@@ -168,6 +168,44 @@ export const SourceSchema = z.object({
 });
 
 /* ----------------------------------------------------------------------------
+ * ECA — YAPISAL, motorun çalıştırabildiği kural (düz metin değil)
+ * -------------------------------------------------------------------------- */
+export const EcaConditionSchema = z.object({
+  field: z.string(),
+  op: z.enum(["eq", "neq", "gt", "lt", "gte", "lte", "in", "contains"]),
+  value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]),
+});
+export type EcaCondition = z.infer<typeof EcaConditionSchema>;
+
+export const EcaActionSchema = z.object({
+  type: z.string(), // ör. "notify" | "create-task" | "webhook" | "set-field"
+  params: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
+});
+export type EcaAction = z.infer<typeof EcaActionSchema>;
+
+export const EcaRuleSchema = z.object({
+  id: z.string(),
+  event: z.string(), // ör. "task.status.changed"
+  when: z.array(EcaConditionSchema).default([]),
+  then: EcaActionSchema,
+  /** Sonsuz tetik zincirini kıran üst sınır (kullanıcı kuralı: maks 6) */
+  maxChainDepth: z.number().int().min(1).max(6).default(6),
+  requiresApproval: z.boolean().default(false),
+});
+export type EcaRule = z.infer<typeof EcaRuleSchema>;
+
+/** AI ajan davranış politikası — makine-okunur (düz metin değil) */
+export const AgentPolicySchema = z.object({
+  autonomy: z.enum(["suggest", "draft", "apply-gated", "none"]).default("suggest"),
+  capabilities: z.array(z.string()).default([]),
+  /** step-up (insan onayı) gerektiren aksiyonlar */
+  stepUp: z.array(z.string()).default([]),
+  subPromptUntrusted: z.boolean().default(true),
+  killSwitch: z.boolean().default(true),
+});
+export type AgentPolicy = z.infer<typeof AgentPolicySchema>;
+
+/* ----------------------------------------------------------------------------
  * TaskNode — ana şema
  * -------------------------------------------------------------------------- */
 export const TaskNodeSchema = z
@@ -222,6 +260,10 @@ export const TaskNodeSchema = z
       })
       .optional(),
     metrics: z.array(z.object({ key: z.string(), target: z.string() })).default([]),
+
+    // Otomasyon — YAPISAL (motorun çalıştırabildiği), düz metin değil
+    ecaRules: z.array(EcaRuleSchema).default([]),
+    agentPolicy: AgentPolicySchema.optional(),
 
     // 14 üretim boyutu (iskelet)
     dimensions: z.record(DimensionKeySchema, DimensionSchema).default({}),

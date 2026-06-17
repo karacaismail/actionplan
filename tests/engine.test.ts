@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildTree,
   computeCriticalPath,
+  evaluateEca,
   exportCSV,
   exportJSON,
   exportTask,
@@ -10,7 +11,7 @@ import {
   importJSON,
   indexById,
 } from "@/engine";
-import { type TaskNode, TaskNodeSchema } from "@/schemas";
+import { EcaRuleSchema, type TaskNode, TaskNodeSchema } from "@/schemas";
 
 function node(over: Record<string, unknown>): TaskNode {
   return TaskNodeSchema.parse({
@@ -119,6 +120,33 @@ describe("kritik yol", () => {
       node({ id: "y", title: "Y", slug: "y", dependsOn: ["x"] }),
     ];
     expect(() => computeCriticalPath(nodes)).not.toThrow();
+  });
+});
+
+describe("ECA motoru (yapısal — gerçekten çalışır, mock değil)", () => {
+  const rule = EcaRuleSchema.parse({
+    id: "r1",
+    event: "task.status.changed",
+    when: [{ field: "status", op: "eq", value: "done" }],
+    then: { type: "notify", params: { target: "owner" } },
+  });
+
+  it("olay + koşul sağlanınca tetiklenir ve aksiyonu döner", () => {
+    const r = evaluateEca(rule, "task.status.changed", { status: "done" });
+    expect(r.fired).toBe(true);
+    expect(r.action?.type).toBe("notify");
+  });
+
+  it("koşul sağlanmazsa tetiklenmez", () => {
+    expect(evaluateEca(rule, "task.status.changed", { status: "todo" }).fired).toBe(false);
+  });
+
+  it("olay eşleşmezse tetiklenmez", () => {
+    expect(evaluateEca(rule, "task.progress.changed", { status: "done" }).fired).toBe(false);
+  });
+
+  it("maxChainDepth aşılınca tetiklenmez (sonsuz zincir koruması — maks 6)", () => {
+    expect(evaluateEca(rule, "task.status.changed", { status: "done" }, 6).fired).toBe(false);
   });
 });
 

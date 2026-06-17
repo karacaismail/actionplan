@@ -315,5 +315,103 @@
     "cluster": "core-operations"
   },
   "state": "aday",
-  "lastUpdated": ""
+  "lastUpdated": "",
+  "ecaRules": [
+    {
+      "id": "eca-s-ecommerce-models-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "E-Ticaret İş Modelleri — Capability Flag Mimarisi tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-ecommerce-models-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "E-Ticaret İş Modelleri — Capability Flag Mimarisi blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-ecommerce-models-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-ecommerce-models-publish",
+      "event": "task.publish.requested",
+      "when": [
+        {
+          "field": "phase",
+          "op": "eq",
+          "value": "release-maintenance"
+        }
+      ],
+      "then": {
+        "type": "publish",
+        "params": {
+          "scope": "public",
+          "module": "s-ecommerce-models"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "apply-gated",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "stepUp": [
+      "publish-public",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  }
 }

@@ -1,14 +1,9 @@
+import strings from "@/data/strings.json";
 import type { Priority, TaskStatus, WbsLevel } from "@/schemas";
 import { LEVEL_META } from "@/schemas";
 
-export const STATUS_LABEL: Record<TaskStatus, string> = {
-  backlog: "Backlog",
-  todo: "Yapılacak",
-  "in-progress": "Devam Ediyor",
-  blocked: "Bloke",
-  review: "İncelemede",
-  done: "Tamam",
-};
+// Etiketler tek kaynaktan: src/data/strings.json
+export const STATUS_LABEL = strings.status as Record<TaskStatus, string>;
 
 export const STATUS_VAR: Record<TaskStatus, string> = {
   backlog: "--status-backlog",
@@ -19,12 +14,7 @@ export const STATUS_VAR: Record<TaskStatus, string> = {
   done: "--status-done",
 };
 
-export const PRIORITY_LABEL: Record<Priority, string> = {
-  low: "Düşük",
-  medium: "Orta",
-  high: "Yüksek",
-  critical: "Kritik",
-};
+export const PRIORITY_LABEL = strings.priority as Record<Priority, string>;
 
 export function levelLabel(level: WbsLevel): string {
   return `${LEVEL_META[level].tr} · ${LEVEL_META[level].metaphor}`;
