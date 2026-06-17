@@ -16,8 +16,16 @@
     "rag",
     "agent"
   ],
-  "dependsOn": [],
-  "blocks": [],
+  "dependsOn": [
+    "k-agent-runtime",
+    "sus-actions",
+    "l1-search",
+    "scale-projections"
+  ],
+  "blocks": [
+    "k-agent-runtime",
+    "sus-actions"
+  ],
   "related": [
     "k-agent-runtime",
     "sus-actions",
@@ -30,164 +38,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "ai-platform-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 96,
     "unit": "sp",
-    "spent": 0
+    "spent": 18
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 16,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "AI çekirdek primitive'leri tanımlandı: model gateway, prompt kütüphanesi, embedding/vektör servisi, ajan çalışma zamanı (k-agent-runtime)",
+        "Çok-sağlayıcılı ve model sabitleme (model pinning) gereksinimleri onaylandı",
+        "Yetenek kapısı ve insan-onayı (human-in-the-loop) ilkeleri kurumsal politikayla hizalandı"
+      ],
+      "passed": true,
+      "notes": "AI Stack, tüm AI-first ArcheType'ların tükettiği temel katmandır."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Prompt enjeksiyonu ve güvensiz çıktı için kötü-niyetli girdi test seti tanımlandı (test-önce)",
+        "Halüsinasyon/olgusal doğruluk değerlendirme (eval) seti ve eşikleri belirlendi",
+        "Model gateway için sözleşme (contract) ve geri-çekilme testleri planlandı"
+      ],
+      "passed": true,
+      "notes": "Eval ve red-team test seti şema ve geliştirme öncesi kilitlendi."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Prompt/şablon, model konfigürasyonu ve eval sonuçları tabloları tenant_id + RLS ile tasarlanır",
+        "Embedding/vektör kayıtları ve kaynak referansı için şema kurulur",
+        "İstem/yanıt denetim günlüğü (audit log) ve token kullanım sayacı şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Vektör ve prompt sürümleme şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Model gateway sağlayıcı soyutlaması ve geri-çekilme zinciri uygulanır",
+        "Yetenek kapılı ajan çalışma zamanı ve istek/yanıt doğrulayıcıları geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Prompt enjeksiyonu negatif testleri yeşil",
+        "Eval doğruluk eşiği karşılanır ve halüsinasyon oranı sınır altında",
+        "Çok-sağlayıcı geri-çekilme e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme tamamlanınca yürütülecek."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP LLM Top 10 güvenlik gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (AI sohbet/öneri yüzeyleri) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA tamamlanınca yapılacak."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Model sürümü değişiminde kademeli açılış ve geri-alma doğrulanır",
+        "Token maliyeti, gecikme ve eval kayması (drift) izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama kapısı bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Çok-sağlayıcılı (multi-provider) model gateway ve geri-çekilme (fallback) katmanı",
+    "Yetenek kapılı (capability-gated) ajan çalışma zamanı ve istek/yanıt doğrulayıcıları",
+    "Prompt kütüphanesi, embedding/vektör servisi ve eval/regresyon hattı"
+  ],
+  "acceptanceCriteria": [
+    "Tüm AI çağrıları yetenek kapılı, model sabitli (model pinning) ve tenant kapsamlıdır",
+    "Prompt enjeksiyonu ve güvensiz çıktıya (insecure output) karşı girdi/çıktı doğrulaması zorunludur",
+    "Üretim öncesi eval eşiği geçilmeden hiçbir model değişikliği yayınlanmaz"
+  ],
+  "risks": [
+    {
+      "id": "r-sai-1",
+      "desc": "Prompt enjeksiyonu ile güvensiz çıktı ve ayrıcalık yükselmesi",
+      "severity": "high",
+      "mitigation": "Güvenilmez girdi sub_prompt olarak izole edilir; çıktı şema doğrulamasından geçer; eylemler yetenek kapılıdır."
+    },
+    {
+      "id": "r-sai-2",
+      "desc": "Model davranış kayması (drift) ve halüsinasyon kullanıcı güvenini düşürür",
+      "severity": "high",
+      "mitigation": "Model sabitleme + sürümlü eval seti; yayın öncesi eşik kapısı ve sürekli regresyon."
+    }
+  ],
+  "rollback": "Model gateway sağlayıcı/sürüm bayrağıyla anında önceki sabit modele döner; sorunlu yetenek capability flag ile kapatılarak çekirdek etkilenmez.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "eval_olgusal_dogruluk_yuzde",
+      "target": ">= 95"
+    },
+    {
+      "key": "prompt_enjeksiyon_negatif_test_gecme_yuzde",
+      "target": "100"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Çok-sağlayıcılı model gateway: sağlayıcı soyutlaması, model sabitleme ve geri-çekilme zinciri",
+        "Prompt kütüphanesi: sürümlü şablonlar, değişken bağlama ve sistem/araç istem ayrımı",
+        "Embedding ve vektör servisi: gömme üretimi, benzerlik araması ve kaynak referansı",
+        "Eval altyapısı: olgusal doğruluk, halüsinasyon ve güvenlik test setleri ile yayın kapısı"
+      ],
+      "notes": "Bu primitive'ler tüm AI-first ArcheType'lar tarafından tüketilir."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Prompt/eval/vektör tablolarında tenant_id RLS zorunlu",
+        "Model anahtarları gizli kasada; çağrı başına least-privilege yetki",
+        "Kullanıcı/araç kaynaklı tüm metin güvenilmez kabul edilir; sub_prompt olarak izole edilir",
+        "Yanıtlardaki PII çıktı katmanında redaksiyona tabidir"
+      ],
+      "notes": "Güvenilmez girdi ve çıktı her zaman doğrulanır."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Model çağrıları tek gateway arayüzü arkasında; sağlayıcı eklemek yeni adaptör ile yapılır",
+        "Prompt oluşturma saf fonksiyonlarla; yan etki yok, test edilebilir",
+        "Embedding ve eval iş mantığı paylaşılan kütüphanelerden tek kaynak olarak gelir"
+      ],
+      "notes": "Sağlayıcı detayları tek arayüz arkasında soyutlanır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Model API anahtarları için zamanlanmış secret rotasyonu",
+        "Tenant başına token kotası ve oran sınırlama (rate-limit)",
+        "AI yüzeylerini servis eden uçlarda sıkı CSP ve çıktı kaçışı (escaping)"
+      ],
+      "notes": "Saldırı yüzeyi anahtar rotasyonu ve kota ile daraltılır."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Vektör araması ANN indeksi (HNSW/IVF) ile hızlandırılır",
+        "Deterministik/sık istemler için yanıt önbelleği (prompt cache)",
+        "Embedding üretimi toplu (batch) işlenir; uzun bağlam sayfalanarak verilir"
+      ],
+      "notes": "Vektör arama ve önbellek gecikmeyi düşürür."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI yanıtları akış (streaming) ile mobil PWA'da kademeli gösterilir",
+        "iOS/Android (Capacitor) istemcisi gateway'i salt-API üzerinden tüketir",
+        "Chrome eklentisi sayfa bağlamını gateway'e güvenli şekilde iletir"
+      ],
+      "notes": "AI yüzeyleri mobil ve eklenti istemcilerinden tüketilir."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI sohbet/öneri arayüzünde 7:1 kontrast (AAA)",
+        "Akan yanıt ekran okuyucuya canlı bölge (aria-live) ile bildirilir",
+        "Tüm AI tetikleyici ve onay aksiyonları klavyeyle erişilebilir"
+      ],
+      "notes": "Üretilen içerik erişilebilir biçimde sunulur."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Gateway Swarm/K8s'te HPA, liveness/readiness probe ile koşar",
+        "Embedding/çıkarım GPU node havuzunda taint/toleration ile planlanır",
+        "Paylaşımlı barındırmada yalnızca harici model API'sine proxy; yerel GPU kısıtı kabul edilir"
+      ],
+      "notes": "GPU yoğun iş yükleri ayrı düğümlerde planlanır."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: yeni belge eklendi -> Koşul: indekslenebilir tür -> Eylem: embedding üret ve indeksle",
+        "Kurallar idempotent; aynı sürüm yeniden gömülmez",
+        "Döngü kırıcı: eval/yeniden-deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "Otomasyon zincirleri sınırlandırılır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI önerir, uygulamaz: yan etkili eylemler insan onayı veya açık yetki gerektirir",
+        "Her araç çağrısı capability-gated; ajan yalnızca verilen yetenek kümesini kullanır",
+        "Kullanıcı/araç metni untrusted sub_prompt olarak işaretlenir, talimat olarak yürütülmez",
+        "Model sabitlenir (pinning); her sürüm eval setinden geçmeden devreye girmez"
+      ],
+      "notes": "Bu katman tüm ajan davranış sözleşmesinin kaynağıdır."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Prompt oluşturma ve doğrulayıcılar için birim testleri",
+        "Ajan akışları için e2e ve uçtan uca kullanıcı yolculuğu testleri",
+        "AI-Playwright ile üretilen yüzeylerin otonom QA regresyonu",
+        "Halüsinasyon ve prompt enjeksiyonu test seti; test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "Halüsinasyon ve güvenlik testleri yayın kapısıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP LLM01: prompt enjeksiyonu izolasyonu ve sistem istemi koruması",
+        "OWASP LLM02: güvensiz çıktı işleme; yanıt şema doğrulaması ve kaçış",
+        "OWASP A05/2025: model konfigürasyonu ve gizli anahtar yanlış yapılandırmasına karşı denetim"
+      ],
+      "notes": "LLM'e özgü riskler önceliklidir."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Ajan çalışma zamanı kernel (k-agent-runtime) üzerinden çalışır",
+        "Eylem yetkileri sürdürülebilir aksiyon kataloğu (sus-actions) ile kapılanır",
+        "Arama/erişim Layer 1 search (l1-search) primitive'i üzerine oturur"
+      ],
+      "notes": "AI yetenekleri çekirdekten tüketilir, yeniden uygulanmaz."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "RAG ArcheType (s-rag) embedding/vektör ve gateway servislerini tüketir",
+        "Konuşma ve tahmin ArcheType'ları (s-conversational, s-predictive) model gateway'i kullanır",
+        "Belge eşleştirme (s-doc-matching) sınıflandırma için aynı çıkarım katmanını çağırır"
+      ],
+      "notes": "AI Stack, AI-first iddiasının teknik kaynağıdır."
     }
   },
   "source": {
@@ -197,5 +321,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

@@ -4,6 +4,8 @@
  */
 export { buildTree, flattenTree } from "./buildTree";
 export type { TreeNode, Rollup } from "./buildTree";
+export { computeCriticalPath } from "./criticalPath";
+export type { CriticalPath } from "./criticalPath";
 export { loadDataset, resetDatasetCache } from "./loadData";
 export type { Dataset } from "./loadData";
 export {

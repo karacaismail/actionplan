@@ -1,7 +1,5 @@
 import { AppShell } from "@/components/app-shell/AppShell";
-import { BoardView } from "@/views/BoardView";
 import { DashboardView } from "@/views/DashboardView";
-import { GraphView } from "@/views/GraphView";
 import { TaskDetailView } from "@/views/TaskDetailView";
 import { WbsView } from "@/views/WbsView";
 import {
@@ -10,11 +8,23 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { Suspense, lazy } from "react";
+
+// Ağır görünümler (ECharts/React Flow/ELK/TanStack Table) tembel yüklenir →
+// başlangıç paketi küçülür.
+const BoardView = lazy(() => import("@/views/BoardView").then((m) => ({ default: m.BoardView })));
+const GraphView = lazy(() => import("@/views/GraphView").then((m) => ({ default: m.GraphView })));
+
+function Loading() {
+  return <div className="p-6 text-base text-muted-foreground">Yükleniyor…</div>;
+}
 
 const rootRoute = createRootRoute({
   component: () => (
     <AppShell>
-      <Outlet />
+      <Suspense fallback={<Loading />}>
+        <Outlet />
+      </Suspense>
     </AppShell>
   ),
 });

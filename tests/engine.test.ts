@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildTree,
+  computeCriticalPath,
   exportCSV,
   exportJSON,
   getAncestors,
@@ -70,6 +71,29 @@ describe("export/import round-trip", () => {
     const result = importJSON("{ bozuk");
     expect(result.nodes).toEqual([]);
     expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+
+describe("kritik yol", () => {
+  it("en uzun bağımlılık zincirini bulur", () => {
+    const nodes = [
+      node({ id: "a", title: "A", slug: "a", effort: { estimate: 1, unit: "sp", spent: 0 } }),
+      node({ id: "b", title: "B", slug: "b", dependsOn: ["a"], effort: { estimate: 1, unit: "sp", spent: 0 } }),
+      node({ id: "c", title: "C", slug: "c", dependsOn: ["b"], effort: { estimate: 1, unit: "sp", spent: 0 } }),
+      node({ id: "d", title: "D", slug: "d", effort: { estimate: 1, unit: "sp", spent: 0 } }),
+    ];
+    const cp = computeCriticalPath(nodes);
+    expect(cp.path).toEqual(["a", "b", "c"]);
+    expect(cp.ids.has("d")).toBe(false);
+    expect(cp.length).toBe(3);
+  });
+
+  it("döngüde sonsuz döngüye girmez", () => {
+    const nodes = [
+      node({ id: "x", title: "X", slug: "x", dependsOn: ["y"] }),
+      node({ id: "y", title: "Y", slug: "y", dependsOn: ["x"] }),
+    ];
+    expect(() => computeCriticalPath(nodes)).not.toThrow();
   });
 });
 

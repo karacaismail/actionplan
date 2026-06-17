@@ -14,7 +14,13 @@
     "etl",
     "stack"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "l1-import",
+    "l1-export",
+    "l1-webhook-in",
+    "scale-workers",
+    "scale-outbox"
+  ],
   "blocks": [],
   "related": [
     "s-ai",
@@ -28,164 +34,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "veri-platform-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 60,
     "unit": "sp",
-    "spent": 0
+    "spent": 9
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 14,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Bağlayıcı çerçevesi, senkron modları (tam/artımlı/CDC) ve dönüşüm kapsamı tanımlandı",
+        "Kimlik bilgisi yönetimi ve idempotentlik gereksinimleri kabul edildi",
+        "Çalıştırma izleme ve geri-doldurma gereksinimleri belirlendi"
+      ],
+      "passed": true,
+      "notes": "Airbyte/Fivetran paritesi ve integration ürünleştirme kapsamı onaylandı."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Tekrar çalıştırmada çoğaltma için negatif test seti tanımlandı (test-önce)",
+        "Kimlik bilgisi redaksiyonu ve sızıntı test senaryoları belirlendi",
+        "Şema değişimi ve geri-doldurma test planı hazırlandı"
+      ],
+      "passed": true,
+      "notes": "İdempotentlik ve sızıntı testleri önceden yazıldı."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Hat/çalıştırma/checkpoint tabloları tenant_id + RLS ile tasarlanır",
+        "Şema eşleme ve dönüşüm tanımları için sürümlü şema kurulur",
+        "Çalıştırma günlüğü ve hata kuyruğu (dead-letter) şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Çalıştırma, checkpoint ve eşleme şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Bağlayıcı çerçevesi ve artımlı/CDC senkron motoru uygulanır",
+        "Dönüşüm hattı, idempotent yükleme ve yeniden deneme geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "İdempotentlik ve çoğaltma negatif testleri yeşil",
+        "Geri-doldurma ve şema değişimi testleri geçer",
+        "Hat kurulum kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP güvenlik gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (hat izleme arayüzü) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Yeni bağlayıcı açılışı ve geri-alma doğrulanır",
+        "Çalıştırma gecikmesi, hata oranı ve veri tazeliği izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Airbyte/Fivetran muadili bağlayıcı çerçevesi ve senkron (sync) motoru",
+    "Dönüşüm (transform) hattı, şema eşleme ve artımlı/CDC yükleme",
+    "Çalıştırma izleme, yeniden deneme ve geri-doldurma (backfill)"
+  ],
+  "acceptanceCriteria": [
+    "Bağlayıcılar idempotent ve artımlı çalışır; tekrar çalıştırma veri çoğaltmaz",
+    "Tüm hatlar tenant kapsamlı ve kimlik bilgileri gizli kasada tutulur",
+    "Başarısız çalıştırma izlenebilir, yeniden denenebilir ve geri-doldurulabilir"
+  ],
+  "risks": [
+    {
+      "id": "r-setl-1",
+      "desc": "Bağlayıcı kimlik bilgilerinin sızması",
+      "severity": "high",
+      "mitigation": "Kimlik bilgileri gizli kasada; çalıştırma sırasında least-privilege; loglara redakte edilir."
+    },
+    {
+      "id": "r-setl-2",
+      "desc": "Tekrar çalıştırmada veri çoğaltma/bozulma",
+      "severity": "high",
+      "mitigation": "İdempotent yükleme, upsert anahtarları ve checkpoint tabanlı artımlı senkron."
+    }
+  ],
+  "rollback": "Hat bayrakla duraklatılır; son başarılı checkpoint'e dönülür ve hedef tablo sürümlü görünümle geri alınır.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "idempotent_yeniden_calistirma_cogaltma_orani",
+      "target": "0"
+    },
+    {
+      "key": "basarisiz_calistirma_otomatik_kurtarma_yuzde",
+      "target": ">= 90"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Bağlayıcı çerçevesi: kaynak/hedef adaptörleri ile tam, artımlı ve CDC senkron",
+        "Dönüşüm hattı: şema eşleme, normalizasyon ve türetilmiş alanlar",
+        "Çalıştırma orkestrasyonu: zamanlama, yeniden deneme ve geri-doldurma (backfill)",
+        "AI yardımı: şema eşleme önerisi ve anomali işaretleme"
+      ],
+      "notes": "Integration yeteneğinin ürünleşmiş hali."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Hat/çalıştırma/eşleme tablolarında tenant_id RLS zorunlu",
+        "Bağlayıcı kimlik bilgileri gizli kasada; çalıştırma least-privilege",
+        "Kaynak konfigürasyon girdileri sunucuda doğrulanır",
+        "Loglarda kimlik bilgisi ve PII redaksiyonu uygulanır"
+      ],
+      "notes": "Kimlik bilgileri kasada, loglar redakte."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Bağlayıcılar ortak kaynak/hedef arayüzüne uyar; yeni adaptörle eklenir",
+        "Dönüşümler saf fonksiyon zinciri; test edilebilir ve birleştirilebilir",
+        "İdempotent yükleme mantığı tek noktada, yeniden kullanılır"
+      ],
+      "notes": "Bağlayıcılar tek arayüze uyar."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Bağlayıcı kimlik bilgileri için zamanlanmış secret rotasyonu",
+        "Kaynak başına eşzamanlılık ve oran sınırlama",
+        "Hat yönetim uçlarında CSP; konfigürasyon değişiklikleri denetim günlüğüne"
+      ],
+      "notes": "Kimlik yüzeyi rotasyon ve kota ile daraltılır."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Checkpoint tabanlı artımlı senkron; yalnızca değişen kayıt taşınır",
+        "Toplu (batch) yükleme ve hedef tabloda upsert indeksi",
+        "Büyük çıkarımlar sayfalanır; worker havuzunda paralel işlenir"
+      ],
+      "notes": "Artımlı senkron ve toplu yazma hızlandırır."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da hat durumu ve çalıştırma geçmişi izlenir",
+        "iOS/Android (Capacitor) istemcisinde başarısız çalıştırma bildirimi",
+        "Chrome eklentisinden hızlı yeniden deneme tetikleme"
+      ],
+      "notes": "Hat durumu mobilde izlenir."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Çalıştırma durumu hem renk hem ikon/metinle gösterilir (7:1 kontrast)",
+        "Hat akış diyagramı ekran okuyucuya metin alternatifiyle sunulur",
+        "Hat kurulum ve izleme tam klavye desteklidir"
+      ],
+      "notes": "Durum renge bağımlı değildir."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "ETL kontrol düzlemi Swarm/K8s'te HPA ve probe ile koşar",
+        "Senkron worker havuzu kuyruk derinliğine göre ölçeklenir",
+        "Paylaşımlı barındırmada zamanlanmış cron + harici depolama hedefi"
+      ],
+      "notes": "Worker'lar yatay ölçeklenir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: zamanlama/webhook geldi -> Koşul: hat aktif -> Eylem: senkron çalıştır",
+        "Çalıştırmalar idempotent; aynı checkpoint yeniden işlenmez",
+        "Döngü kırıcı: yeniden deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "Senkron olaya bağlanır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI şema eşleme önerir; eşleme insan onayıyla uygulanır",
+        "Eşleme önerisi yetenek kapılı; hedef yazma yetkisi gerektirir",
+        "Kaynak meta verisi untrusted; talimat olarak yürütülmez",
+        "Anomali tespit modeli sabitlenir; eval'den geçmeden değişmez"
+      ],
+      "notes": "AI eşleme önerir; uygulamaz."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Bağlayıcı, dönüşüm ve idempotent yükleme birim testleri",
+        "Hat kurulum ve çalıştırma kullanıcı yolculuğu için Playwright e2e",
+        "AI-Playwright ile otonom QA; çoğaltma ve sızıntı test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "İdempotentlik testleri kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP A02: bağlayıcı kimlik bilgileri şifreli ve kasada",
+        "OWASP A03: kaynak/hedef sorguları parametreli",
+        "OWASP A09: çalıştırma günlükleri yeterli ve PII redakte"
+      ],
+      "notes": "Kimlik ve enjeksiyon merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Kaynak alımı Layer 1 import (l1-import) ve webhook (l1-webhook-in) ile",
+        "Hedefe yazım Layer 1 export (l1-export) ile yapılır",
+        "Çalıştırma scale-workers ve scale-outbox üzerinden güvenilir teslim alır"
+      ],
+      "notes": "İçe/dışa aktarma ve worker çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "BI (s-bi) hazır veri setlerini ETL hatlarından besler",
+        "Veri temizleme (s-data-cleansing) ETL akışında dönüşüm adımı olarak çağrılır",
+        "Tüm modüller dış sistem entegrasyonunu ETL bağlayıcılarıyla kurar"
+      ],
+      "notes": "ETL, veri hareketinin sahibidir."
     }
   },
   "source": {
@@ -195,5 +317,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

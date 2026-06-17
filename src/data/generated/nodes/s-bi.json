@@ -15,7 +15,12 @@
     "stack",
     "ai-native"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "l1-analytics",
+    "l1-export",
+    "scale-projections",
+    "sus-actions"
+  ],
   "blocks": [],
   "related": [
     "s-ai",
@@ -28,164 +33,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "veri-analitik-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 64,
     "unit": "sp",
-    "spent": 0
+    "spent": 10
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 14,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Gösterge paneli, görselleştirme ve semantik katman kapsamı tanımlandı",
+        "Text-to-SQL güvenlik sınırları (salt-okunur, tenant filtresi) belirlendi",
+        "Metrik açıklanabilirlik gereksinimleri kabul edildi"
+      ],
+      "passed": true,
+      "notes": "Metabase/Looker paritesi ve text-to-SQL kapsamı onaylandı."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Yetkisiz/yıkıcı SQL üretimi için negatif test seti tanımlandı (test-önce)",
+        "Tenant filtresi zorunluluğu test senaryoları belirlendi",
+        "Text-to-SQL doğruluk eval seti planlandı"
+      ],
+      "passed": true,
+      "notes": "SQL güvenlik testleri önceden yazıldı."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Panel/widget/metrik tanımı tabloları tenant_id + RLS ile tasarlanır",
+        "Salt-okunur raporlama görünümleri ve satır seviyesi yetki kurulur",
+        "Sorgu çalıştırma denetim günlüğü şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Semantik katman ve görünüm şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Panel/görselleştirme motoru ve semantik katman uygulanır",
+        "Text-to-SQL üretimi, doğrulama ve önizleme geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Yıkıcı/yetkisiz SQL negatif testleri yeşil",
+        "Text-to-SQL doğruluk eşiği karşılanır",
+        "Panel oluşturma kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP/LLM güvenlik gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (grafik/tablo) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Şema değişiminde panel uyumu ve geri-alma doğrulanır",
+        "Sorgu performansı ve text-to-SQL doğruluk kayması izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Metabase/Looker muadili gösterge paneli ve görselleştirme motoru",
+    "Doğal dil sorgu (text-to-SQL) ve açıklanabilir sorgu üretimi",
+    "Tenant kapsamlı semantik katman ve metrik tanımları"
+  ],
+  "acceptanceCriteria": [
+    "Text-to-SQL üretilen sorgu kullanıcıya gösterilir, doğrulanır ve salt-okunur çalıştırılır",
+    "Tüm sorgular tenant kapsamlı ve satır seviyesinde yetkilendirilmiştir",
+    "Panel ve metrikler açıklanabilir tanımlarla sunulur"
+  ],
+  "risks": [
+    {
+      "id": "r-sbi-1",
+      "desc": "Text-to-SQL ile yetkisiz veri erişimi veya yıkıcı sorgu",
+      "severity": "high",
+      "mitigation": "Üretilen SQL salt-okunur izinli bağlantıda; tenant filtresi zorunlu enjekte edilir; sorgu önce gösterilir."
+    },
+    {
+      "id": "r-sbi-2",
+      "desc": "Yanlış metrik tanımı hatalı kararlara yol açar",
+      "severity": "medium",
+      "mitigation": "Semantik katmanda merkezî, sürümlü metrik tanımları; her metrik açıklanabilir."
+    }
+  ],
+  "rollback": "Text-to-SQL özelliği bayrakla kapatılır; panel motoru klasik sorgu kütüphanesiyle çalışmaya devam eder.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "text_to_sql_dogrulama_oncesi_calistirma_orani",
+      "target": "0"
+    },
+    {
+      "key": "panel_yukleme_p95_ms",
+      "target": "< 1500"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Sürükle-bırak gösterge paneli ve zengin görselleştirme kütüphanesi",
+        "Doğal dil sorgu (text-to-SQL): soru SQL'e çevrilir, gösterilir ve çalıştırılır",
+        "Semantik katman: merkezî, sürümlü metrik ve boyut tanımları",
+        "Zamanlanmış rapor, paylaşım ve dışa aktarma (export)"
+      ],
+      "notes": "AI ayırt edici yetenek: doğal dil sorgu."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Panel/metrik/sorgu tablolarında tenant_id RLS zorunlu",
+        "Text-to-SQL salt-okunur izinli bağlantıda çalışır (least-privilege)",
+        "Üretilen SQL'e tenant filtresi zorunlu enjekte edilir; girdi şema doğrulanır",
+        "Hassas sütunlar tanıma göre maskelenir (PII redaction)"
+      ],
+      "notes": "Üretilen SQL daima salt-okunur ve tenant filtreli."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Text-to-SQL üretimi ve SQL doğrulayıcı saf fonksiyonlarla",
+        "Görselleştirme bileşenleri veri şeklinden bağımsız ve yeniden kullanılır",
+        "Metrik tanımları tek kaynaktan; panel ve sorgu paylaşır"
+      ],
+      "notes": "Sorgu üretimi ve doğrulama ayrıştırılır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Model anahtarları için zamanlanmış secret rotasyonu",
+        "Kullanıcı başına sorgu oran sınırlama ve sonuç satır limiti",
+        "Panel servis uçlarında CSP; dışa aktarma denetim günlüğüne yazılır"
+      ],
+      "notes": "Sorgu yüzeyi kota ve denetimle sınırlandırılır."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Sık panel sorguları için sonuç önbelleği ve materyalize görünüm",
+        "Tarih/tenant kolonlarında indeksle sıralı erişim",
+        "Büyük sonuç kümeleri sayfalama ve örnekleme ile yüklenir"
+      ],
+      "notes": "Önbellek ve indeks panel gecikmesini düşürür."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da panel ve grafikler duyarlı (responsive) yeniden düzenlenir",
+        "iOS/Android (Capacitor) istemcisinde çevrimdışı son panel anlık görüntüsü",
+        "Chrome eklentisinden seçili veriyle hızlı grafik üretimi"
+      ],
+      "notes": "Paneller mobil ölçeklenir."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Grafik ve tablolarda 7:1 kontrast; renk tek başına anlam taşımaz",
+        "Her grafiğin metin/tablo alternatifi ekran okuyucuya sunulur",
+        "Panel düzenleme ve filtreler tam klavye desteklidir"
+      ],
+      "notes": "Grafikler renge bağımlı olmaz."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "BI servisi Swarm/K8s'te HPA ve probe ile koşar",
+        "Text-to-SQL/eval worker'ı ayrı dağıtım birimi; gerekirse GPU node",
+        "Paylaşımlı barındırmada salt-okunur panel görünümü + harici model API"
+      ],
+      "notes": "Sorgu motoru bağımsız ölçeklenir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: zamanlanmış an geldi -> Koşul: panel aktif -> Eylem: raporu üret ve dağıt",
+        "Kurallar idempotent; aynı dönem raporu yinelenmez",
+        "Döngü kırıcı: yeniden deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "Raporlama olaya bağlanır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI doğal dili SQL'e çevirir; sorguyu çalıştırmadan önce kullanıcıya gösterir",
+        "Üretilen SQL salt-okunur; yazma/silme yetenekleri kapalıdır (capability-gated)",
+        "Kullanıcı sorusu metni untrusted; şema dışı talimat olarak yürütülmez",
+        "Model sabitlenir; text-to-SQL doğruluk eval'inden geçmeden değişmez"
+      ],
+      "notes": "AI sorgu önerir; kullanıcı onaylar."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "SQL doğrulayıcı ve metrik hesap birim testleri",
+        "Panel oluşturma ve sorgu kullanıcı yolculuğu için Playwright e2e",
+        "AI-Playwright ile otonom QA; yıkıcı SQL ve enjeksiyon test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "SQL güvenliği ve doğruluğu kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP A03: tüm sorgular parametreli; text-to-SQL salt-okunur ve filtreli",
+        "OWASP A01: panel ve veri erişimi rol ve tenant RLS ile",
+        "OWASP LLM02: güvensiz çıktı; üretilen SQL doğrulamadan çalıştırılmaz"
+      ],
+      "notes": "Enjeksiyon ve erişim merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Veri Layer 1 analytics (l1-analytics) projeksiyonlarından okunur",
+        "Rapor dışa aktarımı Layer 1 export (l1-export) ile yapılır",
+        "Ölçeklenebilir projeksiyonlar (scale-projections) panel görünümlerini besler"
+      ],
+      "notes": "Analitik ve dışa aktarma çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Tüm operasyon modülleri KPI panellerini BI üzerinden yayınlar",
+        "Tahmin ArcheType'ı (s-predictive) çıktılarını BI panellerinde gösterir",
+        "ETL (s-etl) hazırlanmış veri setlerini BI semantik katmanına sunar"
+      ],
+      "notes": "BI, karar verme yüzeyinin sahibidir."
     }
   },
   "source": {
@@ -195,5 +316,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

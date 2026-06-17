@@ -8,7 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: "http://127.0.0.1:4173",
     trace: "on-first-retry",
   },
   projects: [
@@ -16,8 +16,9 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: {
-    command: "npm run preview -- --port 4173",
-    url: "http://localhost:4173",
+    // Dev sunucusu base "/" sunar (Pages alt-yolu yok) → e2e build'den bağımsız çalışır.
+    command: "npm run dev -- --port 4173 --host 127.0.0.1",
+    url: "http://127.0.0.1:4173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

@@ -14,7 +14,12 @@
     "doc-matching",
     "stack"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "l1-import",
+    "sus-actions",
+    "k-agent-runtime",
+    "scale-workers"
+  ],
   "blocks": [],
   "related": [
     "s-ai",
@@ -26,164 +31,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "belge-otomasyon-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 52,
     "unit": "sp",
-    "spent": 0
+    "spent": 8
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 13,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Belge türleri, çıkarım alanları ve eşleştirme kuralları tanımlandı",
+        "Güven skoru ve insan onay eşiği gereksinimleri kabul edildi",
+        "OCR ve sınıflandırma doğruluk eval eşikleri belirlendi"
+      ],
+      "passed": true,
+      "notes": "Fatura-PO matching ve OCR kapsamı onaylandı."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Hatalı eşleşme/çıkarım için negatif test seti tanımlandı (test-önce)",
+        "Belge kaynaklı prompt enjeksiyonu test senaryoları belirlendi",
+        "Üçlü eşleşme tutarsızlık test planı hazırlandı"
+      ],
+      "passed": true,
+      "notes": "Çıkarım doğruluk ve enjeksiyon testleri önceden yazıldı."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Belge/çıkarım/eşleşme tabloları tenant_id + RLS ile tasarlanır",
+        "Güven skoru ve onay durumu şeması kurulur",
+        "Belge işleme denetim günlüğü şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Belge, çıkarım ve eşleşme şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OCR, sınıflandırma ve alan çıkarımı uygulanır",
+        "Üçlü eşleştirme ve insan-onaylı istisna akışı geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Çıkarım doğruluk ve hatalı eşleşme negatif testleri yeşil",
+        "Enjeksiyon ve üçlü eşleşme tutarsızlık testleri geçer",
+        "Belge işleme kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP LLM Top 10 gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (belge inceleme) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Yeni belge tipi açılışı ve geri-alma doğrulanır",
+        "Çıkarım doğruluğu ve istisna oranı izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "OCR + belge sınıflandırma ve alan çıkarımı (extraction)",
+    "Fatura-PO eşleştirme (3-way match) ve istisna yönetimi",
+    "İnsan-onaylı doğrulama ve güven skoru akışı"
+  ],
+  "acceptanceCriteria": [
+    "Belgeler sınıflandırılır; alanlar güven skoruyla çıkarılır",
+    "Fatura-PO-mal kabul üçlü eşleşmesi otomatik; istisna insana yönlendirilir",
+    "Düşük güvenli çıkarımlar otomatik onaylanmaz, insana sunulur"
+  ],
+  "risks": [
+    {
+      "id": "r-sdm-1",
+      "desc": "Hatalı eşleşme/çıkarımın yanlış ödemeye yol açması",
+      "severity": "high",
+      "mitigation": "Güven eşiği altı sonuç insan onaylı; üçlü eşleşme tutarsızlığı bloke eder."
+    },
+    {
+      "id": "r-sdm-2",
+      "desc": "Belge içeriğiyle prompt enjeksiyonu (OCR metni)",
+      "severity": "high",
+      "mitigation": "OCR/çıkarım metni untrusted; talimat olarak yürütülmez; çıktı şema doğrulanır."
+    }
+  ],
+  "rollback": "Otomatik eşleştirme bayrakla kapatılır; tüm belgeler manuel doğrulama kuyruğuna düşer.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "alan_cikarim_dogruluk_yuzde",
+      "target": ">= 95"
+    },
+    {
+      "key": "dusuk_guven_otomatik_onay_orani",
+      "target": "0"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OCR ve belge sınıflandırma: tür tespiti ve sayfa segmentasyonu",
+        "Alan çıkarımı: yapılandırılmış alanlar güven skoruyla",
+        "Fatura-PO-mal kabul üçlü eşleştirme (3-way match) ve istisna yönetimi",
+        "İnsan-onaylı doğrulama: düşük güvenli sonuçlar incelemeye gider"
+      ],
+      "notes": "OCR + AI sınıflandırma çekirdek yetenektir."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Belge/çıkarım/eşleşme tablolarında tenant_id RLS zorunlu",
+        "Belge erişimi rol ve süreç bazlı (least-privilege)",
+        "Yüklenen belge (tür, boyut, içerik) sunucuda doğrulanır",
+        "Belgedeki PII çıktı ve depolamada redaksiyona tabidir"
+      ],
+      "notes": "Belge içeriği güvenilmez kabul edilir."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Çıkarım sonrası alan doğrulayıcılar saf fonksiyonlarla",
+        "Eşleştirme kuralları (3-way) yeniden kullanılan tek modülde",
+        "OCR/sınıflandırma çıkarımı tek servis arayüzü arkasında"
+      ],
+      "notes": "OCR, çıkarım ve eşleştirme ayrıştırılır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Model anahtarları için zamanlanmış secret rotasyonu",
+        "Yükleme başına oran sınırlama ve boyut/format kotası",
+        "Belge erişimi ve dışa aktarma denetim günlüğüne yazılır"
+      ],
+      "notes": "Belge yüzeyi kota ve denetimle korunur."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OCR/çıkarım asenkron worker havuzunda işlenir",
+        "Tekrar eden şablonlar için çıkarım şablonu önbelleği",
+        "Eşleştirme aday kümesi (PO no, tutar) indeksiyle daraltılır"
+      ],
+      "notes": "Asenkron işleme ve önbellek hızlandırır."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da belge görüntüleme ve onay kuyruğu",
+        "iOS/Android (Capacitor) istemcisinde kamerayla belge yakalama ve yükleme",
+        "Chrome eklentisinden ekrandaki faturayı işleme gönderme"
+      ],
+      "notes": "Belge incelemesi mobilde yapılır."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Belge ve çıkarım vurgu kutularında 7:1 kontrast",
+        "Güven skoru hem renk hem metinle gösterilir",
+        "Belge gezinme, alan düzeltme ve onay tam klavye desteklidir"
+      ],
+      "notes": "Çıkarım sonucu erişilebilir sunulur."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Belge servisi Swarm/K8s'te HPA ve probe ile koşar",
+        "OCR/çıkarım worker'ı GPU node havuzunda taint/toleration ile",
+        "Paylaşımlı barındırmada harici OCR/model API'sine proxy; yerel kısıt kabul"
+      ],
+      "notes": "OCR/çıkarım GPU node'da planlanabilir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: belge yüklendi -> Koşul: tür fatura -> Eylem: çıkar, sınıflandır ve eşleştir",
+        "İşleme idempotent; aynı belge tekrar eşleştirilmez",
+        "Döngü kırıcı: çıkarım/yeniden deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "Eşleştirme olaya bağlanır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI sınıflandırır ve alan çıkarır; düşük güvenli sonuç insan onaylı",
+        "Eşleştirme/onay yetenek kapılı; ödeme tetikleme yetkisi açık değildir",
+        "OCR/belge metni untrusted sub_prompt; talimat olarak yürütülmez",
+        "Sınıflandırma/çıkarım modeli sabitlenir; eval'den geçmeden değişmez"
+      ],
+      "notes": "AI çıkarır/eşleştirir; düşük güven insana gider."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Alan doğrulayıcı ve 3-way eşleştirme birim testleri",
+        "Belge işleme kullanıcı yolculuğu için Playwright e2e",
+        "AI-Playwright ile otonom QA; hatalı eşleşme ve enjeksiyon test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "Doğruluk ve enjeksiyon testleri kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP LLM01: belge metni kaynaklı prompt enjeksiyonu izolasyonu",
+        "OWASP LLM02: güvensiz çıktı; çıkarılan alanlar şema doğrulanır",
+        "OWASP A01: belge ve eşleşme verisine rol/tenant RLS ile erişim"
+      ],
+      "notes": "LLM ve erişim riskleri merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Belge alımı Layer 1 import (l1-import) üzerinden yapılır",
+        "Onaylı aksiyonlar sürdürülebilir aksiyon kataloğu (sus-actions) ile kapılanır",
+        "OCR/çıkarım orkestrasyonu k-agent-runtime ve scale-workers tüketir"
+      ],
+      "notes": "İçe aktarma, aksiyon ve worker çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Satın alma/finans modülü fatura-PO eşleştirmeyi bu servisle yapar",
+        "Muhasebe modülü onaylı çıkarımları kayıt için tüketir",
+        "RAG (s-rag) işlenmiş belgeleri bilgi tabanına ekler"
+      ],
+      "notes": "Belge eşleştirme, evrak otomasyonunun sahibidir."
     }
   },
   "source": {
@@ -193,5 +314,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

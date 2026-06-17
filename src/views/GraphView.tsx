@@ -47,7 +47,12 @@ function TaskFlowNode({ data }: NodeProps<GraphNode>) {
       to="/task/$taskId"
       params={{ taskId: task.id }}
       className="block rounded-lg border-2 bg-card p-3 text-card-foreground no-underline shadow-sm transition-colors hover:bg-secondary"
-      style={{ width: NODE_W, minHeight: NODE_H, borderColor: color }}
+      style={{
+        width: NODE_W,
+        minHeight: NODE_H,
+        borderColor: color,
+        boxShadow: task.criticalPath ? "0 0 0 2px hsl(38 92% 62%)" : undefined,
+      }}
       aria-label={`${task.wbsCode} ${task.title}`}
     >
       <Handle type="target" position={Position.Top} style={{ background: color, border: "none" }} />

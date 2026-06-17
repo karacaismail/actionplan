@@ -57,6 +57,14 @@ function WbsRow({ node, expanded, onToggle, activeId }: { node: TreeNode } & Omi
           <span className="shrink-0 font-mono text-base text-muted-foreground">{node.wbsCode}</span>
           <span className="truncate text-base">{node.title}</span>
         </Link>
+        {node.criticalPath && (
+          <Icon
+            name="ph-lightning"
+            className="shrink-0"
+            style={{ color: "hsl(38 92% 62%)" }}
+            title="Kritik yol"
+          />
+        )}
         <div className="hidden w-28 shrink-0 items-center gap-2 sm:flex">
           <ProgressBar value={node.rollup.progress} color={color} />
           <span className="w-9 text-right text-base text-muted-foreground tabular-nums">

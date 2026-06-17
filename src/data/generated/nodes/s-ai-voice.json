@@ -14,7 +14,11 @@
     "aday",
     "fırsat"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "sus-actions",
+    "k-agent-runtime",
+    "scale-streaming"
+  ],
   "blocks": [],
   "related": [
     "build-app-katalogu",
@@ -30,7 +34,7 @@
   "priority": "medium",
   "owner": null,
   "effort": {
-    "estimate": 0,
+    "estimate": 48,
     "unit": "sp",
     "spent": 0
   },
@@ -38,152 +42,268 @@
   "phase": "requirements",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Çağrı senaryoları, niyet kapsamı ve STT/TTS gereksinimleri tanımlanır",
+        "Entegre aksiyon ve insan devralma (handoff) politikası onaylanır",
+        "Niyet doğruluk ve gecikme eval eşikleri belirlenir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Aday SaaS fırsatı; sesli ajan kapsamı şekilleniyor."
     },
     "test-plan": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Sesli prompt enjeksiyonu için negatif test seti tanımlanır (test-önce)",
+        "STT hatası ve yanlış aksiyon test senaryoları belirlenir",
+        "Handoff ve çağrı sürekliliği test planı hazırlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Gereksinim sonrası."
     },
     "db-schema": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Çağrı/transkript/aksiyon tabloları tenant_id + RLS ile tasarlanır",
+        "Onay kaydı ve handoff durumu şeması kurulur",
+        "PII redaksiyon işareti ve denetim günlüğü şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test planı sonrası."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "STT/TTS ve niyet çözümleme uygulanır",
+        "Yetenek kapılı aksiyon ve insan devralma akışı geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema sonrası."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Sesli enjeksiyon ve yetkisiz aksiyon negatif testleri yeşil",
+        "Niyet doğruluk ve handoff testleri geçer",
+        "Çağrı akışı kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP LLM Top 10 gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (transkript/yapılandırma arayüzü) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Sesli ajan sürümü kademeli açılış ve geri-alma doğrulanır",
+        "Çözüm oranı, gecikme ve handoff oranı izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Çağrı karşılama: konuşma-metin (STT) ve metin-konuşma (TTS)",
+    "Niyet çözümleme ve entegre aksiyon (randevu, yönlendirme)",
+    "Canlı insan devralma (handoff) ve çağrı özeti"
+  ],
+  "acceptanceCriteria": [
+    "Sesli ajan niyeti çözer; emin olmadığında insana aktarır (handoff)",
+    "Yan etkili aksiyonlar (randevu, işlem) onay/yetki gerektirir",
+    "Çağrı kaydı ve transkript tenant kapsamlı; PII redakte edilir"
+  ],
+  "risks": [
+    {
+      "id": "r-saiv-1",
+      "desc": "Sesli komutla prompt enjeksiyonu ve yetkisiz aksiyon",
+      "severity": "high",
+      "mitigation": "Transkript untrusted sub_prompt; aksiyonlar yetenek kapılı; yan etkili işlem onaylı."
+    },
+    {
+      "id": "r-saiv-2",
+      "desc": "STT hatası/halüsinasyonla yanlış aksiyon",
+      "severity": "high",
+      "mitigation": "Kritik aksiyonlarda geri-okuma ve onay; düşük güvende handoff; eval eşiği."
+    }
+  ],
+  "rollback": "Sesli ajan bayrakla kapatılır; çağrılar IVR/insan kuyruğuna düşer (graceful degradation).",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "kritik_aksiyon_onay_kapsam_yuzde",
+      "target": "100"
+    },
+    {
+      "key": "niyet_cozumleme_dogruluk_yuzde",
+      "target": ">= 90"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Çağrı karşılama: düşük gecikmeli STT (konuşma-metin) ve TTS (metin-konuşma)",
+        "Niyet çözümleme: çağrı amacını anlama ve diyalog yönetimi",
+        "Entegre aksiyon: randevu, yönlendirme ve kayıt sorgulama (yetenek kapılı)",
+        "İnsan devralma ve çağrı özeti: belirsizlikte aktarım, sonrasında otomatik özet"
+      ],
+      "notes": "Gerçek zamanlı ses çekirdek yetenektir."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Çağrı/transkript/aksiyon tablolarında tenant_id RLS zorunlu",
+        "Aksiyonlar yetenek kapılı; yan etkili işlem least-privilege ve onaylı",
+        "Çağrı meta verisi ve girdileri sunucuda doğrulanır",
+        "Transkript ve kayıttaki PII redaksiyona tabidir"
+      ],
+      "notes": "Transkript güvenilmez ve PII korumalı."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "STT/TTS sağlayıcıları ortak arayüze uyar; değiştirilebilir",
+        "Niyet çözümleme ve durum geçişleri saf fonksiyonlarla",
+        "Aksiyon yürütme tek yetenek kapılı katmandan geçer"
+      ],
+      "notes": "Ses, niyet ve aksiyon ayrıştırılır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "STT/TTS ve model anahtarları için secret rotasyonu",
+        "Numara/oturum başına çağrı oran sınırlama ve kötüye kullanım tespiti",
+        "Aksiyon ve kayıt erişimi denetim günlüğüne yazılır"
+      ],
+      "notes": "Telefon yüzeyi kota ve denetimle korunur."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Akış (streaming) STT/TTS ile uçtan uca düşük gecikme",
+        "Sık niyet/yanıtlar ve bilgi erişimi önbelleklenir",
+        "Eşzamanlı çağrılar worker havuzunda yatay ölçeklenir"
+      ],
+      "notes": "Düşük gecikme akışla sağlanır."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da çağrı özeti ve transkript görüntüleme",
+        "iOS/Android (Capacitor) istemcisinde kaçırılan çağrı/aksiyon bildirimi",
+        "Chrome eklentisinden çağrı akışı ve özet kontrolü"
+      ],
+      "notes": "Yapılandırma ve özet mobilde."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Transkript ve yapılandırma arayüzünde 7:1 kontrast",
+        "Çağrı her zaman metin transkript alternatifiyle erişilebilir",
+        "Akış kontrolleri ve aksiyon onayı tam klavye desteklidir"
+      ],
+      "notes": "Ses içeriği metinle de sunulur."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Sesli ajan servisi Swarm/K8s'te HPA ve probe ile koşar",
+        "STT/TTS çıkarımı GPU node havuzunda; streaming altyapısı kullanılır",
+        "Paylaşımlı barındırmada harici telefon/ses API'sine proxy; gerçek zaman kısıtı kabul"
+      ],
+      "notes": "Ses işleme GPU/streaming gerektirir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: niyet \"randevu\" çözüldü -> Koşul: uygunluk var ve onay alındı -> Eylem: randevu oluştur",
+        "Aksiyonlar idempotent; aynı çağrıda çift kayıt oluşmaz",
+        "Döngü kırıcı: diyalog/yeniden deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "Aksiyon ve handoff olaya bağlanır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI yanıt verir ve aksiyon önerir; kritik işlem geri-okuma + onay gerektirir",
+        "Aksiyonlar capability-gated; ajan yalnızca tanımlı yetenekleri çağırır",
+        "Çağrı transkripti untrusted sub_prompt; talimat olarak yürütülmez",
+        "STT/diyalog modeli sabitlenir; doğruluk eval'inden geçmeden değişmez"
+      ],
+      "notes": "Ses ajanı önerir; kritik aksiyon onaylı."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Niyet çözümleme ve aksiyon kapısı birim testleri",
+        "Çağrı akışı kullanıcı yolculuğu için Playwright e2e (transkript simülasyonu)",
+        "AI-Playwright ile otonom QA; sesli enjeksiyon ve yanlış aksiyon test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "Enjeksiyon ve doğruluk testleri kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP LLM01: çağrı transkripti kaynaklı prompt enjeksiyonu izolasyonu",
+        "OWASP LLM02: güvensiz çıktı; aksiyon parametreleri doğrulanır",
+        "OWASP A01: aksiyon ve kayıt erişimi rol ve tenant RLS ile"
+      ],
+      "notes": "LLM ve erişim riskleri merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Yan etkili işlemler sürdürülebilir aksiyon kataloğu (sus-actions) ile kapılanır",
+        "Diyalog orkestrasyonu kernel ajan çalışma zamanını (k-agent-runtime) tüketir",
+        "Gerçek zamanlı ses scale-streaming altyapısını kullanır"
+      ],
+      "notes": "Aksiyon, çalışma zamanı ve streaming çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Katalog uygulaması (build-app-katalogu) fırsatına sesli kanal ekler",
+        "Konuşma ArcheType'ı (s-conversational) ile niyet/diyalog mantığını paylaşır",
+        "Randevu/destek modülleri çağrı aksiyonlarını sesli ajana açar"
+      ],
+      "notes": "Sesli ajan, telefon kanalının sahibidir."
     }
   },
   "source": {
@@ -193,5 +313,5 @@
     "cluster": "data-intelligence"
   },
   "state": "aday",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

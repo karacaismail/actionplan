@@ -1,4 +1,11 @@
-import { type TreeNode, type NodeIndex, buildTree, indexById, loadDataset } from "@/engine";
+import {
+  type NodeIndex,
+  type TreeNode,
+  buildTree,
+  computeCriticalPath,
+  indexById,
+  loadDataset,
+} from "@/engine";
 import type { DatasetMeta, NavNode, TaskNode } from "@/schemas";
 import { useSyncExternalStore } from "react";
 
@@ -13,6 +20,9 @@ interface State {
   navigation: NavNode[];
   meta: DatasetMeta;
   errors: string[];
+  /** kritik yol üzerindeki düğüm id'leri + ağırlıklı uzunluk */
+  criticalPath: Set<string>;
+  criticalLength: number;
   /** düzenleme yapıldıysa true (export uyarısı için) */
   dirty: boolean;
 }
@@ -20,9 +30,17 @@ interface State {
 let state: State = init();
 const listeners = new Set<() => void>();
 
+/** Kritik yolu hesaplar ve düğümlere criticalPath bayrağını işler. */
+function applyCritical(nodes: TaskNode[]) {
+  const cp = computeCriticalPath(nodes);
+  for (const n of nodes) n.criticalPath = cp.ids.has(n.id);
+  return cp;
+}
+
 function init(): State {
   const ds = loadDataset();
-  return { ...ds, dirty: false };
+  const cp = applyCritical(ds.nodes);
+  return { ...ds, dirty: false, criticalPath: cp.ids, criticalLength: cp.length };
 }
 
 function emit() {
@@ -30,11 +48,14 @@ function emit() {
 }
 
 function setNodes(nodes: TaskNode[], dirty: boolean) {
+  const cp = applyCritical(nodes);
   state = {
     ...state,
     nodes,
     index: indexById(nodes),
     tree: buildTree(nodes),
+    criticalPath: cp.ids,
+    criticalLength: cp.length,
     dirty,
   };
   emit();

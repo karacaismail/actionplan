@@ -75,6 +75,11 @@ export function TaskDetailView() {
             <Icon name={node.icon} /> {levelLabel(node.level)}
           </Badge>
           <StatusBadge status={node.status} />
+          {node.criticalPath && (
+            <Badge color="hsl(38 92% 62%)">
+              <Icon name="ph-lightning" /> Kritik yol
+            </Badge>
+          )}
         </div>
         <h1 className="text-2xl font-medium">{node.title}</h1>
         {node.summary && <p className="text-muted-foreground">{node.summary}</p>}

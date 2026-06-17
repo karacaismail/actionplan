@@ -19,6 +19,19 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: false,
     chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        // Ağır kütüphaneleri ayrı, önbelleklenebilir parçalara böl.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("echarts") || id.includes("zrender")) return "echarts";
+          if (id.includes("@xyflow") || id.includes("elkjs")) return "graph";
+          if (id.includes("@tanstack")) return "tanstack";
+          if (id.includes("react-dom") || id.includes("/react/") || id.includes("scheduler"))
+            return "react-vendor";
+        },
+      },
+    },
   },
   test: {
     globals: true,

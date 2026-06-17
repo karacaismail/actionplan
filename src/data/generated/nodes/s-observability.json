@@ -14,7 +14,13 @@
     "observability",
     "stack"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "cc-obs",
+    "cc-obs-deep",
+    "scale-timeseries",
+    "scale-streaming",
+    "l1-analytics"
+  ],
   "blocks": [],
   "related": [
     "s-ai",
@@ -26,164 +32,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "platform-sre-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 56,
     "unit": "sp",
-    "spent": 0
+    "spent": 8
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 13,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Log/metrik/iz toplama kapsamı ve saklama (retention) politikası tanımlandı",
+        "Uyarı, SLO ve panolama gereksinimleri kabul edildi",
+        "AI anomali/kök neden yeteneği kapsamı belirlendi"
+      ],
+      "passed": true,
+      "notes": "Datadog/Grafana LGTM paritesi taban çizgisi belirlendi."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Log PII/secret sızıntısı için negatif test seti tanımlandı (test-önce)",
+        "Uyarı doğruluğu ve gürültü test senaryoları belirlendi",
+        "Telemetri tenant izolasyon test planı hazırlandı"
+      ],
+      "passed": true,
+      "notes": "Redaksiyon ve uyarı testleri önceden yazıldı."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Log/metrik/iz depoları tenant_id ve saklama politikasıyla tasarlanır",
+        "Uyarı kuralı ve SLO tanımı şeması kurulur",
+        "Erişim ve redaksiyon işareti şeması tanımlanır"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Telemetri ve uyarı şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Toplama hattı, redaksiyon ve birleşik sorgu uygulanır",
+        "Uyarı kuralları, SLO izleme ve AI anomali tespiti geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "PII/secret redaksiyon negatif testleri yeşil",
+        "Uyarı doğruluğu ve SLO hesabı testleri geçer",
+        "Pano/uyarı kurulum kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP güvenlik gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi (pano/grafik) geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Yeni uyarı/pano kademeli açılış ve geri-alma doğrulanır",
+        "Alım gecikmesi, saklama maliyeti ve uyarı kalitesi izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Log + metric + trace toplama ve sorgulama (Datadog/Grafana LGTM muadili)",
+    "Gösterge panoları, uyarı (alert) kuralları ve SLO izleme",
+    "AI yardımı: anomali tespiti ve kök neden (root cause) önerisi"
+  ],
+  "acceptanceCriteria": [
+    "Log/metrik/iz birleşik sorgulanır ve ilişkilendirilir (correlation)",
+    "Uyarılar gürültüsüz; SLO ihlali zamanında bildirilir",
+    "Tüm telemetri tenant kapsamlı ve hassas alanlar redakte edilir"
+  ],
+  "risks": [
+    {
+      "id": "r-sobs-1",
+      "desc": "Loglardaki PII/sırların telemetriye sızması",
+      "severity": "high",
+      "mitigation": "Alım hattında PII/secret redaksiyonu; örnekleme öncesi maskeleme; tenant izolasyonu."
+    },
+    {
+      "id": "r-sobs-2",
+      "desc": "Uyarı gürültüsü ile gerçek olayların kaçırılması (alert fatigue)",
+      "severity": "medium",
+      "mitigation": "Eşik + anomali tabanlı uyarı, gruplama ve susturma; AI kök neden önceliklendirme."
+    }
+  ],
+  "rollback": "AI anomali/öneri katmanı bayrakla kapatılır; klasik eşik tabanlı uyarı ve panolar çalışmaya devam eder.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "log_pii_redaksiyon_kapsam_yuzde",
+      "target": "100"
+    },
+    {
+      "key": "yanlis_pozitif_uyari_orani",
+      "target": "< 5"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Birleşik telemetri: log, metrik ve dağıtık iz (trace) toplama ve ilişkilendirme",
+        "Panolama ve sorgu: özelleştirilebilir gösterge panoları ve sorgu dili",
+        "Uyarı ve SLO: eşik/anomali tabanlı uyarı, gruplama ve hata bütçesi",
+        "AI yardımı: anomali tespiti ve kök neden (root cause) önerisi"
+      ],
+      "notes": "Log+metric+trace tek yerde birleşir."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Log/metrik/iz erişiminde tenant kapsamı zorunlu",
+        "Pano/uyarı yönetimi rol bazlı (least-privilege)",
+        "Alım uçlarında girdi doğrulama ve şema kontrolü",
+        "Alım hattında PII/secret redaksiyonu uygulanır"
+      ],
+      "notes": "Telemetri redakte ve tenant kapsamlı."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Alım işleyicileri sinyal tipi başına modülerdir",
+        "Redaksiyon kuralları saf fonksiyonlarla; alımdan önce çalışır",
+        "Sorgu katmanı depo deseniyle soyutlanır"
+      ],
+      "notes": "Alım ve sorgu ayrıştırılır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Alım anahtarları/agent token'ları için secret rotasyonu",
+        "Kaynak başına alım oran sınırlama ve kardinalite limiti",
+        "Pano/uyarı değişiklikleri ve veri dışa aktarma denetim günlüğüne"
+      ],
+      "notes": "Erişim yüzeyi kota ve denetimle korunur."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Zaman serisi (tenant, sinyal, zaman) indeksiyle hızlı sorgu",
+        "Yüksek hacimli izlerde akıllı örnekleme (sampling)",
+        "Sık panolar önbelleklenir; geçmiş veri sayfalanır"
+      ],
+      "notes": "İndeks ve örnekleme gecikmeyi düşürür."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da pano özeti ve aktif uyarı listesi",
+        "iOS/Android (Capacitor) istemcisinde push ile SLO ihlali bildirimi",
+        "Chrome eklentisinden bir servise hızlı pano açma"
+      ],
+      "notes": "Uyarılar mobilde alınır."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Grafik ve durum göstergelerinde 7:1 kontrast; renk yanında ikon/metin",
+        "Grafiklerin tablo/metin alternatifi ekran okuyucuya sunulur",
+        "Pano düzenleme ve uyarı kabul tam klavye desteklidir"
+      ],
+      "notes": "Panolar renge bağımlı değildir."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Observability bileşenleri Swarm/K8s'te HPA ve probe ile koşar",
+        "Alım ve sorgu katmanları bağımsız ölçeklenir; saklama katmanlıdır",
+        "Paylaşımlı barındırmada harici telemetri arka ucuna proxy; saklama kısıtı kabul"
+      ],
+      "notes": "Alım ve sorgu ayrı ölçeklenir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: metrik eşiği aşıldı -> Koşul: SLO ihlali -> Eylem: uyarı oluştur ve bildir",
+        "Uyarılar idempotent; aynı olay tekrar bildirilmez (gruplama/susturma)",
+        "Döngü kırıcı: uyarı tetikleme zinciri en fazla 6 adım"
+      ],
+      "notes": "Uyarı olaya bağlanır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI anomali ve kök neden önerir; düzeltme aksiyonu insan onaylı",
+        "Öneri yetenek kapılı; otomatik müdahale yetkisi açık değildir",
+        "Log/iz içeriği untrusted; talimat olarak yürütülmez",
+        "Anomali modeli sabitlenir; eval'den geçmeden değişmez"
+      ],
+      "notes": "AI kök neden önerir; aksiyon insan onaylı."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Redaksiyon ve uyarı kuralı değerlendirme birim testleri",
+        "Pano/uyarı kurulum kullanıcı yolculuğu için Playwright e2e",
+        "AI-Playwright ile otonom QA; PII sızıntısı ve yanlış pozitif test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "Redaksiyon ve uyarı testleri kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP A09: yeterli ve güvenli telemetri; PII/secret redakte",
+        "OWASP A01: pano/veri erişimi rol ve tenant kapsamıyla",
+        "OWASP LLM06: AI kök neden çıktısında hassas bilgi ifşası önlenir"
+      ],
+      "notes": "Gizlilik ve erişim merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Telemetri cross-cutting observability (cc-obs, cc-obs-deep) ile hizalanır",
+        "Zaman serisi ve akış scale-timeseries ve scale-streaming üzerinden",
+        "Analitik panolar Layer 1 analytics (l1-analytics) ile beslenir"
+      ],
+      "notes": "Gözlemlenebilirlik çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Tüm modüller log/metrik/iz'i bu platforma yollar",
+        "SRE/operasyon ekibi SLO ve uyarıları buradan yönetir",
+        "AI Stack (s-ai) model gecikmesi/maliyeti telemetrisini buraya gönderir"
+      ],
+      "notes": "Observability, sistem sağlığının sahibidir."
     }
   },
   "source": {
@@ -193,5 +315,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

@@ -14,7 +14,13 @@
     "rag",
     "stack"
   ],
-  "dependsOn": [],
+  "dependsOn": [
+    "l1-search",
+    "l1-search-deep",
+    "scale-projections",
+    "k-agent-runtime",
+    "sus-actions"
+  ],
   "blocks": [],
   "related": [
     "s-ai",
@@ -27,164 +33,280 @@
   ],
   "refs": [],
   "criticalPath": false,
-  "status": "backlog",
-  "priority": "medium",
-  "owner": null,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "ai-platform-ekibi",
   "effort": {
-    "estimate": 0,
+    "estimate": 72,
     "unit": "sp",
-    "spent": 0
+    "spent": 12
   },
-  "progress": 0,
-  "phase": "requirements",
+  "progress": 14,
+  "phase": "db-schema",
   "phases": {
     "requirements": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Kaynak bağlayıcı kapsamı (Drive + CMS + dosya) ve indeksleme stratejisi onaylandı",
+        "Yetki-farkında erişim ve alıntı zorunluluğu gereksinimleri kabul edildi",
+        "Relevans ve halüsinasyon eval eşikleri tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Glean/Danswer paritesi taban çizgisi belirlendi."
     },
     "test-plan": {
-      "status": "pending",
-      "criteria": [],
-      "passed": false,
-      "notes": ""
+      "status": "passed",
+      "criteria": [
+        "Yetkisiz belgeye erişim için negatif test seti tanımlandı (test-önce)",
+        "Belge kaynaklı prompt enjeksiyonu test senaryoları belirlendi",
+        "Alıntı doğruluğu ve relevans eval seti planlandı"
+      ],
+      "passed": true,
+      "notes": "Yetki sızıntısı ve enjeksiyon testleri önceden yazıldı."
     },
     "db-schema": {
-      "status": "pending",
-      "criteria": [],
+      "status": "active",
+      "criteria": [
+        "Belge/parça/embedding tabloları tenant_id + RLS ile tasarlanır",
+        "Her parçaya kaynak ve erişim kontrol listesi (ACL) kimliği iliştirilir",
+        "İndeksleme durumu ve sürüm takibi şeması kurulur"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Parça (chunk) ve ACL şeması aktif tasarımda."
     },
     "development": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Bağlayıcılar ve artımlı indeksleme uygulanır",
+        "Yetki-farkında erişim ve alıntılı yanıt motoru geliştirilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Şema kapısı bekleniyor."
     },
     "test-qa": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Yetki sızıntısı negatif testleri yeşil",
+        "Alıntı kapsamı ve relevans eşiği karşılanır",
+        "Soru-yanıt kullanıcı yolculuğu e2e geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Geliştirme sonrası yürütülecek."
     },
     "verification": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "OWASP LLM Top 10 gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi geçer"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Test-QA sonrası."
     },
     "release-maintenance": {
       "status": "pending",
-      "criteria": [],
+      "criteria": [
+        "Kaynak değişiminde yeniden indeksleme ve geri-alma doğrulanır",
+        "Relevans kayması ve erişim ihlali izleme devrede"
+      ],
       "passed": false,
-      "notes": ""
+      "notes": "Doğrulama bekleniyor."
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
-  "rollback": null,
+  "deliverables": [
+    "Kaynak bağlayıcılar (Drive, CMS, dosya) ve artımlı indeksleme hattı",
+    "Erişim-artırımlı yanıt motoru: alıntı (citation) ve kaynak izlenebilirliği",
+    "Yetki-farkında (permission-aware) erişim ve eval/relevans hattı"
+  ],
+  "acceptanceCriteria": [
+    "Her yanıt doğrulanabilir kaynak alıntısıyla üretilir",
+    "Kullanıcı yalnızca erişim yetkisi olan belgelerden yanıt alır (permission-aware retrieval)",
+    "Bilinmeyen bilgi için model \"bilmiyorum\" der; uydurma yapmaz"
+  ],
+  "risks": [
+    {
+      "id": "r-srag-1",
+      "desc": "Yetki sızıntısı: yetkisiz belge içeriğinin yanıta sızması",
+      "severity": "high",
+      "mitigation": "Erişim filtresi vektör sorgusunda zorunlu; tenant + ACL kimliği her parçaya (chunk) iliştirilir."
+    },
+    {
+      "id": "r-srag-2",
+      "desc": "Belge kaynaklı prompt enjeksiyonu",
+      "severity": "high",
+      "mitigation": "Getirilen içerik untrusted sub_prompt; talimat olarak yürütülmez, yalnızca bağlam olarak verilir."
+    }
+  ],
+  "rollback": "İndeksleme ve yanıt yüzeyi bayraklıdır; sorunlu bağlayıcı veya model kapatılarak salt-arama moduna düşülür.",
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "yanit_alinti_kapsam_yuzde",
+      "target": "100"
+    },
+    {
+      "key": "erisim_sizinti_negatif_test_gecme_yuzde",
+      "target": "100"
+    }
+  ],
   "dimensions": {
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Kaynak bağlayıcılar: Drive, CMS ve dosya yüklemeleri için artımlı indeksleme",
+        "Erişim-artırımlı üretim: parçalama (chunking), benzerlik araması ve bağlam birleştirme",
+        "Alıntı ve kaynak izleme: her cümle kaynağa geri bağlanır",
+        "Yetki-farkında erişim: yanıt yalnızca kullanıcının görebildiği belgelerden gelir"
+      ],
+      "notes": "RAG, kurumsal bilgi üzerinde güvenilir yanıt katmanıdır."
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Belge/parça/embedding tablolarında tenant_id RLS zorunlu",
+        "Her parçaya ACL kimliği iliştirilir; erişim filtresi sorguda least-privilege",
+        "Belge yükleme girdileri (tür, boyut, içerik) sunucuda doğrulanır",
+        "Yanıttaki hassas alanlar (PII) çıktı katmanında redaksiyona tabidir"
+      ],
+      "notes": "Erişim yetkisi vektör katmanına kadar taşınır."
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Bağlayıcılar ortak arayüze uyar; yeni kaynak adaptörle eklenir",
+        "Parçalama ve birleştirme saf fonksiyonlarla; test edilebilir",
+        "Erişim filtresi tek noktada uygulanır; yeniden kullanılır"
+      ],
+      "notes": "Erişim ve üretim katmanları ayrıştırılır."
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Model anahtarları için zamanlanmış secret rotasyonu",
+        "Sorgu başına oran sınırlama ve tenant token kotası",
+        "Yanıt servis eden uçlarda CSP ve alıntı bağlantısı doğrulaması"
+      ],
+      "notes": "İçerik sızdırma yüzeyi denetimle daraltılır."
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Vektör araması HNSW/IVF indeksiyle düşük gecikmeli",
+        "Sık sorgular için yanıt ve erişim önbelleği",
+        "Büyük belge kümeleri toplu indekslenir; sonuç sayfalanır"
+      ],
+      "notes": "ANN indeksi ve önbellek erişimi hızlandırır."
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Mobil PWA'da soru-yanıt akış (streaming) ile gösterilir",
+        "iOS/Android (Capacitor) istemcisi alıntıları dokunmatik açar",
+        "Chrome eklentisi açık sekme içeriğini RAG bağlamına ekler"
+      ],
+      "notes": "Soru-yanıt mobilde akışla sunulur."
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Yanıt ve alıntı rozetlerinde 7:1 kontrast",
+        "Kaynak bağlantıları ekran okuyucuya açıklayıcı metinle sunulur",
+        "Soru girişi ve kaynak gezinme tam klavye desteklidir"
+      ],
+      "notes": "Alıntılar erişilebilir biçimde sunulur."
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "RAG servisi Swarm/K8s'te HPA ve probe ile koşar",
+        "İndeksleme worker'ı ayrı dağıtım birimi; GPU node'da embedding üretir",
+        "Paylaşımlı barındırmada harici vektör/model API'sine proxy; yerel kısıt kabul"
+      ],
+      "notes": "İndeksleyici ayrı ölçeklenir."
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Olay: kaynakta belge değişti -> Koşul: erişilebilir tür -> Eylem: yeniden parçala ve indeksle",
+        "Kurallar idempotent; değişmeyen belge yeniden indekslenmez",
+        "Döngü kırıcı: yeniden deneme zinciri en fazla 6 adım"
+      ],
+      "notes": "İndeksleme olaya bağlıdır."
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "AI yalnızca getirilen bağlamdan yanıtlar; kaynak yoksa \"bilmiyorum\" der",
+        "Getirilen belge içeriği untrusted sub_prompt; talimat olarak yürütülmez",
+        "Yanıt üretimi yetenek kapılı ve salt-okunurdur; yan etki yapmaz",
+        "Model sabitlenir; relevans/halüsinasyon eval'inden geçmeden değişmez"
+      ],
+      "notes": "RAG yanıtı uydurmaz; kaynağa dayanır."
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Parçalama, erişim filtresi ve alıntı eşleme birim testleri",
+        "Soru-yanıt kullanıcı yolculuğu için Playwright e2e",
+        "AI-Playwright ile otonom QA; halüsinasyon ve enjeksiyon test seti",
+        "Test döngüsü en fazla 6 yeniden deneme, düzelmezse rapor"
+      ],
+      "notes": "Sızıntı ve halüsinasyon testleri kapıdır."
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "OWASP A01: yetki-farkında erişim ve tenant RLS ile yetkisiz erişim engellenir",
+        "OWASP LLM01: belge kaynaklı prompt enjeksiyonu izolasyonu",
+        "OWASP LLM06: hassas bilgi ifşasına karşı çıktı redaksiyonu"
+      ],
+      "notes": "Erişim kontrolü ve LLM riskleri merkezde."
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Erişim Layer 1 search (l1-search) ve derin arama (l1-search-deep) üzerine oturur",
+        "Yanıt orkestrasyonu kernel ajan çalışma zamanını (k-agent-runtime) tüketir",
+        "Ölçeklenebilir projeksiyonlar (scale-projections) indeks görünümlerini besler"
+      ],
+      "notes": "Arama ve ajan altyapısı çekirdekten gelir."
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": ""
+      "status": "filled",
+      "items": [
+        "Konuşma ArcheType'ı (s-conversational) yanıtları RAG erişimiyle zenginleştirir",
+        "Destek ve operasyon modülleri bilgi tabanı sorgularını RAG'a yönlendirir",
+        "Belge eşleştirme (s-doc-matching) benzer belge bulmada RAG indeksini kullanır"
+      ],
+      "notes": "RAG kurumsal bilgi erişiminin sahibidir."
     }
   },
   "source": {
@@ -194,5 +316,5 @@
     "cluster": "data-intelligence"
   },
   "state": "taslak",
-  "lastUpdated": ""
+  "lastUpdated": "2026-06-17"
 }

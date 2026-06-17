@@ -20,7 +20,7 @@ const STATUS_COLOR: Record<string, string> = {
 export function DashboardView() {
   const meta = useTaskStore((s) => s.meta);
   const tree = useTaskStore((s) => s.tree);
-  const nodes = useTaskStore((s) => s.nodes);
+  const criticalCount = useTaskStore((s) => s.criticalPath.size);
 
   const overall = useMemo(() => {
     if (!tree.length) return 0;
@@ -76,7 +76,7 @@ export function DashboardView() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat icon="ph-list-checks" label={t.dashboard.total} value={String(meta.counts.total)} />
         <Stat icon="ph-mountains" label={t.dashboard.apps} value={String(apps.length)} />
-        <Stat icon="ph-cube" label="Sayfa/Görev" value={String(nodes.length)} />
+        <Stat icon="ph-lightning" label="Kritik yol (düğüm)" value={String(criticalCount)} />
         <Stat icon="ph-gauge" label={t.dashboard.progress} value={`%${overall}`} />
       </div>
 
