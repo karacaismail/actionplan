@@ -16,7 +16,6 @@ if (!window.matchMedia) {
 }
 
 if (!("ResizeObserver" in globalThis)) {
-  // @ts-expect-error test stub
   globalThis.ResizeObserver = class {
     observe() {}
     unobserve() {}

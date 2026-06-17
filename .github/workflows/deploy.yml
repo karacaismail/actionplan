@@ -1,5 +1,6 @@
 # GitHub Pages dağıtım iş akışı — main'e push veya elle tetikleme ile çalışır.
 # Sıra: kur → tipdenetimi → birim test → E2E/axe (dev-server) → Vite üretim derlemesi → deploy.
+# Gateler BLOKLAYICI: tipdenetimi, birim test veya E2E/axe kırmızıysa deploy yapılmaz.
 name: Deploy to GitHub Pages
 
 on:
@@ -31,18 +32,14 @@ jobs:
       - name: Bağımlılıkları kur
         run: npm install --no-audit --no-fund
 
-      # İlk turlarda gateler bilgilendirici (continue-on-error); yeşile ulaşınca bloklayıcı yapılacak.
-      - name: Tip denetimi (bloklamaz)
-        continue-on-error: true
+      - name: Tip denetimi
         run: npm run typecheck
 
-      - name: Birim testleri (bloklamaz)
-        continue-on-error: true
+      - name: Birim testleri
         run: npm test
 
-      # E2E + erişilebilirlik (axe WCAG 2.2 AAA). Dev-server tabanlı (build gerekmez).
-      - name: E2E + axe (bloklamaz)
-        continue-on-error: true
+      # E2E + erişilebilirlik (axe WCAG 2.2). Dev-server tabanlı (build gerekmez).
+      - name: E2E + axe
         run: |
           npx playwright install --with-deps chromium
           npm run test:e2e

@@ -13,7 +13,7 @@ export const NavNodeSchema: z.ZodType<NavNode> = z.lazy(() =>
     wbsCode: z.string().default(""),
     children: z.array(NavNodeSchema).default([]),
   }),
-);
+) as z.ZodType<NavNode>;
 export interface NavNode {
   id: string;
   title: string;

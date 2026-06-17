@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
+import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
 import { getAncestors } from "@/engine";
 import { cn } from "@/lib/cn";
 import { PRIORITY_LABEL, STATUS_LABEL, hslVar, levelLabel, levelVar } from "@/lib/format";

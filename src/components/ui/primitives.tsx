@@ -85,6 +85,7 @@ export function ProgressBar({ value, color }: { value: number; color?: string })
     <div
       className="h-2 w-full overflow-hidden rounded-full bg-secondary"
       role="progressbar"
+      aria-label={`İlerleme %${value}`}
       aria-valuenow={value}
       aria-valuemin={0}
       aria-valuemax={100}

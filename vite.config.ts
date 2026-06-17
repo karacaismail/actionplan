@@ -1,6 +1,7 @@
+/// <reference types="vitest/config" />
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite";
 
 // GitHub Pages alt-yol: https://karacaismail.github.io/actionplan/
 // Yerel geliştirmede "/" kullanılır; CI'da BASE_PATH="/actionplan/" verilir.
