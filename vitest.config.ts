@@ -1,0 +1,25 @@
+/// <reference types="vitest/config" />
+import path from "node:path";
+import { defineConfig } from "vitest/config";
+
+// Vitest ayrı tutulur (vite.config saf vite kalır) — react plugin gerekmez,
+// böylece vitest'in kendi vite kopyasıyla PluginOption tip çakışması olmaz.
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./tests/setup.ts"],
+    include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
+    exclude: ["tests/e2e/**", "node_modules/**"],
+    coverage: {
+      provider: "v8",
+      reportsDirectory: "./coverage",
+      exclude: ["**/*.config.*", "tests/**", "tools/**", "dist/**"],
+    },
+  },
+});
