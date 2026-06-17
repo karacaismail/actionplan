@@ -80,6 +80,21 @@ export function importCSV(text: string): ImportResult {
   const records = parseCSV(text);
   const nodes: TaskNode[] = [];
   records.forEach((rec, i) => {
+    // Tam-fidelity: _node sütunu varsa tüm düğümü oradan kur (14 boyut + 7 faz + kabul/risk dahil).
+    if (rec._node) {
+      try {
+        const full = TaskNodeSchema.safeParse(JSON.parse(rec._node));
+        if (full.success) {
+          nodes.push(full.data);
+          return;
+        }
+        errors.push(`Satır ${i + 2}: ${full.error.issues.map((x) => x.message).join("; ")}`);
+        return;
+      } catch (e) {
+        errors.push(`Satır ${i + 2}: _node JSON ayrıştırılamadı (${(e as Error).message})`);
+        return;
+      }
+    }
     const candidate = {
       id: rec.id,
       wbsCode: rec.wbsCode ?? "",

@@ -98,4 +98,15 @@ const meta = {
 fs.writeFileSync(path.join(GEN, "navigation.json"), `${JSON.stringify(navigation, null, 2)}\n`);
 fs.writeFileSync(path.join(GEN, "index.json"), `${JSON.stringify(index, null, 2)}\n`);
 fs.writeFileSync(path.join(GEN, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
-console.log(`[reindex] ${nodes.length} düğüm, ${filledExample} dolu örnek. index/navigation/meta güncellendi.`);
+
+// Lazy veri: ağır tüm-düğüm aggregate'i statik asset olarak (public/data) yaz.
+// Runtime'da fetch ile çekilir → başlangıç JS paketine girmez.
+const PUB = path.resolve(__dirname, "..", "public", "data");
+fs.mkdirSync(PUB, { recursive: true });
+const ordered = [...nodes].sort((a, b) =>
+  (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }),
+);
+fs.writeFileSync(path.join(PUB, "nodes.json"), JSON.stringify(ordered));
+console.log(
+  `[reindex] ${nodes.length} düğüm, ${filledExample} dolu örnek. index/navigation/meta + public/data/nodes.json güncellendi.`,
+);

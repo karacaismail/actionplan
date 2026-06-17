@@ -22,6 +22,7 @@ const CSV_COLUMNS = [
   "dependsOn",
   "criticalPath",
   "state",
+  "_node",
 ] as const;
 
 function csvEscape(value: string): string {
@@ -50,6 +51,8 @@ export function exportCSV(nodes: TaskNode[]): string {
       n.dependsOn.join("|"),
       String(n.criticalPath),
       n.state,
+      // Tam-fidelity: 14 boyut + 7 faz + kabul/risk/teslimat dahil tüm düğüm JSON olarak.
+      JSON.stringify(n),
     ]
       .map((v) => csvEscape(String(v)))
       .join(","),

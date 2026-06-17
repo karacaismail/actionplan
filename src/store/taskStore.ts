@@ -4,13 +4,15 @@ import {
   buildTree,
   computeCriticalPath,
   indexById,
-  loadDataset,
+  loadMeta,
+  loadNodesAsync,
 } from "@/engine";
 import type { DatasetMeta, NavNode, TaskNode } from "@/schemas";
 import { useSyncExternalStore } from "react";
 
 /**
  * Oturum-içi tek doğruluk kaynağı (hibrit: görüntüleme + düzenleme).
+ * Meta/navigasyon eager; ağır düğüm gövdesi runtime'da lazy fetch (loading bayrağı).
  * Kalıcılık yok — değişiklikler export/import ile taşınır (frontend-only).
  */
 interface State {
@@ -20,14 +22,14 @@ interface State {
   navigation: NavNode[];
   meta: DatasetMeta;
   errors: string[];
-  /** kritik yol üzerindeki düğüm id'leri + ağırlıklı uzunluk */
   criticalPath: Set<string>;
   criticalLength: number;
-  /** düzenleme yapıldıysa true (export uyarısı için) */
   dirty: boolean;
+  /** ağır veri henüz yüklenmediyse true */
+  loading: boolean;
 }
 
-let state: State = init();
+let state: State = emptyState();
 const listeners = new Set<() => void>();
 
 /** Kritik yolu hesaplar ve düğümlere criticalPath bayrağını işler. */
@@ -37,17 +39,27 @@ function applyCritical(nodes: TaskNode[]) {
   return cp;
 }
 
-function init(): State {
-  const ds = loadDataset();
-  const cp = applyCritical(ds.nodes);
-  return { ...ds, dirty: false, criticalPath: cp.ids, criticalLength: cp.length };
+function emptyState(): State {
+  const m = loadMeta();
+  return {
+    nodes: [],
+    index: new Map(),
+    tree: [],
+    navigation: m.navigation,
+    meta: m.meta,
+    errors: m.errors,
+    criticalPath: new Set(),
+    criticalLength: 0,
+    dirty: false,
+    loading: true,
+  };
 }
 
 function emit() {
   for (const l of listeners) l();
 }
 
-function setNodes(nodes: TaskNode[], dirty: boolean) {
+function commit(nodes: TaskNode[], dirty: boolean) {
   const cp = applyCritical(nodes);
   state = {
     ...state,
@@ -57,9 +69,24 @@ function setNodes(nodes: TaskNode[], dirty: boolean) {
     criticalPath: cp.ids,
     criticalLength: cp.length,
     dirty,
+    loading: false,
   };
   emit();
 }
+
+/** Ağır veriyi runtime'da yükler (tarayıcı). jsdom/test'te fetch yoksa çağrılmaz. */
+function bootstrap() {
+  loadNodesAsync()
+    .then(({ nodes, errors }) => {
+      if (errors.length) state = { ...state, errors: [...state.errors, ...errors] };
+      commit(nodes, false);
+    })
+    .catch((e) => {
+      state = { ...state, loading: false, errors: [...state.errors, String(e)] };
+      emit();
+    });
+}
+if (typeof fetch !== "undefined") bootstrap();
 
 export const taskStore = {
   subscribe(listener: () => void) {
@@ -69,33 +96,32 @@ export const taskStore = {
   getSnapshot(): State {
     return state;
   },
-  /** Bir görevi kısmî olarak günceller (oturum-içi). */
   updateNode(id: string, patch: Partial<TaskNode>) {
-    setNodes(
+    commit(
       state.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
       true,
     );
   },
-  /** İçe aktarımı uygular: replace tüm seti değiştirir, merge id'ye göre birleştirir. */
   applyImport(incoming: TaskNode[], mode: "replace" | "merge") {
     if (mode === "replace") {
-      setNodes(incoming, true);
+      commit(incoming, true);
       return;
     }
     const map = new Map(state.nodes.map((n) => [n.id, n]));
     for (const n of incoming) map.set(n.id, n);
-    setNodes([...map.values()], true);
+    commit([...map.values()], true);
   },
-  reset() {
-    state = init();
+  reload() {
+    state = emptyState();
     emit();
+    if (typeof fetch !== "undefined") bootstrap();
   },
 };
 
 export function useTaskStore<T>(selector: (s: State) => T): T {
   return useSyncExternalStore(
     taskStore.subscribe,
-    () => selector(taskStore.getSnapshot()),
-    () => selector(taskStore.getSnapshot()),
+    () => selector(state),
+    () => selector(state),
   );
 }

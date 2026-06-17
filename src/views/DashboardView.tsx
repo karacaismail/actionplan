@@ -1,11 +1,21 @@
-import { EChart } from "@/components/charts/EChart";
 import { Card, Icon, ProgressBar } from "@/components/ui/primitives";
 import { STATUS_LABEL } from "@/lib/format";
 import { LEVEL_META, type WbsLevel } from "@/schemas";
 import { t } from "@/lib/strings";
 import { useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { Suspense, lazy, useMemo } from "react";
+
+// ECharts'i tembel yükle → echarts (~1MB) başlangıç paketinden çıkar.
+const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+
+function ChartFallback() {
+  return (
+    <div className="grid h-[280px] place-items-center text-base text-muted-foreground">
+      Grafik yükleniyor…
+    </div>
+  );
+}
 
 const LEVEL_COLOR = ["#38bdf8", "#2dd4bf", "#a78bfa", "#fbbf24", "#f472b6", "#4ade80", "#cbd5e1"];
 const STATUS_COLOR: Record<string, string> = {
@@ -88,11 +98,15 @@ export function DashboardView() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Card className="p-4">
           <h2 className="mb-2 font-medium">{t.dashboard.byStatus}</h2>
-          <EChart option={statusOption} ariaLabel="Duruma göre görev dağılımı" />
+          <Suspense fallback={<ChartFallback />}>
+            <EChart option={statusOption} ariaLabel="Duruma göre görev dağılımı" />
+          </Suspense>
         </Card>
         <Card className="p-4">
           <h2 className="mb-2 font-medium">{t.dashboard.byLevel}</h2>
-          <EChart option={levelOption} ariaLabel="Seviyeye göre görev dağılımı" />
+          <Suspense fallback={<ChartFallback />}>
+            <EChart option={levelOption} ariaLabel="Seviyeye göre görev dağılımı" />
+          </Suspense>
         </Card>
       </div>
 

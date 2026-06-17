@@ -2,6 +2,7 @@ import { useTheme } from "@/components/theme/useTheme";
 import { Button, Icon } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 import { t } from "@/lib/strings";
+import { useTaskStore } from "@/store/taskStore";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { theme, toggle } = useTheme();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const loading = useTaskStore((s) => s.loading);
 
   // rota değişince mobil çekmeceyi kapat
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +87,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
+          {loading ? (
+            <div className="grid h-full place-items-center text-base text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <Icon name="ph-circle-notch" className="animate-spin text-xl" /> Veri yükleniyor…
+              </span>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

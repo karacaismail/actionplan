@@ -72,6 +72,24 @@ describe("export/import round-trip", () => {
     expect(result.nodes).toEqual([]);
     expect(result.errors.length).toBeGreaterThan(0);
   });
+
+  it("CSV tam-fidelity: _node ile 14 boyut/7 faz/risk round-trip korunur", () => {
+    const full = node({
+      id: "gamma",
+      title: "Gamma",
+      slug: "gamma",
+      wbsCode: "3",
+      dimensions: {
+        featureDefs: { key: "featureDefs", title: "Özellik", status: "filled", items: ["a", "b"], notes: "n" },
+      },
+      deliverables: ["d1", "d2"],
+      risks: [{ id: "r1", desc: "risk", severity: "high", mitigation: "m" }],
+      acceptanceCriteria: ["k1"],
+    });
+    const result = importCSV(exportCSV([full]));
+    expect(result.errors).toEqual([]);
+    expect(result.nodes[0]).toEqual(full); // tam eşitlik (boyut/faz/risk dahil)
+  });
 });
 
 describe("kritik yol", () => {
