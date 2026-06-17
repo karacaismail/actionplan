@@ -5,6 +5,14 @@ export function exportJSON(nodes: TaskNode[]): string {
   return JSON.stringify({ schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes }, null, 2);
 }
 
+/**
+ * Tek bir görevi tam JSON olarak verir (vibecoding prompt'u olarak kullanılır).
+ * Kaynak: düğüm verisinin TAMAMI (DOM değil) → sayfaya bileşen eklense de bozulmaz.
+ */
+export function exportTask(node: TaskNode): string {
+  return JSON.stringify(node, null, 2);
+}
+
 const CSV_COLUMNS = [
   "id",
   "wbsCode",

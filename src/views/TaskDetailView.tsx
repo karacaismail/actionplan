@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
-import { getAncestors } from "@/engine";
+import { downloadFile, exportTask, getAncestors } from "@/engine";
 import { cn } from "@/lib/cn";
 import { PRIORITY_LABEL, STATUS_LABEL, hslVar, levelLabel, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
@@ -69,17 +69,33 @@ export function TaskDetailView() {
 
       {/* Başlık */}
       <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-base text-muted-foreground">{node.wbsCode}</span>
-          <Badge color={color}>
-            <Icon name={node.icon} /> {levelLabel(node.level)}
-          </Badge>
-          <StatusBadge status={node.status} />
-          {node.criticalPath && (
-            <Badge color="hsl(38 92% 62%)">
-              <Icon name="ph-lightning" /> Kritik yol
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-base text-muted-foreground">{node.wbsCode}</span>
+            <Badge color={color}>
+              <Icon name={node.icon} /> {levelLabel(node.level)}
             </Badge>
-          )}
+            <StatusBadge status={node.status} />
+            {node.criticalPath && (
+              <Badge color="hsl(38 92% 62%)">
+                <Icon name="ph-lightning" /> Kritik yol
+              </Badge>
+            )}
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            aria-label="Bu görevi JSON olarak dışa aktar"
+            onClick={() =>
+              downloadFile(
+                `${node.wbsCode || node.id}-${node.id}.json`,
+                exportTask(node),
+                "application/json",
+              )
+            }
+          >
+            <Icon name="ph-export" /> Export this task
+          </Button>
         </div>
         <h1 className="text-2xl font-medium">{node.title}</h1>
         {node.summary && <p className="text-muted-foreground">{node.summary}</p>}
@@ -260,6 +276,26 @@ function Dimensions({ node }: { node: TaskNode }) {
                 </ul>
               )}
               {dim?.notes && <p className="mt-1 text-base text-muted-foreground">{dim.notes}</p>}
+              {dim?.prompt && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-base text-muted-foreground">
+                    <Icon name="ph-sparkle" className="text-primary" /> AI prompt (vibecoding)
+                  </summary>
+                  <div className="mt-1 flex items-start gap-2">
+                    <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
+                      {dim.prompt}
+                    </pre>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Prompt'u kopyala"
+                      onClick={() => navigator.clipboard?.writeText(dim.prompt)}
+                    >
+                      <Icon name="ph-copy" />
+                    </Button>
+                  </div>
+                </details>
+              )}
             </Card>
           );
         })}

@@ -4,6 +4,7 @@ import {
   computeCriticalPath,
   exportCSV,
   exportJSON,
+  exportTask,
   getAncestors,
   importCSV,
   importJSON,
@@ -89,6 +90,12 @@ describe("export/import round-trip", () => {
     const result = importCSV(exportCSV([full]));
     expect(result.errors).toEqual([]);
     expect(result.nodes[0]).toEqual(full); // tam eşitlik (boyut/faz/risk dahil)
+  });
+
+  it("exportTask tek görevi tam JSON verir (round-trip, veriden — DOM değil)", () => {
+    const n = node({ id: "solo", title: "Solo", slug: "solo", wbsCode: "9", owner: "x", progress: 30 });
+    const back = TaskNodeSchema.parse(JSON.parse(exportTask(n)));
+    expect(back).toEqual(n);
   });
 });
 

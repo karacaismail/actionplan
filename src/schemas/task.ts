@@ -120,6 +120,8 @@ export const DimensionSchema = z.object({
   /** Madde listesi — iskelet düğümlerde boş */
   items: z.array(z.string()).default([]),
   notes: z.string().default(""),
+  /** Bu boyutu üretmek için bağlama-özgü AI prompt'u (vibecoding) */
+  prompt: z.string().default(""),
 });
 export type Dimension = z.infer<typeof DimensionSchema>;
 
@@ -247,6 +249,7 @@ export function makeSkeletonDimensions(): Record<DimensionKey, Dimension> {
       status: "skeleton",
       items: [],
       notes: "",
+      prompt: "",
     };
   }
   return out;
