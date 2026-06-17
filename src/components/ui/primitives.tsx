@@ -57,13 +57,14 @@ export function Badge({
   color?: string;
   className?: string;
 }) {
+  // Renk yalnız kenarlık/nokta için; metin daima yüksek-kontrast foreground (WCAG AA/AAA).
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-base",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-base text-foreground",
         className,
       )}
-      style={color ? { borderColor: color, color } : undefined}
+      style={color ? { borderColor: color } : undefined}
     >
       {children}
     </span>
