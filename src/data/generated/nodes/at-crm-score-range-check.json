@@ -1,0 +1,296 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "at-crm-score-range-check",
+  "wbsCode": "6.1.1.1.1.1.2",
+  "level": "atom",
+  "title": "Skor Aralık Kontrolü",
+  "slug": "at-crm-score-range-check",
+  "summary": "Hesaplanan veya verilen lead skorunu 0-100 kapalı aralığına sıkıştıran (clamp) ve aralık ihlalini raporlayan atom. Skorun her zaman geçerli sınırda kalmasını garanti eder.",
+  "parentId": "el-crm-score-field-validator",
+  "order": 2,
+  "icon": "ph-ruler",
+  "tags": [
+    "core-operations",
+    "crm",
+    "atom",
+    "aralik",
+    "skor"
+  ],
+  "dependsOn": [
+    "el-crm-score-field-validator"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [],
+  "criticalPath": true,
+  "status": "done",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 1,
+    "unit": "sp",
+    "spent": 1
+  },
+  "progress": 100,
+  "phase": "release-maintenance",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Geçerli skor aralığı 0-100 kapalı aralık olarak tanımlandı",
+        "Aralık dışı değerin sıkıştırılacağı (clamp) ve raporlanacağı kararlaştırıldı",
+        "Sayısal olmayan girdi davranışı belirlendi"
+      ],
+      "passed": true,
+      "notes": "Aralık sözleşmesi kesinleştirildi."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Sınır değerleri (0, 100, -1, 101) için testler yazıldı (test-önce)",
+        "Sayısal olmayan/NaN girdi davranışı test edildi",
+        "Sıkıştırma sonrası ihlal raporu doğruluğu tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Sınır test seti uygulamadan önce yazıldı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "Atom saf kontrol; şema değişikliği gerektirmez"
+      ],
+      "passed": true,
+      "notes": "Atom durumsuzdur."
+    },
+    "development": {
+      "status": "passed",
+      "criteria": [
+        "Sıkıştırma (clamp) ve ihlal raporlama uygulandı",
+        "NaN/sayısal olmayan girdi güvenli biçimde ele alındı",
+        "Lint ve kod gözden geçirme geçildi"
+      ],
+      "passed": true,
+      "notes": "Atom uygulandı ve gözden geçirildi."
+    },
+    "test-qa": {
+      "status": "passed",
+      "criteria": [
+        "Sınır ve geçersiz girdi testleri yeşil"
+      ],
+      "passed": true,
+      "notes": "Test döngüsü ilk turda yeşil."
+    },
+    "verification": {
+      "status": "passed",
+      "criteria": [
+        "Skorlama çıktısının her zaman 0-100 aralığında olduğu doğrulandı"
+      ],
+      "passed": true,
+      "notes": "Aralık değişmezi (invariant) doğrulandı."
+    },
+    "release-maintenance": {
+      "status": "passed",
+      "criteria": [
+        "Atom doğrulayıcı element ile birlikte yayınlandı"
+      ],
+      "passed": true,
+      "notes": "Üretimde aktif."
+    }
+  },
+  "deliverables": [
+    "0-100 sıkıştırma (clamp) fonksiyonu",
+    "Aralık ihlali raporu",
+    "Sınır ve geçersiz girdi test paketi"
+  ],
+  "acceptanceCriteria": [
+    "Çıktı her zaman 0-100 kapalı aralığındadır",
+    "Aralık dışı girdi sıkıştırılır ve ihlal raporlanır",
+    "Sayısal olmayan/NaN girdi güvenli varsayılana (0) düşer ve raporlanır"
+  ],
+  "risks": [
+    {
+      "id": "r-atrange-1",
+      "desc": "Sessiz sıkıştırma, hatalı skorlama kuralını gizleyebilir",
+      "severity": "low",
+      "mitigation": "Her sıkıştırma ihlal raporuyla loglanır; eşik aşımında uyarı üretilir."
+    }
+  ],
+  "rollback": "Atom sıkıştırma yerine yalnızca uyarı moduna alınabilir; gerekirse önceki sürüme döner.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "aralik_ihlali_orani_yuzde",
+      "target": "< 0.5"
+    },
+    {
+      "key": "calisma_suresi_us",
+      "target": "< 20"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Skoru 0-100 kapalı aralığına sıkıştırma (clamp)",
+        "Aralık ihlali tespiti ve raporlama",
+        "Sayısal olmayan/NaN girdi için güvenli varsayılan (0)",
+        "Saf, durumsuz sayısal kontrol"
+      ],
+      "notes": "Atom skorun sınır değişmezini (invariant) korur."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Atom durumsuz ve tenant'tan bağımsızdır; sızıntı yüzeyi yoktur",
+        "Girdi tipi sayısala zorlanır; beklenmeyen tip güvenli ele alınır",
+        "Yalnızca sayısal aralık kontrolü yapar; yan etki üretmez"
+      ],
+      "notes": "Aralık kontrolü güvenli varsayılan ilkesini uygular."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tek satır clamp: Math.min(100, Math.max(0, x)) deseni",
+        "Saf fonksiyon: (number) -> {value, clamped}",
+        "Sabit sınırlar modül düzeyinde tanımlı"
+      ],
+      "notes": "Atom mümkün olan en küçük, en test edilebilir birimdir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Aralık ihlalleri toplu olarak izlenir; ani artış uyarı tetikler",
+        "Sıkıştırma sessiz değildir; her ihlal raporlanır",
+        "Hesaplama yalnızca sayı ile çalışır; girdi enjeksiyonu olamaz"
+      ],
+      "notes": "Sessiz hata gizlenmesi raporlamayla önlenir."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Sabit zamanlı (O(1)) hesaplama; < 20 mikrosaniye",
+        "Bellek ayırması yok; ilkel (primitive) değerlerle çalışır",
+        "Sıcak yolda dal tahmini (branch prediction) dostu basit karşılaştırma"
+      ],
+      "notes": "Atom skorlama gecikmesine ölçülebilir katkı yapmaz."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Aynı clamp mantığı mobil istemcide skor gösteriminde kullanılır",
+        "Platform bağımsız saf TypeScript fonksiyonu",
+        "Çevrimdışı hesaplanan skor da aynı sınıra tabidir"
+      ],
+      "notes": "İstemci ve sunucu aynı sınır kuralını paylaşır."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Skor değeri metin olarak (0-100) erişilebilir sunulur",
+        "Aralık ihlali uyarısı renkten bağımsız metinle gösterilir",
+        "Skor göstergesi ekran okuyucuya sayısal değer olarak iletilir"
+      ],
+      "notes": "Skorun anlamı görsel olmayan biçimde de erişilebilir."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Doğrulayıcı kütüphanesiyle birlikte paketlenir",
+        "Ayrı servis/probe gerektirmez",
+        "Her ortamda (Swarm/K8s/paylaşımlı) çalışır"
+      ],
+      "notes": "Atom taşınabilir saf koddur."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: skor üretildi -> Koşul: değer 0-100 dışında -> Eylem: sıkıştır ve ihlal raporla",
+        "Kural idempotent; aynı girdi aynı sonucu verir",
+        "Döngü kırıcı: atom tek adım; zincir derinliğine maks 6 içinde katkı sağlar"
+      ],
+      "notes": "Atom, skor zincirinin son sınır kontrolüdür."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI sık aralık ihlalini fark edip kural gözden geçirmesi önerir; uygulamaz",
+        "Sıkıştırma kararı deterministiktir; AI değiştirmez",
+        "Atom AI girdisi almaz; yalnızca sayısal değer işler"
+      ],
+      "notes": "Atom tamamen deterministiktir."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Sınır değerleri (0, 100, -1, 101, 50) için birim testleri",
+        "NaN ve sayısal olmayan girdi davranış testleri",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Sıkıştırma sonrası ihlal raporu doğruluğu test edilir"
+      ],
+      "notes": "Sınır davranışı eksiksiz test edilir."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A04 (Güvensiz Tasarım): güvenli varsayılan ve sınır zorlaması",
+        "OWASP A09 (Günlük/İzleme): ihlaller raporlanır",
+        "Veri bütünlüğü: skor her zaman geçerli aralıkta tutulur"
+      ],
+      "notes": "Atom, veri bütünlüğünü sınır zorlamasıyla korur."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skor alanı doğrulayıcı element tarafından çağrılır",
+        "Skorlama molekülünün çıktısını son adımda sınırlar",
+        "İhlal raporları denetim altyapısına iletilir"
+      ],
+      "notes": "Atom, skor çıktısının son güvencesidir."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Skorlama molekülünün çıktı sınırını garanti eder",
+        "Skor gösteren tüm CRM görünümleri bu sınıra güvenir",
+        "Veri zekâsı kümesi geçerli aralıkta skor verisi alır"
+      ],
+      "notes": "Tüm skor tüketicileri 0-100 garantisinden yararlanır."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "atom",
+    "cluster": "core-operations"
+  },
+  "state": "dogrulanmis",
+  "lastUpdated": "2026-06-17"
+}

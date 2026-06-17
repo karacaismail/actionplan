@@ -1,0 +1,305 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "at-crm-email-regex",
+  "wbsCode": "6.1.1.1.1.1.1",
+  "level": "atom",
+  "title": "E-posta Format Regex",
+  "slug": "at-crm-email-regex",
+  "summary": "Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir.",
+  "parentId": "el-crm-score-field-validator",
+  "order": 1,
+  "icon": "ph-envelope-simple",
+  "tags": [
+    "core-operations",
+    "crm",
+    "atom",
+    "regex",
+    "e-posta"
+  ],
+  "dependsOn": [
+    "el-crm-score-field-validator"
+  ],
+  "blocks": [],
+  "related": [
+    "at-crm-domain-blocklist"
+  ],
+  "refs": [],
+  "criticalPath": true,
+  "status": "done",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 2,
+    "unit": "sp",
+    "spent": 2
+  },
+  "progress": 100,
+  "phase": "release-maintenance",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Desteklenen e-posta biçimi (RFC 5322 pratik alt kümesi) tanımlandı",
+        "Maksimum uzunluk (254 karakter) sınırı belirlendi",
+        "ReDoS güvenliği gereksinimi netleştirildi"
+      ],
+      "passed": true,
+      "notes": "E-posta doğrulama kapsamı sınırlandı; uluslararası alan adı sonraki sürüme bırakıldı."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Geçerli e-postalar (alt+etiketli, çok seviyeli alan adı) için testler yazıldı",
+        "Geçersizler (boşluklu, çift @, eksik TLD) için negatif testler yazıldı",
+        "Aşırı uzun girdi ve ReDoS örüntü testi tanımlandı (test-önce)"
+      ],
+      "passed": true,
+      "notes": "Test seti regex yazımından önce hazırlandı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "Atom saf kontrol; şema değişikliği gerektirmez (kayıt üst seviyede yapılır)"
+      ],
+      "passed": true,
+      "notes": "Atom durumsuzdur; doğrudan veri saklamaz."
+    },
+    "development": {
+      "status": "passed",
+      "criteria": [
+        "ReDoS güvenli regex yazıldı ve önceden derlendi",
+        "Uzunluk üst sınırı kontrolü eklendi",
+        "Lint ve kod gözden geçirme geçildi"
+      ],
+      "passed": true,
+      "notes": "Regex doğrusal zamanlı (linear-time) ve güvenli; gözden geçirildi."
+    },
+    "test-qa": {
+      "status": "passed",
+      "criteria": [
+        "Tüm geçerli/geçersiz e-posta testleri yeşil",
+        "ReDoS örüntü testi makul sürede tamamlanır"
+      ],
+      "passed": true,
+      "notes": "Test döngüsü ilk turda yeşil; ReDoS testi eşik altında."
+    },
+    "verification": {
+      "status": "passed",
+      "criteria": [
+        "Gerçek lead e-posta örnekleminde yanlış ret oranı eşik altında"
+      ],
+      "passed": true,
+      "notes": "Örneklemde yanlış ret oranı kabul edilebilir düzeyde."
+    },
+    "release-maintenance": {
+      "status": "passed",
+      "criteria": [
+        "Regex atomu doğrulayıcı element ile birlikte yayınlandı"
+      ],
+      "passed": true,
+      "notes": "Üretimde aktif; örüntü düzenli gözden geçiriliyor."
+    }
+  },
+  "deliverables": [
+    "ReDoS güvenli e-posta doğrulama regex'i",
+    "Uzunluk sınırı ve hızlı-ret kontrolü",
+    "Geçerli/geçersiz e-posta test paketi"
+  ],
+  "acceptanceCriteria": [
+    "Geçerli RFC 5322 alt küme e-postaları kabul edilir, geçersizler reddedilir",
+    "254 karakteri aşan girdi doğrudan reddedilir",
+    "Regex doğrusal zamanlıdır; ReDoS'a açık değildir"
+  ],
+  "risks": [
+    {
+      "id": "r-atemail-1",
+      "desc": "Aşırı geniş regex geçersiz e-postaları kabul edebilir",
+      "severity": "low",
+      "mitigation": "Regex RFC 5322 pratik alt kümesine sabitlenir ve negatif testlerle kilitlenir."
+    },
+    {
+      "id": "r-atemail-2",
+      "desc": "Karmaşık regex ReDoS (hizmet reddi) riskine açık olabilir",
+      "severity": "medium",
+      "mitigation": "Geri izleme (backtracking) içermeyen örüntü ve uzunluk sınırı kullanılır."
+    }
+  ],
+  "rollback": "Regex önceki sürüme döndürülerek e-posta doğrulama davranışı geri alınır; gerekirse doğrulayıcı esnek moda alınır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "regex_calisma_suresi_us",
+      "target": "< 100"
+    },
+    {
+      "key": "yanlis_ret_orani_yuzde",
+      "target": "< 1"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "RFC 5322 pratik alt kümesine uygun e-posta biçim kontrolü",
+        "Yerel kısım, @ ve etki alanı (domain) yapısının doğrulanması",
+        "254 karakter üst sınırı ve hızlı-ret (fast-fail) kontrolü",
+        "Doğrusal zamanlı, ReDoS güvenli örüntü"
+      ],
+      "notes": "Atom tek bir işi yapar: e-posta biçimini güvenle doğrular."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Girdi uzunluğu üst sınırla kesilerek aşırı veri reddedilir",
+        "Atom durumsuz ve tenant'tan bağımsızdır; veri sızıntısı yüzeyi yoktur",
+        "Yalnızca biçim doğrular; e-posta gönderimi/teslimi iddiası taşımaz"
+      ],
+      "notes": "Biçim doğrulaması, enjeksiyon ve bozuk veri için ilk filtredir."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Regex bir kez derlenir ve modül düzeyinde yeniden kullanılır",
+        "Saf fonksiyon imzası: (string) -> boolean",
+        "Hızlı-ret kontrolleri (uzunluk, @ varlığı) regex'ten önce çalışır"
+      ],
+      "notes": "Atom minimal, yan etkisiz ve yüksek test edilebilir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Geri izlemesiz örüntü ile ReDoS riski ortadan kaldırılır",
+        "Uzunluk sınırı DoS amaçlı dev girdileri engeller",
+        "Hata durumunda ham girdi loglanmaz"
+      ],
+      "notes": "ReDoS ve DoS riskleri örüntü ve sınırla giderilir."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Doğrulama < 100 mikrosaniye; doğrusal zamanlı",
+        "Önceden derlenmiş regex tekrar derleme maliyetini sıfırlar",
+        "Hızlı-ret ile çoğu geçersiz girdi regex'e ulaşmadan elenir"
+      ],
+      "notes": "Atom skorlama gecikmesine etki etmeyecek kadar hızlıdır."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Aynı regex mobil formda istemci ön-kontrolünde kullanılır",
+        "Geçersiz e-posta mobilde anında geri bildirimle gösterilir",
+        "Atom platformdan bağımsız saf TypeScript fonksiyonudur"
+      ],
+      "notes": "İstemci ve sunucu aynı atomu paylaşır."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Geçersiz e-posta mesajı açık dille ve renkten bağımsız sunulur",
+        "Hata, e-posta alanına aria-describedby ile bağlanır",
+        "Hata canlı bölgede ekran okuyucuya duyurulur"
+      ],
+      "notes": "Atom çıktısı erişilebilir hata mesajını besler."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Atom doğrulayıcı kütüphanesinin parçası olarak paketlenir",
+        "Ayrı servis/probe gerektirmez; saf koddur",
+        "Paylaşımlı barındırma dahil her ortamda çalışır"
+      ],
+      "notes": "Atom her dağıtım hedefinde taşınabilir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: e-posta alanı doğrulanıyor -> Koşul: regex eşleşmiyor -> Eylem: geçersiz işaretle ve neden döndür",
+        "Kural idempotent; aynı girdi aynı sonucu verir",
+        "Döngü kırıcı: atom tek adımdır; zincire katkısı sınırlıdır (maks 6 içinde)"
+      ],
+      "notes": "Atom, doğrulama zincirinin en küçük kararıdır."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI geçersiz e-posta için olası düzeltme önerir; düzeltmeyi insan uygular",
+        "Doğrulama kararı deterministik regex'tedir; AI değiştirmez",
+        "AI önerisi e-posta içeriğini talimat olarak işlemez (untrusted)"
+      ],
+      "notes": "Doğrulama AI'dan bağımsızdır; AI yalnızca öneri verir."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Geçerli (alt+etiketli, çok seviyeli domain) ve geçersiz (boşluk, çift @, eksik TLD) birim testleri",
+        "Aşırı uzun girdi ve ReDoS örüntü süre testi",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Sınır değerleri (boş string, tek karakter, 254/255 uzunluk) kapsanır"
+      ],
+      "notes": "Atom davranışı kapsamlı sınır testleriyle kilitlenir."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 (Enjeksiyon): biçim doğrulaması girdi yüzeyini daraltır",
+        "ReDoS: geri izlemesiz örüntü ile hizmet reddi engellenir",
+        "OWASP A04 (Güvensiz Tasarım): uzunluk sınırı ve hızlı-ret varsayılanı"
+      ],
+      "notes": "Atom, OWASP girdi doğrulama önerileriyle uyumludur."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skor alanı doğrulayıcı element tarafından çağrılır",
+        "Alan adı blok listesi atomuyla (at-crm-domain-blocklist) zincirlenir",
+        "Aynı atom lead formu istemci ön-kontrolünde kullanılır"
+      ],
+      "notes": "Atom, doğrulama zincirinin ilk biçim kontrolüdür."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Lead Yönetimi taşının e-posta giriş doğrulamasını besler",
+        "Tekilleştirme molekülü normalize öncesi geçerlilik kontrolü için kullanır",
+        "Tüm CRM e-posta girişleri bu atomu yeniden kullanır"
+      ],
+      "notes": "E-posta doğrulama tek atomda merkezîleştirildi."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "atom",
+    "cluster": "core-operations"
+  },
+  "state": "dogrulanmis",
+  "lastUpdated": "2026-06-17"
+}

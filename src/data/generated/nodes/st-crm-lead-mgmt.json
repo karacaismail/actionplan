@@ -1,0 +1,307 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "st-crm-lead-mgmt",
+  "wbsCode": "6.1.1.1",
+  "level": "stone",
+  "title": "Lead Yönetimi",
+  "slug": "st-crm-lead-mgmt",
+  "summary": "Lead yakalama, niteleme (qualification), atama ve skorlama yaşam döngüsünü kapsayan CRM taşı. Lead skorlama kuralları bu taşın çekirdeğidir.",
+  "parentId": "s-crm",
+  "order": 1,
+  "icon": "ph-user-focus",
+  "tags": [
+    "core-operations",
+    "crm",
+    "stone",
+    "lead"
+  ],
+  "dependsOn": [
+    "s-crm"
+  ],
+  "blocks": [],
+  "related": [
+    "l1-party"
+  ],
+  "refs": [],
+  "criticalPath": true,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 34,
+    "unit": "sp",
+    "spent": 16
+  },
+  "progress": 45,
+  "phase": "development",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Lead yaşam döngüsü durumları (yeni, nitelikli, atanmış, dönüştürülmüş, kayıp) tanımlandı",
+        "Lead kaynakları ve zorunlu alanlar (e-posta, ad, firma) belirlendi",
+        "Skorlama girdileri ve eşik kuralları paydaşlarca onaylandı"
+      ],
+      "passed": true,
+      "notes": "Lead yaşam döngüsü ve skorlama girdileri donduruldu."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Lead oluşturma/niteleme/atama için kabul testleri yazıldı (test-önce)",
+        "Skorlama eşik ve sınır değer test senaryoları tanımlandı",
+        "Zorunlu alan doğrulama negatif testleri belirlendi"
+      ],
+      "passed": true,
+      "notes": "Test planı geliştirme öncesi onaylandı; test-önce sağlandı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "lead tablosu tenant_id + RLS, durum ve skor alanlarıyla tasarlandı",
+        "Skor geçmişi ve atama denetim alanları eklendi",
+        "(tenant_id, durum, skor) bileşik indeksi planlandı"
+      ],
+      "passed": true,
+      "notes": "Lead şeması skorlama ve atama akışını destekler."
+    },
+    "development": {
+      "status": "active",
+      "criteria": [
+        "Lead CRUD, niteleme ve atama akışları çalışır",
+        "Skorlama molekülleri entegre edilir",
+        "Lint ve kod gözden geçirme kapıları geçilir"
+      ],
+      "passed": false,
+      "notes": "Lead skorlama molekülü entegrasyonu sürüyor."
+    },
+    "test-qa": {
+      "status": "active",
+      "criteria": [
+        "Lead yaşam döngüsü e2e yeşil",
+        "Skorlama eşik testleri geçer",
+        "Cross-tenant negatif testleri geçer"
+      ],
+      "passed": false,
+      "notes": "Yaşam döngüsü e2e büyük ölçüde yeşil; skorlama testleri tamam."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Erişilebilirlik ve güvenlik denetimleri taş kapsamında geçer"
+      ],
+      "passed": false,
+      "notes": "Test-QA tamamlanınca yapılacak."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Lead skorlama kuralları sürüm etiketiyle yayınlanır"
+      ],
+      "passed": false,
+      "notes": "Doğrulama kapısı bekleniyor."
+    }
+  },
+  "deliverables": [
+    "Lead yaşam döngüsü API ve durum makinesi",
+    "Lead skorlama kuralları (molekül) entegrasyonu",
+    "Lead atama ve denetim akışı"
+  ],
+  "acceptanceCriteria": [
+    "Lead, kaynaktan kazanıma kadar durum makinesiyle ilerler",
+    "Her lead deterministik ve açıklanabilir skor alır",
+    "Zorunlu alan ve format doğrulamaları sunucuda zorunludur"
+  ],
+  "risks": [
+    {
+      "id": "r-stlead-1",
+      "desc": "Geçersiz lead verisi (hatalı e-posta) skorlama ve iletişimi bozabilir",
+      "severity": "medium",
+      "mitigation": "E-posta/telefon format doğrulayıcıları girişte zorunlu kılınır."
+    },
+    {
+      "id": "r-stlead-2",
+      "desc": "Yanlış atama satış verimini düşürebilir",
+      "severity": "low",
+      "mitigation": "Atama kuralları sürümlenir ve denetim günlüğüne yazılır."
+    }
+  ],
+  "rollback": "Lead skorlama molekülü bayrakla devre dışı bırakılarak lead yönetimi temel akışa döner; skor kural sürümü geri alınır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "lead_dogrulama_hata_orani",
+      "target": "< 1"
+    },
+    {
+      "key": "skorlama_gecikme_ms",
+      "target": "< 200"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Lead yakalama: web formu, içe aktarım ve eklenti kaynaklı lead oluşturma",
+        "Lead niteleme: zorunlu alanlar ve uygunluk kontrolüyle nitelikli lead'e geçiş",
+        "Lead atama: kural tabanlı sahip ataması ve yeniden atama",
+        "Lead skorlama: kurallara dayalı, 0-100 aralığında açıklanabilir skor"
+      ],
+      "notes": "Skorlama, lead yaşam döngüsünü besleyen çekirdek molekülde tanımlanır."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "lead tablosunda tenant_id RLS zorunlu",
+        "Lead atama yalnızca yetkili rol tarafından değiştirilebilir (least-privilege)",
+        "Lead girdileri (e-posta, telefon) sunucuda format doğrulamasından geçer"
+      ],
+      "notes": "Lead iletişim verisi maskelenerek loglanır."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Lead durum geçişleri tek bir durum makinesinde merkezîleştirilir",
+        "Doğrulayıcılar ve skorlama saf fonksiyon olarak izole edilir",
+        "Atama kuralı strateji deseniyle (strategy pattern) genişletilebilir"
+      ],
+      "notes": "İş kuralları UI ve veri katmanından ayrıştırıldı."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Toplu lead içe aktarımında satır kotası ve oran sınırlama",
+        "Lead dışa aktarımı yetki + denetim günlüğüyle koşullanır",
+        "Form kaynaklı lead'lerde bot koruması (rate-limit + doğrulama)"
+      ],
+      "notes": "Otomatik lead akışları kötüye kullanıma karşı sınırlanır."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "(tenant_id, durum, skor) bileşik indeksiyle hızlı lead listeleme",
+        "Lead listesi imleç tabanlı sayfalama kullanır",
+        "Skorlama, lead kaydından sonra asenkron kuyrukta hesaplanır"
+      ],
+      "notes": "Skorlama istek yolunu bloke etmez."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobilde hızlı lead oluşturma formu dokunmatik için optimize (PWA)",
+        "Capacitor paketinde lead listesi çevrimdışı okunur",
+        "Chrome eklentisinden web sayfasından lead yakalama"
+      ],
+      "notes": "Saha lead yakalama mobil senaryosu desteklenir."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Lead formu alanlarında etiket-alan ilişkisi ve 7:1 kontrast",
+        "Doğrulama hataları aria-describedby ile alana bağlanır ve duyurulur",
+        "Lead listesi klavye ile tam gezilebilir ve sıralanabilir"
+      ],
+      "notes": "Form hataları erişilebilir biçimde sunulur."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Lead servisi CRM dağıtım birimiyle Swarm/K8s'te koşar (probe + limit)",
+        "Skorlama worker'ı kuyruk derinliğine göre HPA ile ölçeklenir",
+        "Paylaşımlı barındırmada lead formu statik + harici API'ye gönderir"
+      ],
+      "notes": "Skorlama kuyruğu yük altında bağımsız ölçeklenir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: yeni lead oluşturuldu -> Koşul: skor henüz yok -> Eylem: skorlama işini kuyruğa al",
+        "Kural idempotent; aynı lead için tek skorlama işi sıraya alınır",
+        "Döngü kırıcı: skor güncelleme -> atama -> bildirim zinciri en fazla 6 adım"
+      ],
+      "notes": "Skorlama tetikleyici idempotency anahtarıyla korunur."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI lead niteleme için soru önerir; lead durumunu insan onayıyla değiştirir",
+        "Skor açıklaması üretimi salt-okunur ve yetenek kapılıdır",
+        "Lead notundaki serbest metin güvenilmez; ajan talimatı olarak işlenmez"
+      ],
+      "notes": "AI yalnızca öneri üretir; durum geçişini insan onaylar."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Lead durum makinesi geçişleri için birim testleri",
+        "Lead yakalama -> niteleme -> atama yolculuğu için Playwright e2e",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Otonom QA ajanı lead akışını regresyon turunda doğrular"
+      ],
+      "notes": "Lead yaşam döngüsü kritik yol olarak sürekli test edilir."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: lead atama yetkisi rol ve tenant ile sınırlanır",
+        "OWASP A03: lead arama parametreli sorgu ile enjeksiyondan korunur",
+        "OWASP LLM01: lead notu kaynaklı istem enjeksiyonu izole edilir"
+      ],
+      "notes": "Lead girdi yüzeyi enjeksiyona karşı doğrulanır."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Nitelikli lead, Layer 1 party (l1-party) kaydına eşlenir",
+        "Lead atama bildirimleri çekirdek bildirim servisini kullanır",
+        "Skor olayları event bus üzerinden yayınlanır"
+      ],
+      "notes": "Lead, party çekirdeğiyle çift yönlü eşlenir."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "CRM ve Satış modülünün lead havuzunu besler",
+        "Pazarlama kümesi kampanya yanıtlarını lead olarak buraya yazar",
+        "Satış ArcheType'ı nitelikli lead'i fırsata dönüştürür"
+      ],
+      "notes": "Lead havuzu, satış hattının üst kaynağıdır."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "orta-tas",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-17"
+}

@@ -1,0 +1,19 @@
+/**
+ * Engine — JSON-as-DB veri setini yükleyen, doğrulayan, ağaçlayan ve
+ * dışa/içe aktaran UI-bağımsız çekirdek. UI yalnız bu API'yi tüketir.
+ */
+export { buildTree, flattenTree } from "./buildTree";
+export type { TreeNode, Rollup } from "./buildTree";
+export { loadDataset, resetDatasetCache } from "./loadData";
+export type { Dataset } from "./loadData";
+export {
+  indexById,
+  getChildren,
+  getAncestors,
+  getDescendants,
+  deriveBlocks,
+} from "./resolve";
+export type { NodeIndex } from "./resolve";
+export { exportJSON, exportCSV, downloadFile, CSV_COLUMNS } from "./exportData";
+export { importJSON, importCSV, parseCSV } from "./importData";
+export type { ImportResult } from "./importData";

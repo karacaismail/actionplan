@@ -1,0 +1,297 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "el-crm-score-weight-config",
+  "wbsCode": "6.1.1.1.1.2",
+  "level": "element",
+  "title": "Skor Ağırlık Yapılandırması",
+  "slug": "el-crm-score-weight-config",
+  "summary": "Lead skorlama sinyallerinin ağırlıklarını sürümlenebilir biçimde tanımlayan ve toplam ağırlık tutarlılığını doğrulayan element. Skor davranışını koda dokunmadan ayarlamayı sağlar.",
+  "parentId": "mol-crm-lead-scoring",
+  "order": 2,
+  "icon": "ph-sliders",
+  "tags": [
+    "core-operations",
+    "crm",
+    "element",
+    "yapilandirma"
+  ],
+  "dependsOn": [
+    "mol-crm-lead-scoring"
+  ],
+  "blocks": [],
+  "related": [
+    "el-crm-score-field-validator"
+  ],
+  "refs": [],
+  "criticalPath": false,
+  "status": "in-progress",
+  "priority": "medium",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 5,
+    "unit": "sp",
+    "spent": 2
+  },
+  "progress": 40,
+  "phase": "development",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Ağırlık yapılandırma alanları (sinyal -> ağırlık) tanımlandı",
+        "Toplam ağırlık ve aralık kısıtları belirlendi",
+        "Sürümleme ve yalnızca yetkili rolce değişiklik kuralı onaylandı"
+      ],
+      "passed": true,
+      "notes": "Ağırlık yapılandırma sözleşmesi onaylandı."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Geçersiz ağırlık (negatif, toplam ihlali) için testler yazıldı (test-önce)",
+        "Sürüm değişiminde geçmiş skorların korunduğu doğrulanır",
+        "Yetkisiz değişiklik reddi test edilir"
+      ],
+      "passed": true,
+      "notes": "Test planı geliştirme öncesi yazıldı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "weight_config ve rule_version tabloları tenant_id + RLS ile tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Ağırlık yapılandırması sürümlenerek saklanır."
+    },
+    "development": {
+      "status": "active",
+      "criteria": [
+        "Ağırlık yapılandırma okuma/yazma ve doğrulama uygulanır",
+        "Toplam ağırlık tutarlılığı zorunlu kılınır",
+        "Lint ve kod gözden geçirme geçilir"
+      ],
+      "passed": false,
+      "notes": "Yapılandırma doğrulama mantığı geliştiriliyor."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Geçersiz ağırlık reddi testleri yeşil"
+      ],
+      "passed": false,
+      "notes": "Geliştirme sonrası."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Ağırlık değişiminin skoru beklenen yönde etkilediği doğrulanır"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Ağırlık yapılandırması rule_version ile yayınlanır"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    }
+  },
+  "deliverables": [
+    "Sürümlenebilir skor ağırlık yapılandırması",
+    "Toplam ağırlık tutarlılık doğrulaması",
+    "Yetkili değişiklik ve denetim akışı"
+  ],
+  "acceptanceCriteria": [
+    "Ağırlıklar negatif olamaz ve toplam tutarlılık kuralını ihlal edemez",
+    "Yapılandırma değişikliği yeni rule_version üretir; geçmiş skorlar korunur",
+    "Yalnızca yetkili rol ağırlıkları değiştirebilir ve değişiklik denetlenir"
+  ],
+  "risks": [
+    {
+      "id": "r-elw-1",
+      "desc": "Yanlış ağırlık ayarı skor dağılımını bozabilir",
+      "severity": "medium",
+      "mitigation": "Değişiklik öncesi simülasyon (dry-run) ve sürümle geri alma sağlanır."
+    }
+  ],
+  "rollback": "Ağırlık yapılandırması önceki rule_version'a döndürülerek skor davranışı anında geri alınır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "yapilandirma_dogrulama_hata_orani",
+      "target": "< 1"
+    },
+    {
+      "key": "agirlik_toplam_ihlali_sayisi",
+      "target": "0"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Sinyal -> ağırlık eşlemesi yapılandırması (firmografik, davranışsal)",
+        "Toplam ağırlık tutarlılık doğrulaması",
+        "Sürümleme: her değişiklik yeni rule_version üretir",
+        "Değişiklik öncesi simülasyon (dry-run) ile skor etkisi önizlemesi"
+      ],
+      "notes": "Skor davranışı koda dokunmadan yapılandırmayla ayarlanır."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "weight_config tablosu tenant_id RLS ile korunur",
+        "Ağırlık değişikliği yalnızca yetkili rolce yapılır (least-privilege)",
+        "Yapılandırma değerleri (negatif/aralık dışı reddi) sunucuda doğrulanır"
+      ],
+      "notes": "Yapılandırma değişikliği yetki ve doğrulamaya tabidir."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Yapılandırma değişmez (immutable) nesne olarak okunur; sürümle değişir",
+        "Doğrulama saf fonksiyon olarak izole edilir",
+        "Skorlama, ağırlığı yapılandırmadan enjeksiyonla (DI) alır"
+      ],
+      "notes": "Ağırlık, skorlama koduna sabit gömülmez."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Yapılandırma değişiklikleri denetim günlüğüne yazılır (kim, ne zaman, ne)",
+        "Toplu skor yeniden hesaplama oran sınırlamayla tetiklenir",
+        "Simülasyon üretim verisini değiştirmez (salt-okunur)"
+      ],
+      "notes": "Değişiklikler izlenebilir ve geri alınabilir."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Aktif ağırlık yapılandırması bellek içinde önbelleğe alınır",
+        "Sürüm değişiminde önbellek hedefli geçersizleştirilir",
+        "Simülasyon örneklem üzerinde çalışır; tüm veriyi taramaz"
+      ],
+      "notes": "Ağırlık okuma sıcak yolda I/O üretmez."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Ağırlık yapılandırma ekranı yöneticiler için duyarlı (responsive) sunulur",
+        "Mobilde yalnızca salt-okunur görüntüleme önceliklenir",
+        "Simülasyon sonucu mobilde özetle gösterilir"
+      ],
+      "notes": "Ağırlık düzenleme ağırlıklı masaüstü senaryosudur."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Ağırlık girdileri etiketli ve 7:1 kontrastlı",
+        "Toplam ağırlık hatası alana bağlı ve canlı bölgede duyurulur",
+        "Kaydırıcı (slider) yerine erişilebilir sayısal girdi alternatifi sunulur"
+      ],
+      "notes": "Yapılandırma formu klavye ve ekran okuyucu dostudur."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Yapılandırma servisi CRM dağıtım birimiyle koşar (probe + limit)",
+        "Sürüm değişikliği yeniden başlatma gerektirmez (sıcak yükleme)",
+        "Paylaşımlı barındırmada yapılandırma harici API'den okunur"
+      ],
+      "notes": "Ağırlık değişikliği kesintisiz uygulanır."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: yeni rule_version yayınlandı -> Koşul: toplu yeniden skorlama açık -> Eylem: yeniden skorlama işini kuyruğa al",
+        "Kural idempotent; aynı sürüm için tek yeniden skorlama tetiklenir",
+        "Döngü kırıcı: sürüm->yeniden skorlama zinciri en fazla 6 adım"
+      ],
+      "notes": "Sürüm değişimi kontrollü yeniden skorlama tetikler."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI veri eğilimine göre ağırlık ayarı önerir; değişikliği insan onaylar",
+        "AI önerisi simülasyonla doğrulanmadan yayınlanmaz",
+        "Yapılandırma girdileri serbest metin değil; tipli ve doğrulanır"
+      ],
+      "notes": "AI ağırlık önerir; uygulama insan onaylıdır."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Negatif/aralık dışı ağırlık reddi için birim testleri",
+        "Toplam ağırlık tutarlılık testleri",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Sürüm değişiminde geçmiş skorların değişmediği doğrulanır"
+      ],
+      "notes": "Yapılandırma değişmezleri testlerle korunur."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: ağırlık değişikliği yetkisi rol ve tenant ile sınırlı",
+        "OWASP A08 (Veri Bütünlüğü): sürümleme ile yapılandırma bütünlüğü korunur",
+        "OWASP A09 (Günlük/İzleme): değişiklikler denetlenir"
+      ],
+      "notes": "Yapılandırma değişikliği bütünlük ve izlemeyle korunur."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skorlama molekülüne aktif ağırlık setini sağlar",
+        "Sürüm değişiklikleri event bus'a yayınlanır",
+        "Denetim altyapısına değişiklik kaydı yazar"
+      ],
+      "notes": "Yapılandırma, skorlamanın davranış kaynağıdır."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Skorlama molekülünün ağırlık kaynağıdır",
+        "Satış yöneticisi ağırlıkları portföy stratejisine göre ayarlar",
+        "Veri zekâsı kümesi sürüm bazlı skor analizini bu yapılandırmayla ilişkilendirir"
+      ],
+      "notes": "Ağırlık yapılandırması skor stratejisini yönetir."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "toz-tanesi",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-17"
+}

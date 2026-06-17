@@ -1,0 +1,295 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "mol-crm-lead-dedup",
+  "wbsCode": "6.1.1.1.2",
+  "level": "molecule",
+  "title": "Lead Tekilleştirme Kuralı",
+  "slug": "mol-crm-lead-dedup",
+  "summary": "Normalize edilmiş e-posta ve telefon üzerinden olası tekrar (duplicate) lead kayıtlarını saptayıp birleştirme önerisi üreten molekül. Veri kalitesini korur.",
+  "parentId": "st-crm-lead-mgmt",
+  "order": 2,
+  "icon": "ph-copy-simple",
+  "tags": [
+    "core-operations",
+    "crm",
+    "molecule",
+    "veri-kalitesi"
+  ],
+  "dependsOn": [
+    "st-crm-lead-mgmt"
+  ],
+  "blocks": [],
+  "related": [
+    "mol-crm-lead-scoring"
+  ],
+  "refs": [],
+  "criticalPath": false,
+  "status": "todo",
+  "priority": "medium",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 10,
+  "phase": "test-plan",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Tekilleştirme anahtarları (normalize e-posta, telefon) belirlendi",
+        "Eşleşme eşiği ve birleştirme önerisi davranışı tanımlandı",
+        "Otomatik birleştirme değil, insan onaylı birleştirme kararı verildi"
+      ],
+      "passed": true,
+      "notes": "Tekilleştirme insan onayı gerektiren öneri olarak tanımlandı."
+    },
+    "test-plan": {
+      "status": "active",
+      "criteria": [
+        "Aynı e-posta/telefon için tekrar saptama testleri yazılır (test-önce)",
+        "Yanlış pozitif (false positive) sınır testleri tanımlanır",
+        "Birleştirme önerisinin veriyi bozmadığı doğrulanır"
+      ],
+      "passed": false,
+      "notes": "Test planı yazımı sürüyor; geliştirme henüz başlamadı (test-önce)."
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "Normalize e-posta/telefon için indeks tanımlanır",
+        "Birleştirme (merge) ilişki ve denetim alanı eklenir"
+      ],
+      "passed": false,
+      "notes": "Test planı tamamlanınca şema kesinleşecek."
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Eşleşme saptama ve birleştirme önerisi uygulanır"
+      ],
+      "passed": false,
+      "notes": "Test planı kapısı bekleniyor (test-önce)."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Tekrar saptama doğruluk testleri yeşil"
+      ],
+      "passed": false,
+      "notes": "Geliştirme sonrası."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Birleştirme önerisi veri bütünlüğünü korur"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Tekilleştirme kuralı kademeli açılır"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    }
+  },
+  "deliverables": [
+    "Normalize anahtarla tekrar lead saptama",
+    "İnsan onaylı birleştirme önerisi akışı",
+    "Birleştirme denetim kaydı"
+  ],
+  "acceptanceCriteria": [
+    "Aynı normalize e-posta/telefonlu lead'ler tekrar olarak işaretlenir",
+    "Birleştirme önerisi otomatik uygulanmaz; insan onayı gerekir",
+    "Birleştirme işlemi tersine izlenebilir denetim kaydı bırakır"
+  ],
+  "risks": [
+    {
+      "id": "r-moldedup-1",
+      "desc": "Yanlış pozitif eşleşme farklı kişileri birleştirebilir",
+      "severity": "high",
+      "mitigation": "Birleştirme otomatik değil; her zaman insan onayına sunulur."
+    }
+  ],
+  "rollback": "Tekilleştirme molekülü bayrakla kapatıldığında lead'ler tekrar kontrolü olmadan oluşturulur; yanlış birleştirme denetim kaydından geri alınabilir.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "yanlis_pozitif_orani",
+      "target": "< 2"
+    },
+    {
+      "key": "tekrar_saptama_geri_cagirma_yuzde",
+      "target": ">= 90"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Normalize e-posta (küçük harf, nokta/etiket sadeleştirme) ve E.164 telefonla eşleşme",
+        "Olası tekrarlar için birleştirme önerisi listesi",
+        "İnsan onaylı birleştirme; otomatik birleştirme yapılmaz"
+      ],
+      "notes": "Tekilleştirme önerir, kullanıcı karar verir."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Eşleşme aramaları tenant_id RLS bağlamında çalışır",
+        "Birleştirme yalnızca yetkili rolce onaylanır (least-privilege)",
+        "Normalize anahtarlar loglarda maskelenir"
+      ],
+      "notes": "Tekrar arama tenant sınırını aşmaz."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Normalizasyon saf fonksiyonlar olarak izole edilir (element doğrulayıcılarla paylaşılır)",
+        "Eşleşme sorgusu indeks dostu normalize kolon üzerinden çalışır",
+        "Birleştirme mantığı işlem (transaction) içinde atomik yürütülür"
+      ],
+      "notes": "Normalizasyon kodu element seviyesiyle yeniden kullanılır."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Toplu tekilleştirme taraması oran sınırlamayla çalışır",
+        "Birleştirme işlemleri denetim günlüğüne yazılır",
+        "Birleştirme geri alma (undo) penceresi tanımlanır"
+      ],
+      "notes": "Yanlış birleştirme kısa pencerede geri alınabilir."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Normalize e-posta/telefon kolonlarında indeksle hızlı eşleşme",
+        "Toplu tarama parçalı (chunked) ve kuyrukta çalışır",
+        "Eşleşme adayları sayfalanarak sunulur"
+      ],
+      "notes": "Tarama istek yolunu bloke etmez."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Olası tekrar uyarısı lead oluştururken mobilde gösterilir",
+        "Birleştirme önerisi mobilde onaylanabilir (PWA)",
+        "Çevrimdışı oluşturulan lead, çevrimiçi olunca tekrar kontrolünden geçer"
+      ],
+      "notes": "Mobil lead oluşturmada erken tekrar uyarısı verilir."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Tekrar uyarısı metinle açık biçimde sunulur (renk tek başına değil)",
+        "Birleştirme önerisi listesi klavye ile gezilebilir",
+        "Onay diyaloğu odak tuzağı (focus trap) ve kaçış (Esc) destekler"
+      ],
+      "notes": "Birleştirme onayı erişilebilir diyalogla yapılır."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Tekilleştirme taraması worker olarak Swarm/K8s'te koşar (probe + limit)",
+        "Toplu tarama düşük öncelikli kuyrukta planlanır",
+        "Paylaşımlı barındırmada tarama harici API tarafında çalışır"
+      ],
+      "notes": "Tarama düşük öncelikli arka plan işidir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: yeni lead oluşturuldu -> Koşul: normalize anahtar mevcut lead'le eşleşiyor -> Eylem: birleştirme önerisi üret",
+        "Kural idempotent; aynı çift için tek öneri açılır",
+        "Döngü kırıcı: birleştirme tetik zinciri en fazla 6 adım"
+      ],
+      "notes": "Aynı çift için tekrar öneri üretilmez."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI olası eşleşmeleri sıralar ve gerekçeyi önerir; birleştirmeyi insan onaylar",
+        "Birleştirme kararı asla otomatik yürütülmez (capability-gated)",
+        "Lead alan verisi serbest metin olarak güvenilmez sayılır"
+      ],
+      "notes": "Birleştirme her zaman insan onayına tabidir."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Aynı/benzer e-posta-telefon için tekrar saptama birim testleri",
+        "Yanlış pozitif sınır senaryoları için testler",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Birleştirme sonrası veri bütünlüğü e2e ile doğrulanır"
+      ],
+      "notes": "Yanlış pozitif riski testlerle sınırlanır."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: birleştirme yetkisi rol ve tenant ile sınırlı",
+        "OWASP A04: yanlış pozitife karşı insan onayı tasarıma gömülü",
+        "OWASP A09 (Günlük/İzleme): birleştirme denetim günlüğüne yazılır"
+      ],
+      "notes": "Birleştirme güvenli tasarım ilkesiyle insan onaylıdır."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Birleştirilen lead, party (l1-party) eşlemesini korur",
+        "Birleştirme olayı event bus'a yayınlanır",
+        "Normalizasyon, element doğrulayıcılarla aynı kuralı paylaşır"
+      ],
+      "notes": "Party eşlemesi birleştirmede bozulmadan taşınır."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Lead Yönetimi taşının veri kalitesini korur",
+        "Pazarlama, tekrarsız lead havuzundan segment üretir",
+        "Skorlama, birleşik tek lead üzerinde tutarlı skor hesaplar"
+      ],
+      "notes": "Tekilleştirme, skorlamanın girdi kalitesini yükseltir."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "kucuk-tas",
+    "cluster": "core-operations"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-06-17"
+}

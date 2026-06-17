@@ -1,0 +1,302 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "at-crm-domain-blocklist",
+  "wbsCode": "6.1.1.1.1.1.3",
+  "level": "atom",
+  "title": "Alan Adı Blok Listesi",
+  "slug": "at-crm-domain-blocklist",
+  "summary": "Lead e-postasının etki alanını (domain), tek kullanımlık (disposable) ve bilinen istenmeyen sağlayıcı listesine karşı denetleyen atom. Düşük kaliteli leadleri skorlamadan önce işaretler.",
+  "parentId": "el-crm-score-field-validator",
+  "order": 3,
+  "icon": "ph-prohibit",
+  "tags": [
+    "core-operations",
+    "crm",
+    "atom",
+    "alan-adi",
+    "veri-kalitesi"
+  ],
+  "dependsOn": [
+    "el-crm-score-field-validator"
+  ],
+  "blocks": [],
+  "related": [
+    "at-crm-email-regex"
+  ],
+  "refs": [],
+  "criticalPath": false,
+  "status": "todo",
+  "priority": "medium",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 2,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 15,
+  "phase": "test-plan",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Blok listesi kaynağı (tek kullanımlık domain listesi) ve güncelleme sıklığı tanımlandı",
+        "Engellenen domain'in skoru düşürme mi yoksa işaretleme mi yapacağı kararlaştırıldı",
+        "Tenant'a özel ek/istisna listesi gereksinimi belirlendi"
+      ],
+      "passed": true,
+      "notes": "Blok listesi işaretleme (skoru sıfırlamaz) olarak tanımlandı."
+    },
+    "test-plan": {
+      "status": "active",
+      "criteria": [
+        "Bilinen tek kullanımlık domain'ler için pozitif testler yazılır (test-önce)",
+        "Meşru domain'ler için yanlış pozitif testleri tanımlanır",
+        "Tenant istisna listesi davranışı test edilir"
+      ],
+      "passed": false,
+      "notes": "Test planı yazılıyor; geliştirme henüz başlamadı (test-önce)."
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "Blok listesi ve tenant istisnaları için saklama/indeks tanımlanır"
+      ],
+      "passed": false,
+      "notes": "Test planı tamamlanınca kesinleşecek."
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Domain ayıklama ve blok listesi eşleşmesi uygulanır"
+      ],
+      "passed": false,
+      "notes": "Test planı kapısı bekleniyor (test-önce)."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Pozitif/negatif eşleşme testleri yeşil"
+      ],
+      "passed": false,
+      "notes": "Geliştirme sonrası."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Yanlış pozitif oranının eşik altında olduğu doğrulanır"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Blok listesi düzenli güncelleme hattıyla yayınlanır"
+      ],
+      "passed": false,
+      "notes": "Bekliyor."
+    }
+  },
+  "deliverables": [
+    "Domain ayıklama ve blok listesi eşleşme kontrolü",
+    "Tenant'a özel istisna listesi desteği",
+    "Pozitif/negatif eşleşme test paketi"
+  ],
+  "acceptanceCriteria": [
+    "Tek kullanımlık/engelli domain'li e-posta işaretlenir (skoru sıfırlanmaz)",
+    "Tenant istisna listesindeki domain engellenmez",
+    "Blok listesi düzenli güncellenir ve sürümlenir"
+  ],
+  "risks": [
+    {
+      "id": "r-atblock-1",
+      "desc": "Güncel olmayan blok listesi yeni tek kullanımlık domain'leri kaçırabilir",
+      "severity": "low",
+      "mitigation": "Blok listesi düzenli güncelleme hattıyla yenilenir ve sürümlenir."
+    },
+    {
+      "id": "r-atblock-2",
+      "desc": "Aşırı geniş liste meşru leadleri yanlış işaretleyebilir",
+      "severity": "medium",
+      "mitigation": "Tenant istisna listesi ve yanlış pozitif izleme uygulanır."
+    }
+  ],
+  "rollback": "Blok listesi atomu bayrakla devre dışı bırakıldığında domain denetimi atlanır; önceki liste sürümüne dönülebilir.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "yanlis_pozitif_orani_yuzde",
+      "target": "< 1"
+    },
+    {
+      "key": "liste_guncelleme_gecikme_gun",
+      "target": "<= 7"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "E-posta domain'ini ayıklama ve normalleştirme",
+        "Tek kullanımlık/istenmeyen domain blok listesiyle eşleşme",
+        "Tenant'a özel istisna (allowlist) desteği",
+        "Engellenen domain'i skoru sıfırlamadan işaretleme"
+      ],
+      "notes": "Atom düşük kaliteli lead sinyalini erken yakalar."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tenant istisna listesi tenant_id RLS bağlamında okunur",
+        "Liste güncellemesi yalnızca yetkili süreçle yapılır (least-privilege)",
+        "Domain karşılaştırması büyük/küçük harf normalize ederek yapılır"
+      ],
+      "notes": "İstisna listesi tenant sınırında izole edilir."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Blok listesi küme (Set) olarak O(1) aramayla tutulur",
+        "Domain ayıklama saf fonksiyon olarak izole edilir (e-posta regex atomuyla paylaşılır)",
+        "İstisna kontrolü blok listesinden önce kısa devre yapar"
+      ],
+      "notes": "Arama sabit zamanlı ve yan etkisizdir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Liste güncellemeleri imzalı kaynaktan alınır ve doğrulanır",
+        "Liste sürümlenir; geri alma mümkündür",
+        "İşaretleme kararları denetim günlüğüne yazılır"
+      ],
+      "notes": "Liste bütünlüğü imzayla korunur."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Küme (Set) tabanlı O(1) domain araması",
+        "Blok listesi bellek içinde önbelleğe alınır; güncellemede yenilenir",
+        "Domain ayıklama erken çıkışla hızlandırılır"
+      ],
+      "notes": "Denetim skorlama gecikmesine kayda değer katkı yapmaz."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Engellenen domain uyarısı mobil lead formunda gösterilir",
+        "Atom platform bağımsız saf fonksiyondur",
+        "Çevrimdışı oluşturulan lead çevrimiçi olunca denetlenir"
+      ],
+      "notes": "Mobil lead girişinde erken kalite uyarısı verilir."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Engelli domain uyarısı renkten bağımsız metinle sunulur",
+        "Uyarı e-posta alanına aria-describedby ile bağlanır",
+        "Uyarı engelleyici değil; kullanıcı yine de devam edebilir (bilgilendirici)"
+      ],
+      "notes": "Uyarı erişilebilir ve engelleyici olmayan biçimde sunulur."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Atom doğrulayıcı kütüphanesiyle paketlenir; liste yapılandırmadan yüklenir",
+        "Liste güncelleme işi planlı bir worker olarak Swarm/K8s'te koşar",
+        "Paylaşımlı barındırmada liste harici API tarafında tutulur"
+      ],
+      "notes": "Liste güncellemesi arka plan işidir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: e-posta domain'i denetleniyor -> Koşul: domain blok listesinde -> Eylem: leadi düşük kalite işaretle",
+        "Kural idempotent; aynı domain aynı sonucu verir",
+        "Döngü kırıcı: atom tek adım; zincire maks 6 içinde katkı sağlar"
+      ],
+      "notes": "İşaretleme skoru düşürmez; yalnızca etiketler."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI yeni şüpheli domain örüntüleri önerir; listeye eklemeyi insan onaylar",
+        "Engelleme kararı deterministik listeye dayanır; AI değiştirmez",
+        "Domain verisi talimat olarak işlenmez (untrusted)"
+      ],
+      "notes": "Liste güncellemesi insan onaylıdır; AI yalnızca önerir."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Bilinen tek kullanımlık domain'ler için pozitif birim testleri",
+        "Meşru domain ve tenant istisnası için negatif testler",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Domain ayıklama sınır senaryoları (alt alan adı, büyük harf) kapsanır"
+      ],
+      "notes": "Yanlış pozitif riski negatif testlerle sınırlanır."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A08 (Veri Bütünlüğü): liste imzalı kaynaktan doğrulanır",
+        "OWASP A09 (Günlük/İzleme): işaretleme kararları denetlenir",
+        "OWASP A04 (Güvensiz Tasarım): istisna listesiyle yanlış pozitif azaltılır"
+      ],
+      "notes": "Liste bütünlüğü ve izleme standartlarla uyumludur."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skor alanı doğrulayıcı element tarafından e-posta regex atomundan sonra çağrılır",
+        "Domain ayıklamayı e-posta regex atomuyla aynı saf yardımcıdan alır",
+        "İşaretleme olayları event bus'a yayınlanabilir"
+      ],
+      "notes": "Atom, doğrulama zincirinde biçim kontrolünden sonra gelir."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Lead Yönetimi taşının veri kalitesi sinyalini besler",
+        "Skorlama molekülü işaretli leadleri ağırlıklandırırken kullanır",
+        "Pazarlama, tek kullanımlık domainli leadleri segment dışı bırakabilir"
+      ],
+      "notes": "Domain sinyali, lead kalitesi değerlendirmesini güçlendirir."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "atom",
+    "cluster": "core-operations"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-06-17"
+}

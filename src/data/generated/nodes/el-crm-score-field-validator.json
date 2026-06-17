@@ -1,0 +1,296 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "el-crm-score-field-validator",
+  "wbsCode": "6.1.1.1.1.1",
+  "level": "element",
+  "title": "Skor Alanı Doğrulayıcı",
+  "slug": "el-crm-score-field-validator",
+  "summary": "Skorlamayı besleyen lead alanlarını (e-posta, telefon, firma büyüklüğü, skor değeri) hesaplama öncesi doğrulayan element. Geçersiz girdiyi güvenli varsayılana indirger ve nedeni kaydeder.",
+  "parentId": "mol-crm-lead-scoring",
+  "order": 1,
+  "icon": "ph-check-square",
+  "tags": [
+    "core-operations",
+    "crm",
+    "element",
+    "dogrulama"
+  ],
+  "dependsOn": [
+    "mol-crm-lead-scoring"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [],
+  "criticalPath": true,
+  "status": "done",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 5,
+    "unit": "sp",
+    "spent": 5
+  },
+  "progress": 100,
+  "phase": "release-maintenance",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Doğrulanacak skor girdileri (e-posta, telefon, firma büyüklüğü, skor) belirlendi",
+        "Geçersiz girdi için güvenli varsayılan ve neden kaydı kuralı tanımlandı",
+        "Doğrulama hatalarının skorlamayı bloke etmeyeceği kararlaştırıldı"
+      ],
+      "passed": true,
+      "notes": "Doğrulama sözleşmesi netleştirildi."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Geçerli/geçersiz e-posta ve telefon için testler yazıldı (test-önce)",
+        "Firma büyüklüğü aralık ve skor 0-100 sınır testleri tanımlandı",
+        "Güvenli varsayılana düşme davranışı test edildi"
+      ],
+      "passed": true,
+      "notes": "Test seti geliştirme öncesi yazıldı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "Doğrulama sonucu (geçerli/varsayılan + neden) skor geçmişine eklendi"
+      ],
+      "passed": true,
+      "notes": "Doğrulama nedeni skor kaydında saklanır."
+    },
+    "development": {
+      "status": "passed",
+      "criteria": [
+        "Alan doğrulayıcılar saf fonksiyon olarak uygulandı",
+        "Atom seviyesi regex/aralık kontrolleri entegre edildi",
+        "Lint ve kod gözden geçirme geçildi"
+      ],
+      "passed": true,
+      "notes": "Doğrulayıcı uygulandı ve gözden geçirildi."
+    },
+    "test-qa": {
+      "status": "passed",
+      "criteria": [
+        "Tüm doğrulama birim testleri yeşil",
+        "Güvenli varsayılan davranışı doğrulandı"
+      ],
+      "passed": true,
+      "notes": "Test döngüsü ilk turda yeşil tamamlandı."
+    },
+    "verification": {
+      "status": "passed",
+      "criteria": [
+        "Doğrulayıcı, skorlama doğruluğunu örnek veri setinde korudu"
+      ],
+      "passed": true,
+      "notes": "Doğrulama, skor değişmezlerini bozmadan geçti."
+    },
+    "release-maintenance": {
+      "status": "passed",
+      "criteria": [
+        "Doğrulayıcı skorlama molekülüyle birlikte yayınlandı"
+      ],
+      "passed": true,
+      "notes": "Üretimde aktif; düzenli izleniyor."
+    }
+  },
+  "deliverables": [
+    "E-posta/telefon/firma büyüklüğü/skor alan doğrulayıcıları",
+    "Güvenli varsayılana indirgeme ve neden kaydı",
+    "Doğrulama birim test paketi"
+  ],
+  "acceptanceCriteria": [
+    "Geçersiz alan skorlamayı bozmaz; güvenli varsayılana düşer ve neden kaydedilir",
+    "E-posta ve telefon formatı atom doğrulayıcılarla kontrol edilir",
+    "Skor değeri her zaman 0-100 aralığına sıkıştırılır (clamp)"
+  ],
+  "risks": [
+    {
+      "id": "r-elval-1",
+      "desc": "Aşırı katı doğrulama geçerli leadleri varsayılana düşürebilir",
+      "severity": "low",
+      "mitigation": "Doğrulama kuralları gerçek veriyle kalibre edilir ve neden kaydıyla izlenir."
+    }
+  ],
+  "rollback": "Doğrulayıcı esnek moda alınarak yalnızca uyarı üretir (bloke etmez); gerekirse önceki sürüme döner.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "dogrulama_suresi_ms",
+      "target": "< 10"
+    },
+    {
+      "key": "varsayilana_dusme_orani",
+      "target": "< 3"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "E-posta ve telefon format doğrulaması (atom regex/aralık kontrollerine delege eder)",
+        "Firma büyüklüğü sayısal aralık doğrulaması",
+        "Skor değeri 0-100 sıkıştırma (clamp) ve neden kaydı",
+        "Geçersiz girdide skorlamayı bloke etmeden güvenli varsayılan döndürme"
+      ],
+      "notes": "Doğrulayıcı, skorlamanın temiz girdi sözleşmesini garanti eder."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tüm girdiler skorlamadan önce sunucu tarafında doğrulanır",
+        "Doğrulama, tenant bağlamından bağımsız saf fonksiyondur (sızıntı yüzeyi yok)",
+        "Hatalı girdi nedenleri ham veri sızdırmadan kaydedilir"
+      ],
+      "notes": "Doğrulama, enjeksiyon ve bozuk veri için ilk savunma hattıdır."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Her alan için tek sorumlu doğrulayıcı (single responsibility)",
+        "Atom kontrolleri (regex, aralık) yeniden kullanılır",
+        "Doğrulama sonucu birleşik bir sonuç nesnesinde toplanır"
+      ],
+      "notes": "Doğrulayıcılar bağımsız test edilebilir küçük birimlerdir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Regex'ler katastrofik geri izleme (ReDoS) riskine karşı sınırlı tutulur",
+        "Girdi uzunluğu üst sınırla kesilir (DoS önleme)",
+        "Doğrulama nedenleri maskelenmiş biçimde loglanır"
+      ],
+      "notes": "ReDoS ve aşırı uzun girdi riskleri ele alınır."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Doğrulama < 10ms; bellek içinde saf hesaplama",
+        "Derlenmiş regex'ler yeniden kullanılır (her çağrıda derlenmez)",
+        "Erken çıkış (fast-fail) ile gereksiz kontrol atlanır"
+      ],
+      "notes": "Doğrulama skorlama gecikmesine kayda değer ek getirmez."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Aynı doğrulama kuralları mobil formda istemci tarafında ön-kontrol için kullanılır",
+        "Geçersiz alan mobilde anında geri bildirimle gösterilir",
+        "Çevrimdışı girilen veri çevrimiçi olunca sunucuda yeniden doğrulanır"
+      ],
+      "notes": "İstemci ön-kontrolü deneyimi hızlandırır; sunucu doğrulaması yetkilidir."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Doğrulama hata mesajı ilgili alana aria-describedby ile bağlanır",
+        "Hata metni renkten bağımsız ve açık dille yazılır",
+        "Hata canlı bölgede (aria-live) ekran okuyucuya duyurulur"
+      ],
+      "notes": "Doğrulama geri bildirimi erişilebilir biçimde sunulur."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Doğrulayıcı skorlama worker'ı içinde paketlenir; ayrı dağıtım gerektirmez",
+        "Saf kütüphane olduğundan probe/limit ek yükü yoktur",
+        "Paylaşımlı barındırmada hem istemci hem harici API'de çalışır"
+      ],
+      "notes": "Doğrulayıcı taşınabilir saf bir kütüphanedir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: skorlama tetiklendi -> Koşul: alan doğrulaması başarısız -> Eylem: varsayılan kullan ve neden kaydet",
+        "Kural idempotent; aynı girdi aynı doğrulama sonucunu verir",
+        "Döngü kırıcı: doğrulama->varsayılan->skor zinciri en fazla 6 adım"
+      ],
+      "notes": "Doğrulama, skorlama zincirinin ilk adımıdır."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI hatalı alan için düzeltme önerir; düzeltmeyi insan uygular",
+        "Doğrulama deterministik kuraldır; AI karar mercii değildir",
+        "Doğrulanan değerler dışında serbest metin güvenilmez sayılır"
+      ],
+      "notes": "Doğrulama AI'dan bağımsız ve deterministiktir."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Geçerli/geçersiz e-posta, telefon, firma büyüklüğü, skor için birim testleri",
+        "Güvenli varsayılana düşme ve neden kaydı testleri",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Sınır değerleri (boş, çok uzun, 0, 100, 101) kapsanır"
+      ],
+      "notes": "Doğrulama davranışı sınır testleriyle kilitlenir."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 (Enjeksiyon): girdi doğrulaması enjeksiyon yüzeyini daraltır",
+        "OWASP A04 (Güvensiz Tasarım): güvenli varsayılan davranış",
+        "ReDoS: regex karmaşıklığı ve girdi uzunluğu sınırlandırılır"
+      ],
+      "notes": "Girdi doğrulaması güvenliğin temel taşıdır."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Atom doğrulayıcıları (e-posta regex, skor aralığı, alan adı blok listesi) çağırır",
+        "Skorlama molekülüne temiz, doğrulanmış girdi sağlar",
+        "Doğrulama nedeni denetim altyapısına yazılır"
+      ],
+      "notes": "Element, atom kontrollerini birleştiren orkestrasyon katmanıdır."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Skorlama molekülüne girdi doğrulama sağlar",
+        "Lead formu (taş) aynı kuralları istemci ön-kontrolünde kullanır",
+        "Tekilleştirme molekülü normalizasyon için aynı atomları paylaşır"
+      ],
+      "notes": "Doğrulama kuralları CRM genelinde yeniden kullanılır."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "toz-tanesi",
+    "cluster": "core-operations"
+  },
+  "state": "dogrulanmis",
+  "lastUpdated": "2026-06-17"
+}

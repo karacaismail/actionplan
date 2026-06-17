@@ -1,0 +1,304 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "mol-crm-lead-scoring",
+  "wbsCode": "6.1.1.1.1",
+  "level": "molecule",
+  "title": "Lead Skorlama Kuralı",
+  "slug": "mol-crm-lead-scoring",
+  "summary": "Lead'in dönüşüm olasılığını 0-100 aralığında, ağırlıklı ve açıklanabilir kurallarla hesaplayan skorlama molekülü. Demografik, firmografik ve davranışsal sinyalleri birleştirir.",
+  "parentId": "st-crm-lead-mgmt",
+  "order": 1,
+  "icon": "ph-gauge",
+  "tags": [
+    "core-operations",
+    "crm",
+    "molecule",
+    "skorlama"
+  ],
+  "dependsOn": [
+    "st-crm-lead-mgmt"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [],
+  "criticalPath": true,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 8
+  },
+  "progress": 60,
+  "phase": "test-qa",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Skor girdileri (firma büyüklüğü, sektör, etkileşim, e-posta geçerliliği) belirlendi",
+        "Ağırlıklar ve 0-100 normalizasyon kuralı onaylandı",
+        "Skor açıklaması (katkı dökümü) gereksinimi tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Skorlama girdileri ve ağırlık politikası donduruldu."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Skor hesaplama için sınır değer ve eşik testleri yazıldı (test-önce)",
+        "Geçersiz/eksik girdi için varsayılan davranış test edildi",
+        "Açıklama dökümü doğruluk testi tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Skorlama testleri geliştirme öncesi yazıldı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "Skor ve skor geçmişi alanları lead şemasına eklendi",
+        "Skorlama kural sürümü (rule_version) alanı tanımlandı"
+      ],
+      "passed": true,
+      "notes": "Skor saklama ve sürümleme şeması hazır."
+    },
+    "development": {
+      "status": "passed",
+      "criteria": [
+        "Ağırlıklı skor hesaplama saf fonksiyon olarak uygulandı",
+        "Skor açıklaması (katkı dökümü) üretildi",
+        "Lint ve kod gözden geçirme geçildi"
+      ],
+      "passed": true,
+      "notes": "Skorlama fonksiyonu tamamlandı ve gözden geçirildi."
+    },
+    "test-qa": {
+      "status": "active",
+      "criteria": [
+        "Sınır değer ve eşik testleri yeşil",
+        "Geçersiz girdi varsayılan davranış testleri geçer",
+        "Açıklama dökümü doğruluk testi geçer"
+      ],
+      "passed": false,
+      "notes": "Test döngüsü çalışıyor; açıklama dökümü testi son aşamada."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Skorlama doğruluğu örnek veri setiyle doğrulanır"
+      ],
+      "passed": false,
+      "notes": "Test-QA bitince yapılacak."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Skorlama kuralı rule_version etiketiyle yayınlanır"
+      ],
+      "passed": false,
+      "notes": "Doğrulama bekleniyor."
+    }
+  },
+  "deliverables": [
+    "Ağırlıklı, açıklanabilir lead skor hesaplama fonksiyonu",
+    "Skor katkı dökümü (açıklama) üreticisi",
+    "Skorlama kural sürümleme mekanizması"
+  ],
+  "acceptanceCriteria": [
+    "Skor her zaman 0-100 aralığında ve deterministiktir",
+    "Eksik/geçersiz girdide skor güvenli varsayılana düşer ve neden kaydedilir",
+    "Her skor, katkıların açıklanabilir dökümüyle birlikte üretilir"
+  ],
+  "risks": [
+    {
+      "id": "r-molscore-1",
+      "desc": "Ağırlıkların elle ayarı tutarsız skorlara yol açabilir",
+      "severity": "medium",
+      "mitigation": "Ağırlıklar yapılandırma olarak sürümlenir ve birim testlerle sabitlenir."
+    },
+    {
+      "id": "r-molscore-2",
+      "desc": "Geçersiz e-posta gibi kötü girdi skoru çarpıtabilir",
+      "severity": "medium",
+      "mitigation": "Skor öncesi element düzeyinde alan doğrulaması zorunlu kılınır."
+    }
+  ],
+  "rollback": "Skorlama molekülü bayrakla devre dışı bırakıldığında lead'ler skorsuz işlenir; önceki rule_version'a dönülerek davranış geri alınır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "skor_hesaplama_suresi_ms",
+      "target": "< 50"
+    },
+    {
+      "key": "skor_aralik_ihlali_sayisi",
+      "target": "0"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Ağırlıklı skor: firmografik (firma büyüklüğü, sektör) + davranışsal (etkileşim, ziyaret) sinyaller",
+        "0-100 aralığına normalizasyon ve eşik bantları (sıcak/ılık/soğuk)",
+        "Skor katkı dökümü: her sinyalin skora etkisi açıklanır",
+        "Skorlama kuralı sürümlenir; geçmiş skorlar hangi sürümle üretildiği bilinir"
+      ],
+      "notes": "Açıklanabilirlik bu molekülün temel tasarım hedefidir."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Skorlama yalnızca aynı tenant lead verisi üzerinde çalışır (RLS bağlamında)",
+        "Skor girdileri element doğrulayıcılardan geçmiş veriyle beslenir",
+        "Skor kural değişikliği yalnızca yetkili rolce yapılır"
+      ],
+      "notes": "Skorlama tenant sınırını asla aşmaz."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Skor hesaplama saf (pure) ve yan etkisiz; kolay test edilir",
+        "Ağırlıklar yapılandırma nesnesi olarak dışarıdan verilir",
+        "Sinyal katkıları ortak bir azaltma (reduce) deseniyle toplanır"
+      ],
+      "notes": "Yeni sinyal eklemek mevcut kodu bozmadan genişletilebilir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Skor kural sürümü değişiklikleri denetim günlüğüne yazılır",
+        "Toplu yeniden skorlama oran sınırlamayla çalışır",
+        "Skor açıklaması hassas ham veriyi değil, katkı düzeyini gösterir"
+      ],
+      "notes": "Açıklama dökümü veri sızdırmadan içgörü verir."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tek lead skoru < 50ms; saf hesaplama bellek içinde yapılır",
+        "Toplu yeniden skorlama parçalı (chunked) ve kuyrukta çalışır",
+        "Değişmeyen ağırlık tablosu bellek içinde önbelleğe alınır"
+      ],
+      "notes": "Hesaplama I/O bağımlı değildir; CPU hafiftir."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Skor ve bandı (sıcak/ılık/soğuk) mobil lead kartında gösterilir",
+        "Skor açıklaması mobilde açılır panelde okunur",
+        "Çevrimdışı görüntülemede son hesaplanan skor önbellekten gelir"
+      ],
+      "notes": "Mobilde skor salt-okunur sunulur."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Skor bandı renkle birlikte metin etiketiyle de belirtilir (renk tek başına değil)",
+        "Skor rozeti 7:1 kontrast sağlar",
+        "Skor açıklaması ekran okuyucu için yapısal liste olarak sunulur"
+      ],
+      "notes": "Skor anlamı renk körü kullanıcılar için de erişilebilir."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Skorlama worker olarak kuyruk tüketir; Swarm/K8s'te HPA ile ölçeklenir",
+        "Kaynak limitleri düşük (CPU-yoğun değil); hızlı başlar",
+        "Paylaşımlı barındırmada skorlama harici API tarafında çalışır"
+      ],
+      "notes": "Skorlama bağımsız ölçeklenebilir hafif birimdir."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: lead alanı güncellendi -> Koşul: skorlamayı etkileyen alan -> Eylem: yeniden skorla",
+        "Kural idempotent; aynı güncelleme için tek yeniden skorlama yapılır",
+        "Döngü kırıcı: yeniden skorlama tetik zinciri en fazla 6 adım"
+      ],
+      "notes": "Gereksiz yeniden skorlama alan-değişti filtresiyle önlenir."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI skor açıklamasını doğal dile çevirip önerir; skoru değiştirmez",
+        "Ağırlık önerileri yalnızca öneridir; insan onayıyla yapılandırmaya girer",
+        "Skorlama girdisindeki serbest metin güvenilmez sayılır"
+      ],
+      "notes": "Skoru yalnızca deterministik kural üretir; AI yorumlar."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Sınır değerleri (0, 100, eşik bantları) için birim testleri",
+        "Eksik/geçersiz girdi varsayılan davranış testleri",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Açıklama dökümünün katkı toplamı skora eşit mi doğrulanır"
+      ],
+      "notes": "Skor değişmezleri (invariant) testlerle kilitlenir."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: skorlama tenant bağlamı dışına çıkamaz",
+        "OWASP A04 (Güvensiz Tasarım): geçersiz girdide güvenli varsayılan skor",
+        "OWASP LLM01: AI açıklamasında girdi metni talimat olarak işlenmez"
+      ],
+      "notes": "Güvenli varsayılanlar tasarıma gömülü."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skor olayları event bus'a yayınlanır (lead atama tetikleyebilir)",
+        "Skor geçmişi denetim altyapısına yazılır",
+        "Skorlama, element doğrulayıcıların ürettiği temiz veriyi tüketir"
+      ],
+      "notes": "Skorlama, doğrulanmış girdiye bağımlıdır."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Lead Yönetimi taşına skor ve bant sağlar",
+        "Satış hattı önceliklendirmesi skoru tüketir",
+        "Pazarlama, sıcak lead segmentini skora göre oluşturur"
+      ],
+      "notes": "Skor, satış ve pazarlama önceliklendirmesinin girdisidir."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "kucuk-tas",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-17"
+}

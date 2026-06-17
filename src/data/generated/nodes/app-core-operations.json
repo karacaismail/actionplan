@@ -1,0 +1,313 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "app-core-operations",
+  "wbsCode": "6",
+  "level": "app",
+  "title": "Çekirdek Operasyon",
+  "slug": "app-core-operations",
+  "summary": "Satış, CRM, sipariş, stok ve POS gibi gelir-getiren çekirdek operasyon modüllerini barındıran çok kiracılı (multi-tenant) kurumsal uygulama kümesi. AI-yerel, waterfall planlama ile geliştirilir.",
+  "parentId": null,
+  "order": 0,
+  "icon": "ph-storefront",
+  "tags": [
+    "core-operations",
+    "app",
+    "küme",
+    "multi-tenant",
+    "ai-native"
+  ],
+  "dependsOn": [],
+  "blocks": [],
+  "related": [
+    "app-kernel",
+    "app-layer1"
+  ],
+  "refs": [],
+  "criticalPath": true,
+  "status": "in-progress",
+  "priority": "critical",
+  "owner": "core-ops-platform-ekibi",
+  "effort": {
+    "estimate": 320,
+    "unit": "sp",
+    "spent": 96
+  },
+  "progress": 28,
+  "phase": "development",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Küme kapsamı (CRM, Satış, Sipariş, Stok, POS) ve modül sınırları onaylandı",
+        "Çok kiracılı izolasyon ve veri kalıcılığı (data residency) gereksinimleri belgelendi",
+        "Paydaş kabul kriterleri ve hizmet seviyesi hedefleri (SLO) imzalandı"
+      ],
+      "passed": true,
+      "notes": "Ürün, güvenlik ve operasyon paydaşlarınca gereksinim taban çizgisi onaylandı."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "Küme düzeyinde test stratejisi (birim, entegrasyon, e2e, kullanıcı yolculuğu) tanımlandı",
+        "Tenant izolasyon ve yetkilendirme regresyon test seti belirlendi",
+        "Test-önce kapısı: kabul testleri geliştirme başlamadan yazıldı"
+      ],
+      "passed": true,
+      "notes": "Test planı db-şema ve geliştirme fazlarından önce onaylandı (test-önce sözleşmesi)."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "Ortak tenant_id sütunu ve satır düzeyi güvenlik (RLS) politikaları tüm tablolarda tanımlandı",
+        "Modüller arası yabancı anahtar ve referans bütünlüğü doğrulandı",
+        "Geçiş (migration) ve geri-alma (rollback) betikleri gözden geçirildi"
+      ],
+      "passed": true,
+      "notes": "Çekirdek şema taban çizgisi ve RLS politikaları üretime hazır."
+    },
+    "development": {
+      "status": "active",
+      "criteria": [
+        "Modüller (CRM, Satış, Sipariş) artımlı olarak teslim edilir",
+        "Her modül kendi kabul testlerini yeşil geçer",
+        "Kod gözden geçirme ve statik analiz kapıları zorunlu"
+      ],
+      "passed": false,
+      "notes": "CRM/Satış modülleri aktif geliştirmede; Sipariş ve POS backlog'ta."
+    },
+    "test-qa": {
+      "status": "active",
+      "criteria": [
+        "Modül başına kapsam eşiği ve kritik yol e2e senaryoları yeşil",
+        "Tenant sızıntısı (cross-tenant leakage) negatif testleri geçer",
+        "Otonom QA ajanı regresyon turunu tamamlar"
+      ],
+      "passed": false,
+      "notes": "CRM modülü QA turunda; kalan modüller geliştirme bitince devreye girer."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Güvenlik gözden geçirmesi (OWASP Top 10:2025 + LLM Top 10) tamamlandı",
+        "WCAG 2.2 AAA erişilebilirlik denetimi geçti",
+        "Performans ve yük testleri SLO hedeflerini karşıladı"
+      ],
+      "passed": false,
+      "notes": "Tüm modüller test-QA'dan geçtikten sonra küme düzeyinde doğrulama yapılacak."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Mavi-yeşil (blue-green) dağıtım ve geri-alma prosedürü doğrulandı",
+        "İzlenebilirlik (gözlemlenebilirlik, uyarılar, koşu kitapları) hazır",
+        "Sürüm notları ve operasyon devir teslimi tamamlandı"
+      ],
+      "passed": false,
+      "notes": "Doğrulama kapısı geçilmeden yayına çıkılmaz."
+    }
+  },
+  "deliverables": [
+    "Çekirdek operasyon küme mimarisi ve modül sınır belgesi",
+    "Çok kiracılı veri modeli ve RLS politika kütüphanesi",
+    "Küme düzeyi CI/CD hattı ve test kapıları"
+  ],
+  "acceptanceCriteria": [
+    "Tüm alt modüller test-önce waterfall fazlarını sırayla geçer",
+    "Hiçbir senaryoda tenant verisi başka kiracıya sızmaz (negatif testlerle kanıtlı)",
+    "Küme, hedef SLO'ları (p95 < 400ms, %99.9 erişilebilirlik) karşılar"
+  ],
+  "risks": [
+    {
+      "id": "r-co-1",
+      "desc": "Modüller arası sıkı bağ (tight coupling) bağımsız dağıtımı engelleyebilir",
+      "severity": "high",
+      "mitigation": "Modül sınırları net API sözleşmeleriyle ayrıştırılır; paylaşılan çekirdek minimum tutulur."
+    },
+    {
+      "id": "r-co-2",
+      "desc": "Çok kiracılı veri sızıntısı kurumsal güveni zedeleyebilir",
+      "severity": "critical",
+      "mitigation": "Tüm tablolarda RLS zorunlu; cross-tenant negatif testleri CI kapısına eklenir."
+    }
+  ],
+  "rollback": "Küme dağıtımı mavi-yeşil stratejiyle yönetilir; sorunlu sürümde trafik anında önceki yeşil sürüme döner ve şema geçişleri geri-alma betiğiyle geri sarılır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "p95_yanit_suresi_ms",
+      "target": "< 400"
+    },
+    {
+      "key": "erisilebilirlik_yuzde",
+      "target": ">= 99.9"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Çekirdek operasyon kümesi; CRM, Satış, Sipariş Yönetimi, Stok ve POS modüllerini tek çok kiracılı çatı altında toplar",
+        "Modüller ortak kimlik, yetkilendirme ve denetim günlüğü (audit log) altyapısını paylaşır",
+        "Her modül bağımsız sürümlenir ancak ortak gelir-veri modeli üzerinden tutarlı raporlama sağlar"
+      ],
+      "notes": "Kapsam, gelir-getiren operasyonel iş akışlarıyla sınırlandırıldı."
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tüm operasyonel tablolarda tenant_id tabanlı satır düzeyi güvenlik (RLS) zorunlu",
+        "En az ayrıcalık (least-privilege) ilkesiyle rol tabanlı erişim; satış temsilcisi yalnızca kendi portföyünü görür",
+        "Tüm dış girdiler sunucu tarafında şema doğrulamasından (Zod/Pydantic) geçer",
+        "Hassas alanlar (iletişim, ödeme) bekleyen veride şifrelenir (encryption at rest)"
+      ],
+      "notes": "Güvenlik kontrolleri modüllerce miras alınan ortak çekirdekte tanımlı."
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Paylaşılan iş mantığı çekirdek kütüphanede toplanır; modüllerde kod tekrarı önlenir",
+        "Modüller arası iletişim tipli sözleşmeler (typed contracts) üzerinden yapılır",
+        "Statik analiz (Biome/ruff) ve karmaşıklık eşikleri CI kapısında zorunlu"
+      ],
+      "notes": "Sınır ihlalleri (cross-module import) mimari lint kuralıyla engellenir."
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Sır (secret) rotasyonu otomatik; kasada (vault) saklanır, kodda asla bulunmaz",
+        "İçerik Güvenlik Politikası (CSP) ve güvenli HTTP başlıkları küme ağ geçidinde uygulanır",
+        "Tenant ve IP bazlı oran sınırlama (rate-limit) ile kötüye kullanım engellenir"
+      ],
+      "notes": "Güvenlik optimizasyonu API ağ geçidi katmanında merkezîleştirildi."
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Sık sorgulanan kolonlarda (tenant_id, durum, tarih) bileşik veritabanı indeksleri",
+        "Listeleme uçları imleç (cursor) tabanlı sayfalama kullanır; ofset taraması yapılmaz",
+        "Sıcak okuma yolları Redis ile önbelleğe alınır; yazma sonrası geçersizleştirme (invalidation) uygulanır",
+        "ORM sorguları N+1 önleme için eager-loading ile düzenlenir"
+      ],
+      "notes": "Küme hedefi p95 < 400ms; yük testleriyle doğrulanır."
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Duyarlı (responsive) PWA; iOS Safari ve Android Chrome'da çevrimdışı önbellekle çalışır",
+        "Capacitor sarmalayıcı ile yerel iOS/Android paketleri üretilir",
+        "Saha satış senaryosu için Chrome eklentisi uyumlu, salt-okunur hızlı görünüm sağlanır"
+      ],
+      "notes": "Mobil deneyim CRM ve POS modülleri için önceliklendirildi."
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Metin/arka plan kontrast oranı en az 7:1 (AAA) tüm bileşenlerde sağlanır",
+        "Tüm akışlar tam klavye ile gezilebilir; mantıksal odak (focus) sırası korunur",
+        "Anlamsal ARIA rolleri ve canlı bölgeler (live region) ekran okuyucu için tanımlı",
+        "Görünür odak göstergesi ve hedef boyutu (target size) AAA eşiklerine uyar"
+      ],
+      "notes": "Erişilebilirlik küme tasarım sistemine gömülü; modüller miras alır."
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Docker Swarm üzerinde küçük ölçek; servis replikaları ve sağlık kontrolleriyle",
+        "Kubernetes üzerinde yatay otomatik ölçekleme (HPA), liveness/readiness probe ve kaynak limitleri (CPU/bellek requests/limits)",
+        "WordPress benzeri paylaşımlı barındırma kısıtı için statik PWA derlemesi + harici API modu destekli"
+      ],
+      "notes": "Paylaşımlı barındırmada arka uç dış API'ye delege edilir; tam yığın K8s'te koşar."
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Olay: yeni müşteri oluşturuldu -> Koşul: segment 'kurumsal' -> Eylem: hesap yöneticisi atama görevi üret",
+        "Tüm ECA kuralları idempotent; aynı olay iki kez işlense yan etki tekrarlanmaz",
+        "Döngü kırıcı (loop breaker): bir tetikleme zincirinde en fazla 6 adım; aşılırsa zincir durdurulur ve uyarı kaydı atılır"
+      ],
+      "notes": "ECA motoru modüllerce paylaşılır; zincir derinliği merkezî olarak sınırlandırılır."
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI ajanları yalnızca önerir; hiçbir değişikliği insan onayı olmadan uygulamaz",
+        "Yetenek kapısı (capability-gated): ajan yalnızca açıkça verilen izinler dahilinde araç çağırır",
+        "Kullanıcıdan gelen alt-istem (sub_prompt) güvenilmez (untrusted) kabul edilir; sistem talimatından izole edilir"
+      ],
+      "notes": "AI davranışı tüm modüllerde 'öner-uygulama' ilkesine bağlı."
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Birim + entegrasyon + uçtan uca (e2e) + kullanıcı yolculuğu testleri zorunlu",
+        "AI destekli Playwright ile kritik akışlar için senaryolar üretilir ve sürdürülür",
+        "Test döngüsü: başarısız test düzelene kadar en fazla 6 kez yeniden çalıştırılır; düzelmezse raporlanır",
+        "Otonom QA ajanı her sürüm öncesi regresyon turunu yürütür"
+      ],
+      "notes": "Test stratejisi test-önce; kapsam ve kritik yol kapıları CI'da zorunlu."
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP Top 10:2025 — Bozuk Erişim Kontrolü (A01) tenant RLS ve rol kontrolüyle ele alınır",
+        "OWASP Top 10:2025 — Enjeksiyon (A03) parametreli sorgu ve girdi doğrulamayla engellenir",
+        "OWASP LLM Top 10 — İstem Enjeksiyonu (LLM01) güvenilmez alt-istem izolasyonuyla azaltılır"
+      ],
+      "notes": "Güvenlik standartları küme güvenlik gözden geçirme kapısında denetlenir."
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kimlik, oturum ve yetkilendirme için kernel (app-kernel) servislerini tüketir",
+        "Taraf/kişi (party) verisi için Layer 1 ortak modeliyle (app-layer1) entegre olur",
+        "Denetim günlüğü ve olay yayını (event bus) çekirdek altyapı üzerinden yapılır"
+      ],
+      "notes": "Küme, çekirdek hizmetleri yeniden uygulamaz; sözleşme üzerinden tüketir."
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Bu küme bir app seviyesidir; modülleri (CRM/Satış vb.) içerir ve diğer kümelere gelir-veri sağlar",
+        "Finans kümesi gelir tanıma için Satış modülü verisini tüketir",
+        "Veri zekâsı kümesi raporlama için operasyonel olayları okur"
+      ],
+      "notes": "Modül kullanımı sözleşmeli okuma uçlarıyla yönetilir."
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "dag",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-17"
+}
