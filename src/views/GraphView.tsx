@@ -3,6 +3,7 @@ import { downloadFile, getDescendants } from "@/engine";
 import { STATUS_LABEL, hslVar, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
 import { LEVEL_META, type TaskNode } from "@/schemas";
+import { useTheme } from "@/components/theme/useTheme";
 import { useTaskStore } from "@/store/taskStore";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -272,6 +273,7 @@ function exportPng(laid: LaidOut, title: string, fileBase: string) {
  * -------------------------------------------------------------------------- */
 export function GraphView() {
   const nodes = useTaskStore((s) => s.nodes);
+  const { theme } = useTheme();
 
   const apps = useMemo(
     () =>
@@ -375,6 +377,7 @@ export function GraphView() {
         )}
         {data && data.nodes.length > 0 ? (
           <ReactFlow<GraphNode>
+            colorMode={theme}
             nodes={data.nodes}
             edges={data.edges}
             nodeTypes={nodeTypes}

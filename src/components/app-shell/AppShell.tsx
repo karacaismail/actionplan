@@ -22,13 +22,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => setOpen(false), [pathname]);
 
   return (
-    <div className="min-h-[100dvh]">
+    <div className="flex h-[100dvh] flex-col">
       <a href="#main" className="skip-link">
         {t.skipToContent}
       </a>
 
-      {/* Üst bar (mobile-first) */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-6">
+      {/* Üst bar (mobile-first) — sabit yükseklikli kolon başı */}
+      <header className="z-30 flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 md:px-6">
         <Button
           variant="ghost"
           size="sm"
@@ -51,8 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Kenar çubuğu — masaüstü sabit, mobil off-canvas */}
+      <div className="flex min-h-0 flex-1">
+        {/* Kenar çubuğu — masaüstü sticky (kendi scroll'u), mobil off-canvas */}
         {open && (
           <button
             type="button"
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav
           aria-label="Ana gezinme"
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card p-3 pt-16 transition-transform md:static md:z-0 md:translate-x-0 md:pt-4",
+            "fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto border-r border-border bg-card p-3 pt-16 transition-transform md:static md:z-0 md:translate-x-0 md:pt-4",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        <main id="main" className="min-w-0 flex-1 p-4 md:p-6">
+        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>

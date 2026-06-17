@@ -8,7 +8,7 @@ export function EChart({
   height = 280,
   ariaLabel,
 }: {
-  option: EChartsOption;
+  option: Record<string, unknown>;
   height?: number;
   ariaLabel?: string;
 }) {
@@ -17,7 +17,7 @@ export function EChart({
   useEffect(() => {
     if (!ref.current) return;
     const chart = echarts.init(ref.current, undefined, { renderer: "svg" });
-    chart.setOption(option);
+    chart.setOption(option as EChartsOption);
     const ro = new ResizeObserver(() => chart.resize());
     ro.observe(ref.current);
     return () => {

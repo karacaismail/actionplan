@@ -1,11 +1,21 @@
 import { cn } from "@/lib/cn";
 import { STATUS_LABEL, STATUS_VAR, hslVar } from "@/lib/format";
 import type { TaskStatus } from "@/schemas";
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
 
 /** Phosphor ikon (CDN web-font). */
-export function Icon({ name, className }: { name: string; className?: string }) {
-  return <i className={cn("ph", name, className)} aria-hidden="true" />;
+export function Icon({
+  name,
+  className,
+  style,
+  title,
+}: {
+  name: string;
+  className?: string;
+  style?: CSSProperties;
+  title?: string;
+}) {
+  return <i className={cn("ph", name, className)} style={style} title={title} aria-hidden="true" />;
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

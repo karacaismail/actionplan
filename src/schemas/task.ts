@@ -183,7 +183,7 @@ export const TaskNodeSchema = z
     slug: z.string().min(1),
     summary: z.string().default(""),
     parentId: z.string().nullable().default(null),
-    order: z.number().int().default(0),
+    order: z.number().default(0),
     icon: z.string().default("ph-cube"),
     tags: z.array(z.string()).default([]),
 
