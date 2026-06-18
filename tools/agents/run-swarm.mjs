@@ -13,7 +13,8 @@
  *
  * Gerekler: yerelde `claude` (Claude Code) kurulu + giriş yapılmış. Repo klonlu.
  * Güvenli: her ajan yalnız KENDİ cluster'ının JSON'larını düzenler (izole). Sonunda reindex.
- * Doğrulama: bitince `npm run typecheck && npm test && npm run build`.
+ * Doğrulama: bitince `npm run typecheck && npm test && npm run test:content && npm run build`.
+ * Provenance: ajan ürettiği boyutlara `provenance:"swarm"` damgalar; `provenance:"human"` düğümlere dokunmaz.
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -36,7 +37,7 @@ for (const a of argv) {
     flags[k] = v ?? true;
   } else clustersArg.push(a);
 }
-const CONCURRENCY = Number(flags.concurrency ?? 4);
+const CONCURRENCY = Number(flags.concurrency ?? 3);
 const DRY = Boolean(flags["dry-run"]);
 const MODEL = flags.model;
 const CLAUDE = process.env.CLAUDE_BIN ?? "claude";
@@ -106,6 +107,6 @@ if (!DRY) {
   const fail = res.filter((r) => r.code !== 0).map((r) => r.cluster);
   console.log(
     `\nTamam. Başarısız cluster: ${fail.length ? fail.join(", ") : "yok"}.\n` +
-      "Doğrula: npm run typecheck && npm test && npm run build",
+      "Doğrula: npm run typecheck && npm test && npm run test:content && npm run build",
   );
 }

@@ -115,6 +115,10 @@ export const DIMENSION_META: Record<DimensionKey, { tr: string; icon: string }> 
 export const DimensionStatusSchema = z.enum(["skeleton", "draft", "filled"]);
 export type DimensionStatus = z.infer<typeof DimensionStatusSchema>;
 
+/** İçerik kökeni (Faz A3): template=kalıp, swarm=AI ürünü, human=insan yazdı/onayladı. */
+export const DimensionProvenanceSchema = z.enum(["template", "swarm", "human"]);
+export type DimensionProvenance = z.infer<typeof DimensionProvenanceSchema>;
+
 export const DimensionSchema = z.object({
   key: DimensionKeySchema,
   title: z.string(),
@@ -124,6 +128,12 @@ export const DimensionSchema = z.object({
   notes: z.string().default(""),
   /** Bu boyutu üretmek için bağlama-özgü AI prompt'u (vibecoding) */
   prompt: z.string().default(""),
+  /** İçerik kökeni — eski JSON'larda yoksa "template" varsayılır (geriye uyumlu). */
+  provenance: DimensionProvenanceSchema.default("template"),
+  /** Üreten prompt sürümü (swarm tekrarlanabilirliği için); opsiyonel. */
+  promptVersion: z.string().optional(),
+  /** Son insan denetimi tarihi (ISO); opsiyonel. */
+  lastReviewed: z.string().optional(),
 });
 export type Dimension = z.infer<typeof DimensionSchema>;
 
@@ -336,6 +346,7 @@ export function makeSkeletonDimensions(): Record<DimensionKey, Dimension> {
       items: [],
       notes: "",
       prompt: "",
+      provenance: "template",
     };
   }
   return out;

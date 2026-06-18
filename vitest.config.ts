@@ -15,7 +15,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
-    exclude: ["tests/e2e/**", "node_modules/**"],
+    // tests/content/** AYRI config ile koşar (vitest.content.config.ts + `npm run test:content`).
+    // Faz F2'ye kadar ana CI'dan ayrı; içerik doldurulurken yayın hattı yeşil kalır.
+    exclude: ["tests/e2e/**", "tests/content/**", "node_modules/**"],
     coverage: {
       provider: "v8",
       reportsDirectory: "./coverage",

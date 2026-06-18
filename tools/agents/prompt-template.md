@@ -9,6 +9,7 @@ BAĞLAM: `source.cluster === "{{CLUSTER}}"` ({{CLUSTER_TR}}) düğümleri şu an
 
 KESİN KURALLAR:
 - SADECE `source.cluster === "{{CLUSTER}}"` olan node JSON dosyalarını düzenle. Kod/config/index/navigation/meta veya başka cluster'a DOKUNMA.
+- KORU (insan içeriği): bir düğümde herhangi bir `dimensions[*].provenance === "human"` ise O DÜĞÜME DOKUNMA (altın referans/insan-onaylı içerik ezilmez).
 - `node tools/reindex.mjs` ÇALIŞTIRMA (orkestratör en sonda bir kez çalıştırır). Kurulum yapma. Emoji yok.
 - Şema: her düğümde `dimensions` 14 anahtar + `phases` 7 anahtar KORUNMALI. Şema-dışı alan ekleme. Geçerli JSON yaz.
 - AI maliyeti önemli değil; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, publish/delete/direct-prod-write yapamaz.
@@ -19,7 +20,7 @@ ADIMLAR:
 1. Bu cluster'ın düğüm listesini çıkar:
    `for f in src/data/generated/nodes/*.json; do node -e "const n=require('./'+process.argv[1]);if(n.source&&n.source.cluster==='{{CLUSTER}}')console.log(n.id+' :: '+n.title)" "$f"; done`
 2. HER düğüm için dosyayı OKU (`title`, `summary`, `tags`) → düğümün NE olduğunu anla.
-3. 14 boyutu O DÜĞÜME ÖZGÜ yaz. Her `dimensions[key]`: `{ "key", "title", "status": "filled", "items": [2-4 SOMUT madde], "notes": "" }`. Boyut rehberi (hepsi düğüme özel olmalı):
+3. 14 boyutu O DÜĞÜME ÖZGÜ yaz. Her `dimensions[key]`: `{ "key", "title", "status": "filled", "items": [3-5 SOMUT madde], "notes": "", "provenance": "swarm" }`. YASAK KALIP ifadeleri (docs/icerik-kalite-sozlesmesi.md Bölüm 4: "net işlevsel sınır", "N+1 önleme + önbellek", "klavye gezinme + kontrast ≥7:1" vb.) KULLANMA — kapı (`npm run test:content`) bunları reddeder. Boyut rehberi (hepsi düğüme özel olmalı):
    - **featureDefs**: düğümün net işlevsel kapsamı, girdi/çıktı sözleşmesi.
    - **security**: bu düğümün GERÇEK tehdit yüzeyi (ör. yetki düğümü→policy template/least-privilege; veriyolu→poison message/SSRF; tenant→RLS+SET LOCAL).
    - **codeOptimization / securityOptimization / performance**: düğüme özel (ör. realtime→backpressure; ledger→bileşik indeks).
@@ -36,4 +37,6 @@ ADIMLAR:
 5. PM alanları: `acceptanceCriteria` (2-4), `deliverables` (2-3), `risks` (1-2: {id,desc,severity,mitigation}), `effort` ({estimate,unit:'sp',spent}), `progress`, `status`, `phase`, `state` ('aday'/'incelemede') — düğüme uygun ayarla.
 6. KORU: `id, wbsCode, parentId, level, dependsOn, blocks, related, source, tags, title, slug, summary, schemaVersion`.
 
-Bitince: kaç düğümü benzersiz içerikle yazdığını + 2 örnek (id → bir security maddesi) tek paragraf raporla.
+7. ÖZ-DENETİM (her düğümü yazmadan önce, kalite sözleşmesi): (a) her dolu boyut 3-5 madde mi? (b) en az 1 madde düğüme özgü terim (başlık/etiket) içeriyor mu? (c) Bölüm 4 yasak kalıp imzası var mı (zorunlu eca/aiAgents sınır satırları hariç)? (d) her dolu boyut `"provenance": "swarm"` damgalı mı? Hepsi tamamsa yaz; değilse düzelt.
+
+Bitince: kaç düğümü benzersiz içerikle yazdığını + 2 örnek (id → bir security maddesi) tek paragraf raporla. Orkestratör sonda `npm run test:content` ile kapıyı koşacak — çıktın bu kapıdan geçmeli.
