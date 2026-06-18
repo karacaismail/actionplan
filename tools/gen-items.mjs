@@ -53,6 +53,13 @@ function itemsFor(n) {
   const [e1, e2] = pick(d.ent, seed, 2);
   const T = n.title;
   const scope = LEVEL_SCOPE[n.level] || "birim";
+  const isArchetype = n.level === "archetype";
+  const isAppOrModule = n.level === "app" || n.level === "module";
+  const aiBoundary = isArchetype
+    ? `${T}: AI yalnız ArcheType taslağı veya prod-update önerisi üretir; prod için snapshot + rollback + compatibility check + geçmiş veri koruma zorunlu`
+    : isAppOrModule
+      ? `${T}: AI bu ${n.level} seviyesini üretemez/güncelleyemez; sadece okur ve insan için changeset önerir`
+      : `${T}: AI sadece öneri üretir; mutasyon ArcheType ruleset sınırına bağlıdır`;
   return {
     featureDefs: [`${T}: ${e1} ve ${e2} için net işlevsel sınır (${scope})`, `${e1} yaşam döngüsü + durum makinesi`, `Girdi/çıktı sözleşmesi ve hata yolları (${e2})`],
     security: [`${T}: ${e1} tablolarında tenant_id RLS + ${d.pii} maskeleme`, `${T} için rol bazlı erişim (least-privilege) + ${d.reg} uyum audit'i`, `${e2} işlemlerinde sunucu-taraflı doğrulama (${T})`],
@@ -62,8 +69,8 @@ function itemsFor(n) {
     mobileApps: [`${T} ekranı 320px+ duyarlı; ${e1} kartı dokunma hedefi ≥44px`, "iOS/Android PWA (Capacitor köprüsü)", `${e2} için offline taslak + senkron`],
     wcag: [`${T} formlarında label↔input + ARIA hata mesajı`, `${e1} tablosunda klavye gezinme + kontrast ≥7:1`, "Görünür odak sırası + ekran okuyucu denetimi"],
     deployment: [`${T} servisi Docker Swarm + sağlık kontrolü`, "Kubernetes: HPA + liveness/readiness probe + kaynak limiti", `Shared hosting: ${n.level === "app" || n.level === "module" ? "statik SPA + JSON" : "bağımsız artefakt"}`],
-    eca: [`${T} — '${d.evt}' olayında ${e1} durumuna göre bildirim/aksiyon`, `${T} zincirinde döngü kırıcı (maks 6) + idempotency`, `Dış etkili aksiyon (${e2}) → step-up + allowlist`],
-    aiAgents: [`AI ${e1} taslağı önerir; ${T} motoru uygular (capability-gated)`, "sub_prompt güvenilmez girdi; yıkıcı işlemde insan onayı", `${d.reg} kapsamında PII redaksiyon + kill-switch`],
+    eca: [`${T}: backend ruleset AI app/module üretim-güncelleme denemesini deny eder`, `${T} zincirinde döngü kırıcı (maks 6) + idempotency`, `ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback`],
+    aiAgents: [aiBoundary, "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny", `${d.reg} kapsamında PII redaksiyon + kill-switch`],
     testing: [`${T} için unit + e2e + '${e1}' kullanıcı yolculuğu (Playwright)`, "AI-destekli senaryo + testing-loop (maks 6, düzelmezse raporla)", `${e2} için autonomous QA + golden fixture`],
     owasp: [`${T} yüzeyinde OWASP Top 10:2025 (özellikle A01 erişim, A03 injection)`, `${e1} için ${n.source?.cluster === "data-intelligence" ? "LLM Top 10 (prompt injection)" : "girdi/çıktı doğrulama"}`, "Güvenlik olay loglaması + denetim izi"],
     integration: [`${T}, kernel/core ile ${e1} sözleşmesi üzerinden entegre`, n.parentId ? "Üst düğümle tipli arayüz; yan modüllerle gevşek bağ" : "Çekirdek kontrol düzlemiyle doğrudan", `Olay veriyolu: '${d.evt}' yayını`],
@@ -86,16 +93,47 @@ function phaseCriteriaFor(n) {
   };
 }
 
+function requiredBoundaryItems(n) {
+  const T = n.title;
+  return {
+    eca: `${T}: backend ECA ruleset AI app/module mutasyonunu ve ruleset override denemesini deny eder`,
+    aiAgents: `${T}: AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir`,
+  };
+}
+
+function prependUnique(arr, item) {
+  const without = (arr || []).filter((x) => x !== item);
+  return [item, ...without];
+}
+
+function enforceBoundaryItems(n) {
+  const required = requiredBoundaryItems(n);
+  if (n.dimensions?.eca) {
+    n.dimensions.eca.items = prependUnique(n.dimensions.eca.items, required.eca);
+    n.dimensions.eca.status = "filled";
+  }
+  if (n.dimensions?.aiAgents) {
+    n.dimensions.aiAgents.items = prependUnique(n.dimensions.aiAgents.items, required.aiAgents);
+    n.dimensions.aiAgents.status = "filled";
+  }
+}
+
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 let updated = 0, kept = 0;
 for (const f of files) {
   const p = path.join(NODES, f);
   const n = JSON.parse(fs.readFileSync(p, "utf8"));
-  if (isBespokeNode(n)) { kept++; continue; } // elle/ajan yazılan bespoke korunur
+  if (isBespokeNode(n)) {
+    enforceBoundaryItems(n);
+    fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
+    kept++;
+    continue;
+  } // elle/ajan yazılan bespoke korunur
   const items = itemsFor(n);
   for (const [k, arr] of Object.entries(items)) {
     if (n.dimensions[k]) { n.dimensions[k].items = arr; n.dimensions[k].status = "filled"; }
   }
+  enforceBoundaryItems(n);
   const crit = phaseCriteriaFor(n);
   for (const [ph, c] of Object.entries(crit)) if (n.phases[ph]) n.phases[ph].criteria = c;
   const d = DOM[n.source?.cluster] || DEFAULT_DOM;

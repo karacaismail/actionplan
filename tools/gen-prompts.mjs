@@ -21,8 +21,8 @@ const DIM = {
   mobileApps: { tr: "Mobil Uygulama Uyumu", kapsa: "iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı" },
   wcag: { tr: "WCAG 2.2 AAA", kapsa: "kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası" },
   deployment: { tr: "Dağıtım", kapsa: "Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu" },
-  eca: { tr: "ECA Kuralları", kapsa: "somut Event-Condition-Action kuralı, döngü kırıcı (maks zincir 6), aksiyon allowlist, dış etkide step-up" },
-  aiAgents: { tr: "AI Ajan Davranışı", kapsa: "AI önerir/motor uygular, capability-gated yetki, sub_prompt güvenilmez girdi, kill-switch, insan onayı (step-up)" },
+  eca: { tr: "ECA Kuralları", kapsa: "backend/engine tarafında çalışan ruleset; UI tasarlama. AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility check, append-only/expand-contract migration; döngü kırıcı maks 6" },
+  aiAgents: { tr: "AI Ajan Davranışı", kapsa: "AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez veya güncelleyemez. sub_prompt güvenilmez girdi; ruleset dışına çıkamaz; kill-switch, step-up, PII redaksiyon" },
   testing: { tr: "Testler & QA", kapsa: "unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı" },
   owasp: { tr: "OWASP & Standartlar", kapsa: "OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi" },
   integration: { tr: "Kernel/Core Entegrasyonu", kapsa: "kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü" },
@@ -48,6 +48,7 @@ function promptFor(node, key) {
     `"${d.tr}" boyutunu bu görev için üret.`,
     `Bağlam: ${node.id} — "${node.title}" (${lvl}; küme: ${cl}).${summary ? ` Özet: ${summary}` : ""}${tags ? ` Etiketler: ${tags}.` : ""}`,
     "Çıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.",
+    "Güvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
     `Kapsa: ${d.kapsa}.`,
   ].join("\n");
 }

@@ -11,6 +11,9 @@ KESİN KURALLAR:
 - SADECE `source.cluster === "{{CLUSTER}}"` olan node JSON dosyalarını düzenle. Kod/config/index/navigation/meta veya başka cluster'a DOKUNMA.
 - `node tools/reindex.mjs` ÇALIŞTIRMA (orkestratör en sonda bir kez çalıştırır). Kurulum yapma. Emoji yok.
 - Şema: her düğümde `dimensions` 14 anahtar + `phases` 7 anahtar KORUNMALI. Şema-dışı alan ekleme. Geçerli JSON yaz.
+- AI maliyeti önemli değil; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, publish/delete/direct-prod-write yapamaz.
+- AI yalnız ArcheType taslağı veya ArcheType prod-update önerisi üretebilir. Prod ArcheType update için geçmiş veri korunmalı; immutable snapshot, rollback planı, compatibility check ve append-only/expand-contract migration zorunludur.
+- ECA UI tasarlama. ECA yalnız backend/engine tarafında çalışan ruleset ve risk azaltma senaryosu olarak yazılmalı. AI ruleset dışına çıkamaz, ruleset override/disable edemez.
 
 ADIMLAR:
 1. Bu cluster'ın düğüm listesini çıkar:
@@ -23,8 +26,8 @@ ADIMLAR:
    - **mobileApps**: iOS/Android (PWA/Capacitor) + Chrome extension — düğüm bağlamında.
    - **wcag**: WCAG 2.2 AAA (kontrast 7:1, klavye, ARIA) — düğümün UI yüzeyi varsa somut.
    - **deployment**: Docker Swarm + Kubernetes (HPA/probe/limit) + WordPress sınıfı shared hosting kısıtı.
-   - **eca**: düğümün GERÇEK olayına özel Event-Condition-Action kuralı + döngü kırıcı (maks zincir 6).
-   - **aiAgents**: AI önerir/motor uygular, capability-gated, sub_prompt untrusted; düğüme özel davranış.
+   - **eca**: düğümün GERÇEK olayına özel backend Event-Condition-Action ruleset'i + döngü kırıcı (maks zincir 6). ECA UI değildir; sadece risk azaltır.
+   - **aiAgents**: AI yalnız ArcheType taslağı/prod-update önerisi üretir; app/module üretemez/güncelleyemez; sub_prompt untrusted; ruleset override deny.
    - **testing**: unit + e2e + user journey + AI-destekli Playwright + testing-loop (maks 6, düzelmezse raporla) + autonomous QA.
    - **owasp**: OWASP Top 10:2025 (+ AI ilgiliyse LLM Top 10) — düğümün açık yüzeyine özel maddeler.
    - **integration**: bu düğümün kernel/core/modüller/app'lerle GERÇEK entegrasyonu (gerekli mi, nasıl).

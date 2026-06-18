@@ -6,8 +6,8 @@ export { buildTree, flattenTree } from "./buildTree";
 export type { TreeNode, Rollup } from "./buildTree";
 export { computeCriticalPath } from "./criticalPath";
 export type { CriticalPath } from "./criticalPath";
-export { evaluateEca, runEca } from "./eca";
-export type { EcaFireResult } from "./eca";
+export { evaluateAgentPolicy, evaluateEca, runEca } from "./eca";
+export type { AgentActionRequest, AgentPolicyDecision, EcaFireResult } from "./eca";
 export { loadMeta, loadNodesAsync } from "./loadData";
 export type { MetaBundle } from "./loadData";
 export {

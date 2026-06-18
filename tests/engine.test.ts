@@ -1,7 +1,11 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   buildTree,
   computeCriticalPath,
+  evaluateAgentPolicy,
   evaluateEca,
   exportCSV,
   exportJSON,
@@ -11,7 +15,18 @@ import {
   importJSON,
   indexById,
 } from "@/engine";
-import { EcaRuleSchema, type TaskNode, TaskNodeSchema } from "@/schemas";
+import { AgentPolicySchema, EcaRuleSchema, type TaskNode, TaskNodeArraySchema, TaskNodeSchema } from "@/schemas";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const generatedNodesDir = path.resolve(__dirname, "../src/data/generated/nodes");
+
+function loadGeneratedNodes(): TaskNode[] {
+  const nodes = fs
+    .readdirSync(generatedNodesDir)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => JSON.parse(fs.readFileSync(path.join(generatedNodesDir, f), "utf8")));
+  return TaskNodeArraySchema.parse(nodes);
+}
 
 function node(over: Record<string, unknown>): TaskNode {
   return TaskNodeSchema.parse({
@@ -147,6 +162,99 @@ describe("ECA motoru (yapısal — gerçekten çalışır, mock değil)", () => 
 
   it("maxChainDepth aşılınca tetiklenmez (sonsuz zincir koruması — maks 6)", () => {
     expect(evaluateEca(rule, "task.status.changed", { status: "done" }, 6).fired).toBe(false);
+  });
+});
+
+describe("AI ArcheType güvenlik sınırı", () => {
+  const policy = AgentPolicySchema.parse({
+    autonomy: "draft",
+    allowedTargets: ["archetype"],
+    forbiddenTargets: ["app", "module"],
+  });
+
+  it("AI app/module üretemez veya güncelleyemez", () => {
+    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "app" }).allowed).toBe(false);
+    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "module" }).allowed).toBe(false);
+    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "update", targetLevel: "module" }).allowed).toBe(false);
+  });
+
+  it("AI yalnız ArcheType taslağı üretebilir", () => {
+    const decision = evaluateAgentPolicy(policy, {
+      actor: "ai",
+      action: "generate",
+      targetLevel: "archetype",
+      environment: "draft",
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.requiresApproval).toBe(true);
+  });
+
+  it("prod ArcheType update geçmiş veri korunmadan geçmez", () => {
+    const denied = evaluateAgentPolicy(policy, {
+      actor: "ai",
+      action: "update",
+      targetLevel: "archetype",
+      environment: "production",
+      historyPreserved: false,
+    });
+    expect(denied.allowed).toBe(false);
+
+    const allowed = evaluateAgentPolicy(policy, {
+      actor: "ai",
+      action: "update",
+      targetLevel: "archetype",
+      environment: "production",
+      historyPreserved: true,
+      snapshotCreated: true,
+      rollbackReady: true,
+      compatibilityChecked: true,
+      migrationMode: "append-only",
+    });
+    expect(allowed.allowed).toBe(true);
+    expect(allowed.requiresApproval).toBe(true);
+  });
+
+  it("AI ruleset dışına çıkamaz", () => {
+    const decision = evaluateAgentPolicy(policy, {
+      actor: "ai",
+      action: "change-ruleset",
+      targetLevel: "archetype",
+      rulesetBypassAttempt: true,
+    });
+    expect(decision.allowed).toBe(false);
+  });
+});
+
+describe("üretilmiş JSON agentPolicy/ECA kapıları", () => {
+  const nodes = loadGeneratedNodes();
+
+  it("app/module düğümlerinde AI mutasyon otonomisi yoktur", () => {
+    const violations = nodes
+      .filter((n) => n.level === "app" || n.level === "module")
+      .filter((n) => n.agentPolicy?.autonomy !== "none");
+    expect(violations.map((n) => `${n.id}:${n.agentPolicy?.autonomy}`)).toEqual([]);
+  });
+
+  it("ECA publish otomasyonu üretmez", () => {
+    const publishRules = nodes.flatMap((n) => n.ecaRules.filter((r) => r.then.type === "publish").map((r) => `${n.id}:${r.id}`));
+    expect(publishRules).toEqual([]);
+  });
+
+  it("her düğümde backend AI deny ruleset'i vardır", () => {
+    const missing = nodes.filter((n) => {
+      const events = new Set(n.ecaRules.map((r) => r.event));
+      return !events.has("ai.generation.requested") || !events.has("ai.update.requested") || !events.has("ai.ruleset.override.requested");
+    });
+    expect(missing.map((n) => n.id)).toEqual([]);
+  });
+
+  it("ArcheType düğümleri prod update geçmiş veri gate'i taşır", () => {
+    const missing = nodes.filter((n) => {
+      if (n.level !== "archetype") return false;
+      const ruleIds = new Set(n.ecaRules.map((r) => r.id));
+      return !ruleIds.has(`eca-${n.id}-archetype-draft-allow`) || !ruleIds.has(`eca-${n.id}-archetype-prod-update-gated`);
+    });
+    expect(missing.map((n) => n.id)).toEqual([]);
   });
 });
 

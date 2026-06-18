@@ -196,12 +196,54 @@ export const EcaRuleSchema = z.object({
 });
 export type EcaRule = z.infer<typeof EcaRuleSchema>;
 
+export const MigrationModeSchema = z.enum(["append-only", "expand-contract", "reversible-backfill"]);
+export type MigrationMode = z.infer<typeof MigrationModeSchema>;
+
+export const RulesetBoundarySchema = z.object({
+  /** ECA/ruleset motoru UI isteğiyle veya AI çıktısıyla devre dışı bırakılamaz. */
+  enforced: z.boolean().default(true),
+  /** AI kendi yetki setini veya ECA kurallarını override edemez. */
+  canOverride: z.boolean().default(false),
+  /** ECA senaryoları ürün UI'i değil, backend/engine koruma katmanıdır. */
+  backendOnly: z.boolean().default(true),
+  version: z.string().default("ai-archetype-eca-v1"),
+});
+export type RulesetBoundary = z.infer<typeof RulesetBoundarySchema>;
+
+export const ProdDataPolicySchema = z.object({
+  /** Prod ArcheType güncellemesi geçmiş veriyi rewrite edemez. */
+  preserveHistory: z.boolean().default(true),
+  migrationModes: z.array(MigrationModeSchema).default(["append-only", "expand-contract"]),
+  requireSnapshot: z.boolean().default(true),
+  requireRollback: z.boolean().default(true),
+  requireCompatibilityCheck: z.boolean().default(true),
+});
+export type ProdDataPolicy = z.infer<typeof ProdDataPolicySchema>;
+
 /** AI ajan davranış politikası — makine-okunur (düz metin değil) */
 export const AgentPolicySchema = z.object({
   autonomy: z.enum(["suggest", "draft", "apply-gated", "none"]).default("suggest"),
   capabilities: z.array(z.string()).default([]),
+  /** AI'nin üretim/güncelleme hedefi olarak kullanabileceği WBS seviyeleri. */
+  allowedTargets: z.array(WbsLevelSchema).default([]),
+  /** AI için mutasyon hedefi olamayacak WBS seviyeleri. */
+  forbiddenTargets: z.array(WbsLevelSchema).default(["app", "module"]),
+  allowedActions: z.array(z.string()).default(["read", "suggest-changeset"]),
+  forbiddenActions: z.array(z.string()).default([
+    "generate-app",
+    "generate-module",
+    "update-app",
+    "update-module",
+    "publish-public",
+    "disable-ruleset",
+    "override-ruleset",
+    "rewrite-history",
+    "direct-prod-write",
+  ]),
   /** step-up (insan onayı) gerektiren aksiyonlar */
   stepUp: z.array(z.string()).default([]),
+  rulesetBoundary: RulesetBoundarySchema.default({}),
+  prodDataPolicy: ProdDataPolicySchema.default({}),
   subPromptUntrusted: z.boolean().default(true),
   killSwitch: z.boolean().default(true),
 });
