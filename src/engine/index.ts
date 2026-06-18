@@ -21,3 +21,11 @@ export type { NodeIndex } from "./resolve";
 export { exportJSON, exportTask, exportCSV, downloadFile, CSV_COLUMNS } from "./exportData";
 export { importJSON, importCSV, parseCSV } from "./importData";
 export type { ImportResult } from "./importData";
+export {
+  saveToGitHub,
+  buildCommitBody,
+  toBase64,
+  rememberToken,
+  recallToken,
+} from "./githubSave";
+export type { GitHubTarget, SaveResult } from "./githubSave";

@@ -1,3 +1,4 @@
+import { GitHubSaveDialog } from "@/components/toolbar/GitHubSaveDialog";
 import { Button, Icon } from "@/components/ui/primitives";
 import { downloadFile, exportCSV, exportJSON, importCSV, importJSON } from "@/engine";
 import { t } from "@/lib/strings";
@@ -49,6 +50,7 @@ export function ExportImportBar() {
         onChange={onFile}
         aria-hidden="true"
       />
+      <GitHubSaveDialog />
       {dirty && (
         <span className="text-base text-muted-foreground">
           <Icon name="ph-circle-dashed" /> oturum-içi değişiklik var
