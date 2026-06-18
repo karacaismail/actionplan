@@ -311,12 +311,12 @@ export function GraphView() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-base">
             <Icon name="ph-mountains" className="text-primary" aria-hidden="true" />
-            <span className="sr-only">Uygulama seç</span>
+            <span className="sr-only">{t.a11y.appSelect}</span>
             <select
               value={appId}
               onChange={(e) => setSelectedId(e.target.value)}
               className="tap-target rounded-md border border-input bg-card px-3 py-2 text-base"
-              aria-label="Uygulama seç"
+              aria-label={t.a11y.appSelect}
             >
               {apps.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -330,14 +330,14 @@ export function GraphView() {
             onClick={() => data && exportSvg(data, title, fileBase)}
             disabled={!data || isFetching}
           >
-            <Icon name="ph-file-svg" aria-hidden="true" /> SVG indir
+            <Icon name="ph-file-svg" aria-hidden="true" /> {t.actions.exportSvg}
           </Button>
           <Button
             size="sm"
             onClick={() => data && exportPng(data, title, fileBase)}
             disabled={!data || isFetching}
           >
-            <Icon name="ph-image" aria-hidden="true" /> PNG indir
+            <Icon name="ph-image" aria-hidden="true" /> {t.actions.exportPng}
           </Button>
         </div>
       </div>
@@ -345,7 +345,7 @@ export function GraphView() {
       {/* Açıklama: kenar tipleri */}
       <div className="flex flex-wrap items-center gap-4 text-base text-muted-foreground">
         <span className="inline-flex items-center gap-2">
-          <span className="h-0.5 w-6" style={{ background: hslVar("--border") }} /> Hiyerarşi
+          <span className="h-0.5 w-6" style={{ background: hslVar("--border") }} /> {t.a11y.hierarchy}
         </span>
         <span className="inline-flex items-center gap-2">
           <span
@@ -354,9 +354,11 @@ export function GraphView() {
               backgroundImage: `repeating-linear-gradient(90deg, ${hslVar("--status-blocked")} 0 6px, transparent 6px 10px)`,
             }}
           />
-          Bağımlılık (dependsOn)
+          {t.a11y.depLegend}
         </span>
-        <span className="ml-auto">{subtree.length} düğüm</span>
+        <span className="ml-auto">
+          {subtree.length} {t.a11y.nodesUnit}
+        </span>
       </div>
 
       <Card className="relative h-[70dvh] min-h-[480px] overflow-hidden p-0">
@@ -364,14 +366,14 @@ export function GraphView() {
           <div className="absolute inset-0 z-10 grid place-items-center bg-card/70 text-muted-foreground">
             <span className="inline-flex items-center gap-2 text-base">
               <Icon name="ph-spinner" className="animate-spin text-primary" aria-hidden="true" />
-              Yerleşim hesaplanıyor…
+              {t.a11y.layoutComputing}
             </span>
           </div>
         )}
         {isError && (
           <div className="absolute inset-0 z-10 grid place-items-center text-destructive">
             <span className="inline-flex items-center gap-2 text-base">
-              <Icon name="ph-warning-circle" aria-hidden="true" /> Yerleşim hesaplanamadı.
+              <Icon name="ph-warning-circle" aria-hidden="true" /> {t.a11y.layoutFailed}
             </span>
           </div>
         )}
@@ -403,7 +405,7 @@ export function GraphView() {
           !isFetching &&
           !isError && (
             <div className="grid h-full place-items-center text-muted-foreground">
-              <span className="text-base">Bu uygulamada gösterilecek alt düğüm yok.</span>
+              <span className="text-base">{t.a11y.noSubNodes}</span>
             </div>
           )
         )}

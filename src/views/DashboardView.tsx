@@ -12,7 +12,7 @@ const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ de
 function ChartFallback() {
   return (
     <div className="grid h-[280px] place-items-center text-base text-muted-foreground">
-      Grafik yükleniyor…
+      {t.dashboard.chartLoading}
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function DashboardView() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat icon="ph-list-checks" label={t.dashboard.total} value={String(meta.counts.total)} />
         <Stat icon="ph-mountains" label={t.dashboard.apps} value={String(apps.length)} />
-        <Stat icon="ph-lightning" label="Kritik yol (düğüm)" value={String(criticalCount)} />
+        <Stat icon="ph-lightning" label={t.dashboard.critical} value={String(criticalCount)} />
         <Stat icon="ph-gauge" label={t.dashboard.progress} value={`%${overall}`} />
       </div>
 
@@ -99,13 +99,13 @@ export function DashboardView() {
         <Card className="p-4">
           <h2 className="mb-2 font-medium">{t.dashboard.byStatus}</h2>
           <Suspense fallback={<ChartFallback />}>
-            <EChart option={statusOption} ariaLabel="Duruma göre görev dağılımı" />
+            <EChart option={statusOption} ariaLabel={t.dashboard.chartStatus} />
           </Suspense>
         </Card>
         <Card className="p-4">
           <h2 className="mb-2 font-medium">{t.dashboard.byLevel}</h2>
           <Suspense fallback={<ChartFallback />}>
-            <EChart option={levelOption} ariaLabel="Seviyeye göre görev dağılımı" />
+            <EChart option={levelOption} ariaLabel={t.dashboard.chartLevel} />
           </Suspense>
         </Card>
       </div>
@@ -119,7 +119,9 @@ export function DashboardView() {
               <Link to="/task/$taskId" params={{ taskId: a.id }} className="min-w-0 flex-1 truncate hover:underline">
                 <span className="font-mono text-base text-muted-foreground">{a.wbsCode}</span> {a.title}
               </Link>
-              <span className="text-base text-muted-foreground">{a.rollup.total} alt görev</span>
+              <span className="text-base text-muted-foreground">
+                {a.rollup.total} {t.detail.subTaskUnit}
+              </span>
               <div className="w-24">
                 <ProgressBar value={a.rollup.progress} />
               </div>

@@ -25,7 +25,7 @@ export function ExportImportBar() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Dışa/İçe aktarma">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t.a11y.exportImport}>
       <Button
         size="sm"
         onClick={() => downloadFile("eylem-plani.json", exportJSON(nodes), "application/json")}

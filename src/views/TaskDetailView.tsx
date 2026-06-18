@@ -53,7 +53,7 @@ export function TaskDetailView() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
       {/* Breadcrumb */}
-      <nav aria-label="Konum" className="flex flex-wrap items-center gap-1 text-base text-muted-foreground">
+      <nav aria-label={t.detail.location} className="flex flex-wrap items-center gap-1 text-base text-muted-foreground">
         <Link to="/wbs" className="hover:text-foreground">
           {t.nav.wbs}
         </Link>
@@ -78,14 +78,14 @@ export function TaskDetailView() {
             <StatusBadge status={node.status} />
             {node.criticalPath && (
               <Badge color="hsl(38 92% 62%)">
-                <Icon name="ph-lightning" /> Kritik yol
+                <Icon name="ph-lightning" /> {t.detail.criticalPath}
               </Badge>
             )}
           </div>
           <Button
             variant="primary"
             size="sm"
-            aria-label="Bu görevi JSON olarak dışa aktar"
+            aria-label={t.a11y.exportTaskAria}
             onClick={() =>
               downloadFile(
                 `${node.wbsCode || node.id}-${node.id}.json`,
@@ -94,7 +94,7 @@ export function TaskDetailView() {
               )
             }
           >
-            <Icon name="ph-export" /> Export this task
+            <Icon name="ph-export" /> {t.actions.exportTask}
           </Button>
         </div>
         <h1 className="text-2xl font-medium">{node.title}</h1>
@@ -260,7 +260,7 @@ function Dimensions({ node }: { node: TaskNode }) {
                 <span className="font-medium">{meta.tr}</span>
                 {!isSkeleton && (
                   <Badge className="ml-auto text-primary" color={hslVar("--status-done")}>
-                    {dim.items.length} madde
+                    {dim.items.length} {t.detail.itemsUnit}
                   </Badge>
                 )}
               </div>
@@ -279,7 +279,7 @@ function Dimensions({ node }: { node: TaskNode }) {
               {dim?.prompt && (
                 <details className="mt-2">
                   <summary className="cursor-pointer text-base text-muted-foreground">
-                    <Icon name="ph-sparkle" className="text-primary" /> AI prompt (vibecoding)
+                    <Icon name="ph-sparkle" className="text-primary" /> {t.detail.aiPrompt}
                   </summary>
                   <div className="mt-1 flex items-start gap-2">
                     <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
@@ -288,7 +288,7 @@ function Dimensions({ node }: { node: TaskNode }) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      aria-label="Prompt'u kopyala"
+                      aria-label={t.actions.copyPrompt}
                       onClick={() => navigator.clipboard?.writeText(dim.prompt)}
                     >
                       <Icon name="ph-copy" />
@@ -307,8 +307,8 @@ function Dimensions({ node }: { node: TaskNode }) {
 function Relations({ node }: { node: TaskNode }) {
   const index = useTaskStore((s) => s.index);
   const groups: { label: string; ids: string[] }[] = [
-    { label: "Bağımlı (depends-on)", ids: node.dependsOn },
-    { label: "İlişkili", ids: node.related },
+    { label: t.detail.dependsOn, ids: node.dependsOn },
+    { label: t.detail.related, ids: node.related },
   ];
   const any = groups.some((g) => g.ids.length);
   if (!any) return null;

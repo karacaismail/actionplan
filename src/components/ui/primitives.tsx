@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import { STATUS_LABEL, STATUS_VAR, hslVar } from "@/lib/format";
+import { t } from "@/lib/strings";
 import type { TaskStatus } from "@/schemas";
 import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
 
@@ -86,7 +87,7 @@ export function ProgressBar({ value, color }: { value: number; color?: string })
     <div
       className="h-2 w-full overflow-hidden rounded-full bg-secondary"
       role="progressbar"
-      aria-label={`İlerleme %${value}`}
+      aria-label={`${t.a11y.progressOf} %${value}`}
       aria-valuenow={value}
       aria-valuemin={0}
       aria-valuemax={100}

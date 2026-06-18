@@ -96,7 +96,7 @@ function KanbanCard({ node }: { node: TaskNode }) {
           value={node.status}
           onChange={(e) => taskStore.updateNode(node.id, { status: e.target.value as TaskStatus })}
           className="tap-target w-full rounded-md border border-border bg-card px-2 py-1 text-base"
-          aria-label={`${node.title} durumu`}
+          aria-label={`${node.title} ${t.a11y.statusSuffix}`}
         >
           {STATUS_LIST.map((s) => (
             <option key={s} value={s}>
@@ -175,7 +175,7 @@ function KanbanBoard({ nodes }: { nodes: TaskNode[] }) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-label="Kanban panosu">
+    <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-label={t.a11y.kanbanBoard}>
       {STATUS_LIST.map((s) => (
         <KanbanColumn key={s} status={s} nodes={byStatus.get(s) ?? []} onDropNode={onDropNode} />
       ))}
@@ -212,7 +212,7 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
       },
       {
         accessorKey: "title",
-        header: "Başlık",
+        header: t.fields.title,
         cell: ({ row }) => (
           <Link
             to="/task/$taskId"
@@ -304,9 +304,9 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
           <input
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Görevlerde ara…"
+            placeholder={t.a11y.searchPlaceholder}
             className="w-full bg-transparent text-base outline-none"
-            aria-label="Görevlerde ara"
+            aria-label={t.a11y.searchTasks}
           />
         </label>
         <label className="flex items-center gap-2 text-base text-muted-foreground">
@@ -317,7 +317,7 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
             className="tap-target rounded-md border border-border bg-card px-2 py-2 text-base text-foreground"
             aria-label={`${t.fields.level} filtresi`}
           >
-            <option value="">Tüm seviyeler</option>
+            <option value="">{t.a11y.allLevels}</option>
             {WBS_LEVELS.map((lv) => (
               <option key={lv} value={lv}>
                 {LEVEL_META[lv].tr}
@@ -333,7 +333,7 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
             className="tap-target rounded-md border border-border bg-card px-2 py-2 text-base text-foreground"
             aria-label={`${t.fields.status} filtresi`}
           >
-            <option value="">Tüm durumlar</option>
+            <option value="">{t.a11y.allStatuses}</option>
             {STATUS_LIST.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABEL[s]}
@@ -405,7 +405,7 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
       </Card>
 
       <p className="text-base text-muted-foreground" role="status">
-        {table.getRowModel().rows.length} / {nodes.length} görev
+        {table.getRowModel().rows.length} / {nodes.length} {t.a11y.taskUnit}
       </p>
     </div>
   );
@@ -429,7 +429,7 @@ export function BoardView() {
       <div
         className="inline-flex rounded-md border border-border bg-card p-1"
         role="tablist"
-        aria-label="Görünüm seçimi"
+        aria-label={t.a11y.viewSelect}
       >
         <button
           type="button"

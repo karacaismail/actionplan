@@ -1,4 +1,5 @@
 import { Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
+import { t } from "@/lib/strings";
 import { cn } from "@/lib/cn";
 import { levelLabel, levelVar, hslVar } from "@/lib/format";
 import type { TreeNode } from "@/engine";
@@ -13,7 +14,7 @@ interface Props {
 
 export function WbsTree({ nodes, expanded, onToggle, activeId }: Props) {
   return (
-    <ul role="tree" aria-label="WBS ağacı" className="flex flex-col">
+    <ul role="tree" aria-label={t.a11y.wbsTree} className="flex flex-col">
       {nodes.map((n) => (
         <WbsRow key={n.id} node={n} expanded={expanded} onToggle={onToggle} activeId={activeId} />
       ))}
@@ -37,7 +38,7 @@ function WbsRow({ node, expanded, onToggle, activeId }: { node: TreeNode } & Omi
       >
         <button
           type="button"
-          aria-label={hasChildren ? (isOpen ? "Kapat" : "Aç") : undefined}
+          aria-label={hasChildren ? (isOpen ? t.a11y.collapse : t.a11y.expand) : undefined}
           className={cn("grid size-6 place-items-center rounded", !hasChildren && "invisible")}
           onClick={() => onToggle(node.id)}
           tabIndex={hasChildren ? 0 : -1}
@@ -62,7 +63,7 @@ function WbsRow({ node, expanded, onToggle, activeId }: { node: TreeNode } & Omi
             name="ph-lightning"
             className="shrink-0"
             style={{ color: "hsl(38 92% 62%)" }}
-            title="Kritik yol"
+            title={t.detail.criticalPath}
           />
         )}
         <div className="hidden w-28 shrink-0 items-center gap-2 sm:flex">

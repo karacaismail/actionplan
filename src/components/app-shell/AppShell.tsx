@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           variant="ghost"
           size="sm"
           className="md:hidden"
-          aria-label="Menü"
+          aria-label={t.a11y.menu}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
@@ -58,13 +58,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         {open && (
           <button
             type="button"
-            aria-label="Kapat"
+            aria-label={t.a11y.close}
             className="fixed inset-0 z-30 bg-black/50 md:hidden"
             onClick={() => setOpen(false)}
           />
         )}
         <nav
-          aria-label="Ana gezinme"
+          aria-label={t.a11y.mainNav}
           className={cn(
             "fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto border-r border-border bg-card p-3 pt-16 transition-transform md:static md:z-0 md:translate-x-0 md:pt-4",
             open ? "translate-x-0" : "-translate-x-full",
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {loading ? (
             <div className="grid h-full place-items-center text-base text-muted-foreground">
               <span className="flex items-center gap-2">
-                <Icon name="ph-circle-notch" className="animate-spin text-xl" /> Veri yükleniyor…
+                <Icon name="ph-circle-notch" className="animate-spin text-xl" /> {t.a11y.loading}
               </span>
             </div>
           ) : (

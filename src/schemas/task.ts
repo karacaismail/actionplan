@@ -1,3 +1,4 @@
+import uiStrings from "@/data/strings.json";
 import { z } from "zod";
 
 /**
@@ -23,14 +24,15 @@ export const WBS_LEVELS = [
 export const WbsLevelSchema = z.enum(WBS_LEVELS);
 export type WbsLevel = z.infer<typeof WbsLevelSchema>;
 
+// Etiketler tek kaynaktan: src/data/strings.json (içerik JSON'da, kodda değil)
 export const LEVEL_META: Record<WbsLevel, { tr: string; metaphor: string; depth: number }> = {
-  app: { tr: "Uygulama", metaphor: "dağ", depth: 0 },
-  module: { tr: "Modül", metaphor: "kaya", depth: 1 },
-  archetype: { tr: "ArcheType", metaphor: "büyük taş", depth: 2 },
-  stone: { tr: "Taş", metaphor: "orta taş", depth: 3 },
-  molecule: { tr: "Molekül", metaphor: "küçük taş", depth: 4 },
-  element: { tr: "Element", metaphor: "toz tanesi", depth: 5 },
-  atom: { tr: "Atom", metaphor: "atom", depth: 6 },
+  app: { ...uiStrings.levels.app, depth: 0 },
+  module: { ...uiStrings.levels.module, depth: 1 },
+  archetype: { ...uiStrings.levels.archetype, depth: 2 },
+  stone: { ...uiStrings.levels.stone, depth: 3 },
+  molecule: { ...uiStrings.levels.molecule, depth: 4 },
+  element: { ...uiStrings.levels.element, depth: 5 },
+  atom: { ...uiStrings.levels.atom, depth: 6 },
 };
 
 /* ----------------------------------------------------------------------------
@@ -49,13 +51,13 @@ export const WaterfallPhaseSchema = z.enum(WATERFALL_PHASES);
 export type WaterfallPhase = z.infer<typeof WaterfallPhaseSchema>;
 
 export const PHASE_META: Record<WaterfallPhase, { tr: string; order: number }> = {
-  requirements: { tr: "Gereksinim", order: 1 },
-  "test-plan": { tr: "Test Planı", order: 2 },
-  "db-schema": { tr: "DB / Şema", order: 3 },
-  development: { tr: "Geliştirme", order: 4 },
-  "test-qa": { tr: "Test / QA", order: 5 },
-  verification: { tr: "Doğrulama", order: 6 },
-  "release-maintenance": { tr: "Yayın / Bakım", order: 7 },
+  requirements: { tr: uiStrings.phases.requirements, order: 1 },
+  "test-plan": { tr: uiStrings.phases["test-plan"], order: 2 },
+  "db-schema": { tr: uiStrings.phases["db-schema"], order: 3 },
+  development: { tr: uiStrings.phases.development, order: 4 },
+  "test-qa": { tr: uiStrings.phases["test-qa"], order: 5 },
+  verification: { tr: uiStrings.phases.verification, order: 6 },
+  "release-maintenance": { tr: uiStrings.phases["release-maintenance"], order: 7 },
 };
 
 export const PhaseStatusSchema = z.enum(["pending", "active", "passed", "failed"]);
@@ -94,20 +96,20 @@ export const DimensionKeySchema = z.enum(DIMENSION_KEYS);
 export type DimensionKey = z.infer<typeof DimensionKeySchema>;
 
 export const DIMENSION_META: Record<DimensionKey, { tr: string; icon: string }> = {
-  featureDefs: { tr: "Özellik Tanımları", icon: "ph-list-bullets" },
-  security: { tr: "Güvenlik Önlemleri", icon: "ph-shield-check" },
-  codeOptimization: { tr: "Kod Optimizasyonu", icon: "ph-code" },
-  securityOptimization: { tr: "Güvenlik Optimizasyonu", icon: "ph-lock-key" },
-  performance: { tr: "Performans Optimizasyonu", icon: "ph-gauge" },
-  mobileApps: { tr: "Mobil Uygulama Uyumu", icon: "ph-device-mobile" },
-  wcag: { tr: "WCAG 2.2 AAA", icon: "ph-wheelchair" },
-  deployment: { tr: "Dağıtım (Swarm/K8s/Shared)", icon: "ph-stack" },
-  eca: { tr: "ECA Kuralları", icon: "ph-flow-arrow" },
-  aiAgents: { tr: "AI Ajan Davranışı", icon: "ph-robot" },
-  testing: { tr: "Testler & QA", icon: "ph-test-tube" },
-  owasp: { tr: "OWASP & Standartlar", icon: "ph-bug-beetle" },
-  integration: { tr: "Kernel/Core Entegrasyonu", icon: "ph-plugs-connected" },
-  moduleUsage: { tr: "Modül Kullanımı", icon: "ph-share-network" },
+  featureDefs: { tr: uiStrings.dimensions.featureDefs, icon: "ph-list-bullets" },
+  security: { tr: uiStrings.dimensions.security, icon: "ph-shield-check" },
+  codeOptimization: { tr: uiStrings.dimensions.codeOptimization, icon: "ph-code" },
+  securityOptimization: { tr: uiStrings.dimensions.securityOptimization, icon: "ph-lock-key" },
+  performance: { tr: uiStrings.dimensions.performance, icon: "ph-gauge" },
+  mobileApps: { tr: uiStrings.dimensions.mobileApps, icon: "ph-device-mobile" },
+  wcag: { tr: uiStrings.dimensions.wcag, icon: "ph-wheelchair" },
+  deployment: { tr: uiStrings.dimensions.deployment, icon: "ph-stack" },
+  eca: { tr: uiStrings.dimensions.eca, icon: "ph-flow-arrow" },
+  aiAgents: { tr: uiStrings.dimensions.aiAgents, icon: "ph-robot" },
+  testing: { tr: uiStrings.dimensions.testing, icon: "ph-test-tube" },
+  owasp: { tr: uiStrings.dimensions.owasp, icon: "ph-bug-beetle" },
+  integration: { tr: uiStrings.dimensions.integration, icon: "ph-plugs-connected" },
+  moduleUsage: { tr: uiStrings.dimensions.moduleUsage, icon: "ph-share-network" },
 };
 
 export const DimensionStatusSchema = z.enum(["skeleton", "draft", "filled"]);
