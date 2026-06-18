@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TaskNodeSchema, WbsLevelSchema } from "./task";
 
 export * from "./task";
+export * from "./archetype";
 
 /** Navigasyon ağacı düğümü (generated/navigation.json) */
 export const NavNodeSchema: z.ZodType<NavNode> = z.lazy(() =>

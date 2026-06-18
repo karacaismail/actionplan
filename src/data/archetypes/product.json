@@ -1,0 +1,92 @@
+{
+  "identity": {
+    "id": "product",
+    "name": "Product",
+    "module": "s-crm",
+    "app": "app-core-operations",
+    "description": "Ürün ArcheType'ı — katalog, fiyat, stok ve yaşam döngüsü; CRM/satış/e-ticaret modüllerinin paylaştığı büyük taş.",
+    "family": "archetype-contract"
+  },
+  "fields": [
+    { "name": "sku", "label": "Stok Kodu (SKU)", "type": "string", "required": true, "unique": true, "pii": false, "alias": [], "deprecated": false, "protected": true, "enumValues": [] },
+    { "name": "name", "label": "Ürün Adı", "type": "string", "required": true, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": [] },
+    { "name": "price", "label": "Fiyat", "type": "currency", "required": true, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": [] },
+    { "name": "status", "label": "Durum", "type": "enum", "required": true, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": ["draft", "active", "discontinued"] },
+    { "name": "stock", "label": "Stok Adedi", "type": "integer", "required": false, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": [] },
+    { "name": "categoryId", "label": "Kategori", "type": "relation", "required": false, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": [], "relationTo": "product-category" }
+  ],
+  "fragments": [
+    { "id": "pricing", "label": "Fiyatlandırma", "fields": [
+      { "name": "currency", "label": "Para Birimi", "type": "enum", "required": true, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": ["TRY", "USD", "EUR"] }
+    ] }
+  ],
+  "relations": [
+    { "name": "category", "kind": "many-to-one", "target": "product-category", "onDelete": "restrict" },
+    { "name": "supplier", "kind": "many-to-one", "target": "supplier", "onDelete": "set-null" }
+  ],
+  "validationRules": [
+    { "id": "v-price-positive", "field": "price", "expr": "price >= 0", "message": "Fiyat negatif olamaz" },
+    { "id": "v-sku-format", "field": "sku", "expr": "matches(sku, '^[A-Z0-9-]{3,}$')", "message": "SKU biçimi geçersiz" }
+  ],
+  "semanticRules": [
+    { "id": "sem-discontinued-stock", "description": "Discontinued ürün satışa açık olamaz", "invariant": "status != 'discontinued' || stock == 0" }
+  ],
+  "permissions": [
+    { "role": "catalog-manager", "actions": ["read", "create", "update"], "fieldLevel": { "price": "write" } },
+    { "role": "sales", "actions": ["read"], "fieldLevel": { "price": "read", "stock": "read" } }
+  ],
+  "accessPolicy": { "model": "hybrid", "relations": ["owner", "team-member"], "attributes": [ { "attr": "department", "op": "eq", "value": "catalog" } ], "tenantScoped": true },
+  "lifecycle": {
+    "states": ["draft", "active", "discontinued"],
+    "initial": "draft",
+    "transitions": [
+      { "from": "draft", "to": "active", "guard": "price > 0 && sku != null" },
+      { "from": "active", "to": "discontinued", "guard": "" }
+    ]
+  },
+  "linkedSurfaces": [ { "ref": "product-form", "version": "1.0.0" }, { "ref": "product-table", "version": "1.0.0" } ],
+  "linkedWorkflows": [ { "ref": "product-approval", "version": "1.0.0" } ],
+  "typedActions": [
+    { "id": "publish", "label": "Yayınla", "riskLevel": "high", "requiresApproval": true, "rollback": true },
+    { "id": "discontinue", "label": "Üretimden Kaldır", "riskLevel": "medium", "requiresApproval": true, "rollback": true }
+  ],
+  "searchIndex": { "indexedFields": ["sku", "status", "categoryId"], "fullText": ["name"], "vector": true },
+  "auditPolicy": { "enabled": true, "immutable": true, "forensicFields": ["actor", "agent", "model", "promptVersion", "beforeHash", "afterHash"] },
+  "migrationPolicy": {
+    "defaultMode": "expand-contract",
+    "allowedModes": ["append-only", "expand-contract", "reversible-backfill"],
+    "forbidDirect": ["delete", "rename", "type-change"],
+    "requireSnapshot": true, "requireRollback": true, "requireCompatibilityCheck": true,
+    "requireDataImpact": true, "requireDryRun": true, "requireAudit": true, "dataLossNeedsOwnerApproval": true
+  },
+  "retentionPolicy": { "retainDays": 0, "softDelete": true },
+  "tenantIsolation": { "strategy": "rls", "tenantField": "tenant_id", "enforced": true },
+  "ecaBindings": [
+    { "id": "eca-product-low-stock", "event": "product.stock.changed", "when": [ { "field": "stock", "op": "lt", "value": 5 } ], "then": { "type": "create-task", "params": { "title": "Düşük stok yeniden sipariş", "priority": "high" } }, "maxChainDepth": 6, "requiresApproval": false }
+  ],
+  "rulesetBindings": [
+    { "id": "rs-system-core", "layer": "system", "tenantEditableParams": [], "immutable": true },
+    { "id": "rs-platform-pricing", "layer": "platform", "tenantEditableParams": [], "immutable": false },
+    { "id": "rs-tenant-lowstock", "layer": "tenant", "tenantEditableParams": ["lowStockThreshold"], "immutable": false }
+  ],
+  "aiPolicy": {
+    "autonomy": "draft",
+    "capabilities": ["read", "suggest-changeset", "archetype-draft", "archetype-prod-update-proposal"],
+    "allowedTargets": ["archetype"],
+    "forbiddenTargets": ["app", "module"],
+    "allowedActions": ["read", "suggest-changeset", "generate-archetype-draft", "update-archetype-draft", "propose-archetype-prod-update"],
+    "forbiddenActions": ["generate-app", "generate-module", "update-app", "update-module", "publish-public", "disable-ruleset", "override-ruleset", "rewrite-history", "direct-prod-write"],
+    "stepUp": ["propose-archetype-prod-update", "delete-field", "change-permission", "disable-protection", "migrate-data"],
+    "rulesetBoundary": { "enforced": true, "canOverride": false, "backendOnly": true, "version": "ai-archetype-eca-v1" },
+    "prodDataPolicy": { "preserveHistory": true, "migrationModes": ["append-only", "expand-contract"], "requireSnapshot": true, "requireRollback": true, "requireCompatibilityCheck": true },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "steelWalls": ["schema-validation", "semantic-validation", "migration-safety", "rebac-abac", "tenant-isolation", "action-allowlist", "prompt-injection-guard", "audit-forensic-log", "rate-cost-abuse-limits", "conformance-tests", "rollback-snapshot-gates", "protected-fields-rules-archetypes", "immutable-ruleset-boundary"],
+  "testFixtures": [ { "sku": "PRD-001", "name": "Örnek Ürün", "price": 100, "status": "active", "stock": 20 } ],
+  "conformanceTests": [
+    { "id": "cf-price-nonneg", "assert": "price >= 0 her kayıtta" },
+    { "id": "cf-tenant-rls", "assert": "tenant_id olmadan satır okunamaz" }
+  ],
+  "versioning": { "version": "1.0.0", "compatibleWith": [] }
+}
