@@ -73,7 +73,8 @@ export function WorkloadView() {
         )}
       </Card>
 
-      <Card className="overflow-x-auto p-0">
+      <Card className="p-0">
+        <div className="overflow-x-auto" tabIndex={0} role="group" aria-label={t.workload.title}>
         <table className="w-full border-collapse text-base">
           <caption className="sr-only">{t.workload.title}</caption>
           <thead>
@@ -108,6 +109,7 @@ export function WorkloadView() {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
     </div>
   );
