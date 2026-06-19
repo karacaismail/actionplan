@@ -16,7 +16,8 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
     // tests/content/** AYRI config ile koşar (vitest.content.config.ts + `npm run test:content`).
-    // Faz F2'ye kadar ana CI'dan ayrı; içerik doldurulurken yayın hattı yeşil kalır.
+    // Faz F2 TAMAM: içerik kapısı CI'da AYRI bloklayıcı adım olarak koşar (deploy.yml: node checker + test:content).
+    // `npm test`'ten hariç tutulur çünkü kendi config'i (node environment) ve kendi CI adımı var.
     exclude: ["tests/e2e/**", "tests/content/**", "node_modules/**"],
     coverage: {
       provider: "v8",

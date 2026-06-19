@@ -7,9 +7,9 @@ import { DIMENSION_KEYS, type TaskNode } from "@/schemas";
  * contentQuality kapısı (Faz A2) — İçerik kalite sözleşmesinin (docs/icerik-kalite-sozlesmesi.md)
  * makine karşılığı. Bir boyutun maddeleri ŞABLON (kalıp) mı yoksa DERİN (sayfaya-özel) mi ölçer.
  *
- * Başlangıçta KIRMIZIDIR: 407 şablon düğüm yasak imza taşır. Küme B ilerledikçe yeşile döner.
- * Bu test ana CI'dan (npm test) AYRIDIR (vitest.content.config.ts + `npm run test:content`);
- * Faz F2'de bloklayıcı yapılır. Böylece içerik doldurulurken yayın hattı yeşil kalır.
+ * Küme B TAMAM: 422/422 düğümün 5908 boyutu derinleştirildi (swarm/human), bu test artık YEŞİL.
+ * Faz F2 TAMAM: kapı CI'da bloklayıcıdır (deploy.yml: önce node checker `tools/agents/check-content.mjs`,
+ * sonra bu kanonik vitest testi `npm run test:content`). Bir düğüm şablona geri dönerse deploy durur.
  */
 
 const NODES = path.resolve(process.cwd(), "src/data/generated/nodes");

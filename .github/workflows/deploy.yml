@@ -1,6 +1,6 @@
 # GitHub Pages dağıtım iş akışı — main'e push veya elle tetikleme ile çalışır.
-# Sıra: kur → tipdenetimi → birim test → E2E/axe (dev-server) → Vite üretim derlemesi → deploy.
-# Gateler BLOKLAYICI: tipdenetimi, birim test veya E2E/axe kırmızıysa deploy yapılmaz.
+# Sıra: kur → tipdenetimi → içerik kalite kapısı → birim test → E2E/axe (dev-server) → Vite üretim derlemesi → deploy.
+# Gateler BLOKLAYICI: tipdenetimi, içerik kapısı, birim test veya E2E/axe kırmızıysa deploy yapılmaz.
 name: Deploy to GitHub Pages
 
 on:
@@ -34,6 +34,14 @@ jobs:
 
       - name: Tip denetimi
         run: npm run typecheck
+
+      # İçerik kalite kapısı (Faz F2 — BLOKLAYICI). Önce bağımlılıksız node checker (hızlı, rollup gerekmez),
+      # sonra kanonik vitest testi. 422 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
+      - name: İçerik kalite kapısı (node checker — 422 düğüm)
+        run: node tools/agents/check-content.mjs
+
+      - name: İçerik kalite kapısı (vitest — kanonik)
+        run: npm run test:content
 
       - name: Birim testleri
         run: npm test
