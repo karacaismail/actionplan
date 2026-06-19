@@ -16,6 +16,7 @@ const BoardView = lazy(() => import("@/views/BoardView").then((m) => ({ default:
 const GraphView = lazy(() => import("@/views/GraphView").then((m) => ({ default: m.GraphView })));
 const ExecutionView = lazy(() => import("@/views/ExecutionView").then((m) => ({ default: m.ExecutionView })));
 const AuditView = lazy(() => import("@/views/AuditView").then((m) => ({ default: m.AuditView })));
+const TableView = lazy(() => import("@/views/TableView").then((m) => ({ default: m.TableView })));
 
 function Loading() {
   return <div className="p-6 text-base text-muted-foreground">Yükleniyor…</div>;
@@ -42,6 +43,7 @@ const boardRoute = createRoute({ getParentRoute: () => rootRoute, path: "/board"
 const graphRoute = createRoute({ getParentRoute: () => rootRoute, path: "/graph", component: GraphView });
 const executionRoute = createRoute({ getParentRoute: () => rootRoute, path: "/execution", component: ExecutionView });
 const auditRoute = createRoute({ getParentRoute: () => rootRoute, path: "/audit", component: AuditView });
+const tableRoute = createRoute({ getParentRoute: () => rootRoute, path: "/table", component: TableView });
 
 const routeTree = rootRoute.addChildren([
   dashboardRoute,
@@ -51,6 +53,7 @@ const routeTree = rootRoute.addChildren([
   graphRoute,
   executionRoute,
   auditRoute,
+  tableRoute,
 ]);
 
 export const router = createRouter({

@@ -9,6 +9,7 @@ import { type ReactNode, useEffect, useState } from "react";
 const NAV = [
   { to: "/", label: t.nav.dashboard, icon: "ph-squares-four" },
   { to: "/wbs", label: t.nav.wbs, icon: "ph-tree-structure" },
+  { to: "/table", label: t.nav.table, icon: "ph-table" },
   { to: "/board", label: t.nav.board, icon: "ph-kanban" },
   { to: "/graph", label: t.nav.graph, icon: "ph-graph" },
   { to: "/execution", label: t.nav.execution, icon: "ph-calendar-check" },

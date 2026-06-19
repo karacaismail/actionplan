@@ -12,6 +12,8 @@ export { rollupExecution, groupByMilestone } from "./execution";
 export type { ExecutionRollup } from "./execution";
 export { parseQuery, matchNode, filterNodes, isQueryError, QUERY_FIELDS, QUERY_OPS } from "./query";
 export type { QueryAst, QueryError, QueryField, QueryOp, QueryValue } from "./query";
+export { sortNodes, groupNodes, valueForSort, groupValue } from "./table";
+export type { SortDir, ScoreOf } from "./table";
 export { evaluateAgentPolicy, evaluateEca, runEca } from "./eca";
 export type { AgentActionRequest, AgentPolicyDecision, EcaFireResult } from "./eca";
 export { loadMeta, loadNodesAsync } from "./loadData";

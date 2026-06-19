@@ -41,6 +41,15 @@ test.describe("Erişilebilirlik (axe-core)", () => {
     ).toHaveLength(0);
   });
 
+  for (const route of ["/table", "/execution", "/audit"]) {
+    test(`${route} WCAG A/AA ihlali içermez`, async ({ page }) => {
+      await page.goto(route, { waitUntil: "networkidle" });
+      const sonuc = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+      const ihlaller = bloklayiciIhlaller(sonuc.violations);
+      expect(ihlaller, `"${route}" sayfasında bloklayıcı erişilebilirlik ihlalleri:\n${ihlaller.join("\n")}`).toHaveLength(0);
+    });
+  }
+
   test("Gösterge Paneli 320px dar ekranda WCAG A/AA ihlali içermez", async ({ page }) => {
     // En dar mobil viewport — yansıma (reflow) ve dokunma hedefi ihlallerini yakalar.
     await page.setViewportSize({ width: 320, height: 640 });

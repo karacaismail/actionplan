@@ -306,6 +306,8 @@ export const TaskNodeSchema = z
     status: TaskStatusSchema.default("backlog"),
     priority: PrioritySchema.default("medium"),
     owner: z.string().nullable().default(null),
+    /** Çoklu atama (Faz 0) — owner tekil sahip; assignees ek atananlar. */
+    assignees: z.array(z.string()).default([]),
     effort: EffortSchema.default({}),
     /** 0-100; ebeveynlerde rollup ile türetilebilir */
     progress: z.number().min(0).max(100).default(0),
