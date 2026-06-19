@@ -165,6 +165,17 @@ export const EffortSchema = z.object({
   spent: z.number().nonnegative().default(0),
 });
 
+/** Takvim (waterfall) — planlanan ve gerçekleşen başlangıç/bitiş (ISO tarih). */
+export const ScheduleSchema = z
+  .object({
+    start: z.string().nullable().default(null),
+    end: z.string().nullable().default(null),
+    actualStart: z.string().nullable().default(null),
+    actualEnd: z.string().nullable().default(null),
+  })
+  .default({});
+export type Schedule = z.infer<typeof ScheduleSchema>;
+
 export const RiskSchema = z.object({
   id: z.string(),
   desc: z.string(),
@@ -297,6 +308,10 @@ export const TaskNodeSchema = z
     progress: z.number().min(0).max(100).default(0),
     phase: WaterfallPhaseSchema.default("requirements"),
     phases: z.record(WaterfallPhaseSchema, PhaseGateSchema).default({}),
+
+    // Yürütme (dev-ekip): milestone + takvim. effort.unit "d" = adam-gün (waterfall).
+    milestone: z.string().nullable().default(null),
+    schedule: ScheduleSchema,
 
     // Kalite & kabul
     deliverables: z.array(z.string()).default([]),

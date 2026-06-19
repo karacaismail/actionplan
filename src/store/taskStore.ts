@@ -9,11 +9,13 @@ import {
 } from "@/engine";
 import type { DatasetMeta, NavNode, TaskNode } from "@/schemas";
 import { useSyncExternalStore } from "react";
+import { applyOverrides, clearOverrides, loadOverrides, saveOverrides } from "./persist";
 
 /**
  * Oturum-içi tek doğruluk kaynağı (hibrit: görüntüleme + düzenleme).
  * Meta/navigasyon eager; ağır düğüm gövdesi runtime'da lazy fetch (loading bayrağı).
- * Kalıcılık yok — değişiklikler export/import ile taşınır (frontend-only).
+ * Kalıcılık: moderatör düzenlemeleri browser-storage'da "override" olarak tutulur
+ * (tek mod hep-düzenlenebilir); taban veri korunur. Export/import yedek yoludur.
  */
 interface State {
   nodes: TaskNode[];
@@ -27,6 +29,8 @@ interface State {
   dirty: boolean;
   /** ağır veri henüz yüklenmediyse true */
   loading: boolean;
+  /** moderatörün yerel (browser-storage) düzenlemeleri */
+  overrides: Record<string, TaskNode>;
 }
 
 let state: State = emptyState();
@@ -52,6 +56,7 @@ function emptyState(): State {
     criticalLength: 0,
     dirty: false,
     loading: true,
+    overrides: loadOverrides(),
   };
 }
 
@@ -74,12 +79,13 @@ function commit(nodes: TaskNode[], dirty: boolean) {
   emit();
 }
 
-/** Ağır veriyi runtime'da yükler (tarayıcı). jsdom/test'te fetch yoksa çağrılmaz. */
+/** Ağır veriyi runtime'da yükler (tarayıcı); yerel override'ları taban üzerine bindirir. */
 function bootstrap() {
   loadNodesAsync()
     .then(({ nodes, errors }) => {
       if (errors.length) state = { ...state, errors: [...state.errors, ...errors] };
-      commit(nodes, false);
+      const merged = applyOverrides(nodes, state.overrides);
+      commit(merged, false);
     })
     .catch((e) => {
       state = { ...state, loading: false, errors: [...state.errors, String(e)] };
@@ -97,19 +103,34 @@ export const taskStore = {
     return state;
   },
   updateNode(id: string, patch: Partial<TaskNode>) {
-    commit(
-      state.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
-      true,
-    );
+    const next = state.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n));
+    const updated = next.find((n) => n.id === id);
+    const overrides = updated ? { ...state.overrides, [id]: updated } : state.overrides;
+    saveOverrides(overrides);
+    state = { ...state, overrides };
+    commit(next, true);
   },
   applyImport(incoming: TaskNode[], mode: "replace" | "merge") {
+    let nodes: TaskNode[];
     if (mode === "replace") {
-      commit(incoming, true);
-      return;
+      nodes = incoming;
+    } else {
+      const map = new Map(state.nodes.map((n) => [n.id, n]));
+      for (const n of incoming) map.set(n.id, n);
+      nodes = [...map.values()];
     }
-    const map = new Map(state.nodes.map((n) => [n.id, n]));
-    for (const n of incoming) map.set(n.id, n);
-    commit([...map.values()], true);
+    const overrides = { ...state.overrides };
+    for (const n of incoming) overrides[n.id] = n;
+    saveOverrides(overrides);
+    state = { ...state, overrides };
+    commit(nodes, true);
+  },
+  /** Yerel (browser-storage) düzenlemeleri temizler ve tabandan yeniden yükler. */
+  clearLocal() {
+    clearOverrides();
+    state = emptyState();
+    emit();
+    if (typeof fetch !== "undefined") bootstrap();
   },
   reload() {
     state = emptyState();

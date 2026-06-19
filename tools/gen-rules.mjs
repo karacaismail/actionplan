@@ -190,7 +190,11 @@ let count = 0;
 for (const f of files) {
   const p = path.join(NODES, f);
   const n = JSON.parse(fs.readFileSync(p, "utf8"));
-  n.ecaRules = rulesFor(n);
+  // Bespoke (domain) ECA kuralları korunur; standart governance seti yenilenir/eklenir.
+  const generated = rulesFor(n);
+  const genIds = new Set(generated.map((r) => r.id));
+  const bespoke = (n.ecaRules || []).filter((r) => !genIds.has(r.id));
+  n.ecaRules = [...bespoke, ...generated];
   n.agentPolicy = policyFor(n);
   fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
   count++;
