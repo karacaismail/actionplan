@@ -129,8 +129,13 @@ function EditRow({ n }: { n: TaskNode }) {
   return (
     <div className="grid grid-cols-1 gap-2 border-border border-b py-3 last:border-0 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="min-w-0">
-        <Link to="/task/$taskId" params={{ taskId: n.id }} className="truncate font-medium hover:underline">
-          <span className="font-mono text-base text-muted-foreground">{n.wbsCode}</span> {n.title}
+        <Link
+          to="/task/$taskId"
+          params={{ taskId: n.id }}
+          className="flex min-h-[44px] items-center truncate font-medium hover:underline"
+        >
+          <span className="font-mono text-base text-muted-foreground">{n.wbsCode}</span>
+          <span className="ml-1 truncate">{n.title}</span>
         </Link>
         <div className="truncate text-base text-muted-foreground">{n.milestone ?? "—"}</div>
       </div>

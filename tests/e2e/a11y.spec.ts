@@ -9,11 +9,11 @@ const BLOKLAYICI_ETKILER = ["serious", "critical"];
 
 // Tarama sonucundaki bloklayıcı ihlalleri okunabilir biçime çevirir.
 function bloklayiciIhlaller(
-  violations: Array<{ id: string; impact?: string | null; help: string; nodes: unknown[] }>,
+  violations: Array<{ id: string; impact?: string | null; help: string; nodes: Array<{ target?: unknown[] }> }>,
 ) {
   return violations
     .filter((v) => BLOKLAYICI_ETKILER.includes(v.impact ?? ""))
-    .map((v) => `[${v.impact}] ${v.id}: ${v.help} (${v.nodes.length} öğe)`);
+    .map((v) => `[${v.impact}] ${v.id}: ${v.help} → ${v.nodes.map((n) => (n.target ?? []).join(" ")).join(" | ")}`);
 }
 
 test.describe("Erişilebilirlik (axe-core)", () => {
