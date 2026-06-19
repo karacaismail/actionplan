@@ -1,11 +1,12 @@
 import { Button, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
 import { auditNode, filterNodes, groupNodes, isQueryError, parseQuery, sortNodes } from "@/engine";
-import type { QueryAst, SortDir } from "@/engine";
+import type { BulkPatch, QueryAst, SortDir } from "@/engine";
+import people from "@/data/people.json";
 import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/format";
 import { t } from "@/lib/strings";
-import { LEVEL_META, type SavedView, type TaskNode } from "@/schemas";
+import { LEVEL_META, PRIORITY_LIST, STATUS_LIST, type SavedView, type TaskNode } from "@/schemas";
 import { loadSavedViews, loadViewState, saveSavedViews, saveViewState } from "@/store/viewState";
-import { useTaskStore } from "@/store/taskStore";
+import { taskStore, useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -35,6 +36,7 @@ export function TableView() {
   const [hidden, setHidden] = useState<Set<Col>>(new Set());
   const [savedViews, setSavedViews] = useState<SavedView[]>(() => loadSavedViews());
   const [viewName, setViewName] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const lastGood = useRef<QueryAst>({ kind: "true" });
 
   useEffect(() => {
@@ -102,6 +104,17 @@ export function TableView() {
     }
     setGroupBy(v.group ?? "");
     setHidden(new Set(COLS.filter((c) => v.columns.length > 0 && !v.columns.includes(c))));
+  };
+  const toggleRow = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const onBulkApply = (patch: BulkPatch) => {
+    taskStore.applyBulkPatch([...selected], patch);
+    setSelected(new Set());
   };
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
@@ -230,6 +243,14 @@ export function TableView() {
             <caption className="sr-only">{t.table.title}</caption>
             <thead>
               <tr className="border-border border-b">
+                <th scope="col" className="w-10 px-3 py-2">
+                  <input
+                    type="checkbox"
+                    aria-label={t.table.selectAll}
+                    checked={sorted.length > 0 && sorted.every((n) => selected.has(n.id))}
+                    onChange={(e) => setSelected(e.target.checked ? new Set(sorted.map((n) => n.id)) : new Set())}
+                  />
+                </th>
                 {visibleCols.map((c) => (
                   <th key={c} scope="col" aria-sort={ariaSort(c)} className="px-3 py-2 text-left font-medium">
                     <button
@@ -249,19 +270,19 @@ export function TableView() {
               ? groups.map((g) => (
                   <tbody key={g.key}>
                     <tr className="bg-secondary">
-                      <th scope="colgroup" colSpan={visibleCols.length} className="px-3 py-1 text-left font-medium">
+                      <th scope="colgroup" colSpan={visibleCols.length + 1} className="px-3 py-1 text-left font-medium">
                         {g.key} <span className="text-muted-foreground tabular-nums">({g.nodes.length})</span>
                       </th>
                     </tr>
                     {g.nodes.map((n) => (
-                      <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} />
+                      <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} selected={selected.has(n.id)} onToggle={() => toggleRow(n.id)} />
                     ))}
                   </tbody>
                 ))
               : (
                 <tbody>
                   {paged?.map((n) => (
-                    <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} />
+                    <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} selected={selected.has(n.id)} onToggle={() => toggleRow(n.id)} />
                   ))}
                 </tbody>
               )}
@@ -287,14 +308,88 @@ export function TableView() {
           </Button>
         </nav>
       )}
+
+      {selected.size > 0 && <BulkActionBar count={selected.size} onApply={onBulkApply} onClear={() => setSelected(new Set())} />}
     </div>
   );
 }
 
-function Row({ n, cols, score }: { n: TaskNode; cols: readonly string[]; score: number }) {
+function BulkActionBar({ count, onApply, onClear }: { count: number; onApply: (p: BulkPatch) => void; onClear: () => void }) {
+  const [status, setStatus] = useState("");
+  const [priority, setPriority] = useState("");
+  const [owner, setOwner] = useState("");
+  const [milestone, setMilestone] = useState("");
+  const apply = () => {
+    const p: BulkPatch = {};
+    if (status) p.status = status as TaskNode["status"];
+    if (priority) p.priority = priority as TaskNode["priority"];
+    if (owner) p.owner = owner;
+    if (milestone) p.milestone = milestone;
+    onApply(p);
+    setStatus("");
+    setPriority("");
+    setOwner("");
+    setMilestone("");
+  };
+  return (
+    <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 rounded-md border border-border bg-card p-3 shadow-lg">
+      <span className="font-medium tabular-nums">
+        {count} {t.table.bulk.selected}
+      </span>
+      <select aria-label={t.table.bulk.status} value={status} onChange={(e) => setStatus(e.target.value)} className={CTRL}>
+        <option value="">{t.table.bulk.noChange}</option>
+        {STATUS_LIST.map((s) => (
+          <option key={s} value={s}>
+            {STATUS_LABEL[s]}
+          </option>
+        ))}
+      </select>
+      <select aria-label={t.table.bulk.priority} value={priority} onChange={(e) => setPriority(e.target.value)} className={CTRL}>
+        <option value="">{t.table.bulk.noChange}</option>
+        {PRIORITY_LIST.map((p) => (
+          <option key={p} value={p}>
+            {PRIORITY_LABEL[p]}
+          </option>
+        ))}
+      </select>
+      <select aria-label={t.table.bulk.owner} value={owner} onChange={(e) => setOwner(e.target.value)} className={CTRL}>
+        <option value="">{t.table.bulk.noChange}</option>
+        {people.map((pp) => (
+          <option key={pp.id} value={pp.id}>
+            {pp.name}
+          </option>
+        ))}
+      </select>
+      <input
+        aria-label={t.table.bulk.milestone}
+        value={milestone}
+        onChange={(e) => setMilestone(e.target.value)}
+        placeholder={t.table.bulk.milestonePlaceholder}
+        className={`${CTRL} w-36`}
+      />
+      <Button size="sm" onClick={apply}>
+        {t.table.bulk.apply}
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onClear}>
+        {t.table.bulk.clear}
+      </Button>
+    </div>
+  );
+}
+
+function Row({
+  n,
+  cols,
+  score,
+  selected,
+  onToggle,
+}: { n: TaskNode; cols: readonly string[]; score: number; selected: boolean; onToggle: () => void }) {
   const bandColor = score >= 2.3 ? "#22c55e" : score >= 1.5 ? "#38bdf8" : "#ef4444";
   return (
-    <tr className="border-border border-b hover:bg-secondary/50">
+    <tr className={`border-border border-b hover:bg-secondary/50 ${selected ? "bg-secondary/40" : ""}`}>
+      <td className="w-10 px-3 py-2 align-middle">
+        <input type="checkbox" aria-label={t.table.selectRow} checked={selected} onChange={onToggle} />
+      </td>
       {cols.map((c) => (
         <td key={c} className="px-3 py-2 align-middle">
           {c === "wbsCode" && <span className="font-mono text-muted-foreground">{n.wbsCode}</span>}

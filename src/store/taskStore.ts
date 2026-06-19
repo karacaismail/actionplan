@@ -1,6 +1,8 @@
 import {
+  type BulkPatch,
   type NodeIndex,
   type TreeNode,
+  applyBulk,
   buildTree,
   computeCriticalPath,
   indexById,
@@ -124,6 +126,16 @@ export const taskStore = {
     saveOverrides(overrides);
     state = { ...state, overrides };
     commit(nodes, true);
+  },
+  /** Toplu düzenleme (Faz 2): seçili id'lere beyaz-liste yamasını uygular + persist. */
+  applyBulkPatch(ids: string[], patch: BulkPatch) {
+    const next = applyBulk(state.nodes, ids, patch);
+    const idset = new Set(ids);
+    const overrides = { ...state.overrides };
+    for (const n of next) if (idset.has(n.id)) overrides[n.id] = n;
+    saveOverrides(overrides);
+    state = { ...state, overrides };
+    commit(next, true);
   },
   /** Yerel (browser-storage) düzenlemeleri temizler ve tabandan yeniden yükler. */
   clearLocal() {

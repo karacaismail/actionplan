@@ -14,6 +14,8 @@ export { parseQuery, matchNode, filterNodes, isQueryError, QUERY_FIELDS, QUERY_O
 export type { QueryAst, QueryError, QueryField, QueryOp, QueryValue } from "./query";
 export { sortNodes, groupNodes, valueForSort, groupValue } from "./table";
 export type { SortDir, ScoreOf } from "./table";
+export { applyBulk, sanitizeBulkPatch, BULK_FIELDS } from "./bulk";
+export type { BulkPatch } from "./bulk";
 export { evaluateAgentPolicy, evaluateEca, runEca } from "./eca";
 export type { AgentActionRequest, AgentPolicyDecision, EcaFireResult } from "./eca";
 export { loadMeta, loadNodesAsync } from "./loadData";
