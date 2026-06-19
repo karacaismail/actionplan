@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { effectiveRules, firedOutcomes, ruleEvents, simulate } from "@/lib/eca-effective";
+import { actionEmits, effectiveRules, firedOutcomes, ruleEvents, simulate, simulateChain } from "@/lib/eca-effective";
 import type { EcaRule, EcaRulesetPackage } from "@/schemas";
 
 /**
@@ -98,5 +98,48 @@ describe("eca-effective — simülasyon (salt-okunur dry-run)", () => {
     const rules = effectiveRules(node("x", inline), []);
     simulate(rules, "task.status.changed", { status: "done" });
     expect(JSON.stringify(inline)).toBe(frozen); // girdi dokunulmadı
+  });
+});
+
+describe("eca-effective — çok-adımlı zincir simülasyonu (faz-2, salt-okunur)", () => {
+  it("actionEmits: create-task→task.created, set-field(status)→task.status.changed, notify→yok", () => {
+    expect(actionEmits({ type: "create-task", params: {} })).toBe("task.created");
+    expect(actionEmits({ type: "set-field", params: { field: "status" } })).toBe("task.status.changed");
+    expect(actionEmits({ type: "set-field", params: { field: "owner" } })).toBe("task.field.changed");
+    expect(actionEmits({ type: "notify", params: {} })).toBeUndefined();
+  });
+
+  it("zinciri eylem→olay eşlemesiyle takip eder ve terminal eylemde durur", () => {
+    const rules = effectiveRules(
+      node("x", [
+        rule("a", "task.submitted", [], { type: "create-task", params: {} }),
+        rule("b", "task.created", [], { type: "set-field", params: { field: "status" } }),
+        rule("c", "task.status.changed", [], { type: "notify", params: {} }),
+      ]),
+      [],
+    );
+    const chain = simulateChain(rules, "task.submitted", {}, 6);
+    expect(chain.steps.map((s) => s.rule.id)).toEqual(["a", "b", "c"]);
+    expect(chain.steps.map((s) => s.depth)).toEqual([0, 1, 2]);
+    expect(chain.steps[2].emits).toBeUndefined(); // notify terminal
+    expect(chain.depthLimitHit).toBe(false);
+  });
+
+  it("kendini tetikleyen döngüde maxChainDepth (6) ile durur ve sınır işaretini koyar", () => {
+    // create-task → task.created; bu da create-task → ... sonsuz; sınır kırar.
+    const rules = effectiveRules(
+      node("x", [rule("loop", "task.created", [], { type: "create-task", params: {} })]),
+      [],
+    );
+    const chain = simulateChain(rules, "task.created", {}, 6);
+    expect(chain.depthLimitHit).toBe(true);
+    expect(chain.steps.length).toBeLessThanOrEqual(6); // sonsuz değil
+  });
+
+  it("eşleşme yoksa boş zincir döndürür", () => {
+    const rules = effectiveRules(node("x", [rule("a", "task.submitted")]), []);
+    const chain = simulateChain(rules, "hic.olmayan.olay", {}, 6);
+    expect(chain.steps).toHaveLength(0);
+    expect(chain.depthLimitHit).toBe(false);
   });
 });

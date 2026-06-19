@@ -1,4 +1,5 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
+import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
 import { downloadFile, exportTask, getAncestors } from "@/engine";
 import { cn } from "@/lib/cn";
@@ -115,6 +116,7 @@ export function TaskDetailView() {
       <PhaseStepper node={node} />
       <Dimensions node={node} />
       <EcaPanel node={node} />
+      <WorkflowPanel node={node} />
       <Relations node={node} />
     </div>
   );

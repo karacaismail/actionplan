@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Icon } from "@/components/ui/primitives";
 import rulesetCatalogJson from "@/data/eca/ruleset-catalog.json";
-import { type EffectiveRule, type SimOutcome, effectiveRules, firedOutcomes, ruleEvents, simulate } from "@/lib/eca-effective";
+import {
+  type ChainResult,
+  type EffectiveRule,
+  type SimOutcome,
+  effectiveRules,
+  firedOutcomes,
+  ruleEvents,
+  simulate,
+  simulateChain,
+} from "@/lib/eca-effective";
 import { t } from "@/lib/strings";
 import type { EcaRulesetPackage, TaskNode } from "@/schemas";
 
@@ -131,6 +140,49 @@ function coerce(v: string): string | number | boolean {
   return v;
 }
 
+function EcaChainResult({ chain }: { chain: ChainResult }) {
+  if (chain.steps.length === 0) return <p className="mt-2 text-muted-foreground">{e.chainEmpty}</p>;
+  return (
+    <div aria-live="polite" className="mt-2 flex flex-col gap-1">
+      <p className="flex items-center gap-1 text-base font-medium">
+        <Icon name="ph-tree-structure" className="text-sm" />
+        {e.chainTitle} <span className="text-sm text-muted-foreground">{e.ctxFixedNote}</span>
+      </p>
+      {chain.steps.map((s, i) => {
+        const summary = paramsSummary(s.action.params);
+        return (
+          <div
+            key={`${s.depth}:${s.rule.id}:${i}`}
+            className="flex flex-wrap items-center gap-1 text-base"
+            style={{ paddingInlineStart: `${s.depth * 16}px` }}
+          >
+            <Icon name="ph-arrow-bend-down-right" className="text-xs text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {e.stepLabel} {s.depth}
+            </span>
+            <span className="font-medium">{s.event}</span>
+            <Icon name="ph-arrow-right" className="text-xs" />
+            <span>{s.action.type}</span>
+            {summary && <span className="text-muted-foreground">({summary})</span>}
+            {s.requiresApproval && <ApprovalBadge />}
+            {s.emits && (
+              <span className="text-sm text-muted-foreground">
+                {e.chainEmits} {s.emits}
+              </span>
+            )}
+          </div>
+        );
+      })}
+      {chain.depthLimitHit && (
+        <p className="mt-1 flex items-center gap-1 text-base">
+          <Icon name="ph-warning-circle" className="text-sm" />
+          {e.chainDepthHit}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
   const events = useMemo(() => ruleEvents(rules), [rules]);
   const [event, setEvent] = useState(events[0] ?? "");
@@ -140,13 +192,22 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
   );
   const [ctxRaw, setCtxRaw] = useState<Record<string, string>>({});
   const [outcomes, setOutcomes] = useState<SimOutcome[] | null>(null);
+  const [chain, setChain] = useState<ChainResult | null>(null);
 
   if (events.length === 0) return null;
 
-  const onSimulate = () => {
+  const buildCtx = (): Record<string, unknown> => {
     const ctx: Record<string, unknown> = {};
     for (const f of fields) if (ctxRaw[f] !== undefined && ctxRaw[f] !== "") ctx[f] = coerce(ctxRaw[f]);
-    setOutcomes(simulate(rules, event, ctx)); // SALT-OKUNUR: store'a yazılmaz
+    return ctx;
+  };
+  const onSimulate = () => {
+    setChain(null);
+    setOutcomes(simulate(rules, event, buildCtx())); // SALT-OKUNUR: store'a yazılmaz
+  };
+  const onChain = () => {
+    setOutcomes(null);
+    setChain(simulateChain(rules, event, buildCtx(), 6)); // SALT-OKUNUR çok-adımlı
   };
 
   return (
@@ -166,6 +227,7 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
             onChange={(ev) => {
               setEvent(ev.target.value);
               setOutcomes(null);
+              setChain(null);
             }}
           >
             {events.map((ev) => (
@@ -190,8 +252,13 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
           <Icon name="ph-play" className="text-sm" />
           {e.simButton}
         </Button>
+        <Button variant="outline" size="sm" onClick={onChain}>
+          <Icon name="ph-tree-structure" className="text-sm" />
+          {e.chainButton}
+        </Button>
       </div>
       {outcomes !== null && <EcaSimulationResult outcomes={outcomes} />}
+      {chain !== null && <EcaChainResult chain={chain} />}
     </div>
   );
 }
