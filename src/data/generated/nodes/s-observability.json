@@ -137,11 +137,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Observability ArcheType'ı: log/metrik/iz (trace) toplama, uyarı ve SLO/SLI takibi",
-        "Dağıtık iz korelasyonu ve kök-neden analizi yüzeyi",
-        "Gösterge panoları ve olay (incident) ilişkilendirme"
+        "Observability çekirdeği: log, metrik ve dağıtık iz (trace) üç sinyalini tek sözleşmede toplar",
+        "SLO/SLI takibi: hata bütçesi tüketimini ölçer, eşik aşımında olay (incident) durumuna geçer",
+        "Girdi sözleşmesi OpenTelemetry formatında telemetri alır, çıktı olarak korele iz + uyarı üretir",
+        "Hata yolu: telemetri kabul edilemezse (şema dışı) örnek düşürülür, toplama ucu çökmez"
       ],
-      "notes": "",
+      "notes": "Üç sinyal (log/metrik/trace) tek trace-id ekseninde korele edilerek kök-neden yüzeyi sağlanır.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -150,11 +151,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Telemetri tenant_id ile etiketli; log'da PII redaksiyon",
-        "Gözlem verisine erişim rol bazlı (ops düzlemi)",
-        "Uyarı kuralı değişimi izli"
+        "Her telemetri kaydı tenant_id ile etiketlenir, RLS ile tenant yalnız kendi izlerini sorgular",
+        "Log içeriği toplama anında PII sınıflandırmasından geçer, e-posta/telefon/token maskelenir",
+        "Gözlem panolarına erişim ops rolüyle sınırlanır (least-privilege), geliştirici salt-okur",
+        "Uyarı/eşik kuralı değişiklikleri değişmez audit kanıtına aktör + zaman damgasıyla yazılır"
       ],
-      "notes": "",
+      "notes": "Telemetri çapraz-tenant sızıntısına karşı tenant_id RLS ile korunur; loglar PII redaksiyonludur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -163,11 +165,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Telemetri toplama düşük ek-yük (sampling)",
-        "İz korelasyonu trace-id ile; sorgu indeksli",
-        "SLO hesabı saf; hata bütçesi türetilir"
+        "SLO/hata-bütçesi hesabı saf fonksiyon olarak yazılır, aynı metrik penceresinden deterministik türetilir",
+        "İz korelasyon mantığı trace-id çözücü modülüne ayrılır, toplama yolundan bağımsız test edilir",
+        "Telemetri toplama ek-yükü düşük tutulur: kuyruğa yazma sıcak yolu yan etkisiz ve dallanmasız",
+        "Sinyal parser'ları (log/metrik/trace) ortak şema kütüphanesinden gelir, ölü kod ayıklanır"
       ],
-      "notes": "",
+      "notes": "SLO hesabı saf tutulduğundan hata bütçesi türetimi tekrar-üretilebilir ve test edilebilirdir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -176,11 +179,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Log redaksiyonu varsayılan; sır/token log'a yazılmaz",
-        "Yüksek-kardinalite etiket sınırı (maliyet/DoS koruması)",
-        "Uyarı eşiği sürümlü"
+        "Log redaksiyonu varsayılan açıktır; sır/token toplama ucunda yakalanır, depoya hiç yazılmaz",
+        "Yüksek-kardinalite etiketler sınırlandırılır (etiket başına maks değer), kardinalite-patlaması DoS'u önlenir",
+        "Telemetri toplama uçları tenant başına oran sınırına alınır, kötücül telemetri sağanağı bastırılır",
+        "Toplama ajanı en az ayrıcalıkla koşar; uyarı eşiği değişiklikleri sürümlenir ve geri alınabilir"
       ],
-      "notes": "",
+      "notes": "Kardinalite ve oran sınırları telemetri maliyetini ve DoS yüzeyini birlikte daraltır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -189,11 +193,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Zaman-serisi deposu yüksek-yazma; sorgu için downsampling",
-        "İz örnekleme (sampling) ile hacim yönetimi",
-        "Pano sorguları önceden toplanmış"
+        "Zaman-serisi deposu (tenant_id, metrik, zaman) bileşik indeksiyle pano sorgusu p95 hedefini tutar",
+        "İz örnekleme (sampling) ile hacim yönetilir; yüksek-trafik servislerde örnekleme oranı düşürülür",
+        "Pano sorguları önceden toplanmış (pre-aggregated) materyalize görünümden okunur, N+1 tarama önlenir",
+        "Uzun zaman aralığı sorguları imleç tabanlı sayfalama + downsampling ile akışkan döner"
       ],
-      "notes": "",
+      "notes": "Pano sorgusu p95 gecikme hedefi önceden toplama ve bileşik indeksle güvenceye alınır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -202,11 +207,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobil on-call: uyarı + olay durumu + onay",
-        "iOS/Android push ile kritik uyarı",
-        "Dar ekranda SLO/hata-bütçesi kartı"
+        "Mobil on-call PWA'sı: aktif uyarı listesi, olay durumu ve devral/sustur eylemini tek ekranda sunar",
+        "iOS/Android push bildirimiyle kritik SLO ihlali on-call mühendisine anında iletilir",
+        "Uyarı devral/sustur düğmeleri ≥44px dokunma hedefiyle saha koşullarında rahat tıklanır",
+        "Bağlantı koparsa son SLO/hata-bütçesi kartı çevrimdışı önbellekten okunur (offline davranışı)"
       ],
-      "notes": "",
+      "notes": "Mobil yüzey on-call müdahalesine odaklıdır; ağır pano analizi masaüstüne bırakılır.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -215,11 +221,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Uyarı önem düzeyi renk dışında metin+ikonla; kontrast 7:1",
-        "Grafikler için veri tablosu/metin alternatifi",
-        "Olay zaman çizelgesi klavye+okuyucu erişimli"
+        "Uyarı önem düzeyi (kritik/uyarı/bilgi) yalnız renkle değil metin + ikonla, kontrast ≥7:1 ile gösterilir",
+        "Metrik grafikleri için eşdeğer veri tablosu/metin özeti sunulur, ekran okuyucu değeri okuyabilir",
+        "Olay zaman çizelgesi ve uyarı listesi klavyeyle tam gezilir, odak sırası görünürdür",
+        "Canlı uyarı akışı aria-live bölgesiyle duyurulur, yeni kritik uyarı sesli okuyucuda bildirilir"
       ],
-      "notes": "",
+      "notes": "Grafik-ağırlıklı bir yüzey olduğundan her görsel sinyalin metin alternatifi zorunlu tutulur.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -228,11 +235,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Toplama ajanları her serviste; depolama ayrı ölçek",
-        "Uyarı yöneticisi ayrı worker; bildirim entegrasyonu",
-        "Shared hosting'de temel log + basit uyarı"
+        "Toplama ajanı her serviste DaemonSet olarak koşar; zaman-serisi deposu ayrı StatefulSet'te ölçeklenir",
+        "Sorgu/depolama katmanı Kubernetes'te otomatik ölçekleyici (HPA), sağlık probu ve kaynak limitiyle yönetilir",
+        "Uyarı yöneticisi ayrı worker olarak Docker Swarm'da sağlık kontrolüyle dağıtılır",
+        "Shared hosting'de yalnız temel log toplama + basit eşik uyarısı çalışır (iz/yüksek hacim kısıtlı)"
       ],
-      "notes": "",
+      "notes": "Depolama yükü değişken olduğundan toplama ve sorgu katmanları bağımsız ölçeklenir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -241,11 +249,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: SLO ihlali/hata-bütçesi tükendi → uyarı + olay aç + runbook bağı (idempotent, zincir ≤6)",
-        "Olay: anomali tespit → ilgili ekibe yükselt (loop-breaker)"
+        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (UI'da serbest JS/SQL/shell yok)",
+        "Olay: hata bütçesi tükendi → Koşul: SLO 'ihlal' → Eylem: olay aç + runbook bağla (idempotent, zincir ≤6)",
+        "Olay: anomali tespiti → Eylem: ilgili ekibe yükselt; aynı anomali tekrarında yinelenen olay açılmaz",
+        "Döngü kırıcı: uyarı→olay→bildirim zinciri en fazla 6 adım; eylemler allowlist ile sınırlı"
       ],
-      "notes": "",
+      "notes": "Uyarı kuralları idempotenttir; aynı SLO ihlali için tek açık olay tutulur.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -254,11 +263,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI kök-neden analizi ve olay özeti önerir; otomatik düzeltme/dağıtım aksiyonunu insan onaylar"
+        "AI bu Observability yüzeyi için app/module üretemez/güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi sunabilir",
+        "AI iz/log korelasyonundan kök-neden ve olay özeti önerir; düzeltme/yeniden-dağıtımı insan onaylar (doğrudan prod write yok)",
+        "Log/iz içeriğindeki sub_prompt benzeri metin güvenilmez kabul edilir, talimat olarak yürütülmez",
+        "Ruleset override/disable denemesi anında deny; PII redaksiyonu, kill-switch ve step-up devrededir"
       ],
-      "notes": "",
+      "notes": "AI kök-neden ve olay özetinde yardımcıdır; müdahale kararı on-call insanındadır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -267,11 +277,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "İz korelasyonu ve SLO hesabı doğruluk testi",
-        "Uyarı tetik ve gürültü (alert fatigue) ayar testi",
-        "Olay→runbook kullanıcı yolculuğu; en çok 6 tur"
+        "Birim test: SLO/hata-bütçesi hesabı sabit metrik penceresinde beklenen değeri üretir mi",
+        "İz korelasyon birim testi: dağıtık trace-id'ler doğru span ağacında birleştiriliyor mu",
+        "Playwright e2e: SLO ihlali → olay aç → runbook aç on-call kullanıcı yolculuğu doğrulanır",
+        "Testing-loop: başarısız uyarı/korelasyon testi en fazla 6 kez yeniden çalışır, düzelmezse raporlanır"
       ],
-      "notes": "",
+      "notes": "Uyarı gürültüsü (alert fatigue) eşik ayar testleriyle sürekli denetlenir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -280,11 +291,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "LLM06/A09: log redaksiyonu (sır/PII sızmaz)",
-        "A01 Access Control: gözlem verisi ops düzlemi yetkisi",
-        "A05 Misconfiguration: telemetri güvenli varsayılan"
+        "OWASP A09: log/iz toplamada PII ve sır redaksiyonu zorunlu, gözlem verisi sızıntı yüzeyi değildir",
+        "OWASP A01: gözlem panoları ve sorgu API'si ops rolüyle sınırlanır, tenant kendi telemetrisini görür",
+        "OWASP A05: telemetri toplama uçları güvenli varsayılanla gelir, açık/yetkisiz endpoint bırakılmaz",
+        "OWASP LLM06: AI kök-neden özeti üretirken hassas log içeriği maskelenmiş telemetriden okunur"
       ],
-      "notes": "",
+      "notes": "Telemetri deposunun temel tehdidi PII/sır sızıntısıdır; A09 redaksiyonu önceliklidir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -293,11 +305,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Observability, tüm app/servislerden telemetri toplar",
-        "Ops kontrol düzlemi (Boyut 1) panellerini besler",
-        "Olaylar bildirim/on-call ile entegre"
+        "Observability, tüm app/servislerden OpenTelemetry sözleşmesiyle telemetri toplar (bağımlılık tek yönlü içeri)",
+        "Zaman-serisi deposu (scale-timeseries) ve akış (scale-streaming) primitiflerini tüketir",
+        "Ops kontrol düzlemi panolarını ve l1-analytics özetlerini gözlem verisiyle besler",
+        "Açılan olaylar bildirim/on-call kanallarına olay yüzeyinden iletilir"
       ],
-      "notes": "",
+      "notes": "Observability bağımlılık yönü içeridir: servisler telemetri yayınlar, bu çekirdek toplar.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -306,10 +319,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Observability ArcheType'ı Veri & Zeka app'inde sistem gözlemlenebilirliğini sağlar",
-        "Tüm app'ler kendi telemetrisini bu sözleşmeye yayınlar"
+        "Observability ArcheType'ı Veri & Zeka app'inde sistem gözlemlenebilirliği yeteneğini sağlar",
+        "Tüm app'ler kendi log/metrik/izini OpenTelemetry sözleşmesiyle yayınlar, depoya doğrudan yazmaz",
+        "Pano/uyarı tüketen app'ler üretilen sorgu API'si üzerinden gözlem verisine erişir"
       ],
-      "notes": "",
+      "notes": "Tüketim daima OpenTelemetry sözleşmesi ve sorgu API'si üzerinden, doğrudan DB ile değildir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-observability — \"Observability\" (ArcheType/büyük taş; küme: Veri & Zeka (AI-first)). Özet: Datadog, Grafana LGTM muadili. Log + metric + trace Etiketler: data-intelligence, observability, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

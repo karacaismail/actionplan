@@ -7,8 +7,8 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 ## Özet
 
 - Toplam düğüm: **424** · skorlanan (en az 1 dolu boyut): **424**
-- Ortalama düğüm skoru: **2.62 / 3**
-- Güçlü (≥2.3): **401** (95%) · Orta (1.5-2.3): **23** (5%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
+- Ortalama düğüm skoru: **2.66 / 3**
+- Güçlü (≥2.3): **424** (100%) · Orta (1.5-2.3): **0** (0%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
 
 ### Köken dağılımı (provenance)
 
@@ -17,39 +17,39 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 
 ### Bayrak dağılımı (en sık kalite sorunları)
 
-- `incomplete`: 395 düğümde
-- `short-items`: 314 düğümde
-- `generic`: 1 düğümde
+- `incomplete`: 372 düğümde
+- `short-items`: 291 düğümde
+- `generic`: 2 düğümde
 
 ## En zayıf 25 düğüm (öncelikli zenginleştirme)
 
 | Skor | id | Başlık |
 | ---: | --- | --- |
-| 2.24 | `s-pim` | PIM |
-| 2.25 | `app-build-x-stone` | Taş — Build & Dağıtım örnek kırılımı |
-| 2.25 | `app-hr-x-stone` | Taş — İnsan Kaynakları örnek kırılımı |
-| 2.25 | `cc-compliance-matrix` | Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR |
-| 2.25 | `s-pms` | PMS Stack |
-| 2.26 | `s-cpq` | CPQ |
-| 2.26 | `s-drive` | Drive + Collaboration Stack |
-| 2.26 | `s-observability` | Observability |
-| 2.27 | `app-data-intelligence-x-element` | Element — Veri & Zeka (AI-first) örnek kırılımı |
-| 2.27 | `cc-obs` | Observability + Performance + DR |
-| 2.27 | `s-i18n` | i18n / Localization |
-| 2.27 | `s-lms` | LMS Stack |
-| 2.27 | `scale-counter` | Hot Counter |
-| 2.27 | `scale-workers` | Workers + Scheduler |
-| 2.28 | `l1-workflow` | Workflow + ECA |
-| 2.28 | `s-hrms` | HRMS Stack (TR) |
-| 2.28 | `s-performance` | Performance & Competency |
-| 2.29 | `app-data-intelligence-x-molecule` | Molekül — Veri & Zeka (AI-first) örnek kırılımı |
-| 2.29 | `s-marketing` | Marketing + CRM Stack |
-| 2.29 | `s-marketplace` | Marketplace Management |
-| 2.29 | `s-payroll` | Payroll |
-| 2.29 | `scale-streaming` | Streaming — Kafka, real-time aggregation |
-| 2.29 | `scale-webhook` | Outbound Webhook — dış sisteme olay yollama |
 | 2.3 | `app-finance-x-molecule` | Molekül — Finans & Muhasebe örnek kırılımı |
 | 2.3 | `app-hr` | İnsan Kaynakları |
+| 2.3 | `cc-i18n-standards` | i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL |
+| 2.3 | `s-clm` | Contract Management (CLM) |
+| 2.3 | `s-conversational` | Conversational Commerce / Chatbot |
+| 2.3 | `s-iam` | Identity & Access (IAM) |
+| 2.3 | `s-membership` | Membership / Association |
+| 2.3 | `s-wms` | Warehouse Management (WMS) |
+| 2.31 | `s-doc-matching` | Document Classification & Matching |
+| 2.31 | `scale-timeseries` | Time-Series — IoT, metrik, sensör verisi |
+| 2.32 | `fe-mobile` | Frontend — Capacitor Mobile + KYC/KYB |
+| 2.32 | `s-demand-planning` | Demand Planning / S&OP |
+| 2.32 | `s-dms` | Document Management (DMS) |
+| 2.32 | `s-rpa` | Hibrit / Tarayıcı Tabanlı RPA-lite |
+| 2.33 | `app-finance-x-element` | Element — Finans & Muhasebe örnek kırılımı |
+| 2.33 | `cc-i18n-deep` | i18n Derinleştirme — pluralization, RTL, lokal format |
+| 2.33 | `cc-notification-consent` | Bildirim & Consent — Transactional vs Marketing, SMS Regülasyon |
+| 2.33 | `cc-resolver-ops` | Resolver Operasyonel Sertleştirme — Migration, Cache, Failure, Governance |
+| 2.33 | `l1-search` | Search (Hybrid: BM25 + Vector) |
+| 2.33 | `s-fixed-assets` | Fixed Assets / Amortization |
+| 2.33 | `s-fsm` | Field Service |
+| 2.33 | `s-ipaas` | Integration Hub (iPaaS) |
+| 2.33 | `s-studio` | Low-code Studio |
+| 2.33 | `s-subscription-analytics` | Subscription Analytics |
+| 2.34 | `app-platform-horizontal` | Platform & Yatay |
 
 ## Yorum
 

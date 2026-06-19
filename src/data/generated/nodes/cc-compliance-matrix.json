@@ -147,11 +147,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Uyum Matrisi: KVKK, GDPR, CCPA, LGPD, PCI gibi düzenlemeleri tek matriste eşler ve kontrol eder",
-        "Kontrol→düzenleme eşlemesi, kanıt ve boşluk (gap) analizi",
-        "Denetim hazırlığı ve uyum durumu raporlama"
+        "Yargı bölgesi başına KVKK, GDPR, CCPA, LGPD, PCI-DSS kontrol maddelerini tek matriste eşler ve uyum durumunu raporlar",
+        "DSAR (veri-konu talebi) pipeline'ı: erişim/silme/taşınabilirlik talebini al, doğrula, sürelidir biçimde (örn. 30 gün) yanıtla",
+        "Sanctions screening: OFAC/EU yaptırım listelerine karşı taraf tarama ve eşleşmede engelleme kararı üretir",
+        "Erasure çatışması (sil-vs-sakla): silme talebi ile yasal saklama yükümlülüğü çakışınca öncelik kuralını ve gerekçeyi kaydeder"
       ],
-      "notes": "",
+      "notes": "Çekirdek işlev kontrol-düzenleme eşleme, DSAR akışı ve yaptırım taramasıdır.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -160,11 +161,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Uyum kanıtları değişmez ve erişim-kontrollü",
-        "Kontrol durumu yetkili güncellenir; izli",
-        "Hassas kanıt belgesi şifreli"
+        "DSAR kayıtları ve uyum kanıtları tenant_id RLS ile izole edilir; çapraz-tenant erişim PostgreSQL satır düzeyinde engellenir",
+        "Veri-konu PII'si (TCKN, e-posta, IP) özel-kategori olarak sınıflandırılır ve maskeleme/şifreleme uygulanır",
+        "Kontrol durumu ve yaptırım eşleşmesini yalnızca uyum sorumlusu rolü değiştirebilir (least-privilege)",
+        "Her uyum kararı ve DSAR yanıtı değişmez (append-only) audit kanıtına yazılır, sonradan düzenlenemez"
       ],
-      "notes": "",
+      "notes": "Veri-konu PII'si özel-kategori kabul edilir; erişim ve değişiklik denetim altındadır.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -173,11 +175,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Kontroller tek kaynaktan; düzenlemelere çoktan-çoğa eşlenir",
-        "Boşluk analizi türetilir (kontrol-düzenleme farkı)",
-        "Kanıt otomatik toplanır (audit/config'den)"
+        "Kontrol tanımları tek kaynaktan beslenir; her düzenlemeye (KVKK/GDPR/PCI) çoktan-çoğa eşleme tablosuyla bağlanır",
+        "Boşluk (gap) analizi saf fonksiyonla türetilir: beklenen kontrol kümesi eksi karşılanan kontrol kümesi farkı",
+        "DSAR durum geçişleri tek bir effective-dated state machine'de toplanır, yan etkiler ayrı işleyiciye taşınır",
+        "Yaptırım listesi yükleyicisi, eşleştirme ve karar verme ayrı modüllere bölünür; her biri bağımsız test edilebilir"
       ],
-      "notes": "",
+      "notes": "Eşleme ve boşluk türetimi yan etkisiz tutularak test edilebilirlik sağlanır.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -186,11 +189,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Eksik kontrol deny/uyarı; sessiz uyumsuzluk olmaz",
-        "Kanıt bütünlüğü (hash); kurcalama tespiti",
-        "Denetim erişimi zaman-sınırlı"
+        "Sanctions/DSAR dış servis kimlik bilgileri kasada tutulur ve düzenli rotasyona tabidir (sessiz uyumsuzluk üretmez)",
+        "Uyum kanıtı yüklendiğinde SHA-256 hash alınır; sonraki erişimde kurcalama (tampering) tespit edilir",
+        "DSAR ve yaptırım sorgu uçları için oran sınırlama uygulanır, toplu sızdırma denemesi sınırlanır",
+        "Denetçi (auditor) erişimi zaman-sınırlı verilir; süre dolunca yetki en az ayrıcalığa geri düşer"
       ],
-      "notes": "",
+      "notes": "Kanıt bütünlüğü hash ile, dış servis erişimi rotasyon ve oran sınırla korunur.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -199,11 +203,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Uyum durumu projeksiyondan anlık",
-        "Kanıt toplama zamanlanmış",
-        "Matris sorgusu indeksli"
+        "Uyum skoru ve matris durumu önceden hesaplanmış projeksiyondan okunur; sorgu başına yeniden hesaplama yapılmaz",
+        "Matris sorgusu (tenant_id, jurisdiction, regulation) bileşik indeksiyle çalışır, p95 gecikme hedefi 200 ms altıdır",
+        "Kanıt toplama işi zamanlanmış toplu görevle yürütülür, kullanıcı isteği yolunda N+1 sorgu oluşmaz",
+        "DSAR talep listesi imleç (cursor) tabanlı sayfalanır, büyük talep hacminde kayma (offset) maliyeti önlenir"
       ],
-      "notes": "",
+      "notes": "Matris durumu projeksiyondan, kanıt toplama ise zamanlanmış toplu işle gelir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -212,11 +217,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde uyum durumu ve eksik kontrol uyarısı",
-        "iOS/Android'de kanıt fotoğrafı/belge yükleme",
-        "Dar ekranda uyum skoru kartı"
+        "Uyum skoru kartı ve eksik kontrol uyarısı PWA olarak mobilde gösterilir; son senkron veri çevrimdışı okunabilir",
+        "Capacitor paketinde kanıt fotoğrafı/belge yükleme yapılır; bağlantı yokken kuyruğa alınır, gelince eşitlenir",
+        "DSAR onay ve yaptırım uyarısı tüm dokunma hedefleri ≥44px olacak şekilde dar ekrana uyarlanır",
+        "Çevrimdışı görünüm salt-okunurdur; uyum kararı yalnızca çevrimiçi ve yetkili oturumla değiştirilebilir"
       ],
-      "notes": "",
+      "notes": "Saha denetçisi mobil senaryosunda kanıt yükleme ve uyum durumu görüntüleme desteklenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -225,11 +231,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Uyum matrisi tablosu klavye+okuyucu erişimli",
-        "Uyumlu/eksik renk dışında metin+ikonla; kontrast 7:1",
-        "Boşluk detayı yapılandırılmış"
+        "Uyum matrisi tablosu tam klavye ile gezilebilir; satır/sütun başlıkları ARIA ile ekran okuyucuya bağlanır",
+        "Uyumlu/eksik/kısmi durumu yalnızca renkle değil metin etiketi ve ikonla da belirtilir, kontrast ≥7:1 sağlanır",
+        "DSAR ve yaptırım uyarıları görünür odak sırasıyla sunulur; her form alanının açık etiketi ve hata mesajı vardır",
+        "Boşluk (gap) detayı yapılandırılmış başlık hiyerarşisiyle verilir, ekran okuyucu kullanıcısı sıralı gezebilir"
       ],
-      "notes": "",
+      "notes": "Uyum durumu renk dışında metin ve ikonla da iletilir, AAA kontrast korunur.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -238,11 +245,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Uyum servisi standart; kanıt toplama worker",
-        "Çok-jurisdiction için bölge-farkında",
-        "Shared hosting'de temel uyum takibi"
+        "Uyum servisi Kubernetes'te liveness/readiness probe ve kaynak limitiyle koşar; kanıt toplama ayrı worker olarak ölçeklenir",
+        "Sanctions list yenileme ve DSAR işleme job'ları Docker Swarm/K8s zamanlanmış görev olarak yürütülür",
+        "Çok-jurisdiction senaryosunda veri ikameti gereği bölge-farkında dağıtım yapılır (AB verisi AB bölgesinde)",
+        "WordPress sınıfı shared hosting'de yalnızca temel uyum takibi sunulur; yaptırım taraması harici API'ye delege edilir"
       ],
-      "notes": "",
+      "notes": "Kanıt toplama ve yaptırım yenileme bağımsız worker/job olarak ölçeklenir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -251,11 +259,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: kontrol durumu değişti → uyum matrisini güncelle + boşluk varsa uyar (idempotent, zincir ≤6)",
-        "Olay: denetim yaklaşıyor → eksik kanıtları sorumluya bildir (loop-breaker)"
+        "Kurallar backend ruleset olarak çalışır; UI yalnız güvenli yönetim yüzeyidir, serbest JS/SQL yoktur ve AI mutasyon denemesi reddedilir",
+        "Olay: kontrol durumu değişti -> Koşul: zorunlu kontrol eksik -> Eylem: uyum matrisini güncelle ve sorumluyu uyar (idempotent)",
+        "Olay: DSAR talebi geldi -> Koşul: yasal süre (örn. 30 gün) -> Eylem: işleme görevi aç ve sayaç başlat, zincir en fazla 6 adımdır",
+        "Olay: yaptırım listesi yenilendi -> Koşul: yeni eşleşme -> Eylem: ilgili kaydı engelle ve tenant bazlı bildirim üret (action allowlist)"
       ],
-      "notes": "",
+      "notes": "ECA kuralları kontrol durumu, DSAR süresi ve yaptırım yenilemesine bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -264,11 +273,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI kontrol-düzenleme eşleme ve boşluk önerir; uyum durumunu/kanıtı insan onaylar"
+        "AI bu modül için yalnızca ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez veya güncelleyemez, ruleset'i geçersiz kılamaz",
+        "AI kontrol-düzenleme eşlemesi ve boşluk önerir; uyum durumunu ve DSAR yanıtını yalnızca uyum sorumlusu onaylayıp uygular",
+        "DSAR talep metni ve yaptırım kayıt notu güvenilmez (sub_prompt) kabul edilir, AI'a talimat olarak çalıştırılmaz",
+        "Admin akışı prompt->draft->validation->diff->data-impact->dry-run->preview->approval->apply adımlarını izler, kill-switch her an devrededir"
       ],
-      "notes": "",
+      "notes": "AI öneri üretir; uyum ve DSAR kararı insan onayına tabidir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -277,11 +287,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Kontrol→düzenleme eşleme doğruluk testi",
-        "Boşluk analizi testi (eksik kontrol tespit)",
-        "Kanıt bütünlüğü testi; en çok 6 tur"
+        "Kontrol-düzenleme eşleme doğruluğu için birim testleri; KVKK/GDPR/PCI maddelerinin doğru kontrole bağlandığı sınır değerleriyle doğrulanır",
+        "DSAR pipeline'ı için uçtan uca (e2e) Playwright senaryosu: talep alma, doğrulama ve süreli yanıt yolu test edilir",
+        "Boşluk analizi testi eksik zorunlu kontrolün tespit edildiğini, yaptırım eşleşmesinin engelleme ürettiğini doğrular",
+        "Başarısız test en fazla 6 kez yeniden çalıştırılır; düzelmezse rapor üretilir (testing-loop)"
       ],
-      "notes": "",
+      "notes": "DSAR ve eşleme doğruluğu birim ve e2e seviyesinde sürekli doğrulanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -290,11 +301,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A08 Integrity: kanıt hash + değişmezlik",
-        "A01 Access Control: uyum/kanıt erişimi",
-        "A09 Logging: uyum kararları forensic iz"
+        "OWASP A01 (Erişim Kontrolü): uyum kanıtı ve DSAR kayıtlarına erişim tenant RLS ve uyum sorumlusu rolüyle sınırlanır",
+        "OWASP A08 (Veri Bütünlüğü): uyum kanıtı SHA-256 hash ile değişmez tutulur, yaptırım listesi imzalı kaynaktan alınır",
+        "OWASP A09 (Loglama): tüm uyum kararları ve DSAR yanıtları PII redakte edilerek forensic ize yazılır",
+        "OWASP LLM01: DSAR talep metni kaynaklı istem enjeksiyonuna karşı AI girdisi izole edilir ve talimat olarak yorumlanmaz"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi kanıt bütünlüğü, erişim kontrolü ve DSAR metni enjeksiyonudur.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -303,11 +315,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Compliance matrix, privacy/security/TR uyum modüllerini birleştirir",
-        "Audit'ten kanıt toplar",
-        "Jurisdiction resolver ile bölge düzenlemeleri"
+        "Compliance matrix, cc-privacy/cc-security/cc-tr uyum modüllerinin kontrollerini tek matriste birleştirir",
+        "Kanıtı l1-audit değişmez kayıt servisinden olay üzerinden toplar; kendi kanıt deposunu yeniden uygulamaz",
+        "Geçerli yargı bölgesini cc-jurisdiction-resolver'dan alır; hangi düzenlemenin uygulanacağına buna göre karar verir",
+        "Bağımlılık yönü tek taraflıdır: matris çekirdek servisleri tüketir, çekirdek servisler matrise bağımlı değildir"
       ],
-      "notes": "",
+      "notes": "Kanıt audit'ten, bölge kuralları jurisdiction-resolver'dan gelir; tek yönlü bağımlılık korunur.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -316,10 +329,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Uyum Matrisi (modül) tüm app'lerin düzenleyici uyumunu izler",
-        "Düzenlemeye tabi tüm app'ler uyum matrisini kullanır"
+        "Ödeme app'leri (s-payment-methods) PCI-DSS kontrol durumunu ve yaptırım taramasını matrisin yayımladığı API üzerinden tüketir",
+        "GRC ve denetim app'leri (s-cyber-grc, s-audit) uyum skoru ve boşluk verisini doğrudan DB'den değil olay/API ile okur",
+        "Düzenlemeye tabi tüm app'ler DSAR talebini kendi UI'ından matrise yönlendirir; süreli yanıt sürecini matris yürütür",
+        "AI yönetişim app'i (s-ai-governance) LLM kullanımını ilgili düzenleme maddelerine matris üzerinden eşler"
       ],
-      "notes": "",
+      "notes": "Matris uyum durumunu API/olayla sunar; app'ler doğrudan DB'ye erişmez.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-compliance-matrix — \"Compliance Matrisi — KVKK, GDPR, CCPA, LGPD, PCI-DSS + Sanctions + DSAR\" (modül/kaya; küme: Cross-cutting). Özet: Yargı bölgesi başına uyumluluk: hangi kanun, hangi gereksinim. Sanctions screening (OFAC/EU). DSAR pipeline. Erasure çatışması (sil-vs-sakla). Etiketler: crosscut, compliance, kvkk, gdpr, ccpa, lgpd.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

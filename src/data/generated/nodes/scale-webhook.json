@@ -144,11 +144,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Giden Webhook: dış sisteme olay yollama; abonelik, imza, yeniden-deneme ve teslim takibi",
-        "Olay filtresi, payload şablonu ve hedef yönetimi",
-        "Teslim günlüğü ve ölü-mektup (DLQ)"
+        "Giden Webhook: 'sipariş oluştu' gibi iş olaylarını dış sistem URL'ine HMAC-imzalı POST ile yollar",
+        "Abonelik ve olay filtresi sözleşmesi; payload şablonu, hedef URL yönetimi ve imza başlığı (X-Signature)",
+        "Teslim durum makinesi (kuyrukta→gönderiliyor→teslim→başarısız→DLQ); 2xx dışı yanıtta yeniden-deneme yolu",
+        "Teslim günlüğü ve ölü-mektup kuyruğu (DLQ); maks 6 denemeden sonra DLQ'ya alma ve elle yeniden-gönderim"
       ],
-      "notes": "",
+      "notes": "HMAC-imzalı giden olay teslimi, retry ve DLQ çekirdek işlevdir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -157,11 +158,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Webhook hedefi allowlist/doğrulama (SSRF önleme)",
-        "Payload imzalı (HMAC); alıcı doğrular",
-        "Abonelik yetkisi tenant bazlı"
+        "Webhook hedef URL'i allowlist + DNS çözümleme doğrulamasıyla onaylanır; özel/iç IP'ler reddedilir (SSRF önleme)",
+        "Payload HMAC-SHA256 ile imzalanır; zaman damgası içerir, alıcı imzayı ve tekrar (replay) penceresini doğrular",
+        "Abonelik ve hedef kayıtları tenant_id RLS ile izole; başka tenant'ın hedefine olay sızdırılamaz",
+        "İmza secret'ı per-abonelik tutulur, PII içermeyen payload tercih edilir; teslim kararları audit'lenir"
       ],
-      "notes": "",
+      "notes": "SSRF, HMAC imza ve tenant izolasyonu birincil güvenlik kontrolleridir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -170,11 +172,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Teslim asenkron kuyruk; yeniden-deneme üstel geri-çekilme",
-        "Payload şablonu bildirimsel",
-        "İmza üretimi tek noktada"
+        "Teslim asenkron kuyrukta işlenir; yeniden-deneme üstel geri-çekilme (backoff) + jitter ile zamanlanır",
+        "HMAC imza üretimi tek bir saf fonksiyonda toplanır; çağrı yerlerinde tekrar edilmez",
+        "Payload şablonu bildirimsel yapılandırmadan render edilir; serbest kod yürütmesi yoktur",
+        "Teslim worker'ı modüler; hedef HTTP istemci, retry politikası ve DLQ yazımı ayrı birimlerde test edilir"
       ],
-      "notes": "",
+      "notes": "İmza ve retry mantığı saf, tek noktada ve modüler tutulur.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -183,11 +186,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "SSRF: özel/iç IP'lere webhook reddi",
-        "En-az-bir-kez teslim + alıcı idempotency",
-        "Yeniden-deneme üst sınırı (maks 6) sonra DLQ"
+        "SSRF sertleştirme: özel/iç IP, localhost ve metadata uçlarına (169.254.0.0/16) teslim reddedilir",
+        "En-az-bir-kez teslim garantisi; alıcının idempotency yapması için her olaya benzersiz event_id verilir",
+        "Yeniden-deneme üst sınırı maks 6; sonrasında DLQ'ya alınır, sonsuz retry döngüsü kırılır",
+        "İmza secret rotasyonu desteklenir (eski+yeni secret geçiş penceresi); hedef başına rate-limit uygulanır"
       ],
-      "notes": "",
+      "notes": "SSRF, en-az-bir-kez + idempotency ve sınırlı retry teslim güvenliğini sağlar.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -196,11 +200,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Teslim paralel kuyruk; yavaş hedef diğerlerini bloklamaz",
-        "Toplu/sıralı teslim opsiyonu",
-        "Teslim gecikmesi izlenir"
+        "Teslim hedef başına ayrı kuyruk/partition ile paralelleştirilir; yavaş bir hedef diğerlerini bloklamaz",
+        "Outbox tablosu (status, next_attempt_at) bileşik indeksiyle bekleyen mesajlar verimli çekilir, N+1 önlenir",
+        "Toplu (batch) veya sıraya duyarlı (ordered) teslim opsiyonu abonelik bazında seçilir",
+        "Uçtan uca teslim gecikmesi p95 < 2 sn hedefiyle izlenir; kuyruk birikmesi uyarı üretir"
       ],
-      "notes": "",
+      "notes": "Hedef-bazlı izolasyon ve outbox indeksiyle teslim ölçeklenir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -209,11 +214,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Webhook backend; teslim/DLQ izleme mobilde salt-okuma",
-        "iOS/Android push ile teslim hatası uyarısı",
-        "Dar ekranda hedef sağlık özeti"
+        "Webhook teslim motoru backend'dir; teslim/DLQ izleme paneli mobilde (PWA) salt-okuma sunulur",
+        "iOS/Android push ile DLQ artışı veya hedef sürekli başarısızlığı uyarısı iletilir",
+        "Yeniden-gönder ve DLQ aksiyon butonları en az 44px dokunma alanına sahip",
+        "Dar ekranda hedef sağlık özeti (başarı %, son hata) tek sütun kart olarak gösterilir"
       ],
-      "notes": "",
+      "notes": "Mobilde DLQ/teslim izleme salt-okuma ve hata bildirimi sunulur.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -222,11 +228,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Teslim günlüğü/DLQ panosu klavye+okuyucu erişimli",
-        "Teslim durumu renk dışında metinle; kontrast 7:1",
-        "Hata bilgisi yapılandırılmış olarak tutulur"
+        "Teslim günlüğü ve DLQ panosu tam klavye ile gezilir; tablo başlıkları ekran okuyucuya ARIA ile sunulur",
+        "Teslim durumu (başarılı/başarısız/DLQ) yalnız renkle değil metin ve simgeyle belirtilir; kontrast ≥7:1",
+        "Yeniden-gönder aksiyonunda görünür odak ve durum bildirimi (aria-live) sağlanır",
+        "Hata detayı yapılandırılmış ve okunabilir biçimde sunulur; odak sırası panoda mantıksal kalır"
       ],
-      "notes": "",
+      "notes": "DLQ/teslim panosu klavye ve ekran okuyucu için tam erişilebilirdir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -235,11 +242,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Teslim worker'ı ayrı ölçek; oran-sınırlı (hedef başına)",
-        "DLQ ve yeniden-gönderim yüzeyi",
-        "Shared hosting'de zamanlanmış teslim (kısıtlı)"
+        "Teslim worker'ı Kubernetes'te kuyruk derinliğine göre HPA ile ölçeklenir; liveness/readiness probe ve kaynak limiti tanımlı",
+        "Hedef başına oran-sınırı (rate-limit) uygulanır; alıcı sistemlerin aşırı yüklenmesi önlenir",
+        "DLQ ve elle yeniden-gönderim Docker Swarm servisi olarak sağlık kontrollü çalışır",
+        "WordPress sınıfı shared hosting'de cron ile zamanlanmış toplu teslim (sürekli worker yerine) kısıtlı modda"
       ],
-      "notes": "",
+      "notes": "Teslim worker'ı kuyruğa göre ölçeklenir; shared hosting'de cron ile çalışır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -248,11 +256,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: abone olunan iş olayı oldu → filtreye uyanları imzala + teslim et (idempotent, zincir ≤6)",
-        "Olay: teslim tekrar başarısız → DLQ'ya al + aboneye uyar (loop-breaker)"
+        "Webhook: backend ruleset AI'ın app/module üretim-güncelleme ve ruleset override denemesini deny eder; serbest JS/SQL/shell yok",
+        "Olay: abone olunan iş olayı oldu → Koşul: olay filtreye uyuyor → Eylem: payload'ı imzala + teslim et (idempotent, zincir ≤6)",
+        "Olay: teslim maks 6 kez başarısız → DLQ'ya al + aboneyi uyar; aynı olay tekrar kuyruklanmaz (loop-breaker)",
+        "Hedef değiştirme/secret rotasyon eylemleri step-up onayı ister; eylem allowlist'i ve tenant izolasyonu zorunludur"
       ],
-      "notes": "",
+      "notes": "ECA kuralları olay filtresi, imzalı teslim ve DLQ döngüsünü yönetir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -261,11 +270,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI teslim hatası kök-neden önerir; webhook hedefi/imza yapılandırmasını kendisi değiştiremez"
+        "Webhook: AI app/module üretemez veya güncelleyemez; bu taşta yalnız okuma ve değişiklik-önerisi (suggest-changeset) yapabilir",
+        "AI teslim hatalarını analiz edip kök-neden ve düzeltme önerir; webhook hedefi/imza secret'ını kendisi değiştiremez",
+        "Gelen webhook yanıt gövdesi ve abone payload'ı güvenilmez girdi kabul edilir, sub_prompt olarak çalıştırılmaz",
+        "ruleset override/disable veya doğrudan prod write denemesi anında deny; kill-switch ile durdurulabilir"
       ],
-      "notes": "",
+      "notes": "AI yalnız teslim hatası analizi/önerisi yapar; yapılandırmayı insan değiştirir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -274,11 +284,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "İmza doğrulama + SSRF reddi testi",
-        "Yeniden-deneme + DLQ testi",
-        "En-az-bir-kez + idempotency testi; en çok 6 tur"
+        "HMAC imza üretim/doğrulama ve SSRF reddi (iç IP/metadata) için birim testleri",
+        "Yeniden-deneme backoff zamanlaması ve maks 6 sonrası DLQ geçişi için senaryo testleri",
+        "En-az-bir-kez teslim + alıcı idempotency (aynı event_id) için entegrasyon testi; sahte alıcı ile e2e",
+        "Testing-loop: başarısız test en çok 6 kez yeniden çalıştırılır, düzelmezse otonom QA raporlar"
       ],
-      "notes": "",
+      "notes": "İmza, SSRF, retry/DLQ ve idempotency uçtan uca test edilir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -287,11 +298,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A10 SSRF: hedef allowlist/iç-IP reddi",
-        "A08 Integrity: payload HMAC imzası",
-        "A09 Logging: teslim kararları iz"
+        "OWASP A10 SSRF: hedef URL allowlist + iç-IP/metadata reddi ve DNS rebinding koruması",
+        "OWASP A08 Yazılım/Veri Bütünlüğü: payload HMAC-SHA256 imzası ve zaman damgalı replay koruması",
+        "OWASP A09 Loglama: teslim, retry ve DLQ kararları izlenir; anomali tespiti beslenir",
+        "OWASP A04 Güvensiz Tasarım: en-az-bir-kez + idempotency ile tekrarlı teslim güvenli tasarlanır"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi SSRF, payload bütünlüğü ve tekrarlı teslimde yoğunlaşır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -300,11 +312,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Webhook, iş olaylarını dış sistemlere (entegrasyon) iletir",
-        "Outbox/olay veriyolundan beslenir",
-        "Teslim metrikleri gözlemlenebilirliğe"
+        "Webhook, kernel iş olaylarını dış sistemlere iletir; bağımlılık yönü webhook→outbox/olay veriyoludur",
+        "Olaylar scale-outbox'tan transactional outbox deseniyle beslenir; kayıp/çift teslim engellenir",
+        "İmza secret yönetimi ve hedef doğrulama cc-security sözleşmesine dayanır",
+        "Teslim metrikleri (başarı %, gecikme, DLQ) gözlemlenebilirlik katmanına olay olarak yayılır"
       ],
-      "notes": "",
+      "notes": "Webhook outbox'tan beslenir; secret/doğrulama cc-security'den gelir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -313,10 +326,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Outbound Webhook (orta taş) Scale app'inde dış-sistem olay iletimini sağlar",
-        "Entegrasyon ve bildirim gerektiren app'ler webhook'u kullanır"
+        "Outbound Webhook (orta taş) Scale app'ine dış-sistem olay iletimi primitifi sağlar",
+        "Entegrasyon gerektiren app'ler (s-billing, s-payment-methods, s-tms, s-treasury) abonelik API'si üzerinden olay alır",
+        "Marketplace ve l1-webhook-in tüketicileri 'sipariş oluştu' gibi olayları imzalı POST ile karşılar",
+        "App'ler webhook'u doğrudan DB değil, üretilen abonelik/teslim API'si ve teslim olayları üzerinden tüketir"
       ],
-      "notes": "",
+      "notes": "Webhook bir teslim primitifidir; app'ler abonelik API'siyle tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-webhook — \"Outbound Webhook — dış sisteme olay yollama\" (taş/orta taş; küme: Scale Primitifleri). Özet: Marketplace + entegrasyon ekosistemi için: 'sipariş oluştu' olayını dış sistem URL'ine HMAC-imzalı POST ile yolla. Etiketler: scale, webhook, outbound, hmac, integration.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

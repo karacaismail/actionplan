@@ -137,11 +137,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Marketplace Management: çok-satıcılı pazaryeri — satıcı onboarding, komisyon, ödeme dağıtımı (split)",
-        "Satıcı yönetimi, ürün onayı ve sipariş yönlendirme",
-        "Komisyon hesabı ve satıcı ödemesi (payout)"
+        "Çok-satıcılı pazaryeri çekirdeği: satıcı onboarding, ürün onayı, sipariş yönlendirme ve komisyon",
+        "Satıcı yaşam-döngüsü durum makinesi: başvuru → onay → aktif → askı/iptal geçişlerini yönetir",
+        "Girdi sözleşmesi sipariş + satıcı + komisyon kuralı alır, çıktı olarak satıcı bakiyesi ve payout üretir",
+        "Hata yolu: ödeme dağıtımı (split) başarısızsa sipariş 'beklemede' kalır, çift-ödeme önlenir"
       ],
-      "notes": "",
+      "notes": "TR TradeHub damarı için komisyon ve ödeme dağıtımı (split) çekirdek pazaryeri yetenekleridir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -150,11 +151,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Satıcı/sipariş verisi tenant + satıcı izolasyonu (çapraz-satıcı yok)",
-        "Komisyon/ödeme audit'li; satıcı banka bilgisi kasada",
-        "Ürün onayı yetkili (moderasyon)"
+        "Satıcı/sipariş verisi tenant_id + satıcı kimliği ile çift RLS'le izole edilir, çapraz-satıcı okuma engellenir",
+        "Satıcı banka/IBAN bilgisi PII olarak sınıflanır ve sırlar kasasında (vault) şifreli tutulur",
+        "Ürün onayı ve payout yetkisi rol bazlıdır (moderatör/finans), satıcı kendi onayını veremez",
+        "Komisyon ve payout işlemleri değişmez audit kanıtına aktör + tutar + zamanla yazılır"
       ],
-      "notes": "",
+      "notes": "Pazaryerinin en kritik sınırı çapraz-satıcı izolasyonudur; çift RLS ile güvenceye alınır.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -163,11 +165,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ödeme dağıtımı (split) saf hesap; komisyon kuralından",
-        "Satıcı bakiyesi hareketlerden; payout zamanlanmış",
-        "Sipariş yönlendirme satıcıya idempotent"
+        "Ödeme dağıtımı (split) saf fonksiyon olarak yazılır: komisyon kuralı + tutar girilince deterministik böler",
+        "Satıcı bakiyesi olay/hareket akışından türetilir, payout zamanlanmış işle hesaplanır",
+        "Sipariş yönlendirme idempotenttir; aynı sipariş iki kez satıcıya düşürülmez",
+        "Komisyon, payout ve yönlendirme mantığı ayrı modüllere bölünür, döngüsel karmaşıklık sınırlı tutulur"
       ],
-      "notes": "",
+      "notes": "Split hesabı saf tutulduğundan komisyon dağıtımı test edilebilir ve yeniden-üretilebilirdir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -176,11 +179,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Payout onaylı + eşik; sahte satıcı/ürün moderasyonu",
-        "Komisyon kuralı sürümlü",
-        "Çapraz-satıcı veri sızıntısı engellenir"
+        "Payout eşik üstünde insan onayı ve step-up gerektirir; sahte satıcı/ürün moderasyon kuyruğuna düşer",
+        "Komisyon kuralı sürümlenir; geçmiş siparişe uygulanan oran değişmez biçimde saklanır",
+        "Satıcı paneli uçları oran sınırına alınır; ödeme sağlayıcı sırrı periyodik rotasyona tabidir",
+        "Çapraz-satıcı veri sızıntısı testlerle ve en-az-ayrıcalık erişimle aktif olarak engellenir"
       ],
-      "notes": "",
+      "notes": "Payout eşik + onay ve komisyon sürümleme, finansal manipülasyon yüzeyini daraltır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -189,11 +193,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Satıcı/ürün listesi indeksli; sipariş yönlendirme hızlı",
-        "Payout toplu/asenkron",
-        "Komisyon hesabı projeksiyondan"
+        "Satıcı/ürün listesi (tenant_id, satıcı, durum) bileşik indeksiyle imleç sayfalanır, sipariş yönlendirme p95 hedefini tutar",
+        "Payout toplu/asenkron worker'da işlenir, satıcı sayısı arttıkça istek yolu yavaşlamaz",
+        "Komisyon ve bakiye hesabı önceden toplanmış projeksiyondan okunur, sipariş başına yeniden-hesap (N+1) önlenir",
+        "Sıcak satıcı kataloğu önbelleğe alınır, listeleme gecikmesi düşürülür"
       ],
-      "notes": "",
+      "notes": "Payout ve komisyon hesabı projeksiyona taşınarak istek yolundaki p95 gecikme korunur.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -202,11 +207,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Satıcı mobil paneli (ürün/sipariş/bakiye)",
-        "iOS/Android push ile yeni sipariş/payout bildirimi",
-        "Dar ekranda satıcı özet"
+        "Satıcı mobil paneli (PWA): ürün listesi, gelen sipariş ve güncel bakiye tek sütunda gösterilir",
+        "iOS/Android push bildirimiyle yeni sipariş ve gerçekleşen payout satıcıya anında iletilir",
+        "Sipariş kabul/kargola ve ürün düzenle düğmeleri ≥44px dokunma hedefiyle parmakla rahat tıklanır",
+        "Bağlantı koparsa son satıcı bakiyesi ve sipariş özeti çevrimdışı önbellekten okunur (offline davranışı)"
       ],
-      "notes": "",
+      "notes": "Mobil yüzey satıcının saha operasyonuna (sipariş/kargo) odaklıdır.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -215,11 +221,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Satıcı/komisyon ekranı klavye+okuyucu erişimli",
-        "Bakiye/komisyon metinle; kontrast 7:1",
-        "Onay/payout aksiyonu açık"
+        "Satıcı yönetimi ve komisyon ekranı klavyeyle tam gezilir, odak sırası görünür ve düzenlidir",
+        "Bakiye/komisyon tutarları metin etiketiyle de sunulur, sayı-renk kontrastı ≥7:1 sağlanır",
+        "Ürün onayı ve payout aksiyonları ARIA etiketiyle adlandırılır, durum sözlü okuyucuya bildirilir",
+        "Sipariş tablosu başlık ilişkilendirmesiyle (th scope) ekran okuyucuda anlaşılır biçimde okunur"
       ],
-      "notes": "",
+      "notes": "Finansal tutarlar renk körü satıcılar için metin alternatifiyle de aktarılır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -228,11 +235,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Marketplace servisi ölçeklenir; payout worker",
-        "Ödeme dağıtımı (split) sağlayıcıyla",
-        "Shared hosting'de küçük pazaryeri (kısıtlı)"
+        "Marketplace servisi Kubernetes'te otomatik ölçekleyici (HPA), sağlık probu ve kaynak limitiyle ölçeklenir",
+        "Payout işleme ayrı worker dağıtım birimidir, dönem sonu yükünde bağımsız ölçeklenir",
+        "Ödeme dağıtımı (split) dış ödeme sağlayıcısıyla idempotent çağrıyla yapılır, çift-dağıtım önlenir",
+        "Shared hosting'de yalnız küçük tek-bölge pazaryeri çalışır, yüksek hacimli payout kısıtlıdır"
       ],
-      "notes": "",
+      "notes": "Payout dönemsel yük yarattığından ödeme worker'ı servis gövdesinden ayrı ölçeklenir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -241,11 +249,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: sipariş geldi → satıcıya yönlendir + komisyon hesapla (idempotent, zincir ≤6)",
-        "Olay: payout dönemi → satıcı bakiyesini öde (onaylı) (loop-breaker)"
+        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (UI'da serbest JS/SQL/shell yok)",
+        "Olay: sipariş geldi → Eylem: satıcıya yönlendir + komisyon hesapla (idempotent, zincir ≤6)",
+        "Olay: payout dönemi geldi → Koşul: bakiye > 0 ve onaylı → Eylem: satıcı bakiyesini öde (allowlist)",
+        "Döngü kırıcı: sipariş→yönlendirme→komisyon zinciri maks 6 adım; payout tetiği step-up ister"
       ],
-      "notes": "",
+      "notes": "Sipariş ve payout kuralları idempotenttir; aynı sipariş/dönem için çift ödeme tetiklenmez.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -254,11 +263,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI satıcı/ürün kalitesi ve komisyon önerir; payout/onayı insan verir"
+        "AI bu Marketplace yüzeyi için app/module üretemez/güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi sunabilir",
+        "AI satıcı/ürün kalite skoru ve komisyon oranı önerir; payout ve satıcı onayını insan verir (doğrudan prod write yok)",
+        "Satıcı ürün açıklaması/mesajı serbest metin güvenilmezdir, sub_prompt enjeksiyonu talimat olarak yürütülmez",
+        "Ruleset override/disable denemesi anında deny; banka PII redaksiyonu, kill-switch ve step-up devrede"
       ],
-      "notes": "",
+      "notes": "AI kalite ve komisyon önerisinde yardımcıdır; finansal onay kararı insanındadır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -267,11 +277,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Komisyon/split hesap doğruluk testi",
-        "Çapraz-satıcı izolasyon testi (başka satıcı verisi görünmez)",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Komisyon/split hesap birim testi: kenar oranlarda (yuvarlama, %0, çoklu satıcı) toplam tutar korunur mu",
+        "Çapraz-satıcı izolasyon negatif testi: bir satıcı başka satıcının siparişini/bakiyesini göremez",
+        "Playwright e2e: satıcı onboarding → ürün onayı → sipariş → payout kullanıcı yolculuğu doğrulanır",
+        "Testing-loop: başarısız komisyon/izolasyon testi en fazla 6 kez yeniden çalışır, düzelmezse raporlanır"
       ],
-      "notes": "",
+      "notes": "Çapraz-satıcı izolasyonu ve komisyon doğruluğu finansal kritiklikle sürekli regresyon altındadır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -280,11 +291,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: satıcı izolasyonu",
-        "A04 Insecure Design: sahte satıcı/ürün moderasyonu",
-        "A09 Logging: komisyon/payout kararları iz"
+        "OWASP A01: satıcı izolasyonu zorunlu erişim kontrolüyle sağlanır, çapraz-satıcı kaynak erişimi reddedilir",
+        "OWASP A04: sahte satıcı/ürün riski moderasyon ve payout-eşik tasarımıyla baştan sınırlanır",
+        "OWASP A09: komisyon hesabı ve payout kararları iz olarak değişmez biçimde günlüklenir",
+        "OWASP A03: ürün/satıcı arama ve filtre parametreli sorgularla yürütülür (enjeksiyon önlenir)"
       ],
-      "notes": "",
+      "notes": "Pazaryeri tehdit yüzeyinin merkezi yetkisiz satıcı erişimi (A01) ve finansal dolandırıcılıktır (A04).",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -293,11 +305,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Marketplace, commerce (sipariş), payment (split), party (satıcı) ile entegre",
-        "Komisyon finance'a; ürün pim'den",
-        "Channel-hub ile dış pazaryerleri"
+        "Marketplace, commerce (sipariş), payment (split), party (satıcı kimliği) sözleşmeleriyle entegre olur",
+        "Komisyon kayıtları finance ArcheType'ına olay olarak akar; ürün verisi PIM'den okunur",
+        "Satıcı sipariş olayı sipariş yönlendirme akışını tetikler, bağımlılık yönü commerce'tendir",
+        "Dış pazaryerleri (Trendyol, Hepsiburada) channel-hub üzerinden senkronize edilir"
       ],
-      "notes": "",
+      "notes": "Marketplace commerce/payment/party çekirdeğini tüketir; komisyonu finance'a olayla iletir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -306,10 +319,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Marketplace Management ArcheType'ı Müşteri & Gelir'de çok-satıcılı pazaryeri sağlar",
-        "Pazaryeri kuran app'ler bu ArcheType'ı kullanır"
+        "Marketplace Management ArcheType'ı Müşteri & Gelir app'inde çok-satıcılı pazaryeri yeteneğini sağlar",
+        "TR TradeHub ve sahibinden tarzı dağıtımlar (dist-sahibinden) bu ArcheType'ı temel alır",
+        "Pazaryeri kuran app'ler satıcı/komisyon verisine üretilen API ve olaylarla erişir, doğrudan DB'ye yazmaz"
       ],
-      "notes": "",
+      "notes": "Tüketim üretilen pazaryeri API'si ve olaylar üzerinden olur, satıcı tablolarına doğrudan erişilmez.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

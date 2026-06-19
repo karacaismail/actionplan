@@ -130,11 +130,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "PIM (Product Information Management): merkezî ürün verisi, varyant, zenginleştirme ve kanal yayını",
-        "Ürün özniteliği, kategori, medya ve çok-dilli içerik",
-        "Veri kalitesi (tamlık) skoru ve kanal-özel yayın"
+        "PIM katalog çekirdeği: ürün, varyant, öznitelik ve kategori ağacını tek kaynaktan yönetir, draft→review→published yaşam durumlarını taşır",
+        "Çok-dilli ve çok-kanallı yayın: aynı ürünü dil/kanal bağlamına göre projeksiyonlar; eksik alanda yayını reddeden net hata yolu döner",
+        "Tamlık (completeness) skoru: zorunlu öznitelik kapsamını yüzde olarak ölçer, eşik altı ürünü kanal yayınından otomatik dışlar",
+        "İçe/dışa aktarım sözleşmesi: CSV/Akeneo benzeri besleme alır, doğrulama hatalarını satır bazında raporlar, kısmi kabul yapmaz"
       ],
-      "notes": "",
+      "notes": "PIM bu ArcheType'ta tüm satış kanallarının tek ürün doğruluk kaynağıdır.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -143,11 +144,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Ürün verisi tenant_id RLS; yayın yetkisi rol bazlı",
-        "Fiyat/maliyet alanları erişim-kontrollü",
-        "Medya kaynağı güvenli (file modülü)"
+        "Tüm katalog tablolarında tenant_id bazlı PostgreSQL RLS zorunlu; çapraz-tenant ürün okuma satır düzeyinde engellenir",
+        "Fiyat ve maliyet öznitelikleri hassas (PII/ticari sır) sınıflanır; yalnız fiyatlama rolü least-privilege ile görür",
+        "Yayın (publish) yetkisi rol bazlı; medya kaynakları file modülünden imzalı URL ile alınır, doğrudan path açılmaz",
+        "Ürün/yayın değişiklikleri değişmez (append-only) audit kaydına yazılır; kim hangi alanı ne zaman değiştirdi izlenir"
       ],
-      "notes": "",
+      "notes": "Fiyat alanı sınıflandırması rol bazlı erişimin temelidir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -156,11 +158,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ürün modeli varyant-farkında; öznitelik bildirimsel",
-        "Zenginleştirme pipeline'ı; tamlık skoru türetilir",
-        "Kanal yayını fark-temelli"
+        "Tamlık skoru ve öznitelik doğrulaması yan etkisiz saf fonksiyonlar olarak izole edilir, kolayca birim test edilir",
+        "Öznitelik şeması bildirimsel (declarative) tanımlanır; yeni ürün tipi kod yazmadan konfigürasyonla eklenir",
+        "Katalog okuma deposu (repository) ile soyutlanır; varyant çözümleme tek modülde toplanır, kopya mantık kalmaz",
+        "Zenginleştirme pipeline'ı adımlara bölünür; her adım tipli girdi/çıktı sözleşmesiyle bağımsız test edilebilir"
       ],
-      "notes": "",
+      "notes": "Saf doğrulama fonksiyonları kanal yayını mantığından net ayrılır.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -169,11 +172,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Eksik/düşük-kalite ürün yayını engellenir (tamlık eşiği)",
-        "Yayın sürümlü; geri-alınabilir",
-        "Çok-dilli içerik sanitize"
+        "Toplu içe aktarma uç noktası IP/tenant başına oran-sınırlı; tek seferde maks satır kotası ile katalog bombardımanı engellenir",
+        "Medya/feed sağlayıcı anahtarları (secret) düzenli döndürülür ve vault'tan çekilir, kod veya env dosyasında saklanmaz",
+        "Çok-dilli serbest metin öznitelikler sunucuda sanitize edilir; bağımlılıklar her derlemede güvenlik açığı için taranır",
+        "Yayın işlemleri sürümlenir ve geri-alınabilir; düşük tamlık skorlu ürün yayını ruleset düzeyinde reddedilir"
       ],
-      "notes": "",
+      "notes": "Toplu içe aktarımda oran-sınırı katalog kötüye kullanımını sınırlar.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -182,11 +186,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ürün araması indeksli; medya CDN",
-        "Toplu içe aktarma/zenginleştirme asenkron",
-        "Kanal yayını yalnız değişen ürün"
+        "Ürün listeleme (tenant_id, kategori, güncellenme) bileşik indeksiyle ve imleç tabanlı sayfalamayla okunur, offset taraması yapılmaz",
+        "Varyant ve öznitelik yüklemesi tek sorguda toplanarak N+1 erişim önlenir; medya CDN üzerinden servis edilir",
+        "Toplu içe aktarma ve zenginleştirme asenkron worker'da çalışır; katalog okuma p95 gecikme hedefi 200 ms altında tutulur",
+        "Kanal yayını yalnız değişen ürünleri fark-temelli işler; sık okunan ürün projeksiyonu önbelleğe alınır"
       ],
-      "notes": "",
+      "notes": "p95 200 ms hedefi indeks ve önbellek tasarımını yönlendirir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -195,11 +200,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde ürün düzenleme ve medya yükleme",
-        "iOS/Android'de tamlık skoru görüntüleme",
-        "Dar ekranda ürün kartı"
+        "PWA olarak ürün kartı ve tamlık skoru çevrimdışı okunabilir; bağlantı dönünce öznitelik düzenlemeleri kuyruktan senkronlanır",
+        "Capacitor paketinde kameradan ürün medyası çekip yükleme; tüm dokunma hedefleri en az 44px boyutunda tutulur",
+        "Dar ekranda öznitelik formu tek sütuna iner; zorunlu alan eksikleri ilk ekranda görünür biçimde işaretlenir",
+        "Saha/depo senaryosu için barkod okutarak ürün arama ve hızlı stok-öznitelik güncelleme akışı sunulur"
       ],
-      "notes": "",
+      "notes": "Saha ekibi için çevrimdışı düzenleme ve 44px dokunma hedefi önceliklidir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -208,11 +214,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Ürün formu alan-etiket ilişkili; medyaya alt-metin zorunlu",
-        "Tamlık skoru metinle; kontrast 7:1",
-        "Çok-dilli sekmeler klavye erişimli"
+        "Her öznitelik girişi programatik etiketle (label-for/aria-label) bağlanır; ürün görsellerine anlamlı alt-metin zorunlu kılınır",
+        "Tamlık skoru yalnız renkle değil yüzde metniyle de gösterilir; metin/arkaplan kontrastı en az 7:1 sağlanır",
+        "Çok-dilli öznitelik sekmeleri ve kategori ağacı yalnız klavye ile tam gezilebilir; odak sırası görünür ve mantıklıdır",
+        "Yayın hata mesajları ARIA canlı bölge (aria-live) ile ekran okuyucuya bildirilir, sessiz başarısızlık olmaz"
       ],
-      "notes": "",
+      "notes": "Tamlık skoru renkten bağımsız metinle de iletilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -221,11 +228,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "PIM servisi standart; zenginleştirme worker; medya CDN",
-        "Kanal yayını outbox ile commerce/channel'a",
-        "Shared hosting'de temel ürün yönetimi"
+        "PIM API'si Kubernetes'te yatay ölçeklenir, hazırlık (readiness) ve canlılık (liveness) yoklamaları katalog DB bağlantısını doğrular",
+        "Zenginleştirme worker'ı Docker Swarm servisi olarak ayrı dağıtılır; CPU/bellek kaynak limitleri tanımlı",
+        "Kanal yayını outbox deseniyle commerce/channel-hub'a güvenilir teslim edilir; medya ayrı CDN katmanından servis edilir",
+        "WordPress sınıfı paylaşımlı barındırmada yalnız temel ürün yönetimi ve salt-okunur feed çıktısı, ağır worker'sız çalışır"
       ],
-      "notes": "",
+      "notes": "Worker ve API bağımsız ölçeklenir; shared hosting kısıtlı moda iner.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -234,11 +242,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: ürün güncellendi → tamlık skoru hesapla + kanallara yayınla (idempotent, zincir ≤6)",
-        "Olay: tamlık eşiği altı → yayını engelle + uyar (loop-breaker)"
+        "PIM ECA ruleset'i backend'de çalışır (serbest JS/SQL/shell yok); AI'ın app/module üretim ve ruleset override denemesini deny eder",
+        "Olay: ürün güncellendi -> Koşul: tamlık skoru ≥ eşik -> Eylem: bağlı kanallara yayınla; kural idempotent, çift yayın üretmez",
+        "Olay: tamlık skoru eşik altına düştü -> Koşul: ürün yayında -> Eylem: yayını çek + sorumluya uyarı, tetik zinciri en fazla 6 adım",
+        "Tüm kurallar tenant_id kapsamında izole; prod öznitelik göçü yalnız append-only/expand-contract modunda step-up onayıyla geçer"
       ],
-      "notes": "",
+      "notes": "Tamlık eşiği ECA tetikleyici koşulun çekirdeğidir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -247,11 +256,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI ürün açıklaması/öznitelik zenginleştirme önerir; yayını insan onaylar"
+        "AI yalnız PIM ArcheType taslağı veya prod-update önerisi üretebilir; app/module üretemez/güncelleyemez, doğrudan prod write yapamaz",
+        "AI ürün açıklaması ve öznitelik zenginleştirme önerir; kanal yayınını her zaman insan onaylar (prompt->draft->preview->approval akışı)",
+        "Ürün notu/feed metni gibi sub_prompt girdileri güvenilmez sayılır; talimat olarak çalıştırılmaz, ruleset disable denemesi anında deny edilir",
+        "AI doğrulama döngüsü en fazla 6 turda yürür; 9. turda tanı koyup durur, üretilen öneriler kill-switch ile durdurulabilir"
       ],
-      "notes": "",
+      "notes": "AI öneri üretir, yayını insan onayı kapısı geçirir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -260,11 +270,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Varyant/öznitelik doğruluk + tamlık skoru testi",
-        "Kanal yayını (fark-temelli) tutarlılık testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Tamlık skoru ve öznitelik doğrulaması için sınır değer dahil birim testleri; varyant çözümleme kapsamı %90 üstünde tutulur",
+        "Ürün düzenleme ve yayın kullanıcı yolculuğu Playwright e2e ile sürülür; eksik-alan reddi negatif senaryosu doğrulanır",
+        "Kanal yayını fark-temelli tutarlılık testi: aynı ürün iki kez yayınlandığında çift kayıt oluşmadığı (idempotency) kanıtlanır",
+        "Testing-loop başarısız testi en fazla 6 kez yeniden dener, düzelmezse raporlar; cross-tenant katalog sızıntısı negatif testi koşulur"
       ],
-      "notes": "",
+      "notes": "Idempotency ve cross-tenant negatif testleri yayın güvenini korur.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -273,11 +284,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: fiyat/maliyet alanı erişimi",
-        "A03 Injection: çok-dilli içerik sanitize",
-        "A09 Logging: ürün/yayın kararları iz"
+        "OWASP A01 Erişim Kontrolü: fiyat/maliyet öznitelik erişimi rol bazlı, tenant RLS ile çapraz-tenant katalog görünürlüğü engellenir",
+        "OWASP A03 Enjeksiyon: öznitelik araması parametreli sorgularla yapılır, çok-dilli serbest metin sunucuda sanitize edilir",
+        "OWASP A09 Loglama: ürün ve yayın kararları izlenir; tamlık reddi ve içe-aktarma hataları denetlenebilir kayda yazılır",
+        "OWASP LLM01: AI zenginleştirme önerilerine ürün notu/feed kaynaklı istem enjeksiyonu için girdi izolasyonu uygulanır"
       ],
-      "notes": "",
+      "notes": "Çok-dilli içerik sanitizasyonu enjeksiyon yüzeyini kapatır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -286,11 +298,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "PIM, commerce (katalog), channel-hub (kanal), file (medya) ile entegre",
-        "Ürün feed (product-feed) PIM'den beslenir",
-        "AI-catalog üretilen görseli PIM'e"
+        "PIM, commerce çekirdeğine ürün-yayınlandı olayını yayar; channel-hub bu olayı tüketerek kanal katalogunu günceller",
+        "Medya kernel surface'teki file modülünden imzalı URL ile alınır; PIM dosya depolamayı yeniden uygulamaz",
+        "Ürün feed (s-product-feed) PIM yayın projeksiyonundan beslenir; bağımlılık yönü tek yönlü (PIM -> feed)",
+        "AI-catalog üretilen görsel PIM'e öznitelik olarak iliştirilir; kategori değişimi olay üzerinden bağlı app'lere bildirilir"
       ],
-      "notes": "",
+      "notes": "Bağımlılık yönü PIM'den tüketici app'lere doğru tek yönlüdür.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -299,10 +312,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "PIM ArcheType'ı Müşteri & Gelir'de merkezî ürün verisini sağlar",
-        "Ürün satan tüm app'ler PIM'i tüketir"
+        "Commerce ve marketplace app'leri ürün kataloğunu doğrudan DB'den değil, PIM'in ürün-yayınlandı olayı ve üretilen API'si üzerinden tüketir",
+        "Product-feed app'i PIM yayın projeksiyonunu okuyarak kanal beslemeleri üretir; ham öznitelik tablosuna erişmez",
+        "Sosyal-ticaret ve pazarlama app'leri ürün görseli/öznitelik snapshot'ını yetki kapsamlı araç çağrısıyla alır",
+        "PIM, Müşteri & Gelir kümesinde tüm satış kanalları için tek ürün doğruluk kaynağı (single source of truth) olarak konumlanır"
       ],
-      "notes": "",
+      "notes": "Tüketim daima olay/üretilen API üzerinden, ham tabloya erişimsiz olur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-pim — \"PIM\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Akeneo muadili. Çok kanallı katalog yönetimi Etiketler: customer-revenue, pim, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

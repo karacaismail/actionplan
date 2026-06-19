@@ -133,11 +133,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Hot Counter: yüksek-yazımlı sayaç (görüntüleme/beğeni); parçalı (sharded) toplama",
-        "Yaklaşık ve kesin sayım modları; periyodik birleştirme (flush)",
-        "Aşırı-sıcak anahtar için shard dağıtımı"
+        "Hot Counter: like/view/follower gibi yüksek-yazımlı sayaçları parçalı (sharded) tutar, okuma shard toplamını döndürür",
+        "Kesin ve yaklaşık sayım modları: kesin modda atomik artırım, yaklaşık modda HyperLogLog ile bellek-verimli tekil sayım",
+        "Periyodik birleştirme (flush): Redis benzeri sıcak depodaki shard değerlerini kalıcı sayaca taşır; artırım sözleşmesi (key, delta, event_id) alır",
+        "Backend takas edilebilir (swappable): aynı sayaç API'si Redis veya alternatif depo arkasında değişmeden çalışır, hata yolunda son bilinen değeri döner"
       ],
-      "notes": "",
+      "notes": "Sharding ve swappable backend bu orta taşın çekirdek işlevidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -146,11 +147,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Sayaç anahtarı tenant-kapsamlı; çapraz-tenant artırım engellenir",
-        "Sahte artırım (bot) oran-sınırlı",
-        "Sayaç sıfırlama yetki+iz ister"
+        "Sayaç anahtarı tenant_id ile öneklenir; kalıcı sayaç tablosunda RLS ile çapraz-tenant artırım ve okuma engellenir",
+        "Sahte artırım (bot) kaynak/IP başına oran-sınırlı; sayaç ham değerleri kişisel veri içermez, yalnız toplam sayı sınıfında tutulur",
+        "Sayaç sıfırlama ve eşik yapılandırması yalnız yetkili role açık (least-privilege); her sıfırlama değişmez audit kaydına yazılır",
+        "Artırım uç noktası yalnız doğrulanmış kaynaktan kabul edilir; yetkisiz delta enjeksiyonu reddedilir"
       ],
-      "notes": "",
+      "notes": "Sayaç PII içermez; risk bot şişirme ve çapraz-tenant artırımdadır.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -159,11 +161,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yazım shard'lara dağıtılır; okuma shard toplamı",
-        "Birleştirme asenkron; sıcak yol kilitlemesiz (atomic incr)",
-        "Yaklaşık sayım için olasılıksal yapı (HLL) opsiyonu"
+        "Shard seçimi ve toplam hesaplama yan etkisiz saf fonksiyonlar olarak izole edilir; deterministik olduğu için kolay birim test edilir",
+        "Depolama erişimi adaptör (port/adapter) deseniyle soyutlanır; Redis veya alternatif backend tek arayüz arkasında takas edilir",
+        "Sıcak yazım yolu kilitlemesiz atomik artırım (INCR) kullanır; birleştirme mantığı ayrı asenkron modüle taşınır",
+        "Yaklaşık sayım için HyperLogLog yapısı opsiyonel strateji modülü olarak eklenir, kesin moddan tipli arayüzle ayrılır"
       ],
-      "notes": "",
+      "notes": "Backend adaptör soyutlaması swappable depo gereksinimini taşır.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -172,11 +175,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Artırım idempotent (event-id) ile çift sayım önlenir",
-        "Sayaç taşması/negatif kontrolü",
-        "Sıcak anahtar başına oran-sınırı (DoS önleme)"
+        "Artırım event_id ile idempotent yapılır; aynı olayın tekrar gelmesi çift sayıma yol açmaz, dedupe penceresi tutulur",
+        "Sayaç değeri taşma ve negatif değere karşı korunur; beklenmeyen büyük delta'lar reddedilip işaretlenir",
+        "Sıcak anahtar başına oran-sınırı uygulanır; tek bir viral anahtar üzerinden gelen DoS yazım seli yavaşlatılır",
+        "Depo erişim anahtarları (secret) düzenli döndürülür ve vault'tan çekilir; bağımlılıklar her derlemede güvenlik açığı için taranır"
       ],
-      "notes": "",
+      "notes": "Idempotency ve oran-sınırı çift sayım ve DoS yüzeyini kapatır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -185,11 +189,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Sharding ile yazım darboğazı (hot key) dağıtılır",
-        "Okuma önbellekli; kesin sayım gerektiğinde birleştir",
-        "Yüksek throughput hedefi izlenir"
+        "Sharding ile sıcak anahtar (hot key) yazım darboğazı N shard'a dağıtılır; tek satıra yığılma ve kilit çekişmesi önlenir",
+        "Okuma değeri önbelleğe alınır ve kısa TTL ile servis edilir; kesin sayım gerektiğinde shard'lar tek geçişte birleştirilir",
+        "Artırım sıcak yolu için p95 yazım gecikme hedefi 10 ms altında tutulur ve sürekli ölçülür",
+        "Birleştirme (flush) toplu işlenir; her artırımda kalıcı tabloya yazım yapılmaz, N+1 kalıcılaştırma çağrısı önlenir"
       ],
-      "notes": "",
+      "notes": "p95 10 ms yazım hedefi sharding kararını yönlendirir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -198,11 +203,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Sayaç backend; pano mobilde salt-okuma",
-        "iOS/Android'de canlı sayaç gösterimi",
-        "Dar ekranda sayaç özeti"
+        "Hot Counter saf backend yeteneğidir; mobilde yalnız salt-okunur sayaç değeri tüketilir, yazım istemciden tetiklenmez",
+        "PWA panosunda canlı sayaç gösterimi çevrimdışında son senkronlanan değeri gösterir; bağlanınca güncel toplamı çeker",
+        "Dar ekranda sayaç özeti tek kart olarak sığar; tüm dokunulabilir kontroller en az 44px boyutunda tutulur",
+        "Mobil görüntüleme/beğeni artırımı uygulama backend'ine oran-sınırlı çağrıyla iletilir, sayaç deposuna doğrudan erişmez"
       ],
-      "notes": "",
+      "notes": "Sayaç backend yeteneği; mobil yüzey salt-okunur tüketicidir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -211,11 +217,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Sayaç değeri metinle okunur; canlı güncelleme aria-live",
-        "Trend renk dışında metinle; kontrast 7:1",
-        "Pano klavye erişimli"
+        "Sayaç değeri okunabilir metinle sunulur; canlı güncelleme aria-live ile ekran okuyucuya bildirilir, sessiz değişmez",
+        "Trend (artış/azalış) yalnız renkle değil ok/etiket metniyle de gösterilir; metin/arkaplan kontrastı en az 7:1 sağlanır",
+        "Sayaç panosu ve eşik ayar ekranı yalnız klavye ile tam gezilebilir; odak sırası görünür ve mantıklıdır",
+        "Büyük sayılar binlik ayraçla ve ekran okuyucuya anlamlı biçimde (ör. yaklaşık değer) okutulur, ham rakam yığını verilmez"
       ],
-      "notes": "",
+      "notes": "Trend bilgisi renkten bağımsız metinle de iletilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -224,11 +231,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Sayaç deposu (Redis benzeri) ayrı; shard'lar bölgelere dağılır",
-        "Birleştirme worker'ı zamanlanmış",
-        "Shared hosting'de tek-düğüm sayaç (kısıtlı)"
+        "Sayaç deposu (Redis benzeri) ayrı dağıtım birimidir; shard'lar düğümlere/bölgelere yayılır, kaynak limitleri tanımlıdır",
+        "Birleştirme (flush) worker'ı zamanlanmış iş olarak Docker Swarm/K8s'te koşar; hazırlık/canlılık yoklamaları depo erişimini doğrular",
+        "Sayaç servisi yatay ölçeklenir; sıcak anahtar yükü arttığında HPA shard işleyici replikalarını çoğaltır",
+        "WordPress sınıfı paylaşımlı barındırmada tek-düğüm sayaç çalışır; sharding ve çok-bölge dağıtım devre dışı, kapasite kısıtlıdır"
       ],
-      "notes": "",
+      "notes": "Depo ve flush worker'ı API'den bağımsız ölçeklenir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -237,11 +245,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: sayaç eşiği aştı (ör. viral) → ölçek/uyarı tetikle (idempotent, zincir ≤6)",
-        "Olay: birleştirme zamanı → shard toplamını kalıcı sayaca yaz (loop-breaker)"
+        "Hot Counter ECA ruleset'i backend'de çalışır (serbest JS/SQL/shell yok); AI'ın app/module üretimi ve ruleset override denemesini deny eder",
+        "Olay: sayaç eşiği aştı (ör. viral içerik) -> Koşul: oran anormal -> Eylem: ölçek/uyarı tetikle; kural idempotent, tek olay tek uyarı üretir",
+        "Olay: birleştirme zamanı geldi -> Koşul: bekleyen shard delta'sı var -> Eylem: shard toplamını kalıcı sayaca yaz, tetik zinciri en fazla 6 adım",
+        "Tüm kurallar tenant_id kapsamında izole; sayaç sıfırlama eylemi step-up onayı ister ve eylemler allowlist ile sınırlıdır"
       ],
-      "notes": "",
+      "notes": "Eşik aşımı ve flush ECA tetikleyicilerinin çekirdeğidir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -250,11 +259,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI sayaç anomalisi (bot artışı) işaretler; sayaç sıfırlama/yapılandırmayı kendisi yapamaz"
+        "Bu taşta AI yetkisi yalnız okuma ve değişiklik-önerisi (suggest) ile sınırlıdır; app/module üretemez/güncelleyemez, doğrudan prod write yapamaz",
+        "AI sayaç anomalisini (ani bot artışı, viral sıçrama) işaretler; sayaç sıfırlama veya shard yapılandırmasını kendisi uygulayamaz",
+        "Metrik/etiket gibi sub_prompt girdileri güvenilmez sayılır; talimat olarak çalıştırılmaz, ruleset override/disable denemesi anında deny edilir",
+        "AI önerileri kill-switch ile durdurulabilir; anomali işaretleme döngüsü en fazla 6 turda biter, sonra rapor üretir"
       ],
-      "notes": "",
+      "notes": "Bu taşın otonomisi suggest; AI sayaç değerini ve ayarını değiştiremez.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -263,11 +273,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Eşzamanlı artırım doğruluk testi (kayıp sayım yok)",
-        "Idempotent artırım testi (çift sayım yok)",
-        "Sıcak anahtar yük testi; en çok 6 tur"
+        "Eşzamanlı artırım doğruluk birim testi: yüksek paralel yazımda shard toplamının kayıp sayım olmadan tutması kanıtlanır",
+        "Idempotent artırım testi: aynı event_id ile tekrarlanan olayın sayacı yalnız bir kez artırdığı doğrulanır",
+        "Sıcak anahtar yük testi: tek viral anahtar altında p95 yazım gecikmesi ölçülür; testing-loop en fazla 6 turda raporlar",
+        "Cross-tenant negatif test: bir tenant'ın diğerinin sayaç anahtarını artıramadığı/okuyamadığı kanıtlanır"
       ],
-      "notes": "",
+      "notes": "Kayıp sayım yok ve idempotency garantileri çekirdek test hedefidir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -276,11 +287,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A04 Insecure Design: bot/DoS için oran-sınırı",
-        "A01 Access Control: tenant-kapsamlı sayaç",
-        "A09 Logging: sıfırlama kararları iz"
+        "OWASP A04 Güvensiz Tasarım: bot şişirme ve DoS yazım seline karşı sıcak anahtar başına oran-sınırı tasarımda kurulur",
+        "OWASP A01 Erişim Kontrolü: sayaç anahtarı tenant-kapsamlı, sıfırlama yalnız yetkili role açık (RLS + least-privilege)",
+        "OWASP A09 Loglama: sayaç sıfırlama ve eşik değişiklik kararları değişmez kayda yazılır, kötüye kullanım sonradan izlenir",
+        "OWASP A08 Bütünlük: idempotent artırım ve taşma kontrolü sayaç değerinin manipülasyonla bozulmasını engeller"
       ],
-      "notes": "",
+      "notes": "Oran-sınırı ve idempotency tehdit yüzeyinin merkezindedir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -289,11 +301,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Counter, içerik/etkileşim ArcheType'larına sayım yeteneği verir",
-        "Olay veriyolundan artırım tüketir",
-        "Metrikler gözlemlenebilirliğe"
+        "Counter, içerik/etkileşim ArcheType'larına artırım/oku sözleşmesi (key, delta, event_id) üzerinden sayım yeteneği sağlar",
+        "Olay veriyolundan beğeni/görüntüleme olaylarını tüketerek sayacı artırır; bağımlılık yönü tüketicilerden Counter'a doğrudur",
+        "Kalıcı projeksiyon ihtiyacında scale-projections ile, okuma hızlandırma için scale-cache ile birlikte çalışır",
+        "Sayaç metrikleri (throughput, gecikme, anomali) gözlemlenebilirlik katmanına yayılır, doğrudan iş tablosuna yazılmaz"
       ],
-      "notes": "",
+      "notes": "Tüketiciler Counter'a bağlıdır; artırım olay sözleşmesiyle gelir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -302,10 +315,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Hot Counter (orta taş) Scale app'inde yüksek-yazım sayaç yeteneğini sağlar",
-        "İçerik, sosyal ve analitik app'ler sayacı kullanır"
+        "Sosyal (s-social), topluluk (s-community) ve sabit kıymet (s-fixed-assets) app'leri beğeni/görüntüleme sayımını doğrudan DB'den değil, Counter'ın artırım/oku API'siyle tüketir",
+        "Eğitim (edu-u14) gibi tüketiciler sayaç değerini yetki kapsamlı araç çağrısıyla okur, shard tablosuna erişmez",
+        "İçerik ve analitik app'ler trend/popülerlik için Counter okuma projeksiyonunu kullanır, sayacı kendileri yazmaz",
+        "Hot Counter, Scale Primitifleri kümesinde yüksek-yazım sayım yeteneğinin tek ortak takas-edilebilir sağlayıcısıdır"
       ],
-      "notes": "",
+      "notes": "Tüketim daima artırım/oku API'si üzerinden, ham shard'a erişimsizdir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-counter — \"Hot Counter\" (taş/orta taş; küme: Scale Primitifleri). Özet: Like, view, follower. Backend swappable. Etiketler: counter, hot, redis, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

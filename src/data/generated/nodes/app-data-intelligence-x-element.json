@@ -286,11 +286,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Veri & Zeka kırılımının Element örneği: tek bir veri alanı veya AI kuralı (ör. güven eşiği)",
-        "Element, AI/veri sözleşmesindeki en küçük anlamlı alan/kural",
-        "Örnek dal; AI alan kuralının granülerlikteki yeri"
+        "Element, Veri & Zeka sözleşmesindeki tek bir alanı tanımlar: AI çıktısı güven eşiği (0.0-1.0)",
+        "Girdi sözleşmesi: model_skoru ve eşik değeri; çıktı 'kabul/insana-yönlendir' kararı döner",
+        "Eşik durumu yapılandırılır/kilitli arasında geçer; üretimde kilitliyken keyfi değişmez",
+        "Geçersiz skor (NaN, aralık dışı) hata yoluna düşer ve üst moleküle güvensiz sinyal verir"
       ],
-      "notes": "",
+      "notes": "Element, AI/veri sözleşmesinin en küçük anlamlı kuralıdır.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -299,11 +300,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Veri alanı doğrulaması sunucuda; AI çıktısı için güven eşiği kuralı",
-        "Hassas alan (PII) sınıflandırma bayrağı + maskeleme",
-        "Alan yazımı tenant+rol yetkisiyle"
+        "Güven eşiği ve alan değeri sunucuda doğrulanır; istemci eşik değerine güvenilmez",
+        "Bu alan PII içeriyorsa sınıflandırma bayrağı taşır ve role göre maskeli serileştirilir",
+        "Alana yazma yalnız tenant_id RLS ve uygun rol ile mümkün; cross-tenant okuma engellenir",
+        "Eşik değişikliği değişmez audit kaydına yazılır; eski ve yeni değer kanıt olarak saklanır"
       ],
-      "notes": "",
+      "notes": "AI çıktısı için güven eşiği sunucu otoritesinde tutulur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -312,11 +314,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "AI kuralı (eşik) saf doğrulayıcı; tek sorumluluk",
-        "Alan tipi Zod şemasıyla",
-        "Tekrar eden kural paylaşılan doğrulayıcıya"
+        "Güven eşiği kontrolü saf bir doğrulayıcı fonksiyondur; skor->karar dönüşümü yan etkisizdir",
+        "Alan tipi ve aralık (0.0-1.0) Zod şemasıyla derleme öncesi sözleşmeye bağlanır",
+        "Eşik karşılaştırması gibi tekrar eden kural paylaşılan doğrulayıcı kütüphanesinden gelir",
+        "Fonksiyon tek sorumluluk taşır; karmaşıklık düşük, kullanılmayan eşik dalları elenir"
       ],
-      "notes": "",
+      "notes": "Eşik doğrulayıcı saf tutulduğu için kolay test edilir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -325,11 +328,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Allowlist temelli; beklenmeyen AI çıktısı/girdi reddi",
-        "Güven eşiği altı çıktı insana yönlendirilir",
-        "PII alanı için field-level yetki"
+        "AI çıktı şeması allowlist temellidir; beklenmeyen alan veya tip içeren çıktı reddedilir",
+        "Güven eşiğinin altındaki AI çıktısı otomatik uygulanmaz, insana yönlendirilir",
+        "PII alanı için alan-düzeyi (field-level) yetki uygulanır; yetkisiz okuma maskelenir",
+        "Eşik okuma uç noktası oran sınırına tabidir; sızdırma amaçlı toplu sorgu kesilir"
       ],
-      "notes": "",
+      "notes": "Düşük güvenli çıktının otomatik etkisi en aza indirilir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -338,11 +342,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Eşik/doğrulama O(1) saf hesap",
-        "Önbelleklenebilir",
-        "Toplu doğrulamada vektörel"
+        "Güven eşiği karşılaştırması O(1) saf hesaptır; tek skor için ek sorgu gerektirmez",
+        "Eşik kararı aynı skor için önbeklenebilir; değişmediği sürece yeniden hesaplanmaz",
+        "Toplu skor doğrulaması vektörel işlenir; satır-satır N+1 çağrı yapılmaz",
+        "Tek alan değerlendirmesi için p95 gecikme hedefi 5 ms altında tutulur"
       ],
-      "notes": "",
+      "notes": "Saf eşik hesabı sıcak yolda neredeyse maliyetsizdir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -351,11 +356,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Alan/eşik mobilde okunur gösterilir",
-        "iOS/Android offline doğrulanabilir",
-        "Düşük-güven uyarısı dar ekranda"
+        "Güven skoru ve eşik kararı PWA'da okunur biçimde, yüzde olarak dar ekranda gösterilir",
+        "Düşük-güven uyarısı en az 44px dokunma hedefli bir 'gözden geçir' eylemiyle sunulur",
+        "Çevrimdışıyken alan değeri istemci tarafında aralık (0.0-1.0) için ön doğrulanır",
+        "Eşik altı çıktı kırmızı rozet yerine metinli uyarı ile iOS/Android'de belirgin kılınır"
       ],
-      "notes": "",
+      "notes": "Düşük güvenli sonuç mobilde net biçimde işaretlenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -364,11 +370,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Alan etiketi programatik ilişkili; güven durumu metinle",
-        "Hata alanla bağlı ve sesli; kontrast 7:1",
-        "Eşik göstergesi yalnız renk değil metin+ikon"
+        "Alan etiketi programatik olarak girdiye bağlanır; güven durumu metinle de aktarılır",
+        "Eşik göstergesi yalnız renkle değil metin ve ikonla sunulur; kontrast oranı en az 7:1",
+        "Düşük-güven hatası ilgili alana aria-describedby ile bağlanır ve ekran okuyucuya duyurulur",
+        "Eşik ayar alanı tam klavye erişimlidir; odak sırası görünür ve mantıklı tutulur"
       ],
-      "notes": "",
+      "notes": "Güven durumu renkten bağımsız metinle iletilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -377,11 +384,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Alan/eşik kuralı veri şemasının parçası",
-        "Her profilde istemci+sunucu doğrulaması",
-        "Shared hosting'de çift doğrulama"
+        "Güven eşiği kuralı bağımsız servis değil; ArcheType veri şemasının parçası olarak dağıtılır",
+        "Kubernetes'te üst molekülle ölçeklenir; eşik kontrolü stateless, ek probe gerektirmez",
+        "Tüm profillerde hem istemci hem sunucuda doğrulama korunur; sunucu son sözü söyler",
+        "Paylaşımlı barındırmada eşik kontrolü sunucu tarafında zorunlu kalır, istemciye bırakılmaz"
       ],
-      "notes": "",
+      "notes": "Eşik kuralı şemaya gömülü olduğundan ayrı dağıtım birimi yoktur.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -390,11 +398,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: AI çıktısı güven eşiğini geçemedi → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-        "Element tek başına otomasyon yazmaz; üst kurala girdi sağlar"
+        "Backend ruleset, AI'ın app/module üretme/güncelleme ve ruleset override denemesini reddeder",
+        "Olay: AI skoru -> Koşul: güven eşiğinin altında -> Eylem: üst moleküle insan-incelemesi sinyali",
+        "Sinyal idempotenttir; aynı düşük-güven çıktısı için tekrar inceleme görevi üretilmez",
+        "Element kendi otomasyonunu çalıştırmaz; üst kurala girdi sağlar, zincir en fazla 6 adım"
       ],
-      "notes": "",
+      "notes": "Eşik kararı yalnız üst moleküle sinyal üretir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -403,11 +412,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI alan/eşik kuralı önerebilir; güven eşiğini veya maskeleme kuralını kendisi gevşetemez"
+        "AI bu element için app/module üretemez/güncelleyemez; yalnız ArcheType taslağı/prod-update önerebilir",
+        "AI yeni bir güven eşiği değeri önerebilir; eşiği veya maskeleme kuralını kendisi gevşetemez",
+        "RAG/text-to-sql çıktısındaki sub_prompt güvenilmez kabul edilir, komut olarak çalıştırılmaz",
+        "AI ruleset override/disable denemesi anında deny edilir; PII redaksiyonu ve kill-switch aktiftir"
       ],
-      "notes": "",
+      "notes": "AI eşiği öneri olarak sunar, onay insana aittir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -416,11 +426,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Güven eşiği ve alan sınır-değer testleri",
-        "PII alanı maskeleme testi",
-        "Form bağlamında erişilebilirlik mikro-yolculuğu"
+        "Güven eşiği sınır-değer birim testleri: tam eşik, eşiğin hemen altı/üstü, NaN ve aralık dışı",
+        "PII alanı için maskeleme testi; yetkisiz rol maskeli, yetkili rol açık değer görür",
+        "Eşik ayar alanının Playwright mikro-yolculuğu ve axe ile AAA erişilebilirlik kontrolü",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden denenir, düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Eşik sınır değerleri ve PII maskeleme sürekli sınanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -429,11 +440,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "LLM02 Insecure Output Handling: güven eşiği + sanitizasyon",
-        "A02 Cryptographic Failures: hassas alan maskeli",
-        "Alan/eşik değişikliği izli"
+        "OWASP LLM02 Güvensiz Çıktı: AI çıktısı güven eşiği ve sanitizasyon olmadan uygulanmaz",
+        "OWASP A02 Kriptografik Hatalar: PII alanı maskeli/şifreli tutulur, açık sızmaz",
+        "OWASP A09: eşik ve alan değişiklikleri zaman damgalı denetim günlüğüne işlenir",
+        "OWASP LLM01: text-to-sql/RAG girdilerinde istem enjeksiyonuna karşı bağlam izolasyonu"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi AI çıktısı ve PII alanına odaklıdır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -442,11 +454,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Element, üst molekül ve ArcheType field sözleşmesine bağlanır",
-        "Veri şema doğrulamasına dahil",
-        "Surface projeksiyonunda görünürlük bu kurala göre"
+        "Element, üst molekülün ve ArcheType field sözleşmesinin tipli bir alanı olarak bağlanır",
+        "Eşik kuralı çekirdek veri-şema doğrulamasına dahil edilir; şema dışı değer reddedilir",
+        "k-surface projeksiyonunda alanın görünürlüğü eşik ve rol kararına göre belirlenir",
+        "Bağımlılık yönü tek yönlü: element çekirdek şemayı tüketir, çekirdek elemente bağımlı değildir"
       ],
-      "notes": "",
+      "notes": "Eşik kuralı çekirdek şema doğrulamasının parçasıdır.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -455,9 +468,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "AI elementi bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası"
+        "Bu AI elementi bir alan/kuraldır; bağımsız API sunmaz, ArcheType field tanımının parçasıdır",
+        "Veri & Zeka app'leri eşik kararını doğrudan DB'den değil, üretilen field sözleşmesinden okur",
+        "Analitik/raporlama yüzeyleri 'eşik altı' işaretini olay üzerinden tüketir, ham skoru değil"
       ],
-      "notes": "",
+      "notes": "Element dolaylı olarak ArcheType field yüzeyiyle tüketilir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-element — \"Element — Veri & Zeka (AI-first) örnek kırılımı\" (element/toz; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

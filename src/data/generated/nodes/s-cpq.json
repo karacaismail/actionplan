@@ -129,11 +129,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "CPQ (Configure-Price-Quote): ürün yapılandırma, fiyatlandırma kuralları ve teklif üretimi",
-        "Karmaşık ürün/paket yapılandırma, indirim onay ve teklif belgesi",
-        "Fiyat listesi, kademe ve sözleşme fiyatı"
+        "Configure aşaması: kural motoru geçersiz ürün/opsiyon kombinasyonlarını anında reddeder, paket ağacını çözer",
+        "Price aşaması: fiyat listesi, hacim kademesi ve sözleşme fiyatı deterministik hesaplanır, çıktı kuruşa yuvarlanır",
+        "Quote aşaması: teklif durum makinesi taslak→onay→gönderildi→kabul/ret geçişlerini yönetir, PDF belgesi üretir",
+        "İndirim eşiği aşılınca onay akışına yükseltir; girdi sözleşmesi Zod ile doğrulanır, hata yolu kullanıcıya net döner"
       ],
-      "notes": "",
+      "notes": "CPQ'nun üç fazı (Configure-Price-Quote) tek teklif durum makinesinde birleşir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -142,11 +143,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Teklif/fiyat verisi tenant_id RLS; portföy bazlı erişim",
-        "İndirim yetki eşiğine bağlı; eşik üstü onay + audit",
-        "Maliyet/marj bilgisi maskeli (müşteriye sızmaz)"
+        "Tüm teklif, fiyat listesi ve indirim tabloları tenant_id kolonu üzerinde PostgreSQL RLS ile izole edilir",
+        "Maliyet ve marj alanları PII/ticari-sır olarak sınıflandırılır; müşteriye dönen teklifte maskelenir",
+        "İndirim yetkisi role bağlı en az ayrıcalıkla verilir; %15 üstü indirim satış müdürü onayı gerektirir",
+        "Her fiyat/indirim kararı değişmez (append-only) audit kaydına aktör ve zaman damgasıyla yazılır"
       ],
-      "notes": "",
+      "notes": "Marj sızıntısı maskeleme ve RLS ile iki katmanda engellenir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -155,11 +157,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yapılandırma kuralları (geçerli kombinasyon) bildirimsel motor",
-        "Fiyat hesabı saf; kademe/indirim deterministik",
-        "Teklif belgesi şablondan"
+        "Yapılandırma kuralları bildirimsel bir motorda tanımlanır; geçerli kombinasyon mantığı koddan ayrışır",
+        "Fiyat ve kademe/indirim hesabı yan etkisiz saf fonksiyonlardır, aynı girdiyle aynı çıktıyı üretir",
+        "CPQ motoru ile teklif UI'si ayrı modüllerdir; ortak fiyat tipleri paylaşılan şema paketinden gelir",
+        "Yapılandırma çözücü fonksiyonun döngüsel karmaşıklığı ≤10 tutulur, dallar test edilebilir kalır"
       ],
-      "notes": "",
+      "notes": "Fiyat çekirdeği saf tutularak doğruluk testleri deterministik olur.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -168,11 +171,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Geçersiz yapılandırma engellenir (kural motoru)",
-        "İndirim onay zinciri; sıfır-fiyat reddi",
-        "Fiyat kuralı sürümlü"
+        "Teklif PDF imza/şablon anahtarları periyodik rotasyona tabidir; sırlar koddan ayrı kasada saklanır",
+        "Toplu teklif üretimi ve fiyat sorgu uçları tenant başına dakikada 60 istekle oran sınırlanır",
+        "İndirim onay zinciri en az ayrıcalıkla işler; sıfır veya negatif fiyatlı teklif backend'de reddedilir",
+        "Fiyat kuralı motoru bağımlılıkları SCA taramasından geçer; her sürüm değişikliği sürümlenir ve izlenir"
       ],
-      "notes": "",
+      "notes": "Fiyat manipülasyonu yüzeyi rate-limit ve sürümleme ile daraltılır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -181,11 +185,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yapılandırma çözümleme bellekte; büyük katalogda budama",
-        "Fiyat hesabı anlık",
-        "Teklif üretimi asenkron (PDF)"
+        "Teklif listeleme (tenant_id, durum, oluşturma_tarihi) bileşik indeksiyle imleç tabanlı sayfalanır",
+        "Yapılandırma çözümü bellekte yapılır; büyük katalog dalı budanarak p95 fiyat hesabı 200 ms altında tutulur",
+        "Teklif satırları tek sorguda yüklenerek satır başına ürün çağrısı (N+1) önlenir",
+        "Sık kullanılan fiyat listesi ve kademe tabloları önbelleğe alınır, kural değişiminde geçersizleştirilir"
       ],
-      "notes": "",
+      "notes": "Fiyat hesabı sıcak yolda; p95 200 ms hedefi izlenir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -194,11 +199,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Saha satışta mobil teklif oluşturma",
-        "iOS/Android offline yapılandırma + senkron",
-        "Dar ekranda teklif özeti"
+        "Saha satış temsilcisi PWA üzerinden çevrimdışı ürün yapılandırıp teklif taslağı oluşturabilir",
+        "Capacitor paketinde teklif değişiklikleri yerelde kuyruğa alınır, bağlantı dönünce sunucuyla senkronlanır",
+        "Yapılandırma sihirbazı butonları ve adım kontrolleri ≥44px dokunma alanı ölçüsünde tasarlanır",
+        "Dar ekranda teklif özeti tek sütuna iner; fiyat ve indirim satırları okunur kalır"
       ],
-      "notes": "",
+      "notes": "Saha teklifi offline-first PWA senaryosuyla desteklenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -207,11 +213,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Yapılandırma sihirbazı adım adım, klavye erişimli",
-        "Fiyat/indirim metinle; kontrast 7:1",
-        "Geçersiz kombinasyon hatası açık"
+        "Yapılandırma sihirbazının her adımı yalnız klavyeyle tamamlanabilir, odak adımdan adıma görünür şekilde ilerler",
+        "Fiyat, indirim ve toplam tutar metinle de belirtilir; tüm tutar etiketleri kontrast oranı ≥7:1 sağlar",
+        "Geçersiz ürün kombinasyonu hatası aria-describedby ile ilgili alana bağlanıp ekran okuyucuya iletilir",
+        "Teklif tablosu uygun ARIA tablo rolleriyle işaretlenir, satır/sütun başlıkları sesli okunur"
       ],
-      "notes": "",
+      "notes": "Fiyat bilgisi renkten bağımsız, metinle ve ≥7:1 kontrastla aktarılır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -220,11 +227,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "CPQ motoru standart ölçek; teklif PDF worker",
-        "Fiyat olayları finance/sales ile",
-        "Shared hosting'de temel teklif (karmaşık config kısıtlı)"
+        "CPQ motoru Kubernetes'te dağıtılır; liveness/readiness prob'ları ve CPU/bellek kaynak limitleri tanımlıdır",
+        "Teklif PDF üretimi ayrı Docker Swarm worker servisidir, kuyruk derinliğine göre bağımsız ölçeklenir",
+        "Teklif kabul ve fiyat olayları sales/finance modüllerine olay kuyruğu üzerinden yayınlanır",
+        "WordPress sınıfı shared hosting'de yalnız temel teklif sunulur; karmaşık yapılandırma harici API'ye delege edilir"
       ],
-      "notes": "",
+      "notes": "PDF worker'ı ana motordan ayrı ölçeklenerek teklif sıcak yolu korunur.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -233,11 +241,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: teklif oluştu → indirim eşiği kontrol; aşımda onaya yükselt (idempotent, zincir ≤6)",
-        "Olay: teklif kabul edildi → siparişe/sözleşmeye dönüştür (loop-breaker)"
+        "Backend ECA ruleset'i AI'ın app/module mutasyon ve ruleset override denemesini deny eder; serbest JS/SQL/shell çalışmaz",
+        "Olay: teklif oluşturuldu → Koşul: indirim eşiği aşıldı → Eylem: satış müdürü onayına yükselt (idempotent)",
+        "Olay: teklif kabul edildi → Eylem: siparişe ve sözleşmeye dönüştür; tetikleme zinciri en fazla 6 adımla sınırlı",
+        "Tenant yalnız güvenli fiyat parametresini değiştirebilir; eşik/onay mantığı platform sahibinde kilitli kalır"
       ],
-      "notes": "",
+      "notes": "ECA kuralları teklif yaşam döngüsüne bağlı; idempotency yinelenen sipariş üretimini engeller.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -246,11 +255,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI ürün/fiyat önerisi (guided selling) üretir; teklifi/indirimi satışçı onaylar"
+        "AI yalnız CPQ ArcheType taslağı veya prod-update önerisi üretir; app/module üretemez, güncelleyemez, ruleset override edemez",
+        "AI guided-selling ile ürün/çapraz-satış ve fiyat önerir; teklif ve indirim satış temsilcisi onayıyla kesinleşir",
+        "Müşteri notu ve sub_prompt güvenilmez girdi kabul edilir, talimat olarak çalıştırılmaz; PII redaksiyonu uygulanır",
+        "Admin akışı prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply adımlarıyla kapılıdır; kill-switch hazırdır"
       ],
-      "notes": "",
+      "notes": "AI öneri üretir, prod yazımı insan onayına ve dry-run kapısına tabidir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -259,11 +269,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Yapılandırma geçerlilik + fiyat hesabı doğruluk testi",
-        "İndirim onay eşiği testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Yapılandırma geçerlilik ve fiyat/kademe hesabı için sınır değerleri içeren birim testleri yazılır",
+        "Teklif oluştur→indirim onayı→kabul kullanıcı yolculuğu Playwright ile uçtan uca doğrulanır",
+        "İndirim eşiği ve sıfır-fiyat reddi senaryoları ayrı negatif testlerle kapsanır",
+        "Başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır; QA ajanı CPQ regresyonunu sürer"
       ],
-      "notes": "",
+      "notes": "Fiyat doğruluğu sınır değerleriyle sürekli sınanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -272,11 +283,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: teklif/fiyat erişimi portföy bazlı",
-        "A04 Insecure Design: indirim manipülasyonu eşik+onayla engellenir",
-        "A09 Logging: fiyat/indirim kararları iz"
+        "OWASP A01 Erişim Kontrolü: teklif ve fiyat verisi portföy/rol bazlı ve tenant RLS ile sınırlandırılır",
+        "OWASP A04 Güvensiz Tasarım: indirim manipülasyonu eşik kuralı ve onay zinciriyle tasarımdan engellenir",
+        "OWASP A09 Kayıt/İzleme: tüm fiyat ve indirim kararları denetlenebilir log'a aktör damgasıyla yazılır",
+        "OWASP LLM01: guided-selling istemi enjeksiyonuna karşı müşteri notu izole edilir, çıktı güvensiz kabul edilir"
       ],
-      "notes": "",
+      "notes": "OWASP Top 10:2025 ve LLM yüzeyi teklif tehdit modeline göre kapsanır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -285,11 +297,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "CPQ, sales (sipariş), clm (sözleşme), pim (ürün) ile entegre",
-        "Teklif finance'a (gelir), müşteri crm'e",
-        "Fiyat listesi commerce ile tutarlı"
+        "CPQ; sales (sipariş), s-clm (sözleşme) ve ürün kataloğuyla tipli k-surface sözleşmeleri üzerinden entegre olur",
+        "Kabul edilen teklif olayı finance'a gelir kaydı, crm'e müşteri güncellemesi olarak yayınlanır",
+        "Fiyat listesi s-commerce çekirdeğiyle tek kaynaktan beslenir; CPQ fiyatı yeniden uygulamaz",
+        "Bağımlılık yönü tek yönlüdür: CPQ commerce/clm'i tüketir, çekirdek CPQ'ya geri bağımlı olmaz"
       ],
-      "notes": "",
+      "notes": "Fiyat tek kaynaktan (commerce) gelir; CPQ tüketici taraftadır.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -298,10 +311,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "CPQ ArcheType'ı Müşteri & Gelir'de teklif üretimini sağlar",
-        "Karmaşık ürün satan app'ler CPQ'yu kullanır"
+        "CPQ ArcheType'ı Müşteri & Gelir kümesinde tekliflendirme yeteneğinin sahibi ve sağlayıcısıdır",
+        "Karmaşık paket/abonelik satan app'ler CPQ'yu doğrudan DB yerine üretilen teklif API'si üzerinden tüketir",
+        "Distribution/edition paketleri CPQ teklif yüzeyini olay ve araç-kapsamı sözleşmesiyle entegre eder",
+        "Tüketici app'ler fiyat kuralına yazamaz; yalnız teklif oluşturma ve okuma uçlarına erişir"
       ],
-      "notes": "",
+      "notes": "CPQ, tekliflendirme mantığının tek sahibidir; app'ler API üzerinden tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-cpq — \"CPQ\" (ArcheType/büyük taş; küme: Müşteri & Gelir). Özet: Salesforce CPQ, PandaDoc muadili. Configure-Price-Quote Etiketler: customer-revenue, cpq, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
