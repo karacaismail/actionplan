@@ -286,11 +286,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Scale kırılımının Element örneği: tek bir ölçek alanı/kuralı (ör. yeniden-deneme sayısı)",
-        "Element, ölçek sözleşmesindeki en küçük anlamlı alan/kural",
-        "Örnek dal; ölçek alan kuralının granülerlikteki yeri"
+        "Scale primitif elementi: outbox mesaj sözleşmesindeki tek bir alan/kural (ör. max_retry sayısı, default 5)",
+        "Element, teslim garantisi yapılandırmasındaki en küçük anlamlı alan; geçerli değer aralığını sabitler",
+        "Alan girdisi tip ve sınır doğrulamasından geçer; sınırsız/negatif değer 422 ile reddedilir",
+        "WBS 25.4.1.1 element kapsamı: alanın varsayılanı ve expand-contract göç davranışı tanımlanır"
       ],
-      "notes": "",
+      "notes": "Element, outbox/teslim garantisi yapılandırmasının en küçük alan birimidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -299,11 +300,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Yapılandırma alanı doğrulaması sunucuda; sınır değerleri zorlanır",
-        "Yetkisiz yapılandırma değişimi reddi",
-        "Alan değişimi izli"
+        "Outbox yapılandırma alanı sunucuda doğrulanır; max_retry gibi sınır değerleri zorlanır, aşırı değer reddedilir",
+        "Yapılandırma değişikliği tenant_id RLS ve platform-owner yetkisine bağlıdır; tenant yalnız güvenli parametreyi değiştirir",
+        "Yetkisiz yapılandırma değişim denemesi 403 ile reddedilir ve en az ayrıcalık ilkesi uygulanır",
+        "Alan değişiklikleri değişmez (append-only) denetim kaydına yazılır; kim hangi eşiği değiştirdi izlenir"
       ],
-      "notes": "",
+      "notes": "Outbox alanı PII taşımaz ancak yetkisiz değişime karşı korunur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -312,11 +314,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ölçek kuralı (eşik/sayı) saf doğrulayıcı",
-        "Tip Zod ile; geçersiz değer reddi",
-        "Tek kaynaktan"
+        "max_retry/backoff gibi ölçek eşiği saf doğrulayıcı fonksiyonla denetlenir; yan etki içermez",
+        "Alan tipi tek Zod şemasından türetilir; TypeScript tipi infer edilir, geçersiz değer derleme öncesi yakalanır",
+        "Doğrulayıcı tek dosyada toplanır; döngüsel karmaşıklık 5 altında, dallanma sadeleştirilir",
+        "Ortak eşik kuralı paylaşılan scale şema kütüphanesinden gelir; outbox elementinde kopyalanmaz"
       ],
-      "notes": "",
+      "notes": "Saf eşik doğrulayıcısı sınır-değer testlerini deterministik kılar.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -325,11 +328,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Allowlist temelli; tehlikeli değer (sınırsız retry) reddi",
-        "Maks 6 zorlanır",
-        "Field-level yetki"
+        "Eşik allowlist temelli doğrulanır; sınırsız retry gibi DoS'a açık tehlikeli değer reddedilir",
+        "Yeniden deneme zinciri maks 6 ile zorlanır; outbox mesajı sonsuz döngüye girip kaynağı tüketemez",
+        "Yapılandırma yazımına field-level en az ayrıcalık uygulanır; salt-okuma rolü eşiği değiştiremez",
+        "Eşiği sağlayan scale bağımlılığı SCA taramasından geçirilir; CVE'li sürüm CI'da bloklanır"
       ],
-      "notes": "",
+      "notes": "Sınırsız retri reddi, ölçek primitifinin DoS yüzeyini kapatır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -338,11 +342,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "O(1) doğrulama",
-        "Önbelleklenebilir",
-        "Toplu doğrulama"
+        "Eşik doğrulaması O(1) sabit zamanlı; outbox işleme yolunda ek DB sorgusu veya N+1 üretmez",
+        "Geçerli yapılandırma değeri bellekte önbelleklenir; her mesaj tesliminde tablo okunmaz",
+        "Toplu yapılandırma doğrulaması tek geçişte yapılır; 1000 alan p95 < 30ms hedeflenir",
+        "Eşik okuma maliyeti ölçülür; outbox teslim hattında darboğaz yaratmadığı izlenir"
       ],
-      "notes": "",
+      "notes": "Önbelleklenen eşik, sıcak teslim yolunu hızlandırır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -351,11 +356,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Yapılandırma alanı mobilde salt-okuma",
-        "iOS/Android'de geçerli değer gösterimi",
-        "Dar ekranda net"
+        "Outbox eşiği mobilde yönetici görünümünde salt-okuma gösterilir; PWA'da çevrimdışı son değeriyle okunur",
+        "Değer değiştirme aksiyonu (yetkiliyse) ≥44px dokunma hedefiyle sunulur; Capacitor paketinde de korunur",
+        "Çevrimdışıyken eşik istemcide ön-doğrulanır; bağlantı gelince sunucu sınır kuralı tekrar uygulanır",
+        "Dar ekranda geçersiz değer hatası alanın altında tek satırda okunur biçimde gösterilir"
       ],
-      "notes": "",
+      "notes": "Outbox yapılandırması mobilde çoğunlukla salt-okuma izlenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -364,11 +370,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Alan etiketli; geçersiz değer metinle bildirilir; kontrast 7:1",
-        "Hata alanla bağlı",
-        "Yardımcı teknolojiye anlamlı"
+        "Eşik alanı görünür <label> ile ilişkilendirilir; geçersiz değer metinle bildirilir, kontrast ≥7:1 sağlanır",
+        "Sınır ihlali hatası aria-describedby/aria-invalid ile alana programatik bağlanır ve ekran okuyucuya duyurulur",
+        "Alanın izinli aralığı (ör. 1–6) yardımcı metinle belirtilir; salt renkle sınır gösterilmez",
+        "Eşik alanı Tab sırasına dahil; klavye odağı görünür çerçeveyle akar, odak tuzağı oluşmaz"
       ],
-      "notes": "",
+      "notes": "İzinli aralık metinle de bildirildiğinden renk körlüğünden bağımsızdır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -377,11 +384,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Ölçek kuralı altyapı şemasının parçası",
-        "Her profilde doğrulanır",
-        "Shared hosting'de de geçerli"
+        "Outbox eşik kuralı ayrı servis değil; teslim worker'ının K8s imajındaki yapılandırma şemasıyla taşınır",
+        "Eşik şeması readiness probe'a dahil; geçersiz yapılandırmayla pod trafik almaz, hatalı teslim önlenir",
+        "Docker Swarm profilinde de aynı eşik bayrağı geçerli; ortamlar arası teslim davranışı tutarlıdır",
+        "WordPress sınıfı shared hosting'de eşik düşük sabit değerle (ör. retry=3) uygulanır, ağır worker gerektirmez"
       ],
-      "notes": "",
+      "notes": "Element bağımsız ölçeklenmez, teslim worker'ı ile dağıtılır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -390,11 +398,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: yapılandırma alanı sınır dışı → üst molekül kuralı reddeder (idempotent, zincir ≤6)",
-        "Element tek başına otomasyon yazmaz"
+        "Backend ECA ruleset, AI'ın outbox elementini app/module mutasyonuna çevirme ve ruleset override denemesini deny eder",
+        "Olay: yapılandırma alanı sınır dışı (ör. retry>6) → Koşul: değer allowlist dışı → Eylem: üst molekül kuralı reddeder (idempotent)",
+        "Kural engine'de çalışır; eşik yalnız güvenli parametre yüzeyinden ayarlanır, serbest JS/SQL/shell yoktur",
+        "Yeniden deneme zincir derinliği maks 6 ile sınırlı; aynı sınır ihlali yinelense tekrar işlem üretilmez"
       ],
-      "notes": "",
+      "notes": "Element tek başına teslim otomasyonu başlatmaz; üst kurala sinyal verir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -403,11 +412,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI ölçek alanı/eşiği önerir; güvenlik sınırını (maks retry) kendisi gevşetemez"
+        "AI bu outbox elementi için app/module üretemez/güncelleyemez; yalnız ArcheType taslağında eşik alanı önerebilir",
+        "Yapılandırma metni sub_prompt olarak güvenilmezdir; AI bunu talimat değil veri olarak ele alır",
+        "AI önerdiği eşiği prod'a doğrudan yazamaz; admin akışı (data-impact→dry-run→preview→approval) zorunludur",
+        "AI'ın max_retry güvenlik sınırını gevşetme denemesi kill-switch ile durdurulur; ruleset override edilemez"
       ],
-      "notes": "",
+      "notes": "AI eşik önerebilir; güvenlik sınırını yalnız admin onayı değiştirir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -416,11 +426,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Sınır-değer doğrulama testi (sınırsız retry reddi)",
-        "Tip doğrulama testi",
-        "Yapılandırma erişilebilirlik mikro-testi"
+        "Sınır-değer birim testleri: retry=0, retry=6 ve retry=7 (sınırsız) senaryolarında beklenen kabul/ret doğrulanır",
+        "Tip doğrulama testi: negatif/ondalık/metin eşik değeri Zod tarafından reddedilir",
+        "Eşik yapılandırma alanı için axe erişilebilirlik mikro-testi; label/aria ihlali 0 olmalıdır",
+        "Test döngüsü maks 6 yeniden denemeyle sınırlı; eşik testi düzelmezse tanı raporu üretilir"
       ],
-      "notes": "",
+      "notes": "Sınırsız retry reddi, ölçek elementinin kritik test kapısıdır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -429,11 +440,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A04 Insecure Design: tehlikeli yapılandırma reddi",
-        "A05 Misconfiguration: güvenli sınır varsayılanı",
-        "Değişiklik izli"
+        "OWASP A04:2025 Insecure Design: sınırsız retry gibi DoS'a açık eşik tasarımca reddedilir",
+        "OWASP A05:2025 Security Misconfiguration: eşik güvenli varsayılanla (retry=5, maks 6) gelir",
+        "OWASP A09:2025 Logging: eşik değişikliği denetim izine düşer, anormal yapılandırma tespit edilir",
+        "OWASP A06:2025 Vulnerable Components: eşiği sağlayan scale bağımlılığı sürüm taramasından geçer"
       ],
-      "notes": "",
+      "notes": "Yanlış yapılandırma (misconfiguration) bu elementin ana tehdit yüzeyidir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -442,11 +454,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Element üst molekül ve primitif sözleşmesine bağlanır",
-        "Altyapı şema doğrulamasına dahil",
-        "Yapılandırma kontrol düzleminden"
+        "Element, üst app-scale-x-molecule ve outbox primitif sözleşmesine tek yönlü bağımlılıkla bağlanır",
+        "Eşik, scale altyapı şema doğrulama hattına dahil edilir; kernel doğrudan elementi değil molekülü çağırır",
+        "Yapılandırma değeri kontrol düzleminden gelir; teslim worker'ı çalışma anında bu eşiği okur",
+        "Bağımlılık yönü yukarıdır: element kernel'e değil, üst molekül/worker elementin sözleşmesine dayanır"
       ],
-      "notes": "",
+      "notes": "Element kernel'e bağımlı değil; üst primitif onu tüketir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -455,9 +468,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Ölçek elementi bir alan/kuraldır; bağımsız sunulmaz, primitif yapılandırmasının parçası"
+        "Ölçek elementi bağımsız sunulmaz; app'ler eşiği yalnız outbox primitif yapılandırması içinden tüketir",
+        "App'ler eşiğe doğrudan DB ile değil, primitifin ürettiği yapılandırma API'si üzerinden erişir",
+        "Eşik değiştiğinde teslim davranışı değişir; tüketen app'ler primitifin yayımladığı yapılandırma olayıyla bilgilenir"
       ],
-      "notes": "",
+      "notes": "Element uçtan uca özellik değil, outbox primitifinin alanıdır.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-scale-x-element — \"Element — Scale Primitifleri örnek kırılımı\" (element/toz; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

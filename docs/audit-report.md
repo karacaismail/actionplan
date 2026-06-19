@@ -7,8 +7,8 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 ## Özet
 
 - Toplam düğüm: **424** · skorlanan (en az 1 dolu boyut): **424**
-- Ortalama düğüm skoru: **2.59 / 3**
-- Güçlü (≥2.3): **385** (91%) · Orta (1.5-2.3): **39** (9%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
+- Ortalama düğüm skoru: **2.62 / 3**
+- Güçlü (≥2.3): **401** (95%) · Orta (1.5-2.3): **23** (5%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
 
 ### Köken dağılımı (provenance)
 
@@ -17,30 +17,14 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 
 ### Bayrak dağılımı (en sık kalite sorunları)
 
-- `incomplete`: 411 düğümde
-- `short-items`: 330 düğümde
+- `incomplete`: 395 düğümde
+- `short-items`: 314 düğümde
 - `generic`: 1 düğümde
 
 ## En zayıf 25 düğüm (öncelikli zenginleştirme)
 
 | Skor | id | Başlık |
 | ---: | --- | --- |
-| 2.05 | `app-layer1-x-element` | Element — Layer 1 — In-tree Modüller örnek kırılımı |
-| 2.06 | `app-crosscut-x-element` | Element — Cross-cutting örnek kırılımı |
-| 2.11 | `s-cms` | CMS Stack |
-| 2.14 | `s-social` | Social Stack |
-| 2.15 | `app-layer1-x-molecule` | Molekül — Layer 1 — In-tree Modüller örnek kırılımı |
-| 2.15 | `app-scale-x-molecule` | Molekül — Scale Primitifleri örnek kırılımı |
-| 2.16 | `app-crosscut-x-molecule` | Molekül — Cross-cutting örnek kırılımı |
-| 2.16 | `app-layer1-x-atom` | Atom — Layer 1 — In-tree Modüller örnek kırılımı |
-| 2.18 | `app-scale-x-element` | Element — Scale Primitifleri örnek kırılımı |
-| 2.19 | `s-survey` | Survey / Feedback |
-| 2.21 | `app-crosscut-x-atom` | Atom — Cross-cutting örnek kırılımı |
-| 2.21 | `app-scale-x-atom` | Atom — Scale Primitifleri örnek kırılımı |
-| 2.22 | `s-community` | Community / Forum |
-| 2.23 | `s-ats` | Recruitment / ATS |
-| 2.23 | `s-bpm` | Workflow / BPM Engine |
-| 2.23 | `s-quality` | Quality Management (QC/QA) |
 | 2.24 | `s-pim` | PIM |
 | 2.25 | `app-build-x-stone` | Taş — Build & Dağıtım örnek kırılımı |
 | 2.25 | `app-hr-x-stone` | Taş — İnsan Kaynakları örnek kırılımı |
@@ -50,6 +34,22 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 | 2.26 | `s-drive` | Drive + Collaboration Stack |
 | 2.26 | `s-observability` | Observability |
 | 2.27 | `app-data-intelligence-x-element` | Element — Veri & Zeka (AI-first) örnek kırılımı |
+| 2.27 | `cc-obs` | Observability + Performance + DR |
+| 2.27 | `s-i18n` | i18n / Localization |
+| 2.27 | `s-lms` | LMS Stack |
+| 2.27 | `scale-counter` | Hot Counter |
+| 2.27 | `scale-workers` | Workers + Scheduler |
+| 2.28 | `l1-workflow` | Workflow + ECA |
+| 2.28 | `s-hrms` | HRMS Stack (TR) |
+| 2.28 | `s-performance` | Performance & Competency |
+| 2.29 | `app-data-intelligence-x-molecule` | Molekül — Veri & Zeka (AI-first) örnek kırılımı |
+| 2.29 | `s-marketing` | Marketing + CRM Stack |
+| 2.29 | `s-marketplace` | Marketplace Management |
+| 2.29 | `s-payroll` | Payroll |
+| 2.29 | `scale-streaming` | Streaming — Kafka, real-time aggregation |
+| 2.29 | `scale-webhook` | Outbound Webhook — dış sisteme olay yollama |
+| 2.3 | `app-finance-x-molecule` | Molekül — Finans & Muhasebe örnek kırılımı |
+| 2.3 | `app-hr` | İnsan Kaynakları |
 
 ## Yorum
 

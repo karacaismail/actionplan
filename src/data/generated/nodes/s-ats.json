@@ -131,11 +131,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "İşe Alım / ATS: ilan, aday havuzu, başvuru hunisi, mülakat ve teklif yönetimi",
-        "Aday değerlendirme, mülakat planlama ve işe alım iş akışı",
-        "Kariyer sayfası ve aday iletişimi"
+        "İlan, aday havuzu, başvuru hunisi, mülakat ve teklif yönetimini kapsayan uçtan-uca işe alım (ATS) akışı",
+        "Aday yaşam döngüsü: başvurdu->ön elemede->mülakatta->teklif->işe alındı/reddedildi durum makinesi",
+        "AI CV parsing ham özgeçmişi yapılandırılmış alanlara çıkarır; matching açıklanabilir uygunluk skoru üretir",
+        "Eksik/çelişkili başvuru verisi tipli hata ile reddedilir; kariyer sayfası ve aday iletişimi yönetilir"
       ],
-      "notes": "",
+      "notes": "AI yalnız CV parsing ve aday eşleştirme önerir; işe alım kararını insan verir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -144,11 +145,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Aday verisi PII; izinli işleme + saklama süresi (KVKK)",
-        "Değerlendirme erişimi rol bazlı; önyargı kayıtları izli",
-        "Aday silme/anonimleştirme desteklenir"
+        "Aday verisi tenant_id RLS ile izole; CV/iletişim alanları PII 'hassas' sınıflandırılır, KVKK rıza + saklama süresiyle işlenir",
+        "Aday değerlendirme ve teklife erişim rol bazlıdır (least-privilege); yalnız ilgili işe alımcı/yönetici görür",
+        "Aday silme ve saklama süresi sonunda anonimleştirme desteklenir, ham CV kalıcı tutulmaz",
+        "Değerlendirme ve red kararları değişmez audit kaydına (aktör + gerekçe) yazılır (adil süreç kanıtı)"
       ],
-      "notes": "",
+      "notes": "Aday PII'si KVKK kapsamında; saklama süresi dolunca otomatik anonimleştirilir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -157,11 +159,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Başvuru hunisi durum makinesi; mülakat planlama scheduling ile",
-        "Aday eşleştirme skor (açıklanabilir)",
-        "Kariyer sayfası içerik (CMS) ile"
+        "Başvuru hunisi açık bir durum makinesidir; geçişler bildirimsel kurallarla yönetilir, dağınık if/else yerine tablo",
+        "Aday eşleştirme skoru saf, açıklanabilir fonksiyondur; her skora katkı dökümü (hangi kriter kaç puan) üretir",
+        "Mülakat planlama ortak scheduling yardımcısını çağırır; kariyer sayfası içeriği CMS sözleşmesinden gelir",
+        "CV parsing çıktısı tek Zod şemasıyla doğrulanır; ağır parsing modülü kod-bölme ile ayrı yüklenir"
       ],
-      "notes": "",
+      "notes": "Eşleştirme skorunun açıklanabilirliği önyargı denetimi için saf fonksiyona dayanır.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -170,11 +173,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Aday değerlendirme adil/şeffaf; önyargı (bias) izlenir",
-        "Aday verisi saklama süresi sonunda anonimleştirilir",
-        "Teklif gizli; erişim dar"
+        "Aday değerlendirmede önyargı (bias) izlenir; cinsiyet/yaş gibi korumalı alanlar eşleştirme skorundan dışlanır",
+        "Aday verisi KVKK saklama süresi (ör. başvurudan 12 ay) dolunca otomatik anonimleştirilir",
+        "Teklif/maaş alanları gizli sınıflandırılır; erişim dar tutulur ve görüntüleme audit'lenir",
+        "Aday portalı yükleme uç noktasında rate-limit + dosya tipi allowlist ile kötüye kullanım engellenir"
       ],
-      "notes": "",
+      "notes": "Önyargı denetimi ve korumalı alan dışlaması adil işe alımın çekirdeğidir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -183,11 +187,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Aday havuzu araması indeksli",
-        "Başvuru zirvesinde kuyruk",
-        "Mülakat takvimi çakışma kontrolü"
+        "Aday havuzu araması (tenant_id, ilan_id, durum) bileşik indeksiyle yapılır; liste imleç sayfalamayla yüklenir",
+        "İlan açılış zirvesinde başvuru ve CV parsing kuyrukla işlenir; başvuru yazma p95 <300 ms hedeflenir",
+        "Aday kartı listesinde değerlendirme/skor verisi tek sorguda çekilir, satır başına ek sorgu (N+1) yapılmaz",
+        "Mülakat takviminde çakışma kontrolü indeksli zaman-aralığı sorgusuyla hızlandırılır"
       ],
-      "notes": "",
+      "notes": "Popüler ilanların başvuru zirvesi kuyruk + indeksle sabit gecikmede tutulur.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -196,11 +201,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde başvuru ve mülakat değerlendirme",
-        "iOS/Android push ile aday/mülakat bildirimi",
-        "Dar ekranda aday kartı"
+        "Aday başvurusu ve işe alımcı mülakat değerlendirmesi PWA'da yapılır; tüm aksiyon butonları ≥44px dokunma hedefi",
+        "iOS/Android push ile yeni aday, mülakat hatırlatması ve teklif onay bildirimi gönderilir",
+        "Mülakat notu çevrimdışı (offline) girilip yeniden bağlanınca idempotent senkronlanır",
+        "Capacitor paketinde aday kartı dar ekranda skor + özgeçmiş özetiyle kompakt sunulur"
       ],
-      "notes": "",
+      "notes": "Mülakatçı sahada notu offline alabilir; bağlanınca kaybolmadan senkronlanır.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -209,11 +215,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Kariyer sayfası/başvuru formu WCAG 2.2 AAA (aday erişilebilirliği)",
-        "Aday durumu renk dışında metinle; kontrast 7:1",
-        "Değerlendirme formu erişilebilir"
+        "Kariyer sayfası ve başvuru formu tam klavye ile doldurulabilir; her alan etiketli, kontrast ≥7:1 sağlanır",
+        "Aday huni durumu (ön eleme/mülakat/teklif) renk dışında metin etiketiyle de gösterilir",
+        "CV yükleme alanı ARIA ile durum (yükleniyor/başarılı/hata) duyurur; ekran okuyucu süreci takip eder",
+        "Değerlendirme formunda odak sırası görünür; puanlama kontrolleri radyo grubu rolüyle erişilebilir"
       ],
-      "notes": "",
+      "notes": "Kariyer sayfası adayların erişilebilirliği için AAA seviyesinde tutulur.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -222,11 +229,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "ATS servisi standart; kariyer sayfası CDN",
-        "İş ilanı dağıtımı (kanal/feed)",
-        "Shared hosting'de temel ATS"
+        "ATS servisi Swarm/K8s'te liveness/readiness probe ile koşar; kariyer sayfası statik olarak CDN'den sunulur",
+        "CV parsing/matching ağır AI işi ayrı worker'dır; K8s HPA ile başvuru hacmine göre ölçeklenir, kaynak limitli",
+        "İş ilanı dağıtımı kanal/feed worker'ı üzerinden yapılır; ilan yayını yanıt yolundan ayrıktır",
+        "Shared hosting profilinde AI parsing olmadan temel ATS (başvuru + manuel değerlendirme) çalışır (degrade)"
       ],
-      "notes": "",
+      "notes": "CV parsing ayrı ölçeklenir; başvuru kabul yolu daima açık kalır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -235,11 +243,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: başvuru geldi → ön-eleme + ilgili işe alımcıya ata (idempotent, zincir ≤6)",
-        "Olay: aday reddedildi → KVKK saklama/anonimleştirme planla (loop-breaker)"
+        "Backend ECA ruleset, AI'ın app/module üretme/güncelleme ve ruleset override denemesini deny eder",
+        "Olay: başvuru geldi -> Koşul: ilana uygun -> Eylem: ön-eleme + ilgili işe alımcıya idempotent ata",
+        "Olay: aday reddedildi -> Eylem: KVKK saklama süresi sonunda anonimleştirmeyi planla; tetik zinciri en fazla 6 adım",
+        "Aynı başvuru için atama tekrar tetiklenmez (idempotent); kurallar yalnız backend engine'de koşar"
       ],
-      "notes": "",
+      "notes": "Red sonrası KVKK anonimleştirme planı loop-breaker ile bir kez kurulur.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -248,11 +257,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI aday eşleştirme/özet önerir (açıklanabilir, önyargı-denetimli); işe alım kararını insan verir"
+        "AI app/module üretemez/güncelleyemez; yalnız ATS ArcheType taslağı veya prod-update önerisi üretebilir",
+        "CV içeriği güvenilmez (sub_prompt) kabul edilir; parsing onu talimat olarak çalıştırmaz, PII redaksiyonu uygulanır",
+        "AI aday eşleştirme/özet önerir (açıklanabilir, önyargı-denetimli); işe alım/red kararını yalnız insan verir",
+        "AI önerisi prompt->draft->validation->preview->onay akışından geçer; ruleset override ve doğrudan prod write yasaktır (kill-switch)"
       ],
-      "notes": "",
+      "notes": "AI eşleştirme öneridir; korumalı alan dışlaması ve insan onayı zorunludur.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -261,11 +271,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Başvuru hunisi + mülakat planlama kullanıcı yolculuğu",
-        "Önyargı (bias) denetim + KVKK saklama testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Başvuru hunisi + mülakat planlama kullanıcı yolculuğu için Playwright e2e + axe AAA 0 ihlal denetimi",
+        "Önyargı (bias) testi: korumalı alanların skoru etkilemediği; KVKK saklama/anonimleştirme zamanlamasının çalıştığı doğrulanır",
+        "CV parsing ve eşleştirme skoru için golden örnekli birim testleri (açıklanabilirlik dökümü dahil)",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Bias ve KVKK saklama davranışı sürekli regresyonla kanıtlanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -274,11 +285,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: aday verisi/teklif erişimi",
-        "LLM/Bias: AI eşleştirmede önyargı denetimi",
-        "A09 Logging: işe alım kararları iz (adil süreç)"
+        "OWASP A01 Access Control: aday verisi ve teklife erişim rol kontrolünden geçer, yatay yetki aşımı engellenir",
+        "OWASP LLM01/LLM05: CV parsing'de istem enjeksiyonuna karşı izolasyon ve güvensiz çıktı denetimi yapılır",
+        "OWASP A09 Logging: işe alım/red kararları adil-süreç kanıtı olarak izlenir, PII maskeli loglanır",
+        "OWASP A03 Injection: aday arama/filtre parametreli sorgularla işlenir; CV dosyası tip/tarama kontrolünden geçer"
       ],
-      "notes": "",
+      "notes": "CV metni AI'a girdiği için istem enjeksiyonu ve bias birincil tehdit yüzeyidir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -287,11 +299,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "ATS, hrms (işe alım→özlük), onboarding, party (aday) ile entegre",
-        "Kariyer sayfası cms ile; ilan dağıtımı feed/channel ile",
-        "Mülakat scheduling/comms ile"
+        "ATS, aday->özlük geçişi için s-hrms'e, oryantasyon için s-onboarding'e, aday kimliği için party'ye sözleşmeyle bağlanır",
+        "Türkiye yerelleştirmesi (KVKK/SGK kuralları) cc-tr çekirdek bağımlılığından gelir, yeniden uygulanmaz",
+        "İşe alındı olayı yayılır; HRMS bu olaya abone olarak özlük kaydı açar, doğrudan ATS tablosuna erişmez",
+        "Kariyer sayfası içeriği CMS'ten, ilan dağıtımı feed/channel'dan, mülakat planlama scheduling/comms'tan tüketilir"
       ],
-      "notes": "",
+      "notes": "İşe alındı->özlük devri olay üzerinden; cc-tr yerelleştirmesi çekirdekten gelir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -300,10 +313,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Recruitment / ATS ArcheType'ı İK'da işe alımı sağlar",
-        "İşe alım yapan tüm app'ler ATS'i kullanır"
+        "Recruitment / ATS ArcheType'ı İnsan Kaynakları kümesinde işe alım çekirdeğini (aday-ilan-süreç) sağlar",
+        "İşe alım yapan app'ler ATS'i üretilen API/olay üzerinden tüketir, doğrudan aday tablosuna girmez",
+        "HRMS işe alındı olayını, onboarding yeni çalışan tetiğini ATS'ten alır; aday verisinin sahibi ATS'tir",
+        "Tüketici app işe alım akışını değiştiremez; yalnız ilan açar ve aday/işe-alım olaylarına abone olur"
       ],
-      "notes": "",
+      "notes": "ATS aday yaşam döngüsünün sahibidir; HRMS/onboarding sonucu olayla okur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-ats — \"Recruitment / ATS\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: Greenhouse, Lever muadili. AI: CV parsing, matching. Etiketler: hr, ats, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

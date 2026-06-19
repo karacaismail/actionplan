@@ -135,11 +135,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Anket / Geri Bildirim: anket oluşturma, dağıtım, yanıt toplama ve analiz",
-        "Soru tipleri, koşullu mantık (skip logic) ve NPS/CSAT",
-        "Yanıt analizi ve raporlama"
+        "Anket yaşam döngüsü: taslak->yayında->kapalı->arşiv durumları ve her geçişte yanıt toplama kuralları değişir",
+        "8+ soru tipi (tek/çok seçim, ölçek, NPS, açık uçlu) + koşullu mantık (skip logic) ile dallanan akış",
+        "NPS/CSAT skoru otomatik hesaplanır; açık uçlu yanıtlar AI tema analizine girdi olur",
+        "Yanıt gönderiminde geçersiz/eksik zorunlu alan 422 benzeri tipli hata ile reddedilir"
       ],
-      "notes": "",
+      "notes": "AI tema analizi yalnız açık uçlu yanıtları kümeler; anket akışını insan kurar.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -148,11 +149,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Anket/yanıt verisi tenant_id RLS; anonim yanıt opsiyonu",
-        "Yanıtlayan PII izinli; anonimlik korunur",
-        "Yanıt manipülasyonu (çoklu gönderim) sınırlı"
+        "Anket ve yanıt tabloları tenant_id RLS ile izole; bir tenant başka tenantın yanıtlarını sorgulayamaz",
+        "Yanıtlayan PII alanları (e-posta, isim) 'hassas' sınıflandırılır; anonim ankette kimlik bağı hiç tutulmaz",
+        "Anket düzenleme ve yanıt görme yetkisi rol bazlıdır (least-privilege); ham yanıta yalnız anket sahibi erişir",
+        "Anket yayınlama/kapatma ve yanıt dışa aktarımı değişmez audit kaydına (aktör + zaman) yazılır"
       ],
-      "notes": "",
+      "notes": "Anonim yanıt seçeneğinde toplulaştırma öncesi kimlik tamamen ayrıştırılır.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -161,11 +163,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Soru/koşullu mantık (skip logic) bildirimsel",
-        "Yanıt toplama idempotent; analiz projeksiyondan",
-        "NPS/CSAT hesabı saf"
+        "Soru şeması ve koşullu mantık (skip logic) bildirimsel JSON olarak tutulur, kod değil veri yorumlanır",
+        "NPS/CSAT hesabı yan etkisiz saf fonksiyondur; aynı yanıt setine her zaman aynı skoru üretir",
+        "Yanıt toplama idempotent yazma ile çalışır; analiz ham veriden değil önceden hesaplanmış projeksiyondan okur",
+        "Soru-tipi bileşenleri kod-bölme ile ayrı yüklenir; nadir tipler ilk açılışta paket boyutunu şişirmez"
       ],
-      "notes": "",
+      "notes": "Bildirimsel anket şeması yeni soru tipi eklemeyi koda dokunmadan mümkün kılar.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -174,11 +177,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Anonim yanıt gerçekten anonim (kimlik bağı yok)",
-        "Çoklu gönderim oran-sınırı/token",
-        "Yanıt verisi gizlilik eşikli toplulaştırma"
+        "Çoklu gönderim/bot yağmuru tek seferlik token + IP başına dakikada maks 5 gönderim rate-limit ile engellenir",
+        "Anonim ankette yanıt kaydı kimlik tablosuyla join edilemeyecek şekilde ayrı saklanır (gerçek anonimlik)",
+        "Yanıt toplulaştırması gizlilik eşiğiyle korunur; n<5 segment ayrı raporlanmaz, yeniden-kimliklendirme önlenir",
+        "Anket paylaşım yüzeyinde sıkı CSP uygulanır; gömülü ankette XSS yüzeyi daraltılır"
       ],
-      "notes": "",
+      "notes": "Gizlilik eşiği küçük segmentlerde yanıtlayanın deşifre olmasını engeller.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -187,11 +191,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Anket dağıtımı toplu kuyruk; yanıt yüksek-hacim",
-        "Analiz projeksiyondan",
-        "Sonuç önbellekli"
+        "Anket daveti toplu kuyrukla gönderilir; yanıt yazma yüksek-hacimde p95 <300 ms hedeflenir",
+        "Yanıt listesi imleç tabanlı sayfalama ile yüklenir; rapor sayfasında N+1 sorgu yapılmaz",
+        "NPS/CSAT ve tema sonucu önceden hesaplanmış projeksiyondan okunur, her açılışta yeniden hesaplanmaz",
+        "Yanıt tablosunda (tenant_id, survey_id, oluşturulma) bileşik indeksiyle filtreli sorgu sağlanır"
       ],
-      "notes": "",
+      "notes": "Yüksek-hacimli anketlerde rapor projeksiyon + önbellekle sabit gecikme verir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -200,11 +205,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde anket doldurma (kısa form)",
-        "iOS/Android push ile anket daveti",
-        "Dar ekranda soru akışı"
+        "Anket doldurma PWA olarak mobilde tek-soru akışıyla sunulur; tüm seçim hedefleri ≥44px dokunma alanı",
+        "iOS/Android push bildirimi ile anket daveti ve hatırlatma gönderilir, derin bağlantı ilgili soruya açılır",
+        "Yanıtlar çevrimdışı (offline) doldurulup yeniden bağlanınca idempotent şekilde senkronlanır",
+        "Capacitor paketinde uzun anket dar ekranda ilerleme çubuğu ve kayıtlı taslakla bölünür"
       ],
-      "notes": "",
+      "notes": "Offline doldurma saha anketlerinde yanıt kaybını önler.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -213,11 +219,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Anket formu klavye+okuyucu erişimli; soru-tipi etiketli",
-        "İlerleme metinle; kontrast 7:1",
-        "Koşullu mantık erişilebilir (odak yönetimi)"
+        "Anket formu tam klavye ile doldurulabilir; her soru-tipi programatik etiketli, kontrast ≥7:1 sağlanır",
+        "Skip logic ile gizlenen/açılan soruda odak yönetimi yapılır, ekran okuyucu yeni soruyu duyurur",
+        "İlerleme yüzdesi yalnız çubukla değil metinle de (ör. 'Soru 3/10') verilir",
+        "NPS/ölçek soruları radyo grubu ARIA rolüyle işaretlenir; seçim renk dışında metinle de görünür"
       ],
-      "notes": "",
+      "notes": "Koşullu soru akışı erişilebilirlik için odak ve duyuru yönetimine bağlıdır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -226,11 +233,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Anket servisi standart; dağıtım/analiz worker",
-        "Yanıt toplama ölçeklenir",
-        "Shared hosting'de temel anket"
+        "Anket servisi Swarm/K8s'te liveness/readiness probe ile koşar; dağıtım ve tema-analizi ayrı worker'dır",
+        "Yanıt toplama servisi K8s HPA ile yanıt hacmine göre ölçeklenir, kaynak limitleri tanımlıdır",
+        "AI tema-analizi bağımsız worker olduğundan anket doldurma yolu AI yükünden etkilenmez",
+        "Shared hosting profilinde AI tema-analizi olmadan temel anket+rapor çalışır (degrade)"
       ],
-      "notes": "",
+      "notes": "Tema-analizi ayrı ölçeklenir; yanıt toplama yolu daima açık kalır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -239,11 +247,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: anket tamamlandı → analiz güncelle + düşük NPS'te uyar (idempotent, zincir ≤6)",
-        "Olay: anket süresi doldu → kapat + rapor (loop-breaker)"
+        "Backend ECA ruleset, AI'ın app/module üretme/güncelleme ve ruleset override denemesini deny eder",
+        "Olay: yeni yanıt geldi -> Koşul: NPS eşik altı -> Eylem: tema analizini güncelle + sahibe idempotent uyarı",
+        "Olay: anket bitiş tarihi doldu -> Eylem: anketi kapat + özet rapor üret; tetik zinciri en fazla 6 adım",
+        "Anket düşük-NPS uyarısı aynı yanıt için tekrar tetiklenmez (idempotent), yalnız backend engine'de koşar"
       ],
-      "notes": "",
+      "notes": "Anket otomasyonu yanıt ve süre olaylarına bağlı, döngü kırıcılı çalışır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -252,11 +261,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI soru/analiz (açık-uçlu yanıt teması) önerir; anketi/aksiyonu insan yönetir"
+        "AI app/module üretemez/güncelleyemez; yalnız anket ArcheType taslağı veya prod-update önerisi üretebilir",
+        "Açık uçlu yanıt metni güvenilmez (sub_prompt) kabul edilir; tema analizi onu talimat olarak çalıştırmaz",
+        "AI soru taslağı ve açık-uçlu yanıt teması önerir; anketi yayınlama ve aksiyon kararını insan verir",
+        "AI önerisi prompt->draft->validation->preview->onay akışından geçer; doğrudan prod write ve ruleset override yasaktır (kill-switch)"
       ],
-      "notes": "",
+      "notes": "AI tema çıktısı öneridir; düşük-NPS aksiyonunu insan onaylar.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -265,11 +275,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Koşullu mantık (skip logic) + idempotent yanıt testi",
-        "Anonimlik + NPS/CSAT hesap testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Koşullu mantık (skip logic) ve idempotent yanıt gönderimi için birim + e2e testleri",
+        "Anonimlik testi: anonim ankette yanıtın kimlikle join edilemediği doğrulanır; NPS/CSAT hesabı sınır-değerle test edilir",
+        "Anket doldurma kullanıcı yolculuğu için Playwright e2e + axe AAA 0 ihlal denetimi",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Anonimlik ve skip logic doğruluğu sürekli regresyonla korunur.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -278,11 +289,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: yanıt erişimi/anonimlik",
-        "A04 Insecure Design: çoklu-gönderim önleme",
-        "A09 Logging: anket kararları iz (anonimlik korumalı)"
+        "OWASP A01 Access Control: ham yanıta yalnız anket sahibi erişir, anonimlik sınırı zorlanır",
+        "OWASP A04 Insecure Design: çoklu-gönderim token + rate-limit ile tasarımdan engellenir",
+        "OWASP A09 Logging: anket yayın/kapatma kararları izlenir, anonimlik korunarak loglanır",
+        "OWASP LLM01 Prompt Injection: açık uçlu yanıt teması üretiminde yanıt metni izole edilir, talimat sızdıramaz"
       ],
-      "notes": "",
+      "notes": "Açık uçlu yanıt AI'a girdiği için istem enjeksiyonu birincil tehdit yüzeyidir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -291,11 +303,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Survey, party (yanıtlayan), notification (davet), analytics (sonuç) ile entegre",
-        "NPS/CSAT crm/helpdesk ile",
-        "Açık-uçlu analiz data-intelligence ile"
+        "Survey, yanıtlayan kimliği için l1-party'yi, davet için notification'ı, sonuç için l1-analytics'i çekirdek sözleşmeyle tüketir",
+        "Kullanıcı arayüzü kabuğu için kernel surface (k-surface) ve AI tema için k-agent-runtime kullanılır",
+        "NPS/CSAT skoru olay olarak yayılır; CRM/helpdesk bu olaya abone olur, doğrudan tabloya erişmez",
+        "Gizlilik kuralları cc-privacy sözleşmesinden gelir; anket yanıt verisini yeniden uygulamaz"
       ],
-      "notes": "",
+      "notes": "Party, analytics ve agent-runtime çekirdekten gelir; anket bunları yeniden yazmaz.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -304,10 +317,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Anket / Geri Bildirim ArcheType'ı İçerik & İşbirliği'nde anket sağlar",
-        "Geri bildirim toplayan tüm app'ler survey'i kullanır"
+        "Anket / Geri Bildirim ArcheType'ı İçerik & İşbirliği kümesinde anket-yanıt çekirdeğini sağlar",
+        "Geri bildirim toplayan app'ler (etkinlik, topluluk, destek) survey'i üretilen API/olay üzerinden tüketir, doğrudan DB'ye girmez",
+        "CRM/helpdesk NPS/CSAT skorunu okur; pazarlama segmentasyon için anket sonucundan yararlanır",
+        "Tüketici app anket akışını değiştiremez; yalnız anket başlatır ve sonuç olaylarına abone olur"
       ],
-      "notes": "",
+      "notes": "Anket yanıt verisinin sahibidir; diğer app'ler sonucu olayla okur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-survey — \"Survey / Feedback\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Typeform, SurveyMonkey muadili. AI: tema analizi. Etiketler: content-collaboration, survey, stack, ai-native.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

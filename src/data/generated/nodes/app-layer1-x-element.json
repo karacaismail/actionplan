@@ -286,11 +286,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Layer1 kırılımının Element örneği: tek bir yatay alan/kural (ör. bildirim kanalı tercihi)",
-        "Element, yatay modül sözleşmesindeki en küçük anlamlı alan/kural",
-        "Örnek dal; yatay alan kuralının granülerlikteki yeri"
+        "Layer1 in-tree modül sözleşmesindeki tek bir yatay alan tanımı (ör. bildirim kanalı tercihi enum'u: email/push/sms)",
+        "Element seviyesinde girdi alanının kabul ettiği değer kümesi ve zorunluluk bayrağı açıkça sabitlenir",
+        "Alan boş/geçersiz geldiğinde 422 doğrulama hatası döner; üst molekül kuralına sinyal iletilir",
+        "WBS 20.10.1.1 element kapsamı: alanın varsayılan değeri ve göç (expand-contract) davranışı belirlenir"
       ],
-      "notes": "",
+      "notes": "Element, layer1 yatay modül şemasının en küçük doğrulanabilir alan birimidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -299,11 +300,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Alan doğrulaması sunucuda; yetki/izin kuralı uygulanır",
-        "Hassas alan maskeleme/şifreleme",
-        "Alan yazımı tenant+rol yetkisiyle"
+        "Yatay element alanı tenant_id RLS politikası altında yazılır; çapraz tenant değer sızıntısı PostgreSQL düzeyinde engellenir",
+        "Hassas element alanı (PII) sınıflandırılır; en az ayrıcalıkla yalnız yetkili rol görür/değiştirir",
+        "Element alan değeri sunucuda Zod ile doğrulanır; istemciden gelen değer asla güvenilir kabul edilmez",
+        "Alan değişikliği değişmez (append-only) denetim kaydına yazılarak kim-ne-zaman izi tutulur"
       ],
-      "notes": "",
+      "notes": "Element düzeyinde PII alanları varsayılan olarak maskelenir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -312,11 +314,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yatay kural saf doğrulayıcı",
-        "Tip Zod ile",
-        "Tek kaynaktan"
+        "Yatay element doğrulaması yan etkisiz saf fonksiyon olarak yazılır; aynı girdi her zaman aynı sonucu verir",
+        "Alan tipi tek bir Zod şemasından türetilir; TypeScript tipi schema'dan infer edilerek çift tanım önlenir",
+        "Element doğrulayıcısı tek dosyada toplanır; döngüsel karmaşıklık 5 altında tutulur",
+        "Ortak alan kuralı paylaşılan layer1 şema kütüphanesinden import edilir, kopyalanmaz"
       ],
-      "notes": "",
+      "notes": "Saf doğrulayıcı birim testlerini deterministik kılar.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -325,11 +328,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Allowlist temelli doğrulama",
-        "Field-level yetki",
-        "Güvenli varsayılan"
+        "Element alanı allowlist temelli doğrulanır; izinli enum dışı her değer reddedilerek injection yüzeyi daraltılır",
+        "Alan yazımına saniyede sınırlı istek (rate-limit) uygulanır; otomatik kötüye kullanım yavaşlatılır",
+        "Element için en az ayrıcalık: salt-okuma rolü yalnız GET görür, yazma ayrı yetki gerektirir",
+        "Şemayı sağlayan layer1 bağımlılığı SCA taramasından geçirilir; bilinen CVE'li sürüm bloklanır"
       ],
-      "notes": "",
+      "notes": "Güvenli varsayılan: alan tanımsızken erişim kapalıdır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -338,11 +342,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "O(1) doğrulama",
-        "Önbelleklenebilir",
-        "Toplu doğrulama"
+        "Element alan doğrulaması O(1) sabit zamanlı; ek DB sorgusu üretmez ve N+1 yaratmaz",
+        "Enum/sözlük değerleri bellekte önbelleklenir; her doğrulamada tablo okuması yapılmaz",
+        "Toplu içe aktarımda alanlar tek geçişte vektörel doğrulanır; 1000 kayıt p95 < 50ms hedeflenir",
+        "Element doğrulama maliyeti ölçülür; üst molekül akışında darboğaz oluşturmadığı izlenir"
       ],
-      "notes": "",
+      "notes": "Element saf doğrulama olduğundan önbellekleme güvenlidir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -351,11 +356,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Alan mobilde uygun girdiyle",
-        "Çevrimdışı doğrulanabilir",
-        "Hata dar ekranda okunur"
+        "Element alanı mobilde uygun girdi tipiyle (numeric/email klavyesi) sunulur; PWA formunda doğru tuş takımı açılır",
+        "Alanın dokunulabilir alanı en az 44px tutulur; parmakla rahat seçilir, Capacitor paketinde de aynı ölçü korunur",
+        "Çevrimdışıyken alan istemcide Zod ile ön-doğrulanır; bağlantı gelince sunucu doğrulaması tekrarlanır",
+        "Geçersiz değer hatası dar ekranda alanın hemen altında tek satırda okunur biçimde gösterilir"
       ],
-      "notes": "",
+      "notes": "Element alanı mobil offline form taslağında saklanabilir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -364,11 +370,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Alan etiketi ilişkili; hata sesli; kontrast 7:1",
-        "Zorunluluk metin/ikonla",
-        "Ekran okuyucuya anlamlı"
+        "Element alanı görünür <label> ile programatik ilişkilendirilir; etiket-girdi kontrastı ≥7:1 sağlanır",
+        "Doğrulama hatası aria-describedby ve aria-invalid ile ekran okuyucuya anında bildirilir",
+        "Alanın zorunluluğu yalnız renkle değil metin/ikon ile de belirtilir; klavye odağı görünür çerçeveyle akar",
+        "Element form alanı sekme (Tab) sırasına dahil; odak tuzağı oluşturmadan tam klavyeyle gezilir"
       ],
-      "notes": "",
+      "notes": "Hata mesajı renkten bağımsız olarak metinle taşınır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -377,11 +384,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Kural yatay modül şemasının parçası",
-        "Her profilde doğrulanır",
-        "Shared hosting'de de geçerli"
+        "Element alan kuralı ayrı servis değil; üst layer1 modülünün K8s imajı içinde paketlenip dağıtılır",
+        "Alan doğrulaması readiness probe'a dahil edilir; şema yüklenemezse pod trafik almaz",
+        "Docker Swarm profilinde de aynı şema bayrağı geçerli; ortamlar arası alan davranışı tutarlıdır",
+        "WordPress sınıfı shared hosting'de element salt-okuma doğrulama olarak çalışır, ağır işlem gerektirmez"
       ],
-      "notes": "",
+      "notes": "Element bağımsız ölçeklenmez, üst modülle birlikte taşınır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -390,11 +398,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: alan değeri kuralı ihlal etti → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-        "Element tek başına otomasyon yazmaz"
+        "Backend ECA ruleset, AI'ın element alanını app/module mutasyonuna çevirme ve ruleset override denemesini deny eder",
+        "Olay: element alan değeri sınır kuralını ihlal etti → Eylem: üst molekül kuralına geçersizlik sinyali (idempotent)",
+        "Kural backend/engine'de çalışır; UI yalnız güvenli parametre yüzeyi sunar, serbest JS/SQL/shell yoktur",
+        "Zincir derinliği maks 6 ile sınırlı; aynı alan ihlali tekrar tetiklense yinelenen sinyal üretilmez"
       ],
-      "notes": "",
+      "notes": "Element tek başına otomasyon başlatmaz; yalnız üst kurala sinyal verir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -403,11 +412,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI alan/kural önerebilir; yetki/maskeleme kuralını kendisi gevşetemez"
+        "AI bu element için app/module üretemez/güncelleyemez; yalnız ArcheType taslağında alan tanımı önerebilir",
+        "Element alan değeri serbest metni sub_prompt olarak güvenilmezdir; talimat gibi yürütülmez, redakte edilir",
+        "AI yeni alan önerse bile prod'a doğrudan yazamaz; admin onayı (preview→approval→apply) zorunludur",
+        "AI'ın alan maskeleme/yetki kuralını gevşetme denemesi kill-switch ile durdurulur; ruleset override edilemez"
       ],
-      "notes": "",
+      "notes": "AI önerisi taslakla sınırlı; uygulama insan onayına bağlı.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -416,11 +426,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Sınır-değer doğrulama testi",
-        "Hassas alan maskeleme testi",
-        "Erişilebilirlik mikro-testi"
+        "Element alanı için sınır-değer birim testleri: boş, min, maks ve enum dışı değerlerde beklenen ret doğrulanır",
+        "Hassas alanın maskeleme/PII redaksiyon davranışı için ayrı bir golden-fixture testi yürütülür",
+        "Alanın axe ile erişilebilirlik mikro-testi koşulur; label/aria ihlali 0 olmalıdır",
+        "Test döngüsü en fazla 6 yeniden denemeyle sınırlı; alan testi düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Sınır değerleri elementin sözleşme kapısıdır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -429,11 +440,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: allowlist doğrulama",
-        "A02 Cryptographic Failures: hassas alan korumalı",
-        "Değişiklik izli"
+        "OWASP A03:2025 Injection: element alanı allowlist + parametreli doğrulamayla enjeksiyona kapatılır",
+        "OWASP A02:2025 Cryptographic Failures: hassas element alanı şifreli saklanır, düz metin loglanmaz",
+        "OWASP A09:2025 Logging: element alan değişikliği denetim izine düşer, anomali tespit edilebilir",
+        "LLM01 Prompt Injection: alan içeriği AI'a girerse veri olarak işlenir, talimat olarak değil"
       ],
-      "notes": "",
+      "notes": "Element küçük olsa da injection ve PII yüzeyini taşır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -442,11 +454,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Element üst molekül ve ArcheType field sözleşmesine bağlanır",
-        "Yatay modül şema doğrulamasına dahil",
-        "Surface görünürlüğü bu kurala göre"
+        "Element, üst app-layer1-x-molecule ve ArcheType field sözleşmesine tek yönlü bağımlılıkla bağlanır",
+        "Alan, layer1 modül şema doğrulama hattına dahil edilir; kernel doğrudan elementi değil molekülü çağırır",
+        "Element kernel surface (k-surface) görünürlük kuralını tüketir; alanın gösterimi bu yetkiye göre belirlenir",
+        "Bağımlılık yönü yukarı doğrudur: element kernel'e değil, kernel/molekül elementin sözleşmesine dayanır"
       ],
-      "notes": "",
+      "notes": "Element kernel'e bağımlı değil; üst katman elementi tüketir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -455,9 +468,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Yatay element bir alan/kuraldır; bağımsız sunulmaz, modül field tanımının parçası"
+        "Yatay element bağımsız sunulmaz; app'ler onu yalnız üst layer1 modülünün field tanımı içinden tüketir",
+        "App'ler element alanına doğrudan DB ile değil, modülün ürettiği API/araç kapsamı üzerinden erişir",
+        "Element değeri değiştiğinde tüketen app'ler modülün yayımladığı alan-değişti olayıyla bilgilenir"
       ],
-      "notes": "",
+      "notes": "Element bir uçtan uca özellik değil, modül alanının yapı taşıdır.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-element — \"Element — Layer 1 — In-tree Modüller örnek kırılımı\" (element/toz; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Element seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, element.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

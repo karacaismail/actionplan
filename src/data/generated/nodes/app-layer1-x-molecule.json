@@ -286,11 +286,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Layer1 kırılımının Molekül örneği: bir yatay yeteneğin bileşen düzeyi tarifi",
-        "Molekül, bir layer1 modülünün çalışabilir en küçük bileşeni",
-        "Örnek dal; yatay yetenek bileşeninin granülerlikteki yeri"
+        "Layer1 in-tree modül molekülü: webhook-in akışındaki bir yatay yetenek bileşeni (ör. workflow durumu geçişi)",
+        "Molekül, çalışabilir en küçük bileşen olarak girdi alır, durumu ilerletir ve tipli çıktı döndürür",
+        "Workflow durum makinesi: bekliyor→işleniyor→tamam/başarısız geçişleri molekül seviyesinde sabitlenir",
+        "Geçersiz girdi veya geçiş hatası 422/409 ile reddedilir; üst modüle yapılandırılmış hata iletilir"
       ],
-      "notes": "",
+      "notes": "Molekül, layer1 yatay yeteneğin durum-ilerleten en küçük bileşenidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -299,11 +300,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Molekül girdi doğrulamasını sınırda yapar; modül yetki kapsamına uyar",
-        "Yalnız kapsamındaki kaynağa erişir",
-        "Tenant bağlamına bağlı"
+        "Molekül girdisini sınırda doğrular; workflow durumu yazımı tenant_id RLS kapsamında PostgreSQL'de izole edilir",
+        "Yalnız kendi kapsamındaki kaynağa erişir; en az ayrıcalıkla başka modülün verisine uzanmaz",
+        "Durum geçişleri değişmez (append-only) denetim kaydına yazılır; kim hangi geçişi tetikledi izlenir",
+        "Webhook payload'unda taşınan PII alanı sınıflandırılır; loglarda maskelenerek tutulur"
       ],
-      "notes": "",
+      "notes": "Molekül her durum geçişini tenant bağlamına bağlı doğrular.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -312,11 +314,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yatay molekül saf fonksiyon; modül sözleşmesine uyumlu",
-        "Tipli arayüz",
-        "Paylaşılan yardımcıya çıkarım"
+        "Workflow durum geçiş fonksiyonu saf tutulur; yan etki (DB yazımı) ayrı bir kenara (adapter) taşınır",
+        "Molekül arayüzü tek Zod sözleşmesinden tiplenir; girdi/çıktı tipi şemadan infer edilir",
+        "Durum makinesi açık bir geçiş tablosuyla kodlanır; döngüsel karmaşıklık 8 altında tutulur",
+        "Ortak geçiş yardımcıları paylaşılan layer1 util modülüne çıkarılır, molekülde tekrarlanmaz"
       ],
-      "notes": "",
+      "notes": "Durum geçişinin saflığı, geçiş testlerini deterministik kılar.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -325,11 +328,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "En az ayrıcalık",
-        "Girdi normalizasyonu",
-        "Loop-breaker (maks 6) zincirde"
+        "Molekül yalnız kendi durum geçişlerini yapacak en az ayrıcalıkla çalışır; geniş yetki token'ı taşımaz",
+        "Gelen webhook payload'u normalize/sanitize edilir; beklenmeyen alanlar atılarak işlem yüzeyi daraltılır",
+        "Tekrarlı durum tetiklemesi loop-breaker ile maks 6 adımda durdurulur; sonsuz geçiş döngüsü önlenir",
+        "Webhook imza doğrulaması ve giriş sekretleri düzenli rotasyona tabi tutulur"
       ],
-      "notes": "",
+      "notes": "Geçiş zinciri maks 6 ile sınırlandığından kaçak otomasyon engellenir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -338,11 +342,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Saf ve önbelleklenebilir",
-        "Gerektiğinde başlatma",
-        "Küçük çıktı"
+        "Durum geçişi saf hesap olduğundan idempotent sonuç önbelleklenebilir; tekrar webhook'ta yeniden hesaplanmaz",
+        "Workflow durumu (tenant_id, entity_id) bileşik indeksiyle okunur; tarama yerine doğrudan erişim sağlanır",
+        "Molekül durum geçmişini imleç tabanlı çeker; OFFSET kullanılmaz, N+1 sorgu üretilmez",
+        "Geçiş işleme p95 < 80ms hedeflenir ve webhook kuyruğunda biriktirmeden ölçülür"
       ],
-      "notes": "",
+      "notes": "Idempotent geçiş, tekrar teslimde güvenli önbellek sağlar.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -351,11 +356,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Molekül UI'si mobilde uyumlu",
-        "iOS/Android içinde çağrılabilir",
-        "Dar ekranda özetli"
+        "Molekülün durum rozeti mobilde özet kartla gösterilir; PWA'da workflow durumu çevrimdışı son haliyle okunur",
+        "Durum ilerletme aksiyonu iOS/Android'de ≥44px dokunma hedefiyle sunulur; Capacitor paketinde de korunur",
+        "Çevrimdışı tetiklenen geçiş kuyruğa alınır; bağlantı gelince sunucu durum makinesiyle uzlaştırılır",
+        "Dar ekranda geçiş hatası tek satır özet + ayrıntı bağlantısı olarak okunur biçimde gösterilir"
       ],
-      "notes": "",
+      "notes": "Workflow durumu mobil offline'da son bilinen haliyle gösterilir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -364,11 +370,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Etkileşim klavye erişimli ve adlandırılmış",
-        "Durum metinle; kontrast 7:1",
-        "Hata ilişkilendirilmiş"
+        "Durum ilerletme düğmesi adlandırılmış (aria-label) ve tam klavyeyle erişilebilir; odak görünür çerçeveyle akar",
+        "Workflow durumu yalnız renkle değil metinle de belirtilir (ör. 'İşleniyor'); rozet kontrastı ≥7:1 sağlanır",
+        "Geçiş başarısızlığı aria-live bölgesiyle anlık duyurulur; hata ilgili kontrole programatik bağlanır",
+        "Durum geçmişi listesi ARIA rolleriyle yapılandırılır; ekran okuyucu sırayı doğru aktarır"
       ],
-      "notes": "",
+      "notes": "Durum etiketi renkten bağımsız okunabilir metin taşır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -377,11 +384,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Üst modülle dağıtılır",
-        "Modülle ölçeklenir",
-        "Shared hosting'de degrade"
+        "Molekül bağımsız servis değil; üst webhook-in modülünün K8s Deployment imajıyla birlikte paketlenir",
+        "Modül HPA ile yatay ölçeklendiğinde molekül de aynı pod replikalarında çoğalır; ayrı limit gerektirmez",
+        "Durum geçiş işlevi readiness probe kapsamına alınır; geçiş tablosu yüklenemezse pod trafik almaz",
+        "Shared hosting'de molekül senkron tek-işçi modda çalışır; ağır asenkron kuyruk devre dışı bırakılır"
       ],
-      "notes": "",
+      "notes": "Molekül üst modülün dağıtım birimine gömülüdür.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -390,11 +398,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: molekül girdisi geçersiz → sınırda reddet + üst modüle hata (idempotent, zincir ≤6)",
-        "Molekül üst modül kuralına bağlanır"
+        "Backend ECA ruleset, AI'ın bu molekülü app/module mutasyonuna çevirme ve ruleset override denemesini deny eder",
+        "Olay: molekül girdisi geçersiz → Koşul: durum geçişi izinsiz → Eylem: sınırda reddet + üst modüle hata (idempotent)",
+        "Kural engine'de çalışır; geçiş allowlist'i UI'dan yalnız güvenli parametre olarak ayarlanır, serbest kod yok",
+        "Geçiş zinciri maks 6 adımla sınırlı; aynı olay yinelense idempotency anahtarıyla tekrar işlenmez"
       ],
-      "notes": "",
+      "notes": "Molekül kuralı üst modül ruleset'ine bağlı çalışır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -403,11 +412,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI molekül tarifini önerebilir; üst modül/app'i kendisi üretemez"
+        "AI bu molekül için app/module üretemez/güncelleyemez; yalnız ArcheType taslağında bileşen tarifi önerebilir",
+        "Webhook payload'undaki serbest metin sub_prompt olarak güvenilmezdir; talimat değil veri olarak ele alınır",
+        "AI önerdiği geçiş kuralını prod'a doğrudan yazamaz; admin akışı (diff→dry-run→preview→approval) zorunludur",
+        "AI'ın durum makinesi yetki sınırını gevşetme denemesi kill-switch ile durdurulur; ruleset override edilemez"
       ],
-      "notes": "",
+      "notes": "AI molekül tarifini önerir, uygulamayı admin onaylar.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -416,11 +426,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Molekül birim testi",
-        "Üst modül entegrasyon testi",
-        "Erişilebilirlik mikro-yolculuğu; en çok 6 tur"
+        "Durum makinesi için birim testleri: her geçerli geçiş ve her yasak geçiş ayrı senaryoyla doğrulanır",
+        "Üst webhook-in modülüyle entegrasyon testi: payload→geçiş→çıktı sözleşmesi uçtan uca koşulur",
+        "Durum rozeti için axe erişilebilirlik mikro-yolculuğu; klavye geçişi ihlali 0 olmalıdır",
+        "Test döngüsü maks 6 yeniden denemeyle sınırlı; geçiş testi düzelmezse tanı raporu üretilir"
       ],
-      "notes": "",
+      "notes": "Yasak geçişler molekülün test kapısının çekirdeğidir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -429,11 +440,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: girdi sınırda doğrulanır",
-        "A04 Insecure Design: en-az-ayrıcalık",
-        "İzlenir"
+        "OWASP A03:2025 Injection: webhook girdisi sınırda parametreli ve şema-doğrulamayla işlenir",
+        "OWASP A04:2025 Insecure Design: durum makinesi en az ayrıcalıkla ve açık geçiş allowlist'iyle tasarlanır",
+        "OWASP A08:2025 Integrity Failures: webhook imzası doğrulanır; sahte tetik durum değiştiremez",
+        "OWASP A09:2025 Logging: her durum geçişi denetim izine düşer, anormal geçiş tespit edilir"
       ],
-      "notes": "",
+      "notes": "Webhook girişi en yüksek tehdit yüzeyidir, imza doğrulanır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -442,11 +454,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Molekül üst layer1 modülüne tipli arayüzle bağlanır",
-        "Modül sözleşmesini tüketir",
-        "Çıktısı üst yetenek akışında"
+        "Molekül, üst l1-webhook-in modülüne tipli bir arayüzle bağlanır; kernel doğrudan molekülü çağırmaz",
+        "Molekül modül sözleşmesini tüketir; durum geçişi çıktısı üst yatay yetenek akışına olay olarak verilir",
+        "Bağımlılık yönü yukarıdır: molekül kendi içerdiği elementlere dayanır, modül molekülün arayüzüne dayanır",
+        "Çıktı olayı k-surface üzerinden yayılır; tüketiciler doğrudan molekülün iç durumunu okumaz"
       ],
-      "notes": "",
+      "notes": "Molekül kernel'e değil, üst webhook modülüne bağlıdır.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -455,9 +468,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Yatay molekül bir bileşendir; bağımsız sunulmaz, üst modül içinde kullanılır"
+        "Yatay molekül bağımsız sunulmaz; app'ler durum geçişini üst webhook-in modülü üzerinden tetikler",
+        "App'ler molekülün durumuna doğrudan DB ile değil, modülün ürettiği API/olay sözleşmesiyle erişir",
+        "Durum değişince tüketen app'ler molekülün yaydığı 'durum-değişti' olayıyla bilgilendirilir"
       ],
-      "notes": "",
+      "notes": "Molekül uçtan uca özellik değil, modülün geçiş bileşenidir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-layer1-x-molecule — \"Molekül — Layer 1 — In-tree Modüller örnek kırılımı\" (molekül/küçük taş; küme: Layer 1 modülleri). Özet: Layer 1 — In-tree Modüller için 7-seviye WBS kırılımının Molekül seviyesi (örnek dal). Etiketler: layer1, ornek, 7-seviye, molecule.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

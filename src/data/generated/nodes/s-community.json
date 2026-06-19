@@ -135,11 +135,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Topluluk / Forum: üye tartışması, konu/yanıt, oylama (upvote) ve moderasyon",
-        "Kategori, etiket, itibar (reputation) ve bildirim",
-        "Soru-cevap ve bilgi paylaşımı"
+        "Topluluk / Forum (Discourse muadili): konu açma, yanıt, oylama (upvote) ve moderasyon iş akışı",
+        "Kategori/etiket taksonomisi, üye itibarı (reputation) ve yanıt/bahsetme bildirimleri",
+        "Soru-cevap akışı: çözüldü işaretleme, kabul edilen yanıt ve B2B bilgi paylaşımı",
+        "Konu durum makinesi: taslak→yayında→kilitli/arşiv; geçersiz geçiş 409 ile reddedilir"
       ],
-      "notes": "",
+      "notes": "Konu/yanıt ve moderasyon, bu ArcheType'ın çekirdek tartışma yetenekleridir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -148,11 +149,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Üye/gönderi verisi tenant_id RLS; iletişim izinli",
-        "İçerik moderasyonu (spam/taciz); raporlama",
-        "Gönderi sanitize (XSS)"
+        "Üye ve gönderi verisi tenant_id RLS ile izole edilir; çapraz tenant forum içeriği PostgreSQL'de görünmez",
+        "Üye PII (e-posta, profil) sınıflandırılır; rol bazlı en az ayrıcalıkla yalnız moderatör/sahip erişir",
+        "Gönderi/yanıt HTML'i sunucuda sanitize edilir (XSS); zengin metin allowlist'le filtrelenir",
+        "Moderasyon kararları ve raporlamalar değişmez (append-only) denetim kaydına yazılır"
       ],
-      "notes": "",
+      "notes": "Forum gönderisi güvenilmez kullanıcı girdisidir, daima sanitize edilir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -161,11 +163,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Konu/yanıt akışı sayfalı; oylama saf hesap",
-        "İtibar (reputation) kurallardan",
-        "Moderasyon kuyruğu"
+        "Oylama ve itibar hesabı saf fonksiyona ayrılır; gönderi sayacı yan etkiden bağımsız hesaplanır",
+        "Konu/yanıt erişimi repository deseniyle soyutlanır; sorgular tek katmanda toplanır",
+        "İtibar (reputation) kuralları yapılandırılabilir saf kurallardan türetilir; iş mantığı UI'dan ayrıdır",
+        "Moderasyon kuyruğu durum makinesiyle modellenir; döngüsel karmaşıklık modül başına sınırlandırılır"
       ],
-      "notes": "",
+      "notes": "Oylama saf hesap olduğundan itibar testleri deterministiktir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -174,11 +177,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Spam/bot oran-sınırı + moderasyon",
-        "Taciz/uygunsuz içerik raporlama + aksiyon",
-        "İtibar manipülasyonu (oy şişirme) tespiti"
+        "Gönderi/kayıt akışına oran-sınırı (rate-limit) uygulanır; spam/bot saldırısı yavaşlatılır",
+        "Taciz/uygunsuz içerik raporlaması moderasyon kuyruğuna düşer; eşik aşılınca otomatik gizlenir",
+        "İtibar manipülasyonu (oy şişirme) tespit edilir; çoklu hesap oy davranışı işaretlenir",
+        "Zengin metin/medya yükleme için CSP sıkılaştırılır; gömülü dış kaynaklar allowlist'le kısıtlanır"
       ],
-      "notes": "",
+      "notes": "Oy şişirme tespiti, topluluk güvenini koruyan kritik kontroldür.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -187,11 +191,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Forum okuma-yoğun; CDN+önbellek",
-        "Akış sonsuz kaydırma (imleç)",
-        "Arama indeksli"
+        "Forum okuma-ağırlıklı olduğundan konu listesi CDN ve sunucu önbelleğiyle servis edilir",
+        "Konu akışı (tenant_id, son_etkinlik) bileşik indeksiyle sonsuz kaydırma (imleç) üzerinden yüklenir",
+        "Yanıt listesinde yazar/oy verisi tek sorguda join edilir; N+1 önlenir",
+        "Belge/forum araması l1-search-deep indeksinden gelir; arama p95 < 200ms hedeflenir"
       ],
-      "notes": "",
+      "notes": "Sıcak konu listeleri önbelleğe alınarak okuma yükü azaltılır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -200,11 +205,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde forum okuma/yanıt + bildirim",
-        "iOS/Android push ile yanıt/bahsetme",
-        "Dar ekranda konu akışı"
+        "Mobilde forum okuma/yanıt PWA ile çalışır; okunan konular çevrimdışı son haliyle görüntülenir",
+        "iOS/Android push ile yanıt/bahsetme bildirimi gelir; cc-notification-consent izni kontrol edilir",
+        "Yanıtla/oyla aksiyonları ≥44px dokunma hedefiyle sunulur; Capacitor paketinde de korunur",
+        "Dar ekranda konu akışı tek sütun kart düzeninde; uzun başlıklar kırpılmadan okunur"
       ],
-      "notes": "",
+      "notes": "Push bildirimi yalnız onay verilmiş üyelere gönderilir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -213,11 +219,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Forum akışı klavye+okuyucu erişimli (yapılandırılmış)",
-        "Oylama/itibar metinle; kontrast 7:1",
-        "Yanıt editörü erişilebilir"
+        "Konu/yanıt akışı ARIA rolleriyle yapılandırılır; tam klavyeyle gezilir, ekran okuyucu sırayı doğru aktarır",
+        "Oylama sayısı ve itibar rozeti yalnız renkle değil metinle de belirtilir; kontrast ≥7:1 sağlanır",
+        "Yanıt editörü (zengin metin) klavyeyle tam kullanılabilir; biçim düğmeleri adlandırılır",
+        "Yeni yanıt geldiğinde aria-live ile duyurulur; odak sırası görünür çerçeveyle korunur"
       ],
-      "notes": "",
+      "notes": "Oy/itibar sayıları renkten bağımsız metinle okunur.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -226,11 +233,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Topluluk servisi ölçeklenir; moderasyon worker",
-        "Bildirim notification ile",
-        "Shared hosting'de temel forum"
+        "Topluluk servisi K8s'te HPA ve liveness/readiness probe ile koşar; okuma trafiğine göre yatay ölçeklenir",
+        "Moderasyon ve bildirim işleri ayrı worker dağıtım birimi olarak bağımsız ölçeklenir",
+        "Bildirim teslimi cc-notification-consent servisi üzerinden yapılır; kaynak limitleri tanımlıdır",
+        "WordPress sınıfı shared hosting'de temel forum (okuma/yanıt) çalışır; ağır moderasyon worker'ı devre dışıdır"
       ],
-      "notes": "",
+      "notes": "Moderasyon worker'ı forum okuma yolundan bağımsız ölçeklenir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -239,11 +247,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: gönderi şüpheli işaretlendi → moderasyon kuyruğuna al (idempotent, zincir ≤6)",
-        "Olay: yanıt/bahsetme → ilgiliye bildir (loop-breaker)"
+        "Backend ECA ruleset, AI'ın Forum app/module üretme-güncelleme ve ruleset override denemesini deny eder",
+        "Olay: gönderi spam skoru eşiği aştı → Koşul: yayında → Eylem: moderasyon kuyruğuna al (idempotent)",
+        "Olay: yanıt/bahsetme oluştu → Eylem: ilgili üyeye bildir; zincir maks 6 ile loop-breaker korumalı",
+        "Kural engine'de çalışır; moderasyon eşiği UI'dan yalnız güvenli parametre olarak ayarlanır, serbest kod yok"
       ],
-      "notes": "",
+      "notes": "ECA kuralları konu/yanıt yaşam döngüsüne bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -252,11 +261,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI spam/taciz skorlama ve yanıt önerisi üretir; moderasyon kararını insan/kural verir"
+        "AI Forum için app/module üretemez/güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
+        "Gönderi/yanıt serbest metni sub_prompt olarak güvenilmezdir; talimat değil veri olarak işlenir, PII redakte edilir",
+        "AI spam/taciz skorlaması ve yanıt taslağı üretir; nihai moderasyon kararını insan veya kural verir",
+        "AI'ın moderasyon ruleset'ini override/disable denemesi kill-switch ile durdurulur; doğrudan prod write yapamaz"
       ],
-      "notes": "",
+      "notes": "AI skorlar ve önerir; moderasyon kararı insan/kural otoritesindedir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -265,11 +275,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Oylama/itibar + moderasyon akış testi",
-        "Spam/oran-sınır + sanitize testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Oylama/itibar hesabı ve moderasyon kuyruğu için birim + entegrasyon testleri yürütülür",
+        "Konu açma→yanıt→çözüldü işaretleme kullanıcı yolculuğu Playwright e2e ile uçtan uca koşulur",
+        "Spam oran-sınırı ve gönderi sanitize (XSS) için negatif güvenlik testleri çalıştırılır",
+        "Test döngüsü maks 6 yeniden denemeyle sınırlı; forum testi düzelmezse tanı raporu üretilir"
       ],
-      "notes": "",
+      "notes": "Sanitize ve oran-sınır testleri güvenlik regresyonunu yakalar.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -278,11 +289,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: gönderi sanitize",
-        "A04 Insecure Design: spam/oy-şişirme önleme",
-        "A09 Logging: moderasyon kararları iz"
+        "OWASP A03:2025 Injection: gönderi/yanıt sanitize edilir; stored XSS allowlist filtresiyle engellenir",
+        "OWASP A04:2025 Insecure Design: spam ve oy-şişirme tasarımca oran-sınırı ve tespitle önlenir",
+        "OWASP A01:2025 Broken Access Control: konu/yanıt erişimi rol ve tenant RLS ile kapsamlanır",
+        "OWASP A09:2025 Logging: moderasyon kararları iz bırakır; LLM skorlamada güvensiz çıktı filtrelenir"
       ],
-      "notes": "",
+      "notes": "Stored XSS ve oy manipülasyonu en yüksek tehdit yüzeyleridir.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -291,11 +303,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Community, party (üye), notification, search ile entegre",
-        "Bilgi wiki/helpdesk ile",
-        "İçerik moderasyonu crosscut ile"
+        "Üye kimliği için party modeline bağlanır; üye verisi yeniden uygulanmaz, çekirdekten gelir",
+        "Forum araması l1-search-deep, sayaçlar scale-counter, bildirim cc-notification-consent ile entegre edilir",
+        "Bilgi paylaşımı s-wiki ve etkinlikler s-event ile olay üzerinden eşleşir; çift veri tutulmaz",
+        "Bağımlılık yönü: Community bu çekirdek servisleri tüketir, onlara olay/sözleşme üzerinden bağlanır"
       ],
-      "notes": "",
+      "notes": "Arama, sayaç ve bildirim çekirdekten gelir; Community yeniden yazmaz.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -304,10 +317,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Topluluk / Forum ArcheType'ı İçerik & İşbirliği'nde tartışma sağlar",
-        "Topluluk gerektiren app'ler bu ArcheType'ı kullanır"
+        "Topluluk / Forum ArcheType'ı, İçerik & İşbirliği kümesindeki app'lere tartışma/soru-cevap yeteneği sağlar",
+        "App'ler foruma doğrudan DB ile değil, üretilen API ve konu/yanıt olayları üzerinden erişir",
+        "Topluluk gerektiren dağıtımlar (ör. üyelik, etkinlik) bu ArcheType'ı araç kapsamıyla tüketir"
       ],
-      "notes": "",
+      "notes": "Community, topluluk tartışma verisinin sahibidir; app'ler API ile tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-community — \"Community / Forum\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Discourse, Circle, Open Atrium muadili. B2B topluluk Etiketler: content-collaboration, community, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
