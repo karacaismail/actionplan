@@ -6,6 +6,8 @@ export { buildTree, flattenTree } from "./buildTree";
 export type { TreeNode, Rollup } from "./buildTree";
 export { computeCriticalPath } from "./criticalPath";
 export type { CriticalPath } from "./criticalPath";
+export { auditNode, auditAll, scoreDimension, summarize, domainTokens, AUDIT_WEIGHTS, GENERIC_MARKERS } from "./audit";
+export type { NodeAudit, DimensionScore, AuditSummary } from "./audit";
 export { evaluateAgentPolicy, evaluateEca, runEca } from "./eca";
 export type { AgentActionRequest, AgentPolicyDecision, EcaFireResult } from "./eca";
 export { loadMeta, loadNodesAsync } from "./loadData";
