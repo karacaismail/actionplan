@@ -172,6 +172,9 @@ export const ScheduleSchema = z
     end: z.string().nullable().default(null),
     actualStart: z.string().nullable().default(null),
     actualEnd: z.string().nullable().default(null),
+    /** Baseline (dondurulmuş plan) — Faz 3 Gantt plan-vs-gerçek kıyası için. */
+    baselineStart: z.string().nullable().default(null),
+    baselineEnd: z.string().nullable().default(null),
   })
   .default({});
 export type Schedule = z.infer<typeof ScheduleSchema>;
