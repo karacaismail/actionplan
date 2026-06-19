@@ -41,7 +41,7 @@ test.describe("Erişilebilirlik (axe-core)", () => {
     ).toHaveLength(0);
   });
 
-  for (const route of ["/table", "/execution", "/audit"]) {
+  for (const route of ["/table", "/execution", "/audit", "/gantt", "/workload", "/reports"]) {
     test(`${route} WCAG A/AA ihlali içermez`, async ({ page }) => {
       await page.goto(route, { waitUntil: "networkidle" });
       const sonuc = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
