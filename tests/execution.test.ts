@@ -13,7 +13,14 @@ describe("yürütme şeması (milestone + takvim)", () => {
   it("milestone ve schedule alanları varsayılanla gelir (geriye uyumlu)", () => {
     const n = base({ id: "x", level: "atom", title: "X", slug: "x" });
     expect(n.milestone).toBeNull();
-    expect(n.schedule).toEqual({ start: null, end: null, actualStart: null, actualEnd: null });
+    expect(n.schedule).toEqual({
+      start: null,
+      end: null,
+      actualStart: null,
+      actualEnd: null,
+      baselineStart: null,
+      baselineEnd: null,
+    });
   });
 
   it("schedule ve milestone değerleri parse edilir", () => {

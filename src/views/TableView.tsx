@@ -1,10 +1,10 @@
 import { Button, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
 import { auditNode, filterNodes, groupNodes, isQueryError, parseQuery, sortNodes } from "@/engine";
 import type { QueryAst, SortDir } from "@/engine";
-import { PRIORITY_LABEL } from "@/lib/format";
+import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/format";
 import { t } from "@/lib/strings";
-import { LEVEL_META, type TaskNode } from "@/schemas";
-import { type SavedView, loadSavedViews, loadViewState, saveSavedViews, saveViewState } from "@/store/viewState";
+import { LEVEL_META, type SavedView, type TaskNode } from "@/schemas";
+import { loadSavedViews, loadViewState, saveSavedViews, saveViewState } from "@/store/viewState";
 import { useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -14,12 +14,13 @@ type Col = (typeof COLS)[number];
 const PAGE = 50;
 const CTRL =
   "tap-target rounded-md border border-border bg-background px-2 py-1 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const QUICK = [
-  { label: "done", q: "status = done" },
-  { label: "in-progress", q: "status = in-progress" },
-  { label: "blocked", q: "status = blocked" },
-  { label: "app", q: "level = app" },
-  { label: "kritik", q: "criticalPath = true" },
+// Etiketler mevcut i18n haritalarından türetilir (satır-içi UI metni yok).
+const QUICK: { q: string; label: string }[] = [
+  { q: "status = done", label: STATUS_LABEL.done },
+  { q: "status = in-progress", label: STATUS_LABEL["in-progress"] },
+  { q: "status = blocked", label: STATUS_LABEL.blocked },
+  { q: "level = app", label: LEVEL_META.app.tr },
+  { q: "criticalPath = true", label: t.detail.criticalPath },
 ];
 
 export function TableView() {
@@ -102,12 +103,6 @@ export function TableView() {
     setGroupBy(v.group ?? "");
     setHidden(new Set(COLS.filter((c) => v.columns.length > 0 && !v.columns.includes(c))));
   };
-  const deleteView = (id: string) => {
-    const next = savedViews.filter((v) => v.id !== id);
-    setSavedViews(next);
-    saveSavedViews(next);
-  };
-
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
       <div>
