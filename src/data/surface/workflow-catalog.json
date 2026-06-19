@@ -1,0 +1,94 @@
+[
+  {
+    "id": "wf-approval",
+    "name": "Onay Akışı",
+    "description": "Taslak→gönderildi→onaylandı/reddedildi durum makinesi. Onay geçişi insan onayı gerektirir.",
+    "version": "1.0.0",
+    "archetypeRef": "",
+    "states": ["draft", "submitted", "approved", "rejected"],
+    "initial": "draft",
+    "terminalStates": ["approved", "rejected"],
+    "transitions": [
+      { "from": "draft", "to": "submitted", "on": "submit", "guard": "", "action": "create-task", "requiresApproval": false },
+      { "from": "submitted", "to": "approved", "on": "approve", "guard": "isApprover", "action": "set-field", "requiresApproval": true },
+      { "from": "submitted", "to": "rejected", "on": "reject", "guard": "isApprover", "action": "notify", "requiresApproval": true }
+    ],
+    "rulesetRefs": ["rs-approval-workflow", "rs-status-notify"],
+    "approvals": [{ "state": "submitted", "approverRole": "manager" }],
+    "slaHours": 48
+  },
+  {
+    "id": "wf-order-fulfillment",
+    "name": "Sipariş Karşılama",
+    "description": "Sipariş yaşam döngüsü: yeni→ödendi→hazırlandı→kapandı. SLA aşımında tırmandırma.",
+    "version": "1.0.0",
+    "archetypeRef": "s-order",
+    "states": ["new", "paid", "fulfilled", "closed", "cancelled"],
+    "initial": "new",
+    "terminalStates": ["closed", "cancelled"],
+    "transitions": [
+      { "from": "new", "to": "paid", "on": "payment.confirmed", "guard": "", "action": "notify", "requiresApproval": false },
+      { "from": "paid", "to": "fulfilled", "on": "shipment.done", "guard": "", "action": "notify", "requiresApproval": false },
+      { "from": "fulfilled", "to": "closed", "on": "delivery.confirmed", "guard": "", "action": "set-field", "requiresApproval": false },
+      { "from": "new", "to": "cancelled", "on": "cancel", "guard": "", "action": "notify", "requiresApproval": false }
+    ],
+    "rulesetRefs": ["rs-status-notify", "rs-sla-escalation"],
+    "approvals": [],
+    "slaHours": 72
+  },
+  {
+    "id": "wf-onboarding",
+    "name": "İşe Başlatma Akışı",
+    "description": "İşe alım→onboarding başlatıldı→devam→tamamlandı. İşe alım tamamlanınca provizyon paketi tetiklenir.",
+    "version": "1.0.0",
+    "archetypeRef": "s-onboarding",
+    "states": ["hired", "provisioning", "in-progress", "completed"],
+    "initial": "hired",
+    "terminalStates": ["completed"],
+    "transitions": [
+      { "from": "hired", "to": "provisioning", "on": "hire.completed", "guard": "", "action": "create-task", "requiresApproval": false },
+      { "from": "provisioning", "to": "in-progress", "on": "provision.done", "guard": "", "action": "notify", "requiresApproval": false },
+      { "from": "in-progress", "to": "completed", "on": "checklist.done", "guard": "allTasksDone", "action": "set-field", "requiresApproval": false }
+    ],
+    "rulesetRefs": ["rs-onboarding-provision", "rs-stale-reminder"],
+    "approvals": [],
+    "slaHours": 168
+  },
+  {
+    "id": "wf-payroll-close",
+    "name": "Bordro Dönem Kapanışı",
+    "description": "Açık→hesaplandı→onaylandı→kapandı. Görev ayrılığı (SoD): hesaplayan onaylayamaz; onay insan gerektirir.",
+    "version": "1.0.0",
+    "archetypeRef": "s-payroll",
+    "states": ["open", "calculated", "approved", "closed"],
+    "initial": "open",
+    "terminalStates": ["closed"],
+    "transitions": [
+      { "from": "open", "to": "calculated", "on": "payroll.period.due", "guard": "", "action": "create-task", "requiresApproval": false },
+      { "from": "calculated", "to": "approved", "on": "approve", "guard": "approverNotCalculator", "action": "set-field", "requiresApproval": true },
+      { "from": "approved", "to": "closed", "on": "close", "guard": "", "action": "audit-log", "requiresApproval": false }
+    ],
+    "rulesetRefs": ["rs-payroll-period-close", "rs-audit-on-change"],
+    "approvals": [{ "state": "calculated", "approverRole": "finance-manager" }],
+    "slaHours": 96
+  },
+  {
+    "id": "wf-support-ticket",
+    "name": "Destek Talebi Akışı",
+    "description": "Açık→beklemede→çözüldü→kapandı. SLA aşımında tırmandırma, durağanlıkta hatırlatma.",
+    "version": "1.0.0",
+    "archetypeRef": "s-helpdesk",
+    "states": ["open", "pending", "resolved", "closed"],
+    "initial": "open",
+    "terminalStates": ["closed"],
+    "transitions": [
+      { "from": "open", "to": "pending", "on": "await.customer", "guard": "", "action": "notify", "requiresApproval": false },
+      { "from": "pending", "to": "resolved", "on": "resolve", "guard": "", "action": "notify", "requiresApproval": false },
+      { "from": "resolved", "to": "closed", "on": "confirm", "guard": "", "action": "set-field", "requiresApproval": false },
+      { "from": "pending", "to": "open", "on": "customer.replied", "guard": "", "action": "notify", "requiresApproval": false }
+    ],
+    "rulesetRefs": ["rs-sla-escalation", "rs-stale-reminder", "rs-status-notify"],
+    "approvals": [],
+    "slaHours": 24
+  }
+]
