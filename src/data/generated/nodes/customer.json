@@ -1,0 +1,748 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "customer",
+  "wbsCode": "6.1.1",
+  "level": "archetype",
+  "title": "Customer (Müşteri ArcheType)",
+  "slug": "customer",
+  "summary": "Kişi/kurum, iletişim (PII), segment ve yaşam döngüsünü taşıyan çok-parçalı müşteri ArcheType'ı; CRM, helpdesk ve billing modüllerinin paylaştığı büyük taş. Golden referans: src/data/archetypes/customer.json sözleşmesine bağlıdır.",
+  "parentId": "m-crm-sales",
+  "order": 2,
+  "icon": "ph-user-circle",
+  "tags": [
+    "core-operations",
+    "crm",
+    "customer",
+    "archetype",
+    "ai-native",
+    "pii",
+    "kvkk"
+  ],
+  "dependsOn": [
+    "l1-party",
+    "k-surface"
+  ],
+  "blocks": [
+    "s-crm"
+  ],
+  "related": [
+    "s-crm",
+    "s-sales"
+  ],
+  "refs": [
+    "archetype-contract: src/data/archetypes/customer.json"
+  ],
+  "criticalPath": false,
+  "status": "in-progress",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 34,
+    "unit": "d",
+    "spent": 8
+  },
+  "progress": 30,
+  "phase": "development",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Müşteri çekirdek alanları (ad, e-posta, telefon, vergi no, segment, durum) ve PII sınıflandırması onaylandı",
+        "CRM/helpdesk/billing modüllerinin paylaşılan müşteri ihtiyacı tek ArcheType'a indirgendi",
+        "KVKK saklama/anonimleştirme gereksinimi yasal kapsamla hizalandı"
+      ],
+      "passed": true,
+      "notes": "Çok-parçalı sözleşme (fields/relations/permissions/lifecycle) kapsamı kilitlendi."
+    },
+    "test-plan": {
+      "status": "passed",
+      "criteria": [
+        "PII maskeleme ve rol bazlı alan görünürlüğü için kabul testleri yazıldı (test-önce)",
+        "Lead→active→churned yaşam döngüsü geçiş testleri tanımlandı",
+        "Cross-tenant izolasyon negatif test seti belirlendi"
+      ],
+      "passed": true,
+      "notes": "Test planı db-şema öncesi onaylandı."
+    },
+    "db-schema": {
+      "status": "passed",
+      "criteria": [
+        "customer tablosu tenant_id + RLS ile, e-posta benzersiz kısıtıyla tasarlandı",
+        "PII alanları (email/phone/taxId/address) ayrı sınıflandırma etiketiyle işaretlendi",
+        "1095 gün sonrası anonimleştirme için retention alanı şemaya eklendi"
+      ],
+      "passed": true,
+      "notes": "Append-only/expand-contract migration moduna uygun şema."
+    },
+    "development": {
+      "status": "active",
+      "criteria": [
+        "Müşteri CRUD + segment/durum yaşam döngüsü uçtan uca teslim edilir",
+        "PII maskeleme ve KVKK anonimleştirme typed-action'ı entegre edilir",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
+      "passed": false,
+      "notes": "PII anonimleştirme aksiyonu aktif geliştirmede."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "PII maskeleme rol testleri yeşil",
+        "Yaşam döngüsü geçiş e2e geçer",
+        "Cross-tenant negatif testleri geçer"
+      ],
+      "passed": false,
+      "notes": "Geliştirme tamamlanınca QA başlar."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "OWASP A01/A03 + LLM01 güvenlik gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi geçer"
+      ],
+      "passed": false,
+      "notes": "Test-QA sonrası doğrulama."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Anonimleştirme zamanlayıcısı ve geri-alma prosedürü doğrulanır",
+        "PII erişim denetim günlüğü izleme/uyarı devrede"
+      ],
+      "passed": false,
+      "notes": "Doğrulama kapısı bekleniyor."
+    }
+  },
+  "deliverables": [
+    "Müşteri çekirdek varlık modeli, API'leri ve çok-parçalı ArcheType sözleşmesi",
+    "PII maskeleme + KVKK anonimleştirme (retention 1095 gün) typed-action katmanı",
+    "Lead/active/churned yaşam döngüsü ve geçiş muhafızları (guard)"
+  ],
+  "acceptanceCriteria": [
+    "Yetkisiz rolde email/phone/taxId maskeli görünür, denetim günlüğüne yazılır",
+    "Churned müşterinin açık siparişi olamaz (semantik değişmez)",
+    "Tüm müşteri sorguları tenant kapsamlıdır (RLS)"
+  ],
+  "risks": [
+    {
+      "id": "r-customer-1",
+      "desc": "PII sızıntısı yetkisiz dışa aktarımdan kaynaklanabilir",
+      "severity": "critical",
+      "mitigation": "PII dışa aktarımı step-up onayı + değişmez denetim günlüğü ardına alınır."
+    },
+    {
+      "id": "r-customer-2",
+      "desc": "Kayıt birleştirme (merge) yanlış eşleşmede veri kaybına yol açar",
+      "severity": "high",
+      "mitigation": "Merge geri-alınabilir (rollback) ve onay gerektirir; snapshot alınır."
+    }
+  ],
+  "rollback": "Yeni alanlar bayrakla açılır; anonimleştirme öncesi immutable snapshot alınır, sorunlu sürüm geri alınır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "pii_maskeleme_kapsam_yuzde",
+      "target": "100"
+    },
+    {
+      "key": "cross_tenant_sizinti_olayi",
+      "target": "0"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Kişi/kurum müşteri kaydı: ad, e-posta (benzersiz), telefon, vergi no, segment (lead/smb/enterprise), durum (lead/active/churned)",
+        "Lead→active→churned yaşam döngüsü; active'e geçiş e-posta zorunluluğu guard'ı ile korunur",
+        "PII maskeleme ve KVKK anonimleştirme typed-action'ı (retention 1095 gün sonrası)",
+        "İlişkiler: müşteri→sipariş (one-to-many, restrict), müşteri→hesap yöneticisi (many-to-one, set-null)"
+      ],
+      "notes": "Müşteri, CRM/helpdesk/billing modüllerinin paylaştığı tek doğruluk kaynağıdır.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon). Özet: kişi/kurum, iletişim (PII), segment ve yaşam döngüsünü taşıyan müşteri ArcheType'ı.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "customer tablosunda tenant_id RLS zorunlu; tüm sorgular tenant kapsamlı",
+        "email/phone/taxId/address PII olarak sınıflandırılır; support rolünde taxId gizli, phone salt-okunur",
+        "PII dışa aktarımı (customer.export.requested + includesPii) step-up onayı tetikler",
+        "E-posta benzersizliği ve biçim doğrulaması sunucuda zorlanır (regex + unique kısıt)"
+      ],
+      "notes": "Veri minimizasyonu: yalnız gerekli PII tutulur, erişim least-privilege.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon). Özet: müşteri PII, segment ve yaşam döngüsü.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Müşteri doğrulayıcıları (email/phone/taxId) saf fonksiyonlara ayrıştırılır ve paylaşılan şema kütüphanesinden gelir",
+        "Yaşam döngüsü geçişleri tek bir durum makinesi tablosunda toplanır (if-zinciri değil)",
+        "Müşteri erişimi repository deseniyle soyutlanır; RLS sorgu katmanında merkezîdir"
+      ],
+      "notes": "İş mantığı yan etkisiz tutularak skorlama/maskeleme test edilebilir kalır.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "PII erişimi ve dışa aktarımı değişmez denetim günlüğüne (beforeHash/afterHash) yazılır",
+        "Toplu müşteri içe aktarımında oran sınırlama (rate-limit) uygulanır",
+        "Anonimleştirme kuralı sürümlenir; retention süresi (1095 gün) parametre olarak izlenir"
+      ],
+      "notes": "Veri sızdırma yüzeyi export kontrolleri ve maskeleme ile daraltılır.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Müşteri listeleme için (tenant_id, status, segment) bileşik indeksiyle p95 < 150ms hedefi",
+        "Müşteri arama tam-metin (name) + indeksli alanlarla imleç tabanlı sayfalanır",
+        "Sipariş ilişkisi N+1 önlemek için toplu (batch) yüklenir"
+      ],
+      "notes": "Sıcak müşteri segment listeleri önbelleğe alınır.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobil müşteri kartı PII maskeli ve çevrimdışı okunabilir (PWA), dokunma hedefleri ≥44px",
+        "Capacitor paketinde hızlı müşteri/etkinlik ekleme; çevrimdışı kuyruğa alıp senkronlama",
+        "Chrome eklentisinden web sayfasındaki müşteri verisi (yetkiliyse) içe aktarılır"
+      ],
+      "notes": "Saha temsilcisi PII'ye yalnız yetkisi kadar erişir.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Müşteri kartı ve durum rozetinde ≥7:1 kontrast; durum yalnız renkle değil metinle de belirtilir",
+        "PII maskeleme durumu (gizli/açık) ekran okuyucuya ARIA ile bildirilir",
+        "Tüm müşteri formu ve yaşam döngüsü akışları klavye ile tam gezilebilir, odak sırası görünür"
+      ],
+      "notes": "Maskeli alanlar için anlamlı metin alternatifi sağlanır.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Müşteri servisi Swarm/K8s'te yatay otomatik ölçeklenir; readiness/liveness sağlık yoklaması ve CPU/bellek limiti tanımlıdır",
+        "Anonimleştirme zamanlayıcısı (retention job) ayrı CronJob/worker olarak ölçeklenir",
+        "Paylaşımlı barındırmada salt-okunur müşteri görünümü + harici API; PII export kapalı"
+      ],
+      "notes": "PII işleyen iş yükleri ayrı dağıtım birimi olarak izole edilir.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Müşteri: backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder",
+        "Olay: customer.created + status='active' → Eylem: hesap yöneticisine bildirim (notify)",
+        "Olay: customer.export.requested + includesPii=true → Eylem: step-up onay (requiresApproval)",
+        "Döngü kırıcı: tetik zinciri maks 6 adım; kurallar idempotent (yinelenen bildirim üretmez)"
+      ],
+      "notes": "ECA kuralları müşteri yaşam döngüsü ve PII erişimine bağlı; system katmanı kilitli.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok); döngü kırıcı maks 6, idempotency, tenant isolation, step-up; ruleset yetki katmanları (system kilitli / platform / tenant güvenli parametre).",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "Müşteri: AI app/module üretemez/güncelleyemez; yalnız Customer ArcheType taslağı/prod-update önerisi üretebilir",
+        "PII alanlarında (email/phone/taxId) AI çıktısı redakte edilir; serbest metin notu talimat olarak çalıştırılmaz",
+        "Yaşam döngüsü geçişi önerir; kayıt güncellemesi insan onayına (step-up) tabidir",
+        "Prod ArcheType update önerisi geçmiş-koru + snapshot + rollback + compatibility koşullarına bağlıdır"
+      ],
+      "notes": "Öneri-uygulama ayrımı korunur; kill-switch ve sub-prompt güvensiz varsayımı geçerli.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi; admin akışı prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply; doğrulama döngüsü 1-3 oto, 3/6 admin'e soru, 9 tanı+dur; PII redaksiyon; kill-switch.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "PII maskeleme rol bazlı birim testleri (support taxId gizli, account-manager taxId salt-okunur)",
+        "Lead→active→churned yaşam döngüsü ve guard'lar için Playwright e2e",
+        "Test döngüsü: en fazla 6 yeniden deneme, düzelmezse rapor (testing-loop)",
+        "Otonom QA ajanı cross-tenant izolasyon regresyonunu yürütür"
+      ],
+      "notes": "PII ve tenant izolasyonu sürekli doğrulanır.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: rol/portföy bazlı erişim + tenant RLS ile yetkisiz müşteri erişimi engellenir",
+        "OWASP A03: müşteri arama/filtre parametreli sorgularla, enjeksiyona kapalı",
+        "OWASP LLM01/LLM06: müşteri notu/PII kaynaklı istem enjeksiyonu izole edilir, hassas veri sızdırılmaz"
+      ],
+      "notes": "KVKK uyumu güvenlik standartlarının ayrılmaz parçasıdır.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ LLM Top 10: prompt injection, hassas bilgi sızıntısı), bu görevin tehdit yüzeyi.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kişi/kurum için Layer 1 party (l1-party) modeliyle eşlenir; party verisi yeniden uygulanmaz",
+        "Arayüz kabuğu için kernel surface (k-surface) tüketilir",
+        "Müşteri olayları (created/churned) billing ve helpdesk modüllerine olay sözleşmesiyle yayınlanır"
+      ],
+      "notes": "Müşteri, party çekirdeğinin CRM bağlamına özelleşmiş izdüşümüdür.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "CRM modülü müşteri çekirdeğini sahiplenir; lead/segment verisini okur ve günceller",
+        "Helpdesk müşteri 360 için müşteri+iletişim verisini salt-okunur tüketir",
+        "Billing fatura kesmek için müşteri vergi no/adres alanlarını yetkili kapsamda kullanır"
+      ],
+      "notes": "Diğer app'ler doğrudan DB'ye değil, üretilen API/olay sözleşmesine erişir.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: customer — \"Customer (Müşteri ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "provenance": "human"
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "customer",
+    "granularity": "buyuk-tas",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-19",
+  "ecaRules": [
+    {
+      "id": "eca-customer-welcome",
+      "event": "customer.created",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "active"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "account-manager",
+          "message": "Yeni aktif müşteri"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-pii-export-stepup",
+      "event": "customer.export.requested",
+      "when": [
+        {
+          "field": "includesPii",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "step-up",
+        "params": {
+          "reason": "pii-export"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-customer-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Customer (Müşteri ArcheType) tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Customer (Müşteri ArcheType) blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "customer"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "customer"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "customer"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Customer (Müşteri ArcheType) AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-customer-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "customer",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-customer-archetype-prod-history-deny",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "neq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "prod-archetype-update-must-preserve-history",
+          "node": "customer"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "customer",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "draft",
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
+    "allowedTargets": [
+      "archetype"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "milestone": "Çekirdek Operasyon",
+  "schedule": {
+    "start": "2026-06-15",
+    "end": "2026-08-31",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-06-15",
+    "baselineEnd": "2026-08-31"
+  },
+  "assignees": [
+    "crm-ekibi"
+  ]
+}

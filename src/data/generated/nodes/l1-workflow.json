@@ -148,11 +148,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Workflow + ECA ArcheType'ı: durum makinesi, onay akışı ve olay-koşul-eylem otomasyonu",
-        "Görsel akış tasarımı (şemalı), SLA ve eskalasyon",
-        "İnsan görevi (task) ve otomatik adım karışımı"
+        "Workflow modülü durum makinesi, onay zinciri ve olay-koşul-eylem (ECA) otomasyonunu sağlar",
+        "Görsel akış tasarımcısı, SLA zamanlayıcısı ve süre aşımında eskalasyon adımı sunar",
+        "Tek akışta insan görevi (onay/red) ile otomatik ECA adımı karışık zincirlenebilir",
+        "Geçersiz geçiş veya bilinmeyen olay hata yoluna düşer; akış güvenli son duruma alınır"
       ],
-      "notes": "",
+      "notes": "Bu modül tüm ArcheType'lara süreç otomasyonu çekirdeği verir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -161,11 +162,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Akış tanımı/örneği tenant_id RLS; adım yetkileri rol bazlı",
-        "ECA backend'de çalışır; serbest JS/SQL/shell yok",
-        "Akış değişikliği sürümlü+onaylı"
+        "Akış tanımı ve örneği tenant_id RLS ile izole edilir; başka tenant akışı hiç görünmez",
+        "Adım ve onay yetkileri rol bazlıdır (least-privilege); yetkisiz aktör adımı ilerletemez",
+        "ECA değerlendirmesi yalnız backend'de koşar; serbest JS/SQL/shell çalıştırılmaz",
+        "Akış tanımı değişikliği sürümlenir, onaya tabidir ve değişmez audit kaydına yazılır"
       ],
-      "notes": "",
+      "notes": "ECA otoritesi UI'ye değil backend'e kilitlidir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -174,11 +176,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Durum makinesi açık; geçişler guard'lı ve idempotent",
-        "ECA kuralları yapısal (event/when/then); zincir ≤6 loop-breaker",
-        "Uzun akış kalıcı (durable) ve devam-edilebilir"
+        "Durum makinesi açıkça tanımlıdır; her geçiş guard fonksiyonuyla korunur ve idempotenttir",
+        "ECA kuralları yapısal (event/when/then) tutulur; serbest dal yerine bildirimsel modeldir",
+        "Uzun süren akış kalıcı (durable) saklanır ve yeniden başlatmada kaldığı yerden sürer",
+        "Zincir derinliği en fazla 6 ile sınırlanır; guard ve geçiş mantığı düşük karmaşıklıkta kalır"
       ],
-      "notes": "",
+      "notes": "Bildirimsel ECA modeli akış mantığını test edilebilir kılar.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -187,11 +190,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "ECA action allowlist; yalnız izinli aksiyonlar",
-        "Step-up onay yüksek-riskli adımda",
-        "Sonsuz tetik zinciri loop-breaker ile kırılır"
+        "ECA eylemleri allowlist ile sınırlıdır; yalnız önceden onaylı aksiyon tipleri yürütülür",
+        "Yüksek-riskli adım (ödeme/silme) için step-up doğrulaması zorunlu kılınır",
+        "Sonsuz tetik zinciri 6 adımlık loop-breaker ile kırılır; aşımda akış durdurulur",
+        "Akış servis hesabı en az ayrıcalıkla çalışır; bağımlılıklar SCA ile düzenli taranır"
       ],
-      "notes": "",
+      "notes": "Eylem allowlist'i akışın kötüye kullanım yüzeyini daraltır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -200,11 +204,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Akış örnekleri asenkron; bekleyenler verimli saklanır",
-        "ECA değerlendirme indeksli/hızlı",
-        "SLA zamanlayıcısı ölçeklenir"
+        "Akış örnekleri asenkron işlenir; bekleyen adımlar (durum, son_kontrol) indeksiyle verimli okunur",
+        "ECA kuralları olay tipine göre indekslenir; eşleşme N+1 yerine tek sorguda bulunur",
+        "SLA zamanlayıcısı toplu (batch) tarama ile ölçeklenir; vadesi gelen görevler imleçle sayfalanır",
+        "Adım yürütme için p95 gecikme hedefi 300 ms; uzun işler kuyruğa devredilir"
       ],
-      "notes": "",
+      "notes": "Bekleyen iş kuyrukları sıcak yolu yormadan ölçeklenir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -213,11 +218,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde insan görevi onay/red; akış durumu görüntüleme",
-        "iOS/Android push ile bekleyen görev/SLA uyarısı",
-        "Dar ekranda akış adım ilerlemesi"
+        "Mobilde insan görevi onay/red butonları en az 44px dokunma hedefiyle sunulur (PWA)",
+        "iOS/Android push bildirimi bekleyen onay görevini ve yaklaşan SLA aşımını duyurur",
+        "Dar ekranda akış adım ilerlemesi dikey zaman çizelgesi olarak tek sütunda gösterilir",
+        "Çevrimdışıyken akış durumu salt-okunur; onay eylemi ağ gelince kuyruktan gönderilir"
       ],
-      "notes": "",
+      "notes": "Mobil onaycı senaryosu push ve offline ile desteklenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -226,11 +232,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Akış tasarımcısına klavye alternatifi; görev formu erişilebilir",
-        "Adım durumu renk dışında metin+ikonla; kontrast 7:1",
-        "SLA/eskalasyon uyarısı sesli"
+        "Sürükle-bırak akış tasarımcısına tam klavye alternatifi sunulur; her düğüm ARIA ile adlandırılır",
+        "Adım durumu (bekliyor/onaylandı/reddedildi) renk dışında metin ve ikonla; kontrast en az 7:1",
+        "SLA/eskalasyon uyarısı aria-live ile ekran okuyucuya canlı duyurulur",
+        "Onay formunda odak sırası görünür ve mantıklı; hata ilgili alana programatik bağlanır"
       ],
-      "notes": "",
+      "notes": "Akış durumu renkten bağımsız olarak da okunabilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -239,11 +246,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Workflow motoru dayanıklı worker; durum kalıcı depoda",
-        "ECA değerlendirme backend'de (UI yalnız yönetim)",
-        "Shared hosting'de basit/kısa akışlar (kısıtlı)"
+        "Workflow motoru dayanıklı worker olarak koşar; akış durumu kalıcı depoda (DB) tutulur",
+        "Kubernetes'te worker HPA ile ölçeklenir; liveness/readiness probe ile sağlık izlenir",
+        "Docker Swarm profilinde tek motor servisi + sağlık kontrolü ile çalışır, durum dışsaldır",
+        "Paylaşımlı barındırmada yalnız kısa/senkron akışlar desteklenir; uzun akış kuyruğu kapatılır"
       ],
-      "notes": "",
+      "notes": "Akış durumu daima dışsal kalıcı depoda saklanır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -252,11 +260,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: akış olayı + koşul sağlandı → tanımlı eylemi yürüt (allowlist, idempotent, zincir ≤6)",
-        "Olay: SLA aşıldı → eskalasyon + sorumluya bildir (loop-breaker)"
+        "Backend ruleset, AI'ın app/module üretme/güncelleme ve ruleset override denemesini reddeder",
+        "Olay: akış olayı -> Koşul: guard sağlandı -> Eylem: allowlist'teki eylemi yürüt (idempotent)",
+        "Olay: SLA süresi aşıldı -> Eylem: eskalasyon ve sorumluya bildirim, zincir en fazla 6 adım",
+        "Ruleset yetki katmanları: system kilitli, platform owner yönetir, tenant yalnız güvenli parametre"
       ],
-      "notes": "",
+      "notes": "ECA bu modülün çekirdek otomasyon sözleşmesidir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -265,11 +274,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI akış/ECA kuralı önerir ve simüle eder; çalışan ECA otoritesini veya akışı kendisi değiştiremez"
+        "AI bu modül için app/module üretemez/güncelleyemez; yalnız ArcheType taslağı/prod-update önerebilir",
+        "AI yeni akış veya ECA kuralı önerir ve kuru-çalıştırma (dry-run) ile simüle eder; canlıya yazamaz",
+        "AI çalışan ECA otoritesini veya akış tanımını kendisi değiştiremez; uygulama insan onayına tabidir",
+        "sub_prompt güvenilmez kabul edilir; ruleset override/disable denemesi anında deny, kill-switch aktif"
       ],
-      "notes": "",
+      "notes": "AI akış önerir, otorite backend ve insanda kalır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -278,11 +288,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Durum makinesi geçiş + guard testi",
-        "ECA tetikleme + loop-breaker (maks 6) testi",
-        "SLA/eskalasyon kullanıcı yolculuğu; en çok 6 tur"
+        "Durum makinesi için geçiş ve guard birim testleri; geçersiz geçiş reddi doğrulanır",
+        "ECA tetikleme ve 6 adımlık loop-breaker testi; idempotency yinelenen tetikle sınanır",
+        "SLA aşımı ve eskalasyon için Playwright kullanıcı yolculuğu, axe ile AAA kontrolü",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden denenir, düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Loop-breaker ve idempotency davranışı sürekli sınanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -291,11 +302,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A04 Insecure Design: ECA allowlist + loop-breaker",
-        "A01 Access Control: adım/onay yetkisi",
-        "A09 Logging: akış/ECA kararları iz"
+        "OWASP A04 Güvensiz Tasarım: ECA eylem allowlist'i ve 6 adımlık loop-breaker ile sertleştirilir",
+        "OWASP A01 Erişim Denetimi: adım ilerletme ve onay yetkisi rol bazlı doğrulanır",
+        "OWASP A09: tüm akış geçişleri ve ECA kararları zaman damgalı denetim günlüğüne yazılır",
+        "OWASP LLM01: AI'nın akış önerisindeki sub_prompt istem enjeksiyonuna karşı izole edilir"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi otomasyon yetkisi ve sonsuz döngüye odaklıdır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -304,11 +316,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Workflow, tüm ArcheType'lara durum makinesi + otomasyon sağlar",
-        "ECA kuralları olay veriyolunu dinler",
-        "İnsan görevleri bildirim/UI ile"
+        "Workflow modülü tüm ArcheType'lara durum makinesi ve otomasyon yüzeyi sağlar (Layer 1 çekirdek)",
+        "ECA kuralları platform olay veriyolunu dinler; tetikleyiciler olay sözleşmesiyle gelir",
+        "İnsan görevleri k-surface UI ve bildirim kanalı üzerinden sunulur",
+        "Denetim için l1-audit'e karar olayları yayımlanır; bağımlılık yönü tek yönlüdür"
       ],
-      "notes": "",
+      "notes": "Akış olayları platform veriyolu üzerinden alınıp verilir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -317,10 +330,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Workflow + ECA modülü tüm app'lere süreç otomasyonu sağlar",
-        "Onay/süreç gerektiren app'ler bu modülü kullanır"
+        "Workflow modülü app'lere süreç otomasyonunu üretilen API ve olay yüzeyiyle sunar, ham DB değil",
+        "Onay zinciri gerektiren ArcheType'lar (s-procurement, s-expenses, s-kyc-aml) bu modülü tüketir",
+        "Bordro/satın alma gibi app'ler durum geçişini olay yayımlayarak tetikler, motoru doğrudan çağırmaz"
       ],
-      "notes": "",
+      "notes": "Onay/süreç gerektiren ArcheType'lar bu modülün ana tüketicisidir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-workflow — \"Workflow + ECA\" (modül/kaya; küme: Layer 1 modülleri). Özet: State machine + approval chain + Event-Condition-Action. Etiketler: workflow, state-machine, approval, eca.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -547,5 +561,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Layer 1 — In-tree Modüller",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

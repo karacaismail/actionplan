@@ -133,11 +133,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Bordro (Payroll): maaş hesabı, kesinti/ek ödeme, vergi/SGK ve bordro çıktısı (TR)",
-        "Dönem bordrosu, ücret bordrosu (payslip) ve banka ödeme dosyası",
-        "Gelir vergisi, SGK primi ve yasal kesinti hesabı"
+        "Bordro: brüt maaş, kesinti/ek ödeme, gelir vergisi ve SGK primiyle net ücret hesabı (TR)",
+        "Çıktı sözleşmesi: dönem bordrosu, çalışan başına payslip (PDF) ve banka ödeme dosyası üretir",
+        "SGK primi, gelir vergisi dilimi ve yasal kesintiler yürürlük tarihli tablodan hesaplanır",
+        "Dönem durumları taslak/onaylı/kapalı arasında geçer; eksik tahakkukta hata yoluna düşer"
       ],
-      "notes": "",
+      "notes": "TR yerelleştirme (SGK/GİB) bu ArcheType'ın zorunlu çekirdeğidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -146,11 +147,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Bordro/maaş en gizli veri; çok dar erişim + değişmez audit",
-        "Ödeme dosyası imzalı; banka bilgisi kasada",
-        "Bordro dönemi kilidi (sonradan değişmez)"
+        "Maaş ve bordro en hassas PII'dir; tenant_id RLS üstüne çok dar rol erişimi uygulanır",
+        "Her bordro işlemi değişmez audit kaydına yazılır; kim, hangi tutarı, ne zaman değiştirdi izlenir",
+        "Banka ödeme dosyası imzalanır; IBAN ve hesap bilgisi şifreli kasada (secret store) tutulur",
+        "Kapanan bordro dönemi kilitlenir ve sonradan değiştirilemez; düzeltme yeni dönemle yapılır"
       ],
-      "notes": "",
+      "notes": "Maaş verisi en üst gizlilik sınıfında korunur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -159,11 +161,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bordro hesabı saf (vergi/SGK kuralları tablodan); ondalık tutar",
-        "Dönem durum makinesi (taslak→onay→kapanış)",
-        "Toplu hesap asenkron"
+        "Bordro hesabı saf fonksiyondur; vergi/SGK oranları tablodan alınır, tutarlar ondalık tipte tutulur",
+        "Dönem yaşam döngüsü açık durum makinesidir: taslak -> onay -> kapanış geçişleri guard'lıdır",
+        "Vergi dilimi ve kesinti kuralları paylaşılan kural modülünde toplanır, hesaptan ayrılır",
+        "Toplu bordro hesabı asenkron işlenir; fonksiyon karmaşıklığı düşük, ölü kural dalları elenir"
       ],
-      "notes": "",
+      "notes": "Hesap saf tutulduğu için TR kural değişimi izole edilir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -172,11 +175,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bordro onayı SoD (görev ayrılığı); hesaplayan ≠ onaylayan",
-        "Vergi/SGK oranı sürümlü (yürürlük tarihli)",
-        "Geçmiş dönem dokunulmaz"
+        "Bordro onayında görev ayrılığı (SoD) zorunludur; hesaplayan kullanıcı onaylayan olamaz",
+        "Ödeme dosyası üretimi ve gönderimi için step-up doğrulaması ve dar rol şarttır",
+        "Vergi/SGK oranları yürürlük tarihiyle sürümlenir; geçmiş dönem oranı dokunulmaz kalır",
+        "Banka/SGK entegrasyon sırrı düzenli rotasyona tabidir; bağımlılıklar SCA ile taranır"
       ],
-      "notes": "",
+      "notes": "SoD ve sürümlü oranlar mali hata/suistimali daraltır.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -185,11 +189,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Toplu bordro dönem-sonu parçalı/asenkron",
-        "Payslip üretimi asenkron (PDF)",
-        "Bordro sorgusu indeksli"
+        "Dönem-sonu toplu bordro hesabı parçalanıp asenkron kuyrukta işlenir; UI bloklamaz",
+        "Payslip PDF üretimi arka planda yapılır; çalışan listesi imleç tabanlı sayfalama ile gezilir",
+        "Bordro sorguları (tenant_id, dönem, çalışan_id) bileşik indeksiyle N+1 olmadan okunur",
+        "Tek çalışan bordrosu görüntüleme için p95 gecikme hedefi 400 ms altında tutulur"
       ],
-      "notes": "",
+      "notes": "Ağır dönem-sonu işi asenkron kuyruğa devredilir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -198,11 +203,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Çalışan mobilde payslip görüntüleme (güvenli)",
-        "iOS/Android'de bordro bildirimi",
-        "Dar ekranda maaş özeti"
+        "Çalışan payslip'i PWA'da güvenli (oturum + tekrar kimlik) olarak, dar ekranda okunur sunulur",
+        "iOS/Android push bildirimi bordro dönemi kapandığında çalışana payslip hazır bilgisi verir",
+        "Maaş özeti kartında indirme/paylaş eylemleri en az 44px dokunma hedefiyle tasarlanır",
+        "Çevrimdışıyken yalnız son indirilmiş payslip görüntülenir; canlı tutar offline gösterilmez"
       ],
-      "notes": "",
+      "notes": "Hassasiyet nedeniyle maaş verisi mobilde sınırlı/çevrimiçi tutulur.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -211,11 +217,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Payslip erişilebilir (yapılandırılmış); tutarlar metinle",
-        "Kesinti/ek renk dışında işaretle; kontrast 7:1",
-        "Bordro onayı klavye erişimli"
+        "Payslip yapılandırılmış tablo olarak sunulur; tutarlar ve kalemler metinle ekran okuyucuya açıktır",
+        "Kesinti ve ek ödeme yalnız renkle değil işaret/etiketle gösterilir; kontrast oranı en az 7:1",
+        "Bordro onay/red akışı tam klavye erişimlidir; her aksiyon ARIA ile adlandırılır",
+        "Onayda odak ilk hatalı/uyarılı kaleme taşınır; sıra görünür ve mantıklı tutulur"
       ],
-      "notes": "",
+      "notes": "Maaş kalemleri renkten bağımsız metinle de aktarılır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -224,11 +231,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Bordro hesap motoru worker; banka/SGK entegrasyonu",
-        "TR veri ikameti; payslip şifreli depo",
-        "Shared hosting'de temel bordro"
+        "Bordro hesap motoru dayanıklı worker olarak koşar; banka/SGK entegrasyonu ayrı dağıtım birimidir",
+        "Kubernetes'te hesap worker'ı HPA ile ölçeklenir; liveness/readiness probe ile sağlık izlenir",
+        "TR veri ikameti (data residency) sağlanır; payslip şifreli depoda, anahtar kasada tutulur",
+        "Paylaşımlı barındırmada yalnız temel görüntüleme açılır; toplu hesap merkezi servise devredilir"
       ],
-      "notes": "",
+      "notes": "TR veri ikameti dağıtım kararını belirler.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -237,11 +245,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: bordro dönemi → hesapla + onaya gönder; onayda payslip+ödeme dosyası (idempotent, zincir ≤6)",
-        "Olay: bordro kapandı → ledger'a + SGK bildirimine (loop-breaker)"
+        "Backend ruleset, AI'ın app/module üretme/güncelleme ve ruleset override denemesini reddeder",
+        "Olay: bordro dönemi açıldı -> Eylem: hesapla ve onaya gönder; onayda payslip+ödeme dosyası üret",
+        "Kurallar idempotenttir; aynı dönem iki kez tetiklense bile tek ödeme dosyası üretilir",
+        "Olay: bordro kapandı -> Eylem: ledger kaydı + SGK bildirimi; zincir en fazla 6 adım (loop-breaker)"
       ],
-      "notes": "",
+      "notes": "ECA kuralları bordro dönem yaşam döngüsüne bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -250,11 +259,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI bordro anomali/kontrol önerir; bordroyu/ödemeyi insan onaylar (SoD)"
+        "AI bu bordro ArcheType'ı için app/module üretemez/güncelleyemez; yalnız taslak/prod-update önerebilir",
+        "AI bordro anomalisi (aşırı kesinti, atipik tutar) işaretler; bordroyu/ödemeyi insan onaylar (SoD)",
+        "AI doğrudan prod write yapamaz; maaş tutarını veya ödeme dosyasını kendisi değiştiremez",
+        "sub_prompt güvenilmez kabul edilir; ruleset override denemesi deny, PII redaksiyonu ve kill-switch aktif"
       ],
-      "notes": "",
+      "notes": "AI bordroda yalnız denetçi rolündedir; onay insandadır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -263,11 +273,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Maaş/vergi/SGK hesabı çok-senaryo doğruluk testi",
-        "SoD (hesaplayan≠onaylayan) + dönem kilidi testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Maaş/gelir vergisi/SGK hesabı için çok-senaryolu doğruluk testi; dilim sınırları ve asgari ücret",
+        "SoD kontrolü testi: hesaplayan kullanıcı onaylayamaz; kapalı dönem değişmezliği doğrulanır",
+        "Payslip ve onay akışı için Playwright kullanıcı yolculuğu, axe ile AAA erişilebilirlik kontrolü",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden denenir, düzelmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Hesap doğruluğu ve SoD sınır senaryolarla sürekli sınanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -276,11 +287,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: bordro/maaş çok dar erişim + SoD",
-        "A02 Cryptographic Failures: ödeme dosyası imzalı",
-        "A09 Logging: bordro kararları forensic iz"
+        "OWASP A01 Erişim Denetimi: bordro/maaş çok dar role kapalı, SoD ile ayrıştırılır",
+        "OWASP A02 Kriptografik Hatalar: ödeme dosyası imzalı, IBAN ve payslip şifreli saklanır",
+        "OWASP A09: bordro kararları ve ödeme tetikleri zaman damgalı forensic denetim izine yazılır",
+        "OWASP A04 Güvensiz Tasarım: hesaplama-onay-ödeme ayrımı tasarımda zorunlu kılınır"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi maaş erişimi ve ödeme dosyasına odaklıdır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -289,11 +301,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Payroll, hrms (özlük), finance (ledger/ödeme), treasury (banka) ile entegre",
-        "SGK/GİB ile vergi bildirimi",
-        "Masraf (expenses) geri ödemesi bordroya"
+        "Payroll, hrms (özlük), finance (ledger/ödeme) ve treasury (banka) ile sözleşme üzerinden entegre olur",
+        "SGK/GİB ile vergi ve prim bildirimi entegrasyon adaptörü üzerinden yapılır (cc-tr bağımlılığı)",
+        "Masraf (s-expenses) geri ödemesi olay olarak alınır ve bordro tahakkukuna eklenir",
+        "Onay süreci için l1-workflow tüketilir; bağımlılık yönü Payroll'dan çekirdeğe doğrudur"
       ],
-      "notes": "",
+      "notes": "TR vergi bildirimi cc-tr üzerinden zorunlu entegrasyondur.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -302,10 +315,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Payroll ArcheType'ı İK'da bordro hesabını sağlar",
-        "Maaş ödeyen tüm app'ler payroll'u kullanır"
+        "Payroll ArcheType'ı İK kümesinde bordro hesabını üretilen API ve olay yüzeyiyle sağlar, ham DB değil",
+        "Teşvik (s-incentive) ArcheType'ı prim/ek ödemeyi bordroya olay göndererek aktarır",
+        "Maaş ödeyen app'ler net ücreti doğrudan tabloya değil, payroll'un payslip olayına abone olarak okur"
       ],
-      "notes": "",
+      "notes": "Payroll bordro verisinin sahibidir; tüketim olay/araç ile olur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-payroll — \"Payroll\" (ArcheType/büyük taş; küme: İnsan Kaynakları). Özet: TR: SGK entegrasyonu kritik TR yerelleştirme: zorunlu. Etiketler: hr, payroll, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -665,5 +679,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "İnsan Kaynakları",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

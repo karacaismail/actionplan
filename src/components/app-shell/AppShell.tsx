@@ -9,8 +9,14 @@ import { type ReactNode, useEffect, useState } from "react";
 const NAV = [
   { to: "/", label: t.nav.dashboard, icon: "ph-squares-four" },
   { to: "/wbs", label: t.nav.wbs, icon: "ph-tree-structure" },
+  { to: "/table", label: t.nav.table, icon: "ph-table" },
   { to: "/board", label: t.nav.board, icon: "ph-kanban" },
   { to: "/graph", label: t.nav.graph, icon: "ph-graph" },
+  { to: "/execution", label: t.nav.execution, icon: "ph-calendar-check" },
+  { to: "/gantt", label: t.nav.gantt, icon: "ph-chart-bar-horizontal" },
+  { to: "/workload", label: t.nav.workload, icon: "ph-gauge" },
+  { to: "/reports", label: t.nav.reports, icon: "ph-chart-line-up" },
+  { to: "/audit", label: t.nav.audit, icon: "ph-clipboard-text" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

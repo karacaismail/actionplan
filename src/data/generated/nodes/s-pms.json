@@ -135,11 +135,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "PMS Stack — portal/yayın yönetimi: intranet/portal, sayfa düzeni, widget ve kişiselleştirilmiş içerik",
-        "Rol-bazlı portal, duyuru/akış ve içerik bileşenleri (widget)",
-        "Çok-kitle portal varyantları"
+        "PMS Stack: proje/iş kalemi (issue) hiyerarşisi, sprint/iterasyon, backlog ve durum panosu (Linear/Jira muadili)",
+        "Görev durum makinesi (açık→devam→inceleme→kapalı) ve geçerli geçiş sözleşmesi; geçersiz geçişte 422 hata yolu",
+        "Bağımlılık (dependency) çizelgesi: blocks/blocked-by kenarları, döngü tespiti ve kritik yol hesabı",
+        "Zaman planı (scheduling): kilometre taşı, kapasite ve Gantt görünümü, hedef/gerçek tarih sapması raporu"
       ],
-      "notes": "",
+      "notes": "PMS Stack proje yönetimi çekirdeğidir; portal değil görev/bağımlılık/zaman planı yönetir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -148,11 +149,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Portal içeriği tenant_id RLS; rol-bazlı görünürlük",
-        "Widget veri kaynağı yetkili; içerik sanitize",
-        "Kişiselleştirme PII-min"
+        "Proje/issue tabloları tenant_id RLS ile izole; çapraz-proje sorgu sızıntısı engellenir",
+        "İş kalemi görünürlüğü proje üyeliği + rol bazlı (least-privilege); izinsiz atama reddedilir",
+        "Atanan kişi, yorum ve ek dosya (attachment) PII kapsamında sınıflandırılır ve maskelenir",
+        "Görev durum/atama değişikliği değişmez (append-only) audit kanıtına yazılır"
       ],
-      "notes": "",
+      "notes": "Proje verisi tenant ve proje üyeliği sınırında tutulur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -161,11 +163,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Portal düzeni bildirimsel (widget grid); kişiselleştirme kurallardan",
-        "Widget veri tembel/önbellekli",
-        "Sayfa kompozisyonu yapılandırılmış"
+        "Durum geçişi ve kritik yol hesabı yan etkisiz saf fonksiyonlara ayrıştırılır, birim test edilir",
+        "Bağımlılık grafı çözümü (topolojik sıralama) modüler bir çekirdekte; UI'dan bağımsız",
+        "Sprint/backlog görünümleri kod bölme (lazy chunk) ile yüklenir, ilk paket küçültülür",
+        "Karmaşık zamanlama kuralları döngüsel karmaşıklık ≤10 hedefiyle küçük birimlere bölünür"
       ],
-      "notes": "",
+      "notes": "Çizelge ve durum mantığı test edilebilir saf çekirdekte tutulur.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -174,11 +177,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Widget allowlist; üçüncü-taraf widget sandbox",
-        "Rol-bazlı içerik sızıntısı engellenir",
-        "Portal yapılandırma sürümlü"
+        "Webhook/entegrasyon secret'ları (Slack, GitHub) kasada tutulur ve düzenli rotasyona tabidir",
+        "Toplu issue içe aktarımı ve API yazımı tenant+kullanıcı bazlı rate-limit ile sınırlanır",
+        "Otomasyon/iş akışı kuralları en az ayrıcalıkla çalışır; serbest script yürütmeye izin verilmez",
+        "Bağımlılık (SCA) taraması CI'da zorunlu; bilinen CVE'li paket merge'i bloklanır"
       ],
-      "notes": "",
+      "notes": "Entegrasyon yüzeyi ve otomasyon kuralları sertleştirilir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -187,11 +191,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Portal sayfası önbellekli; widget paralel yüklenir",
-        "Kişiselleştirme anlık (rol/segment)",
-        "İlk-yük bütçesi"
+        "Backlog listesi (tenant_id, project_id, status) bileşik indeksi ve imleç (cursor) sayfalama ile gelir",
+        "Issue + atanan + etiket birlikte yüklenir; liste sorgusunda N+1 erişim engellenir",
+        "Sık açılan sprint panosu sayımları önbelleğe alınır, durum değişiminde geçersiz kılınır",
+        "Pano yükleme p95 < 300 ms hedefiyle ölçülür ve regresyonda uyarı üretilir"
       ],
-      "notes": "",
+      "notes": "Backlog ve pano sorguları indeks + önbellekle hızlandırılır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -200,11 +205,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobil portal duyarlı; widget tek sütun",
-        "iOS/Android'de portal akışı",
-        "Dar ekranda öncelikli widget"
+        "Mobil backlog ve görev kartı PWA olarak çevrimdışı okunur; bağlanınca durum değişimi senkronlanır",
+        "Capacitor paketinde hızlı görev oluşturma ve atama; sürükle-bırak yerine dokunmatik aksiyon menüsü",
+        "Tüm aksiyon hedefleri (durum değiştir, ata, yorumla) en az 44px dokunma alanına sahip",
+        "Dar ekranda sprint panosu tek sütuna iner; öncelikli ve atanmış işler üstte gösterilir"
       ],
-      "notes": "",
+      "notes": "Saha/mobil kullanıcı için offline okuma ve hızlı görev güncelleme desteklenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -213,11 +219,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Portal/widget klavye+okuyucu erişimli; landmark'lı",
-        "Widget durumu renk dışında metinle; kontrast 7:1",
-        "Kişiselleştirme erişilebilirliği bozmaz"
+        "Sprint panosu sürükle-bırak işlemine klavye alternatifi sunar (taşı/yukarı/aşağı kısayolları)",
+        "Görev durumu yalnız renkle değil metin/etiketle de belirtilir; kontrast oranı ≥7:1 sağlanır",
+        "Issue kartları ARIA rolleri ve etiketleriyle ekran okuyucuya anlamlı sunulur",
+        "Pano sütunları arasında görünür odak sırası korunur; odak tuzağı oluşmaz"
       ],
-      "notes": "",
+      "notes": "Kanban etkileşimleri klavye ve ekran okuyucu için tam erişilebilir kılınır.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -226,11 +233,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Portal servisi standart; widget veri kaynakları entegrasyonlu",
-        "İçerik CDN",
-        "Shared hosting'de temel portal"
+        "PMS API servisi Kubernetes'te HPA ile yatay ölçeklenir; liveness/readiness probe ve CPU/bellek limiti tanımlıdır",
+        "Bildirim/otomasyon worker'ı Docker Swarm servisi olarak ayrı dağıtım birimidir, sağlık kontrolü yapılır",
+        "WordPress sınıfı shared hosting'de temel proje/görev CRUD'u; ağır zamanlama/grafik özellikleri kapalı çalışır",
+        "Göç (migration) expand-contract modunda; eski ve yeni şema bir sürüm boyunca birlikte desteklenir"
       ],
-      "notes": "",
+      "notes": "Worker ve API ayrı ölçeklenir; shared hosting için kısıtlı profil sunulur.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -239,11 +247,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: duyuru yayınlandı → ilgili kitleye portal akışında göster + bildir (idempotent, zincir ≤6)",
-        "Olay: rol değişti → portal görünürlüğünü güncelle (loop-breaker)"
+        "PMS: backend ruleset AI'ın app/module üretim-güncelleme ve ruleset override denemesini deny eder; serbest JS/SQL/shell yok",
+        "Olay: issue 'engellendi' (blocked) işaretlendi → Koşul: bağımlılık çözülmemiş → Eylem: blocker görevi aç (idempotent, zincir ≤6)",
+        "Olay: sprint bitiş tarihi geçti → kapanmamış işleri sonraki sprinte taşı + sorumluyu uyar (loop-breaker)",
+        "Otomasyon eylemleri allowlist ile sınırlı; izin/atama değiştiren kurallar step-up onayı ister, tenant izolasyonu korunur"
       ],
-      "notes": "",
+      "notes": "ECA kuralları issue ve sprint yaşam döngüsüne bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -252,11 +261,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI içerik/widget kişiselleştirme önerir; portal yapılandırmasını insan onaylar"
+        "PMS: AI app/module üretemez veya güncelleyemez; yalnız proje ArcheType taslağı/prod-update önerisi üretebilir",
+        "AI sprint planı, iş kırılımı ve bağımlılık önerir; backlog yazımı ve atama insan onayına tabidir",
+        "Issue açıklaması ve yorum serbest metni güvenilmez kabul edilir, sub_prompt olarak çalıştırılmaz (PII redaksiyonu uygulanır)",
+        "ruleset override/disable veya doğrudan prod write denemesi anında deny edilir; kill-switch mevcuttur"
       ],
-      "notes": "",
+      "notes": "AI öneri üretir; backlog/atama kararını insan verir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -265,11 +275,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Rol-bazlı görünürlük + widget veri testi",
-        "Kişiselleştirme + erişilebilirlik testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Durum makinesi ve bağımlılık döngü tespiti için sınır değerli birim testleri",
+        "Backlog→sprint→kapatma kullanıcı yolculuğu için Playwright e2e senaryosu",
+        "AI-destekli Playwright akışı sürükle-bırak ve klavye alternatifini birlikte doğrular",
+        "Testing-loop: başarısız test en çok 6 kez yeniden çalıştırılır, düzelmezse otonom QA raporlar"
       ],
-      "notes": "",
+      "notes": "Çizelge ve pano akışları regresyona karşı sürekli test edilir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -278,11 +289,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: rol-bazlı portal içeriği",
-        "A03 Injection: widget içeriği sanitize",
-        "A05 Misconfiguration: widget allowlist"
+        "OWASP A01 Erişim Kontrolü: issue erişimi proje üyeliği + rolle sınırlı, IDOR'a karşı yetki kontrolü",
+        "OWASP A03 Injection: yorum/açıklama ve arama filtresi parametreli sorgu ve sanitize ile işlenir",
+        "OWASP A05 Hatalı Yapılandırma: webhook/entegrasyon ayarları güvenli varsayılan ve allowlist ile",
+        "OWASP LLM01: AI sprint asistanına gelen issue metni güvenilmez, istem enjeksiyonuna karşı izole edilir"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi proje erişimi ve AI asistan girdisinde yoğunlaşır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -291,11 +303,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "PMS portal, cms (içerik), iam (rol), notification (duyuru) ile entegre",
-        "Widget'lar diğer ArcheType verisini gösterir (yetkili)",
-        "Kişiselleştirme analytics ile"
+        "Kullanıcı/atanan kişi için kernel party modeline (l1-party) bağlanır; kimlik yeniden uygulanmaz",
+        "UI kabuğu kernel surface (k-surface) üzerinden tüketilir; bağımlılık yönü PMS→kernel'dir",
+        "Dış olay (l1-webhook-in) ile entegrasyon webhook'ları issue oluşturma/güncellemeyi tetikler",
+        "Uzun süren göç ve dağıtım koordinasyonu scale-saga ve cc-rollout sözleşmeleriyle hizalanır"
       ],
-      "notes": "",
+      "notes": "Kimlik ve UI kabuğu çekirdekten gelir; PMS bunları tüketir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -304,10 +317,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "PMS Stack ArcheType'ı İçerik & İşbirliği'nde portal/intranet sağlar",
-        "Portal/intranet gerektiren app'ler bu ArcheType'ı kullanır"
+        "PMS Stack ArcheType'ı İçerik & İşbirliği kümesine proje/görev/bağımlılık yönetimi yeteneği sağlar",
+        "İş takibi gerektiren app'ler issue/sprint verisini üretilen API ve olaylar üzerinden tüketir (doğrudan DB değil)",
+        "Roadmap/teslimat planı görünümleri için kritik yol ve zamanlama çıktıları yetkili biçimde sunulur",
+        "PMS, proje yürütme verisinin sahibidir; başka ArcheType'lar yalnız okunan/abone olunan kapsamla erişir"
       ],
-      "notes": "",
+      "notes": "PMS proje yürütme verisinin kaynağıdır; app'ler API/olayla tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-pms — \"PMS Stack\" (ArcheType/büyük taş; küme: İçerik & İşbirliği). Özet: Linear, Jira, Asana, Monday, ClickUp, MS Project muadili. Etiketler: pms, project, dependency, scheduling.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -667,5 +682,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "İçerik & İşbirliği",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

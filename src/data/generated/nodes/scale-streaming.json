@@ -138,11 +138,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Streaming: Kafka benzeri olay akışı, gerçek-zaman toplama (aggregation) ve akış işleme",
-        "Konu (topic)/bölüm (partition), tüketici grubu ve pencere (windowing)",
-        "Tam-bir-kez/en-az-bir-kez işleme semantiği"
+        "Kafka benzeri olay akışı sağlar; konu (topic)/bölüm (partition) ve tüketici grubu yapısıyla 1M event/sn'ye kadar akış işler",
+        "Gerçek-zaman toplama (aggregation) için pencereleme (windowing) sunar; Flink/Materialize tipi sürekli sorgu çalıştırır",
+        "İşleme semantiği seçilebilir: tam-bir-kez (exactly-once) veya en-az-bir-kez + idempotent tüketim",
+        "Hata yolu tanımlı: zehirli mesaj DLQ'ya yönlendirilir, tüketici lag eşiği aşılınca alerting tetiklenir"
       ],
-      "notes": "",
+      "notes": "Modüler monolith için nadiren gereklidir; yalnız çok-yüksek hacimli akışta devreye girer.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -151,11 +152,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Konu erişimi tenant/rol bazlı; yük şema-doğrulamalı",
-        "Akış kimlik bilgileri kasada",
-        "Hassas alan akışta maskeli"
+        "Konu (topic) erişimi tenant_id ve rol bazlı yetkilendirilir; bir tenant'ın olayı başka tenant'ın tüketicisine sızdırılmaz",
+        "Akışa giren her mesaj (payload) şema-doğrulamalıdır; sözleşmeye uymayan olay reddedilir ve DLQ'ya alınır",
+        "Hassas alanlar (PII) akışa yazılmadan önce maskelenir veya tokenize edilir, tüketicilere açık veri gitmez",
+        "Akış platformu kimlik bilgileri kasada tutulur; tüketici/üretici erişimi en az ayrıcalık ilkesiyle verilir"
       ],
-      "notes": "",
+      "notes": "Konu erişimi tenant izolasyonludur; PII akışa girmeden maskelenir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -164,11 +166,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Akış işleme durum-bilgisi checkpoint'li; yeniden başlatmada kaldığı yerden",
-        "Pencere (windowing) toplama verimli",
-        "Tüketici grubu ile paralel işleme"
+        "Akış işleme durumu checkpoint'lenir; işleyici yeniden başladığında kaldığı offset'ten devam eder, mesaj kaybetmez",
+        "Pencere (windowing) toplama mantığı saf fonksiyon olarak yazılır; girdi olaylarına göre çıktı belirlenir, yan etki taşımaz",
+        "Tüketici grubu ile paralel işleme yapılır; bölüm (partition) sayısı kadar işleyici bağımsız ölçeklenebilir",
+        "Serileştirme, doğrulama ve toplama ayrı modüllere bölünür; biri değişse diğer aşamalar etkilenmez"
       ],
-      "notes": "",
+      "notes": "Pencere toplama yan etkisiz tutulur; checkpoint ile kaldığı yerden devam eder.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -177,11 +180,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tam-bir-kez (exactly-once) veya en-az-bir-kez + idempotent tüketim",
-        "Geride kalan tüketici (lag) izlenir",
-        "Zehirli mesaj DLQ'ya"
+        "İşleme tam-bir-kez (exactly-once) veya en-az-bir-kez + idempotent tüketimle yapılır; tekrar teslimde yan etki yinelenmez",
+        "Zehirli (poison) mesaj otomatik DLQ'ya yönlendirilir; sonsuz yeniden işleme döngüsü oluşmaz",
+        "Üretici/tüketici uçlarına oran sınırlama ve geri-baskı uygulanır; tek tenant akışı boğamaz",
+        "Akış platformu istemci bağımlılıkları düzenli taranır ve kimlik bilgileri rotasyona tabidir"
       ],
-      "notes": "",
+      "notes": "Idempotent tüketim ve DLQ ile tekrar/işleme güvenliği sertleştirilir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -190,11 +194,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yüksek throughput; bölümleme ile paralellik",
-        "Geri-baskı: tüketici hızına saygı",
-        "Toplama penceresi gecikmesi izlenir"
+        "Yüksek throughput bölümleme (partitioning) ile sağlanır; 1M event/sn hedefinde paralellik partition sayısıyla ölçeklenir",
+        "Geri-baskı (backpressure) mekanizması tüketici hızına saygı duyar; üretici hızı tüketim kapasitesine göre kısılır",
+        "Toplama penceresi uçtan uca gecikmesi p95 metriğiyle izlenir; eşik aşımında ölçek sinyali üretilir",
+        "Tüketici lag'i sürekli ölçülür; geride kalma büyüdüğünde işleyici sayısı otomatik artırılır"
       ],
-      "notes": "",
+      "notes": "Throughput partition ile ölçeklenir; gecikme p95 ve tüketici lag üzerinden izlenir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -203,11 +208,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Streaming backend; toplama sonucu mobil panoda",
-        "iOS/Android push ile akış-temelli uyarı",
-        "Dar ekranda canlı metrik"
+        "Streaming saf backend yeteneğidir; gerçek-zaman toplama sonucu mobil panoya PWA üzerinden özet metrik olarak yansır",
+        "iOS/Android push ile akış-temelli uyarı (eşik aşımı/anomali) Capacitor paketinden iletilir",
+        "Dar ekranda canlı metrik kartı gösterilir; tüm dokunma hedefleri ≥44px olacak şekilde düzenlenir",
+        "Mobil istemci ham akışa abone olmaz; yalnız sunucuda toplanmış, hız-sınırlı özet veriyi tüketir (pil/veri dostu)"
       ],
-      "notes": "",
+      "notes": "Mobil istemci ham akışa değil sunucuda toplanmış özet veriye erişir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -216,11 +222,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Akış-temelli pano klavye+okuyucu erişimli; canlı aria-live",
-        "Toplama sonucu metinle; kontrast 7:1",
-        "Veri tablosu alternatifi"
+        "Akış-temelli pano tam klavye ile gezilebilir; canlı güncellenen toplama değerleri aria-live ile ekran okuyucuya duyurulur",
+        "Toplama sonucu ve eşik durumu yalnızca renkle değil metinle de belirtilir, kontrast ≥7:1 korunur",
+        "Her canlı grafik için eşdeğer veri tablosu alternatifi sunulur; ekran okuyucu kullanıcısı sayıları okuyabilir",
+        "Yüksek frekanslı güncelleme kullanıcıyı boğmaz; aria-live politeness ayarıyla bildirim hızı sınırlanır"
       ],
-      "notes": "",
+      "notes": "Canlı toplama değeri aria-live ile duyurulur; grafiklere tablo alternatifi verilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -229,11 +236,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Akış platformu (Kafka benzeri) yönetilen; işleyici ayrı ölçek",
-        "Checkpoint deposu dayanıklı",
-        "Shared hosting akış sağlamaz (degrade, toplu işleme)"
+        "Akış platformu (Kafka benzeri) yönetilen servis olarak koşar; akış işleyiciler Kubernetes'te HPA ile lag'e göre ayrı ölçeklenir",
+        "İşleyici pod'ları liveness/readiness probe ve kaynak limitiyle koşar; checkpoint deposu dayanıklı (durable) tutulur",
+        "Üretici/işleyici Docker Swarm/K8s servisi olarak ayrılır; broker darboğazında bölüm sayısı artırılarak yatay ölçeklenir",
+        "WordPress sınıfı shared hosting gerçek-zaman akış sağlamaz; degrade modda zamanlanmış toplu (batch) işlemeye düşer"
       ],
-      "notes": "",
+      "notes": "İşleyiciler lag'e göre ölçeklenir; shared hosting'de batch'e degrade edilir.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -242,11 +250,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: akış toplaması eşiği aştı → uyarı/aksiyon tetikle (idempotent, zincir ≤6)",
-        "Olay: tüketici lag arttı → ölçek önerisi + uyar (loop-breaker)"
+        "Kurallar backend ruleset olarak çalışır; UI yalnız güvenli yönetim yüzeyidir, serbest JS/SQL yoktur ve AI mutasyon denemesi reddedilir",
+        "Olay: akış toplaması eşiği aştı -> Koşul: süreli ortalama aşıldı -> Eylem: uyarı ve aksiyon tetikle (idempotent, tekrar tetiklemede yinelemez)",
+        "Olay: tüketici lag arttı -> Koşul: eşik aşıldı -> Eylem: ölçek önerisi üret ve uyar, zincir en fazla 6 adımdır",
+        "Olay: zehirli mesaj DLQ'ya düştü -> Koşul: DLQ hacmi arttı -> Eylem: sorumluyu uyar (action allowlist, tenant izolasyonlu)"
       ],
-      "notes": "",
+      "notes": "ECA kuralları toplama eşiği, tüketici lag ve DLQ hacmine bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -255,11 +264,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI akış toplama/anomali önerir; akış işleyiciyi kendisi prod'a alamaz"
+        "AI bu taş için yalnızca ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez veya güncelleyemez, ruleset'i geçersiz kılamaz",
+        "AI akış toplama kuralı veya anomali örüntüsü önerir; akış işleyiciyi kendisi prod'a alamaz, doğrudan prod write yapamaz",
+        "Akıştaki mesaj içeriği güvenilmez (sub_prompt) kabul edilir; içine gömülü talimat AI'a komut olarak çalıştırılmaz",
+        "Yüksek riskli ölçek/topoloji önerisi step-up onayı ister; kill-switch ile AI üretimi her an durdurulabilir"
       ],
-      "notes": "",
+      "notes": "AI toplama/anomali önerir; işleyici prod'a alma kararı insan onayına tabidir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -268,11 +278,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Tam-bir-kez/idempotent işleme testi",
-        "Checkpoint/yeniden başlatma testi",
-        "Pencere toplama doğruluk testi; en çok 6 tur"
+        "Tam-bir-kez/idempotent işleme için birim testleri; aynı mesajın tekrar tesliminde yan etkinin yinelenmediği doğrulanır",
+        "Checkpoint ve yeniden başlatma senaryosu test edilir; işleyici kaldığı offset'ten devam edip mesaj kaybetmemelidir",
+        "Pencere (windowing) toplama doğruluğu sınır değerleriyle (pencere kenarı, gecikmiş olay) test edilir",
+        "Başarısız test en fazla 6 kez yeniden çalıştırılır; düzelmezse rapor üretilir (testing-loop)"
       ],
-      "notes": "",
+      "notes": "Idempotency, checkpoint ve pencere doğruluğu birim seviyesinde sürekli doğrulanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -281,11 +292,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A08 Integrity: yük şema-doğrulamalı, işleme idempotent",
-        "A01 Access Control: konu erişim yetkisi",
-        "A09 Logging: işleme/lag kararları iz"
+        "OWASP A08 (Veri Bütünlüğü): akıştaki her yük (payload) şema-doğrulamalıdır ve işleme idempotenttir, bozuk olay DLQ'ya alınır",
+        "OWASP A01 (Erişim Kontrolü): konu (topic) erişimi tenant/rol yetkisiyle sınırlanır, yetkisiz tüketim engellenir",
+        "OWASP A09 (Loglama): işleme, lag ve DLQ kararları forensic ize yazılır, PII redakte edilir",
+        "OWASP LLM01: akış mesajı kaynaklı istem enjeksiyonuna karşı AI girdisi izole edilir, talimat olarak yorumlanmaz"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi yük bütünlüğü, konu erişimi ve mesaj kaynaklı enjeksiyondur.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -294,11 +306,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Streaming, yüksek-hacim olayları (IoT, tıklama) toplar",
-        "Tahmin/BI gerçek-zaman akıştan beslenir",
-        "Outbox akışa köprülenebilir"
+        "Streaming, k-bus çekirdek olay yolundan ve scale-outbox'tan köprülenen yüksek-hacim olayları (IoT, tıklama) toplar",
+        "Toplama sonucu scale-projections'a beslenir; gerçek-zaman BI/tahmin yüzeyleri bu projeksiyonu okur",
+        "Gözlem (s-observability) akış lag ve throughput metriklerini bu taştan olay üzerinden tüketir",
+        "Bağımlılık yönü tek taraflıdır: streaming çekirdek bus'ı dinler, çekirdek streaming'e iş mantığı için bağımlı değildir"
       ],
-      "notes": "",
+      "notes": "Olaylar k-bus/outbox'tan köprülenir; sonuç projections'a beslenir, bağımlılık tek yönlü.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -307,10 +320,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Streaming (orta taş) Scale app'inde gerçek-zaman akış işlemeyi sağlar",
-        "Analitik, IoT ve tahmin app'leri akışı kullanır"
+        "Sesli/konuşma AI app'leri (s-ai-voice, s-conversational) gerçek-zaman olay akışını bu taşın yayımladığı arayüzle tüketir",
+        "Gözlem app'i (s-observability) yüksek-hacim metrik akışını doğrudan DB'den değil bu akış katmanından okur",
+        "Analitik/IoT/tahmin yüzeyleri ham olaya değil, akıştan üretilmiş toplama (aggregation) sonucuna abone olur",
+        "Yalnız 1M event/sn sınıfı hacim gereken app'ler devreye alır; düşük hacimde modüler monolith outbox/projeksiyon yeterlidir"
       ],
-      "notes": "",
+      "notes": "Akış katmanı yalnız çok-yüksek hacimli app'lerce kullanılır; tüketim API/toplama üzerinden.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-streaming — \"Streaming — Kafka, real-time aggregation\" (taş/orta taş; küme: Scale Primitifleri). Özet: Modüler monolith için NADİREN gerekli. Ama 1M event/sn akışı varsa: Kafka + Flink/Materialize. Etiketler: scale, streaming, kafka, flink, real-time.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -537,5 +552,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Scale Primitifleri",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

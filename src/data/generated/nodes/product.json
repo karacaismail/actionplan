@@ -1,0 +1,747 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "product",
+  "wbsCode": "6.1.2",
+  "level": "archetype",
+  "title": "Product (Ürün ArcheType)",
+  "slug": "product",
+  "summary": "SKU, varyant, fiyat ve stok bağlamını taşıyan çok-parçalı ürün/katalog (PIM) ArcheType'ı; CRM/satış, billing ve tedarik modüllerinin paylaştığı büyük taş. Golden referans: src/data/archetypes/product.json sözleşmesine bağlıdır.",
+  "parentId": "m-crm-sales",
+  "order": 3,
+  "icon": "ph-package",
+  "tags": [
+    "core-operations",
+    "catalog",
+    "product",
+    "archetype",
+    "ai-native",
+    "pricing",
+    "inventory"
+  ],
+  "dependsOn": [
+    "k-surface"
+  ],
+  "blocks": [
+    "s-crm"
+  ],
+  "related": [
+    "s-crm",
+    "customer",
+    "s-product-feed"
+  ],
+  "refs": [
+    "archetype-contract: src/data/archetypes/product.json"
+  ],
+  "criticalPath": false,
+  "status": "todo",
+  "priority": "high",
+  "owner": "katalog-ekibi",
+  "effort": {
+    "estimate": 28,
+    "unit": "d",
+    "spent": 0
+  },
+  "progress": 12,
+  "phase": "test-plan",
+  "phases": {
+    "requirements": {
+      "status": "passed",
+      "criteria": [
+        "Ürün çekirdek alanları (sku, ad, fiyat, para birimi, stok, durum, varyant) ve birimleri onaylandı",
+        "SKU benzersizliği ve varyant ilişki modeli (parent/child) belirlendi",
+        "Fiyat/stok değişiminde geçmiş veri koruma (append-only) gereksinimi netleşti"
+      ],
+      "passed": true,
+      "notes": "Çok-parçalı sözleşme (fields/relations/lifecycle/migration) kapsamı kilitlendi."
+    },
+    "test-plan": {
+      "status": "active",
+      "criteria": [
+        "SKU benzersizlik ve fiyat ≥ 0 doğrulama için kabul testleri yazılır (test-önce)",
+        "Yayın yaşam döngüsü (draft→active→discontinued) geçiş testleri tanımlanır",
+        "Negatif stok ve para birimi tutarlılık test seti belirlenir"
+      ],
+      "passed": false,
+      "notes": "Test planı db-şema öncesi yazılıyor."
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "product tablosu tenant_id + RLS, sku benzersiz kısıt ile tasarlanır",
+        "Fiyat geçmişi (price history) append-only tablo olarak kurulur",
+        "Varyant ilişkisi self-referential (parent_sku) ile modellenir"
+      ],
+      "passed": false,
+      "notes": "Test planı kilitlenince şema kurulur."
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Ürün CRUD + varyant + fiyat/stok yönetimi uçtan uca teslim edilir",
+        "Fiyat değişimi append-only geçmişe yazılır",
+        "Kod gözden geçirme ve lint kapıları geçilir"
+      ],
+      "passed": false,
+      "notes": "DB şema sonrası başlar."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Fiyat/stok doğruluk testleri yeşil",
+        "Yayın yaşam döngüsü e2e geçer"
+      ],
+      "passed": false,
+      "notes": "Geliştirme sonrası."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "OWASP gözden geçirmesi tamamlanır",
+        "WCAG 2.2 AAA denetimi geçer"
+      ],
+      "passed": false,
+      "notes": "QA sonrası doğrulama."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Fiyat değişim geri-alma prosedürü doğrulanır",
+        "Stok tükenme uyarıları devrede"
+      ],
+      "passed": false,
+      "notes": "Doğrulama kapısı bekleniyor."
+    }
+  },
+  "deliverables": [
+    "Ürün çekirdek varlık modeli, API'leri ve çok-parçalı ArcheType sözleşmesi",
+    "Varyant ve fiyat/stok yönetimi + append-only fiyat geçmişi",
+    "Yayın yaşam döngüsü (draft/active/discontinued) ve geçiş muhafızları"
+  ],
+  "acceptanceCriteria": [
+    "SKU tenant içinde benzersizdir; fiyat negatif olamaz",
+    "Fiyat değişimi geçmişi kaybetmeden (append-only) yazılır",
+    "Tüm ürün sorguları tenant kapsamlıdır (RLS)"
+  ],
+  "risks": [
+    {
+      "id": "r-product-1",
+      "desc": "Fiyat/stok yarış koşulu (race) tutarsız değer üretebilir",
+      "severity": "high",
+      "mitigation": "Stok güncellemeleri iyimser kilit (optimistic lock) + idempotent olaylarla yapılır."
+    },
+    {
+      "id": "r-product-2",
+      "desc": "Varyant patlaması katalog performansını düşürür",
+      "severity": "medium",
+      "mitigation": "Varyantlar sayfalanır ve (tenant_id, parent_sku) indeksiyle erişilir."
+    }
+  ],
+  "rollback": "Fiyat/stok değişimi append-only geçmişten geri sarılır; sorunlu yayın sürümü bayrakla kapatılır.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "sku_benzersizlik_ihlali",
+      "target": "0"
+    },
+    {
+      "key": "katalog_listeleme_p95_ms",
+      "target": "< 150"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Ürün kaydı: sku (benzersiz), ad, açıklama, fiyat + para birimi, stok, durum (draft/active/discontinued)",
+        "Varyant modeli: parent/child SKU ile renk/beden gibi özniteliklerde türetme",
+        "Append-only fiyat geçmişi; her fiyat değişimi geçmişi kaybetmeden kaydedilir",
+        "İlişkiler: ürün→sipariş kalemi (one-to-many), ürün→tedarikçi (many-to-one)"
+      ],
+      "notes": "Ürün, satış/billing/tedarik modüllerinin paylaştığı katalog çekirdeğidir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon). Özet: sku, varyant, fiyat ve stok taşıyan ürün/katalog ArcheType'ı.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "product tablosunda tenant_id RLS zorunlu; SKU benzersizliği tenant kapsamında",
+        "Fiyat ve stok yazma yetkisi rol bazlı (katalog yöneticisi); satış rolü salt-okunur",
+        "Fiyat değişimi değişmez denetim günlüğüne (actor + eski/yeni değer) yazılır",
+        "Toplu ürün içe aktarımı şema doğrulamasından geçer; geçersiz satır reddedilir"
+      ],
+      "notes": "Fiyat manipülasyonu denetim ve rol kontrolüyle engellenir.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), veri sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Fiyat/stok doğrulayıcıları (fiyat ≥ 0, stok ≥ 0) saf fonksiyonlara ayrıştırılır",
+        "Varyant türetme tek bir kompozisyon fonksiyonunda toplanır; kopya kod elenir",
+        "Katalog erişimi repository deseniyle soyutlanır; RLS sorgu katmanında merkezîdir"
+      ],
+      "notes": "İş mantığı yan etkisiz tutularak fiyat/stok testleri deterministik kalır.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Fiyat geçmişi append-only; geçmiş kaydın değiştirilmesi/silinmesi reddedilir",
+        "Toplu fiyat güncellemesinde oran sınırlama (rate-limit) ve onay eşiği uygulanır",
+        "Stok düşürme idempotent olay anahtarıyla yapılır; çift işleme engellenir"
+      ],
+      "notes": "Fiyat/stok bütünlüğü değişmezlik ve idempotency ile korunur.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Katalog listeleme için (tenant_id, status, parent_sku) bileşik indeksiyle p95 < 150ms",
+        "Varyantlar imleç tabanlı sayfalanır; tam-metin arama ad/açıklama üzerinde indekslidir",
+        "Sık erişilen aktif ürün ve fiyat verisi önbelleğe alınır, fiyat değişiminde geçersizleştirilir"
+      ],
+      "notes": "Varyant patlaması sayfalama ve indeksle sınırlanır.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobil ürün kartı fiyat/stok ile çevrimdışı okunabilir (PWA), dokunma hedefleri ≥44px",
+        "Capacitor paketinde barkod okutarak SKU arama ve hızlı stok güncelleme",
+        "Chrome eklentisinden rakip ürün sayfasından fiyat/öznitelik içe aktarma (yetkiliyse)"
+      ],
+      "notes": "Saha/depo senaryosu için barkod ve çevrimdışı destek önceliklidir.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Ürün kartı ve stok/durum rozetinde ≥7:1 kontrast; durum yalnız renkle değil metinle de belirtilir",
+        "Fiyat ve para birimi ekran okuyucuya anlamlı biçimde (locale) sunulur",
+        "Katalog filtre ve varyant seçimi klavye ile tam gezilebilir, odak sırası görünür"
+      ],
+      "notes": "Stok tükendi durumu renkten bağımsız olarak metinle bildirilir.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Katalog servisi Swarm/K8s'te yatay otomatik ölçeklenir; readiness/liveness sağlık yoklaması ve CPU/bellek limiti tanımlıdır",
+        "Fiyat/stok olay tüketicisi (consumer) ayrı dağıtım birimi olarak ölçeklenir",
+        "Paylaşımlı barındırmada salt-okunur katalog görünümü + harici fiyat API'si"
+      ],
+      "notes": "Fiyat/stok yazımı tek yetkili servise toplanır; okuma yatay ölçeklenir.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Ürün: backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder",
+        "Olay: stok < eşik → Eylem: tedarik/satınalma görevi oluştur (create-task)",
+        "Olay: fiyat değişimi > %20 → Eylem: katalog yöneticisi onayı (step-up, requiresApproval)",
+        "Döngü kırıcı: tetik zinciri maks 6 adım; stok düşürme idempotent"
+      ],
+      "notes": "ECA kuralları stok eşiği ve fiyat değişim büyüklüğüne bağlı; system katmanı kilitli.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok); döngü kırıcı maks 6, idempotency, tenant isolation, step-up; ruleset yetki katmanları (system kilitli / platform / tenant güvenli parametre).",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "Ürün: AI app/module üretemez/güncelleyemez; yalnız Product ArcheType taslağı/prod-update önerisi üretebilir",
+        "AI fiyat/öznitelik zenginleştirmesi önerir; fiyat değişikliği insan onayına (step-up) tabidir",
+        "Rakip sayfasından çekilen serbest metin güvenilmez kabul edilir, talimat olarak çalıştırılmaz",
+        "Prod ArcheType update önerisi geçmiş-koru (fiyat geçmişi) + snapshot + rollback koşullarına bağlıdır"
+      ],
+      "notes": "Öneri-uygulama ayrımı korunur; fiyat yazımı asla doğrudan AI ile yapılmaz.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi; admin akışı prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply; doğrulama döngüsü 1-3 oto, 3/6 admin'e soru, 9 tanı+dur; kill-switch.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "SKU benzersizlik, fiyat ≥ 0 ve stok ≥ 0 için birim testleri (sınır değerleri dahil)",
+        "Yayın yaşam döngüsü (draft→active→discontinued) için Playwright e2e",
+        "Test döngüsü: en fazla 6 yeniden deneme, düzelmezse rapor (testing-loop)",
+        "Otonom QA ajanı fiyat/stok yarış koşulu regresyonunu yürütür"
+      ],
+      "notes": "Fiyat/stok tutarlılığı sürekli doğrulanır.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01: fiyat/stok yazımı rol bazlı erişim + tenant RLS ile sınırlanır",
+        "OWASP A03: katalog arama/filtre parametreli sorgularla, enjeksiyona kapalı",
+        "OWASP A08: toplu içe aktarımda veri/yazılım bütünlüğü doğrulanır (imza/şema)"
+      ],
+      "notes": "Fiyat bütünlüğü güvenlik standardının merkezindedir.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ LLM Top 10 gerekiyorsa), bu görevin tehdit yüzeyi.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Arayüz kabuğu için kernel surface (k-surface) tüketilir",
+        "Ürün olayları (price.changed/stock.low) billing ve tedarik modüllerine olay sözleşmesiyle yayınlanır",
+        "Sipariş kalemi ürün referansını SKU+fiyat anlık görüntüsüyle (snapshot) bağlar"
+      ],
+      "notes": "Sipariş, fiyatı kendi anına dondurur; ürün fiyat değişimi geçmiş siparişi bozmaz.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Satış/CRM modülü ürün katalogunu fırsat/teklif kalemleri için okur",
+        "Billing fatura kalemi için ürün fiyat/vergi bilgisini yetkili kapsamda kullanır",
+        "Tedarik/satınalma stok eşiği olaylarını tüketerek yeniden sipariş tetikler"
+      ],
+      "notes": "Diğer app'ler doğrudan DB'ye değil, üretilen katalog API/olaylarına erişir.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/büyük taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "provenance": "human"
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "product",
+    "granularity": "buyuk-tas",
+    "cluster": "core-operations"
+  },
+  "state": "incelemede",
+  "lastUpdated": "2026-06-19",
+  "ecaRules": [
+    {
+      "id": "eca-product-stock-low",
+      "event": "product.stock.changed",
+      "when": [
+        {
+          "field": "stock",
+          "op": "lt",
+          "value": 10
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Yeniden sipariş",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-price-jump-stepup",
+      "event": "product.price.changed",
+      "when": [
+        {
+          "field": "deltaPercent",
+          "op": "gt",
+          "value": 20
+        }
+      ],
+      "then": {
+        "type": "step-up",
+        "params": {
+          "reason": "large-price-change"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-product-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Product (Ürün ArcheType) tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Product (Ürün ArcheType) blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "product"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "product"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "product"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Product (Ürün ArcheType) AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-product-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "product",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-product-archetype-prod-history-deny",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "neq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "prod-archetype-update-must-preserve-history",
+          "node": "product"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-product-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "product",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "draft",
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
+    "allowedTargets": [
+      "archetype"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "milestone": "Çekirdek Operasyon",
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2026-09-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2026-09-30"
+  },
+  "assignees": [
+    "katalog-ekibi"
+  ]
+}

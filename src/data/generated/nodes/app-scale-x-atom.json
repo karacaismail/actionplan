@@ -286,11 +286,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Scale kırılımının Atom örneği: bölünemez ölçek ilkeli (ör. idempotency anahtarı değer nesnesi)",
-        "Atom, ölçek sözleşmesinin daha alt parçaya ayrılmayan ilkel birimi",
-        "Örnek dal; ölçek atomunun granülerlik tabanındaki yeri"
+        "Scale primitifleri atomu: bölünemez ölçek değer nesnesi (ör. IdempotencyKey, saga adımı tekil anahtarı)",
+        "Girdi ham UUID/sayaç değeri; çıktı yalnız geçerli, çakışmasız ve değişmez (immutable) ölçek atomudur",
+        "Durumsuzdur: anahtar üretilir ya da reddedilir; ara durum yok, idempotency garantisinin taban birimidir",
+        "Hata yolu: tekrar eden/biçimsiz anahtarda doğrulama hatası verilir; üst saga adımı yinelenmez"
       ],
-      "notes": "",
+      "notes": "Atom, Scale primitifleri sözleşmesinin idempotency/sayaç tabanındaki bölünemez ilkel birimidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -299,11 +300,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Ölçek atomu değişmez; mutasyon engellenir",
-        "Değer sınırda doğrulanır (geçerli anahtar/sayaç)",
-        "Hassas atom üst katmanda korunur"
+        "Ölçek atomu (idempotency anahtarı) değişmezdir; üretildikten sonra mutasyon denemesi reddedilir",
+        "Değer sınırda doğrulanır; geçersiz anahtar/sayaç değeri üst saga adımına hiç geçmez",
+        "Idempotency anahtarı tahmin edilemez (yüksek entropi) üretilir; çakışma/yeniden oynatma saldırısı zorlaşır",
+        "Atom tenant_id taşımaz; ölçek anahtarının tenant kapsamı onu kullanan üst kayıt katmanında RLS ile uygulanır"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu değişmezlik, sınır doğrulaması ve yüksek entropiyle yeniden oynatmaya karşı korunur.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -312,11 +314,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Idempotency anahtarı/sayaç atomu değer nesnesi",
-        "Sabit tip; geçersiz değer reddi",
-        "Paylaşılır"
+        "Idempotency anahtarı/sayaç atomu saf değer nesnesidir; eşitlik değere göre, yan etki yok",
+        "Tek sorumluluk: yalnız ölçek anahtarını temsil eder; döngüsel karmaşıklık 1 düzeyinde kalır",
+        "Geçersiz anahtar kurucuda erken reddedilir; saga/outbox katmanında savunmacı tekrar kontrol gerekmez",
+        "Tek modülde dışa açılır, outbox ve sayaç primitiflerinde yeniden kullanılır; kopya mantık (ölü kod) önlenir"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu yan etkisiz değer nesnesi olarak modüler ve saga primitiflerinde paylaşılabilir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -325,11 +328,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "En dar biçim doğrulaması",
-        "Güvenli serileştirme",
-        "Bağımlılıksız"
+        "Anahtar en dar kabul biçimiyle (UUID v4 deseni) doğrulanır; beklenmeyen format reddedilir",
+        "Serileştirme/deserileştirme güvenlidir; ham anahtardan kod yürütme veya log enjeksiyonu yüzeyi açılmaz",
+        "Sıfır dış bağımlılık; bu ölçek atomu tedarik zinciri tarama yüzeyine yeni paket eklemez",
+        "Rate-limit/secret yönetimi atomda değil; bunlar atomu tüketen outbox/saga servis sınırında sertleştirilir"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu dar biçim doğrulama ve bağımlılıksızlıkla saldırı yüzeyini minimumda tutar.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -338,11 +342,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Sabit zaman doğrulama",
-        "İnternalize değer",
-        "Ucuz karşılaştırma"
+        "Anahtar doğrulaması O(1) sabit zamanlı; ölçek altında milyonlarca anahtarda sabit maliyet korunur",
+        "Anahtar değeri internalize edilir; tekrar kurma tahsisi azaltılır, GC baskısı düşürülür",
+        "Eşitlik karşılaştırması ucuzdur; idempotency kontrolü üst katmanda hash indeksiyle O(1) yapılır",
+        "Atom kendi başına sorgu üretmez; N+1 riski yok, ölçek primitifinin p95 katkısı ihmal edilebilir"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu sabit zamanlı doğrulama ve internalizasyonla yüksek hacimde ucuz kalır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -351,11 +356,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Atom değeri mobilde özetli",
-        "İnternetsiz doğrulanabilir",
-        "Taşmaz"
+        "Idempotency anahtarı mobil istemcide istek başına üretilir; çevrimdışı kuyruğa anahtarla yazılır",
+        "Bağlantı dönünce aynı anahtarla yeniden gönderim yapılır; mükerrer kayıt PWA senkronunda önlenir",
+        "Anahtar değeri UI'da gösterilirse kısa rozet olarak dar ekranda taşmadan sığar (≥44px sarmalayıcı)",
+        "Capacitor offline modda üretilen anahtar yerel depoda saklanır, senkronda üst saga adımıyla iletilir"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu mobil çevrimdışı isteklerde mükerrer gönderimi önleyen yerel anahtar olarak çalışır.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -364,11 +370,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Atom etiketli; hata metinle; kontrast 7:1",
-        "Biçim ipuçlu",
-        "Okuyucu için anlamlı"
+        "Anahtar/sayaç değerini gösteren alan programatik etiketlidir; biçim hatası metinle bildirilir, kontrast ≥7:1",
+        "Beklenen anahtar deseni ekran okuyucuya aria-describedby ile aktarılır; ipucu yalnız görsel değildir",
+        "Sayaç değeri yalnız renkle değil metinle ifade edilir; eşik aşımı renk körü kullanıcıya da iletilir",
+        "Anahtar/sayaç giriş alanına odak görünür çerçeveyle işaretlenir; klavyeyle erişilir, atlanmaz"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu değer alanı AAA kontrast, programatik etiket ve görünür odakla erişilebilir sunulur.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -377,11 +384,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Ölçek atom tipi şema çekirdeğinde",
-        "Profilden bağımsız aynı doğrulama",
-        "Shared hosting dahil"
+        "Ölçek atom tipi şema çekirdeğinde derlenir; ayrı servis/container olarak dağıtılmaz",
+        "Aynı anahtar tanımı Docker Swarm, Kubernetes ve shared hosting profillerinde özdeş doğrulama verir",
+        "Atomun kendi HPA/probe ihtiyacı yoktur; ölçekleme onu kullanan outbox/saga worker'ına aittir",
+        "Şema sürümlendiğinde anahtar formatı expand-contract ile geri-uyumlu yayılır, kırıcı değişiklik yapılmaz"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu tüm dağıtım profillerinde aynı doğrulamayı veren çekirdek şema parçasıdır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -390,11 +398,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Atom otomasyon tetiklemez; üst kurallara değer sağlar",
-        "Olay: anahtar/sayaç geçersiz → üst element reddeder (idempotent)"
+        "Backend ECA ruleset'i AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder; bu ölçek atomu kuralı değiştiremez",
+        "Atom olay yayınlamaz; yalnız üst saga/outbox kurallarına geçerli idempotency anahtarı besler",
+        "Koşul: anahtar/sayaç geçersiz → Eylem: üst element kaydı reddeder; aynı anahtarla tekrar denemede idempotent kalır",
+        "Ölçek atomu doğrudan eylem çalıştırmaz; action allowlist ve maks 6 zincir denetimi üst saga/outbox engine katmanındadır"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu otomasyon tetiklemez; idempotency garantisini besler, ECA kararları üst saga'da uygulanır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -403,11 +412,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI ölçek atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz"
+        "AI yalnız ArcheType taslağı/prod-update önerisi üretir; bu ölçek atomunu app/module olarak üretemez veya güncelleyemez",
+        "Ölçek atomu tanımına gelen serbest açıklama sub_prompt olarak güvenilmezdir; ruleset override/disable denemesi anında deny edilir",
+        "AI yeni idempotency anahtarı/sayaç biçimi önerebilir; ilkel sözleşmeyi tek başına prod'a yazamaz, insan onayı şarttır",
+        "Ölçek atomu önerisi diff→preview→approval akışından geçer; doğrudan prod write engellenir, kill-switch geçerlidir"
       ],
-      "notes": "",
+      "notes": "AI ölçek atom tipi önerebilir ama ilkel sözleşmeyi onaysız değiştiremez; prod yazımı insana bağlıdır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -416,11 +426,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Atom biçim/sınır testi",
-        "Değişmezlik testi",
-        "Serileştirme testi"
+        "Anahtar biçim ve sınır birim testleri; geçerli/geçersiz idempotency anahtarı örnekleriyle property-based test",
+        "Değişmezlik testi: üretilmiş anahtarın değiştirilme girişiminin reddini doğrular",
+        "Çakışma/entropi testi: yüksek hacimde anahtar üretiminde mükerrer üretilmediği istatistiksel doğrulanır",
+        "Testing-loop: kararsız ölçek anahtarı doğrulama testi en fazla 6 kez yeniden denenir, geçmezse raporlanır"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu biçim, değişmezlik ve çakışma testleriyle idempotency tabanında doğrulanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -429,11 +440,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: değer biçim-doğrulanır",
-        "A08 Integrity: atom değişmez",
-        "İzlenebilir"
+        "OWASP A03 Injection: anahtar değeri biçim-doğrulanır; ham girdi sorgu/log satırına enjekte edilemez",
+        "OWASP A08 Integrity: ölçek atomu değişmezdir, üretildikten sonra bütünlüğü korunur",
+        "OWASP A04 Insecure Design: idempotency anahtarı yeniden oynatmayı baştan engelleyecek şekilde tasarlanır",
+        "Atom AI yüzeyi sunmaz; LLM prompt injection riski onu tüketen üst saga akışında değerlendirilir"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu tehdit yüzeyi enjeksiyon, bütünlük ve yeniden oynatma tasarımıyla (OWASP 2025) sınırlıdır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -442,11 +454,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Ölçek atomu element ve field tanımlarının yapı taşı",
-        "Tip sistemine dahil",
-        "Üst seviyeler birleştirir"
+        "Ölçek atomu, scale element ve field tanımlarının yapı taşıdır; bağımlılık yönü daima atomdan üste doğrudur",
+        "Outbox ve sayaç primitifleri bu atomu idempotency anahtarı olarak tüketir; çekirdeğe ters çağrı yapmaz",
+        "Kernel tip sistemine kayıtlıdır; üst element atomu birleştirerek saga adımı sözleşmesini kurar",
+        "Anahtar formatı değişirse expand-contract ile yayılır; bağımlı outbox/saga element'leri kırılmadan göç eder"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu outbox/sayaç primitiflerinin yaprak yapı taşı; üst element'ler onu birleştirir, ters bağımlılık yoktur.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -455,9 +468,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Ölçek atomu bölünemez birimdir; bağımsız sunulmaz, üst tip tanımlarında kullanılır"
+        "Ölçek atomu bölünemez birimdir; app'lere bağımsız sunulmaz, yalnız üst saga/outbox tip tanımları içinde gömülü tüketilir",
+        "App'ler anahtarı doğrudan DB'den değil, üst element'in ürettiği API/araç kapsamı üzerinden dolaylı kullanır",
+        "Aynı ölçek atomu (idempotency anahtarı) outbox, sayaç ve realtime primitiflerinde yeniden kullanılır; tek tanım, çok tüketim"
       ],
-      "notes": "",
+      "notes": "Ölçek atomu bağımsız bir yüzey değildir; üst saga/outbox API'leri üzerinden dolaylı tüketilen yaprak birimdir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-scale-x-atom — \"Atom — Scale Primitifleri örnek kırılımı\" (atom; küme: Scale Primitifleri). Özet: Scale Primitifleri için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: scale, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -521,5 +536,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Scale Primitifleri",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

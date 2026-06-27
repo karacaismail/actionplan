@@ -135,11 +135,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "i18n / Yerelleştirme: çeviri yönetimi, çok-dilli içerik, yerel biçim ve çeviri iş akışı",
-        "Çeviri belleği, bağlam ve dil-geri-düşme (fallback); TMS entegrasyonu",
-        "Yerel sayı/tarih/para ve RTL desteği"
+        "i18n: ICU MessageFormat tabanlı çeviri yönetimi, çoğul/cinsiyet kuralları ve çeviri iş akışı (taslak→inceleme→yayın)",
+        "Çeviri anahtarı sözleşmesi: eksik anahtarda dil-geri-düşme (fallback) zinciri, çıktıda asla ham anahtar gösterilmez",
+        "Yerel sayı/tarih ve para birimi biçimleme CLDR verisine dayanır; RTL diller için tam düzen desteği",
+        "FX dönüşümü cc-fx-ledger ile; yetki/bölge kuralları cc-jurisdiction-resolver çıktısına göre uygulanır"
       ],
-      "notes": "",
+      "notes": "i18n çeviri yönetimi + yerel biçimleme + para/bölge çözümünü kapsar.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -148,11 +149,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Çeviri/yerel veri tenant_id RLS; çeviri kaynak erişimi rol bazlı",
-        "Çeviri içeriği sanitize (enjeksiyon)",
-        "Dil tercihi kullanıcıya ait"
+        "Tenant'a özel çeviri ve sözlük (glossary) verisi tenant_id RLS ile izole; çapraz-tenant okuma engellenir",
+        "Çeviri düzenleme rol bazlı (çevirmen/onaylayan/yayıncı) least-privilege ile yetkilendirilir",
+        "Çeviri metni HTML/format-string açısından sanitize edilir; kullanıcı-üretimli çeviri PII kapsamında sınıflandırılır",
+        "Çeviri yayını ve geri-alma değişmez audit kanıtına yazılır (kim, hangi anahtar, hangi sürüm)"
       ],
-      "notes": "",
+      "notes": "Çeviri verisi tenant sınırında tutulur ve yayın izi denetlenir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -161,11 +163,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çeviriler tek kaynaktan (ICU); yerel veri CLDR'den",
-        "Eksik çeviri güvenli fallback",
-        "Çeviri paketleri tembel + önbellekli"
+        "ICU biçimleme tek bir saf fonksiyon katmanında toplanır; bileşenler ham string birleştirmez",
+        "Yerel veri CLDR'den tek kaynaktan gelir; tekrarlı biçimleme kodu elenir, modülerlik korunur",
+        "Dil paketleri dil başına ayrı chunk olarak bölünür; yalnız aktif dil paketi yüklenir",
+        "Eksik/çift anahtar lint kuralıyla yakalanır; kullanılmayan çeviri anahtarları temizlenir"
       ],
-      "notes": "",
+      "notes": "Biçimleme tek saf katmanda; diller kod bölme ile ayrılır.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -174,11 +177,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çeviri format-string enjeksiyonu engellenir",
-        "Çeviri değişikliği sürümlü; onay akışı",
-        "RTL/bidi güvenli işleme"
+        "ICU format-string enjeksiyonu engellenir; çeviri içine yürütülebilir placeholder kaçırılamaz",
+        "TMS sağlayıcı API anahtarları kasada tutulur ve düzenli rotasyona tabidir (en az ayrıcalık)",
+        "Bidi/RTL kontrol karakterleri (LRO/RLO) güvenli işlenir; metin yön sahteciliği önlenir",
+        "Çeviri içe/dışa aktarım uçları rate-limit'li; bağımlılık (SCA) taraması CI'da zorunludur"
       ],
-      "notes": "",
+      "notes": "Format-string ve bidi sahteciliği yüzeyi sertleştirilir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -187,11 +191,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çeviri paketi tembel yükleme; önbellek",
-        "Yerel biçimleme önbellekli",
-        "Kullanılmayan dil yüklenmez"
+        "Dil paketleri tembel yüklenir ve uzun vadeli (immutable) önbellekle CDN'den sunulur",
+        "Number/DateTimeFormat örnekleri locale başına bir kez kurulup yeniden kullanılır (örnek havuzu)",
+        "Aktif olmayan diller başlangıç paketine dahil edilmez; ilk-yük çeviri yükü minimumda tutulur",
+        "Çeviri çözümleme (lookup) p95 < 5 ms hedefiyle ölçülür; cache miss oranı izlenir"
       ],
-      "notes": "",
+      "notes": "Dil paketleri önbellekli ve tembel; biçimleyiciler tekrar kullanılır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -200,11 +205,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde cihaz dili/yerel otomatik; RTL düzen",
-        "iOS/Android yerel tarih/sayı/para",
-        "Dil değişimi anında"
+        "PWA/Capacitor uygulaması cihaz dilini ve yerel ayarını otomatik algılar; kullanıcı manuel değiştirebilir",
+        "RTL diller için tüm düzen ve dokunma hedefleri (≥44px) ayna-çevrilerek korunur",
+        "iOS/Android'de yerel tarih/sayı/para biçimleri cihaz CLDR'ı yerine uygulama CLDR'ı ile tutarlı kalır",
+        "İndirilen dil paketi çevrimdışı kullanılabilir; dil değişimi sayfa yeniden yüklemeden uygulanır"
       ],
-      "notes": "",
+      "notes": "Mobilde otomatik yerel algılama, offline dil paketi ve RTL ayna desteklenir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -213,11 +219,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Sayfa dili (lang) doğru; ekran okuyucu telaffuzu doğru",
-        "RTL düzen tam erişilebilir; kontrast 7:1",
-        "Dil seçici klavye erişilebilir"
+        "Her metin bloğu doğru lang/dir özniteliği taşır; ekran okuyucu doğru dilde telaffuz eder",
+        "RTL düzende odak sırası mantıksal kalır ve renk/kontrast oranı ≥7:1 korunur",
+        "Dil seçici tam klavye ile gezilir; ARIA listbox rolü ve seçili dil etiketiyle sunulur",
+        "Çeviri metin uzunluk farkları taşma yaratmaz; odak görünürlüğü tüm dillerde bozulmaz"
       ],
-      "notes": "",
+      "notes": "Dil/yön semantiği ve dil seçici erişilebilirliği garanti edilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -226,11 +233,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Çeviri paketleri statik/CDN; TMS entegrasyonu",
-        "Çeviri derleme build/runtime",
-        "Shared hosting'de statik çeviri (uyumlu)"
+        "Derlenmiş dil paketleri statik varlık olarak CDN'den dağıtılır; sürümlü ve immutable adreslenir",
+        "Çeviri API/TMS senkron servisi Kubernetes'te liveness/readiness probe ve kaynak limitiyle koşar",
+        "WordPress sınıfı shared hosting'de statik JSON çeviri paketleri uyumlu çalışır; canlı TMS senkronu kapalıdır",
+        "Çeviri şema göçü expand-contract; eski anahtarlar bir sürüm boyunca korunarak istemci uyumu sağlanır"
       ],
-      "notes": "",
+      "notes": "Çeviriler statik/CDN; senkron servisi probe'lu koşar, shared hosting kısıtlı.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -239,11 +247,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: içerik eklendi/değişti → çeviri iş emri oluştur + eksikleri raporla (idempotent, zincir ≤6)",
-        "Olay: çeviri onaylandı → ilgili paketi yayınla (loop-breaker)"
+        "i18n: backend ruleset AI'ın app/module üretim-güncelleme ve ruleset override denemesini deny eder; serbest JS/SQL/shell yok",
+        "Olay: kaynak metin eklendi/değişti → Koşul: hedef dilde çeviri yok → Eylem: çeviri iş emri aç (idempotent, zincir ≤6)",
+        "Olay: çeviri onaylandı → ilgili dil paketini derleyip yayınla; aynı sürüm tekrar yayınlanmaz (loop-breaker)",
+        "Yayın eylemi allowlist'te; tenant yalnız güvenli parametre (öncelik/SLA) ayarlar, step-up gerektiren değişiklikler onay ister"
       ],
-      "notes": "",
+      "notes": "ECA kuralları çeviri iş emri ve yayın döngüsünü yönetir.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -252,11 +261,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI çeviri/yerelleştirme önerir; çeviri yayınını insan onaylar (kalite/bağlam)"
+        "i18n: AI app/module üretemez veya güncelleyemez; yalnız çeviri ArcheType taslağı/prod-update önerisi üretebilir",
+        "AI makine çevirisi taslağı üretir; yayın öncesi insan çevirmen kalite/bağlam onayı zorunludur",
+        "Çevrilecek kaynak metin güvenilmez girdi kabul edilir, sub_prompt olarak çalıştırılmaz; PII redaksiyonu uygulanır",
+        "ruleset override/disable veya doğrudan prod yayın denemesi anında deny; kill-switch ile durdurulabilir"
       ],
-      "notes": "",
+      "notes": "AI çeviri taslağı önerir; yayın insan onayına bağlıdır.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -265,11 +275,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "ICU çoğul/biçim + RTL render testi",
-        "Eksik çeviri fallback testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "ICU çoğul/cinsiyet kuralları ve sayı/tarih/para biçimleme için birim testleri (sınır locale'ler dahil)",
+        "RTL render ve dil değişimi için Playwright e2e; ham anahtar sızıntısı olmadığı doğrulanır",
+        "Eksik çeviri fallback zinciri ve uzun-metin taşması test edilir; axe AAA 0 ihlal hedefi",
+        "Testing-loop: başarısız test en çok 6 kez yeniden çalıştırılır, düzelmezse otonom QA raporlar"
       ],
-      "notes": "",
+      "notes": "Biçimleme, fallback ve RTL render regresyona karşı test edilir.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -278,11 +289,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: çeviri format-string/bidi enjeksiyonu engellenir",
-        "A05 Misconfiguration: dil güvenli varsayılan",
-        "Erişilebilirlik (lang) doğru"
+        "OWASP A03 Injection: ICU format-string ve bidi kontrol karakteri enjeksiyonu engellenir",
+        "OWASP A05 Hatalı Yapılandırma: varsayılan dil ve fallback güvenli, taşan locale ayarları reddedilir",
+        "OWASP A08 Bütünlük: dağıtılan dil paketleri sürümlü ve bütünlük doğrulamalı (immutable) sunulur",
+        "OWASP LLM02 Güvensiz Çıktı: makine çevirisi çıktısı yayından önce sanitize edilip insan onayından geçer"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi format-string, bidi ve makine çevirisi çıktısında yoğunlaşır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -291,11 +303,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "i18n, tüm UI/içerik metnine uygulanır (crosscut i18n standartlarıyla)",
-        "strings/çeviri katmanı bu servisi kullanır",
-        "TMS dış çeviri sağlayıcılarıyla"
+        "i18n yatay bir servistir; tüm UI/içerik metni çeviri katmanı üzerinden çözümlenir (bağımlılık yönü app→i18n)",
+        "Derin yerelleştirme yetenekleri cc-i18n-deep sözleşmesinden; para birimi cc-fx-ledger'dan tüketilir",
+        "Bölge/yetki kuralları cc-jurisdiction-resolver olayları ile uygulanır; biçim ve dil bunlara göre seçilir",
+        "Çeviri içeriği dış TMS sağlayıcılarıyla yetkili API üzerinden senkronlanır; çekirdek veri yeniden uygulanmaz"
       ],
-      "notes": "",
+      "notes": "i18n yatay servistir; derin yerel/FX/bölge çekirdeğinden beslenir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -304,10 +317,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "i18n / Yerelleştirme ArcheType'ı Platform & Yatay'da çeviri yönetimi sağlar",
-        "Çok-dilli tüm app'ler i18n'i kullanır"
+        "i18n ArcheType'ı Platform & Yatay kümesine çeviri ve yerel biçimleme yeteneği sağlar",
+        "Çok-dilli her app çeviri anahtarlarını üretilen API/SDK üzerinden çözer (doğrudan DB erişimi yok)",
+        "Studio ve Property gibi içerik-yoğun app'ler dil paketi ve RTL düzenini bu ArcheType'tan tüketir",
+        "Para/tarih biçimleme gerektiren app'ler i18n biçimleyicilerini olay/araç kapsamıyla kullanır"
       ],
-      "notes": "",
+      "notes": "i18n yatay yetenektir; app'ler API/SDK ile çeviri ve biçim tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-i18n — \"i18n / Localization\" (ArcheType/büyük taş; küme: Platform & Yatay). Özet: Çoklu dil + para birimi Etiketler: platform-horizontal, i18n, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -667,5 +682,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Platform & Yatay",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

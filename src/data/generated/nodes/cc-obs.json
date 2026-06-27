@@ -146,11 +146,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Observability + Performance + DR: log/metrik/iz, performans bütçesi ve felaket kurtarma çerçevesi",
-        "SLO/SLI, hata bütçesi ve performans regresyon takibi",
-        "Yedekleme/geri-yükleme ve RPO/RTO hedefleri"
+        "Yapısal logging, metrics ve tracing'i tek çatıda toplar; her isteği trace-id ile uçtan uca ilişkilendirir",
+        "SLO/SLI tanımlar ve hata bütçesini takip eder; eşik aşıldığında alerting tetikler (örn. p95 gecikme bütçesi)",
+        "Yedekleme (backup) ve geri-yükleme (restore) akışı sunar; RPO/RTO hedeflerini ölçer ve raporlar",
+        "Felaket kurtarma (DR): bölge kaybında failover senaryosunu ve geri-dönüş prosedürünü tanımlar"
       ],
-      "notes": "",
+      "notes": "Çekirdek işlev log/metrik/iz toplama, SLO takibi ve yedek/DR çerçevesidir.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -159,11 +160,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Telemetride PII redaksiyon; log'a sır yazılmaz",
-        "Gözlem verisine erişim ops düzlemi yetkisiyle",
-        "Yedekler şifreli; geri-yükleme yetkili"
+        "Telemetri ve log alanları PII açısından sınıflandırılır; e-posta/IP/token gibi alanlar yazılmadan önce redakte edilir",
+        "Gözlem verisine ve trace'lere erişim yalnızca ops/SRE rolüne verilir, tenant'a ait izler tenant_id ile ayrılır",
+        "Yedekler bekleme halinde şifrelenir (at-rest); geri-yükleme yalnızca yetkili kullanıcı ve onaylı runbook ile yapılır",
+        "Yedekleme ve restore işlemleri değişmez (append-only) audit kaydına yazılır, kim ne zaman geri yükledi izlenir"
       ],
-      "notes": "",
+      "notes": "Log'a sır yazılmaz; yedekler şifreli ve restore yetkilidir.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -172,11 +174,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yapısal log + trace-id korelasyonu",
-        "Performans bütçesi CI'da; regresyon yakalanır",
-        "Telemetri düşük ek-yük (sampling)"
+        "Yapısal log üretimi tek bir saf logger sarmalayıcısından geçer; trace-id korelasyonu otomatik enjekte edilir",
+        "Performans bütçesi (Core Web Vitals/p95) CI adımında doğrulanır; regresyon eşiği aşılınca build kırılır",
+        "Telemetri toplama düşük ek-yüklü tutulur; örnekleme (sampling) oranı yapılandırmadan okunur, kodda sabitlenmez",
+        "Metrik/log/iz toplayıcıları ayrı modüllere bölünür; biri devre dışı kalsa diğer sinyaller etkilenmez"
       ],
-      "notes": "",
+      "notes": "Telemetri yan etkisiz logger ve örneklemeyle düşük maliyetli tutulur.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -185,11 +188,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Log redaksiyonu varsayılan; yüksek-kardinalite sınırı",
-        "Yedek bütünlüğü doğrulanır (restore tatbikatı)",
-        "DR planı düzenli test edilir"
+        "Log redaksiyonu varsayılan açıktır; yüksek-kardinalite etiketlere sınır konur, kasıtlı kart şişirme (cardinality bomb) engellenir",
+        "Yedek bütünlüğü periyodik restore tatbikatıyla doğrulanır; geri-yüklenemeyen yedek erken tespit edilir",
+        "Telemetri toplayıcı kimlik bilgileri kasada tutulur ve düzenli rotasyona tabidir, log'a sızdırılmaz",
+        "DR planı düzenli aralıkla (örn. çeyrekte bir) tatbik edilir; en az ayrıcalıkla çalışan restore yetkisi gözden geçirilir"
       ],
-      "notes": "",
+      "notes": "Restore ve DR düzenli tatbik edilir; kardinalite ve sır yönetimi sertleştirilir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -198,11 +202,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Performans bütçeleri (Core Web Vitals/p95) izlenir",
-        "Telemetri zaman-serisi deposunda; downsample",
-        "DR: RPO/RTO ölçülür"
+        "Performans bütçeleri Core Web Vitals ve p95 gecikme üzerinden sürekli izlenir; sapma alerting'e bağlanır",
+        "Telemetri zaman-serisi deposunda saklanır; eski veri downsample edilerek sorgu maliyeti ve depolama düşürülür",
+        "Metrik sorguları zaman ve etiket bazlı indekslenir; geniş pencere taramaları imleçli sayfalamayla sınırlanır",
+        "DR ölçümleri (RPO/RTO) gerçek tatbikat verisiyle hesaplanır; hedef sapması raporlanır"
       ],
-      "notes": "",
+      "notes": "Telemetri downsample edilir; performans ve DR hedefleri ölçülerek izlenir.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -211,11 +216,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobil performans (başlatma/jank) izlenir",
-        "iOS/Android crash raporlama (PII'siz)",
-        "Dar ekranda SLO özeti"
+        "Mobil performans sinyalleri (soğuk başlatma süresi, jank/kare düşmesi) PWA ve Capacitor paketinden toplanır",
+        "iOS/Android crash raporlama PII içermeden gönderilir; bağlantı yokken kuyruğa alınıp çevrimiçi olunca eşitlenir",
+        "Dar ekranda SLO/hata bütçesi özeti gösterilir; tüm dokunma hedefleri ≥44px olacak şekilde düzenlenir",
+        "Telemetri toplama mobil pil/veri dostu örnekleme oranıyla yapılır, arka planda aşırı ağ kullanımı önlenir"
       ],
-      "notes": "",
+      "notes": "Mobil telemetri PII'siz ve pil/veri dostu örneklemeyle toplanır.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -224,11 +230,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Gözlem panoları grafiklerine veri tablosu alternatifi",
-        "SLO/hata durumu renk dışında metinle; kontrast 7:1",
-        "Pano klavye erişimli"
+        "Gözlem panolarındaki her grafik için eşdeğer veri tablosu alternatifi sunulur, ekran okuyucu sayıları okuyabilir",
+        "SLO/hata bütçesi durumu yalnızca renkle değil metin etiketiyle de belirtilir, kontrast ≥7:1 sağlanır",
+        "Pano ve uyarı listesi tam klavye ile gezilebilir; görünür odak sırası mantıklı ve kesintisizdir",
+        "Canlı güncellenen metrikler aria-live ile duyurulur, ekran okuyucu kullanıcısı değişimi sessizce kaçırmaz"
       ],
-      "notes": "",
+      "notes": "Grafiklere tablo alternatifi verilir; durum renk dışında metinle iletilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -237,11 +244,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Telemetri ajanları her serviste; depolama ayrı",
-        "Yedekleme zamanlanmış; çok-bölge DR",
-        "Shared hosting'de temel log + manuel yedek"
+        "Telemetri ajanları her serviste sidecar olarak koşar; toplama/depolama katmanı ayrı ölçeklenir ve kaynak limitlidir",
+        "Gözlem servisi Kubernetes'te liveness/readiness probe ile sağlık raporlar; depo darboğazında yatay ölçeklenir",
+        "Yedekleme Docker Swarm/K8s zamanlanmış görevidir; DR için çok-bölge replikasyonu yapılandırılır",
+        "WordPress sınıfı shared hosting'de yalnızca temel log ve manuel yedek sunulur; tracing degrade modunda kapalıdır"
       ],
-      "notes": "",
+      "notes": "Telemetri toplama ayrı ölçeklenir; DR çok-bölge replikasyonuyla sağlanır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -250,11 +258,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: SLO ihlali/performans regresyonu → uyar + olay aç (idempotent, zincir ≤6)",
-        "Olay: yedek başarısız → DR sorumlusuna uyar + yeniden dene (loop-breaker)"
+        "Kurallar backend ruleset olarak çalışır; UI yalnız güvenli yönetim yüzeyidir, serbest JS/SQL yoktur ve AI mutasyon denemesi reddedilir",
+        "Olay: SLO ihlali -> Koşul: hata bütçesi tükendi -> Eylem: uyarı gönder ve olay (incident) kaydı aç (idempotent, tekrar açmaz)",
+        "Olay: yedek başarısız -> Koşul: ardışık 2 başarısızlık -> Eylem: DR sorumlusunu uyar ve yeniden dene, zincir en fazla 6 adımdır",
+        "Olay: tüketici/işleyici lag arttı -> Koşul: eşik aşıldı -> Eylem: ölçek önerisi üret (action allowlist, tenant izolasyonlu)"
       ],
-      "notes": "",
+      "notes": "ECA kuralları SLO ihlali, yedek başarısızlığı ve gecikme eşiğine bağlıdır.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -263,11 +272,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI kök-neden/kapasite önerir; otomatik düzeltme/restore aksiyonunu insan onaylar"
+        "AI bu taş için yalnızca ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez veya güncelleyemez, ruleset'i geçersiz kılamaz",
+        "AI kök-neden (RCA) ve kapasite tahmini önerir; restore veya ölçekleme aksiyonunu yalnızca ops sorumlusu onaylayıp uygular",
+        "Log/trace içeriği güvenilmez (sub_prompt) kabul edilir; içine gömülü talimat AI'a komut olarak çalıştırılmaz",
+        "Yüksek riskli öneri için step-up doğrulama istenir; doğrudan prod write engellenir ve kill-switch her an devrededir"
       ],
-      "notes": "",
+      "notes": "AI tanı/kapasite önerir; restore ve ölçek kararı insan onayına tabidir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -276,11 +286,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "SLO hesabı ve performans bütçesi (CI gate) testi",
-        "Yedek geri-yükleme (restore) tatbikat testi",
-        "DR failover RPO/RTO testi; en çok 6 tur"
+        "SLO/SLI hesaplaması ve performans bütçesi CI kapısı için birim testleri; eşik aşımında build'in kırıldığı doğrulanır",
+        "Yedek geri-yükleme (restore) tatbikatı e2e olarak çalıştırılır; geri-yüklenen verinin bütünlüğü doğrulanır",
+        "DR failover senaryosunda RPO/RTO hedeflerinin karşılandığı ölçülür; trace-id korelasyonu uçtan uca test edilir",
+        "Başarısız test en fazla 6 kez yeniden çalıştırılır; düzelmezse rapor üretilir (testing-loop)"
       ],
-      "notes": "",
+      "notes": "Restore ve DR failover hedefleri test seviyesinde sürekli doğrulanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -289,11 +300,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A09 Logging: yapısal forensic iz (PII redakte)",
-        "A05 Misconfiguration: gözlem güvenli varsayılan",
-        "A08 Integrity: yedek bütünlüğü doğrulanır"
+        "OWASP A09 (Loglama): yapısal forensic iz tutulur, PII redakte edilir ve uyarı (alerting) güvenli kanaldan gider",
+        "OWASP A05 (Hatalı Yapılandırma): gözlem yığını güvenli varsayılanlarla kurulur, debug uçları prod'da kapalıdır",
+        "OWASP A08 (Veri Bütünlüğü): yedek bütünlüğü hash ve restore tatbikatıyla doğrulanır, sessiz bozulma yakalanır",
+        "OWASP A01 (Erişim Kontrolü): trace/log erişimi ops rolüyle sınırlı, tenant izleri tenant_id ile ayrışır"
       ],
-      "notes": "",
+      "notes": "Tehdit yüzeyi log sızıntısı, hatalı yapılandırma ve yedek bütünlüğüdür.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -302,11 +314,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Observability, tüm servislerden telemetri toplar (s-observability ile)",
-        "Performans bütçesi CI/build ile",
-        "DR altyapı (multi-region) ile"
+        "Observability tüm servislerden telemetri toplar; sus-actions olaylarını ve s-observability ArcheType yüzeyini besler",
+        "Performans bütçesi CI/build hattına bağlanır; regresyon sinyalini build adımına olay olarak iletir",
+        "DR ve çok-bölge ihtiyacı scale-multiregion ile koordine edilir; yedek/replikasyon sözleşmesi oradan tüketilir",
+        "Bağımlılık yönü tek taraflıdır: gözlem katmanı servisleri dinler, servisler gözlem katmanına iş mantığı için bağımlı değildir"
       ],
-      "notes": "",
+      "notes": "Telemetri tüm servislerden toplanır; DR scale-multiregion ile koordine edilir.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -315,10 +328,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Observability+Performance+DR (orta taş) tüm app'lere izlenebilirlik/dayanıklılık sağlar",
-        "Tüm servisler telemetri ve yedeklemeyi bu çerçeveden alır"
+        "Tüm app'ler logging/metrics/tracing'i bu çerçevenin sağladığı ortak SDK/araç kapsamı üzerinden gönderir, kendi toplayıcısını kurmaz",
+        "SLO/hata bütçesi panosu ve uyarı kuralları app'ler tarafından bu modülün API'siyle tanımlanır",
+        "Yedekleme ve DR yeteneğini veri tutan app'ler bu çerçeveden devralır; RPO/RTO hedefini buraya bildirir",
+        "Eğitim/enterprise hazırlık birimleri (edu-u*, build-enterprise-readiness) gözlem kanıtını bu çerçeveden okur"
       ],
-      "notes": "",
+      "notes": "App'ler telemetri ve yedeklemeyi ortak araç kapsamı üzerinden tüketir, doğrudan DB'ye değil.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-obs — \"Observability + Performance + DR\" (taş/orta taş; küme: Cross-cutting). Özet: Logging, metrics, tracing, alerting, backup, restore. Etiketler: observability, performance, backup.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -545,5 +560,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Cross-cutting",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }

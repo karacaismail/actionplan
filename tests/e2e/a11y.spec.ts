@@ -9,11 +9,11 @@ const BLOKLAYICI_ETKILER = ["serious", "critical"];
 
 // Tarama sonucundaki bloklayıcı ihlalleri okunabilir biçime çevirir.
 function bloklayiciIhlaller(
-  violations: Array<{ id: string; impact?: string | null; help: string; nodes: unknown[] }>,
+  violations: Array<{ id: string; impact?: string | null; help: string; nodes: Array<{ target?: unknown[] }> }>,
 ) {
   return violations
     .filter((v) => BLOKLAYICI_ETKILER.includes(v.impact ?? ""))
-    .map((v) => `[${v.impact}] ${v.id}: ${v.help} (${v.nodes.length} öğe)`);
+    .map((v) => `[${v.impact}] ${v.id}: ${v.help} → ${v.nodes.map((n) => (n.target ?? []).join(" ")).join(" | ")}`);
 }
 
 test.describe("Erişilebilirlik (axe-core)", () => {
@@ -40,6 +40,15 @@ test.describe("Erişilebilirlik (axe-core)", () => {
       `"/wbs" sayfasında bloklayıcı erişilebilirlik ihlalleri:\n${ihlaller.join("\n")}`,
     ).toHaveLength(0);
   });
+
+  for (const route of ["/table", "/execution", "/audit", "/gantt", "/workload", "/reports"]) {
+    test(`${route} WCAG A/AA ihlali içermez`, async ({ page }) => {
+      await page.goto(route, { waitUntil: "networkidle" });
+      const sonuc = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+      const ihlaller = bloklayiciIhlaller(sonuc.violations);
+      expect(ihlaller, `"${route}" sayfasında bloklayıcı erişilebilirlik ihlalleri:\n${ihlaller.join("\n")}`).toHaveLength(0);
+    });
+  }
 
   test("Gösterge Paneli 320px dar ekranda WCAG A/AA ihlali içermez", async ({ page }) => {
     // En dar mobil viewport — yansıma (reflow) ve dokunma hedefi ihlallerini yakalar.

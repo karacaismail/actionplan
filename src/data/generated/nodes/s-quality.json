@@ -140,11 +140,12 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Kalite Yönetimi (QC/QA): muayene planı, uygunsuzluk (NCR), CAPA ve denetim",
-        "Gelen/üretim/son muayene, örnekleme ve kalite kaydı",
-        "Düzeltici/önleyici faaliyet (CAPA) ve kalite KPI"
+        "Kalite Yönetimi (QC/QA): muayene planı, örnekleme, uygunsuzluk (NCR) ve CAPA durum makinesi (aç→incele→kapat)",
+        "Gelen/üretim/son muayene; girdi ölçüm değerleri, çıktı uygun/uygunsuz kararı ve değişmez kalite kaydı",
+        "Düzeltici/önleyici faaliyet (CAPA) ve kalite KPI panosu (kabul/red oranı, ilk geçiş verimi)",
+        "Hata yolu: muayene başarısızsa lot reddedilir ve karantinaya alınır, NCR açılmadan sevkiyat engellenir"
       ],
-      "notes": "",
+      "notes": "Quality Management inspeksiyon, reddetme ve corrective action (CAPA) yaşam döngüsünün işlevsel kapsamını tanımlar.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -153,11 +154,12 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Kalite/uygunsuzluk verisi tenant_id RLS; denetim izli",
-        "Kalite kaydı değişmez (yasal/sertifika)",
-        "CAPA onay yetkili"
+        "Muayene/NCR/CAPA tablolarında tenant_id RLS zorunlu; çapraz-tenant kalite kaydı erişimi engellenir",
+        "Kalite kaydı değişmez (append-only); yasal/sertifika kanıtı sonradan düzeltilemez, sürümlenir",
+        "CAPA kapatma ve muayene atlama yetkisi rol bazlı (least-privilege); kalite onayı kademelidir",
+        "Tedarikçi/personel kişisel verisi PII olarak sınıflandırılır; muayene fotoğrafı erişimi kısıtlıdır"
       ],
-      "notes": "",
+      "notes": "Kalite kaydının değişmezliği ve tenant RLS, denetlenebilir sertifika kanıtını güvence altına alır.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
@@ -166,11 +168,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Muayene planı/örnekleme bildirimsel; NCR durum makinesi",
-        "CAPA iş akışı; kök-neden yapılandırılmış",
-        "Kalite KPI projeksiyondan"
+        "Örnekleme planı (örn. AQL) saf fonksiyon: lot boyutu → örneklem sayısı, yan etkisiz ve test edilebilir",
+        "NCR durum makinesi ayrı modülde; geçiş kuralları (aç/karantina/kapat) tek sorumlulukta toplanır",
+        "CAPA kök-neden yapısı (5N/balık kılçığı) bildirimsel veri olarak modellenir, prosedürel koddan ayrılır",
+        "Kalite KPI'ları muayene olaylarından projeksiyonla türetilir; ham tarama mantığı tekrarlanmaz"
       ],
-      "notes": "",
+      "notes": "Örnekleme ve KPI hesabı saf çekirdek olarak NCR durum makinesinden ayrı modülerleştirilir.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
@@ -179,11 +182,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Muayene atlama (skip) kontrollü; kritik muayene zorunlu",
-        "NCR/CAPA kapatma onaylı",
-        "Kalite kaydı manipülasyonu izli"
+        "Muayene atlama (skip) yetkili ve gerekçeli; kritik karakteristik muayenesi hiçbir koşulda atlanamaz",
+        "NCR/CAPA kapatma onayları audit'e yazılır; toplu kapatma uçlarına rate-limit uygulanır",
+        "Kalite kaydı dışa aktarımı denetim günlüğüne işlenir; sertifika sızması yüzeyi daraltılır",
+        "Cihaz/IoT muayene entegrasyonu imza anahtarları rotasyonla yenilenir; sahte ölçüm engellenir"
       ],
-      "notes": "",
+      "notes": "Kritik muayene zorunluluğu ve onay audit'i kalite kaydının manipülasyon yüzeyini sertleştirir.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -192,11 +196,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Muayene/NCR listesi indeksli",
-        "Örnekleme hesabı anlık",
-        "Kalite trend projeksiyondan"
+        "Muayene/NCR listesi (tenant_id, durum, created_at) bileşik indeksi + imleç sayfalama ile gezilir",
+        "Örnekleme hesabı bellek-içi anlık; lot için tekil sorgu, satır başına ek tarama yapılmaz",
+        "Muayene ile ölçüm satırları birlikte çekilir, N+1 önlenir; kalite KPI panosu önbelleğe alınır",
+        "NCR liste sorgusu p95 < 250 ms hedefi; kalite trendi olay projeksiyonundan asenkron türetilir"
       ],
-      "notes": "",
+      "notes": "Bileşik indeks ve projeksiyon önbelleği, ölçek altında kalite sorgularının p95 hedefini taşır.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -205,11 +210,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Saha/hat muayenesi mobil (foto + ölçüm)",
-        "iOS/Android offline muayene + senkron",
-        "Dar ekranda NCR/CAPA durumu"
+        "Saha/hat muayenesi mobilde fotoğraf + ölçüm girişiyle yapılır (PWA), bağlantı yokken yerel kaydeder",
+        "Capacitor paketinde iOS/Android offline muayene; çevrimiçi olunca kalite kaydı senkronlanır",
+        "Muayene kontrol listesi dokunma hedefleri ≥44px; dar ekranda NCR/CAPA durumu tek sütun gösterilir",
+        "Çevrimdışı çekilen muayene fotoğrafı kuyruğa alınır, senkronda idempotent anahtarla yüklenir"
       ],
-      "notes": "",
+      "notes": "Saha muayenesi PWA/Capacitor ve offline senkronla hat kenarında çevrimdışı tamamlanabilir.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
@@ -218,11 +224,12 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Muayene/NCR formu klavye+okuyucu erişimli",
-        "Uygun/uygunsuz renk dışında metin+işaretle; kontrast 7:1",
-        "Ölçüm girişi erişilebilir"
+        "Muayene ve NCR formu klavyeyle tam gezilir; alanlar ARIA etiketli, görünür odak sırasına sahiptir",
+        "Uygun/uygunsuz kararı yalnız renkle değil metin+ikonla işaretlenir; kontrast oranı ≥7:1",
+        "Ölçüm girişi tolerans sınırını ekran okuyucuya metinle bildirir; sınır dışı değer sesli uyarılır",
+        "Muayene fotoğrafına alternatif metin alanı zorunlu; eksikse erişilebilirlik uyarısı verilir"
       ],
-      "notes": "",
+      "notes": "Kalite kararı AAA kontrast ve metin+ikon kodlamasıyla renk körü kullanıcıya da iletilir.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
@@ -231,11 +238,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Kalite servisi standart; muayene IoT/cihaz entegrasyonu opsiyon",
-        "NCR/CAPA olayları üretim/tedarikçiye",
-        "Shared hosting'de temel kalite kaydı"
+        "Kalite servisi Kubernetes'te HPA ile yatay ölçeklenir; liveness ve readiness probe ile sağlık denetlenir, kaynak limitleri tanımlı",
+        "Muayene cihazı/IoT köprüsü Docker Swarm servisinde opsiyonel dağıtım birimi olarak ayrılır",
+        "NCR/CAPA olayları üretim ve tedarikçi servislerine olay sözleşmesiyle asenkron yayılır",
+        "Shared hosting profilinde IoT köprüsü kapalı, salt manuel kalite kaydı ile temel kapsam sunulur"
       ],
-      "notes": "",
+      "notes": "Kalite servisi standart ölçeklenir; cihaz/IoT köprüsü bağımsız ve opsiyonel dağıtılır.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
@@ -244,11 +252,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
-        "Olay: muayene başarısız → NCR aç + lotu karantinaya al (idempotent, zincir ≤6)",
-        "Olay: tekrarlayan uygunsuzluk → CAPA tetikle (loop-breaker)"
+        "Backend ECA ruleset'i AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder; UI yalnız güvenli parametre yüzeyi",
+        "Olay: muayene başarısız → Koşul: kritik karakteristik → Eylem: NCR aç + lotu karantinaya al (idempotent, zincir ≤6 adım)",
+        "Olay: aynı uygunsuzluk 3. kez tekrarladı → Eylem: CAPA tetikle; tekrar tetiklemede yinelenen CAPA üretilmez",
+        "Action allowlist: tenant yalnız muayene eşik/örnekleme parametresini ayarlar; system kuralları kilitli, step-up gerektirir"
       ],
-      "notes": "",
+      "notes": "ECA kuralları muayene-NCR-CAPA yaşam döngüsüne bağlı, maks 6 zincir ve idempotency ile sınırlı.",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
@@ -257,11 +266,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
-        "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny",
-        "AI kalite anomali/kök-neden ve muayene-foto analizi önerir; NCR/CAPA kararını kalite uzmanı verir"
+        "AI yalnız Quality ArcheType taslağı/prod-update önerisi üretir; app/module üretemez, güncelleyemez, ruleset override edemez",
+        "Muayene notu ve tedarikçi açıklaması serbest metni sub_prompt olarak güvenilmezdir; talimat gibi çalıştırılmaz",
+        "AI kalite anomalisi, kök-neden hipotezi ve muayene-fotoğraf analizi önerir; NCR/CAPA kararını kalite uzmanı verir",
+        "Admin akışı prompt→draft→validation→diff→preview→approval→apply; yüksek riskte kill-switch ve step-up devreye girer"
       ],
-      "notes": "",
+      "notes": "AI kalite içgörüsü önerir; NCR açma ve CAPA kapatma kararı kalite uzmanı tekelindedir.",
       "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
@@ -270,11 +280,12 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Muayene/örnekleme + NCR akış testi",
-        "CAPA kapatma + kayıt değişmezlik testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Örnekleme (AQL) ve NCR açma birim testleri; lot boyutuna göre örneklem sayısı sınır değerleriyle doğrulanır",
+        "Muayene→red→NCR→CAPA kullanıcı yolculuğu Playwright e2e ile uçtan uca koşulur",
+        "Kalite kaydı değişmezlik (append-only) ve kapatma yetki negatif senaryoları test edilir",
+        "Testing-loop: kararsız muayene testi en fazla 6 kez yeniden denenir, geçmezse rapor üretilir"
       ],
-      "notes": "",
+      "notes": "Örnekleme doğruluğu ve kayıt değişmezliği e2e + birim testleriyle sürekli doğrulanır.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -283,11 +294,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A08 Integrity: kalite kaydı değişmez + izli",
-        "A01 Access Control: CAPA/NCR yetkisi",
-        "A09 Logging: kalite kararları forensic iz"
+        "OWASP A08 Integrity: kalite kaydı değişmez ve sürümlü; sertifika kanıtı manipülasyona karşı korunur",
+        "OWASP A01 Erişim Kontrolü: NCR açma/CAPA kapatma yetkisi tenant_id RLS + rol ile zorlanır",
+        "OWASP A09 Loglama: muayene ve red kararları forensic izlenebilir audit kaydına yazılır",
+        "OWASP LLM02 Güvensiz Çıktı: AI kök-neden önerisi doğrudan uygulanmaz, uzman onayından geçer"
       ],
-      "notes": "",
+      "notes": "Kalite tehdit yüzeyi bütünlük, erişim ve loglama maddeleriyle (OWASP 2025 + LLM) eşlendi.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
@@ -296,11 +308,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Quality, wms (gelen muayene), mrp (üretim), procurement (tedarikçi kalite) ile entegre",
-        "NCR traceability'ye; CAPA workflow'a",
-        "Tedarikçi değerlendirme procurement'a"
+        "Muayene/onay iş akışı l1-workflow üzerinden yürütülür; bağımlılık çekirdek workflow'a doğrudur",
+        "Muayene fotoğrafı l1-file'da saklanır, bildirimler l1-notification olay sözleşmesiyle iletilir",
+        "Kalite kaydı değişmezliği l1-audit ile, yetkilendirme k-authz ile, şema doğrulaması k-schema ile sağlanır",
+        "NCR ve lot kararı s-traceability'ye olayla akar; tedarikçi kalite skoru s-procurement'a iletilir"
       ],
-      "notes": "",
+      "notes": "Quality, workflow/file/notification/audit çekirdek katmanlarını tüketir ve traceability/procurement'a olayla bağlanır.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
@@ -309,10 +322,11 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Kalite Yönetimi ArcheType'ı Tedarik Zinciri'nde QC/QA sağlar",
-        "Üretim/tedarik app'leri quality'yi kullanır"
+        "Kalite Yönetimi ArcheType'ı Tedarik Zinciri kümesine QC/QA yüzeyini üretilen API üzerinden sağlar",
+        "Üretim (mrp) ve depo (wms) app'leri muayene tetikleme ve sonucu doğrudan DB'den değil olay/araç kapsamından okur",
+        "Tedarik (procurement) app'i tedarikçi kalite skorunu quality olay sözleşmesine abone olarak tüketir"
       ],
-      "notes": "",
+      "notes": "Quality QC/QA yüzeyi olay/API kapsamıyla tüketilir; tüketen app'lere doğrudan tablo erişimi verilmez.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-quality — \"Quality Management (QC/QA)\" (ArcheType/büyük taş; küme: Tedarik Zinciri). Özet: İnspeksiyon + reddetme + corrective action Etiketler: supply-chain, quality, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
@@ -672,5 +686,13 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
-  }
+  },
+  "milestone": "Tedarik Zinciri & Lojistik",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null
+  },
+  "assignees": []
 }
