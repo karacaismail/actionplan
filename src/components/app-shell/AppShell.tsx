@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const loading = useTaskStore((s) => s.loading);
 
   // rota değişince mobil çekmeceyi kapat
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setOpen kararlıdır; çekmece yalnızca pathname değişince kapanmalı
   useEffect(() => setOpen(false), [pathname]);
 
   return (
@@ -50,7 +50,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/" className="flex items-center gap-2 font-medium">
           <Icon name="ph-strategy" className="text-2xl text-primary" />
           <span>{t.appTitle}</span>
-          <span className="hidden text-base text-muted-foreground sm:inline">· {t.appSubtitle}</span>
+          <span className="hidden text-base text-muted-foreground sm:inline">
+            · {t.appSubtitle}
+          </span>
         </Link>
         <div className="ml-auto">
           <Button variant="ghost" size="sm" aria-label={t.actions.toggleTheme} onClick={toggle}>

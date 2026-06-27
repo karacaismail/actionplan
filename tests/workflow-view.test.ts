@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { allWorkflows, outgoing, workflowsForNode } from "@/lib/workflow-view";
 import type { WorkflowContract } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * workflow-view (Küme E faz-2) — Surface/Workflow kataloğunu (Küme D) panelde görselleştirmek için

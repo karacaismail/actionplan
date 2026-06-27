@@ -8,9 +8,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const CONTENT = {
@@ -405,11 +415,7 @@ const CONTENT = {
       "iOS/Android push ile sağlık uyarısı",
       "Dar ekranda metrik özeti",
     ],
-    wcag: [
-      "İzleme klavye+okuyucu erişimli",
-      "Durum metinle; kontrast 7:1",
-      "Hata yapılandırılmış",
-    ],
+    wcag: ["İzleme klavye+okuyucu erişimli", "Durum metinle; kontrast 7:1", "Hata yapılandırılmış"],
     deployment: [
       "Ölçek taşı üst primitifle dağıtılır ve ölçeklenir",
       "Sağlık kontrolleriyle dayanıklı",
@@ -537,11 +543,7 @@ const CONTENT = {
       "Maks 6 zorlanır",
       "Field-level yetki",
     ],
-    performance: [
-      "O(1) doğrulama",
-      "Önbelleklenebilir",
-      "Toplu doğrulama",
-    ],
+    performance: ["O(1) doğrulama", "Önbelleklenebilir", "Toplu doğrulama"],
     mobileApps: [
       "Yapılandırma alanı mobilde salt-okuma",
       "iOS/Android'de geçerli değer gösterimi",
@@ -603,26 +605,10 @@ const CONTENT = {
       "Sabit tip; geçersiz değer reddi",
       "Paylaşılır",
     ],
-    securityOptimization: [
-      "En dar biçim doğrulaması",
-      "Güvenli serileştirme",
-      "Bağımlılıksız",
-    ],
-    performance: [
-      "Sabit zaman doğrulama",
-      "İnternalize değer",
-      "Ucuz karşılaştırma",
-    ],
-    mobileApps: [
-      "Atom değeri mobilde özetli",
-      "Offline doğrulanabilir",
-      "Taşmaz",
-    ],
-    wcag: [
-      "Atom etiketli; hata metinle; kontrast 7:1",
-      "Biçim ipuçlu",
-      "Okuyucuya anlamlı",
-    ],
+    securityOptimization: ["En dar biçim doğrulaması", "Güvenli serileştirme", "Bağımlılıksız"],
+    performance: ["Sabit zaman doğrulama", "İnternalize değer", "Ucuz karşılaştırma"],
+    mobileApps: ["Atom değeri mobilde özetli", "Offline doğrulanabilir", "Taşmaz"],
+    wcag: ["Atom etiketli; hata metinle; kontrast 7:1", "Biçim ipuçlu", "Okuyucuya anlamlı"],
     deployment: [
       "Ölçek atom tipi şema çekirdeğinde",
       "Her profilde aynı doğrulama",
@@ -633,21 +619,9 @@ const CONTENT = {
       "Atom otomasyon tetiklemez; üst kurallara değer sağlar",
       "Olay: anahtar/sayaç geçersiz → üst element reddeder (idempotent)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI ölçek atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz",
-    ],
-    testing: [
-      "Atom biçim/sınır testi",
-      "Değişmezlik testi",
-      "Serileştirme testi",
-    ],
-    owasp: [
-      "A03 Injection: değer biçim-doğrulanır",
-      "A08 Integrity: atom değişmez",
-      "İzlenebilir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI ölçek atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz"],
+    testing: ["Atom biçim/sınır testi", "Değişmezlik testi", "Serileştirme testi"],
+    owasp: ["A03 Injection: değer biçim-doğrulanır", "A08 Integrity: atom değişmez", "İzlenebilir"],
     integration: [
       "Ölçek atomu element ve field tanımlarının yapı taşı",
       "Tip sistemine dahil",
@@ -1452,7 +1426,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -1471,4 +1446,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-scale] ${applied} ölçek düğümü derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-scale] ${applied} ölçek düğümü derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

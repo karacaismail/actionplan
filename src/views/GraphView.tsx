@@ -1,23 +1,23 @@
+import { useTheme } from "@/components/theme/useTheme";
 import { Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
 import { downloadFile, getDescendants } from "@/engine";
 import { STATUS_LABEL, hslVar, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
 import { LEVEL_META, type TaskNode } from "@/schemas";
-import { useTheme } from "@/components/theme/useTheme";
 import { useTaskStore } from "@/store/taskStore";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   Background,
   Controls,
+  type Edge,
   Handle,
   MiniMap,
-  Position,
-  ReactFlow,
-  type Edge,
   type Node,
   type NodeProps,
   type NodeTypes,
+  Position,
+  ReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import ELK from "elkjs/lib/elk.bundled.js";
@@ -345,7 +345,8 @@ export function GraphView() {
       {/* Açıklama: kenar tipleri */}
       <div className="flex flex-wrap items-center gap-4 text-base text-muted-foreground">
         <span className="inline-flex items-center gap-2">
-          <span className="h-0.5 w-6" style={{ background: hslVar("--border") }} /> {t.a11y.hierarchy}
+          <span className="h-0.5 w-6" style={{ background: hslVar("--border") }} />{" "}
+          {t.a11y.hierarchy}
         </span>
         <span className="inline-flex items-center gap-2">
           <span

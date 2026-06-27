@@ -74,4 +74,4 @@ fs.writeFileSync(OUT_MD, md);
 console.log(
   `[audit] ${summary.total} düğüm skorlandı · ortalama ${summary.avg}/3 · güçlü ${summary.bands.strong} / orta ${summary.bands.ok} / zayıf ${summary.bands.weak}.`,
 );
-console.log(`[audit] yazıldı: public/data/audit.json, docs/audit-report.md`);
+console.log("[audit] yazıldı: public/data/audit.json, docs/audit-report.md");

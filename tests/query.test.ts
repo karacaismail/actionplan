@@ -44,13 +44,19 @@ describe("filtre DSL parser + matchNode", () => {
     expect(filterNodes(nodes, ok("status = done")).map((n) => n.id)).toEqual(["a"]);
   });
   it("OR birleşimi", () => {
-    expect(filterNodes(nodes, ok("status = done OR level = module")).map((n) => n.id).sort()).toEqual(["a", "b"]);
+    expect(
+      filterNodes(nodes, ok("status = done OR level = module"))
+        .map((n) => n.id)
+        .sort(),
+    ).toEqual(["a", "b"]);
   });
   it("NOT", () => {
     expect(filterNodes(nodes, ok("NOT status = done")).map((n) => n.id)).toEqual(["b"]);
   });
   it("AND + parantez önceliği", () => {
-    expect(filterNodes(nodes, ok("(status = done OR status = todo) AND level = app")).map((n) => n.id)).toEqual(["a"]);
+    expect(
+      filterNodes(nodes, ok("(status = done OR status = todo) AND level = app")).map((n) => n.id),
+    ).toEqual(["a"]);
   });
   it("in [liste]", () => {
     expect(filterNodes(nodes, ok("level in [app, module]")).length).toBe(2);

@@ -54,7 +54,7 @@ const WATERFALL_PHASES = [
 ];
 const GRANULARITY_TO_LEVEL = {
   dag: "app",
-  "dağ": "app",
+  dağ: "app",
   kaya: "module",
   "buyuk-tas": "archetype",
   "büyük-taş": "archetype",
@@ -116,16 +116,20 @@ const CLUSTER_ICON = {
 };
 
 function kebab(s) {
-  return String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "dugum";
+  return (
+    String(s)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "dugum"
+  );
 }
 
 function titleCase(s) {
-  return String(s).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(s)
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function skeletonDimensions() {
@@ -240,7 +244,11 @@ function main() {
     const parentId = parentField && byId.has(parentField) ? parentField : appNodes.get(cluster).id;
     const related = []
       .concat(Array.isArray(raw.related) ? raw.related : [])
-      .concat(Array.isArray(raw.relations) ? raw.relations.map((r) => (typeof r === "string" ? r : r?.target)) : [])
+      .concat(
+        Array.isArray(raw.relations)
+          ? raw.relations.map((r) => (typeof r === "string" ? r : r?.target))
+          : [],
+      )
       .filter(Boolean)
       .map(kebab);
     pageNodes.push({
@@ -302,7 +310,9 @@ function main() {
     if (!childrenOf.has(n.parentId)) childrenOf.set(n.parentId, []);
     childrenOf.get(n.parentId).push(n);
   }
-  const roots = nodes.filter((n) => !n.parentId).sort((a, b) => a.title.localeCompare(b.title, "tr"));
+  const roots = nodes
+    .filter((n) => !n.parentId)
+    .sort((a, b) => a.title.localeCompare(b.title, "tr"));
 
   let appIdx = 0;
   function assign(node, code) {
@@ -310,9 +320,9 @@ function main() {
     const kids = (childrenOf.get(node.id) || []).sort(
       (a, b) => a.order - b.order || a.title.localeCompare(b.title, "tr"),
     );
-    kids.forEach((k, i) => assign(k, `${code}.${i + 1}`));
+    for (const [i, k] of kids.entries()) assign(k, `${code}.${i + 1}`);
   }
-  roots.forEach((r) => assign(r, String(++appIdx)));
+  for (const r of roots) assign(r, String(++appIdx));
 
   // 6) Yaz
   fs.rmSync(NODES_DIR, { recursive: true, force: true });
@@ -381,7 +391,10 @@ function main() {
     },
   };
 
-  fs.writeFileSync(path.join(OUT_DIR, "navigation.json"), `${JSON.stringify(navigation, null, 2)}\n`);
+  fs.writeFileSync(
+    path.join(OUT_DIR, "navigation.json"),
+    `${JSON.stringify(navigation, null, 2)}\n`,
+  );
   fs.writeFileSync(path.join(OUT_DIR, "index.json"), `${JSON.stringify(index, null, 2)}\n`);
   fs.writeFileSync(path.join(OUT_DIR, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
 

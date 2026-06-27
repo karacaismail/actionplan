@@ -1,13 +1,15 @@
 import { Card, Icon, ProgressBar } from "@/components/ui/primitives";
 import { STATUS_LABEL } from "@/lib/format";
-import { LEVEL_META, type WbsLevel } from "@/schemas";
 import { t } from "@/lib/strings";
+import { LEVEL_META, type WbsLevel } from "@/schemas";
 import { useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo } from "react";
 
 // ECharts'i tembel yükle → echarts (~1MB) başlangıç paketinden çıkar.
-const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+const EChart = lazy(() =>
+  import("@/components/charts/EChart").then((m) => ({ default: m.EChart })),
+);
 
 function ChartFallback() {
   return (
@@ -65,12 +67,19 @@ export function DashboardView() {
     return {
       tooltip: { trigger: "axis" },
       grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
-      xAxis: { type: "category", data: entries.map((e) => LEVEL_META[e.lvl].tr), axisLabel: { color: "#94a3b8" } },
+      xAxis: {
+        type: "category",
+        data: entries.map((e) => LEVEL_META[e.lvl].tr),
+        axisLabel: { color: "#94a3b8" },
+      },
       yAxis: { type: "value", axisLabel: { color: "#94a3b8" } },
       series: [
         {
           type: "bar",
-          data: entries.map((e, i) => ({ value: e.count, itemStyle: { color: LEVEL_COLOR[i % LEVEL_COLOR.length] } })),
+          data: entries.map((e, i) => ({
+            value: e.count,
+            itemStyle: { color: LEVEL_COLOR[i % LEVEL_COLOR.length] },
+          })),
           barMaxWidth: 48,
         },
       ],
@@ -116,8 +125,13 @@ export function DashboardView() {
           {apps.map((a) => (
             <li key={a.id} className="flex items-center gap-3 py-2">
               <Icon name={a.icon} className="text-primary text-xl" />
-              <Link to="/task/$taskId" params={{ taskId: a.id }} className="min-w-0 flex-1 truncate hover:underline">
-                <span className="font-mono text-base text-muted-foreground">{a.wbsCode}</span> {a.title}
+              <Link
+                to="/task/$taskId"
+                params={{ taskId: a.id }}
+                className="min-w-0 flex-1 truncate hover:underline"
+              >
+                <span className="font-mono text-base text-muted-foreground">{a.wbsCode}</span>{" "}
+                {a.title}
               </Link>
               <span className="text-base text-muted-foreground">
                 {a.rollup.total} {t.detail.subTaskUnit}

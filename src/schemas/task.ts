@@ -140,14 +140,7 @@ export type Dimension = z.infer<typeof DimensionSchema>;
 /* ----------------------------------------------------------------------------
  * Planlama / izleme yardımcı şemaları
  * -------------------------------------------------------------------------- */
-export const STATUS_LIST = [
-  "backlog",
-  "todo",
-  "in-progress",
-  "blocked",
-  "review",
-  "done",
-] as const;
+export const STATUS_LIST = ["backlog", "todo", "in-progress", "blocked", "review", "done"] as const;
 export const TaskStatusSchema = z.enum(STATUS_LIST);
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
@@ -220,7 +213,11 @@ export const EcaRuleSchema = z.object({
 });
 export type EcaRule = z.infer<typeof EcaRuleSchema>;
 
-export const MigrationModeSchema = z.enum(["append-only", "expand-contract", "reversible-backfill"]);
+export const MigrationModeSchema = z.enum([
+  "append-only",
+  "expand-contract",
+  "reversible-backfill",
+]);
 export type MigrationMode = z.infer<typeof MigrationModeSchema>;
 
 export const RulesetBoundarySchema = z.object({
@@ -253,17 +250,19 @@ export const AgentPolicySchema = z.object({
   /** AI için mutasyon hedefi olamayacak WBS seviyeleri. */
   forbiddenTargets: z.array(WbsLevelSchema).default(["app", "module"]),
   allowedActions: z.array(z.string()).default(["read", "suggest-changeset"]),
-  forbiddenActions: z.array(z.string()).default([
-    "generate-app",
-    "generate-module",
-    "update-app",
-    "update-module",
-    "publish-public",
-    "disable-ruleset",
-    "override-ruleset",
-    "rewrite-history",
-    "direct-prod-write",
-  ]),
+  forbiddenActions: z
+    .array(z.string())
+    .default([
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+    ]),
   /** step-up (insan onayı) gerektiren aksiyonlar */
   stepUp: z.array(z.string()).default([]),
   rulesetBoundary: RulesetBoundarySchema.default({}),

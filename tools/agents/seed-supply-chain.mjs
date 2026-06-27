@@ -8,25 +8,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const xdim = (P, what) => ({
-  featureDefs: [`${P}: ${what}`, `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`, `${P} örnek dal — granülerlikteki yerini gösterir`],
-  security: [`${P} üst ArcheType tenant izolasyonuna uyar`, `${P} girdisi sınırda doğrulanır`, `${P} hassas veri üst katmanda maskelenir`],
-  codeOptimization: [`${P} saf/idempotent tasarlanır`, `${P} üst seviyeyle tipli arayüz`, `${P} tekrar eden mantık paylaşılan yardımcıya`],
-  securityOptimization: [`${P} en az ayrıcalıkla çalışır`, `${P} girdi normalizasyonu ile enjeksiyon daraltılır`, `${P} değişikliği sürümlü`],
-  performance: [`${P} çıktısı önbelleklenebilir`, `${P} tembel başlatılır`, `${P} küçük serileştirilebilir çıktı`],
-  mobileApps: [`${P} UI'si varsa mobilde tek sütun`, `${P} iOS/Android içinde bağımsız çalışabilir`, `${P} dar ekranda okunur`],
-  wcag: [`${P} etkileşimi klavye erişimli ve adlandırılmış`, `${P} durumu metinle bildirilir (kontrast 7:1)`, `${P} hata mesajı ilişkilendirilmiş`],
-  deployment: [`${P} üst ArcheType ile dağıtılır`, `${P} üst yetenekle ölçeklenir`, `${P} shared hosting'de istemci-içi çalışabilir`],
-  eca: [ECA_BOUND, `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`, `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`],
+  featureDefs: [
+    `${P}: ${what}`,
+    `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`,
+    `${P} örnek dal — granülerlikteki yerini gösterir`,
+  ],
+  security: [
+    `${P} üst ArcheType tenant izolasyonuna uyar`,
+    `${P} girdisi sınırda doğrulanır`,
+    `${P} hassas veri üst katmanda maskelenir`,
+  ],
+  codeOptimization: [
+    `${P} saf/idempotent tasarlanır`,
+    `${P} üst seviyeyle tipli arayüz`,
+    `${P} tekrar eden mantık paylaşılan yardımcıya`,
+  ],
+  securityOptimization: [
+    `${P} en az ayrıcalıkla çalışır`,
+    `${P} girdi normalizasyonu ile enjeksiyon daraltılır`,
+    `${P} değişikliği sürümlü`,
+  ],
+  performance: [
+    `${P} çıktısı önbelleklenebilir`,
+    `${P} tembel başlatılır`,
+    `${P} küçük serileştirilebilir çıktı`,
+  ],
+  mobileApps: [
+    `${P} UI'si varsa mobilde tek sütun`,
+    `${P} iOS/Android içinde bağımsız çalışabilir`,
+    `${P} dar ekranda okunur`,
+  ],
+  wcag: [
+    `${P} etkileşimi klavye erişimli ve adlandırılmış`,
+    `${P} durumu metinle bildirilir (kontrast 7:1)`,
+    `${P} hata mesajı ilişkilendirilmiş`,
+  ],
+  deployment: [
+    `${P} üst ArcheType ile dağıtılır`,
+    `${P} üst yetenekle ölçeklenir`,
+    `${P} shared hosting'de istemci-içi çalışabilir`,
+  ],
+  eca: [
+    ECA_BOUND,
+    `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`,
+    `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`,
+  ],
   aiAgents: [AI_B1, AI_B2, `${P} tarifini AI önerebilir; üst ArcheType/app'i kendisi üretemez`],
-  testing: [`${P} için birim + üst sözleşme entegrasyon testi`, `${P} sınır/erişilebilirlik mikro-yolculuğu`, "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"],
-  owasp: [`${P}: A03 girdi sınırda doğrulanır`, `${P}: A04 en-az-ayrıcalık tasarım`, `${P}: kabul/red izlenir`],
-  integration: [`${P} üst ArcheType'a tipli arayüzle bağlanır`, `${P} sözleşmeyi tüketir`, `${P} çıktısı üst akışta kullanılır`],
+  testing: [
+    `${P} için birim + üst sözleşme entegrasyon testi`,
+    `${P} sınır/erişilebilirlik mikro-yolculuğu`,
+    "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+  ],
+  owasp: [
+    `${P}: A03 girdi sınırda doğrulanır`,
+    `${P}: A04 en-az-ayrıcalık tasarım`,
+    `${P}: kabul/red izlenir`,
+  ],
+  integration: [
+    `${P} üst ArcheType'a tipli arayüzle bağlanır`,
+    `${P} sözleşmeyi tüketir`,
+    `${P} çıktısı üst akışta kullanılır`,
+  ],
   moduleUsage: [`${P} bağımsız sunulmaz; üst ArcheType içinde kullanılır`],
 });
 
@@ -103,10 +161,22 @@ const CONTENT = {
     ],
   },
 
-  "app-supply-chain-x-stone": xdim("Tedarik Zinciri Taşı", "bir lojistik yeteneğinin alt-parça tarifi (ör. rota hesabı)"),
-  "app-supply-chain-x-molecule": xdim("Tedarik Zinciri Molekülü", "birkaç lojistik kuralını birleştiren bileşen (ör. sevkiyat kalemi)"),
-  "app-supply-chain-x-element": xdim("Tedarik Zinciri Elementi", "tek bir lojistik alanı/kuralı (ör. lot numarası)"),
-  "app-supply-chain-x-atom": xdim("Tedarik Zinciri Atomu", "bölünemez lojistik ilkeli (ör. SKU değer nesnesi)"),
+  "app-supply-chain-x-stone": xdim(
+    "Tedarik Zinciri Taşı",
+    "bir lojistik yeteneğinin alt-parça tarifi (ör. rota hesabı)",
+  ),
+  "app-supply-chain-x-molecule": xdim(
+    "Tedarik Zinciri Molekülü",
+    "birkaç lojistik kuralını birleştiren bileşen (ör. sevkiyat kalemi)",
+  ),
+  "app-supply-chain-x-element": xdim(
+    "Tedarik Zinciri Elementi",
+    "tek bir lojistik alanı/kuralı (ör. lot numarası)",
+  ),
+  "app-supply-chain-x-atom": xdim(
+    "Tedarik Zinciri Atomu",
+    "bölünemez lojistik ilkeli (ör. SKU değer nesnesi)",
+  ),
 
   "s-wms": {
     featureDefs: [
@@ -442,11 +512,7 @@ const CONTENT = {
       "Olay: yeni satış verisi → tahmini yenile + sapma kontrol (idempotent, zincir ≤6)",
       "Olay: talep-tedarik dengesizliği → S&OP uyarısı + öneri (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI talep tahmini/senaryo önerir; planı (S&OP) insan onaylar",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI talep tahmini/senaryo önerir; planı (S&OP) insan onaylar"],
     testing: [
       "Tahmin doğruluk (backtesting) testi",
       "Talep-tedarik dengeleme + güvenlik stoğu testi",
@@ -758,7 +824,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -777,4 +844,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-supply-chain] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-supply-chain] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

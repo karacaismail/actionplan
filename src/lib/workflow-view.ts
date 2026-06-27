@@ -16,7 +16,10 @@ export function allWorkflows(): WorkflowContract[] {
 }
 
 /** Bir düğüme (ArcheType id) bağlı workflow'lar (archetypeRef eşleşmesi). */
-export function workflowsForNode(nodeId: string, catalog: WorkflowContract[] = WORKFLOWS): WorkflowContract[] {
+export function workflowsForNode(
+  nodeId: string,
+  catalog: WorkflowContract[] = WORKFLOWS,
+): WorkflowContract[] {
   return catalog.filter((w) => w.archetypeRef === nodeId);
 }
 

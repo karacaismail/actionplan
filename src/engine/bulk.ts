@@ -5,7 +5,14 @@ import type { TaskNode } from "@/schemas";
  * toptan yamalanır; audit/dimensions/ecaRules/agentPolicy gibi alanlar KORUNUR
  * (kalite ve güvenlik kapıları toplu işlemle bozulamaz).
  */
-export const BULK_FIELDS = ["status", "priority", "owner", "assignees", "milestone", "phase"] as const;
+export const BULK_FIELDS = [
+  "status",
+  "priority",
+  "owner",
+  "assignees",
+  "milestone",
+  "phase",
+] as const;
 export type BulkPatch = Partial<Pick<TaskNode, (typeof BULK_FIELDS)[number]>>;
 
 export function sanitizeBulkPatch(patch: BulkPatch): BulkPatch {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
 import { ArchetypeContractSchema, STEEL_WALLS } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * ArcheType sözleşme fixtures + politika kapıları (conformance).
@@ -29,7 +29,12 @@ describe("ArcheType sözleşme fixtures", () => {
       expect(c.aiPolicy.rulesetBoundary.canOverride).toBe(false);
       expect(c.aiPolicy.prodDataPolicy.preserveHistory).toBe(true);
       expect(c.aiPolicy.forbiddenActions).toEqual(
-        expect.arrayContaining(["generate-app", "generate-module", "override-ruleset", "direct-prod-write"]),
+        expect.arrayContaining([
+          "generate-app",
+          "generate-module",
+          "override-ruleset",
+          "direct-prod-write",
+        ]),
       );
     });
 
@@ -49,7 +54,7 @@ describe("ArcheType sözleşme fixtures", () => {
       expect(layers).toEqual(expect.arrayContaining(["system", "platform", "tenant"]));
       expect(c.rulesetBindings.find((r) => r.layer === "system")?.immutable).toBe(true);
       const tenant = c.rulesetBindings.find((r) => r.layer === "tenant");
-      expect((tenant?.tenantEditableParams.length ?? 0)).toBeGreaterThan(0);
+      expect(tenant?.tenantEditableParams.length ?? 0).toBeGreaterThan(0);
     });
 
     it(`${id}: tüm çelik duvarlar mevcut`, () => {

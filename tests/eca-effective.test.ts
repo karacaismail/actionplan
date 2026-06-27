@@ -1,6 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { actionEmits, effectiveRules, firedOutcomes, ruleEvents, simulate, simulateChain } from "@/lib/eca-effective";
+import {
+  actionEmits,
+  effectiveRules,
+  firedOutcomes,
+  ruleEvents,
+  simulate,
+  simulateChain,
+} from "@/lib/eca-effective";
 import type { EcaRule, EcaRulesetPackage } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * Küme E test-önce çekirdeği — panel ECA görünürlük + simülasyonun saf-mantık tabanı.
@@ -15,7 +22,12 @@ const rule = (
   requiresApproval = false,
 ): EcaRule => ({ id, event, when, then, maxChainDepth: 6, requiresApproval });
 
-const pkg = (id: string, layer: EcaRulesetPackage["layer"], clusters: string[], rules: EcaRule[]): EcaRulesetPackage => ({
+const pkg = (
+  id: string,
+  layer: EcaRulesetPackage["layer"],
+  clusters: string[],
+  rules: EcaRule[],
+): EcaRulesetPackage => ({
   id,
   name: `paket-${id}`,
   description: "test paketi",
@@ -24,11 +36,20 @@ const pkg = (id: string, layer: EcaRulesetPackage["layer"], clusters: string[], 
   version: "1.0.0",
   params: [],
   rules,
-  safety: { mutates: false, requiresApproval: false, aiCanModify: layer !== "system", maxChainDepth: 6 },
+  safety: {
+    mutates: false,
+    requiresApproval: false,
+    aiCanModify: layer !== "system",
+    maxChainDepth: 6,
+  },
   appliesTo: { clusters, levels: [] },
 });
 
-const node = (cluster: string, ecaRules: EcaRule[]) => ({ id: "n1", ecaRules, source: { cluster } });
+const node = (cluster: string, ecaRules: EcaRule[]) => ({
+  id: "n1",
+  ecaRules,
+  source: { cluster },
+});
 
 describe("eca-effective — etkili kural hesabı", () => {
   it("inline kuralları source=inline olarak döndürür", () => {
@@ -60,7 +81,10 @@ describe("eca-effective — etkili kural hesabı", () => {
   });
 
   it("ruleEvents benzersiz ve sıralı olay listesi verir", () => {
-    const eff = effectiveRules(node("x", [rule("a", "b.event"), rule("b", "a.event"), rule("c", "b.event")]), []);
+    const eff = effectiveRules(
+      node("x", [rule("a", "b.event"), rule("b", "a.event"), rule("c", "b.event")]),
+      [],
+    );
     expect(ruleEvents(eff)).toEqual(["a.event", "b.event"]);
   });
 });
@@ -87,13 +111,18 @@ describe("eca-effective — simülasyon (salt-okunur dry-run)", () => {
   });
 
   it("requiresApproval kuralı sonuçta onay-gerekir işaretini taşır", () => {
-    const rules = effectiveRules(node("x", [rule("appr", "task.approved", [], { type: "set-field", params: {} }, true)]), []);
+    const rules = effectiveRules(
+      node("x", [rule("appr", "task.approved", [], { type: "set-field", params: {} }, true)]),
+      [],
+    );
     const fired = firedOutcomes(simulate(rules, "task.approved", {}));
     expect(fired[0].result.requiresApproval).toBe(true);
   });
 
   it("simülasyon hiçbir mutasyon yapmaz (girdi kuralları değişmez)", () => {
-    const inline = [rule("done", "task.status.changed", [{ field: "status", op: "eq", value: "done" }])];
+    const inline = [
+      rule("done", "task.status.changed", [{ field: "status", op: "eq", value: "done" }]),
+    ];
     const frozen = JSON.stringify(inline);
     const rules = effectiveRules(node("x", inline), []);
     simulate(rules, "task.status.changed", { status: "done" });
@@ -104,8 +133,12 @@ describe("eca-effective — simülasyon (salt-okunur dry-run)", () => {
 describe("eca-effective — çok-adımlı zincir simülasyonu (faz-2, salt-okunur)", () => {
   it("actionEmits: create-task→task.created, set-field(status)→task.status.changed, notify→yok", () => {
     expect(actionEmits({ type: "create-task", params: {} })).toBe("task.created");
-    expect(actionEmits({ type: "set-field", params: { field: "status" } })).toBe("task.status.changed");
-    expect(actionEmits({ type: "set-field", params: { field: "owner" } })).toBe("task.field.changed");
+    expect(actionEmits({ type: "set-field", params: { field: "status" } })).toBe(
+      "task.status.changed",
+    );
+    expect(actionEmits({ type: "set-field", params: { field: "owner" } })).toBe(
+      "task.field.changed",
+    );
     expect(actionEmits({ type: "notify", params: {} })).toBeUndefined();
   });
 

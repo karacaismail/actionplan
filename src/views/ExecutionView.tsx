@@ -6,7 +6,9 @@ import { taskStore, useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 
-const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+const EChart = lazy(() =>
+  import("@/components/charts/EChart").then((m) => ({ default: m.EChart })),
+);
 
 const CTRL =
   "tap-target rounded-md border border-border bg-background px-2 py-1 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -51,14 +53,22 @@ export function ExecutionView() {
   const effortOption = useMemo(() => {
     const m = new Map<string, number>();
     for (const n of nodes)
-      if (n.effort.unit === "d") m.set(n.milestone ?? "—", (m.get(n.milestone ?? "—") ?? 0) + n.effort.estimate);
+      if (n.effort.unit === "d")
+        m.set(n.milestone ?? "—", (m.get(n.milestone ?? "—") ?? 0) + n.effort.estimate);
     const data = [...m.entries()].filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
     return {
       tooltip: { trigger: "axis" },
       grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
       xAxis: { type: "value", axisLabel: { color: "#94a3b8" } },
       yAxis: { type: "category", data: data.map((d) => d[0]), axisLabel: { color: "#94a3b8" } },
-      series: [{ type: "bar", data: data.map((d) => d[1]), itemStyle: { color: "#38bdf8" }, barMaxWidth: 22 }],
+      series: [
+        {
+          type: "bar",
+          data: data.map((d) => d[1]),
+          itemStyle: { color: "#38bdf8" },
+          barMaxWidth: 22,
+        },
+      ],
     };
   }, [nodes]);
 
@@ -111,13 +121,19 @@ export function ExecutionView() {
               </option>
             ))}
           </select>
-          {overrideCount > 0 && <span className="text-base text-muted-foreground">· {t.execution.savedLocally}</span>}
+          {overrideCount > 0 && (
+            <span className="text-base text-muted-foreground">· {t.execution.savedLocally}</span>
+          )}
         </div>
 
         {rows.length === 0 ? (
           <p className="py-6 text-center text-base text-muted-foreground">{t.execution.empty}</p>
         ) : (
-          <div className="flex flex-col">{rows.map((n) => <EditRow key={n.id} n={n} />)}</div>
+          <div className="flex flex-col">
+            {rows.map((n) => (
+              <EditRow key={n.id} n={n} />
+            ))}
+          </div>
         )}
       </Card>
     </div>
@@ -163,7 +179,15 @@ function EditRow({ n }: { n: TaskNode }) {
           min={0}
           aria-label={`${n.title} — ${t.execution.colEffort}`}
           value={n.effort.estimate}
-          onChange={(e) => set({ effort: { ...n.effort, unit: "d", estimate: Math.max(0, Number(e.target.value) || 0) } })}
+          onChange={(e) =>
+            set({
+              effort: {
+                ...n.effort,
+                unit: "d",
+                estimate: Math.max(0, Number(e.target.value) || 0),
+              },
+            })
+          }
           className={`${CTRL} w-16`}
         />
         <input

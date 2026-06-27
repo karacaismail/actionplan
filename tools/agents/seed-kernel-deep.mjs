@@ -10,12 +10,22 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
 const GOLDEN = ["k-surface", "k-control-planes", "k-agent-runtime", "k-sozlesme"];
 
 // Üniform olmaları KASITLI olan zorunlu güvenlik-sınır satırları (kapı allowlist'i).
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const CONTENT = {
@@ -810,7 +820,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 
 // 1) Golden düğümleri human damgala (swarm ezmesin).
 let stamped = 0;
@@ -826,9 +837,11 @@ for (const id of GOLDEN) {
 // 1b) Golden'da 1-maddelik ince boyutlara sayfaya-özel 2. madde ekle (human korunur, idempotent — kapı min 2).
 const GOLDEN_FIXUP = {
   "k-sozlesme": {
-    mobileApps: "Şema pinleme sürümü mobilde rozetle gösterilir; eski sürüm uyarısı dokunmayla detaylanır",
+    mobileApps:
+      "Şema pinleme sürümü mobilde rozetle gösterilir; eski sürüm uyarısı dokunmayla detaylanır",
     wcag: "Pinlenmiş sürüm ve projeksiyon alanları ekran okuyucuya etiketli; sürüm farkı metinle de duyurulur",
-    deployment: "Şema pinleme 10 yıllık entegrasyonu korur; her dağıtım profili aynı pinlenmiş sözleşmeyi yükler",
+    deployment:
+      "Şema pinleme 10 yıllık entegrasyonu korur; her dağıtım profili aynı pinlenmiş sözleşmeyi yükler",
     testing: "Projection izdüşümü için sözleşme-uyum testi; pinlenmiş şemadan sapma kırmızı yanar",
   },
 };
@@ -858,4 +871,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   applied++;
 }
 
-console.log(`[seed-kernel-deep] ${applied}/11 şablon düğüm derinleştirildi (swarm); ${stamped} golden human damgalandı.`);
+console.log(
+  `[seed-kernel-deep] ${applied}/11 şablon düğüm derinleştirildi (swarm); ${stamped} golden human damgalandı.`,
+);

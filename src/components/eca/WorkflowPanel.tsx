@@ -31,7 +31,10 @@ export function WorkflowPanel({ node }: { node: TaskNode }) {
             <div className="flex flex-wrap items-center gap-1">
               <span className="text-sm text-muted-foreground">{w.states}:</span>
               {wf.states.map((s) => (
-                <Badge key={s} className={s === wf.initial ? "text-foreground" : "text-muted-foreground"}>
+                <Badge
+                  key={s}
+                  className={s === wf.initial ? "text-foreground" : "text-muted-foreground"}
+                >
                   {s === wf.initial && <Icon name="ph-play-circle" className="text-xs" />}
                   {isTerminal(wf, s) && <Icon name="ph-flag-checkered" className="text-xs" />}
                   {s}
@@ -42,7 +45,10 @@ export function WorkflowPanel({ node }: { node: TaskNode }) {
             <div className="flex flex-col gap-1">
               <span className="text-sm text-muted-foreground">{w.transitions}:</span>
               {wf.transitions.map((tr, i) => (
-                <div key={`${tr.from}-${tr.to}-${i}`} className="flex flex-wrap items-center gap-1 text-base">
+                <div
+                  key={`${tr.from}-${tr.to}-${i}`}
+                  className="flex flex-wrap items-center gap-1 text-base"
+                >
                   <span>{tr.from}</span>
                   <Icon name="ph-arrow-right" className="text-xs" />
                   <span className="font-medium">{tr.to}</span>

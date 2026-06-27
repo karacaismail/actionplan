@@ -13,7 +13,16 @@ import { z } from "zod";
  * -------------------------------------------------------------------------- */
 
 /* ---- Surface (yüzey/ekran) ---- */
-export const SurfaceTypeSchema = z.enum(["list", "detail", "form", "board", "dashboard", "wizard", "report", "timeline"]);
+export const SurfaceTypeSchema = z.enum([
+  "list",
+  "detail",
+  "form",
+  "board",
+  "dashboard",
+  "wizard",
+  "report",
+  "timeline",
+]);
 export type SurfaceType = z.infer<typeof SurfaceTypeSchema>;
 
 export const SurfaceResponsiveSchema = z.object({

@@ -32,12 +32,14 @@ function scan(): string[] {
     lines.forEach((ln, i) => {
       const s = ln.trim();
       if (s.startsWith("/*")) inBlock = true;
-      const isComment = inBlock || s.startsWith("//") || s.startsWith("*") || s.startsWith("import ");
+      const isComment =
+        inBlock || s.startsWith("//") || s.startsWith("*") || s.startsWith("import ");
       if (s.includes("*/")) inBlock = false;
       if (isComment) return;
       if (ATTR.test(ln)) violations.push(`${rel}:${i + 1} (literal aria/placeholder/title)`);
       else if (LABEL.test(ln)) violations.push(`${rel}:${i + 1} (literal header/label)`);
-      else if (TR_DQ.test(ln) || TR_SQ.test(ln)) violations.push(`${rel}:${i + 1} (gömülü TR metin)`);
+      else if (TR_DQ.test(ln) || TR_SQ.test(ln))
+        violations.push(`${rel}:${i + 1} (gömülü TR metin)`);
     });
   }
   return violations;

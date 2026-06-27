@@ -55,7 +55,10 @@ export function TaskDetailView() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
       {/* Breadcrumb */}
-      <nav aria-label={t.detail.location} className="flex flex-wrap items-center gap-1 text-base text-muted-foreground">
+      <nav
+        aria-label={t.detail.location}
+        className="flex flex-wrap items-center gap-1 text-base text-muted-foreground"
+      >
         <Link to="/wbs" className="hover:text-foreground">
           {t.nav.wbs}
         </Link>
@@ -275,6 +278,7 @@ function Dimensions({ node }: { node: TaskNode }) {
               ) : (
                 <ul className="mt-2 list-disc pl-5 text-base">
                   {dim.items.map((item, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: statik, yeniden-sıralanmayan gösterim listesi; metin yinelenebildiğinden indeks anahtarı güvenli
                     <li key={`${key}-${i}`}>{item}</li>
                   ))}
                 </ul>

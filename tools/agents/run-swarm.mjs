@@ -44,7 +44,8 @@ const CLAUDE = process.env.CLAUDE_BIN ?? "claude";
 
 let selected = shards;
 if (clustersArg.length) selected = shards.filter((s) => clustersArg.includes(s.cluster));
-else if (flags.priority) selected = shards.filter((s) => String(s.oncelik) === String(flags.priority));
+else if (flags.priority)
+  selected = shards.filter((s) => String(s.oncelik) === String(flags.priority));
 
 fs.mkdirSync(LOGS, { recursive: true });
 
@@ -56,10 +57,21 @@ function runOne(cl) {
     const prompt = render(cl);
     const promptFile = path.join(LOGS, `${cl.cluster}.prompt.md`);
     fs.writeFileSync(promptFile, prompt);
-    const claudeArgs = ["-p", "--permission-mode", "acceptEdits", "--allowedTools", "Read", "Edit", "Write", "Bash"];
+    const claudeArgs = [
+      "-p",
+      "--permission-mode",
+      "acceptEdits",
+      "--allowedTools",
+      "Read",
+      "Edit",
+      "Write",
+      "Bash",
+    ];
     if (MODEL) claudeArgs.push("--model", String(MODEL));
     if (DRY) {
-      console.log(`[dry-run] ${cl.cluster}: ${CLAUDE} ${claudeArgs.join(" ")}  (prompt: ${promptFile})`);
+      console.log(
+        `[dry-run] ${cl.cluster}: ${CLAUDE} ${claudeArgs.join(" ")}  (prompt: ${promptFile})`,
+      );
       return resolve({ cluster: cl.cluster, code: 0, dry: true });
     }
     const log = fs.createWriteStream(path.join(LOGS, `${cl.cluster}.log`));
@@ -70,7 +82,9 @@ function runOne(cl) {
     child.stdin.write(prompt);
     child.stdin.end();
     child.on("close", (code) => {
-      console.log(`[bitti] ${cl.cluster} (exit ${code}) → log: tools/agents/logs/${cl.cluster}.log`);
+      console.log(
+        `[bitti] ${cl.cluster} (exit ${code}) → log: tools/agents/logs/${cl.cluster}.log`,
+      );
       resolve({ cluster: cl.cluster, code });
     });
     child.on("error", (e) => {
@@ -94,19 +108,20 @@ async function pool(items, n, fn) {
 }
 
 console.log(
-  `Swarm: ${selected.length} cluster · concurrency ${CONCURRENCY}${DRY ? " · DRY-RUN" : ""}\n` +
-    selected.map((s) => `  - ${s.cluster} (${s.count})`).join("\n"),
+  `Swarm: ${selected.length} cluster · concurrency ${CONCURRENCY}${DRY ? " · DRY-RUN" : ""}\n${selected.map((s) => `  - ${s.cluster} (${s.count})`).join("\n")}`,
 );
 const res = await pool(selected, CONCURRENCY, runOne);
 
 if (!DRY) {
   console.log("\nReindex (index/navigation/meta + wbsCode)...");
   await new Promise((r) =>
-    spawn("node", [path.join(REPO, "tools", "reindex.mjs")], { cwd: REPO, stdio: "inherit" }).on("close", r),
+    spawn("node", [path.join(REPO, "tools", "reindex.mjs")], { cwd: REPO, stdio: "inherit" }).on(
+      "close",
+      r,
+    ),
   );
   const fail = res.filter((r) => r.code !== 0).map((r) => r.cluster);
   console.log(
-    `\nTamam. Başarısız cluster: ${fail.length ? fail.join(", ") : "yok"}.\n` +
-      "Doğrula: npm run typecheck && npm test && npm run test:content && npm run build",
+    `\nTamam. Başarısız cluster: ${fail.length ? fail.join(", ") : "yok"}.\nDoğrula: npm run typecheck && npm test && npm run test:content && npm run build`,
   );
 }

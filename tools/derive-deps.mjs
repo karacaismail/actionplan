@@ -42,10 +42,17 @@ const CLUSTER_DEPS = {
 };
 
 const kebab = (s) =>
-  String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  String(s)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
-const nodes = files.map((f) => ({ f, n: JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8")) }));
+const nodes = files.map((f) => ({
+  f,
+  n: JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8")),
+}));
 const byId = new Map(nodes.map(({ n }) => [n.id, n]));
 
 // çözümleme yardımcıları: target (eski id) -> üretilmiş node id

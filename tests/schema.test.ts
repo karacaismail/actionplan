@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   DIMENSION_KEYS,
   TaskNodeSchema,
@@ -8,6 +7,7 @@ import {
   makeSkeletonDimensions,
   makeSkeletonPhases,
 } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * Test-önce: şema sözleşmesi gövdeden önce kilitlenir.
@@ -88,9 +88,7 @@ describe("iskelet üreticiler", () => {
   });
 
   it("filledDimensionCount iskelet düğümde 0 döner", () => {
-    const node = TaskNodeSchema.parse(
-      minimalNode({ dimensions: makeSkeletonDimensions() }),
-    );
+    const node = TaskNodeSchema.parse(minimalNode({ dimensions: makeSkeletonDimensions() }));
     expect(filledDimensionCount(node)).toBe(0);
   });
 });

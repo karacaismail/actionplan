@@ -34,7 +34,12 @@ export function valueForSort(n: TaskNode, field: string, scoreOf: ScoreOf): stri
   }
 }
 
-export function sortNodes(nodes: TaskNode[], field: string, dir: SortDir, scoreOf: ScoreOf): TaskNode[] {
+export function sortNodes(
+  nodes: TaskNode[],
+  field: string,
+  dir: SortDir,
+  scoreOf: ScoreOf,
+): TaskNode[] {
   const sign = dir === "desc" ? -1 : 1;
   return [...nodes].sort((a, b) => {
     const va = valueForSort(a, field, scoreOf);
@@ -69,5 +74,7 @@ export function groupNodes(nodes: TaskNode[], by: string): { key: string; nodes:
     const k = groupValue(n, by);
     (map.get(k) ?? map.set(k, []).get(k)!).push(n);
   }
-  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], "tr")).map(([key, ns]) => ({ key, nodes: ns }));
+  return [...map.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0], "tr"))
+    .map(([key, ns]) => ({ key, nodes: ns }));
 }

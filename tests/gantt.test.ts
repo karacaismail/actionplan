@@ -1,4 +1,4 @@
-import { diffBaseline, dayspan, toGanttBars } from "@/engine/gantt";
+import { dayspan, diffBaseline, toGanttBars } from "@/engine/gantt";
 import { type Schedule, type TaskNode, TaskNodeSchema } from "@/schemas";
 import { describe, expect, it } from "vitest";
 

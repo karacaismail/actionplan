@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
 import {
   buildTree,
   computeCriticalPath,
@@ -15,7 +14,14 @@ import {
   importJSON,
   indexById,
 } from "@/engine";
-import { AgentPolicySchema, EcaRuleSchema, type TaskNode, TaskNodeArraySchema, TaskNodeSchema } from "@/schemas";
+import {
+  AgentPolicySchema,
+  EcaRuleSchema,
+  type TaskNode,
+  TaskNodeArraySchema,
+  TaskNodeSchema,
+} from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const generatedNodesDir = path.resolve(__dirname, "../src/data/generated/nodes");
@@ -41,8 +47,22 @@ function node(over: Record<string, unknown>): TaskNode {
 describe("buildTree + rollup", () => {
   const data = [
     node({ id: "root", level: "app", title: "Kök", slug: "root", wbsCode: "1" }),
-    node({ id: "a", parentId: "root", wbsCode: "1.1", progress: 100, status: "done", effort: { estimate: 2, unit: "sp", spent: 0 } }),
-    node({ id: "b", parentId: "root", wbsCode: "1.2", progress: 0, status: "in-progress", effort: { estimate: 2, unit: "sp", spent: 0 } }),
+    node({
+      id: "a",
+      parentId: "root",
+      wbsCode: "1.1",
+      progress: 100,
+      status: "done",
+      effort: { estimate: 2, unit: "sp", spent: 0 },
+    }),
+    node({
+      id: "b",
+      parentId: "root",
+      wbsCode: "1.2",
+      progress: 0,
+      status: "in-progress",
+      effort: { estimate: 2, unit: "sp", spent: 0 },
+    }),
   ];
 
   it("ağacı kurar ve çocukları bağlar", () => {
@@ -65,8 +85,22 @@ describe("buildTree + rollup", () => {
 
 describe("export/import round-trip", () => {
   const nodes = [
-    node({ id: "alpha", title: "Alpha", slug: "alpha", wbsCode: "1", tags: ["x", "y"], dependsOn: ["beta"] }),
-    node({ id: "beta", title: "Beta, virgüllü", slug: "beta", wbsCode: "2", owner: "ismail", progress: 40 }),
+    node({
+      id: "alpha",
+      title: "Alpha",
+      slug: "alpha",
+      wbsCode: "1",
+      tags: ["x", "y"],
+      dependsOn: ["beta"],
+    }),
+    node({
+      id: "beta",
+      title: "Beta, virgüllü",
+      slug: "beta",
+      wbsCode: "2",
+      owner: "ismail",
+      progress: 40,
+    }),
   ];
 
   it("JSON tam-doğruluklu döner", () => {
@@ -97,7 +131,13 @@ describe("export/import round-trip", () => {
       slug: "gamma",
       wbsCode: "3",
       dimensions: {
-        featureDefs: { key: "featureDefs", title: "Özellik", status: "filled", items: ["a", "b"], notes: "n" },
+        featureDefs: {
+          key: "featureDefs",
+          title: "Özellik",
+          status: "filled",
+          items: ["a", "b"],
+          notes: "n",
+        },
       },
       deliverables: ["d1", "d2"],
       risks: [{ id: "r1", desc: "risk", severity: "high", mitigation: "m" }],
@@ -109,7 +149,14 @@ describe("export/import round-trip", () => {
   });
 
   it("exportTask tek görevi tam JSON verir (round-trip, veriden — DOM değil)", () => {
-    const n = node({ id: "solo", title: "Solo", slug: "solo", wbsCode: "9", owner: "x", progress: 30 });
+    const n = node({
+      id: "solo",
+      title: "Solo",
+      slug: "solo",
+      wbsCode: "9",
+      owner: "x",
+      progress: 30,
+    });
     const back = TaskNodeSchema.parse(JSON.parse(exportTask(n)));
     expect(back).toEqual(n);
   });
@@ -119,8 +166,20 @@ describe("kritik yol", () => {
   it("en uzun bağımlılık zincirini bulur", () => {
     const nodes = [
       node({ id: "a", title: "A", slug: "a", effort: { estimate: 1, unit: "sp", spent: 0 } }),
-      node({ id: "b", title: "B", slug: "b", dependsOn: ["a"], effort: { estimate: 1, unit: "sp", spent: 0 } }),
-      node({ id: "c", title: "C", slug: "c", dependsOn: ["b"], effort: { estimate: 1, unit: "sp", spent: 0 } }),
+      node({
+        id: "b",
+        title: "B",
+        slug: "b",
+        dependsOn: ["a"],
+        effort: { estimate: 1, unit: "sp", spent: 0 },
+      }),
+      node({
+        id: "c",
+        title: "C",
+        slug: "c",
+        dependsOn: ["b"],
+        effort: { estimate: 1, unit: "sp", spent: 0 },
+      }),
       node({ id: "d", title: "D", slug: "d", effort: { estimate: 1, unit: "sp", spent: 0 } }),
     ];
     const cp = computeCriticalPath(nodes);
@@ -173,9 +232,16 @@ describe("AI ArcheType güvenlik sınırı", () => {
   });
 
   it("AI app/module üretemez veya güncelleyemez", () => {
-    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "app" }).allowed).toBe(false);
-    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "module" }).allowed).toBe(false);
-    expect(evaluateAgentPolicy(policy, { actor: "ai", action: "update", targetLevel: "module" }).allowed).toBe(false);
+    expect(
+      evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "app" }).allowed,
+    ).toBe(false);
+    expect(
+      evaluateAgentPolicy(policy, { actor: "ai", action: "generate", targetLevel: "module" })
+        .allowed,
+    ).toBe(false);
+    expect(
+      evaluateAgentPolicy(policy, { actor: "ai", action: "update", targetLevel: "module" }).allowed,
+    ).toBe(false);
   });
 
   it("AI yalnız ArcheType taslağı üretebilir", () => {
@@ -236,14 +302,20 @@ describe("üretilmiş JSON agentPolicy/ECA kapıları", () => {
   });
 
   it("ECA publish otomasyonu üretmez", () => {
-    const publishRules = nodes.flatMap((n) => n.ecaRules.filter((r) => r.then.type === "publish").map((r) => `${n.id}:${r.id}`));
+    const publishRules = nodes.flatMap((n) =>
+      n.ecaRules.filter((r) => r.then.type === "publish").map((r) => `${n.id}:${r.id}`),
+    );
     expect(publishRules).toEqual([]);
   });
 
   it("her düğümde backend AI deny ruleset'i vardır", () => {
     const missing = nodes.filter((n) => {
       const events = new Set(n.ecaRules.map((r) => r.event));
-      return !events.has("ai.generation.requested") || !events.has("ai.update.requested") || !events.has("ai.ruleset.override.requested");
+      return (
+        !events.has("ai.generation.requested") ||
+        !events.has("ai.update.requested") ||
+        !events.has("ai.ruleset.override.requested")
+      );
     });
     expect(missing.map((n) => n.id)).toEqual([]);
   });
@@ -252,7 +324,10 @@ describe("üretilmiş JSON agentPolicy/ECA kapıları", () => {
     const missing = nodes.filter((n) => {
       if (n.level !== "archetype") return false;
       const ruleIds = new Set(n.ecaRules.map((r) => r.id));
-      return !ruleIds.has(`eca-${n.id}-archetype-draft-allow`) || !ruleIds.has(`eca-${n.id}-archetype-prod-update-gated`);
+      return (
+        !ruleIds.has(`eca-${n.id}-archetype-draft-allow`) ||
+        !ruleIds.has(`eca-${n.id}-archetype-prod-update-gated`)
+      );
     });
     expect(missing.map((n) => n.id)).toEqual([]);
   });

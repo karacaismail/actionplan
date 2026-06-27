@@ -92,8 +92,8 @@ function computeRollup(node: TreeNode): Rollup {
   const progress = weightSum > 0 ? Math.round(progressSum / weightSum) : 0;
   const status: TaskStatus = allDone
     ? "done"
-    : (Object.entries(STATUS_RANK).find(([, r]) => r === maxStatusRank)?.[0] as TaskStatus) ??
-      "backlog";
+    : ((Object.entries(STATUS_RANK).find(([, r]) => r === maxStatusRank)?.[0] as TaskStatus) ??
+      "backlog");
   return { total, done, progress, status };
 }
 

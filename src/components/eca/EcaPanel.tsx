@@ -1,5 +1,12 @@
-import { useMemo, useState } from "react";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Icon } from "@/components/ui/primitives";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Icon,
+} from "@/components/ui/primitives";
 import rulesetCatalogJson from "@/data/eca/ruleset-catalog.json";
 import {
   type ChainResult,
@@ -13,6 +20,7 @@ import {
 } from "@/lib/eca-effective";
 import { t } from "@/lib/strings";
 import type { EcaRulesetPackage, TaskNode } from "@/schemas";
+import { useMemo, useState } from "react";
 
 /**
  * EcaPanel (Küme E) — düğümün etkili ECA kurallarını GÖRÜNÜR kılar ve bir olayı SALT-OKUNUR simüle eder.
@@ -23,7 +31,11 @@ import type { EcaRulesetPackage, TaskNode } from "@/schemas";
 const CATALOG = rulesetCatalogJson as unknown as EcaRulesetPackage[];
 const e = t.eca;
 
-const LAYER_LABEL: Record<string, string> = { system: e.layerSystem, platform: e.layerPlatform, tenant: e.layerTenant };
+const LAYER_LABEL: Record<string, string> = {
+  system: e.layerSystem,
+  platform: e.layerPlatform,
+  tenant: e.layerTenant,
+};
 
 function LayerBadge({ layer }: { layer?: string }) {
   if (!layer) return null;
@@ -39,7 +51,9 @@ function SourceBadge({ rule }: { rule: EffectiveRule }) {
   return (
     <Badge className="text-muted-foreground">
       <Icon name={rule.source === "inline" ? "ph-note-pencil" : "ph-package"} className="text-xs" />
-      {rule.source === "inline" ? e.ruleInline : `${e.rulePkgPrefix} ${rule.packageName ?? rule.packageId}`}
+      {rule.source === "inline"
+        ? e.ruleInline
+        : `${e.rulePkgPrefix} ${rule.packageName ?? rule.packageId}`}
     </Badge>
   );
 }
@@ -113,7 +127,10 @@ function EcaSimulationResult({ outcomes }: { outcomes: SimOutcome[] }) {
           {fired.map((o) => {
             const summary = paramsSummary(o.rule.then.params);
             return (
-              <div key={`${o.rule.source}:${o.rule.id}`} className="rounded-md border border-border p-2">
+              <div
+                key={`${o.rule.source}:${o.rule.id}`}
+                className="rounded-md border border-border p-2"
+              >
                 <span className="inline-flex items-center gap-1">
                   <Icon name="ph-check-circle" className="text-sm" />
                   <span className="font-medium">{o.rule.then.type}</span>
@@ -187,7 +204,10 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
   const events = useMemo(() => ruleEvents(rules), [rules]);
   const [event, setEvent] = useState(events[0] ?? "");
   const fields = useMemo(
-    () => Array.from(new Set(rules.filter((r) => r.event === event).flatMap((r) => r.when.map((c) => c.field)))),
+    () =>
+      Array.from(
+        new Set(rules.filter((r) => r.event === event).flatMap((r) => r.when.map((c) => c.field))),
+      ),
     [rules, event],
   );
   const [ctxRaw, setCtxRaw] = useState<Record<string, string>>({});
@@ -198,7 +218,8 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
 
   const buildCtx = (): Record<string, unknown> => {
     const ctx: Record<string, unknown> = {};
-    for (const f of fields) if (ctxRaw[f] !== undefined && ctxRaw[f] !== "") ctx[f] = coerce(ctxRaw[f]);
+    for (const f of fields)
+      if (ctxRaw[f] !== undefined && ctxRaw[f] !== "") ctx[f] = coerce(ctxRaw[f]);
     return ctx;
   };
   const onSimulate = () => {

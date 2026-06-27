@@ -1,15 +1,15 @@
-import { Badge, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
 import { ExportImportBar } from "@/components/toolbar/ExportImportBar";
+import { Badge, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 import { PRIORITY_LABEL, STATUS_LABEL, hslVar, levelLabel, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
 import {
   LEVEL_META,
-  STATUS_LIST,
-  WBS_LEVELS,
   type Priority,
+  STATUS_LIST,
   type TaskNode,
   type TaskStatus,
+  WBS_LEVELS,
   type WbsLevel,
 } from "@/schemas";
 import { taskStore, useTaskStore } from "@/store/taskStore";
@@ -144,7 +144,9 @@ function KanbanColumn({
         <span className="flex items-center gap-2 font-medium text-foreground">
           <span
             className="size-2.5 rounded-full"
-            style={{ background: hslVar(`--status-${status === "in-progress" ? "progress" : status}`) }}
+            style={{
+              background: hslVar(`--status-${status === "in-progress" ? "progress" : status}`),
+            }}
             aria-hidden="true"
           />
           {STATUS_LABEL[status]}
@@ -175,11 +177,11 @@ function KanbanBoard({ nodes }: { nodes: TaskNode[] }) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-label={t.a11y.kanbanBoard}>
+    <section className="flex gap-3 overflow-x-auto pb-2" aria-label={t.a11y.kanbanBoard}>
       {STATUS_LIST.map((s) => (
         <KanbanColumn key={s} status={s} nodes={byStatus.get(s) ?? []} onDropNode={onDropNode} />
       ))}
-    </div>
+    </section>
   );
 }
 
@@ -267,7 +269,9 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
       {
         accessorKey: "phase",
         header: t.fields.phase,
-        cell: ({ row }) => <span className="whitespace-nowrap text-base">{row.original.phase}</span>,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-base">{row.original.phase}</span>
+        ),
       },
     ],
     [],
@@ -356,11 +360,7 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
                       key={header.id}
                       scope="col"
                       aria-sort={
-                        sortDir === "asc"
-                          ? "ascending"
-                          : sortDir === "desc"
-                            ? "descending"
-                            : "none"
+                        sortDir === "asc" ? "ascending" : sortDir === "desc" ? "descending" : "none"
                       }
                       className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
                     >
@@ -385,13 +385,19 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
           <tbody>
             {table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-3 py-6 text-center text-muted-foreground">
+                <td
+                  colSpan={columns.length}
+                  className="px-3 py-6 text-center text-muted-foreground"
+                >
                   {t.empty.noResults}
                 </td>
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-border/60 border-b last:border-0 hover:bg-secondary/40">
+                <tr
+                  key={row.id}
+                  className="border-border/60 border-b last:border-0 hover:bg-secondary/40"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-3 py-2 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -404,9 +410,9 @@ function TaskTable({ nodes }: { nodes: TaskNode[] }) {
         </table>
       </Card>
 
-      <p className="text-base text-muted-foreground" role="status">
+      <output className="block text-base text-muted-foreground">
         {table.getRowModel().rows.length} / {nodes.length} {t.a11y.taskUnit}
-      </p>
+      </output>
     </div>
   );
 }

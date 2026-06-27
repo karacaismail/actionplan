@@ -23,11 +23,11 @@ function run() {
 function suggestTs(code) {
   return (
     {
-      "6133": "Kullanılmayan import/değişkeni kaldır",
-      "2322": "Tip uyuşmazlığı: tipi/şemayı hizala ya da uygun cast uygula",
-      "2769": "Overload eşleşmiyor: imza/argümanları düzelt (ör. vite≠vitest config ayrımı)",
-      "2578": "Gereksiz @ts-expect-error direktifini kaldır",
-      "2307": "Modül bulunamadı: import yolunu/paketi düzelt",
+      6133: "Kullanılmayan import/değişkeni kaldır",
+      2322: "Tip uyuşmazlığı: tipi/şemayı hizala ya da uygun cast uygula",
+      2769: "Overload eşleşmiyor: imza/argümanları düzelt (ör. vite≠vitest config ayrımı)",
+      2578: "Gereksiz @ts-expect-error direktifini kaldır",
+      2307: "Modül bulunamadı: import yolunu/paketi düzelt",
     }[code] ?? "İlgili tipi/şemayı düzelt"
   );
 }
@@ -37,9 +37,18 @@ function classify(out) {
   for (const m of out.matchAll(/error TS(\d+): ([^\n]+)/g))
     issues.push({ kind: "typecheck", code: `TS${m[1]}`, msg: m[2].trim(), fix: suggestTs(m[1]) });
   for (const m of out.matchAll(/(?:✗|×|FAIL)\s+([^\n›]+)/g))
-    issues.push({ kind: "test", code: "FAIL", msg: m[1].trim(), fix: "İlgili testi/birimi incele; beklenen↔gerçek farkını gider" });
+    issues.push({
+      kind: "test",
+      code: "FAIL",
+      msg: m[1].trim(),
+      fix: "İlgili testi/birimi incele; beklenen↔gerçek farkını gider",
+    });
   for (const m of out.matchAll(/\[serious\]\s+([a-z-]+):/g))
-    issues.push({ kind: "axe", code: m[1], fix: `Erişilebilirlik '${m[1]}' ihlalini gider (ARIA adı / kontrast / klavye)` });
+    issues.push({
+      kind: "axe",
+      code: m[1],
+      fix: `Erişilebilirlik '${m[1]}' ihlalini gider (ARIA adı / kontrast / klavye)`,
+    });
   return issues;
 }
 
@@ -65,5 +74,7 @@ for (const i of last) {
   console.log(`  [${i.kind}/${i.code}] ${i.msg ?? ""}\n     → öneri: ${i.fix}`);
 }
 if (last.length === 0) console.log("  (yapısal hata yakalanamadı — ham çıktıyı incele)");
-console.log("\nNot: otonom kod düzeltme KAPALI (3a güvenli mod). Önerileri uygula, tekrar çalıştır.");
+console.log(
+  "\nNot: otonom kod düzeltme KAPALI (3a güvenli mod). Önerileri uygula, tekrar çalıştır.",
+);
 process.exit(1);

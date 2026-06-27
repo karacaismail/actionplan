@@ -1,4 +1,11 @@
-import type { AgentPolicy, EcaAction, EcaCondition, EcaRule, MigrationMode, WbsLevel } from "@/schemas";
+import type {
+  AgentPolicy,
+  EcaAction,
+  EcaCondition,
+  EcaRule,
+  MigrationMode,
+  WbsLevel,
+} from "@/schemas";
 
 export interface EcaFireResult {
   fired: boolean;
@@ -9,7 +16,15 @@ export interface EcaFireResult {
 
 export interface AgentActionRequest {
   actor: "ai" | "human" | "system";
-  action: "read" | "suggest" | "generate" | "update" | "publish" | "delete" | "migrate-data" | "change-ruleset";
+  action:
+    | "read"
+    | "suggest"
+    | "generate"
+    | "update"
+    | "publish"
+    | "delete"
+    | "migrate-data"
+    | "change-ruleset";
   targetLevel: WbsLevel;
   environment?: "draft" | "staging" | "production";
   historyPreserved?: boolean;
@@ -67,7 +82,11 @@ export function evaluateAgentPolicy(
   if (request.targetLevel === "app" || request.targetLevel === "module") {
     return deny("AI app/module üretemez veya güncelleyemez");
   }
-  if (request.action === "publish" || request.action === "delete" || request.action === "migrate-data") {
+  if (
+    request.action === "publish" ||
+    request.action === "delete" ||
+    request.action === "migrate-data"
+  ) {
     return deny("AI yayın, silme veya doğrudan veri migrasyonu yapamaz");
   }
   if (policy.forbiddenTargets.includes(request.targetLevel)) {
@@ -87,7 +106,8 @@ export function evaluateAgentPolicy(
   }
 
   if (request.action === "update") {
-    if (environment !== "production") return allow("AI ArcheType taslak/staging güncelleme önerisi üretebilir", true);
+    if (environment !== "production")
+      return allow("AI ArcheType taslak/staging güncelleme önerisi üretebilir", true);
 
     const dataPolicy = policy.prodDataPolicy;
     if (dataPolicy.preserveHistory && !request.historyPreserved) {

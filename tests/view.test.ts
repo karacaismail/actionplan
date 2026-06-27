@@ -30,7 +30,17 @@ describe("Faz 0 — şema + görünüm kalıcılığı", () => {
   });
 
   it("savedViews + viewState round-trip (localStorage)", () => {
-    saveSavedViews([{ id: "v1", name: "X", query: "level = app", columns: ["title"], sort: [], group: null, createdAt: "" }]);
+    saveSavedViews([
+      {
+        id: "v1",
+        name: "X",
+        query: "level = app",
+        columns: ["title"],
+        sort: [],
+        group: null,
+        createdAt: "",
+      },
+    ]);
     expect(loadSavedViews()).toHaveLength(1);
     expect(loadSavedViews()[0].query).toBe("level = app");
     saveViewState({ query: "status = done" });

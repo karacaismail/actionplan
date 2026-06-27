@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import type { TaskNode } from "@/schemas";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 /**
  * EcaPanel bileşen testi (Küme E) — render + SALT-OKUNUR simülasyon akışı.
@@ -41,7 +41,9 @@ describe("EcaPanel", () => {
 
   it("simülasyon eşleşen olayda kuralı tetikler (salt-okunur)", () => {
     render(<EcaPanel node={mockNode} />);
-    fireEvent.change(screen.getByLabelText("Simüle edilecek olay"), { target: { value: "task.status.changed" } });
+    fireEvent.change(screen.getByLabelText("Simüle edilecek olay"), {
+      target: { value: "task.status.changed" },
+    });
     fireEvent.change(screen.getByLabelText("bağlam: status"), { target: { value: "done" } });
     fireEvent.click(screen.getByText("Simüle Et"));
     expect(screen.getByText(/kural tetiklenir/)).toBeInTheDocument();

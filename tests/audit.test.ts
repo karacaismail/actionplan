@@ -4,7 +4,12 @@ import { AUDIT_WEIGHTS, auditNode, domainTokens, scoreDimension } from "@/engine
 import type { Dimension, TaskNode } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
-const tokens = domainTokens({ id: "s-crm", title: "CRM", summary: "lead skorlama görüşme zekâsı", tags: ["crm"] });
+const tokens = domainTokens({
+  id: "s-crm",
+  title: "CRM",
+  summary: "lead skorlama görüşme zekâsı",
+  tags: ["crm"],
+});
 
 const goldenDim: Dimension = {
   key: "featureDefs",
@@ -43,7 +48,9 @@ const skeletonDim: Dimension = {
 
 describe("audit skorlama", () => {
   it("ağırlıklar 1'e toplanır", () => {
-    expect(AUDIT_WEIGHTS.concreteness + AUDIT_WEIGHTS.completeness + AUDIT_WEIGHTS.applicability).toBeCloseTo(1, 5);
+    expect(
+      AUDIT_WEIGHTS.concreteness + AUDIT_WEIGHTS.completeness + AUDIT_WEIGHTS.applicability,
+    ).toBeCloseTo(1, 5);
   });
 
   it("iskelet boyut 0 alır", () => {

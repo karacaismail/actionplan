@@ -10,9 +10,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const CONTENT = {
@@ -810,7 +820,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -829,4 +840,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-layer0] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-layer0] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

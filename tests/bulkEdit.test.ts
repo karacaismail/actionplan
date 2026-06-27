@@ -5,7 +5,11 @@ import { describe, expect, it } from "vitest";
 const node = (p: Partial<TaskNode> & { id: string }): TaskNode =>
   TaskNodeSchema.parse({ level: "atom", title: p.id, slug: p.id, ...p });
 
-const nodes: TaskNode[] = [node({ id: "a", status: "todo" }), node({ id: "b", status: "todo" }), node({ id: "c", status: "todo" })];
+const nodes: TaskNode[] = [
+  node({ id: "a", status: "todo" }),
+  node({ id: "b", status: "todo" }),
+  node({ id: "c", status: "todo" }),
+];
 
 describe("toplu düzenleme (applyBulk)", () => {
   it("yalnız seçili id'leri yamalar", () => {
@@ -16,7 +20,9 @@ describe("toplu düzenleme (applyBulk)", () => {
   });
 
   it("beyaz-liste dışı alanları yok sayar (audit/dimensions korunur)", () => {
-    const dirty = { status: "review", progress: 99 } as unknown as Parameters<typeof sanitizeBulkPatch>[0];
+    const dirty = { status: "review", progress: 99 } as unknown as Parameters<
+      typeof sanitizeBulkPatch
+    >[0];
     const safe = sanitizeBulkPatch(dirty);
     expect(safe.status).toBe("review");
     expect("progress" in safe).toBe(false);
