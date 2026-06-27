@@ -5,6 +5,8 @@
 **Yöntem:** salt-okunur node -e analizi; kod veya veri değiştirilmedi.
 **Schema versiyonu:** 1.0.0 (tüm 424 düğümde)
 
+> **Güncelleme (P3-impl + P4 sonrası):** Bu rapor iyileştirme ÖNCESİ taban-çizgisidir (424 düğüm). P3-impl ile owner boşluğu 411→0 (artık %100 dolu), 327 düğüme köken-refs eklendi ve dependsOn döngüleri kırıldı (DAG). P4 ile 13 platform düğümü eklendi (toplam 437). Güncel durum bloklayıcı `check-data-quality` kapısı + `npm test` invariantlarıyla korunur. Bu belge tarihsel kayıt olarak bırakılmıştır.
+
 ---
 
 ## 1. Temel Boşluk Özeti
