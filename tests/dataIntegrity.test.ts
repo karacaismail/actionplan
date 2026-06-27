@@ -136,3 +136,17 @@ describe("yürütülebilirlik invariantları (Faz P3)", () => {
     expect(cycle).toEqual([]);
   });
 });
+
+describe("izlenebilirlik pilotları (Faz P5)", () => {
+  it("product/customer/s-crm traceability + evidence taşır", () => {
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    for (const id of ["product", "customer", "s-crm"]) {
+      const n = byId.get(id);
+      expect(n, `${id} bulunmalı`).toBeTruthy();
+      expect(n?.traceability, `${id}.traceability dolu olmalı`).toBeTruthy();
+      expect(n?.traceability?.implementationStatus).toBeTruthy();
+      expect((n?.traceability?.repoPath ?? []).length).toBeGreaterThan(0);
+      expect((n?.evidence ?? []).length).toBeGreaterThan(0);
+    }
+  });
+});

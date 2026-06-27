@@ -121,6 +121,7 @@ export function TaskDetailView() {
       <EcaPanel node={node} />
       <WorkflowPanel node={node} />
       <Relations node={node} />
+      <Traceability node={node} />
     </div>
   );
 }
@@ -309,6 +310,51 @@ function Dimensions({ node }: { node: TaskNode }) {
         })}
       </div>
     </section>
+  );
+}
+
+function Traceability({ node }: { node: TaskNode }) {
+  const tr = node.traceability;
+  if (!tr) return null;
+  const d = t.detail;
+  const statusLabels = d.implStatusLabels as Record<string, string>;
+  const statusLabel = statusLabels[tr.implementationStatus] ?? tr.implementationStatus;
+  const lists: { label: string; values: string[] }[] = [
+    { label: d.repoPath, values: tr.repoPath },
+    { label: d.testCommand, values: tr.testCommand },
+    { label: d.evidence, values: node.evidence },
+  ].filter((r) => r.values.length > 0);
+  const facts: { label: string; value: string | null }[] = [
+    { label: d.deployTarget, value: tr.deployTarget },
+    { label: d.tenantStrategy, value: tr.tenantStrategy },
+    { label: d.auditLogRef, value: tr.auditLogRef },
+  ].filter((f) => f.value);
+  return (
+    <Card className="p-4">
+      <h2 className="mb-2 flex items-center gap-2 font-medium">
+        <Icon name="ph-link" className="text-primary" /> {d.implementation}
+      </h2>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="text-base text-muted-foreground">{d.implStatus}:</span>
+        <Badge>{statusLabel}</Badge>
+      </div>
+      {facts.map((f) => (
+        <p key={f.label} className="text-base">
+          <span className="text-muted-foreground">{f.label}: </span>
+          {f.value}
+        </p>
+      ))}
+      {lists.map((r) => (
+        <div key={r.label} className="mt-2">
+          <p className="text-base text-muted-foreground">{r.label}</p>
+          <ul className="list-disc pl-5 text-base">
+            {r.values.map((v) => (
+              <li key={v}>{v}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </Card>
   );
 }
 
