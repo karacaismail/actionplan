@@ -275,6 +275,38 @@ export type AgentPolicy = z.infer<typeof AgentPolicySchema>;
 /* ----------------------------------------------------------------------------
  * TaskNode — ana şema
  * -------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------
+ * İzlenebilirlik (Faz P5) — plan düğümü ↔ gerçek implementation artefaktı bağı.
+ * Bu nedir? Bir TaskNode'un hangi repo yolu, test komutu, deploy hedefi ve kanıtla
+ *   gerçeklendiğini taşıyan opsiyonel alan kümesi.
+ * Ne yapar? Plan ↔ kod izlenebilirliği (traceability) kurar; UI "implementation evidence" gösterir.
+ * Ne yapmaz? Kod ÇALIŞTIRMAZ/DEĞİŞTİRMEZ; yalnızca referans/kanıt taşır. Tümüyle opsiyonel: eski JSON kırılmaz.
+ * -------------------------------------------------------------------------- */
+export const ImplementationStatusSchema = z.enum([
+  "not-started",
+  "scaffolded",
+  "in-progress",
+  "implemented",
+  "verified",
+]);
+export type ImplementationStatus = z.infer<typeof ImplementationStatusSchema>;
+
+export const TraceabilitySchema = z.object({
+  /** Gerçek kod deposu yolu/yolları (repo veya monorepo path). */
+  repoPath: z.array(z.string()).default([]),
+  /** Bu düğümü doğrulayan test komutu/komutları. */
+  testCommand: z.array(z.string()).default([]),
+  /** Dağıtım hedefi (ör. Hetzner/Debian servisi, GitHub Pages, container imgesi). */
+  deployTarget: z.string().nullable().default(null),
+  /** Uygulama durumu — "plan var" ile "kod hazır" ayrımını açık tutar. */
+  implementationStatus: ImplementationStatusSchema.default("not-started"),
+  /** Çok-kiracılık stratejisi (platform düğümleri: schema-per-tenant | rls | hybrid). */
+  tenantStrategy: z.string().nullable().default(null),
+  /** Denetim günlüğü (audit log) kaynak referansı. */
+  auditLogRef: z.string().nullable().default(null),
+});
+export type Traceability = z.infer<typeof TraceabilitySchema>;
+
 export const TaskNodeSchema = z
   .object({
     schemaVersion: z.string().default(SCHEMA_VERSION),
@@ -340,6 +372,9 @@ export const TaskNodeSchema = z
 
     // 14 üretim boyutu (iskelet)
     dimensions: z.record(DimensionKeySchema, DimensionSchema).default({}),
+
+    // İzlenebilirlik (Faz P5) — plan ↔ gerçek kod artefaktı bağı (opsiyonel; geriye uyumlu)
+    traceability: TraceabilitySchema.optional(),
 
     // Köken & governance
     source: SourceSchema.optional(),

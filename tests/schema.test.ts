@@ -92,3 +92,33 @@ describe("iskelet üreticiler", () => {
     expect(filledDimensionCount(node)).toBe(0);
   });
 });
+
+describe("TaskNode izlenebilirlik (Faz P5)", () => {
+  it("traceability'siz düğüm geriye uyumlu parse olur (alan opsiyonel)", () => {
+    const parsed = TaskNodeSchema.parse(minimalNode());
+    expect(parsed.traceability).toBeUndefined();
+  });
+
+  it("traceability verilince eksik alanları varsayılanla doldurur", () => {
+    const parsed = TaskNodeSchema.parse(
+      minimalNode({ traceability: { repoPath: ["github.com/karacaismail/actionplan"] } }),
+    );
+    expect(parsed.traceability?.implementationStatus).toBe("not-started");
+    expect(parsed.traceability?.repoPath).toEqual(["github.com/karacaismail/actionplan"]);
+    expect(parsed.traceability?.testCommand).toEqual([]);
+    expect(parsed.traceability?.deployTarget).toBeNull();
+  });
+
+  it("geçersiz implementationStatus reddedilir", () => {
+    expect(() =>
+      TaskNodeSchema.parse(minimalNode({ traceability: { implementationStatus: "done" } })),
+    ).toThrow();
+  });
+
+  it("implementationStatus 'verified' kabul edilir", () => {
+    const parsed = TaskNodeSchema.parse(
+      minimalNode({ traceability: { implementationStatus: "verified" } }),
+    );
+    expect(parsed.traceability?.implementationStatus).toBe("verified");
+  });
+});
