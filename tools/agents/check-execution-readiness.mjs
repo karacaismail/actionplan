@@ -10,7 +10,7 @@
  *  1. Done Evidence: status="done" olan düğüm evidence[] (≥1) taşımalı VE verification fazı "passed" olmalı.
  *     (Kanıtsız "done" yasak — sahte tamamlanma engellenir.)
  *  2. Execution Readiness: development/test-qa/verification/release-maintenance fazındaki düğüm
- *     owner + refs(≥1) + schedule.start + acceptanceCriteria(≥1) taşımalı. (Sahipsiz/plansız yürütme yasak.)
+ *     owner + refs(≥1) + schedule.start + acceptanceCriteria(≥1) + rollback taşımalı. (Sahipsiz/plansız yürütme yasak.)
  *  3. Platform Traceability: id "platform-" ile başlayan düğüm traceability (implementationStatus + deployTarget)
  *     taşımalı. (Plan ↔ uygulama hedefi bağı zorunlu.)
  */
@@ -50,6 +50,7 @@ for (const n of nodes) {
     if (!n.schedule?.start) fails.push(`exec-schedule-yok: ${n.id} (${n.phase})`);
     if (!Array.isArray(n.acceptanceCriteria) || n.acceptanceCriteria.length === 0)
       fails.push(`exec-AC-yok: ${n.id} (${n.phase})`);
+    if (!n.rollback) fails.push(`exec-rollback-yok: ${n.id} (${n.phase})`);
   }
   // 3. Platform Traceability
   if (n.id.startsWith("platform-")) {

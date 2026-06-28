@@ -162,7 +162,7 @@ describe("yürütme hazırlığı kapısı (Faz P5+)", () => {
     expect(bad).toEqual([]);
   });
 
-  it("dev+ fazdaki düğümler owner + refs + schedule + AC taşır", () => {
+  it("dev+ fazdaki düğümler owner + refs + schedule + AC + rollback taşır", () => {
     const bad = nodes
       .filter((n) => DEV.has(n.phase))
       .filter(
@@ -170,7 +170,8 @@ describe("yürütme hazırlığı kapısı (Faz P5+)", () => {
           !n.owner ||
           (n.refs ?? []).length === 0 ||
           !n.schedule?.start ||
-          (n.acceptanceCriteria ?? []).length === 0,
+          (n.acceptanceCriteria ?? []).length === 0 ||
+          !n.rollback,
       )
       .map((n) => n.id);
     expect(bad).toEqual([]);
