@@ -1,0 +1,141 @@
+{
+  "featureDefs": {
+    "items": [
+      "CustomerList sorgusu: tenant_id filtresi zorunlu, cursor-tabanlı sayfalama (first/after), toplam kayıt sayısı ile birlikte pageInfo döner.",
+      "CustomerDetail sorgusu: UUID ile tek müşteri getirir; ilişkili siparişler ve adres alt alanları iç içe çözümlenir.",
+      "createCustomer mutasyonu: zorunlu alan validasyonu (email regex, phone E.164 formatı) ve idempotency-key desteği ile çift kayıt önlenir.",
+      "updateCustomer mutasyonu: kısmi güncelleme (PATCH semantiği), yalnızca değişen alanları veritabanına yazar; güncelleme anında updatedAt damgası basılır."
+    ],
+    "notes": "Tüm customer operasyonları tenant izolasyonunu GraphQL resolver katmanında uygular, SQL'e inmeden önce bağlam kontrolü yapılır.",
+    "prompt": "FastAPI + Strawberry GraphQL kullanarak Customer tipi için liste/detay sorguları ve oluştur/güncelle mutasyonları kapsa; resolver'da JWT'den çekilen tenant_id ile satır düzeyi izolasyon sağla, idempotency-key mekanizmasını açıkla; çıktı: tam resolver ve type tanımları."
+  },
+  "security": {
+    "items": [
+      "Her resolver girişinde JWT Bearer token doğrulanır; token yoksa veya süresi dolmuşsa GraphQL UNAUTHENTICATED hatası fırlatılır.",
+      "Tenant guard: context.tenant_id ile sorgu parametresindeki tenant_id karşılaştırılır; uyuşmazlıkta FORBIDDEN hatası döner, kayıt listelenmez.",
+      "createCustomer mutasyonunda role kontrolü: yalnızca 'customer:write' iznine sahip roller çağırabilir, aksi hâlde 403 benzeri GraphQL hatası üretilir.",
+      "Hassas alanlar (taxNumber, bankIBAN) GraphQL şemasında @sensitive direktifiyle işaretlenir; loglara asla ham değer yazılmaz."
+    ],
+    "notes": "Yetki kararları resolver middleware katmanında merkezi olarak verilir, her query/mutation ayrı ayrı guard almaz.",
+    "prompt": "Strawberry GraphQL resolver'larında JWT tabanlı kimlik doğrulama ve çok-kiracılı tenant guard mekanizmasını kapsa; role-based erişim kontrolü, hassas alan maskeleme ve FORBIDDEN hata üretimini göster; güvenlik sınırı: tenant_id uyuşmazlığında hiçbir veri sızmaz."
+  },
+  "codeOptimization": {
+    "items": [
+      "DataLoader ile N+1 sorunu engellenir: tek istek içinde birden fazla müşteriye ait ilişkili veri tek toplu SQL sorgusuyla getirilir.",
+      "Strawberry @lazy tip referansları: büyük şema modüllerini çalışma zamanında yükler, uygulama başlangıç süresini %30 kısaltır.",
+      "SQLAlchemy selectinload stratejisi: ilişkili orders koleksiyonu ayrı SELECT ile getirilir, JOIN'e bağlı Kartezyen çarpım önlenir.",
+      "Resolver sonuçları Pydantic modeline dönüştürülmeden önce ortak bir adapt() yardımcısından geçer; dönüşüm kodu tek yerden yönetilir."
+    ],
+    "notes": "DataLoader BatchFunction, aynı istek döngüsünde biriken tüm müşteri ID'lerini tek sorguda çözer.",
+    "prompt": "FastAPI + Strawberry GraphQL için DataLoader tabanlı toplu veri çekimini ve SQLAlchemy selectinload kullanımını kapsa; N+1 sorgusunu nasıl ortadan kaldırdığını somut SQL ve DataLoader kodu ile açıkla; çıktı: çalışan DataLoader sınıfı ve resolver entegrasyonu."
+  },
+  "securityOptimization": {
+    "items": [
+      "Persisted Queries (APQ) etkinleştirilir; bilinmeyen sorgu hash'leri reddedilerek arbitrary query saldırı yüzeyi daraltılır.",
+      "Query derinlik sınırı maksimum 7 seviye, genişlik sınırı tek sorguda 4 kardeş alan; aşımda 400 hatası döner.",
+      "Giriş alanlarına maksimum boyut kısıtı: String alanları 2048 karakter, JSON blob alanları 8 KB ile sınırlandırılır.",
+      "Rate limiting GraphQL endpoint'ine token-bucket algoritması ile uygulanır: 60 istek/dakika/IP, aşımda 429 yanıtı."
+    ],
+    "notes": "APQ + derinlik sınırı birlikte uygulandığında DoS ve introspection tabanlı keşif saldırıları önemli ölçüde kısıtlanır.",
+    "prompt": "GraphQL güvenlik sertleştirme tekniklerini kapsa: APQ, sorgu derinlik/genişlik sınırlaması, alan düzeyinde giriş boyutu kontrolü ve rate limiting; her tekniğin hangi saldırı vektörünü kapattığını açıkla; güvenlik sınırı: sunucu unknown query hash'ini asla çalıştırmaz."
+  },
+  "performance": {
+    "items": [
+      "CustomerList sorgusunun p95 yanıt süresi hedefi 120 ms; bu eşik Prometheus histogram ile izlenir ve SLO dashboard'ına eklenir.",
+      "Redis önbelleği: sık okunan müşteri detayları 60 saniyelik TTL ile cache'lenir, güncelleme mutasyonunda ilgili anahtar proaktif olarak temizlenir.",
+      "Veritabanı indeksi: customers tablosunda (tenant_id, created_at DESC) bileşik indeks cursor sayfalama sorgusunu 10x hızlandırır.",
+      "GraphQL yanıt sıkıştırma: 1 KB üzeri yanıtlar Brotli ile sıkıştırılır, ortalama ağ transferi %60 azalır."
+    ],
+    "notes": "p95 hedefi yük testinde doğrulanır; Locust ile 500 eş zamanlı kullanıcı senaryosu çalıştırılır.",
+    "prompt": "FastAPI + GraphQL katmanında performans hedeflerini kapsa: p95 120 ms sorgu süresi, Redis TTL önbellek stratejisi, bileşik veritabanı indeksi tasarımı ve Brotli sıkıştırma; her tekniğin ölçülebilir etkisini belirt; çıktı: Prometheus alert kuralı ve indeks migration scripti."
+  },
+  "mobileApps": {
+    "items": [
+      "GraphQL mobil istemcisi Apollo Client ile yapılandırılır; offline-first persistedCache ayarı 5 MB local store limiti ile çalışır.",
+      "Mobil ağ koşulları için query complexity düşük tutulur: mobil istemciler @skip/@include direktifleriyle gereksiz alanları atlar.",
+      "Mutation yanıtları optimistic update destekler; Apollo Client sunucu onayı gelmeden önce UI'ı günceller, hata durumunda rollback yapar.",
+      "Bağlantı kesildiğinde (offline) mutasyonlar kuyrukta tutulur; yeniden bağlanınca otomatik gönderilir, çakışma 409 Conflict ile sinyal verir."
+    ],
+    "notes": "Mobil GraphQL şeması masaüstüyle aynı endpoint'ten sunulur ancak @connection direktifleriyle sayfalama optimize edilir.",
+    "prompt": "React Native veya PWA mobilinde Apollo Client ile GraphQL Customer operasyonlarını kapsa: persistedCache, optimistic update, offline kuyruk ve bağlantı yönetimi mekanizmalarını açıkla; çıktı: Apollo Client konfigürasyon dosyası ve offline mutasyon işleyici."
+  },
+  "wcag": {
+    "items": [
+      "GraphQL hata mesajları extensions.code ve extensions.userMessage alanı taşır; istemci bu mesajı ARIA live region aracılığıyla duyurur.",
+      "Yükleme durumu GraphQL loading flag'ine bağlıdır; skeleton UI ARIA busy=true ile işaretlenir, veri gelince busy=false yapılır.",
+      "Form validasyon hataları GraphQL mutation hata yanıtından parse edilir ve ilgili input'un aria-describedby'ına bağlanır (WCAG 1.3.1).",
+      "Erişilebilir hata diyalogları: role=alertdialog, aria-live=assertive ile GraphQL FORBIDDEN hatası ekran okuyucuya anında bildirilir."
+    ],
+    "notes": "WCAG 2.2 Başarı Kriteri 4.1.3 uyarınca tüm durum değişiklikleri programatik olarak duyurulur.",
+    "prompt": "GraphQL yanıt durumlarının (yükleniyor, hata, boş) WCAG 2.2 uyumlu istemci tarafı sunumunu kapsa: ARIA live region, aria-busy, aria-describedby bağlantıları ve ekran okuyucu test senaryoları; güvenlik sınırı: FORBIDDEN hatası UI'da asla ham stack trace göstermez."
+  },
+  "deployment": {
+    "items": [
+      "FastAPI uygulaması Docker multi-stage build ile paketlenir; GraphQL şema dosyası derleme anında SDL'e dışa aktarılır ve artefakt olarak saklanır.",
+      "Alembic migration'ları deployment pipeline'ında otomatik çalışır; başarısız migration rollback tetikler, GraphQL endpoint trafiği almaz.",
+      "Kubernetes readiness probe GraphQL /health endpoint'ini 5 saniyelik aralıklarla yoklar; pod hazır olmadan servis trafiği almaz.",
+      "Blue-green dağıtım: yeni sürüm aktif olmadan önce smoke test olarak 10 temel GraphQL sorgusu çalıştırılır, başarısızlıkta trafik eski sürüme yönlendirilir."
+    ],
+    "notes": "SDL artefaktı schema registry'ye gönderilir; breaking change tespiti deployment öncesi engelleme üretir.",
+    "prompt": "FastAPI + Strawberry GraphQL uygulamasının container tabanlı dağıtım sürecini kapsa: multi-stage Dockerfile, Alembic otomatik migration, Kubernetes readiness probe ve blue-green smoke test; çıktı: Dockerfile, K8s manifest parçaları ve smoke test scripti."
+  },
+  "eca": {
+    "items": [
+      "Yeni müşteri oluşturulduğunda ECA kuralı tetiklenir: CRM sistemine POST isteği gönderir, başarısız olursa 3 deneme sonrası dead-letter kuyruğuna yazar.",
+      "updateCustomer mutasyonu sonrası ECA: e-posta adresi değiştiyse doğrulama e-postası gönderme görevi asenkron kuyruğa eklenir.",
+      "Tenant bazlı kural motoru: her tenant için özelleştirilebilir ECA politikaları JSON kural deposunda saklanır ve GraphQL üzerinden yönetilir.",
+      "ECA işlem günlüğü: her tetiklenme event_log tablosuna yazılır (event_type, payload_hash, status, duration_ms); gözlemlenebilirlik için OpenTelemetry trace ile ilişkilendirilir."
+    ],
+    "notes": "ECA tetikleyiciler GraphQL mutation sonrası arka plan görevi olarak çalışır; ana isteğin yanıt süresini etkilemez.",
+    "prompt": "Customer GraphQL mutasyonlarına bağlı ECA otomasyon kurallarını kapsa: CRM entegrasyonu, dead-letter kuyruk, e-posta doğrulama görevi ve tenant bazlı kural motoru; çıktı: Celery task tanımı, kural şeması ve event_log tablosu migration."
+  },
+  "aiAgents": {
+    "items": [
+      "AI agent, GraphQL introspection şemasını analiz ederek müşteri verisi üzerinde doğal dil sorguları oluşturabilir ve createCustomer mutasyonunu çalıştırabilir.",
+      "LangChain GraphQL araç entegrasyonu: agent'a yalnızca izin verilen operasyon listesi verilir (allowlist), şema genelini keşfetmesi engellenir.",
+      "Agent eylemlerinin kayıt altı alınması: GraphQL mutation çağrıları agent_id, session_id ve prompt_hash ile birlikte denetim loguna yazılır.",
+      "Güvenlik sınırı: agent, tenant_id'yi kendi üretemez; JWT bağlamından alınan değer her zaman önceliklidir, agent isteğindeki tenant alanı yoksayılır."
+    ],
+    "notes": "Agent operasyonları normal kullanıcı izin modeliyle aynı resolver guard'larından geçer, özel bypass yoktur.",
+    "prompt": "LangChain tabanlı AI agent'ın FastAPI GraphQL Customer operasyonlarıyla güvenli entegrasyonunu kapsa: operasyon allowlist, tenant_id bağlam zorunluluğu, denetim logu ve introspection kısıtlama; güvenlik sınırı: agent asla kendi tenant_id üretemez."
+  },
+  "testing": {
+    "items": [
+      "Pytest + pytest-asyncio ile resolver birim testleri: her query/mutation sahte (mock) SQLAlchemy session ile izole test edilir, 90% satır kapsama hedeflenir.",
+      "Integration testler gerçek PostgreSQL test veritabanı üzerinde çalışır; Alembic her test oturumu başında temiz schema kurar.",
+      "GraphQL contract testleri: şema SDL sürüm karşılaştırması yapılır, breaking change (alan silme, tip değişimi) CI'da otomatik engellenir.",
+      "DataLoader toplu işlemi doğrulayan test: tek istek içinde kaçı SQL sorgusu üretildiği SQLAlchemy event listener ile sayılır, N+1 regresyonu engellenir."
+    ],
+    "notes": "CI pipeline'da şema lint, resolver testleri ve contract doğrulaması sıralı olarak çalışır.",
+    "prompt": "FastAPI + Strawberry GraphQL Customer resolver'larının test stratejisini kapsa: pytest birim testi, gerçek DB integration testi, SDL breaking change kontrolü ve DataLoader SQL sayım testi; çıktı: örnek test dosyası, conftest fixture'ları ve CI adımı."
+  },
+  "owasp": {
+    "items": [
+      "A01 Broken Access Control: tenant_id guard resolver'da zorunlu tutulur; farklı tenant verisi sızması için integration test senaryosu mevcuttur.",
+      "A03 Injection: tüm GraphQL giriş alanları Strawberry validator'larla temizlenir; SQLAlchemy ORM parametreli sorgu kullanır, ham string birleştirme yasaktır.",
+      "A05 Security Misconfiguration: üretim ortamında GraphQL introspection devre dışı bırakılır; sadece geliştirme ortamında aktiftir.",
+      "A09 Logging Failures: her FORBIDDEN ve UNAUTHENTICATED hatası structured JSON log olarak yazılır; hassas payload loglanmaz, yalnızca hata kodu ve trace_id kaydedilir."
+    ],
+    "notes": "OWASP API Security Top 10 2023'e göre A01, A03, A05 ve A09 önlemleri GraphQL katmanında doğrudan uygulanır.",
+    "prompt": "GraphQL Customer API'sinde OWASP API Security Top 10 2023 önlemlerini kapsa: tenant guard (A01), ORM parametreli sorgu (A03), introspection kapatma (A05) ve structured hata loglama (A09); güvenlik sınırı: introspection üretimde asla açık bırakılmaz."
+  },
+  "integration": {
+    "items": [
+      "CRM sistemiyle webhook entegrasyonu: createCustomer başarılı olduğunda HTTP POST ile dış CRM'e bildirim gönderilir, timeout 3 saniye, retry 3 kez.",
+      "Muhasebe modülüyle GraphQL federation: Customer tipi @key direktifiyle federe şemaya eklenir; fatura sorgusunda müşteri alanları subgraph'tan çözümlenir.",
+      "Arama servisi indeksleme: müşteri oluşturma/güncelleme sonrası Elasticsearch index güncelleme görevi Celery kuyruğuna eklenir, asenkron çalışır.",
+      "Event-driven entegrasyon: updateCustomer mutasyonu başarıyla tamamlandığında Kafka'ya customer.updated eventi yayınlanır; downstream servisler bu olayı tüketir."
+    ],
+    "notes": "Tüm dış entegrasyonlar asenkron kuyruk üzerinden çalışır; ana GraphQL isteği dış servis gecikmesinden etkilenmez.",
+    "prompt": "Customer GraphQL API'sinin CRM webhook, GraphQL federation, Elasticsearch asenkron indeksleme ve Kafka event yayını entegrasyonlarını kapsa; her entegrasyonun hata yönetimini açıkla; çıktı: Celery task, Kafka producer ve federation type tanımı."
+  },
+  "moduleUsage": {
+    "items": [
+      "platform-auth modülü: JWT doğrulama ve tenant_id çıkarma için bağımlılık olarak enjekte edilir; resolver'lar doğrudan token işlemez.",
+      "platform-db modülü: SQLAlchemy AsyncSession ve bağlantı havuzu yönetimi için kullanılır; DataLoader ve resolver'lar bu modülün session factory'sinden session alır.",
+      "platform-events modülü: ECA tetikleyiciler ve Kafka yayıncısı bu modül aracılığıyla erişilir; mutation sonrası event gönderimi standart arayüzle yapılır."
+    ],
+    "notes": "Bu düğüm platform-auth, platform-db ve platform-events modüllerine sıkı bağımlıdır; diğer modüller opsiyoneldir.",
+    "prompt": "platform-customer-graphql düğümünün platform-auth, platform-db ve platform-events modülleriyle bağımlılık ilişkisini kapsa; her modülden hangi arayüzün kullanıldığını göster; çıktı: bağımlılık diyagramı ve örnek bağımlılık enjeksiyon kodu."
+  }
+}

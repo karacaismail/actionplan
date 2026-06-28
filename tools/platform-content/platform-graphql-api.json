@@ -1,0 +1,141 @@
+{
+  "featureDefs": {
+    "items": [
+      "FastAPI üzerinde Strawberry kütüphanesi ile schema-first GraphQL sunucusu kurulur; tüm Query ve Mutation tipleri önce .graphql şema dosyasında tanımlanır, resolver'lar bu sözleşmeye bağlı olarak implement edilir.",
+      "Customer için Query sözleşmesi: customer(id: ID!, tenantId: ID!): Customer ve customers(tenantId: ID!, first: Int, after: String): CustomerConnection (cursor-tabanlı sayfalama) olarak tanımlanır.",
+      "Customer için Mutation sözleşmesi: createCustomer(input: CreateCustomerInput!): CustomerPayload, updateCustomer(id: ID!, input: UpdateCustomerInput!): CustomerPayload ve softDeleteCustomer(id: ID!): DeletePayload olarak tanımlanır.",
+      "GraphQL hata yolları Union tip ile modellenir: CustomerPayload = Customer | ValidationError | AuthorizationError | NotFoundError; istemci her durumu tip güvenli şekilde ayırt eder."
+    ],
+    "notes": "Şema-ilk yaklaşım, API sözleşmesini uygulamadan önce kilitler; resolver implementasyonu sözleşmeye uyumu zorlar.",
+    "prompt": "platform-graphql-api featureDefs boyutunu kapsa: Strawberry schema-first kurulum, Customer query/mutation sözleşmesi (imzalar, tipler, sayfalama), Union tip hata modeli ve FastAPI entegrasyon örüntüsünü somut tip tanımlarıyla açıkla. çıktı: API sözleşme referans kartı."
+  },
+  "security": {
+    "items": [
+      "Her GraphQL resolver başında platform-authn-authz'dan gelen JWT doğrulanır; geçersiz veya süresi dolmuş token tüm resolver'ları AuthorizationError ile bloklar, 401 HTTP yanıtı döner.",
+      "Tenant izolasyonu resolver seviyesinde uygulanır: her sorgu info.context['tenant_id'] değerini SQLAlchemy RLS bağlamına bağlar; farklı tenant kaydına erişim girişimi NotFoundError (bilgi sızdırmayan) döner.",
+      "GraphQL derinlik sınırı: maksimum sorgu derinliği 10 seviye ile kısıtlanır; aşan sorgu ExpressionLimitError ile reddedilir ve DoS koruması sağlanır.",
+      "Persisted queries (APQ): production ortamında yalnızca önceden kaydedilmiş (hash-tabanlı) sorgulara izin verilir; rastgele GraphQL string gönderimi yasaktır ve OWASP A01 kapsamında korunur."
+    ],
+    "notes": "JWT doğrulama, tenant izolasyonu ve derinlik sınırı GraphQL saldırı yüzeyinin üç temel güvenlik kontrolünü oluşturur.",
+    "prompt": "platform-graphql-api güvenlik boyutunu kapsa: JWT resolver guard uygulaması, tenant_id izolasyon bağlam akışı, sorgu derinlik sınırı yapılandırması ve persisted query (APQ) production zorunluluğunu açıkla. güvenlik sınırı: resolver tenant doğrulaması atlanamaz. çıktı: güvenlik kontrol listesi."
+  },
+  "codeOptimization": {
+    "items": [
+      "Strawberry DataLoader ile N+1 önleme: customers listesi için ilgili tenant bilgisi tek bir toplu (batch) SQL sorgusuyla çekilir; her resolver içinde ayrı sorgu yazmak yasaktır ve kod inceleme kuralıyla engellenir.",
+      "Resolver mantığı thin-resolver deseniyle yazılır: resolver yalnızca bağlam çıkarma + service katmanı çağrısı + hata haritalama içerir (≤20 satır); iş mantığı service katmanında tutulur.",
+      "GraphQL şema dosyası tek bir schema.graphql'de tutulur; resolver modülleri (customer_resolver.py, tenant_resolver.py) ayrı dosyalarda organize edilir ve Strawberry router ile bağlanır.",
+      "Tip güvenli bağlam nesnesi (GraphQLContext: TypedDict) tüm resolver'lara enjekte edilir; info.context['tenant_id'] yerine ctx.tenant_id kullanımı mypy ile zorlanır, dict erişim hatası derleme zamanında yakalanır."
+    ],
+    "notes": "Thin-resolver + DataLoader + TypedDict üçlüsü resolver kod tabanını ölçeklenebilir ve test edilebilir kılar.",
+    "prompt": "platform-graphql-api kod optimizasyonu boyutunu kapsa: Strawberry DataLoader batch yükleme implementasyonu, thin-resolver ≤20 satır kuralı, şema organizasyon yapısı ve TypedDict bağlam tip güvenliği örüntüsünü somut Python kod düzeyinde açıkla. çıktı: kod organizasyon rehberi."
+  },
+  "securityOptimization": {
+    "items": [
+      "GraphQL iç gözlem (introspection) production ortamında devre dışı bırakılır; schema endpoint yalnızca development ve staging ortamlarında aktiftir; DEBUG_GRAPHQL ortam değişkeniyle kontrol edilir.",
+      "Sorgu karmaşıklık sınırı (query complexity limit) her alan için ağırlık atanarak uygulanır: bağlantı tipindeki her first argümanı * 1 ağırlık, iç içe bağlantılar * 5 ağırlık; toplam ≤200 aşıldığında sorgu reddedilir.",
+      "GraphQL mutation'larında CSRF koruması: POST + application/json Content-Type zorunlu tutulur; multipart form veya GET ile mutation girişimi 405 döner, CSRF saldırısı token-less ortamda engellenir.",
+      "Rate limiting: kimlik doğrulamalı kullanıcı için dakikada ≤100 GraphQL isteği izin verilir; aşım durumunda 429 Too Many Requests döner ve tenant_id bazlı sayaç Redis'te tutulur."
+    ],
+    "notes": "İç gözlem kapatma + karmaşıklık sınırı + rate limiting GraphQL API'yi hedefe yönelik saldırılara karşı sertleştirir.",
+    "prompt": "platform-graphql-api güvenlik optimizasyonu boyutunu kapsa: production introspection devre dışı bırakma yapılandırması, alan ağırlığı tabanlı karmaşıklık sınırı algoritması, CSRF Content-Type zorunluluğu ve tenant bazlı Redis rate limiting implementasyonunu açıkla. güvenlik sınırı: introspection production'da yoktur. çıktı: güvenlik sertleştirme rehberi."
+  },
+  "performance": {
+    "items": [
+      "DataLoader batch boyutu varsayılan 100 olarak ayarlanır; tek bir GraphQL isteği içinde en fazla 100 Customer kaydı tek SQL sorgusuyla çekilir; p95 gecikme hedefi uçtan uca ≤100ms olarak CI Locust testiyle ölçülür.",
+      "TanStack Query istemci tarafı önbelleği GraphQL yanıtlarını staleTime=60000ms ile önbelleğe alır; aynı Customer kaydına erişim 1 dakika içinde sunucuya yeni istek göndermez, API yükünü ≥40% azaltır.",
+      "Apollo Federation yerine tek şema (monolithic schema) kullanılır; federe sorgu planlama ek yükünden kaçınılır, p95 gecikme bütçesinin %20'si kazanılır.",
+      "Büyük CustomerConnection yanıtları için HTTP Response sıkıştırması: FastAPI GZip middleware ile ≥1KB yanıtlar sıkıştırılır; JSON yük boyutu ortalama %65 küçülür."
+    ],
+    "notes": "DataLoader batch + istemci önbelleği + tek şema üçlüsü GraphQL API gecikme ve yük bütçesini optimize eder.",
+    "prompt": "platform-graphql-api performans boyutunu kapsa: DataLoader batch boyutu ve p95 ≤100ms hedefi, TanStack Query staleTime önbellek stratejisi, tek şema mimarisi performans gerekçesi ve GZip sıkıştırma yapılandırmasını somut eşik ve ölçüm yöntemleriyle açıkla. çıktı: performans optimizasyon rehberi."
+  },
+  "mobileApps": {
+    "items": [
+      "GraphQL persisted query (APQ) desteği mobil istemcide bant genişliği tasarrufu sağlar: sorgu metni yerine SHA-256 hash gönderilir, ilk istekte hash bilinmiyorsa tam sorgu gönderilir ve önbelleğe alınır.",
+      "Mobil istemci için pagination: CustomerConnection tipi first + after (cursor) argümanlarını destekler; OFFSET tabanlı sayfalama yerine keyset pagination ile büyük listede tutarlı ve hızlı sayfa geçişi sağlanır.",
+      "Bant genişliği için alan seçimi: mobil istemci yalnızca ihtiyaç duyduğu alanları (name, status) sorgular; GraphQL alan seçimi sunucu tarafında otomatik olarak SQL SELECT sütun listesini daraltır.",
+      "Offline desteği için istemci tarafı senkronizasyon: GraphQL mutation'ları optimistic update ile yerel önbelleğe hemen yansıtılır; sunucu yanıtı geldiğinde önbellek uzlaştırılır, bağlantısız çalışma ≤60 saniye desteklenir."
+    ],
+    "notes": "APQ + keyset pagination + alan seçimi mobil istemcinin sınırlı bant genişliğinden en iyi şekilde yararlanmasını sağlar.",
+    "prompt": "platform-graphql-api mobil uyum boyutunu kapsa: APQ hash mekanizması, CustomerConnection cursor sayfalama, GraphQL alan seçimi ile SQL optimizasyonu bağlantısı ve optimistic update ile offline senkronizasyon stratejisini açıkla. çıktı: mobil entegrasyon rehberi."
+  },
+  "wcag": {
+    "items": [
+      "GraphQL API doğrudan kullanıcı arayüzü sunmaz; ancak API hata yanıtları platform-customer-ui'nin WCAG 2.2 uyumlu hata mesajları üretebilmesi için makine-okunabilir hata kodu (code: 'VALIDATION_ERROR', field: 'email') içerir.",
+      "CustomerPayload Union hata tipleri (ValidationError, AuthorizationError) her biri ayrı message (string) + code (enum) alanı taşır; UI katmanı bu yapıyı role='alert' + aria-describedby hata bağlantısına dönüştürür.",
+      "GraphQL yanıtlarında locale bilgisi (müşteri preferred_locale) taşınır; UI katmanı bu değeri kullanarak hata ve bilgi mesajlarını doğru dilde render eder, WCAG 2.1 SC 3.1.2 dil ayarı karşılanır.",
+      "API yükleme durumları (loading state) için istemci tarafı skeleton loader örüntüsü önerilir: TanStack Query isLoading flag'ı UI'da aria-busy='true' ile ilişkilendirilir, ekran okuyucu yükleme durumunu bildirir."
+    ],
+    "notes": "GraphQL API, UI erişilebilirliği için veri omurgası işlevi görür; makine-okunabilir hata kodları WCAG uyumunu dolaylı olarak güçlendirir.",
+    "prompt": "platform-graphql-api WCAG boyutunu kapsa: makine-okunabilir hata kodu tasarımı, CustomerPayload Union tip yapısının ARIA bağlantısına dönüşümü, locale taşıma ile WCAG 2.1 SC 3.1.2 desteği ve aria-busy yükleme durum bildirimi örüntüsünü açıkla. güvenlik sınırı: API UI mantığı içermez. çıktı: erişilebilirlik altyapı notları."
+  },
+  "deployment": {
+    "items": [
+      "FastAPI + Strawberry GraphQL sunucusu Docker imajı olarak paketlenir; uvicorn --workers 2 --loop uvloop başlatma komutuyla çalışır ve /health endpoint'i GraphQL şema hazır olduğunda 200 döndürür.",
+      "Docker Swarm health-check: GET /health her 10 saniyede çalışır; arka arkaya 3 başarısız yanıt replica'yı sağlıksız olarak işaretler ve Swarm yeni replica başlatır.",
+      "Şema değişiklik dağıtımı: schema.graphql versiyonlanır, eski sürüm istemciler en az 1 dağıtım döngüsü eski schema'yı alabilir; kırılıcı değişiklik flag'ı CI kapısında tespit edilir.",
+      "Sıfır kesinti dağıtımı: Swarm rolling update stratejisiyle (replicas=2, update_parallelism=1) uygulanır; yeni replica sağlıklı olana kadar eski replica trafiği almaya devam eder."
+    ],
+    "notes": "Rolling update + health-check + şema versiyonlama üçlüsü GraphQL API için sıfır kesintili dağıtım sağlar.",
+    "prompt": "platform-graphql-api dağıtım boyutunu kapsa: FastAPI uvicorn Docker başlatma yapılandırması, Swarm health-check eşikleri, GraphQL şema versiyonlama ve kırılıcı değişiklik tespiti ile rolling update sıfır kesinti stratejisini açıkla. çıktı: dağıtım kontrol listesi."
+  },
+  "eca": {
+    "items": [
+      "graphql.mutation.executed olayı tetiklendiğinde ECA kuralı mutation türüne göre audit kaydı yazar: createCustomer ve updateCustomer işlemleri platform-observability'ye audit_event iletir.",
+      "graphql.schema.breaking_change algılandığında ECA kuralı CI kapısında dağıtımı bloklar ve platform-ekibi'ne kırılıcı değişiklik bildirimi oluşturur; bu kural requiresApproval=true olarak yapılandırılır.",
+      "graphql.query.complexity_exceeded olayı dakikada ≥10 kez gerçekleşirse ECA kuralı ilgili tenant'ı geçici kısıtlama listesine ekler ve güvenlik incelemesi görevi açar.",
+      "Resolver hata oranı (error_rate > %5, 5 dakikalık pencere) ECA uyarı kuralını tetikler: platform-observability'ye alert iletir ve otomatik devre kesici (circuit breaker) mekanizmasını etkinleştirir."
+    ],
+    "notes": "ECA katmanı GraphQL olay akışını izleyerek kırılıcı değişiklik, karmaşıklık saldırısı ve hata oranı anomalilerini otomatik kapılar.",
+    "prompt": "platform-graphql-api ECA boyutunu kapsa: mutation audit event haritalama, breaking change CI bloklama kuralı, karmaşıklık aşımı tenant kısıtlama akışı ve resolver hata oranı devre kesici ECA kuralını somut kural yapısıyla açıkla. çıktı: ECA kural tanımları."
+  },
+  "aiAgents": {
+    "items": [
+      "AI ajanları GraphQL şema ve resolver dosyalarına yalnızca read + suggest-changeset yetkisiyle erişebilir; şema dosyasına doğrudan yazma agentPolicy.forbiddenActions listesindedir.",
+      "Ajan destekli N+1 tespit aracı: resolver günlüklerini (DataLoader miss sayacı) okuyarak yüksek miss oranına sahip resolver'ları tespit eder ve DataLoader batch yükleme önerisi üretir; çıktı: önerilen DataLoader implementasyon taslağı.",
+      "Ajan GraphQL şema evolüsyon analizi yapar: mevcut şema ile önerilen değişiklik arasındaki kırılıcı farkı (field removal, type change) raporlar; bu rapor breaking change CI kapısına girdi sağlar.",
+      "Ajan risk skoru ≥80 olan şema değişikliği önerilerinde ECA karantina kuralı devreye girer: öneri dondurulur, kritik inceleme görevi oluşturulur ve ajan erişimi oturumla kısıtlanır."
+    ],
+    "notes": "Ajan GraphQL API hakkında analitik öneri üretebilir; şema veya resolver dosyasına doğrudan yazma yetkisi yoktur.",
+    "prompt": "platform-graphql-api AI ajan boyutunu kapsa: ajan yetki sınırları (read/suggest), DataLoader miss tespit ve öneri iş akışı, şema evolüsyon kırılıcı değişiklik raporu üretimi ve yüksek risk ECA karantina mekanizmasını açıkla. güvenlik sınırı: ajan şema dosyasına yazamaz. çıktı: ajan görev senaryoları."
+  },
+  "testing": {
+    "items": [
+      "GraphQL şema snapshot testi: Strawberry schema.as_str() çıktısı git-tracked snapshot dosyasıyla karşılaştırılır; her CI çalıştırmasında fark varsa test kırmızı olur, kırılıcı API değişikliği anında tespit edilir.",
+      "Resolver birim testi: her resolver için mock SQLAlchemy session + mock DataLoader kullanılarak bağımsız test yazılır; yetki guard, tenant izolasyon ve hata yolu (ValidationError, AuthorizationError) her biri ayrı test vakasıdır.",
+      "N+1 regresyon testi: pytest-dataloader-assertions ile CustomerConnection resolver'ının SQL sorgu sayısı kayıt sayısından bağımsız sabitte kaldığı doğrulanır; DataLoader devre dışı kalmışsa test kırmızı olur.",
+      "Uçtan uca API testi: FastAPI TestClient ile 5 kritik senaryo (yetkili oluşturma, yetkisiz erişim, çapraz-tenant, karmaşıklık sınırı, soft-delete) her CI çalıştırmasında çalışır; %100 senaryo geçişi kapı koşuludur."
+    ],
+    "notes": "Şema snapshot + N+1 regresyon + uçtan uca senaryo testleri API kalite kapısının üç temel boyutunu oluşturur.",
+    "prompt": "platform-graphql-api test boyutunu kapsa: Strawberry şema snapshot testi mekanizması, mock-tabanlı resolver birim testleri, pytest-dataloader N+1 regresyon testi ve 5 kritik uçtan uca senaryo test yapısını somut test isimleri ve assert örnekleriyle açıkla. çıktı: test planı."
+  },
+  "owasp": {
+    "items": [
+      "OWASP A01 Broken Access Control: her resolver tenant_id bağlamını doğrular; tenant izolasyonu test senaryosu CI'da çalışır ve başarısız olursa dağıtım bloklanır.",
+      "OWASP A03 Injection: GraphQL değişkenleri Strawberry tip doğrulamasından geçer; ham string birleştirme ile oluşturulan SQL yasak olup resolver kod inceleme kuralıyla engellenir.",
+      "OWASP A05 Security Misconfiguration: production ortamında GraphQL introspection kapalı, hata detayları (stack trace) istemciye iletilmez; yalnızca makine-okunabilir hata kodu ve mesajı döner.",
+      "OWASP A10 Server Side Request Forgery: GraphQL mutation'larında URL girdi alanları whitelist domain doğrulamasından geçirilir; dış kaynak isteği yalnızca onaylı domain listesine izin verilir, SSRF riski azaltılır."
+    ],
+    "notes": "OWASP A01+A03+A05+A10 kontrolleri GraphQL katmanında eş zamanlı olarak uygulanır ve her kontrol ayrı lint veya test kuralıyla doğrulanır.",
+    "prompt": "platform-graphql-api OWASP boyutunu kapsa: A01 resolver tenant izolasyon CI kapısı, A03 tip doğrulamalı injection önleme, A05 introspection/stack trace yapılandırması ve A10 SSRF whitelist domain doğrulama mekanizmasını somut yapılandırma örnekleriyle açıkla. güvenlik sınırı: stack trace istemciye iletilmez. çıktı: OWASP kontrol kartı."
+  },
+  "integration": {
+    "items": [
+      "platform-db-schema + platform-customer-model: resolver'lar SQLAlchemy 2.0 async session üzerinden Customer modelini sorgular; DataLoader batch yüklemesi async gather ile SQLAlchemy async context manager'la yürütülür.",
+      "platform-authn-authz: FastAPI Depends(get_current_user) bağımlılığı her resolver'ın info.context nesnesine doğrulanmış kullanıcı ve tenant_id ekler; JWT eksik veya geçersizse resolver çalışmadan AuthorizationError döner.",
+      "platform-observability: her GraphQL isteği için trace_id + tenant_id OpenTelemetry span olarak platform-observability modülüne iletilir; p95 gecikme ölçümü bu span verilerinden Prometheus'a dışa aktarılır.",
+      "platform-customer-ui (TanStack Query): istemci tarafı useQuery/useMutation hook'ları GraphQL endpoint'ine bağlanır; hata tiplerini (ValidationError, AuthorizationError) CustomerPayload Union'dan ayırt ederek toast bildirimine dönüştürür."
+    ],
+    "notes": "GraphQL API dört modülle entegre olur; her entegrasyon noktası async akış, hata propagasyonu ve gözlemlenebilirlik açısından ayrı test senaryosuyla doğrulanır.",
+    "prompt": "platform-graphql-api entegrasyon boyutunu kapsa: SQLAlchemy async session + DataLoader bağlantısı, JWT Depends bağlam enjeksiyonu, OpenTelemetry span iletimi ve TanStack Query CustomerPayload Union hata ayırt etme akışını açıkla. çıktı: entegrasyon noktaları haritası."
+  },
+  "moduleUsage": {
+    "items": [
+      "platform-customer-graphql archetype'ı bu modülün temel tüketicisidir: Customer spesifik query/mutation resolver'larını platform-graphql-api'nin sağladığı DataLoader, bağlam ve hata haritalama altyapısı üzerine inşa eder.",
+      "Yeni bir varlık (ör. Supplier) için GraphQL eklenmesi: platform-graphql-api şema router'ına yeni .graphql dosyası eklenir, thin-resolver + DataLoader + CustomerPayload Union örüntüsü kopyalanır; altyapı yeniden yazılmaz.",
+      "platform-ui-surface modülü TanStack Query ile GraphQL endpoint'e bağlanır; her yeni UI bileşeni useQuery(<CustomerQuery>) hook'u ile API'yi tüketir ve CustomerPayload Union üzerinden hata işler."
+    ],
+    "notes": "GraphQL API altyapı modülüdür; her yeni varlık archetype'ı thin-resolver örüntüsünü takip ederek sözleşmeyi genişletir.",
+    "prompt": "platform-graphql-api modül kullanımı boyutunu kapsa: platform-customer-graphql tüketim örüntüsü, yeni Supplier varlığı ekleme adımları (şema router + DataLoader kopyalama) ve platform-ui-surface TanStack Query hook bağlantısını açıkla. çıktı: kullanım senaryoları ve genişletme rehberi."
+  }
+}

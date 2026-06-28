@@ -1,0 +1,142 @@
+{
+  "featureDefs": {
+    "items": [
+      "OpenTelemetry SDK entegrasyonu: her FastAPI isteğinde otomatik span oluşturma, trace-id ve span-id HTTP response header'larına ekleme.",
+      "Yapılandırılmış JSON log formatı (structlog veya python-json-logger): her log kaydında tenant_id, request_id, user_id, severity ve ISO-8601 timestamp zorunlu alanlar.",
+      "Prometheus metrik uç noktası (/metrics) ile FastAPI middleware üzerinden istek sayısı, gecikme histogramı (p50/p95/p99) ve hata oranı otomatik ölçümü.",
+      "Güvenlik denetim izi (audit log): kimlik doğrulama, yetki değişikliği ve kritik veri erişimi olaylarını ayrı audit tablosuna ve ayrı log akışına yazar; 90 gün saklama."
+    ],
+    "notes": "Her özellik, tenant bağlamını korelasyon kimliğiyle birlikte taşır; bu sayede çok kiracılı ortamda olay kaynağı izole edilebilir.",
+    "prompt": "Platform gözlemlenebilirlik modülünün özellik tanımlarını kapsayan teknik bir belge hazırla; OpenTelemetry trace-id yayılımı, yapılandırılmış log şeması, Prometheus metrik tipleri ve audit log saklama politikasını ele al. çıktı: her özellik için uygulama adımları ve konfigürasyon örneği."
+  },
+  "security": {
+    "items": [
+      "Log verilerinde PII maskeleme: e-posta, TCKN, kart numarası gibi hassas alanlar log yazılmadan önce SHA-256 ile hash'lenir veya [REDACTED] ile değiştirilir.",
+      "Audit log tablosuna yalnızca append yetkisi: uygulama kullanıcısının UPDATE/DELETE yetkisi PostgreSQL seviyesinde kaldırılır, ≥1 yıl değişmezlik sağlanır.",
+      "Trace ve metrik verilerinin aktarımı TLS 1.3 ile şifrelenir; Prometheus scrape endpoint'i Hetzner iç ağı (10.0.0.0/8) dışına kapalı tutulur.",
+      "Log enjeksiyon saldırılarına karşı tüm string alanlar yazılmadan önce kontrol karakterleri (\\n, \\r, \\0) temizlenir (OWASP A09 logging güvenlik standardı)."
+    ],
+    "notes": "Güvenlik denetim izi değiştirilemez akışa yazılır; iç ağ dışına açık hiçbir metrik uç noktası bulunmaz.",
+    "prompt": "Gözlemlenebilirlik modülünün güvenlik önlemlerini kapsayan bir inceleme yaz; PII maskeleme stratejisi, audit log değişmezliği, TLS zorunluluğu ve OWASP A09 log enjeksiyon korumasını detaylandır. güvenlik sınırı: hangi verinin loglanamayacağı ve neden, açık örneklerle açıkla. çıktı: uygulama kontrol listesi."
+  },
+  "codeOptimization": {
+    "items": [
+      "Asenkron log yazımı: structlog async processor zinciri kullanılarak log IO operasyonu FastAPI event loop'unu bloklamaz; p95 log gecikmesi <2 ms hedefi.",
+      "Metrik hesaplamalarında hot-path önleme: Prometheus Counter/Histogram nesneleri modül başlatılırken bir kez örneklenir, her istek döngüsünde yeniden oluşturulmaz.",
+      "OpenTelemetry BatchSpanExporter konfigürasyonu: max_export_batch_size=512, schedule_delay_millis=5000 ile ağ çağrısı sayısı %80 azaltılır.",
+      "Tenant başına metrik etiket kardinalitesi sınırlandırılır: tenant_id etiketi maksimum 500 farklı değere izin verir; aşımda 'overflow' bucket'a düşer, Prometheus bellek şişmesi engellenir."
+    ],
+    "notes": "Asenkron işlem zinciri ve düşük kardinalite politikası, yüksek kiracı sayısında gözlemlenebilirlik altyapısının kaynak tüketimini sabit tutar.",
+    "prompt": "Gözlemlenebilirlik modülü için kod optimizasyon stratejilerini kapsayan bir teknik rehber yaz; asenkron log işleme, BatchSpanExporter ayarları, metrik kardinalite yönetimi ve hot-path tespitini ele al. çıktı: her optimizasyon için ölçülebilir performans hedefi ve kod düzeyinde uygulama notu."
+  },
+  "securityOptimization": {
+    "items": [
+      "Korelasyon kimliği (correlation-id) üretimi kriptografik olarak güçlü UUID v4 kullanır; tahmin edilebilir sıralı ID'ler trace sahteciliğine kapı açar.",
+      "Log aggregator (Loki/Elasticsearch) erişimi servis hesabı token'ı ile kısıtlanır; token 30 günde bir otomatik döndürülür, eski token geçersiz kılınır.",
+      "Prometheus alerting kurallarında hassas tenant bilgisi etiket olarak taşınmaz; alert mesajları yalnızca tenant_hash içerir, düz tenant_id içermez.",
+      "Güvenlik olaylarını (401/403/500) izleyen özel bir Prometheus sayacı, dakikada ≥50 güvenlik hatası eşiğini aşınca PagerDuty/webhook alert tetikler."
+    ],
+    "notes": "Kriptografik korelasyon kimliği ve token rotasyonu, gözlemlenebilirlik altyapısını bir saldırı vektörüne dönüştürmez.",
+    "prompt": "Gözlemlenebilirlik modülündeki güvenlik optimizasyonlarını kapsa; correlation-id entropi gereksinimleri, log aggregator token yaşam döngüsü, etiket bazlı PII sızıntı önleme ve güvenlik olayı eşik alerting mekanizmasını detaylandır. güvenlik sınırı: hangi etiketin alert mesajına yazılamayacağını somut örnekle belirt. çıktı: güvenlik optimizasyon matrisi."
+  },
+  "performance": {
+    "items": [
+      "İstek başına log hacmi sınırı: normal akış için tek istekte maksimum 20 log satırı; aşımlarda 'log budget exceeded' uyarısı yazılır, geri kalanlar DROP edilir.",
+      "OpenTelemetry trace örnekleme oranı: üretimde %10 head-based sampling + hata durumlarında %100 tail-based sampling ile veri hacmi ve bant genişliği dengelenir.",
+      "Grafana dashboard sorgu süresi p95 <500 ms hedefi; Prometheus recording rule'ları ile sık kullanılan agregasyonlar önceden hesaplanır.",
+      "Loki veya Elasticsearch log indeksine tenant_id + timestamp bileşik indeksi eklenir; tek tenant log sorgusu p99 <1 saniye altında kalır."
+    ],
+    "notes": "Örnekleme stratejisi ve log bütçesi, gözlemlenebilirlik katmanının üretim trafiğini en fazla %2 CPU ile etkilemesini garantiler.",
+    "prompt": "Gözlemlenebilirlik modülü performans hedeflerini kapsa; log bütçesi politikası, trace örnekleme algoritmaları, Prometheus recording rule tasarımı ve Loki/Elasticsearch sorgu SLA'larını somut eşiklerle ele al. çıktı: performans test planı ve kabul kriterleri."
+  },
+  "mobileApps": {
+    "items": [
+      "Bu modül doğrudan bir mobil UI sunmaz; ancak OpenTelemetry JavaScript/React Native SDK ile mobil istemci trace'leri backend trace'leriyle aynı trace-id altında birleştirilebilir.",
+      "Mobil uygulama kaynaklı hataları izlemek için frontend span'ları OTLP/HTTP üzerinden gateway'e iletilir; backend span'larıyla korelasyon otomatik kurulur.",
+      "Mobil seans metriği (crash rate, ANR) Prometheus'a custom exporter aracılığıyla beslenir; tenant başına mobil hata oranı panodan izlenir.",
+      "Mobil client log hacmi günlük ≤500 KB/tenant ile sınırlandırılır; aşımda log akışı kesilebilir, tenant uyarı alır."
+    ],
+    "notes": "Mobil gözlemlenebilirlik, backend trace zincirinin bir uzantısı olarak tasarlanmıştır; ayrı bir altyapı gerektirmez.",
+    "prompt": "Gözlemlenebilirlik modülünün mobil uygulama izleme kapsamını ele al; React Native OpenTelemetry entegrasyonu, trace korelasyonu, mobil hata metriği ve veri hacmi politikasını kapsayan teknik bir değerlendirme yaz. çıktı: mobil SDK konfigürasyonu ve tenant log kota tablosu."
+  },
+  "wcag": {
+    "items": [
+      "Bu modül doğrudan son kullanıcıya UI sunmaz; ancak Grafana panoları WCAG 2.1 AA renk kontrastı gereksinimlerini (%4.5:1) karşılayan tema ile yapılandırılır.",
+      "Alert ve rapor e-postaları düz metin alternatif içerir; yalnızca HTML gönderilmez, böylece ekran okuyucu kullanıcıları bildirimleri anlayabilir.",
+      "Log görüntüleme araçları (Grafana Explore) klavye navigasyonunu destekler; operatörler fare kullanmadan log filtreleme ve zaman aralığı değiştirebilir.",
+      "Erişilebilirlik ihlalleri gözlem kapsamının dışında değildir: metrik pano ARIA etiket eksikliği axe-core otomatik taraması ile tespit edilir, ≥0 kritik bulgu CI kapısı gereksinimi."
+    ],
+    "notes": "Gözlemlenebilirlik araçları operatör arayüzü olarak WCAG 2.1 AA uyumluluğunu hedefler; son kullanıcı UI'ı bu modülün sorumluluğunda değildir.",
+    "prompt": "Gözlemlenebilirlik modülü erişilebilirlik gereksinimlerini kapsa; Grafana pano kontrastı, ekran okuyucu uyumlu alerting, klavye navigasyon desteği ve axe-core CI entegrasyonunu WCAG 2.1 AA standardı çerçevesinde değerlendir. çıktı: operatör arayüzü erişilebilirlik kontrol listesi ve CI kapısı konfigürasyonu."
+  },
+  "deployment": {
+    "items": [
+      "OpenTelemetry Collector, Prometheus ve Grafana ayrı Docker container'larında çalışır; Hetzner sunucusunda docker compose up -d ile tek komutla ayağa kalkar.",
+      "Prometheus veri dizini (/var/prometheus) Hetzner Debian sunucusundaki kalıcı volume'a bağlanır; container yeniden başlatıldığında metrik geçmişi korunur, saklama süresi 30 gün.",
+      "Gözlemlenebilirlik stack güncellemesi sıfır kesinti ile yapılır: yeni container image pull → eski container durdur → yeni container başlat; toplam kesinti <30 saniye.",
+      "Hetzner Firewall kuralları ile Prometheus :9090, Grafana :3000 ve Loki :3100 portları yalnızca VPN/iç ağ IP bloğundan erişilebilir; dış trafiğe kapalı."
+    ],
+    "notes": "Tüm gözlemlenebilirlik bileşenleri Hetzner üzerindeki tek Docker Compose dosyasıyla yönetilir; harici bulut servisi bağımlılığı yoktur.",
+    "prompt": "Gözlemlenebilirlik modülünün Hetzner Debian Docker dağıtım mimarisini kapsa; Compose konfigürasyonu, kalıcı volume yönetimi, güncelleme prosedürü ve Hetzner Firewall kural seti tasarımını ele al. çıktı: docker-compose.yml şablonu ve dağıtım kontrol listesi."
+  },
+  "eca": {
+    "items": [
+      "Otomatik log rotasyonu: Debian logrotate konfigürasyonu, uygulama log dosyalarını günlük 100 MB eşiğinde sıkıştırır ve 90 gün sonra siler.",
+      "Prometheus dead man's snitch alarmı: her 1 dakikada bir watchdog alert tetiklenir; eğer 2 dakika sessiz kalırsa PagerDuty/webhook uyarısı gönderilir, gözlemlenebilirlik yığını kendisi izlenir.",
+      "Tenant başına log hacim anomalisi tespiti: 7 günlük ortalamadan %300 fazla log üreten tenant otomatik kota uyarısı alır ve operatör onayı olmadan log akışı kısıtlanır.",
+      "Haftalık özet rapor otomasyonu: cron job, her Pazartesi 07:00'de Grafana API üzerinden tenant SLA metrikleri çeker ve e-posta ile gönderir."
+    ],
+    "notes": "ECA otomasyonları gözlemlenebilirlik altyapısının kendisini de kapsar; ölü watchdog alarmı ile kör nokta oluşmaz.",
+    "prompt": "Gözlemlenebilirlik modülü ECA otomasyon senaryolarını kapsa; log rotasyon politikası, watchdog alarm mekanizması, log anomali tespiti ve haftalık SLA raporlama otomasyonunu teknik düzeyde ele al. çıktı: cron job tanımları, Prometheus alert YAML örnekleri ve otomasyon akış diyagramı."
+  },
+  "aiAgents": {
+    "items": [
+      "AI log analiz ajanı: yapılandırılmış log akışını tüketir, hata örüntülerini LLM ile sınıflandırır ve yeni hata tiplerini Slack kanalına özetleyerek iletir.",
+      "Trace anomali tespiti: OpenTelemetry span sürelerini zaman serisi modeli ile izleyen ajan, p99 gecikme ani artışında (>2× 7 günlük ortalama) otomatik incident bileti açar.",
+      "Kök neden analizi asistanı: hata log'ları ve ilgili trace'ler ajan tarafından birleştirilir; olası kök neden listesi operatöre öneri olarak sunulur, operatör onaylamadan işlem yapılmaz.",
+      "Log tabanlı kullanım analizi: AI ajanı tenant başına özellik kullanım yoğunluğunu log verilerinden çıkarır, ürün ekibine haftalık kullanım özeti üretir."
+    ],
+    "notes": "AI ajanları gözlemlenebilirlik verilerini tüketir ancak hiçbiri log veya metrik silme yetkisine sahip değildir; yalnızca okuma + bildirim rolündedir.",
+    "prompt": "Gözlemlenebilirlik modülü AI ajan entegrasyonunu kapsa; log sınıflandırma, trace anomali tespiti, LLM destekli kök neden analizi ve kullanım analitik ajanlarının mimarisini ele al. güvenlik sınırı: ajanların hangi işlemleri operatör onayı olmadan yapamayacağını belirt. çıktı: ajan rol matrisi ve veri akış diyagramı."
+  },
+  "testing": {
+    "items": [
+      "Birim testi: her log processor ve metrik middleware fonksiyonu için pytest ile test yazılır; log çıktısında tenant_id, request_id ve severity alanlarının varlığı assertion ile doğrulanır.",
+      "Entegrasyon testi: gerçek FastAPI + OTel Collector + Prometheus stack'i Docker Compose ile ayağa kaldırılır; /metrics uç noktasından beklenen metrik etiketleri ve histogram bucketları doğrulanır.",
+      "Audit log değişmezlik testi: veritabanı kullanıcısının audit tablosuna DELETE gönderdiğinde PostgreSQL'in pg_hba.conf kuralı gereğince izin vermediği otomatik test ile kanıtlanır.",
+      "Yük testi: 1000 eş zamanlı sanal kullanıcı ile log yazım yolu test edilir; p95 log gecikmesi <5 ms ve CPU kullanımı <%5 artış kabul kriteri olarak belirlenir."
+    ],
+    "notes": "Test süiti hem veri doğruluk hem güvenlik garantilerini otomatik kapsar; yük testi gözlemlenebilirliğin üretim trafiğini etkilemediğini kanıtlar.",
+    "prompt": "Gözlemlenebilirlik modülü test stratejisini kapsa; birim, entegrasyon, değişmezlik ve yük testi senaryolarını pytest, Docker Compose ve yük testi araçları bağlamında ele al. çıktı: test planı, kabul kriterleri tablosu ve örnek test kodu iskeleti."
+  },
+  "owasp": {
+    "items": [
+      "OWASP A09 (Güvenlik Günlüğü ve İzleme Eksikliği): kritik iş olayları (giriş başarısız, yetki ihlali, veri dışa aktarma) log altyapısına yazılmayan hiçbir akış bırakılmaz.",
+      "OWASP A01 (Kırık Erişim Kontrolü): her yetkisiz erişim girişimi audit log'una yazılır ve 15 dakika içinde alert tetiklenecek şekilde Prometheus kuralı tanımlanır.",
+      "OWASP A04 (Güvensiz Tasarım): log verilerine erişim 'need-to-know' ilkesine göre RBAC ile kısıtlanır; geliştirici ortamı log'larında üretim verisi bulunmaz.",
+      "OWASP A10 (Sunucu Tarafı İstek Sahteciliği): OTel exporter hedefi sabit konfigürasyonla tanımlanır, çalışma zamanında değiştirilemez; SSRF vektörü kapatılır."
+    ],
+    "notes": "OWASP A09 uyumluluğu, gözlemlenebilirlik modülünün temel varoluş gerekçesiyle örtüşür; kör nokta bırakmama prensibi tüm tasarımı yönlendirir.",
+    "prompt": "Gözlemlenebilirlik modülünün OWASP Top 10 uyum durumunu kapsa; A09 log eksikliği, A01 erişim kontrolü ihlali izleme, A04 RBAC politikası ve A10 SSRF önleme mekanizmalarını somut teknik önlemlerle ele al. güvenlik sınırı: hangi olayın loglanmamasının kabul edilemez olduğunu örnekle belirt. çıktı: OWASP uyum matrisi."
+  },
+  "integration": {
+    "items": [
+      "FastAPI middleware entegrasyonu: opentelemetry-instrumentation-fastapi paketi ile tüm HTTP istekleri otomatik span'a dönüştürülür; manuel kod değişikliği gerektirmez.",
+      "SQLAlchemy OTel entegrasyonu: opentelemetry-instrumentation-sqlalchemy ile veritabanı sorguları trace'e dahil edilir; N+1 sorgu örüntüleri span ağacından tespit edilir.",
+      "Grafana ↔ Prometheus ↔ Loki veri kaynağı entegrasyonu: Grafana datasource konfigürasyonu kod olarak (provisioning YAML) yönetilir, el ile UI tıklaması gerekmez.",
+      "Slack/PagerDuty webhook entegrasyonu: Grafana alert kanalı veya Alertmanager üzerinden kritik alertler 5 saniye içinde ilgili on-call kişiye iletilir; SLA ihlali bildirimi ≤1 dakika."
+    ],
+    "notes": "Tüm entegrasyonlar otomatik enstrümantasyon tercihiyle uygulanır; uygulama koduna gözlemlenebilirlik mantığı manuel olarak enjekte edilmez.",
+    "prompt": "Gözlemlenebilirlik modülü entegrasyon mimarisini kapsa; FastAPI ve SQLAlchemy otomatik enstrümantasyon, Grafana provisionig-as-code, Loki log entegrasyonu ve alert kanalı konfigürasyonunu teknik detaylarla ele al. çıktı: entegrasyon diyagramı ve bağımlılık listesi."
+  },
+  "moduleUsage": {
+    "items": [
+      "Platform modüllerinin tamamı gözlemlenebilirlik modülüne bağımlıdır: FastAPI uygulaması başlatıldığında OTel SDK otomatik olarak devreye girer, herhangi bir modül için ayrıca konfigürasyon gerekmez.",
+      "Tenant yönetim modülü, yeni tenant oluşturma ve silme olaylarını audit log akışına yazar; bu sayede gözlemlenebilirlik modülü tenant yaşam döngüsü denetimini otomatik kapsar.",
+      "CI/CD modülü, deploy öncesi /metrics ve /health uç noktalarını smoke test ile doğrular; gözlemlenebilirlik altyapısının çalışır olması deployment kabul kriterlerinden biridir.",
+      "Yetkilendirme modülü, RBAC değişikliklerini (rol atama/kaldırma) audit log'a yazar; gözlemlenebilirlik modülü bu olayları standart log arayüzünden sorgulaya sunarak uyumluluk raporunu destekler."
+    ],
+    "notes": "Gözlemlenebilirlik modülü platform altyapısının çapraz kesici kaygısıdır; diğer modüller doğrudan bağımlıdır ve ayrı entegrasyon adımı gerektirmez.",
+    "prompt": "Platform içindeki diğer modüllerin gözlemlenebilirlik modülünü nasıl kullandığını kapsa; bağımlılık yönü, audit log yazım noktaları, CI/CD kabul kriteri ve RBAC değişiklik izleme senaryolarını somut örneklerle açıkla. çıktı: modül bağımlılık matrisi ve kullanım rehberi."
+  }
+}

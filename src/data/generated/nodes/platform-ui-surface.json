@@ -30,7 +30,11 @@
   "assignees": [
     "platform-ekibi"
   ],
-  "effort": {},
+  "effort": {
+    "estimate": 14,
+    "unit": "d",
+    "spent": 0
+  },
   "progress": 0,
   "phase": "test-plan",
   "phases": {
@@ -80,8 +84,15 @@
       "notes": ""
     }
   },
-  "milestone": null,
-  "schedule": {},
+  "milestone": "v0.3 — Platform dikey dilim",
+  "schedule": {
+    "start": "2026-11-16",
+    "end": "2026-12-14",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-11-16",
+    "baselineEnd": "2026-12-14"
+  },
   "deliverables": [
     "Paylaşılan UI bileşen tabanı + token'lar",
     "Customer ekranları (liste/detay/form)"
@@ -90,10 +101,26 @@
     "UI, GraphQL API'den canlı veri ile çalışır; yükleme/hata durumları ele alınır",
     "a11y kapısı (axe) yeşil; klavye gezinme ve kontrast karşılanır"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-ui-a11y",
+      "desc": "Erişilebilirlik gerilemesi WCAG kapısını kırar",
+      "severity": "medium",
+      "mitigation": "axe e2e kapısı + bileşen testleri"
+    }
+  ],
   "rollback": null,
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "axe WCAG 2.2 ihlali",
+      "target": "0 serious/critical"
+    },
+    {
+      "key": "İlk anlamlı boya (LCP)",
+      "target": "≤ 2.5s"
+    }
+  ],
   "ecaRules": [
     {
       "id": "eca-platform-ui-surface-done",
@@ -261,128 +288,211 @@
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "React 18 + Vite 5 ile modüler uygulama iskeleti: HMR destekli geliştirme sunucusu, üretimde Rollup tabanlı tree-shaking ile paket boyutu %40 küçülür.",
+        "TanStack Router v1: tip-güvenli file-based routing, lazy route splitting, route-level loader ile veri önceden yüklenir, 404 ve hata boundary'leri tanımlıdır.",
+        "TanStack Query v5: GraphQL istekleri useQuery/useMutation hook'larıyla yönetilir; staleTime 60 saniye, gcTime 5 dakika varsayılan, invalidate ile anlık yenileme.",
+        "Tasarım token sistemi: renk, tipografi, aralık ve gölge değerleri CSS custom property (--token-*) olarak tanımlanır; tüm bileşenler token referans eder, hard-coded değer yasaktır."
+      ],
+      "notes": "Vite plugin-react-swc kullanır; TypeScript strict modda derlenir, any tipi CI'da hata üretir.",
+      "prompt": "React 18 + Vite 5 + TanStack Router/Query ile platform UI yüzeyinin temel mimarisini kapsa: route splitting, loader stratejisi, GraphQL veri bağlama ve tasarım token sistemi; çıktı: vite.config.ts, router tanımı, QueryClient yapılandırması ve token CSS dosyası.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "JWT access token memory'de (React state/context) tutulur, localStorage'a yazılmaz; refresh token httpOnly cookie ile taşınır, XSS'e karşı korunur.",
+        "Content Security Policy başlığı strict-dynamic nonce tabanlı uygulanır; inline script yasaktır, sadece nonce'lu scriptler çalışır.",
+        "TanStack Query önbelleğinde hassas veri (SSN, IBAN) tutulmaz; query key tasarımında bu alanlar ayrı sorgu ile getirilir, gcTime=0 ile hemen temizlenir.",
+        "Kullanıcı oturumu kapattığında QueryClient.clear() çağrılır; tüm önbellek verisi bellekten silinir, sonraki kullanıcıya veri sızmaz."
+      ],
+      "notes": "Token saklama stratejisi OWASP SPA Security Cheat Sheet önerisiyle uyumludur.",
+      "prompt": "React SPA'da JWT yaşam döngüsü güvenliğini kapsa: memory-only access token, httpOnly refresh cookie, CSP nonce uygulaması ve oturum kapatmada QueryClient temizleme; güvenlik sınırı: hassas alan asla localStorage veya query cache'te kalmaz.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Vite rollupOptions ile vendor chunk ayrımı yapılır: react, react-dom ve tanstack paketleri ayrı chunk'a alınır; tarayıcı cache'i değişmeyen kütüphaneyi yeniden indirmez.",
+        "React.lazy + Suspense ile route-level kod bölme: her route ayrı async chunk; ana bundle 150 KB gzip altında tutulur.",
+        "useMemo ve useCallback seçici olarak kullanılır: React DevTools Profiler ile yeniden render maliyeti >5 ms olan bileşenler belirlenir, sonra memoize edilir.",
+        "Kullanılmayan CSS Vite PurgeCSS plugin ile derleme anında ayıklanır; üretim CSS boyutu geliştirme ortamının %20'sine iner."
+      ],
+      "notes": "Bundle analizi vite-bundle-visualizer ile her CI çalışmasında üretilir; regresyon tespiti için önceki sürümle karşılaştırılır.",
+      "prompt": "Vite + React projesinde paket boyutu ve render performansı optimizasyonunu kapsa: vendor chunk ayrımı, lazy route splitting, seçici memoization ve PurgeCSS; çıktı: vite.config.ts bundle stratejisi, Suspense sınırları ve Profiler kullanım rehberi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Subresource Integrity (SRI) hash'leri CDN'den yüklenen üçüncü taraf scriptlere eklenir; hash uyuşmazlığında tarayıcı scripti yürütmez.",
+        "Bağımlılık denetimi: npm audit ve Dependabot haftalık çalışır; CVSS skoru ≥7 olan paketler 48 saat içinde güncellenmesi için otomatik PR açar.",
+        "React dangerouslySetInnerHTML tamamen yasaktır; ESLint kuralı no-dangerous-html CI'da hata verir, kod tabanına sızmaz.",
+        "Ortam değişkenleri VITE_PUBLIC_ öneki olmayan değerleri istemciye asla gömmez; gizli anahtarlar sadece backend'de yaşar."
+      ],
+      "notes": "SRI + CSP birlikte uygulandığında supply-chain ve XSS saldırı yüzeyi önemli ölçüde daralır.",
+      "prompt": "React + Vite SPA'da istemci tarafı güvenlik sertleştirmesini kapsa: SRI hash yönetimi, bağımlılık açığı tarama otomasyonu, dangerouslySetInnerHTML yasağı ve ortam değişkeni gizlilik politikası; güvenlik sınırı: CVSS ≥7 açık 48 saatte düzeltilmeden deploy edilemez.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Lighthouse Core Web Vitals hedefleri: LCP ≤2.5 saniye, CLS <0.1, INP ≤200 ms; CI'da Lighthouse CI ile her PR'da otomatik ölçülür.",
+        "TanStack Query prefetching: kullanıcı butona hover ettiğinde route loader tetiklenir, navigasyon anında veri hazır olur, algılanan gecikme sıfıra yaklaşır.",
+        "Görsel optimizasyon: vite-imagetools ile derleme anında WebP/AVIF dönüşümü, srcset otomatik üretimi; resim transferi ortalama %55 azalır.",
+        "React Server Component kullanılmadığından kritik veri TanStack Router loader ile paralel getirilir; sıralı waterfall isteği engellenir."
+      ],
+      "notes": "Lighthouse CI eşikleri geçilmediğinde PR merge bloklenir; performans bütçesi .lighthouserc.json dosyasında tanımlıdır.",
+      "prompt": "React + Vite + TanStack uygulamasında Core Web Vitals hedeflerini kapsa: LCP ≤2.5 s, INP ≤200 ms, TanStack prefetch stratejisi ve WebP/AVIF görsel pipeline; çıktı: .lighthouserc.json, vite-imagetools konfigürasyonu ve loader paralel fetch örneği.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Responsive breakpoint sistemi: 320 px (xs), 640 px (sm), 768 px (md), 1024 px (lg), 1280 px (xl); tasarım token'ları breakpoint başına CSS custom property ile override edilir.",
+        "Dokunmatik etkileşim alanları minimum 44×44 CSS piksel boyutunda tasarlanır (WCAG 2.5.8); ikon düğmelere görünmez padding eklenerek hedef büyütülür.",
+        "CSS Reflow (WCAG 1.4.10): sayfa 320 px genişliğinde yatay kaydırma olmadan okunabilir; tablo bileşenleri yatayda kaydırılabilir konteyner içinde sunulur.",
+        "Touch-specific event: pointer event API kullanılır; hover-only etkileşimler kaldırılır veya fokus eşdeğeri eklenir, dokunmatik kullanıcı bilgiye erişemez kalmaz."
+      ],
+      "notes": "Mobile-first yaklaşım: CSS min-width media query ile başlanır, üste eklenmiş max-width override kullanılmaz.",
+      "prompt": "React + Vite platform UI'ının mobil öncelikli tasarım sistemini kapsa: breakpoint hiyerarşisi, 44×44 px dokunmatik hedef yönetimi, 320 px reflow uyumu ve pointer event entegrasyonu; çıktı: token CSS dosyası, breakpoint mixin'ler ve dokunmatik hedef bileşen örneği.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Renk kontrastı WCAG 2.2 AA standardı: normal metin ≥4.5:1, büyük metin (≥18 pt veya bold ≥14 pt) ≥3:1; tasarım token oluştururken otomatik kontrast denetimi çalışır.",
+        "Klavye gezinme sırası DOM sıralamasıyla uyumludur; focus-visible ring 2 px outline ile tüm interaktif öğelerde görünür, CSS :focus-visible kullanılır.",
+        "Form bileşenleri: her input'un ilişkili label'ı vardır (htmlFor bağlantısı); hata mesajları aria-describedby ile input'a bağlanır, ekran okuyucu anlık okur.",
+        "Animasyonlar prefers-reduced-motion medya sorgusuyla kontrol edilir; hareket hassasiyeti olan kullanıcılar için tüm transition ve animation devre dışı bırakılır."
+      ],
+      "notes": "axe-core ve Storybook a11y addon ile bileşen düzeyinde erişilebilirlik kontrolü her commit'te çalışır.",
+      "prompt": "React + Vite platform UI yüzeyinin WCAG 2.2 AA uyumluluğunu kapsa: token tabanlı kontrast yönetimi, focus-visible klavye navigasyonu, form aria bağlantıları ve reduced-motion desteği; güvenlik sınırı: axe-core critical bulgusu içeren bileşen Storybook'ta publish edilemez.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Vite üretim build'i CI'da npm run build ile üretilir; dist/ klasörü S3'e yüklenir, CloudFront invalidation tetiklenir, tüm adım 4 dakika altında tamamlanır.",
+        "Ortam bazlı yapılandırma: .env.production, .env.staging dosyaları Vault'tan CI ortam değişkeni olarak enjekte edilir; kaynak koduna gömülmez.",
+        "Preview deployment: her PR için Vercel-benzeri izole önizleme URL'i oluşturulur; QA ekibi merge öncesi inteaktif test yapar.",
+        "Cache-Control başlığı: index.html no-cache, statik varlıklar (chunk-*.js) immutable + max-age=31536000 ile yapılandırılır; yeni deploy'da yalnızca index.html indirilir."
+      ],
+      "notes": "Immutable cache stratejisi ile Vite content hash dosya adları birlikte çalışır; eski chunk'lar otomatik geçersiz olur.",
+      "prompt": "React + Vite uygulamasının S3 + CloudFront dağıtım sürecini kapsa: build pipeline, Vault tabanlı ortam değişkeni enjeksiyonu, preview deployment ve Cache-Control stratejisi; çıktı: CI workflow YAML, S3 upload scripti ve CloudFront invalidation komutu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Kullanıcı UI eylemi (ör. form kaydet) backend GraphQL mutation'ı tetikler; başarı yanıtında ECA sonucuna göre bildirim toast'ı gösterilir.",
+        "TanStack Query onSuccess callback'i: mutation tamamlandığında ilgili query cache invalidate edilir ve ECA tetiklendiğine dair kullanıcıya bilgi mesajı iletilir.",
+        "ECA durum takibi: arka plan görevi tamamlandığında WebSocket mesajı veya polling sorgusu ile UI güncellenir; kullanıcı eyleminin tüm sonuçlarını görebilir.",
+        "Hata durumu görselleştirme: ECA görevi başarısız olursa (dead-letter kuyruğu) UI'da sarı uyarı rozeti gösterilir; kullanıcı yeniden deneme butonuna basabilir."
+      ],
+      "notes": "UI, ECA sonuçlarını GraphQL subscription veya periyodik polling ile alır; WebSocket tercih edilir, fallback polling 10 saniyedir.",
+      "prompt": "Platform UI yüzeyinin ECA otomasyon geri bildirimini kapsa: mutation onSuccess invalidation, WebSocket/polling ile arka plan görev takibi ve hata rozeti görselleştirmesi; çıktı: useMutation yapılandırması, WebSocket hook ve ECA durum bileşeni.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "UI bileşen kütüphanesi AI kod üreticileriyle (Copilot, Cursor) uyumlu olacak şekilde JSDoc açıklamalıdır; her bileşenin prop arayüzü ve kullanım örneği belgelenmiştir.",
+        "AI destekli erişilebilirlik tarayıcı: axe-core çıktısı LLM'e beslenerek otomatik düzeltme önerisi üretilir; geliştirici tek tıkla uygular.",
+        "Tasarım token güncelleme ajanı: Figma token dışa aktarımı CI pipeline'ında otomatik olarak CSS custom property dosyasına çevrilir; geliştirici manuel düzenleme yapmaz.",
+        "Storybook stories AI ile üretilir: bileşen prop tiplerine bakılarak temel kullanım senaryoları otomatik oluşturulur; geliştirici hikayeyi gözden geçirip onaylar."
+      ],
+      "notes": "AI araçları UI geliştirme hızını artırır ancak erişilebilirlik ve güvenlik doğrulamaları insan onayı olmadan otomatikleştirilmez.",
+      "prompt": "Platform UI geliştirme sürecinde AI araç entegrasyonunu kapsa: JSDoc belgeleme standardı, axe-core + LLM otomatik düzeltme, Figma token pipeline ve AI story üretimi; çıktı: JSDoc şablonu, axe+LLM script örneği ve token dönüşüm pipeline adımı.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Vitest ile bileşen birim testleri: @testing-library/react ile render, kullanıcı etkileşimi simülasyonu ve snapshot; %80 satır kapsama CI'da zorunludur.",
+        "Playwright ile E2E testler: kritik kullanıcı akışları (giriş, müşteri oluşturma, listeleme) tarayıcıda otomatik çalışır; her PR'da smoke suite çalıştırılır.",
+        "Storybook interaction tests: bileşen hikayelerinde @storybook/test ile kullanıcı etkileşimi test edilir; tasarım uyumu visual regression ile doğrulanır.",
+        "axe-core otomatik erişilebilirlik testi: her Playwright test sonunda çalışır; WCAG 2.2 critical ihlali testi başarısız yapar."
+      ],
+      "notes": "Test katmanları izole çalışır: birim testler tarayıcı gerektirmez, E2E Playwright chromium ile çalışır.",
+      "prompt": "React + Vite + TanStack platform UI'ının test stratejisini kapsa: Vitest birim, Playwright E2E, Storybook interaction ve axe-core erişilebilirlik testleri; çıktı: vitest.config.ts, playwright.config.ts ve örnek test dosyaları.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "A01 Broken Access Control: istemci yetki kararlarını sunucuya bırakır; UI yalnızca kullanıcının iznine sahip olduğu aksiyonları gösterir, gizli veriyi query cache'te tutmaz.",
+        "A03 XSS: React JSX varsayılan olarak string değerleri escape eder; dangerouslySetInnerHTML ESLint kuralıyla tamamen yasaklanır.",
+        "A07 Identification Failures: oturum süresi dolduğunda TanStack Query 401 interceptor'ı çalışır, QueryClient.clear() ardından login sayfasına yönlendirir.",
+        "A08 Software Integrity: npm lockfile (package-lock.json) commit edilir ve CI'da npm ci ile kurulum yapılır; bağımlılık ağacı beklenmeyen değişikliğe kapalıdır."
+      ],
+      "notes": "İstemci OWASP önlemleri sunucu tarafı kontrollerini tamamlar; tek başına güvenlik sağlayamaz.",
+      "prompt": "React SPA'da OWASP Top 10 2021 istemci tarafı önlemlerini kapsa: A01 sunucu delegasyonu, A03 XSS escape ve dangerouslySetInnerHTML yasağı, A07 401 interceptor ve A08 lockfile politikası; güvenlik sınırı: yetki kararı asla yalnızca istemcide alınmaz.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "GraphQL entegrasyonu: Apollo Client veya urql ile platform GraphQL endpoint'e bağlanılır; tüm sorgular TanStack Query useQuery sarmalayıcısından geçer.",
+        "WebSocket aboneliği: GraphQL subscription için ws protokolü kullanılır; TanStack Query ile manuel senkronizasyon sağlanır, bağlantı kopunca otomatik yeniden bağlanır.",
+        "i18n entegrasyonu: react-i18next ile çok dil desteği; çeviri dosyaları CDN'den lazy yüklenir, dil değişimi sayfa yenilemesi gerektirmez.",
+        "Analytics entegrasyonu: kullanıcı etkileşimleri özel event olarak gönderilir; PII (kişisel veri) analytics payload'una eklenmez, yalnızca anonim aksiyon tipi kaydedilir."
+      ],
+      "notes": "Tüm dış servis bağlantıları merkezi bir api.ts adaptör modülünden yapılır; bileşenler doğrudan fetch çağrısı yapmaz.",
+      "prompt": "Platform UI'ın GraphQL, WebSocket subscription, i18n ve analytics entegrasyonlarını kapsa; her entegrasyonun bileşen katmanından nasıl soyutlandığını göster; çıktı: api adaptör modülü, subscription hook ve analytics event tanımları.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "platform-design-tokens modülü: CSS custom property token dosyası bu modülden import edilir; tüm bileşenler token referans eder, modül güncellenince UI otomatik güncellenir.",
+        "platform-auth-ui modülü: login formu, token yenileme hook'u ve korumalı route sarmalayıcısı bu modülden alınır; her feature takımı ayrı auth kodu yazmaz.",
+        "platform-graphql-client modülü: yapılandırılmış Apollo/urql istemcisi ve TanStack Query entegrasyon hook'ları merkezi olarak sağlanır; feature modülleri sadece domain sorgularını tanımlar."
+      ],
+      "notes": "UI yüzey modülü tasarım token, auth ve GraphQL istemci modüllerine zorunlu bağımlıdır; feature takımları bu modülleri doğrudan tüketir.",
+      "prompt": "platform-ui-surface düğümünün platform-design-tokens, platform-auth-ui ve platform-graphql-client modülleriyle bağımlılık ilişkisini kapsa; her modülden hangi arayüzlerin tüketildiğini göster; çıktı: modül bağımlılık grafiği ve örnek feature bileşen yapısı.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     }
   },
   "source": {

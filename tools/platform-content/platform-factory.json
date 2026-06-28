@@ -1,0 +1,142 @@
+{
+  "featureDefs": {
+    "items": [
+      "50+ uygulama için ortak omurga: AppFactory sınıfı tenant_id, app_slug, stack_preset (fastapi-graphql-pg) parametrelerini alır; her yeni uygulama bu fabrikayı genişleterek Customer, Project, Invoice gibi dikey dilimlere ayrılır — tekrar eden iskelet kodu sıfıra indirilir.",
+      "Tenant-aware başlatma akışı: AppFactory.bootstrap() metodu önce TenantContext'i kurar, ardından database migration (Alembic upgrade head) ve GraphQL schema registration adımlarını sırayla çalıştırır; her adımın başarısı bir status callback ile raporlanır.",
+      "Customer dikey dilimi referans implementasyonu: CustomerApp, AppFactory'den türer ve auth/DB/API/UI/CI katmanlarının standart bağlantısını gösterir; yeni dikey eklenirken bu referans kopyalanarak 5 dosya değişikliğiyle iskelet tamamlanır.",
+      "Ortak desen kaydı: Auth (JWT middleware), DB (SQLModel base model + Alembic), API (GraphQL strawberry schema), UI (TanStack Query hooks), CI (GitHub Actions reusable workflow) desenleri merkezi bir PatternRegistry'de tanımlanır ve her uygulama kendi ihtiyacına göre seçer."
+    ],
+    "notes": "Platform fabrikası, 50+ uygulamanın aynı auth/DB/API/UI/CI iskeletini paylaşmasını sağlayan tenant-aware üretim motorudur.",
+    "prompt": "platform-factory düğümü için featureDefs boyutunu kapsa: AppFactory tenant_id/stack_preset parametreleri, bootstrap() Alembic+GraphQL sıralı başlatma, Customer referans dilimi 5-dosya iskeleti, PatternRegistry JWT/SQLModel/strawberry/TanStack/CI desenleri. Çıktı: AppFactory sınıf imzası, bootstrap() akış diyagramı ve PatternRegistry kayıt şeması. güvenlik sınırı: tenant_id doğrulanmadan fabrika başlatılamaz."
+  },
+  "security": {
+    "items": [
+      "Fabrika başlatma kapısı: AppFactory.bootstrap() içinde tenant_id UUID formatı ve veritabanı varlığı doğrulanır; geçersiz tenant ile başlatma girişimi HTTP 403 ve denetim logu üretir — hiçbir uygulama kimliği belirsiz tenant'a bağlanamaz.",
+      "Ortak JWT middleware zorunluluğu: tüm fabrika uygulamaları strawberry GraphQL schema tanımında require_auth=True ile başlatılır; bu parametre False yapılamaz — CI'da conftest fixture bunu doğrular ve hata durumunda pipeline durur.",
+      "Secret yönetimi standardı: AppFactory, uygulama sırlarını (DB şifresi, JWT signing key) yalnızca AWS Secrets Manager veya HashiCorp Vault üzerinden alır; kaynak kodda plaintext secret bulunması pre-commit hook ile engellenir (gitleaks taraması).",
+      "En az ayrıcalık veritabanı rolleri: her uygulama için AppFactory tarafından app_slug_rw (okuma/yazma) ve app_slug_ro (salt okunur) PostgreSQL rolleri otomatik oluşturulur; migration işlemi ise ayrı bir migration_role ile yapılır ve uygulama rollerine DDL yetkisi verilmez."
+    ],
+    "notes": "Fabrika güvenliği, tenant doğrulama kapısı + zorunlu JWT + Vault tabanlı secret + en az ayrıcalıklı otomatik DB rolleriyle katmanlı olarak sağlanır.",
+    "prompt": "platform-factory için security boyutunu kapsa: bootstrap() tenant UUID doğrulama + HTTP 403 denetim logu, require_auth=True zorunluluğu CI kontrolü, AWS Secrets Manager/Vault secret alımı + gitleaks pre-commit, app_slug_rw/ro/migration_role otomatik PostgreSQL rol üretimi. güvenlik sınırı: plaintext secret veya anonim GraphQL başlatma fabrika tarafından reddedilir. Çıktı: bootstrap güvenlik akışı, Vault entegrasyon kodu ve PostgreSQL rol oluşturma SQL."
+  },
+  "codeOptimization": {
+    "items": [
+      "AppFactory modül yüklemesi tembel (lazy import) çalışır: her dikey dilim modülü yalnızca ilk GraphQL isteği sırasında içe aktarılır; 50 uygulama bulunsa bile boşta duran bir tenant'ın bellek kullanımı 40 MB altında kalır.",
+      "Paylaşılan SQLModel BaseModel: tüm uygulama modelleri AppBase(SQLModel) sınıfından türer; id (UUID), tenant_id, created_at, updated_at alanları otomatik eklenir — her modelde tekrarlayan 4 sütun tanımı ortadan kalkar.",
+      "GraphQL şema birleştirme: AppFactory, uygulama alt-şemalarını strawberry.Schema(merge=True) ile tek şemada toplar; her dikey dilim kendi Mutation/Query tip kümesini ayrı dosyada tutar, dosya boyutu 300 satırı geçmez.",
+      "Alembic migration otomasyonu: AppFactory.migrate() fonksiyonu env.py içinde tenant şemasını dinamik olarak seçer; 50 kiracı için paralel migration işlemi ThreadPoolExecutor(max_workers=10) ile yapılır ve toplam süre tek kiracı süresinin 6 katını geçmez."
+    ],
+    "notes": "Lazy import + paylaşılan BaseModel + şema birleştirme + paralel migration kombinasyonu fabrika kod tabanını düşük bellek ve yüksek geliştirici hızıyla ölçeklendirir.",
+    "prompt": "platform-factory için codeOptimization boyutunu kapsa: lazy import 40 MB bellek sınırı, AppBase(SQLModel) 4 ortak sütun otomatik ekleme, strawberry.Schema(merge=True) 300-satır dosya sınırı, ThreadPoolExecutor(max_workers=10) paralel Alembic migration. Çıktı: AppBase tanım kodu, şema birleştirme örneği ve paralel migration env.py parçası. güvenlik sınırı: migration_role DDL yetkisi uygulama rolünden ayrıdır."
+  },
+  "securityOptimization": {
+    "items": [
+      "JWT doğrulama önbellekleme: ortak JWT middleware, decode edilmiş token payload'ını Redis'te TTL=60 saniye ile önbelleğe alır; her GraphQL resolver'da tekrarlayan kriptografik doğrulama maliyeti %80 oranında azalır.",
+      "Tenant izolasyon kontrolü statik analiz kapısı: mypy + bandit + custom AST rule, tüm fabrika uygulamalarında tenant_id parametresi geçirilmeksizin yapılan DB sorgu çağrılarını derleme sürecinde yakalayıp CI'ı durdurur.",
+      "Secret rotasyonu otomasyon akışı: AppFactory, Vault dynamic secrets özelliğini kullanarak her uygulama oturumunda PostgreSQL kimlik bilgilerini yeniden üretir; sabit parola yerine oturum-bazlı kimlik bilgisi kullanımı credential stuffing saldırı yüzeyini ortadan kaldırır.",
+      "Güvenlik başlıkları merkezi tanımı: fabrikadan türeyen tüm FastAPI uygulamaları SecurityHeadersMiddleware aracılığıyla HSTS (max-age=63072000), CSP, X-Frame-Options başlıklarını otomatik ekler; tek tek uygulama seviyesinde unutulması mümkün değildir."
+    ],
+    "notes": "Fabrika güvenlik optimizasyonu, JWT önbellekleme + statik analiz + Vault dynamic secrets + merkezi başlık yönetimiyle savunma derinliği sağlar.",
+    "prompt": "platform-factory için securityOptimization boyutunu kapsa: Redis JWT önbellek TTL=60 s %80 maliyet düşürme, mypy+bandit AST kuralı tenant_id eksik sorgu CI kapısı, Vault dynamic secrets oturum-bazlı PostgreSQL kimlik bilgisi, SecurityHeadersMiddleware HSTS max-age=63072000 otomatik başlık. Çıktı: JWT önbellek middleware kodu, AST kural örneği ve SecurityHeadersMiddleware yapılandırması. güvenlik sınırı: sabit parola üretimi Vault policy tarafından engellenir."
+  },
+  "performance": {
+    "items": [
+      "GraphQL DataLoader zorunluluğu: AppFactory strawberry schema'ya DataLoaderExtension entegre eder; N+1 sorgu sorunu fabrika konfigürasyonu düzeyinde önlenir — bir resolver başına maksimum 3 toplu sorguya izin verilir, aşımı test aşamasında yakalanır.",
+      "Veritabanı bağlantı havuzu boyutlandırması: her tenant uygulaması için SQLAlchemy engine pool_size=5, max_overflow=10, pool_timeout=30 s değerleriyle yapılandırılır; 50 tenant × 15 bağlantı = 750 toplam bağlantı PgBouncer transaction pooling'iyle 100 gerçek bağlantıya sıkıştırılır.",
+      "p95 gecikme hedefi ve izleme: fabrika uygulamalarının GraphQL mutation p95 süresi 200 ms, query p95 süresi 100 ms olarak tanımlanır; OpenTelemetry span'ları her resolver için otomatik üretilir ve Prometheus alert kuralı p95 > 250 ms durumunda ateşlenir.",
+      "Async-first FastAPI endpoint'leri: AppFactory, tüm route fonksiyonlarını async def olarak zorunlu kılar; senkron DB çağrısı yanlışlıkla yazılırsa asyncio.get_event_loop().run_in_executor sarmalayıcı uyarısı CI lint adımında gösterilir."
+    ],
+    "notes": "DataLoader + bağlantı havuzu boyutlandırması + p95 OpenTelemetry izleme + async zorunluluğu fabrika performans tabanını tutarlı ve ölçülebilir kılar.",
+    "prompt": "platform-factory için performance boyutunu kapsa: DataLoaderExtension maks 3 toplu sorgu sınırı, pool_size=5/max_overflow=10 × 50 tenant PgBouncer 100 bağlantıya sıkıştırma, GraphQL mutation p95 < 200 ms / query p95 < 100 ms Prometheus alert, async def zorunluluğu CI lint. Çıktı: DataLoader konfigürasyon kodu, SQLAlchemy engine parametreleri ve Prometheus alert kuralı. güvenlik sınırı: bağlantı havuzu taşması tenant izolasyonunu tehdit etmez."
+  },
+  "mobileApps": {
+    "items": [
+      "Platform fabrikası backend-odaklı bir motor olduğundan doğrudan mobil UI üretmez; mobil istemciler aynı GraphQL API'yi kullanır ve AppFactory'nin ürettiği strawberry şema mobil/web ayrımı yapmaz — istemci tipi JWT claim'indeki client_type alanıyla izlenir.",
+      "React Native veya Flutter istemcileri için AppFactory, CORS middleware'ini fabrika başlatma sırasında origin listesiyle yapılandırır; mobil uygulama bundle ID'si izin verilen origin olarak Vault'tan çekilir, sabit kodlanmaz.",
+      "Mobil push bildirim entegrasyonu: AppFactory NotificationAdapter arayüzü tanımlar; FCM veya APNs sağlayıcısı uygulama konfigürasyonunda seçilir — fabrika katmanı transport bağımsızlığını korur.",
+      "Offline-capable mobil istemciler için GraphQL persisted queries desteği: AppFactory strawberry schema'sına PersistedQueryPlugin eklenir; APQ cache-hit oranı %70 üzeri hedeflenir ve mobil ağ trafiği azaltılır."
+    ],
+    "notes": "Fabrika mobil istemciyi doğrudan üretmez; JWT client_type + CORS + NotificationAdapter + APQ ile mobil entegrasyonu standartlaştırır.",
+    "prompt": "platform-factory için mobileApps boyutunu kapsa: JWT client_type claim mobil/web ayrımı, CORS origin listesi Vault tabanlı bundle ID, NotificationAdapter FCM/APNs transport bağımsızlığı, PersistedQueryPlugin APQ cache-hit %70 hedefi. Bu katmanın mobil katkısı sınırını net belirt. Çıktı: CORS yapılandırma kodu, NotificationAdapter arayüz tanımı ve APQ plugin örneği. güvenlik sınırı: CORS origin sabit kodlanmaz."
+  },
+  "wcag": {
+    "items": [
+      "Platform fabrikası backend motorudur ve doğrudan UI bileşeni üretmez; erişilebilirlik sorumluluğu fabrikadan türeyen React/TanStack UI katmanında taşınır — fabrika bu katman için GraphQL hata mesajı formatını kullanıcı dostu ve ekran okuyucu uyumlu tutar.",
+      "Hata yanıtı standartlaştırması: AppFactory GraphQL error formatter, tüm hata nesnelerine code, message (Türkçe ve İngilizce), path alanlarını ekler; ekran okuyucular bu yapılandırılmış hata metnini announcement bölgesi üzerinden okuyabilir.",
+      "Uluslararasılaştırma altyapısı: AppFactory i18n middleware'i Accept-Language başlığını okur ve GraphQL yanıtlarındaki kullanıcıya yönelik metin alanlarını uygun dile çevirir; WCAG 3.1.1 dil tanımlama kriteri backend tarafından desteklenir.",
+      "Yüksek kontrast mod bilgisi: fabrika uygulamaları kullanıcı tercihlerini (theme: high-contrast, font-size) profil tablosunda depolar ve GraphQL currentUser sorgusunda döner; UI katmanı bu değerleri okuyarak WCAG 1.4.3 kontrast oranı ≥ 4.5:1 uyumunu uygular."
+    ],
+    "notes": "Fabrika WCAG'a dolaylı katkı sunar: yapılandırılmış hata formatı, i18n backend desteği ve kullanıcı tercihleri GraphQL katmanında standartlaştırılır.",
+    "prompt": "platform-factory için wcag boyutunu kapsa: backend motor sınırını dürüstçe belirt, GraphQL error formatter code/message/path yapısı ekran okuyucu uyumluluğu, i18n middleware Accept-Language WCAG 3.1.1, currentUser theme/font-size tercihi WCAG 1.4.3 kontrast ≥4.5:1. Çıktı: error formatter kodu, i18n middleware tanımı ve currentUser sorgu alanları. güvenlik sınırı yok; bu boyut erişilebilirlik desteğidir."
+  },
+  "deployment": {
+    "items": [
+      "Konteyner imajı standardı: AppFactory her uygulama için Docker multi-stage build Dockerfile üretir; final imaj python:3.12-slim tabanlıdır, imaj boyutu 150 MB altında tutulur ve Trivy ile kritik CVE taraması CI'da çalışır.",
+      "Helm chart şablonlaması: fabrikadan türeyen her uygulama tek bir values.yaml dosyasıyla Helm chart'a parametre geçer; tenant_id, replica_count, resource limits (CPU 500m, memory 512Mi) ortam değişkeni olarak Vault'tan enjekte edilir.",
+      "Sıfır kesinti dağıtımı: AppFactory Kubernetes Deployment spec'ine rollingUpdate stratejisi (maxSurge=1, maxUnavailable=0) ile readinessProbe /health/ready endpoint'i ekler; yeni pod hazır olmadan eski pod silinmez.",
+      "GitOps akışı: GitHub Actions reusable workflow (.github/workflows/app-factory-deploy.yml) lint → test → build → push → ArgoCD sync adımlarını sırayla çalıştırır; her adım başarısız olursa sonraki adım atlanır ve Slack bildirimi gönderilir."
+    ],
+    "notes": "Fabrika dağıtım standardı, multi-stage Docker + Helm + rolling update + GitOps zinciriyle tüm türetilmiş uygulamalarda tutarlı üretim dağıtımı sağlar.",
+    "prompt": "platform-factory için deployment boyutunu kapsa: python:3.12-slim multi-stage imaj 150 MB Trivy CVE taraması, Helm values.yaml CPU=500m/memory=512Mi Vault enjeksiyon, rollingUpdate maxSurge=1/maxUnavailable=0 readinessProbe /health/ready, GitHub Actions lint→test→build→push→ArgoCD sync. Çıktı: Dockerfile multi-stage yapısı, Helm values şablonu ve reusable workflow adımları. güvenlik sınırı: kritik CVE içeren imaj push edilmez."
+  },
+  "eca": {
+    "items": [
+      "Event-Driven uygulama fabrikası: AppFactory, EventBus adaptörü (Redis Streams veya RabbitMQ) tanımlar; her dikey dilim domain olaylarını (CustomerCreated, InvoicePaid) EventBus üzerinden yayar — consumer'lar tenant_id bazlı filtreleme yapar.",
+      "Kompensasyon (saga) yönetimi: çok adımlı fabrika işlemleri (yeni uygulama bootstrap + ilk tenant seed) Saga pattern ile sarmalanır; herhangi bir adım başarısız olursa önceki adımların kompensasyon aksiyonları (rollback migration, delete tenant record) çalışır.",
+      "Outbox pattern uygulaması: fabrika uygulamalarında domain event'ları önce outbox_events tablosuna yazılır, ardından bir CDC worker (Debezium veya custom poller) bunları EventBus'a iletir — at-least-once delivery garantisi verilir ve event kaybı sıfıra indirilir.",
+      "Tenant bazlı event akış izolasyonu: EventBus stream adları {tenant_id}.{domain}.{event_type} formatını izler; bir tenant'ın event consumer'ı başka tenant stream'ine abone olamaz — yanlış abone girişimi WARN logu ve bağlantı reddiyle sonuçlanır."
+    ],
+    "notes": "Fabrika ECA katmanı, EventBus adaptörü + Saga kompensasyon + Outbox at-least-once + tenant stream izolasyonu ile güvenilir ve izole olay güdümlü akış sağlar.",
+    "prompt": "platform-factory için eca boyutunu kapsa: EventBus Redis Streams/RabbitMQ tenant_id filtreli consumer, Saga pattern bootstrap+seed kompensasyon rollback, Outbox outbox_events + Debezium CDC at-least-once delivery, {tenant_id}.{domain}.{event_type} stream izolasyonu WARN+red. Çıktı: EventBus adaptör arayüzü, Saga koordinatör sınıf imzası ve Outbox tablo şeması. güvenlik sınırı: çapraz-tenant stream aboneliği reddedilir."
+  },
+  "aiAgents": {
+    "items": [
+      "AI agent entegrasyon noktası: AppFactory, LLM destekli agent'lar için GraphQL tool-use endpoint'i (/graphql/agent) tanımlar; bu endpoint yalnızca agent_token kapsamlı JWT kabul eder, normal kullanıcı token'ı geçersizdir.",
+      "Yapay zeka destekli uygulama iskelet üretimi: AppFactory CLI komutu (app-factory generate --describe 'fatura yönetimi') bir LLM çağrısı yaparak dikey dilim şemasını, GraphQL tipi ve ilk Alembic migration'ı taslak olarak üretir — geliştirici sadece iş kurallarını ekler.",
+      "Otonom kalite döngüsü: agent, yeni üretilen uygulama iskeletine karşı smoke test seti çalıştırır ve başarısız testleri raporla birlikte PR yorumu olarak ekler; insan onayı olmadan merge yapılmaz.",
+      "Bağlam penceresi yönetimi: AppFactory agent araçları GraphQL introspection sonucunu şema özetine (tip sayısı, toplam alan sayısı, en büyük 10 tip) indirger; LLM bağlam penceresine tam şema yerine özet gönderilir — token maliyeti %60 azalır."
+    ],
+    "notes": "Fabrika AI entegrasyonu, agent_token JWT kapısı + LLM iskelet üretimi + otonom smoke test + şema özeti bağlam yönetimiyle üretkenliği artırır.",
+    "prompt": "platform-factory için aiAgents boyutunu kapsa: /graphql/agent endpoint agent_token JWT kapısı, app-factory generate LLM dikey dilim taslak üretimi, otonom smoke test PR yorum + insan onayı zorunluluğu, şema özeti bağlam sıkıştırma %60 token azaltma. Çıktı: agent endpoint FastAPI route, generate CLI komut akışı ve şema özetleme fonksiyonu. güvenlik sınırı: normal kullanıcı token'ı agent endpoint'ine erişemez."
+  },
+  "testing": {
+    "items": [
+      "AppFactory birim testi stratejisi: pytest fixture'ları mock_app_factory(tenant_id='test-uuid') ile sahte bir fabrika örneği döner; gerçek DB veya Vault bağlantısı olmadan 200+ birim testi 10 saniye altında çalışır.",
+      "Entegrasyon test altyapısı: testcontainers-python ile PostgreSQL 16 ve Redis 7 konteynerleri test süresince ayağa kaldırılır; AppFactory.bootstrap() gerçek DB'ye karşı çalıştırılır ve Alembic migration başarısı doğrulanır.",
+      "Fabrika türevi uygulama sözleşme testi: her yeni dikey dilim, AppFactory arayüz sözleşmesine (bootstrap, migrate, shutdown metotları) uyumu pytest-interface-checker ile doğrular; eksik metot CI'da hata verir.",
+      "Kaos testi: AppFactory'nin tenant izolasyon mekanizması chaos-monkey tarzı tenant_id karıştırma senaryolarıyla (100 eşzamanlı istek, 5 farklı tenant) test edilir; hiçbir yanıt yanlış tenant verisi döndürmemeli — sızıntı tespit edilirse test paketi kırmızıya döner."
+    ],
+    "notes": "Fabrika test katmanı mock birim testi + testcontainers entegrasyon + arayüz sözleşme doğrulama + kaos izolasyon testi zinciriyle kapsamlı güvence sunar.",
+    "prompt": "platform-factory için testing boyutunu kapsa: mock_app_factory 200+ birim test < 10 s, testcontainers PostgreSQL 16 + Redis 7 Alembic doğrulama, pytest-interface-checker bootstrap/migrate/shutdown sözleşmesi, kaos 100 eşzamanlı istek 5 tenant çapraz-sızıntı sıfır. Çıktı: mock_app_factory fixture kodu, testcontainers kurulum örneği ve kaos test senaryosu. güvenlik sınırı: kaos testinde sızıntı tespiti pipeline'ı durdurur."
+  },
+  "owasp": {
+    "items": [
+      "OWASP A01 (Erişim Kontrolü): AppFactory, her GraphQL resolver'ı @require_permission dekoratörüyle sarmalar; eksik dekoratör statik analiz aşamasında yakalanır — yetkisiz resolver'ın üretime geçmesi yapısal olarak engellenir.",
+      "OWASP A03 (Enjeksiyon): fabrikadan türeyen tüm DB sorguları SQLAlchemy ORM veya parametre bağlamalı text() kullanır; ham f-string SQL yasaktır ve bandit B608 kuralı CI'da bu ihlali hata olarak işaretler.",
+      "OWASP A05 (Yanlış Güvenlik Yapılandırması): AppFactory güvenlik tarama aracı (safety check + pip-audit) her build'de çalışır; yüksek önem dereceli bağımlılık açığı bulunursa imaj oluşturma durdurulur ve hata raporu PR'a eklenir.",
+      "OWASP A09 (Güvenlik Günlüğü ve İzleme): AppFactory StructuredLogger her isteğe request_id, tenant_id, user_id, action, status_code alanlarını ekler; günlükler JSON formatında OpenSearch'e iletilir ve 90 gün süreyle denetim amacıyla saklanır."
+    ],
+    "notes": "Fabrika OWASP kapsamı A01 dekoratör zorunluluğu + A03 ORM parametre bağlama + A05 dependency tarama + A09 yapılandırılmış denetim günlüğü üzerine kuruludur.",
+    "prompt": "platform-factory için owasp boyutunu kapsa: A01 @require_permission statik analiz zorunluluğu, A03 SQLAlchemy ORM bandit B608 f-string yasağı, A05 safety+pip-audit yüksek açık build durdurma, A09 StructuredLogger request_id/tenant_id/user_id JSON 90 gün OpenSearch. Çıktı: @require_permission dekoratör kodu, bandit kural yapılandırması ve StructuredLogger alan tanımları. güvenlik sınırı: eksik dekoratör veya ham SQL üretime geçemez."
+  },
+  "integration": {
+    "items": [
+      "Dış servis adaptör katmanı: AppFactory ServiceRegistry, her dış entegrasyonu (ödeme kapısı, e-posta, SMS) bir Adapter arayüzüne sarar; üretim ve test ortamları aynı arayüzü kullanır, sadece arka plan implementasyonu değişir — bağımlılık tersine çevirme prensibi uygulanır.",
+      "Webhook alım standartlaştırması: fabrika uygulamaları gelen webhook'ları /webhooks/{provider} endpoint'inde alır; HMAC-SHA256 imza doğrulaması AppFactory tarafından middleware seviyesinde yapılır, her endpoint ayrıca doğrulama yazmak zorunda kalmaz.",
+      "Üçüncü taraf API istemci havuzu: AppFactory httpx.AsyncClient örneklerini uygulama başlangıcında oluşturur ve lifespan context'inde kapatır; bağlantı havuzu limits=Limits(max_connections=20, max_keepalive_connections=10) ile yapılandırılır.",
+      "Entegrasyon sağlık kontrolü: AppFactory /health/integrations endpoint'i her kayıtlı adaptörün ping() metodunu çağırır ve yanıt süresi, durum kodu ile son başarılı çağrı zamanını döner; Kubernetes liveness probe bu endpoint'i 30 saniyede bir yoklar."
+    ],
+    "notes": "Fabrika entegrasyon katmanı ServiceRegistry adaptör sarmalama + HMAC webhook doğrulama + httpx havuz yaşam döngüsü + sağlık kontrolü endpoint'iyle tutarlı dış servis yönetimi sağlar.",
+    "prompt": "platform-factory için integration boyutunu kapsa: ServiceRegistry Adapter arayüzü bağımlılık tersine çevirme, /webhooks/{provider} HMAC-SHA256 middleware doğrulama, httpx.AsyncClient Limits(max_connections=20) lifespan yönetimi, /health/integrations ping() 30 s Kubernetes liveness probe. Çıktı: ServiceRegistry sınıf yapısı, HMAC doğrulama middleware kodu ve sağlık endpoint yanıt şeması. güvenlik sınırı: imza doğrulaması başarısız webhook işlenmez."
+  },
+  "moduleUsage": {
+    "items": [
+      "AppFactory modülünü kullanmak için önce app = AppFactory(tenant_id=uuid, app_slug='myapp', stack_preset='fastapi-graphql-pg') ile örnek oluşturulur, ardından await app.bootstrap() ile auth/DB/API/CI katmanları bağlanır; yeni dikey dilim eklemek için CustomerApp(AppFactory) şablonu 5 dosya değişikliğiyle genişletilir.",
+      "Geliştirici hızlı başlangıç: app-factory generate --slug invoice --describe 'fatura yönetimi' komutu LLM destekli iskelet üretir; çıktı olarak models.py, schema.py, router.py, tests/test_invoice.py ve ilk Alembic migration dosyası hazır şekilde gelir.",
+      "Fabrika hata ayıklama: AppFactory.bootstrap() raise ettiğinde her adımın durumu app.status_report() çağrısıyla incelenebilir; başarısız adım, tenant doğrulama hatası veya Vault bağlantı sorunu log mesajında açıkça belirtilir.",
+      "Üretim ortamı ölçeklendirmesi: aynı AppFactory örneği birden fazla Kubernetes pod'unda çalışabilir; paylaşılan durum yalnızca PostgreSQL ve Redis üzerinde tutulur, pod'lar arası ek koordinasyon gerekmez — yatay ölçekleme KEDA ile HTTP istek sayısına göre otomatik yapılır."
+    ],
+    "notes": "AppFactory kullanımı bootstrap() tek giriş noktası, LLM iskelet üretici CLI, status_report() hata ayıklama ve KEDA yatay ölçekleme ile üretim hazır bir geliştirici deneyimi sunar.",
+    "prompt": "platform-factory için moduleUsage boyutunu kapsa: AppFactory(tenant_id, app_slug, stack_preset) + bootstrap() bağlantı, app-factory generate LLM 5-dosya çıktısı, status_report() hata ayıklama adım raporu, KEDA HTTP bazlı yatay ölçekleme. Çıktı: kullanım kodu örneği, generate komut çıktı listesi ve KEDA ScaledObject tanımı. güvenlik sınırı: bootstrap tenant doğrulaması geçilmeden ölçekleme başlamaz."
+  }
+}
