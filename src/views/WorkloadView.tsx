@@ -92,7 +92,8 @@ export function WorkloadView() {
       </Card>
 
       <Card className="p-0">
-        <section className="overflow-x-auto" aria-label={t.workload.title}>
+        {/* biome-ignore lint/a11y/noNoninteractiveTabindex: kaydırılabilir tablo bölgesi WCAG/axe scrollable-region-focusable için klavyeyle odaklanabilir olmalı (tabIndex=0); statik kuralla çakışıyor, gerçek erişilebilirlik önceliklidir */}
+        <section className="overflow-x-auto" tabIndex={0} aria-label={t.workload.title}>
           <table className="w-full border-collapse text-base">
             <caption className="sr-only">{t.workload.title}</caption>
             <thead>
