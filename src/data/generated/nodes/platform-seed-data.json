@@ -29,7 +29,11 @@
   "assignees": [
     "platform-ekibi"
   ],
-  "effort": {},
+  "effort": {
+    "estimate": 8,
+    "unit": "d",
+    "spent": 0
+  },
   "progress": 0,
   "phase": "test-plan",
   "phases": {
@@ -79,8 +83,15 @@
       "notes": ""
     }
   },
-  "milestone": null,
-  "schedule": {},
+  "milestone": "v0.3 — Platform dikey dilim",
+  "schedule": {
+    "start": "2026-10-19",
+    "end": "2026-11-02",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-10-19",
+    "baselineEnd": "2026-11-02"
+  },
   "deliverables": [
     "Idempotent seed script'i",
     "Golden fixture seti (Customer)"
@@ -89,10 +100,22 @@
     "Seed idempotenttir: tekrar çalıştırma çift kayıt üretmez",
     "e2e testleri seed altın veriye dayanır ve kararlıdır"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-seed-idempotent",
+      "desc": "Idempotent olmayan seed çift kayıt/kararsız e2e üretir",
+      "severity": "medium",
+      "mitigation": "ON CONFLICT DO NOTHING + tekrar-çalıştırma testi"
+    }
+  ],
   "rollback": null,
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "Seed tekrar-çalıştırma",
+      "target": "0 çift kayıt"
+    }
+  ],
   "ecaRules": [
     {
       "id": "eca-platform-seed-data-done",
@@ -260,128 +283,211 @@
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Her çalıştırmada aynı UUID, e-posta ve tenant_id üreten deterministik seed fonksiyonu: seed_database(tenant_id, seed=42) imzasıyla SQLAlchemy session üzerinden çalışır.",
+        "Idempotency garantisi: tekrar çalıştırıldığında INSERT ON CONFLICT DO NOTHING ile 0 tekrar kayıt oluşturulur; CI logunda 'seeded 0 new rows' mesajı beklenir.",
+        "Factory-boy + Faker(locale='tr_TR') tabanlı golden fixture seti: 3 tenant × 10 user × 5 project kombinasyonu, sabit seed=1234 ile üretilip fixtures/golden/ altında sürümlenir.",
+        "Alembic migration sonrası otomatik tetiklenen seed hook: env.py'de post_migrate sinyaline bağlanır, her schema yükseltmesinde referans verilerini taze yükler."
+      ],
+      "notes": "Seed modülünün temel amacı, deterministik ve tenant-izole golden fixture üretimini Alembic yaşam döngüsüne entegre etmektir.",
+      "prompt": "platform-seed-data modülü için featureDefs boyutunu kapsa: deterministik seed fonksiyon imzası, idempotency (INSERT ON CONFLICT DO NOTHING, 0 çift kayıt), factory-boy/Faker golden fixture seti (3 tenant × 10 user), Alembic post_migrate hook entegrasyonu. Çıktı: her özellik için Python kod örneği ve doğrulama koşulu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed verisindeki parola alanları üretim bcrypt hash'i yerine sabit test hash'i (bcrypt cost=4) kullanır; gerçek kullanıcı parolaları fixture'a asla yazılmaz.",
+        "Tenant sızıntısını önlemek için her fixture kaydı oluşturulurken tenant_id == aktif bağlam kontrolü assert edilir; yanlış tenant_id ile ekleme AssertionError fırlatır.",
+        "Seed betiği yalnızca SEED_ALLOWED=true ortam değişkeni tanımlıyken çalışır; production ortamında bu değişken Vault/Secret Manager'da yoktur, böylece üretim veritabanına seed engellenmiş olur.",
+        "Fixture dosyaları CI artifact olarak saklanırken AES-256 ile şifrelenir; açık metin PII (TC kimlik, gerçek e-posta) fixture'lara dahil edilmez, yerine @example.invalid domain kullanılır."
+      ],
+      "notes": "Seed güvenliğinin özü: production ortamında seed çalışmaması ve fixture'larda gerçek PII barındırılmamasıdır.",
+      "prompt": "platform-seed-data için security boyutunu kapsa: bcrypt cost=4 test hash politikası, tenant_id bağlam doğrulama assert mekanizması, SEED_ALLOWED env-guard ile production koruması, AES-256 fixture şifreleme ve @example.invalid PII maskesi. Güvenlik sınırı: hangi ortamlarda seed betiği çalışabilir, hangi koşullar PermissionError fırlatır? Çıktı: kontrol listesi + örnek env-guard kodu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Toplu insert için SQLAlchemy bulk_insert_mappings kullanılır; 1000 satır seed verisi tek round-trip ile yazılır, N ayrı INSERT yerine tekli executemany çağrısı gönderilir.",
+        "Fixture üretimi sırasında foreign-key sıralaması bağımlılık grafiğiyle çözülür (networkx DAG): önce tenants, sonra users, sonra projects INSERT edilir, böylece FK ihlali sıfıra düşer.",
+        "Faker nesnesi modül düzeyinde bir kez örneklenir (Faker.seed(1234)); döngü başına tekrar örnekleme yapılmaz, böylece 10 000 satır seed süresi %40 azalır.",
+        "Seed scripti --dry-run bayrağıyla üretilecek kayıt sayısını ve FK sıralamasını ekrana basar, veritabanına yazmaz; geliştirici doğrulama maliyeti sıfırlanır."
+      ],
+      "notes": "bulk_insert_mappings + DAG sıralama kombinasyonu seed süresini belirgin biçimde kısaltırken FK tutarlılığını korur.",
+      "prompt": "platform-seed-data için codeOptimization boyutunu kapsa: SQLAlchemy bulk_insert_mappings (1 round-trip, N+1 önleme), networkx DAG ile FK sıralama, modül-düzeyi Faker.seed(1234) performansı, --dry-run bayrağı tasarımı. Çıktı: her optimizasyon için before/after karşılaştırması ve ölçülebilir eşik (satır sayısı, süre, round-trip).",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed çalıştırma yetkisi PostgreSQL row-level güvenlik politikasıyla kısıtlanır: seed rolü yalnızca seed_schema şemasına WRITE yetkisine sahip, tenant şemalarına erişimi yoktur.",
+        "CI/CD pipeline'da seed betiği izole bir Docker ağ segmentinde çalışır; dışarı trafik engellenir, böylece fixture verisi sızdırılamaz.",
+        "Seed tamamlandıktan sonra seed rolünün oturum yetkisi otomatik REVOKE edilir; 30 saniye timeout sonrası bağlantı kesilir.",
+        "Fixture üretiminde kullanılan tüm rastgele değerler Python secrets yerine Faker deterministic engine'den gelir; güvenli rastgelelik gerektiren tokenlar fixture'da yer tutucuyla değiştirilir."
+      ],
+      "notes": "Seed işlemi en az ayrıcalık ilkesiyle çalışır: yalnızca hedef şemaya yazabilir, işlem biter bitmez yetki geri alınır.",
+      "prompt": "platform-seed-data için securityOptimization boyutunu kapsa: PostgreSQL RLS seed-rol politikası (yalnızca seed_schema WRITE), Docker ağ izolasyonu, 30 saniyelik oturum timeout + otomatik REVOKE, Faker deterministic vs secrets.token_hex ayrımı. Güvenlik sınırı: seed rolü hangi tabloları görebilir, hangilerini göremez? Çıktı: GRANT/REVOKE SQL örnekleri ve Docker network-policy YAML.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "10 000 satır golden fixture PostgreSQL'e 5 saniyenin altında yüklenir; bu eşik CI pipeline'da assert edilir, aşılırsa build fail olur.",
+        "Seed öncesi tablo istatistikleri ANALYZE ile güncellenir; bu adım sorgu planlayıcısının e2e testler sırasında doğru plan seçmesini sağlar.",
+        "Büyük fixture setleri COPY FROM STDIN protokolüyle yüklenir (psycopg2 copy_expert); 50 000+ satır için INSERT'e kıyasla 3× daha hızlıdır.",
+        "Seed işlemi transaction bloğu içinde çalışır; hata durumunda tam rollback yapılır, kısmi seed verisi tabloda kalmaz ve bir sonraki çalıştırma temiz başlar."
+      ],
+      "notes": "Performans eşiği CI'da zorlanır: 10 000 satır < 5 s, COPY protokolü ile 50 000+ satır ölçeklenir.",
+      "prompt": "platform-seed-data için performance boyutunu kapsa: 10 000 satır < 5 s CI eşiği, ANALYZE sonrası sorgu planı kalitesi, psycopg2 copy_expert COPY FROM STDIN (50 000+ satır), transaction-wrapped seed + tam rollback. Çıktı: benchmark komutu, CI assert kodu ve COPY vs INSERT zaman karşılaştırması.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed modülü doğrudan mobil UI sunmaz; ancak fixture'lar React Native / Expo e2e testlerinin gerçek tenant verisiyle koşmasını sağlar (boş ekran, çok kayıtlı liste, sayfalama uç durumları).",
+        "Mobil e2e senaryoları için seed seti küçük tutulur (50 kayıt/tenant); büyük veri seti mobil cihaz belleğini zorlamadan gerçekçi liste davranışını test etmeye yetecek boyuttadır.",
+        "Mobil erişilebilirlik e2e testi için fixture'larda uzun metin (>80 karakter title) ve çok satırlı açıklama alanları kasıtlı olarak eklenir; mobil truncation davranışı doğrulanır."
+      ],
+      "notes": "Seed verisi mobil arayüz içermez; katkısı mobil e2e senaryolarına gerçekçi, boyut-sınırlı fixture sağlamaktır.",
+      "prompt": "platform-seed-data için mobileApps boyutunu kapsa: seed modülünün mobil UI yokluğu, React Native e2e için 50 kayıt/tenant boyut sınırı, uzun metin fixture'ları ile mobil truncation testi. Çıktı: mobil e2e test planı ve fixture boyut gerekçesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed verisi UI içermediğinden WCAG 2.1 kriterleri doğrudan uygulanmaz; bununla birlikte fixture'lar ekran okuyucu e2e senaryolarının gerçek veriyle çalışmasını sağlar.",
+        "A11y e2e testleri için seed seti bilinçli olarak boş-durum (0 kayıt) ve dolu-durum (100 kayıt) fixture'larını içerir; her iki uç durum aria-label doğrulama testleriyle birlikte koşulur.",
+        "Çok dilli erişilebilirlik senaryoları için fixture'larda Türkçe, İngilizce ve Arapça (RTL) metin içeren kayıtlar yer alır; React bileşenlerinin dir='rtl' davranışı bu veriyle test edilir.",
+        "WCAG 1.4.3 kontrast testi: fixture'lardaki renk kodu alanları (#RRGGBB) geçerli kontrast oranı (≥4.5:1) sağlayan değerlerle tohumlanır; otomatik kontrast denetleyicisi bu alanları tarar."
+      ],
+      "notes": "WCAG doğrudan seed kapsamında değil; katkı, erişilebilirlik e2e senaryolarına çeşitli (boş/dolu/RTL) fixture sağlamaktır.",
+      "prompt": "platform-seed-data için wcag boyutunu kapsa: seed verisinin WCAG dışı konumu, boş/dolu fixture ile aria e2e, RTL metin fixture'ları, #RRGGBB renk alanlarında ≥4.5:1 kontrast değeri. Çıktı: her fixture türünün hangi WCAG kriterini dolaylı desteklediğinin tablosu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed betiği Alembic upgrade head sonrasında otomatik çalışan bir Kubernetes Job olarak tanımlanır; Job tamamlandıktan sonra CrashLoopBackOff olmadan 'Completed' statüsüne geçmesi CI'da doğrulanır.",
+        "Seed Job'u ortam bazlı olarak yapılandırılır: staging ortamında full fixture (3 tenant × 100 user), CI ortamında minimal fixture (1 tenant × 5 user) yüklenir; SEED_PROFILE env değişkeniyle seçilir.",
+        "Helm chart'ta seed Job bağımlılığı initContainer olarak tanımlanır; ana uygulama pod'u seed Job tamamlanmadan Ready durumuna geçemez.",
+        "Seed başarısız olduğunda idempotent yapısı sayesinde yeniden çalıştırma yeterlidir; Helm rollback ayrıca gerekmez, çünkü seed verisi migration dışı bağımsız bir katmandır."
+      ],
+      "notes": "Seed dağıtımı Kubernetes Job + Helm initContainer zinciriyle migration sonrasına kilitlenerek zorunlu sıralama sağlar.",
+      "prompt": "platform-seed-data için deployment boyutunu kapsa: Kubernetes Job (Alembic post-migrate), SEED_PROFILE ile ortam seçimi (staging=full, CI=minimal), Helm initContainer bağımlılık zinciri, başarısız seed durumunda yeniden çalıştırma yeterliliği. Çıktı: Helm values.yaml snippet ve Kubernetes Job YAML örneği.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "CI pipeline'da her migration PR açıldığında seed betiği otomatik tetiklenir (Event); çalışma süresi 5 dakikayı geçerse pipeline otomatik iptal edilir (Condition → Action).",
+        "Seed sonucu veritabanındaki kayıt sayısı beklenen değerle karşılaştırılır (Condition: count == expected); tutarsızlık durumunda Slack kanalına otomatik uyarı gönderilir (Action).",
+        "Haftada bir çalışan zamanlanmış ECA kuralı: fixtures/golden/ klasöründe değişiklik varsa seed versiyonunu otomatik etiketler ve CHANGELOG.seed günceller.",
+        "Staging ortamında seed başarısız olduğunda ECA kuralı ilgili geliştiriciyi (son commit sahibini) otomatik assign eder ve seed hata log'unu issue'ya ekler."
+      ],
+      "notes": "ECA kuralları seed sürecini izler: tetikleme, doğrulama sayacı, başarısızlık ataması ve haftalık versiyon etiketi otomatikleştirilmiştir.",
+      "prompt": "platform-seed-data için eca boyutunu kapsa: PR-tetikli seed + 5 dk timeout Action, kayıt sayısı Condition ile Slack uyarı Action, haftalık fixture versiyon etiketi, başarısız seed'de son commit sahibine otomatik atama. Çıktı: ECA kural YAML şeması ve her kuralın tetikleyici/koşul/eylem üçlüsü.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "LLM tabanlı test senaryosu üretici ajan, mevcut golden fixture şemasını okuyarak boşluk analizi yapar ve eksik uç-durum kayıtlarını öneri olarak sunar; onay sonrası factory fonksiyonuna eklenir.",
+        "Veri kalitesi ajanı her seed çalıştırması sonrası fixture kayıtlarını tarar: FK kırık, NULL zorunlu alan, tenant sızıntısı gibi anormallikleri tespit eder ve yapılandırılmış JSON raporu üretir.",
+        "Seed boyut tavsiye ajanı geçmiş e2e test sürelerini analiz eder ve hangi tenant için fixture büyütüleceğini ya da küçültüleceğini öneren bir rapor üretir; karar insan onayına bırakılır.",
+        "Fixture diff ajanı iki seed versiyonu arasındaki semantik farklılıkları (yeni alan, değişen default, kaldırılan kayıt) özetler ve migration notuna eklenmesi için PR yorumu oluşturur."
+      ],
+      "notes": "AI ajanları seed sürecinde boşluk analizi, kalite taraması ve versiyon diff özeti için danışmanlık rolü üstlenir; nihai yazma kararı insana aittir.",
+      "prompt": "platform-seed-data için aiAgents boyutunu kapsa: LLM uç-durum öneri ajanı (golden fixture şema okuma), veri kalitesi anormallik tarama ajanı (FK kırık/NULL/tenant sızıntısı), fixture boyut tavsiye ajanı (e2e süre analizi), versiyonlar arası semantik diff ajanı. Çıktı: her ajanın girdi/çıktı formatı ve insan onay noktalarının tanımı.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "pytest fixture scope='session' ile tek seferlik seed kurulumu yapılır; 200+ e2e test aynı golden fixture üzerinde koşarak toplam kurulum süresi %70 azaltılır.",
+        "Idempotency testi: seed betiği 3 kez ardışık çalıştırılır ve her seferinde toplam kayıt sayısının değişmediği assert edilir (UNIQUE kısıtı + ON CONFLICT kanıtı).",
+        "Tenant izolasyon testi: tenant_a seed'inden sonra tenant_b için SELECT yapılır ve 0 satır dönmesi beklenir; RLS politikası bu testle doğrulanır.",
+        "Factory-boy factory'lerinin schema'ya uygunluğu Pydantic model validation ile kontrol edilir; her build'de 14 farklı model tipi için 50 örnek üretilip doğrulanır."
+      ],
+      "notes": "Test stratejisi idempotency, tenant izolasyonu ve factory şema uyumunu ayrı test sınıflarıyla doğrular.",
+      "prompt": "platform-seed-data için testing boyutunu kapsa: pytest session scope ile 200+ e2e fixture paylaşımı (%70 süre azalması), 3× ardışık çalıştırma idempotency assert, tenant_a→tenant_b sıfır satır RLS testi, Pydantic factory doğrulaması (14 model × 50 örnek). Çıktı: test kodu iskeletleri ve her test türünün başarı koşulu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "OWASP A03 (Injection): seed betiği SQLAlchemy parametreli sorgular kullanır; dinamik tablo/şema adları asla f-string ile birleştirilmez, allowlist doğrulamasından geçirilir.",
+        "OWASP A01 (Broken Access Control): seed rolü yalnızca hedef şemaya INSERT yetkisine sahiptir; SELECT, UPDATE, DELETE yetkileri seed rolüne verilmez, test edilir.",
+        "OWASP A09 (Security Logging): seed betiğinin her çalışması başlangıç zamanı, çalışan kullanıcı, etkilenen tenant ve eklenen satır sayısıyla structured JSON log üretir; bu log SIEM'e iletilir.",
+        "OWASP A02 (Cryptographic Failures): fixture'lardaki hash alanları gerçek bcrypt hash'i değil sabit test vektörü içerir; bu vektörler CI dışına sızmayacak biçimde .gitignore + CI artifact encryption ile korunur."
+      ],
+      "notes": "Seed modülünde OWASP önceliği: injection önleme (parametreli sorgu), en az ayrıcalık (seed rolü), structured audit log ve hash sızıntısını engelleme.",
+      "prompt": "platform-seed-data için owasp boyutunu kapsa: A03 parametreli sorgu + allowlist tablo adı, A01 seed rolü yetki kısıtı (INSERT only), A09 structured JSON audit log → SIEM, A02 test hash vektörü + .gitignore + CI encryption. Güvenlik sınırı: hangi OWASP maddesi seed modülü için birincil risk? Çıktı: OWASP madde → kontrol eşlemesi tablosu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed modülü FastAPI lifespan event'e bağlanır: uygulama başladığında SEED_ON_STARTUP=true ise seed fonksiyonu çağrılır; test ortamında AsyncClient ile entegrasyon testi yapılır.",
+        "GraphQL şeması ile seed verisi uyumu: seed sonrası tüm temel Query resolver'ları örnek tenant_id ile çağrılır ve 200/data yanıtı alındığı assert edilir (15 resolver × CI).",
+        "Alembic migration entegrasyonu: her yeni migration dosyası seed'in hâlâ idempotent çalışıp çalışmadığını doğrulayan bir pytest marker (@seed_compatibility) ile etiketlenir.",
+        "Redis önbellek ile entegrasyon: seed sonrası önbellek ısıtma (cache warm-up) betiği çalışır, sık kullanılan tenant verisini Redis'e yükler ve e2e testlerin soğuk önbellek gecikmesi yaşamamasını sağlar."
+      ],
+      "notes": "Seed entegrasyonu FastAPI startup, GraphQL resolver doğrulama, Alembic uyumluluk testleri ve Redis ısıtmayı tek akışta birleştirir.",
+      "prompt": "platform-seed-data için integration boyutunu kapsa: FastAPI lifespan SEED_ON_STARTUP hook, 15 GraphQL resolver seed-sonrası doğrulama, Alembic @seed_compatibility marker, Redis cache warm-up betiği entegrasyonu. Çıktı: her entegrasyon noktasının başarı/başarısızlık senaryosu ve test komutu.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Seed modülü CLI arayüzü: python -m app.seed --tenant dev-tenant --profile full --dry-run komutu ile çalıştırılır; --profile parametresi minimal/full/e2e değerlerini kabul eder.",
+        "Diğer modüller (auth, project, task) kendi e2e testlerinde seed modülünün sağladığı pytest fixture'ı (seed_db) doğrudan import eder; her modül bağımsız seed fonksiyonu yazmak zorunda kalmaz.",
+        "Seed modülü FastAPI router olarak da sunulur: POST /internal/seed endpoint'i INTERNAL_TOKEN ile korunur ve staging ortamında Postman koleksiyonundan çağrılabilir.",
+        "seed modülünün factory fonksiyonları (UserFactory, ProjectFactory, TenantFactory) yük testlerinde (locust) veri üretici olarak da kullanılır; 10 000 sanal kullanıcı için benzersiz e-posta üretimi factory üzerinden yapılır."
+      ],
+      "notes": "Seed modülü hem CLI hem pytest fixture hem de korumalı HTTP endpoint olarak kullanılabilir; factory'ler yük testi veri üreticisi olarak yeniden kullanılır.",
+      "prompt": "platform-seed-data için moduleUsage boyutunu kapsa: CLI --profile parametresi, diğer modüllerin seed_db fixture import'u, POST /internal/seed INTERNAL_TOKEN korumalı endpoint, locust yük testinde factory yeniden kullanımı. Çıktı: her kullanım biçimi için komut/import/curl örneği ve yetkilendirme gereksinimi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     }
   },
   "source": {

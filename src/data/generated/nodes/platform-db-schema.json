@@ -31,7 +31,11 @@
   "assignees": [
     "platform-ekibi"
   ],
-  "effort": {},
+  "effort": {
+    "estimate": 14,
+    "unit": "d",
+    "spent": 0
+  },
   "progress": 0,
   "phase": "test-plan",
   "phases": {
@@ -81,8 +85,15 @@
       "notes": ""
     }
   },
-  "milestone": null,
-  "schedule": {},
+  "milestone": "v0.3 — Platform dikey dilim",
+  "schedule": {
+    "start": "2026-09-21",
+    "end": "2026-10-19",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-09-21",
+    "baselineEnd": "2026-10-19"
+  },
   "deliverables": [
     "SQLAlchemy/SQLModel model tabanı",
     "Alembic migration zinciri + seed kancaları"
@@ -91,10 +102,26 @@
     "Her migration ileri+geri (upgrade/downgrade) test edilir",
     "Tüm tenant-kapsamlı tablolarda tenant_id ve uygun indeksler vardır"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-migration-irreversible",
+      "desc": "Geri-alınamaz migration üretim verisini riske atar",
+      "severity": "high",
+      "mitigation": "expand-contract + downgrade testi + snapshot"
+    }
+  ],
   "rollback": null,
   "evidence": [],
-  "metrics": [],
+  "metrics": [
+    {
+      "key": "Migration upgrade/downgrade round-trip",
+      "target": "%100 geçer"
+    },
+    {
+      "key": "Tenant-kapsamlı tablolarda indeks",
+      "target": "p95 sorgu < 50ms"
+    }
+  ],
   "ecaRules": [
     {
       "id": "eca-platform-db-schema-done",
@@ -262,128 +289,211 @@
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "SQLAlchemy 2.0 mapped_column + DeclarativeBase ile tüm tenant-aware tablolar tanımlanır; her tablo zorunlu tenant_id UUID sütunu içerir.",
+        "Alembic migration zinciri expand-contract deseniyle ilerler: önce yeni sütun/indeks eklenir (expand), eski kaldırılmaz; uyumluluk penceresi kapandıktan sonra contract adımı çalışır.",
+        "Her migration dosyası hem upgrade() hem downgrade() metodunu eksiksiz içerir; CI'da pytest-alembic ile round-trip testi zorunludur.",
+        "PostgreSQL Row Level Security (RLS) politikaları migration içinde SET SESSION AUTHORIZATION + ENABLE ROW LEVEL SECURITY ile tabloya bağlanır; tenant yalıtımı şema katmanında güvence altına alınır."
+      ],
+      "notes": "Şema katmanı, tenant yalıtımını ORM üstünde değil veritabanı katmanında (RLS + indeks) tesis eder.",
+      "prompt": "platform-db-schema için featureDefs boyutunu kapsa: SQLAlchemy 2.0 tablo tanımları, Alembic expand-contract zinciri, reversible migration zorunluluğu ve PostgreSQL RLS politika bağlama adımlarını somut kod örüntüleriyle açıkla. çıktı: uygulayıcı başvuru listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Her PostgreSQL tablosunda tenant_id sütununa NOT NULL + DEFAULT gen_random_uuid() kısıtı ve RLS politikası uygulanır; tenant_id eksik satır ekleme veritabanı tarafından reddedilir.",
+        "Alembic migration script'leri versiyon kontrolünde saklanır; production'a gidecek her migration güvenlik incelemesinden (DDL review) geçer ve geri alma (downgrade) test edilmiş olmalıdır.",
+        "Veritabanı kullanıcıları en az ayrıcalık ilkesiyle tanımlanır: uygulama kullanıcısı DDL yetkisinden yoksundur, yalnızca DML (SELECT/INSERT/UPDATE/DELETE) erişimine sahiptir.",
+        "Hassas sütunlar (e-posta, telefon gibi PII alanlar) pgcrypto ile sütun düzeyinde şifreleme veya uygulama katmanı AES-256 ile korunur; düz metin indeksleme yerine hash-tabanlı arama indeksi <%1 ilave overhead hedeflenir."
+      ],
+      "notes": "Güvenlik, SQL seviyesinde (RLS + sütun kısıtı) ve DDL sürecinde (migration review) çift katmanlı sağlanır.",
+      "prompt": "platform-db-schema güvenlik boyutunu kapsa: tenant_id RLS politikası, DDL inceleme akışı, veritabanı kullanıcısı ayrıcalık sınırları ve PII sütun koruma yöntemlerini PostgreSQL/Alembic özelinde açıkla. güvenlik sınırı: DDL yetkisi uygulama kullanıcısına verilmez. çıktı: güvenlik kontrol listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "SQLAlchemy 2.0 select() + scalars() kombinasyonu ile tüm sorgular açık-tip döndürür; eski Query API kullanımı yasaktır ve biome/ruff lint kuralıyla engellenir.",
+        "Alembic migration operasyonları batch_alter_table() ile yazılır; SQLite uyumluluğu gerekmese de aynı desen PostgreSQL'de atomik DDL garantisi sağlar ve okunabilirliği artırır.",
+        "Migration script başına yalnızca tek DDL amacı konulur (tek tablo, tek indeks veya tek kısıt); karışık migration'lar reddedilir, geri alma (downgrade) mantığı netleşir.",
+        "SQLModel modelleri hem Pydantic şema hem SQLAlchemy model olarak çift kullanılır; ek dönüşüm sınıfı yazılmaz, kod yüzde ≥30 daha az model kodu hedeflenir."
+      ],
+      "notes": "Tek-amaçlı migration ve iki-görevli SQLModel modeli yinelenen dönüştürme kodunu ortadan kaldırır.",
+      "prompt": "platform-db-schema kod optimizasyonu boyutunu kapsa: SQLAlchemy 2.0 select API zorunluluğu, tek-amaçlı Alembic migration kuralı, batch_alter_table kullanımı ve SQLModel çift-görev tasarım örüntüsünü açıkla. çıktı: uygulanabilir refactor önerileri listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "RLS politikası current_setting('app.tenant_id') ile bağlam okur; uygulama katmanı her bağlantı başında SET LOCAL app.tenant_id = <uuid> çalıştırır, aksi hâlde sorgu sıfır satır döndürür (fail-closed).",
+        "Veritabanı bağlantıları PgBouncer havuzundan geçirilir; bağlantı başına yalnızca SET LOCAL (işlem-kapsamlı) parametreler kullanılır, SESSION-kapsamlı durum havuzlama bağlamını kirletmez.",
+        "Alembic migration'larında SQL ifadeleri parametre bağlama (bindparams) ile yazılır; doğrudan f-string format kullanımı yasaktır ve OWASP A03 SQL Injection koruması lint kuralıyla zorlanır.",
+        "Migration geçmişi (versions/) dalından silinmez; git history rewrite hook'la engellenir, denetim izi bütünlüğü ≥12 ay korunur."
+      ],
+      "notes": "RLS fail-closed semantiği ve PgBouncer SET LOCAL uyumu güvenlik optimizasyonunun temel eksenini oluşturur.",
+      "prompt": "platform-db-schema güvenlik optimizasyonu boyutunu kapsa: RLS fail-closed akışı, PgBouncer havuzlama uyumluluğu, migration SQL injection engeli (OWASP A03) ve migration geçmiş koruma mekanizmalarını PostgreSQL/Alembic bağlamında açıkla. güvenlik sınırı: tenant bağlamı olmayan hiçbir sorgu veri döndürmez. çıktı: güvenlik-odaklı yapılandırma listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Her tenant_id sütunu içeren tablo için (tenant_id, id) bileşik B-tree indeksi oluşturulur; tenant bazlı liste sorgularında p95 gecikme hedefi <50ms olarak ölçülür ve CI Locust testiyle doğrulanır.",
+        "Büyük tablolarda (>1M satır öngörüsü) imleç-tabanlı sayfalama (keyset pagination) desteklenir; OFFSET+LIMIT yerine WHERE id > :cursor AND tenant_id = :tid + LIMIT deseni migration'dan itibaren şemaya yansıtılır.",
+        "Partial indeks kullanımı: aktif kayıtlar için CREATE INDEX ... WHERE deleted_at IS NULL şeklinde filtrelenmiş indeks oluşturulur; silinmiş kayıtlar indeks boyutunu şişirmez.",
+        "PostgreSQL autovacuum ayarları uygulama yükü modeline göre tablo başına özelleştirilir; yüksek yazma frekanslı tablolarda autovacuum_vacuum_scale_factor=0.01 ile tuple şişmesi ≤10% hedeflenir."
+      ],
+      "notes": "Bileşik tenant_id indeksi ve keyset sayfalama, çok-kiracılı yük altında öngörülebilir sorgu süresi sağlar.",
+      "prompt": "platform-db-schema performans boyutunu kapsa: bileşik tenant_id indeksi tasarımı, keyset sayfalama şema desteği, partial indeks kullanım senaryoları ve PostgreSQL autovacuum ayar stratejisini somut eşik ve ölçüm yöntemleriyle açıkla. çıktı: DBA başvuru listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Şema doğrudan mobil istemciye maruz kalmaz; GraphQL API katmanı ara yüz işlevi görür — şema değişiklikleri GraphQL sözleşme snapshot testi (platform-graphql-api) üzerinden mobil uyumluluğu korur.",
+        "Mobil bant genişliği kısıtları için şema tasarımında geniş JSONB sütunlar kullanımından kaçınılır; ayrık, küçük sütunlar tercih edilir ve GraphQL alanı seçimi (%40 veri tasarrufu) mümkün kılınır.",
+        "Çevrimdışı senkronizasyon için updated_at + deleted_at sütunları tüm tenant-aware tablolarda standart olarak yer alır; mobil istemci delta sorgularını bu alanlara dayandırabilir.",
+        "Şema sürümleme politikası: mevcut sütun kaldırılmadan önce en az 2 sürüm deprecation süreci uygulanır; bu süre mobil istemcilerin güncellenmesine olanak tanır."
+      ],
+      "notes": "Şema mobil katmana doğrudan değil GraphQL üzerinden hizmet verir; mobil uyumluluk indirekt ancak tasarım kararlarıyla güvence altına alınır.",
+      "prompt": "platform-db-schema mobil uyum boyutunu kapsa: şemanın GraphQL aracılığıyla mobil etkileri, JSONB yerine ayrık sütun tercihinin mobil bant verimliliğine katkısı, delta senkronizasyon için updated_at/deleted_at standardı ve mobil sürüm geçiş pencresini açıkla. çıktı: mobil-uyumlu şema tasarım ilkeleri.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Şema doğrudan kullanıcı arayüzü sunmaz; erişilebilirlik platform-ui-surface düğümünde ele alınır — ancak şema, durum enum sütunu (status: active/suspended/archived) ve i18n locale alanı (preferred_locale TEXT) sağlayarak metinsel durum bildirimini ve çok-dil desteğini mümkün kılar.",
+        "Hata mesajı sütunları ve enum değerleri makine-okunabilir sabit kodlarla tanımlanır (ör. 'ACCOUNT_SUSPENDED'), UI katmanı bu kodları WCAG 2.2 uyumlu, dile özgü metin olarak çevirebilir.",
+        "Soft-delete (deleted_at) örüntüsü, UI katmanının silinen içerikler için erişilebilir 'gizlendi' bildirim mesajları üretmesine olanak tanır; şema bunu IS NOT NULL koşuluyla ifade eder.",
+        "Şema tasarım inceleme sürecinde erişilebilirlik gereksinimleri için ayrı bir alan öngörülür: content_language, reading_level gibi metaveri sütunları ileride WCAG 3.0 uyum izlemesini kolaylaştırır."
+      ],
+      "notes": "Şema WCAG uyumu için doğrudan sorumluluk taşımaz; enum, locale ve hata kodu tasarımıyla UI erişilebilirliğini dolaylı olarak destekler.",
+      "prompt": "platform-db-schema WCAG boyutunu kapsa: şemanın dolaylı erişilebilirlik katkılarını (enum kodu, locale alanı, deleted_at), UI katmanının bu verileri WCAG 2.2 uyumlu bildirimlere nasıl dönüştüreceğini ve gelecekteki WCAG 3.0 metaveri gereksinimlerini açıkla. güvenlik sınırı: şema UI mantığı içermez, yalnızca yapısal veri sağlar. çıktı: şema tasarım tavsiyeleri.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Alembic migration'ları Docker entrypoint'inde alembic upgrade head komutuyla uygulama başlamadan önce çalışır; başarısız migration container'ı sağlıksız (unhealthy) olarak işaretler ve Swarm yeniden başlatır.",
+        "Migration idempotency: alembic_version tablosu PostgreSQL advisory lock ile korunur; paralel replica başlangıçlarında yalnızca bir işlem migration çalıştırır, diğerleri kilitlenmeyi bekler.",
+        "Hetzner/Debian Docker ortamında volume-mount ile PostgreSQL data dizini kalıcı disk üzerindedir; migration öncesi pg_dump snapshot alma adımı Docker Swarm service-job olarak çalışır.",
+        "Canary dağıtım senaryosu: expand-contract deseninin 'expand' aşaması eski ve yeni uygulama sürümlerinin aynı şemaya erişmesini sağlar; geriye dönük uyumsuz migration'lar deploy kapısını bloklar."
+      ],
+      "notes": "Migration, deployment sürecinin atomik bir parçasıdır; başarısız migration Swarm'ın servisi sağlıklı olarak kabul etmesini engeller.",
+      "prompt": "platform-db-schema dağıtım boyutunu kapsa: Docker entrypoint migration akışı, Swarm advisory lock ile paralel başlatma güvenliği, Hetzner volume snapshot stratejisi ve canary dağıtım için expand-contract uyum kontrolünü açıkla. çıktı: dağıtım adımları kontrol listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "migration.applied olayı tetiklendiğinde ECA motoru platform-db-schema'yı izleyen modüllere (platform-customer-model, platform-graphql-api) uyumluluk kontrolü bildirimi gönderir.",
+        "migration.failed olayı Swarm health-check başarısızlığına eşlenir; ECA kuralı kritik öncelikli 'migration rollback' görevi oluşturur ve platform-ekibi'ne bildirim iletir.",
+        "schema.breaking_change algılandığında (sütun kaldırma veya tip değişikliği) ECA kuralı insan onayı (requiresApproval: true) gerektiren adım-atlama (step-up) iş akışını başlatır.",
+        "Haftalık ECA zamanlaması: migration geçmişinin son 30 günlük zinciri bütünlük denetiminden geçirilir; eksik downgrade() metoduna sahip migration tespit edildiğinde uyarı görevi açılır."
+      ],
+      "notes": "ECA katmanı migration olay akışını gözlemler ve kırılıcı değişiklikleri insan onayıyla kapılar.",
+      "prompt": "platform-db-schema ECA boyutunu kapsa: migration.applied/failed olay haritalama, kırılıcı şema değişikliği için step-up onay akışı, Swarm health-check ile ECA entegrasyonu ve periyodik migration zincir bütünlük denetimini açıkla. çıktı: ECA kural tanımları.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "AI ajanları SQLAlchemy model ve migration dosyalarına doğrudan yazma yetkisine sahip değildir; yalnızca taslak öneri (suggest-changeset) üretebilir, insan geliştirici onayı zorunludur.",
+        "Ajan destekli migration analizi: mevcut şemayı ve migration geçmişini okuyarak potansiyel performans sorunlarını (eksik indeks, şişirilmiş tablo) raporlar; rapordan sonra otomatik DDL üretemez.",
+        "Şema farkı (diff) talebi için ajan platform-db-schema düğümünü okur ve sqlalchemy-diff çıktısını yorumlar; önerileri çıktı: önerilen Alembic revision olarak yapılandırılmış JSON biçiminde sunar.",
+        "Ajan risk skoru ≥80 olan migration önerilerinde ECA kuralı devreye girerek görevi karantinaya alır ve yüksek öncelikli AI risk incelemesi görevi oluşturur."
+      ],
+      "notes": "Ajan şema üzerinde öneri üretebilir ancak DDL icra etme yetkisinden tamamen yoksundur.",
+      "prompt": "platform-db-schema AI ajan boyutunu kapsa: ajan yetki sınırları (öneri-only), migration analiz ve indeks öneri iş akışı, sqlalchemy-diff yorumlama süreci ve yüksek risk skoru için ECA karantina mekanizmasını açıkla. güvenlik sınırı: ajan DDL çalıştıramaz. çıktı: ajan görev tanımı.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Her Alembic migration için pytest-alembic ile upgrade → verify → downgrade → verify döngüsü çalıştırılır; CI'da bu döngü başarısız olursa build durdurulur.",
+        "SQLAlchemy model kısıtları (UniqueConstraint, ForeignKeyConstraint, CheckConstraint) ayrı birim testlerle doğrulanır; her kısıt ihlali için beklenen IntegrityError assert edilir.",
+        "Tenant izolasyon testi: iki farklı tenant_id ile oluşturulan kayıtlar çapraz sorgulanır; başka tenant'ın kaydı döndürülmesi TestCase'i başarısız kılar (negatif test).",
+        "Performans regresyon testi: 10.000 satır seed verisiyle bileşik (tenant_id, id) indeksi kullanan sorgunun p95 süresi <50ms eşiğini geçmediği CI Locust/pgbench senaryosuyla ölçülür."
+      ],
+      "notes": "Migration round-trip ve tenant izolasyon testleri kalite kapısının bloke edici koşullarıdır.",
+      "prompt": "platform-db-schema test boyutunu kapsa: pytest-alembic round-trip döngüsü, model kısıt birim testleri, çapraz-tenant izolasyon negatif testi ve 10.000 satır yük altında p95 <50ms indeks performans testini açıkla. çıktı: test planı ve örnek test isimleri.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "OWASP A03 SQL Injection: tüm Alembic migration SQL ifadeleri sqlalchemy.text() + bindparams ile yazılır; ham f-string SQL yasak olup ruff kuralıyla (S608) lint kapısında denetlenir.",
+        "OWASP A07 Identification Failures: RLS politikası eksik tenant_id bağlamında tüm sorguları boş küme döndürecek şekilde tasarlanır; current_setting yalnızca tanımlı oturumda değer taşır.",
+        "OWASP A04 Insecure Design: şema tasarım aşamasında tehdit modeli (threat model) gözden geçirilir; tenant_id NULL kabul etmeyen NOT NULL kısıtı ve varsayılan gen_random_uuid() tasarım güvencesidir.",
+        "OWASP A09 Security Logging: DDL değişiklikleri (CREATE TABLE, ALTER TABLE, DROP) PostgreSQL audit_log eklentisi veya pgaudit ile kayıt altına alınır; migration denetim izi ≥12 ay saklanır."
+      ],
+      "notes": "OWASP A03 lint kapısı ve A07 RLS fail-closed semantiği birleşik olarak SQL-katmanı saldırı yüzeyini minimize eder.",
+      "prompt": "platform-db-schema OWASP boyutunu kapsa: A03 SQL Injection lint kuralı (S608), A07 RLS fail-closed tasarımı, A04 threat model incelemesi ve A09 pgaudit DDL denetim izi yapılandırmasını somut kural ve ayar referanslarıyla açıkla. güvenlik sınırı: raw SQL string migration'da yasak. çıktı: OWASP kontrol listesi.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "platform-tenancy modülü tenant_id değerini FastAPI bağımlılık enjeksiyonu (Depends) ile sağlar; platform-db-schema bu değeri SQLAlchemy session başında SET LOCAL ile PostgreSQL oturumuna bağlar.",
+        "k-schema çekirdek modülü (kernel) temel varlık alanlarını (id, created_at, updated_at, deleted_at) mixin olarak tanımlar; platform-db-schema tüm tablolarına bu mixin'i kalıtarak tutarlılık sağlar.",
+        "platform-authn-authz modülünden gelen JWT içindeki tenant_id iddiası (claim) migration sırasında UUID formatı kısıtıyla doğrulanır; format uyuşmazlığı bağlantı katmanında hata verir.",
+        "Alembic env.py, SQLAlchemy engine'i platform-tenancy modülünün sağladığı DSN üzerinden oluşturur; migration ve uygulama aynı bağlantı havuzunu kullanır, DSN yönetimi tek noktadan yapılır."
+      ],
+      "notes": "Şema, tenancy + kernel + authz modülleriyle üç noktadan entegre olur; her entegrasyon noktası ayrı test senaryosuyla kapılanır.",
+      "prompt": "platform-db-schema entegrasyon boyutunu kapsa: platform-tenancy SET LOCAL bağlantı akışı, k-schema mixin kalıtım örüntüsü, JWT tenant_id iddiası doğrulaması ve Alembic env.py DSN yönetim stratejisini açıkla. çıktı: entegrasyon noktaları ve test bağlantıları.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "platform-customer-model bu modülü tüketen birincil archetype'tır: Customer tablosunu platform-db-schema'nın sağladığı temel mixin ve tenant_id standardı üzerine inşa eder; her yeni varlık aynı örüntüyü izler.",
+        "Yeni bir app'in şemasını eklemek için platform-db-schema'nın expand-contract şablonu kopyalanır, app-özgü tablolar ve indeksler eklenir; standart mixin ve RLS politika şablonu değiştirilmeden kullanılır.",
+        "platform-seed-data modülü, platform-db-schema'nın migration zinciri tamamlandıktan sonra seed komutlarını çalıştırır; bağımlılık sırası Alembic revision head kancasıyla güvence altına alınır."
+      ],
+      "notes": "Şema modülü tüm platform varlıkları için temel kalıp (mixin + RLS + indeks standardı) sunarak yeniden kullanımı merkezileştirir.",
+      "prompt": "platform-db-schema modül kullanımı boyutunu kapsa: platform-customer-model tüketim örüntüsü, yeni app şema ekleme adımları ve platform-seed-data bağımlılık sırasını somut örneklerle açıkla. çıktı: kullanım rehberi adımları.",
+      "provenance": "swarm",
+      "promptVersion": "platform-content-v1"
     }
   },
   "source": {
