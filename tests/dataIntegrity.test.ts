@@ -150,3 +150,37 @@ describe("izlenebilirlik pilotları (Faz P5)", () => {
     }
   });
 });
+
+describe("yürütme hazırlığı kapısı (Faz P5+)", () => {
+  const DEV = new Set(["development", "test-qa", "verification", "release-maintenance"]);
+
+  it("done düğümler evidence + verification=passed taşır", () => {
+    const bad = nodes
+      .filter((n) => n.status === "done")
+      .filter((n) => (n.evidence ?? []).length === 0 || n.phases?.verification?.status !== "passed")
+      .map((n) => n.id);
+    expect(bad).toEqual([]);
+  });
+
+  it("dev+ fazdaki düğümler owner + refs + schedule + AC taşır", () => {
+    const bad = nodes
+      .filter((n) => DEV.has(n.phase))
+      .filter(
+        (n) =>
+          !n.owner ||
+          (n.refs ?? []).length === 0 ||
+          !n.schedule?.start ||
+          (n.acceptanceCriteria ?? []).length === 0,
+      )
+      .map((n) => n.id);
+    expect(bad).toEqual([]);
+  });
+
+  it("platform düğümleri traceability (implementationStatus + deployTarget) taşır", () => {
+    const bad = nodes
+      .filter((n) => n.id.startsWith("platform-"))
+      .filter((n) => !n.traceability?.implementationStatus || !n.traceability?.deployTarget)
+      .map((n) => n.id);
+    expect(bad).toEqual([]);
+  });
+});
