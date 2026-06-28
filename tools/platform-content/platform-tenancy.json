@@ -1,0 +1,141 @@
+{
+  "featureDefs": {
+    "items": [
+      "Tenant bağlam middleware (FastAPI dependency): get_tenant_context() bağımlılık fonksiyonu her HTTP isteğinde Authorization başlığından tenant_id'yi JWT payload'ından çıkarır ve ContextVar'a yazar; aşağı akıştaki tüm servis ve DB katmanları bu değeri doğrudan okur — parametre geçişi zincirine gerek kalmaz.",
+      "Schema-per-tenant mimarisi (ADR-0026): her kiracı için PostgreSQL'de ayrı şema oluşturulur (tenant_{uuid}); Alembic migration'ları her şemaya ayrı ayrı uygulanır ve kiracılar arasında tablo düzeyinde erişim sızdırması mümkün değildir.",
+      "Row-Level Security (RLS) yedek katmanı: public şema paylaşımı gereken tablolarda PostgreSQL RLS politikası app.current_tenant ayarını okur ve farklı tenant satırları filtrelenir; schema-per-tenant birincil yalıtım mekanizmasıdır, RLS ikincil güvenlik ağıdır.",
+      "Fail-closed tasarım ilkesi: tenant_id belirsiz veya doğrulanamıyorsa middleware HTTP 401 döner ve istek hiçbir aşamaya geçmez — hata açık (fail-open) değil kapalı (fail-closed) modda yönetilir; her ret denetim loguna tenant_id=unknown olarak yazılır."
+    ],
+    "notes": "Çok-kiracılık modülü, FastAPI ContextVar bağlamı + schema-per-tenant + RLS yedek katmanı + fail-closed politikasıyla çapraz-tenant sızıntısını yapısal olarak imkansız kılar.",
+    "prompt": "platform-tenancy düğümü için featureDefs boyutunu kapsa: get_tenant_context() ContextVar JWT extraction, schema-per-tenant ADR-0026 ayrı Alembic migration, RLS app.current_tenant ikincil güvenlik ağı, fail-closed HTTP 401 tenant_id=unknown denetim logu. Çıktı: get_tenant_context kodu, Alembic multi-tenant env.py parçası ve RLS policy SQL. güvenlik sınırı: belirsiz tenant_id hiçbir zaman veri döndürmez."
+  },
+  "security": {
+    "items": [
+      "Tenant kimlik bilgisi doğrulama zinciri: JWT imzası RS256 algoritmasıyla doğrulanır, ardından tenant_id claim'inin aktif kiracılar tablosunda bulunduğu kontrol edilir; devre dışı bırakılmış tenant'ın token'ı geçerli imzaya sahip olsa bile reddedilir.",
+      "Çapraz-tenant erişim denetimi: SQLAlchemy session factory, bağlantı açılışında SET search_path TO tenant_{uuid} komutunu çalıştırır; farklı search_path değeriyle yapılan sorgu PostgreSQL tarafından relation does not exist hatası fırlatır ve çapraz erişim veritabanı katmanında kesilir.",
+      "Tenant sızdırma testi (OWASP A01): her deployment'ta otomatik sızdırma test senaryosu çalışır — tenant_A token'ı ile tenant_B verisi sorgulanır; HTTP 403 dışında herhangi bir yanıt CI'ı kırmızıya çevirir ve deployment durdurulur.",
+      "Kiracı silme güvenliği: tenant deaktivasyonu iki adımlı gerçekleşir — önce tenant aktif=False yapılır (istekler reddedilir), 30 gün sonra şema CASCADE DROP ile fiziksel olarak kaldırılır; CASCADE DROP öncesi son yedek (pg_dump) zorunludur ve kontrol listesi otomatik doğrulanır."
+    ],
+    "notes": "Tenancy güvenliği RS256 JWT + search_path kesme + otomatik sızdırma testi + iki adımlı tenant silme zinciriyle veri izolasyonunu çok katmanlı güvence altına alır.",
+    "prompt": "platform-tenancy için security boyutunu kapsa: RS256 JWT + aktif kiracı tablosu doğrulama, SET search_path tenant_{uuid} PostgreSQL kesme, OWASP A01 çapraz-tenant sızdırma testi CI deployment durumu, iki adımlı deaktivasyon aktif=False 30 gün + pg_dump zorunluluğu. güvenlik sınırı: deaktif tenant token'ı geçerli imzaya rağmen reddedilir. Çıktı: doğrulama zinciri kodu, sızdırma test senaryosu ve iki adım silme akışı."
+  },
+  "codeOptimization": {
+    "items": [
+      "ContextVar tabanlı tenant bağlamı: threading.local() yerine Python contextvars.ContextVar kullanılır; async FastAPI handler'larında bağlam kopması yaşanmaz ve her coroutine kendi tenant bağlamını doğru taşır — bellek ek yükü ihmal edilebilir düzeyde kalır.",
+      "Tenant şema önbellekleme: TenantRegistry, aktif tenant UUID → şema adı eşlemesini Redis'te TTL=300 s ile önbelleğe alır; her istekte DB sorgusu yapmak yerine önbellek hit oranı %95 üzeri hedeflenir ve latency 2 ms altında tutulur.",
+      "Alembic migration gruplaması: 50 tenant için migration'lar asyncio.gather() ile 10'luk gruplar halinde paralel çalışır; toplam migration süresi seri çalıştırmaya göre ≥8 kat kısalır ve tek tenant başarısız olursa grup raporunda işaretlenir.",
+      "Dinamik search_path ayarı connection event hook'u: SQLAlchemy @event.listens_for(engine, 'connect') hook'u bağlantı oluşturulduğunda search_path'i otomatik ayarlar; her sorgu öncesi manuel SET çağrısı gerekmez ve hazır kod satırı sayısı azalır."
+    ],
+    "notes": "ContextVar + Redis şema önbellekleme + paralel Alembic + connection hook üçlüsü tenancy kod tabanını hem temiz hem yüksek performanslı tutar.",
+    "prompt": "platform-tenancy için codeOptimization boyutunu kapsa: contextvars.ContextVar async bağlam kopması önlemi, Redis TTL=300 s şema önbellek %95 hit <2 ms latency, asyncio.gather 10'luk grup paralel Alembic ≥8x hızlanma, @event.listens_for connect hook search_path otomatik. Çıktı: ContextVar kurulum kodu, TenantRegistry Redis önbellek sınıfı ve connection hook örneği. güvenlik sınırı: önbellek kiracı aktivasyon değişikliğinde TTL beklenmeden geçersizleştirilir."
+  },
+  "securityOptimization": {
+    "items": [
+      "Tenant doğrulama devre kesici (circuit breaker): TenantValidator, veritabanı doğrulamasında ardışık 5 hata aldıktan sonra devre kesiciyi açar ve 30 saniye boyunca tüm isteklere HTTP 503 döner; veritabanı sorununda fail-open yerine hizmet kesintisi tercih edilir.",
+      "JWT tenant claim değişmezliği: token imzalandıktan sonra tenant_id claim'i değiştirilemez; token yenileme (refresh) akışında tenant_id tutarsızlığı tespit edilirse her iki token da geçersiz sayılır ve güvenlik olayı CRITICAL seviyesinde loglanır.",
+      "Tenant bazlı hız sınırlama: her tenant için SlowAPI rate limiter dakikada 1000 istek sınırı uygular; sınır aşımında HTTP 429 döner ve kiracı kimliği, aşım zamanı, istek sayısı denetim logunalışmaz.",
+      "Şema ayrımı sızıntı güvencesi: penetrasyon testi otomasyonu (OWASP ZAP + özel tenant sızıntı eklentisi) her hafta çalışır; raporlanan yüksek veya kritik bulgu sayısı sıfır olmalıdır, aksi hâlde sonraki deployment dondurulur."
+    ],
+    "notes": "Tenancy güvenlik optimizasyonu, devre kesici fail-safe + JWT değişmezlik + tenant hız sınırı + haftalık penetrasyon testi otomasyonuyla aktif saldırı yüzeyini daraltır.",
+    "prompt": "platform-tenancy için securityOptimization boyutunu kapsa: TenantValidator circuit breaker 5 hata → HTTP 503 30 s, JWT tenant_id değişmezliği refresh tutarsızlık → CRITICAL log, SlowAPI dakika 1000 istek HTTP 429 denetim logu, haftalık OWASP ZAP tenant sızıntı eklentisi sıfır bulgu zorunluluğu. güvenlik sınırı: devre kesici açıkken fail-open kesinlikle yoktur. Çıktı: circuit breaker konfigürasyonu, rate limiter kuralı ve ZAP otomasyon komut satırı."
+  },
+  "performance": {
+    "items": [
+      "Tenant bağlam kurma süresi p95 < 5 ms: get_tenant_context() fonksiyonu JWT decode + Redis önbellek okuma adımlarını toplam 5 ms altında tamamlar; OpenTelemetry span'ı bu süreyi ölçer ve p95 > 8 ms olursa Prometheus uyarısı tetiklenir.",
+      "Bağlantı havuzu tenant başına yalıtımı: PgBouncer havuzları tenant_id bazlı ayrılır; bir tenant'ın yoğun trafiği başka tenant'ın bağlantı havuzunu tüketemez — her tenant için max_pool_size=15 sınırı uygulanır.",
+      "Lazy schema initialization: tenant şeması henüz oluşturulmamışsa ilk istek sırasında create_tenant_schema() fonksiyonu çalışır ve şema + başlangıç migration'ları uygulanır; sonraki istekler doğrudan mevcut şemaya ulaşır, yeniden oluşturma yapılmaz.",
+      "Tenant metadata sorgusu önbellekleme: tenant adı, planı, özellik bayrakları gibi metadata TTL=600 s ile Redis'te tutulur; metadata'ya dayanan iş kuralı kararları DB'ye gitmeden alınır ve metadata sorgu trafiği %90 oranında azalır."
+    ],
+    "notes": "Tenancy performansı get_tenant_context p95 < 5 ms + PgBouncer tenant havuz yalıtımı + lazy schema init + metadata önbellekleme ile izole ve hızlı çok-kiracılık sağlar.",
+    "prompt": "platform-tenancy için performance boyutunu kapsa: get_tenant_context p95 < 5 ms Prometheus p95 > 8 ms uyarı, PgBouncer tenant bazlı max_pool_size=15 yalıtımı, lazy create_tenant_schema ilk istekte tek sefer, metadata TTL=600 s Redis %90 DB trafik azalma. Çıktı: OpenTelemetry span ölçüm kodu, PgBouncer tenant havuz yapılandırması ve lazy init fonksiyon akışı. güvenlik sınırı: havuz tüketme saldırısı tenant sınırıyla kesilir."
+  },
+  "mobileApps": {
+    "items": [
+      "Bu modül backend izolasyon katmanıdır; mobil istemci aynı tenant bağlamını JWT talebiyle taşır — sızıntı riski istemciye bağlı değildir, yalnızca backend middleware zinciriyle kontrol edilir.",
+      "Mobil token yenileme akışında tenant tutarlılığı: refresh endpoint'i yeni access token üretirken tenant_id claim'ini kaynak token'dan değişmeden taşır; mobil uygulama arka planda token yenilese bile tenant bağlamı kaybolmaz.",
+      "Uygulama güncellemeleri sırasında tenant bağlam sürekliliği: mobil istemci eski token ile yeni API sürümüne istek gönderdiğinde tenancy middleware sürüm uyumsuzluğunu tespit eder ve HTTP 426 (Upgrade Required) döner — veriye erişim izni verilmez.",
+      "Çevrimdışı mod tenant kısıtlaması: mobil istemci yerel veri önbelleğe aldığında tenant_id etiketini zorunlu tutar; çevrimdışı cihaz paylaşımı senaryosunda farklı kullanıcının önbelleğe erişimi yerel şifreleme katmanı tarafından engellenir — backend bu güvenceyi API güvenlik sınırı olarak belgelendirir."
+    ],
+    "notes": "Tenancy modülü doğrudan mobil UI üretmez; JWT tenant claim tutarlılığı ve HTTP 426 sürüm kontrolüyle mobil istemcinin doğru tenant bağlamında kalması güvence altına alınır.",
+    "prompt": "platform-tenancy için mobileApps boyutunu kapsa: backend izolasyon katmanı sınırını dürüstçe belirt, refresh token tenant_id değişmez taşıma, HTTP 426 sürüm uyumsuzluk tenant erişim reddi, çevrimdışı tenant_id etiket + yerel şifreleme backend belgelendirme. güvenlik sınırı: eski sürüm mobil istemci tenant verisine erişemez. Çıktı: refresh endpoint tenant claim kodu, HTTP 426 kontrolü ve çevrimdışı güvenlik notu."
+  },
+  "wcag": {
+    "items": [
+      "Tenancy modülü backend veri yalıtımı sağlar ve doğrudan UI bileşeni üretmez; WCAG katkısı tenant bazlı kullanıcı tercihleri (dil, erişilebilirlik ayarları) tenant şemasındaki user_preferences tablosunda izole şekilde saklanmasıyla sınırlıdır.",
+      "Hata mesajı çok-dilli desteği: tenant middleware HTTP 401/403 yanıtları Accept-Language başlığına göre Türkçe veya İngilizce hata açıklaması döner; ekran okuyucu kullanan son kullanıcı reddin nedenini kendi dilinde anlayabilir.",
+      "Kiracı özelleştirme erişilebilirliği: tenant_preferences tablosunda high_contrast, font_scale, reduced_motion alanları tutulur; GraphQL tenantPreferences sorgusu UI katmanına bu değerleri aktarır ve WCAG 1.4.3 ≥ 4.5:1 kontrast oranı UI tarafında uygulanır.",
+      "Oturum sonlanma bildirimi erişilebilirliği: tenant oturumu süre dolumu veya deaktivasyon nedeniyle sonlandığında GraphQL subscription olayı gönderilir; UI katmanı bu olayı ARIA live region ile sesli veya görsel olarak kullanıcıya bildirir."
+    ],
+    "notes": "Tenancy WCAG katkısı user_preferences izole saklama + çok-dilli hata mesajı + tenantPreferences GraphQL + oturum sonlanma subscription ile dolaylı ama somut erişilebilirlik altyapısı kurar.",
+    "prompt": "platform-tenancy için wcag boyutunu kapsa: backend sınırını belirt, user_preferences tenant izole saklama, Accept-Language HTTP 401/403 Türkçe/İngilizce mesaj, tenantPreferences high_contrast/font_scale WCAG 1.4.3 ≥4.5:1 UI aktarımı, oturum sonlanma GraphQL subscription ARIA live region. Çıktı: user_preferences tablo şeması, çok-dilli hata yanıt kodu ve tenantPreferences sorgusu. güvenlik sınırı yok; bu boyut erişilebilirlik altyapısıdır."
+  },
+  "deployment": {
+    "items": [
+      "Tenant şema migration pipeline'ı: yeni kiracı kayıt akışında Celery görevi create_tenant_schema.delay(tenant_id) çağrılır; görev PostgreSQL şema oluşturma + Alembic upgrade head + RLS politikası kurulumu adımlarını sırayla işler ve her adım başarısı Celery sonuç backend'ine yazılır.",
+      "Mavi-yeşil deployment tenant uyumluluğu: deployment sırasında iki sürüm aynı anda çalıştığından tenant şeması her iki sürümle uyumlu olmalıdır; forward-only migration kuralı uygulanır, geri alınamaz şema değişikliği ayrı bakım penceresine alınır.",
+      "Tenant sayısı artışına göre ölçekleme: Kubernetes Horizontal Pod Autoscaler, aktif tenant sayısı metriği (custom metric: active_tenants) %80 eşiğini geçtiğinde pod sayısını artırır; maksimum pod sayısı 20 olarak sınırlandırılır ve üzeri için sharding planı devreye girer.",
+      "Tenant şema yedekleme otomasyonu: her gece 02:00 UTC'de pg_dump --schema tenant_{uuid} komutu tüm aktif kiracılar için paralel çalışır; yedek S3 bucket'ına AES-256 şifreli olarak yazılır ve 30 günlük saklama politikası uygulanır."
+    ],
+    "notes": "Tenancy deployment, Celery şema oluşturma + forward-only migration + custom metric HPA + gecelik şifreli pg_dump ile kiracı yaşam döngüsünü güvenli ve ölçeklenebilir yönetir.",
+    "prompt": "platform-tenancy için deployment boyutunu kapsa: Celery create_tenant_schema görevi PostgreSQL+Alembic+RLS sıralı adım, mavi-yeşil forward-only migration geri alınamaz değişiklik bakım penceresi, HPA active_tenants %80 eşik maks 20 pod sharding planı, gecelik pg_dump S3 AES-256 30 gün. Çıktı: Celery görev tanımı, HPA custom metric manifest ve pg_dump otomasyon script'i. güvenlik sınırı: yedek şifrelenmeden S3'e yazılamaz."
+  },
+  "eca": {
+    "items": [
+      "TenantCreated olayı yayılımı: yeni kiracı oluşturulduğunda TenantCreated(tenant_id, plan, created_at) olayı Outbox tablosuna yazılır ve CDC worker EventBus'a iletir; ilgili servisler (billing, notification) bu olaya abone olur — senkron bağlantı kalmaz.",
+      "TenantDeactivated kompensasyon zinciri: kiracı deaktive edildiğinde Saga koordinatörü sırayla active_sessions sonlandırma → open_jobs iptal → webhook abonelik silme kompensasyon adımlarını çalıştırır; herhangi bir adım başarısız olursa retry 3 kez denenir.",
+      "Tenant bağlam olay metadata'sı: EventBus üzerinden geçen tüm domain olayları zorunlu tenant_id alanı taşır; tenant_id eksik olaylar EventBus girişinde reddedilir ve dead-letter queue'ya yönlendirilir — event şema doğrulama Pydantic model ile yapılır.",
+      "Tenant yaşam döngüsü durum makinesi olayları: tenant durumu (pending → active → suspended → deleted) her geçişte bir state_transition olay üretir; bu olaylar audit_log tablosuna yazılır ve GDPR uyumu için 7 yıl saklanır."
+    ],
+    "notes": "Tenancy ECA katmanı TenantCreated Outbox + Saga kompensasyon + zorunlu tenant_id event metadata + durum makinesi audit log ile olay güdümlü yaşam döngüsü yönetimi kurar.",
+    "prompt": "platform-tenancy için eca boyutunu kapsa: TenantCreated Outbox CDC EventBus billing/notification aboneliği, Saga TenantDeactivated sıralı sessions+jobs+webhooks kompensasyon retry 3x, Pydantic zorunlu tenant_id dead-letter queue, pending→active→suspended→deleted state transition 7 yıl GDPR audit. Çıktı: TenantCreated Pydantic şeması, Saga koordinatör adımları ve state transition olay yapısı. güvenlik sınırı: tenant_id eksik olay işlenmez."
+  },
+  "aiAgents": {
+    "items": [
+      "Tenant bağımlı AI araç çağrıları: LLM agent'ı GraphQL tool-use endpoint'ini kullandığında her araç çağrısı zorunlu tenant_id parametresi içermek zorundadır; tenancy middleware bu parametreyi JWT claim'iyle çapraz doğrular — uyuşmazlık anında HTTP 403 döner.",
+      "Agent çıktı tenant izolasyonu: LLM tarafından üretilen SQL veya GraphQL sorgusu yürütülmeden önce TenantQueryValidator, sorguda başka tenant referansı bulunup bulunmadığını AST analizi ile kontrol eder; tehlikeli sorgu loglanır ve reddedilir.",
+      "AI destekli tenant anomali tespiti: tenant istek desenleri (istek hızı, sorgulanan şema sayısı, hata oranı) ML modeli tarafından izlenir; anomali tespit edildiğinde tenant otomatik olarak rate-limited moda alınır ve güvenlik ekibine bildirim gönderilir.",
+      "Otonom tenant onboarding ajanı: yeni tenant kaydında LLM destekli onboarding ajanı, tercih anketi yanıtlarından varsayılan modül seçimi ve ilk veri seed'ini oluşturur; ajan işlemleri yalnızca yeni oluşturulan tenant şeması kapsamında çalışır, başka şemaya erişim izni yoktur."
+    ],
+    "notes": "Tenancy AI katmanı, agent JWT doğrulaması + SQL AST izolasyon denetimi + ML anomali tespiti + sınırlı-kapsam onboarding ajanıyla tenant güvenli AI entegrasyonu sağlar.",
+    "prompt": "platform-tenancy için aiAgents boyutunu kapsa: agent tool-use tenant_id JWT çapraz doğrulama HTTP 403, TenantQueryValidator AST SQL başka-tenant ref reddi, ML istek deseni anomali rate-limit + bildirim, onboarding ajanı yalnızca yeni-tenant şeması kapsamı. güvenlik sınırı: ajan başka tenant şemasına erişemez. Çıktı: TenantQueryValidator AST kural kodu, anomali ML metrik listesi ve onboarding ajan kapsam kısıtı tanımı."
+  },
+  "testing": {
+    "items": [
+      "Tenant izolasyon test paketi: pytest-asyncio ile 5 paralel tenant bağlamı oluşturulur ve her bağlamdan diğer tenant'ın verisine erişim denenir; beklenen sonuç 403/boş sonuç kümesidir — herhangi bir başarılı çapraz erişim testi başarısız sayılır.",
+      "RLS politikası birim testi: her yeni RLS politikası için conftest.py'de tenant_a_session ve tenant_b_session fixture'ları tanımlanır; tenant_b_session ile tenant_a verisi sorgulama sonucu [] (boş liste) döndürmelidir — tam yalıtım doğrulanır.",
+      "Middleware entegrasyon testi: get_tenant_context() bağımlılığı geçersiz JWT, süresi dolmuş JWT, eksik tenant_id claim ve deaktif tenant senaryoları için ayrı test vakaları içerir; her senaryo beklenen HTTP durum kodunu (401/403) ve hata kodunu döndürmelidir.",
+      "Yük testi altında izolasyon doğrulama: Locust ile 50 tenant × 200 eşzamanlı kullanıcı yük testi çalıştırılır; p99 yanıt süresi 500 ms altında kalmalı ve sızdırma tespiti için response body'ler rastgele örneklenerek başka tenant verisi içermediği doğrulanır."
+    ],
+    "notes": "Tenancy test katmanı paralel çapraz-erişim reddi + RLS birim testi + middleware senaryo testi + Locust yük-altı izolasyon doğrulamasıyla çok katmanlı güvence sunar.",
+    "prompt": "platform-tenancy için testing boyutunu kapsa: 5 paralel tenant çapraz-erişim 403/boş reddi, tenant_a/b fixture RLS [] boş liste izolasyon, get_tenant_context 4 hata senaryosu HTTP 401/403, Locust 50 tenant × 200 kullanıcı p99 < 500 ms sızıntı örnekleme. Çıktı: çapraz erişim test kodu, RLS fixture örneği ve Locust senaryo yapısı. güvenlik sınırı: çapraz-tenant başarılı yanıt pipeline'ı durdurur."
+  },
+  "owasp": {
+    "items": [
+      "OWASP A01 (Kırık Erişim Kontrolü): her GraphQL resolver tenant_id bağlamını zorunlu olarak doğrular; tenant bağlamı eksik resolver çağrısı AccessDeniedError fırlatır ve olayı WARN seviyesinde loglar — resolver seviyesinde atlama yapılamaması için base resolver sınıfı zorunlu kontrol içerir.",
+      "OWASP A04 (Güvensiz Tasarım): schema-per-tenant ADR-0026 tasarım kararı belgelenir; tasarım değişikliği pull request'inde ADR güncellemesi zorunludur — güvenli varsayılan (secure by default) ilkesi mimari karar kaydında izlenebilir.",
+      "OWASP A07 (Kimlik Doğrulama Hataları): süresi dolmuş JWT ile tenant bağlamı kurulamaz; expiry kontrolü ve tenant aktiflik kontrolü ayrı aşamalarda yapılır, her aşama bağımsız denetim logu üretir — geri adım saldırısına (replay attack) karşı jti (JWT ID) benzersizliği Redis'te doğrulanır.",
+      "OWASP A09 (Yetersiz Günlükleme): tenant bağlam kurma, çapraz-erişim girişimi, tenant deaktivasyon olaylarının tamamı StructuredLogger ile {event_type, tenant_id, user_id, ip, timestamp, outcome} alanlarıyla OpenSearch'e yazılır ve 12 ay boyunca korunur."
+    ],
+    "notes": "Tenancy OWASP kapsamı A01 zorunlu resolver doğrulaması + A04 ADR belgeli güvenli tasarım + A07 JWT expiry/jti replay koruması + A09 12 aylık yapılandırılmış denetim logu üzerine inşa edilmiştir.",
+    "prompt": "platform-tenancy için owasp boyutunu kapsa: A01 base resolver zorunlu tenant doğrulama AccessDeniedError, A04 schema-per-tenant ADR-0026 PR güncelleme zorunluluğu, A07 JWT expiry + jti Redis replay koruması ayrı aşama logu, A09 StructuredLogger 6 alan OpenSearch 12 ay saklama. güvenlik sınırı: tenant bağlamı doğrulanmadan hiçbir resolver çalışmaz. Çıktı: base resolver sınıf kodu, jti Redis kontrol kodu ve StructuredLogger alan tanımları."
+  },
+  "integration": {
+    "items": [
+      "Dış servis tenant geçişi: AppFactory ServiceRegistry üzerinden çağrılan her dış API (ödeme, e-posta) X-Tenant-ID başlığını otomatik ekler; dış servis bu başlığı kayıt altına alır ve geri dönen webhook'lar tenant_id ile eşleştirilir.",
+      "Kimlik sağlayıcı (IdP) tenant eşlemesi: SAML/OIDC SSO entegrasyonunda IdP'den gelen subject claim'i tenant_user_mapping tablosuyla eşleştirilir; birden fazla tenant'a üye kullanıcı için oturum başlangıcında tenant seçim akışı başlatılır.",
+      "Veri aktarım API'si (import/export): tenant veri aktarımı /api/v1/tenants/{tenant_id}/export endpoint'i aracılığıyla yapılır; endpoint başka tenant'ın aktarım talebini kabul etmez ve her aktarım işlemi veri denetim loguna yazılır.",
+      "Üçüncü taraf izleme araçları tenant ayrımı: Sentry hata raporları, Datadog trace'leri tenant_id etiketi ile zenginleştirilir; izleme aracının UI'ında farklı tenant verileri birbirine karışmaz ve tenant bazlı hata oranı alertleri ayrı ayrı yapılandırılabilir."
+    ],
+    "notes": "Tenancy entegrasyon katmanı X-Tenant-ID otomatik başlık + IdP kullanıcı eşlemesi + izole export endpoint + tenant etiketli izleme araçlarıyla dış sistemlerde de izolasyon sürekliliği sağlar.",
+    "prompt": "platform-tenancy için integration boyutunu kapsa: ServiceRegistry X-Tenant-ID otomatik başlık webhook eşleştirme, SAML/OIDC tenant_user_mapping çok-tenant oturum seçim akışı, /api/v1/tenants/{tenant_id}/export başka-tenant reddi denetim logu, Sentry/Datadog tenant_id etiketi bazlı alert. Çıktı: X-Tenant-ID middleware kodu, IdP mapping tablo şeması ve Sentry tenant enrichment yapılandırması. güvenlik sınırı: başka tenant export isteği anında reddedilir."
+  },
+  "moduleUsage": {
+    "items": [
+      "Tenancy modülünü kullanmak için FastAPI bağımlılık enjeksiyonu yeterlidir: router endpoint'ine Depends(get_tenant_context) eklendiğinde tenant_id otomatik doğrulanır ve ContextVar'a yazılır; sonrasında get_db_session() çağrısı otomatik olarak doğru şemayı seçer — geliştirici ek kod yazmak zorunda kalmaz.",
+      "Yeni tenant oluşturma API akışı: POST /api/v1/tenants endpoint'i tenant_slug ve plan parametrelerini alır, TenantService.provision() çağrılır ve Celery arka plan görevi ile şema + RLS + başlangıç verisi hazırlanır; yanıt 202 Accepted + görev id döner, tamamlanma webhook ile bildirilir.",
+      "Tenant izolasyon sağlığı izleme: GET /health/tenancy endpoint'i aktif tenant sayısı, son 5 dakikadaki çapraz-erişim girişim sayısı ve en yavaş migration süresini döner; DevOps bu endpoint'i her gün kontrol eder ve anomali varsa Slack'e bildirim alır."
+    ],
+    "notes": "Tenancy modülü Depends(get_tenant_context) tek satır entegrasyon, TenantService.provision() arka plan sağlama ve /health/tenancy izleme ile minimal kod yükü ve maksimum izolasyon güvencesi sunar.",
+    "prompt": "platform-tenancy için moduleUsage boyutunu kapsa: Depends(get_tenant_context) tek satır entegrasyon + get_db_session otomatik şema seçimi, POST /api/v1/tenants TenantService.provision() Celery 202 Accepted webhook, /health/tenancy aktif-tenant/çapraz-girişim/migration-süre Slack bildirim. Çıktı: endpoint bağımlılık örneği, provision akış diyagramı ve health endpoint yanıt şeması. güvenlik sınırı: provision tamamlanmadan tenant aktif sayılmaz."
+  }
+}

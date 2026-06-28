@@ -1,0 +1,142 @@
+{
+  "featureDefs": {
+    "items": [
+      "GitHub Actions pipeline: GitHub private repo'daki her push ve pull request olayında otomatik tetiklenen workflow; lint, birim test, entegrasyon test ve Docker image build aşamalarını sırayla çalıştırır.",
+      "Bloklayıcı test kapıları: birim test başarısızlığı, %80 altına düşen kod kapsamı veya OWASP bağımlılık taramasında kritik CVE tespiti durumunda pipeline başarısız sayılır ve merge engellenir.",
+      "Hetzner Debian hedef sunucusuna Docker image aktarımı: GitHub Container Registry (GHCR) üzerinden tag'lenen image, SSH üzerinden sunucuya çekilir ve docker compose up --pull always ile sıfır kesintiye yakın güncellenir.",
+      "Rollback mekanizması: her başarılı deploy sonrası önceki Docker image tag'i .last-deploy dosyasına kaydedilir; başarısız deploy tespitinde otomatik rollback scripti eski tag'i pull edip ayağa kaldırır."
+    ],
+    "notes": "Her pipeline aşaması atomiktir; bir kapı geçilemezse sonraki aşama başlamaz ve üretim ortamı bozuk kod almaz.",
+    "prompt": "Platform CI/CD modülünün özellik tanımlarını kapsayan teknik bir belge hazırla; GitHub Actions workflow yapısı, bloklayıcı test kapıları, Hetzner Debian Docker dağıtım akışı ve rollback mekanizmasını adım adım ele al. çıktı: workflow YAML iskeleti ve kapı geçiş kriterleri tablosu."
+  },
+  "security": {
+    "items": [
+      "GitHub Actions secret yönetimi: HETZNER_SSH_KEY, GHCR_TOKEN ve veritabanı şifreleri GitHub Encrypted Secrets'ta saklanır; workflow dosyasına düz metin olarak asla yazılmaz.",
+      "Docker image taraması: her build sonrası Trivy ile image taranır; CRITICAL severity CVE bulunan image GHCR'ye push edilmez ve pipeline başarısız sayılır.",
+      "SSH ile Hetzner erişimi anahtar tabanlı kimlik doğrulama kullanır; parola tabanlı SSH devre dışıdır ve deploy kullanıcısının sudo yetkisi yalnızca docker compose restart ile sınırlandırılır.",
+      "Pipeline loglarına sızan secret tespiti: gitleaks taraması her commit'te çalıştırılır; kaynak kodda API anahtarı veya şifre örüntüsü bulunursa commit bloklayıcı pre-receive hook devreye girer."
+    ],
+    "notes": "Sıfır düz metin secret politikası pipeline boyunca zorunludur; image taraması üretim ortamını bilinen zaafiyetli image'dan korur.",
+    "prompt": "CI/CD modülünün güvenlik önlemlerini kapsa; GitHub secret yönetimi, Trivy image tarama politikası, SSH anahtar kısıtlaması ve gitleaks secret tarama entegrasyonunu teknik detaylarla ele al. güvenlik sınırı: hangi koşulda pipeline'ın otomatik durması gerektiğini somut örneklerle belirt. çıktı: güvenlik kontrol listesi ve örnek Trivy konfigürasyonu."
+  },
+  "codeOptimization": {
+    "items": [
+      "GitHub Actions cache katmanı: pip bağımlılıkları ve Docker layer cache actions/cache ile saklanır; pipeline süresini tekrar çalışmalarda %60 kısaltır.",
+      "Paralel job stratejisi: lint, birim test ve güvenlik taraması ayrı job olarak eş zamanlı çalıştırılır; toplam pipeline süresi p95 <8 dakika hedefi.",
+      "Docker image çok aşamalı (multi-stage) build: builder aşamasında derleme araçları, final aşamada yalnızca çalışma zamanı bağımlılıkları bulunur; image boyutu %50 küçülür.",
+      "Entegrasyon testleri için docker compose up --wait kullanılır; sabit sleep() yerine servis sağlık kontrolü tamamlanana kadar beklenir, güvenilmez zamanlama sorunu ortadan kalkar."
+    ],
+    "notes": "Cache ve paralel job stratejisi, pipeline süresini minimize ederek geliştirici geri bildirim döngüsünü hızlandırır.",
+    "prompt": "CI/CD modülü kod optimizasyon stratejilerini kapsa; Actions cache konfigürasyonu, paralel job mimarisi, multi-stage Dockerfile tasarımı ve sağlık kontrolü tabanlı servis bekleme mekanizmasını teknik düzeyde ele al. çıktı: optimize edilmiş workflow YAML örneği ve beklenen süre karşılaştırma tablosu."
+  },
+  "securityOptimization": {
+    "items": [
+      "En az ayrıcalık ilkesi deploy servis hesabına uygulanır: GitHub Actions runner, Hetzner sunucusunda yalnızca /opt/app dizinine yazma ve docker compose komutuna izin verir.",
+      "GHCR image imzalama: Cosign aracıyla her production image imzalanır; sunucu tarafında imza doğrulanmadan image çalıştırılamaz, tedarik zinciri saldırısı önlenir.",
+      "Bağımlılık kilitleme: poetry.lock ve package-lock.json dosyaları repo'ya commit'lenir; CI'da pip install --require-hashes zorunlu tutulur, alt bağımlılık enjeksiyonu engellenir.",
+      "Pipeline değişikliği denetimi: .github/workflows/ dizinindeki değişiklikler ayrı CODEOWNERS kuralıyla en az 2 kıdemli geliştirici onayı gerektirir; tek kişi pipeline güvenlik kontrolünü bypass edemez."
+    ],
+    "notes": "Tedarik zinciri güvenliği Cosign imzalama ve bağımlılık kilitleme ile katmanlı biçimde sağlanır.",
+    "prompt": "CI/CD modülü güvenlik optimizasyonlarını kapsa; deploy servis hesabı yetki kısıtlaması, Cosign image imzalama, bağımlılık kilitleme politikası ve pipeline değişikliği denetimini teknik detaylarla ele al. güvenlik sınırı: image imzası doğrulanamadığında sunucunun hangi adımı uygulayacağını belirt. çıktı: güvenlik optimizasyon akış şeması."
+  },
+  "performance": {
+    "items": [
+      "Deploy sonrası smoke test: /health/liveness ve /health/readiness uç noktaları 30 saniye timeout ile kontrol edilir; her iki uç nokta da 200 dönmezse deploy otomatik rollback'e gider.",
+      "Blue-green benzeri sıralı container yenileme: docker compose up --no-deps --scale app=2 ile yeni container ayağa kalkar, sağlık kontrolü geçince eski durdurulur; kesinti <10 saniye.",
+      "Pipeline artifact boyutu izlenir: Docker image ≥1 GB ise build aşaması uyarı üretir; ≥1.5 GB ise bloklayıcı hata ile pipeline durdurulur.",
+      "Hetzner sunucu kaynak izleme: deploy sonrası 5 dakika boyunca CPU >%80 veya bellek >%90 olursa otomatik alert tetiklenir ve rollback değerlendirmesi operatöre bildirilir."
+    ],
+    "notes": "Sıralı yenileme ve sağlık kontrolleri, deploy anında yaşayan kullanıcı oturumlarının kesilmesini önler.",
+    "prompt": "CI/CD modülü performans gereksinimlerini kapsa; smoke test konfigürasyonu, sıralı container yenileme stratejisi, image boyut sınırı ve deploy sonrası kaynak izleme mekanizmasını somut eşiklerle ele al. çıktı: deploy performans kontrol listesi ve kabul kriterleri."
+  },
+  "mobileApps": {
+    "items": [
+      "Bu modül doğrudan mobil uygulama sunmaz; ancak React/Vite frontend ve FastAPI backend'i aynı pipeline üzerinden dağıtır, mobil istemcinin tükettiği API'yi kapsar.",
+      "Mobil uygulama için ayrı bir pipeline aşaması tanımlanabilir: Expo/React Native build ve OTA (over-the-air) güncelleme adımı mevcut workflow'a ek job olarak eklenir.",
+      "API sürüm uyumluluğu testi: mobil istemci için tutturulan minimum API versiyonu pipeline'da contract test ile doğrulanır; eski mobil sürümü kıracak değişiklik deploy edilmez.",
+      "Mobil API entegrasyon testleri CI'da çalıştırılır: mobil istemci simülasyonu ile kritik akışlar (auth, veri listeleme) doğrulanır; mobil test başarısızlığı deploy'u bloklar."
+    ],
+    "notes": "CI/CD modülü mobil build sürecini kapsamasa da tüketilen backend API'nin kırılmaz olmasını pipeline seviyesinde garanti eder.",
+    "prompt": "CI/CD modülünün mobil uygulama bağlamındaki kapsamını ele al; API sürüm uyumluluğu testi, contract test mekanizması ve isteğe bağlı Expo/React Native pipeline entegrasyonunu kapsayan teknik bir değerlendirme yaz. çıktı: mobil API uyumluluk test planı ve pipeline genişletme rehberi."
+  },
+  "wcag": {
+    "items": [
+      "CI/CD modülü doğrudan son kullanıcıya UI sunmaz; ancak deploy edilen React/Vite frontend'in erişilebilirliği pipeline'ın sorumluluğundadır.",
+      "axe-core tabanlı a11y testi pipeline'a entegre edilir: Playwright ile kritik sayfalar taranır; WCAG 2.1 AA seviyesinde kritik ihlal bulunan build deploy edilemez.",
+      "Lighthouse CI erişilebilirlik skoru ≥90 kapısı: her PR'da otomatik Lighthouse taraması çalıştırılır; skor <90 ise merge engellenir ve ihlal detayı PR yorumuna yazılır.",
+      "Pipeline bildirim e-postaları ve Slack mesajları düz metin alternatif içerir; yalnızca HTML gönderilmez, ekran okuyucu kullanan geliştirici bildirimleri kaçırmaz."
+    ],
+    "notes": "CI/CD modülü doğrudan UI sunmaz; ancak axe-core ve Lighthouse kapıları erişilebilirlik ihlallerini deploy öncesi bloklar, böylece erişilebilirliği pipeline zorunlu kılar.",
+    "prompt": "CI/CD modülünün erişilebilirlik kapısı uygulamasını kapsa; axe-core Playwright entegrasyonu, Lighthouse CI skor eşiği, WCAG 2.1 AA kritik ihlal tanımı ve bildirim erişilebilirliğini ele al. çıktı: erişilebilirlik kapısı konfigürasyon örneği ve başarısızlık senaryosu akışı."
+  },
+  "deployment": {
+    "items": [
+      "GitHub Actions self-hosted runner veya GitHub-hosted runner üzerinde çalışır; runner, Hetzner Debian sunucusuna SSH ile bağlanır ve deploy komutlarını uzaktan çalıştırır.",
+      "Docker Compose projesi /opt/app dizininde tutulur; deploy adımı git pull + docker compose pull + docker compose up -d --remove-orphans sırasını izler.",
+      "Alembic veritabanı migrasyon adımı deploy sırasında otomatik çalışır: yeni container başlatılmadan önce alembic upgrade head komutu çalıştırılır; başarısız migrasyon deploy'u durdurur.",
+      "Ortam değişkenleri Hetzner sunucusundaki /opt/app/.env dosyasından okunur; bu dosya git'e dahil edilmez ve GitHub Secrets'tan sunucuya ilk kurulumda ansible-playbook ile yazılır."
+    ],
+    "notes": "Deploy süreci tekrarlanabilir ve idempotent biçimde tasarlanmıştır; aynı workflow birden fazla çalıştırılsa dahi sonuç aynıdır.",
+    "prompt": "CI/CD modülünün Hetzner Debian Docker dağıtım mimarisini kapsa; GitHub Actions runner konfigürasyonu, Compose deploy sırası, Alembic otomatik migrasyon ve ortam değişkeni yönetimini teknik detaylarla ele al. çıktı: deploy workflow YAML ve sunucu hazırlık kontrol listesi."
+  },
+  "eca": {
+    "items": [
+      "Başarısız deploy otomatik rollback: docker compose up başarısız olursa veya liveness probe 30 saniye içinde 200 dönmezse rollback script tetiklenir ve önceki tag yeniden deploy edilir.",
+      "Düzenli bağımlılık güncelleme otomasyonu: Dependabot veya Renovate Bot, poetry.lock ve package.json bağımlılıklarını haftalık PR olarak açar; CI kapılarını geçen PR'lar otomatik merge adayı olur.",
+      "Geceleri (03:00) otomatik Debian güvenlik güncellemesi: unattended-upgrades ile yalnızca güvenlik paketleri güncellenir; kernel güncellemesi için yeniden başlatma Pazartesi 04:00'e planlanır.",
+      "Haftalık pipeline sağlık raporu: GitHub Actions API'sinden son 7 güne ait başarı oranı, ortalama süre ve başarısızlık nedenleri çekilerek ekip e-postasına gönderilir."
+    ],
+    "notes": "Otomatik rollback ve bağımlılık güncelleme döngüsü, üretim ortamını güvenli tutmak için insan müdahalesine gerek kalmadan çalışır.",
+    "prompt": "CI/CD modülü ECA otomasyon senaryolarını kapsa; otomatik rollback tetikleyicileri, Dependabot bağımlılık güncellemesi, Debian unattended-upgrades ve pipeline sağlık raporu otomasyonunu teknik düzeyde ele al. çıktı: otomasyon akış diyagramı ve cron/webhook tanımları."
+  },
+  "aiAgents": {
+    "items": [
+      "AI destekli PR inceleme asistanı: kod değişikliklerini analiz eden ajan, güvenlik açığı, performans regresyonu ve test eksikliği konusunda PR yorumu bırakır; birleştirme kararı geliştiriciye aittir.",
+      "Pipeline başarısızlık analiz ajanı: başarısız test loglarını okuyan ajan, hata kategorisini sınıflandırır (flaky test, gerçek hata, ortam sorunu) ve ilgili geliştiriciye Slack özeti iletir.",
+      "Bağımlılık güvenlik açığı triage ajanı: Dependabot CVE uyarılarını analiz eder, exploitability skorunu değerlendirir ve düşük riskli güncellemeleri otomatik onay listesine ekler; yüksek risk insan onayı bekler.",
+      "Deploy sonrası anomali dedektörü: deploy'dan sonraki 15 dakika boyunca hata oranı metriklerini izleyen ajan, anomali tespit ederse rollback önerisini operatör onayına sunar."
+    ],
+    "notes": "AI ajanları CI/CD kararlarında tavsiye rolündedir; merge, deploy ve rollback kararları insan onayı gerektirir.",
+    "prompt": "CI/CD modülü AI ajan entegrasyonunu kapsa; PR inceleme asistanı, başarısızlık analizi, bağımlılık triage ve deploy sonrası anomali dedektörü mimarisini ele al. güvenlik sınırı: ajanların operatör onayı olmadan otomatik uygulayabileceği ve uygulayamayacağı eylemleri listele. çıktı: ajan yetki matrisi ve entegrasyon şeması."
+  },
+  "testing": {
+    "items": [
+      "Pipeline birim testi: GitHub Actions workflow YAML sözdizimi act aracıyla yerel olarak çalıştırılır; workflow logic hatası üretim pipeline'a ulaşmadan yakalanır.",
+      "Deploy senaryosu entegrasyon testi: Hetzner staging sunucusuna tam pipeline çalıştırılır; liveness/readiness probe, rollback mekanizması ve migrasyon adımı gerçek Docker ortamında doğrulanır.",
+      "Sözleşme (contract) testi: Pact veya Schemathesis ile FastAPI OpenAPI şeması doğrulanır; schema kırıcı değişiklik deploy edilmeden önce tespit edilir ve pipeline durdurulur.",
+      "Kaos mühendisliği testi: staging ortamında container'ı manuel olarak durdurarak rollback süresinin ≤120 saniye içinde tamamlandığı doğrulanır; sonuç runbook'a kaydedilir."
+    ],
+    "notes": "Staging ortamı üretim ortamıyla birebir aynı Compose konfigürasyonunu çalıştırır; her test kategorisi farklı güven katmanını kapsar.",
+    "prompt": "CI/CD modülü test stratejisini kapsa; act tabanlı workflow testi, staging deploy entegrasyon testi, OpenAPI sözleşme testi ve rollback kaos testi senaryolarını teknik detaylarla ele al. çıktı: test planı, kabul kriterleri ve örnek test komutları."
+  },
+  "owasp": {
+    "items": [
+      "OWASP A06 (Güncelliğini Yitirmiş Bileşenler): Trivy ve pip-audit ile tüm bağımlılıklar her build'de taranır; kritik CVE bulunan image deploy engellenir, 7 gün içinde yama zorunludur.",
+      "OWASP A08 (Yazılım ve Veri Bütünlüğü Hataları): Docker image'lar Cosign ile imzalanır ve sunucuda doğrulanır; imzasız image'ın çalıştırılması policy engine tarafından reddedilir.",
+      "OWASP A07 (Kimlik Doğrulama Hataları): GitHub Actions'a erişim OIDC tabanlı geçici token kullanır; uzun ömürlü statik token kullanımı policy ihlali sayılır ve gitleaks taraması ile tespit edilir.",
+      "OWASP A05 (Güvenlik Yanlış Konfigürasyonu): Docker container'lar --read-only root filesystem ve --cap-drop ALL seçenekleriyle çalıştırılır; gereksiz Linux capability yoktur."
+    ],
+    "notes": "Tedarik zinciri ve konfigürasyon güvenliği OWASP'ın en ilgili kategorileridir; her ikisi de pipeline seviyesinde otomatik kontrol altında tutulur.",
+    "prompt": "CI/CD modülünün OWASP Top 10 uyum durumunu kapsa; A06 bağımlılık taraması, A08 image imzalama, A07 OIDC token politikası ve A05 container konfigürasyon sertleştirmesini somut teknik önlemlerle ele al. güvenlik sınırı: hangi OWASP kontrolünün başarısızlığının deploy'u bloklaması gerektiğini belirt. çıktı: OWASP uyum matrisi ve düzeltme zaman çizelgesi."
+  },
+  "integration": {
+    "items": [
+      "GitHub Webhooks → Actions entegrasyonu: push, pull_request ve release olayları workflow'u tetikler; harici CI sistemi yoktur, tüm otomasyon GitHub ekosistemi içinde kalır.",
+      "GHCR (GitHub Container Registry) entegrasyonu: build edilen image Actions içinde docker/build-push-action ile otomatik tag'lenir ve registry'e push edilir; Hetzner sunucu registry'den pull eder.",
+      "Slack entegrasyonu: deploy başarı/başarısızlık bildirimleri Actions'dan Slack Incoming Webhook ile ilgili kanala gönderilir; rollback olaylarında ayrıca @here etiketiyle kritik alert yazılır.",
+      "Gözlemlenebilirlik modülü entegrasyonu: deploy sonrası pipeline, Prometheus /metrics ve Grafana API'yi sorgulayarak deploy öncesi/sonrası temel metrik değerleri karşılaştırır; regresyon tespitinde alert üretir."
+    ],
+    "notes": "Tüm entegrasyonlar GitHub ekosistemi merkezli tasarlanmıştır; harici CI/CD aracı bağımlılığı yoktur.",
+    "prompt": "CI/CD modülü entegrasyon mimarisini kapsa; GitHub Webhooks, GHCR image yönetimi, Slack bildirim entegrasyonu ve gözlemlenebilirlik modülüyle deploy sonrası metrik karşılaştırma mekanizmasını teknik detaylarla ele al. çıktı: entegrasyon akış diyagramı ve webhook konfigürasyon şablonu."
+  },
+  "moduleUsage": {
+    "items": [
+      "Tüm platform modülleri CI/CD pipeline'ından geçerek deploy edilir; hiçbir modül doğrudan sunucuya el ile kopyalanmaz, deploy süreci tekil ve denetlenebilir bir kapıdır.",
+      "Veritabanı modülü, her deploy sırasında Alembic migrasyon adımından geçer; migrasyon başarısız olduğunda CI/CD pipeline durur ve önceki uygulama sürümü çalışmaya devam eder.",
+      "Güvenlik modülü, pipeline'a entegre Trivy ve gitleaks taramalarından yararlanır; güvenlik açığı tespiti CI/CD kapısı aracılığıyla tüm modüller için merkezi biçimde zorlanır.",
+      "Frontend (React/Vite) modülü, ayrı bir pipeline job'ında build edilir ve statik dosyalar Hetzner'deki Nginx container'ına deploy edilir; backend API pipeline'ından bağımsız olarak tetiklenebilir."
+    ],
+    "notes": "CI/CD modülü platformun tüm modülleri için tek dağıtım kanalıdır; modül başına ayrı deploy mekanizması bulunmaz.",
+    "prompt": "Platform içindeki diğer modüllerin CI/CD modülünü nasıl kullandığını kapsa; tek kapı deploy politikası, Alembic migrasyon entegrasyonu, merkezi güvenlik tarama kapısı ve frontend/backend ayrı job mimarisini somut örneklerle açıkla. çıktı: modül deploy bağımlılık matrisi ve pipeline iş akışı rehberi."
+  }
+}
