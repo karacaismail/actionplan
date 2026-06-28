@@ -13,15 +13,28 @@ const SURFACES = path.join(ROOT, "src", "data", "surface", "surface-catalog.json
 const WORKFLOWS = path.join(ROOT, "src", "data", "surface", "workflow-catalog.json");
 const RULESETS = path.join(ROOT, "src", "data", "eca", "ruleset-catalog.json");
 
-const SURFACE_TYPES = ["list", "detail", "form", "board", "dashboard", "wizard", "report", "timeline"];
+const SURFACE_TYPES = [
+  "list",
+  "detail",
+  "form",
+  "board",
+  "dashboard",
+  "wizard",
+  "report",
+  "timeline",
+];
 const LAYOUTS = ["table", "cards", "split", "grid", "stepper", "chart"];
 const MOBILE = ["stack", "scroll", "hidden"];
 
 const v = [];
 const fail = (m) => v.push(m);
 const read = (p, label) => {
-  try { return JSON.parse(fs.readFileSync(p, "utf8")); }
-  catch (e) { console.error(`[check-surface] ${label} okunamadı: ${e.message}`); process.exit(1); }
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf8"));
+  } catch (e) {
+    console.error(`[check-surface] ${label} okunamadı: ${e.message}`);
+    process.exit(1);
+  }
 };
 
 const surfaces = read(SURFACES, "surface-catalog");
@@ -40,7 +53,8 @@ for (const s of surfaces) {
   if (!s.description) fail(`surface ${tag}: description yok`);
   if (!SURFACE_TYPES.includes(s.type)) fail(`surface ${tag}: geçersiz type "${s.type}"`);
   if (!LAYOUTS.includes(s.layout)) fail(`surface ${tag}: geçersiz layout "${s.layout}"`);
-  if (s.responsive && !MOBILE.includes(s.responsive.mobile)) fail(`surface ${tag}: geçersiz responsive.mobile "${s.responsive.mobile}"`);
+  if (s.responsive && !MOBILE.includes(s.responsive.mobile))
+    fail(`surface ${tag}: geçersiz responsive.mobile "${s.responsive.mobile}"`);
   if (!s.a11y || !s.a11y.wcag) fail(`surface ${tag}: a11y.wcag yok`);
 }
 
@@ -52,22 +66,31 @@ for (const w of workflows) {
   if (w.id && wIds.has(w.id)) fail(`workflow ${tag}: tekrarlı id`);
   wIds.add(w.id);
   if (!w.name) fail(`workflow ${tag}: name yok`);
-  if (!Array.isArray(w.states) || w.states.length < 2) fail(`workflow ${tag}: en az 2 state gerekli`);
+  if (!Array.isArray(w.states) || w.states.length < 2)
+    fail(`workflow ${tag}: en az 2 state gerekli`);
   const states = new Set(w.states || []);
   if (!states.has(w.initial)) fail(`workflow ${tag}: initial "${w.initial}" states içinde değil`);
-  for (const t of w.terminalStates || []) if (!states.has(t)) fail(`workflow ${tag}: terminal "${t}" states içinde değil`);
-  if (!Array.isArray(w.transitions) || w.transitions.length < 1) fail(`workflow ${tag}: en az 1 transition gerekli`);
+  for (const t of w.terminalStates || [])
+    if (!states.has(t)) fail(`workflow ${tag}: terminal "${t}" states içinde değil`);
+  if (!Array.isArray(w.transitions) || w.transitions.length < 1)
+    fail(`workflow ${tag}: en az 1 transition gerekli`);
   for (const tr of w.transitions || []) {
-    if (!states.has(tr.from)) fail(`workflow ${tag}: transition.from "${tr.from}" states içinde değil`);
+    if (!states.has(tr.from))
+      fail(`workflow ${tag}: transition.from "${tr.from}" states içinde değil`);
     if (!states.has(tr.to)) fail(`workflow ${tag}: transition.to "${tr.to}" states içinde değil`);
     if (!tr.on) fail(`workflow ${tag}: transition.on (olay) yok (${tr.from}→${tr.to})`);
   }
-  for (const a of w.approvals || []) if (!states.has(a.state)) fail(`workflow ${tag}: approval.state "${a.state}" states içinde değil`);
+  for (const a of w.approvals || [])
+    if (!states.has(a.state))
+      fail(`workflow ${tag}: approval.state "${a.state}" states içinde değil`);
   // ÇAPRAZ-REFERANS: rulesetRefs gerçek ECA paketlerini (Küme C) işaret etmeli.
-  for (const ref of w.rulesetRefs || []) if (!rulesetIds.has(ref)) fail(`workflow ${tag}: rulesetRef "${ref}" ruleset-catalog'da yok`);
+  for (const ref of w.rulesetRefs || [])
+    if (!rulesetIds.has(ref)) fail(`workflow ${tag}: rulesetRef "${ref}" ruleset-catalog'da yok`);
 }
 
-console.log(`Surface/Workflow kataloğu — ${surfaces.length} surface, ${workflows.length} workflow (ECA paket referansı: ${rulesetIds.size} paket)`);
+console.log(
+  `Surface/Workflow kataloğu — ${surfaces.length} surface, ${workflows.length} workflow (ECA paket referansı: ${rulesetIds.size} paket)`,
+);
 if (v.length === 0) {
   console.log("\nSONUÇ: YEŞİL ✓");
   process.exit(0);

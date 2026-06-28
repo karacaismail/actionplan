@@ -9,25 +9,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const xdim = (P, what) => ({
-  featureDefs: [`${P}: ${what}`, `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`, `${P} örnek dal — granülerlikteki yerini gösterir`],
-  security: [`${P} üst ArcheType tenant izolasyonuna uyar`, `${P} girdisi sınırda doğrulanır`, `${P} hassas/paylaşım verisi yetkiyle`],
-  codeOptimization: [`${P} saf/idempotent tasarlanır`, `${P} üst seviyeyle tipli arayüz`, `${P} tekrar eden mantık paylaşılan yardımcıya`],
-  securityOptimization: [`${P} en az ayrıcalıkla çalışır`, `${P} girdi normalizasyonu ile enjeksiyon daraltılır`, `${P} değişikliği sürümlü`],
-  performance: [`${P} çıktısı önbelleklenebilir`, `${P} tembel başlatılır`, `${P} küçük serileştirilebilir çıktı`],
-  mobileApps: [`${P} UI'si varsa mobilde tek sütun`, `${P} iOS/Android içinde bağımsız çalışabilir`, `${P} dar ekranda okunur`],
-  wcag: [`${P} etkileşimi klavye erişimli ve adlandırılmış`, `${P} durumu metinle bildirilir (kontrast 7:1)`, `${P} hata mesajı ilişkilendirilmiş`],
-  deployment: [`${P} üst ArcheType ile dağıtılır`, `${P} üst yetenekle ölçeklenir`, `${P} shared hosting'de istemci-içi çalışabilir`],
-  eca: [ECA_BOUND, `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`, `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`],
+  featureDefs: [
+    `${P}: ${what}`,
+    `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`,
+    `${P} örnek dal — granülerlikteki yerini gösterir`,
+  ],
+  security: [
+    `${P} üst ArcheType tenant izolasyonuna uyar`,
+    `${P} girdisi sınırda doğrulanır`,
+    `${P} hassas/paylaşım verisi yetkiyle`,
+  ],
+  codeOptimization: [
+    `${P} saf/idempotent tasarlanır`,
+    `${P} üst seviyeyle tipli arayüz`,
+    `${P} tekrar eden mantık paylaşılan yardımcıya`,
+  ],
+  securityOptimization: [
+    `${P} en az ayrıcalıkla çalışır`,
+    `${P} girdi normalizasyonu ile enjeksiyon daraltılır`,
+    `${P} değişikliği sürümlü`,
+  ],
+  performance: [
+    `${P} çıktısı önbelleklenebilir`,
+    `${P} tembel başlatılır`,
+    `${P} küçük serileştirilebilir çıktı`,
+  ],
+  mobileApps: [
+    `${P} UI'si varsa mobilde tek sütun`,
+    `${P} iOS/Android içinde bağımsız çalışabilir`,
+    `${P} dar ekranda okunur`,
+  ],
+  wcag: [
+    `${P} etkileşimi klavye erişimli ve adlandırılmış`,
+    `${P} durumu metinle bildirilir (kontrast 7:1)`,
+    `${P} hata mesajı ilişkilendirilmiş`,
+  ],
+  deployment: [
+    `${P} üst ArcheType ile dağıtılır`,
+    `${P} üst yetenekle ölçeklenir`,
+    `${P} shared hosting'de istemci-içi çalışabilir`,
+  ],
+  eca: [
+    ECA_BOUND,
+    `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`,
+    `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`,
+  ],
   aiAgents: [AI_B1, AI_B2, `${P} tarifini AI önerebilir; üst ArcheType/app'i kendisi üretemez`],
-  testing: [`${P} için birim + üst sözleşme entegrasyon testi`, `${P} sınır/erişilebilirlik mikro-yolculuğu`, "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"],
-  owasp: [`${P}: A03 girdi sınırda doğrulanır`, `${P}: A04 en-az-ayrıcalık tasarım`, `${P}: kabul/red izlenir`],
-  integration: [`${P} üst ArcheType'a tipli arayüzle bağlanır`, `${P} sözleşmeyi tüketir`, `${P} çıktısı üst akışta kullanılır`],
+  testing: [
+    `${P} için birim + üst sözleşme entegrasyon testi`,
+    `${P} sınır/erişilebilirlik mikro-yolculuğu`,
+    "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+  ],
+  owasp: [
+    `${P}: A03 girdi sınırda doğrulanır`,
+    `${P}: A04 en-az-ayrıcalık tasarım`,
+    `${P}: kabul/red izlenir`,
+  ],
+  integration: [
+    `${P} üst ArcheType'a tipli arayüzle bağlanır`,
+    `${P} sözleşmeyi tüketir`,
+    `${P} çıktısı üst akışta kullanılır`,
+  ],
   moduleUsage: [`${P} bağımsız sunulmaz; üst ArcheType içinde kullanılır`],
 });
 
@@ -78,11 +136,7 @@ const CONTENT = {
       "Olay: içerik paylaşıldı → erişim ver + ilgilileri bildir (idempotent, zincir ≤6)",
       "Olay: içerik değişti → sürüm + arama indeksi güncelle (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI içerik özeti/öneri (RAG) üretir; yayını/erişimi insan yönetir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI içerik özeti/öneri (RAG) üretir; yayını/erişimi insan yönetir"],
     testing: [
       "Paylaşım/erişim (ReBAC) + sürümleme kullanıcı yolculuğu",
       "İçerik XSS + erişilebilirlik testi",
@@ -104,10 +158,22 @@ const CONTENT = {
     ],
   },
 
-  "app-content-collaboration-x-stone": xdim("İçerik & İşbirliği Taşı", "bir içerik yeteneğinin alt-parça tarifi (ör. sürüm farkı)"),
-  "app-content-collaboration-x-molecule": xdim("İçerik & İşbirliği Molekülü", "birkaç içerik kuralını birleştiren bileşen (ör. paylaşım izni)"),
-  "app-content-collaboration-x-element": xdim("İçerik & İşbirliği Elementi", "tek bir içerik alanı/kuralı (ör. erişim seviyesi)"),
-  "app-content-collaboration-x-atom": xdim("İçerik & İşbirliği Atomu", "bölünemez içerik ilkeli (ör. belge kimliği değer nesnesi)"),
+  "app-content-collaboration-x-stone": xdim(
+    "İçerik & İşbirliği Taşı",
+    "bir içerik yeteneğinin alt-parça tarifi (ör. sürüm farkı)",
+  ),
+  "app-content-collaboration-x-molecule": xdim(
+    "İçerik & İşbirliği Molekülü",
+    "birkaç içerik kuralını birleştiren bileşen (ör. paylaşım izni)",
+  ),
+  "app-content-collaboration-x-element": xdim(
+    "İçerik & İşbirliği Elementi",
+    "tek bir içerik alanı/kuralı (ör. erişim seviyesi)",
+  ),
+  "app-content-collaboration-x-atom": xdim(
+    "İçerik & İşbirliği Atomu",
+    "bölünemez içerik ilkeli (ör. belge kimliği değer nesnesi)",
+  ),
 
   "s-cms": {
     featureDefs: [
@@ -155,11 +221,7 @@ const CONTENT = {
       "Olay: içerik yayınlandı → kanallara dağıt + sitemap/SEO güncelle (idempotent, zincir ≤6)",
       "Olay: planlı yayın zamanı → otomatik yayınla (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI içerik taslağı/SEO/çeviri önerir; yayını editör onaylar",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI içerik taslağı/SEO/çeviri önerir; yayını editör onaylar"],
     testing: [
       "İçerik tipi/şema + yayın iş akışı testi",
       "Önizleme yetki + XSS testi",
@@ -371,11 +433,7 @@ const CONTENT = {
       "Olay: dosya paylaşıldı → erişim ver + bildir (idempotent, zincir ≤6)",
       "Olay: dış paylaşım süresi doldu → erişimi kapat (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI dosya sınıflandırma/özet önerir; paylaşım/erişimi insan yönetir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI dosya sınıflandırma/özet önerir; paylaşım/erişimi insan yönetir"],
     testing: [
       "Paylaşım/erişim (ReBAC) + senkron çakışma testi",
       "Dosya türü/anti-virüs + süreli bağlantı testi",
@@ -759,7 +817,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -778,4 +837,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-content-collaboration] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-content-collaboration] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

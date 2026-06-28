@@ -37,7 +37,9 @@ for (const n of nodes) {
   } else if (a.provenance === "human" || a.provenance === "swarm" || a.provenance === "mixed") {
     claimChecked++;
     if (a.score < CLAIM_MIN)
-      violations.push(`${n.id} (${a.provenance}): skor ${a.score} < ${CLAIM_MIN} — köken iddiası kalitesiz`);
+      violations.push(
+        `${n.id} (${a.provenance}): skor ${a.score} < ${CLAIM_MIN} — köken iddiası kalitesiz`,
+      );
   }
 }
 

@@ -21,7 +21,8 @@ const byId = new Map(nodes.map((n) => [n.id, n]));
 const childrenOf = new Map();
 for (const n of nodes) {
   if (n.parentId && !byId.has(n.parentId)) n.parentId = null;
-  if (n.parentId) (childrenOf.get(n.parentId) ?? childrenOf.set(n.parentId, []).get(n.parentId)).push(n);
+  if (n.parentId)
+    (childrenOf.get(n.parentId) ?? childrenOf.set(n.parentId, []).get(n.parentId)).push(n);
 }
 const roots = nodes.filter((n) => !n.parentId);
 const cmp = (a, b) =>
@@ -33,9 +34,9 @@ let appIdx = 0;
 function assign(node, code) {
   node.wbsCode = code;
   const kids = (childrenOf.get(node.id) || []).sort(cmp);
-  kids.forEach((k, i) => assign(k, `${code}.${i + 1}`));
+  for (const [i, k] of kids.entries()) assign(k, `${code}.${i + 1}`);
 }
-roots.sort(cmp).forEach((r) => assign(r, String(++appIdx)));
+for (const r of roots.sort(cmp)) assign(r, String(++appIdx));
 
 // node dosyalarını (wbsCode değişmiş olabilir) geri yaz
 for (const n of nodes) {
@@ -92,7 +93,12 @@ const meta = {
   schemaVersion: SCHEMA_VERSION,
   generatedAt: new Date().toISOString(),
   counts: { total: nodes.length, byLevel, byStatus, byCluster, filledExample },
-  source: prevMeta.source ?? { contentSource: 0, oldatas: 0, deduped: nodes.length, synthesizedApps: 0 },
+  source: prevMeta.source ?? {
+    contentSource: 0,
+    oldatas: 0,
+    deduped: nodes.length,
+    synthesizedApps: 0,
+  },
 };
 
 fs.writeFileSync(path.join(GEN, "navigation.json"), `${JSON.stringify(navigation, null, 2)}\n`);

@@ -13,7 +13,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 const CATALOG = path.join(ROOT, "src", "data", "eca", "ruleset-catalog.json");
 
 const LAYERS = ["system", "platform", "tenant"];
-const CATEGORIES = ["notification", "escalation", "approval", "audit", "lifecycle", "security-gate", "integration", "migration", "ai-boundary"];
+const CATEGORIES = [
+  "notification",
+  "escalation",
+  "approval",
+  "audit",
+  "lifecycle",
+  "security-gate",
+  "integration",
+  "migration",
+  "ai-boundary",
+];
 const PARAM_TYPES = ["number", "string", "boolean", "duration"];
 const OPS = ["eq", "neq", "gt", "lt", "gte", "lte", "in", "contains"];
 
@@ -50,17 +60,21 @@ for (const p of catalog) {
     if (!pr.key) fail(`${tag}: param key yok`);
     if (!PARAM_TYPES.includes(pr.type)) fail(`${tag}.${pr.key}: geçersiz param type "${pr.type}"`);
     // GÜVENLİK: system katmanı kilitli → tenant-düzenlenebilir param olamaz.
-    if (p.layer === "system" && pr.tenantEditable === true) fail(`${tag}.${pr.key}: system paket tenant-editable param taşıyamaz`);
+    if (p.layer === "system" && pr.tenantEditable === true)
+      fail(`${tag}.${pr.key}: system paket tenant-editable param taşıyamaz`);
   }
 
   // safety
   const s = p.safety || {};
   if (typeof s.mutates !== "boolean") fail(`${tag}: safety.mutates boolean olmalı`);
-  if (typeof s.requiresApproval !== "boolean") fail(`${tag}: safety.requiresApproval boolean olmalı`);
+  if (typeof s.requiresApproval !== "boolean")
+    fail(`${tag}: safety.requiresApproval boolean olmalı`);
   if (typeof s.aiCanModify !== "boolean") fail(`${tag}: safety.aiCanModify boolean olmalı`);
-  if (!Number.isInteger(s.maxChainDepth) || s.maxChainDepth < 1 || s.maxChainDepth > 6) fail(`${tag}: safety.maxChainDepth 1-6 olmalı`);
+  if (!Number.isInteger(s.maxChainDepth) || s.maxChainDepth < 1 || s.maxChainDepth > 6)
+    fail(`${tag}: safety.maxChainDepth 1-6 olmalı`);
   // ENTERPRISE KURALI: system-katman paketleri AI tarafından DEĞİŞTİRİLEMEZ olmalı.
-  if (p.layer === "system" && s.aiCanModify !== false) fail(`${tag}: system paket aiCanModify=false olmalı (AI kilitli katmanı değiştiremez)`);
+  if (p.layer === "system" && s.aiCanModify !== false)
+    fail(`${tag}: system paket aiCanModify=false olmalı (AI kilitli katmanı değiştiremez)`);
 
   // rules
   for (const r of p.rules || []) {
@@ -75,13 +89,19 @@ for (const p of catalog) {
       if (!OPS.includes(c.op)) fail(`${rt}: geçersiz koşul op "${c.op}"`);
     }
     if (!r.then || !r.then.type) fail(`${rt}: then.type yok`);
-    if (!Number.isInteger(r.maxChainDepth) || r.maxChainDepth < 1 || r.maxChainDepth > 6) fail(`${rt}: maxChainDepth 1-6 olmalı (kullanıcı kuralı: maks 6)`);
+    if (!Number.isInteger(r.maxChainDepth) || r.maxChainDepth < 1 || r.maxChainDepth > 6)
+      fail(`${rt}: maxChainDepth 1-6 olmalı (kullanıcı kuralı: maks 6)`);
     if (typeof r.requiresApproval !== "boolean") fail(`${rt}: requiresApproval boolean olmalı`);
   }
 }
 
-const byLayer = catalog.reduce((a, p) => ((a[p.layer] = (a[p.layer] || 0) + 1), a), {});
-console.log(`ECA ruleset kataloğu — ${catalog.length} paket (system:${byLayer.system || 0} platform:${byLayer.platform || 0} tenant:${byLayer.tenant || 0})`);
+const byLayer = catalog.reduce((a, p) => {
+  a[p.layer] = (a[p.layer] || 0) + 1;
+  return a;
+}, {});
+console.log(
+  `ECA ruleset kataloğu — ${catalog.length} paket (system:${byLayer.system || 0} platform:${byLayer.platform || 0} tenant:${byLayer.tenant || 0})`,
+);
 const ruleCount = catalog.reduce((a, p) => a + (p.rules?.length || 0), 0);
 console.log(`  ${ruleCount} kural şablonu`);
 if (v.length === 0) {

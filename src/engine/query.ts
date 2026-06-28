@@ -180,13 +180,19 @@ export function parseQuery(input: string): QueryAst | QueryError {
     const f = eat();
     if (!f || f.t !== "word") return fail("Alan adı bekleniyor");
     const field = f.v.toLowerCase();
-    if (!(QUERY_FIELDS as readonly string[]).includes(field)) return fail(`Bilinmeyen alan: ${f.v}`);
+    if (!(QUERY_FIELDS as readonly string[]).includes(field))
+      return fail(`Bilinmeyen alan: ${f.v}`);
     const opt = eat();
     let op: QueryOp;
     if (opt && opt.t === "op") {
-      if (!(QUERY_OPS as readonly string[]).includes(opt.v)) return fail(`Bilinmeyen operatör: ${opt.v}`);
+      if (!(QUERY_OPS as readonly string[]).includes(opt.v))
+        return fail(`Bilinmeyen operatör: ${opt.v}`);
       op = opt.v as QueryOp;
-    } else if (opt && opt.t === "word" && ["in", "contains", "exists"].includes(opt.v.toLowerCase())) {
+    } else if (
+      opt &&
+      opt.t === "word" &&
+      ["in", "contains", "exists"].includes(opt.v.toLowerCase())
+    ) {
       op = opt.v.toLowerCase() as QueryOp;
     } else {
       return fail("Operatör bekleniyor");

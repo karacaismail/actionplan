@@ -11,13 +11,29 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
 
 const CLUSTER_TR = {
-  kernel: "Kernel", scale: "Scale", layer1: "Layer 1", "core-operations": "Çekirdek Operasyon",
-  finance: "Finans", "supply-chain": "Tedarik Zinciri", hr: "İK", "customer-revenue": "Müşteri & Gelir",
-  "content-collaboration": "İçerik & İşbirliği", "data-intelligence": "Veri & Zekâ", vertical: "Dikey",
-  "platform-horizontal": "Platform & Yatay", sus: "Platform Yetenekleri",
+  kernel: "Kernel",
+  scale: "Scale",
+  layer1: "Layer 1",
+  "core-operations": "Çekirdek Operasyon",
+  finance: "Finans",
+  "supply-chain": "Tedarik Zinciri",
+  hr: "İK",
+  "customer-revenue": "Müşteri & Gelir",
+  "content-collaboration": "İçerik & İşbirliği",
+  "data-intelligence": "Veri & Zekâ",
+  vertical: "Dikey",
+  "platform-horizontal": "Platform & Yatay",
+  sus: "Platform Yetenekleri",
 };
 
 const GOLDEN_SCHEDULE = {
@@ -72,4 +88,6 @@ for (const [f, n] of objs) {
     count++;
   }
 }
-console.log(`[gen-schedule] ${count} düğüme milestone/schedule yazıldı (golden örnek takvim tohumlandı).`);
+console.log(
+  `[gen-schedule] ${count} düğüme milestone/schedule yazıldı (golden örnek takvim tohumlandı).`,
+);

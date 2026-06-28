@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
 import { DIMENSION_KEYS, type TaskNode } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * contentQuality kapısı (Faz A2) — İçerik kalite sözleşmesinin (docs/icerik-kalite-sozlesmesi.md)
@@ -74,7 +74,9 @@ describe("contentQuality kapısı (A2) — başlangıçta KIRMIZI beklenir", () 
     }
     // Kırmızıyken okunur kalsın: ilk 30 ihlal + toplam sayı.
     if (violations.length) {
-      console.error(`Şablon ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`);
+      console.error(
+        `Şablon ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`,
+      );
     }
     expect(violations).toEqual([]);
   });
@@ -91,7 +93,9 @@ describe("contentQuality kapısı (A2) — başlangıçta KIRMIZI beklenir", () 
       }
     }
     if (violations.length) {
-      console.error(`Sınır-dışı içerik ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`);
+      console.error(
+        `Sınır-dışı içerik ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`,
+      );
     }
     expect(violations).toEqual([]);
   });
@@ -107,7 +111,9 @@ describe("contentQuality kapısı (A2) — başlangıçta KIRMIZI beklenir", () 
       }
     }
     if (violations.length) {
-      console.error(`Biçim ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`);
+      console.error(
+        `Biçim ihlali (toplam ${violations.length}):\n${violations.slice(0, 30).join("\n")}`,
+      );
     }
     expect(violations).toEqual([]);
   });
@@ -127,7 +133,9 @@ describe("contentQuality kapısı (A2) — başlangıçta KIRMIZI beklenir", () 
       .filter(([, c]) => c >= THRESHOLD)
       .map(([item, c]) => `${c}× "${item.slice(0, 60)}"`);
     if (repeated.length) {
-      console.error(`Tekrar eden madde (toplam ${repeated.length}):\n${repeated.slice(0, 30).join("\n")}`);
+      console.error(
+        `Tekrar eden madde (toplam ${repeated.length}):\n${repeated.slice(0, 30).join("\n")}`,
+      );
     }
     expect(repeated).toEqual([]);
   });

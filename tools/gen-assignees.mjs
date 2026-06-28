@@ -9,7 +9,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
 const GOLDEN = new Set(["product", "customer", "s-crm"]);
 
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));

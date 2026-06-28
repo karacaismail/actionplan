@@ -1,8 +1,8 @@
 import { Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
-import { t } from "@/lib/strings";
-import { cn } from "@/lib/cn";
-import { levelLabel, levelVar, hslVar } from "@/lib/format";
 import type { TreeNode } from "@/engine";
+import { cn } from "@/lib/cn";
+import { hslVar, levelLabel, levelVar } from "@/lib/format";
+import { t } from "@/lib/strings";
 import { Link } from "@tanstack/react-router";
 
 interface Props {

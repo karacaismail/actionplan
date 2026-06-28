@@ -52,7 +52,11 @@ export function ruleEvents(rules: EffectiveRule[]): string[] {
 }
 
 /** Bir olayı SALT-OKUNUR değerlendirir; her kural için sonucu döndürür (mutasyon YOK). */
-export function simulate(rules: EffectiveRule[], event: string, ctx: Record<string, unknown>): SimOutcome[] {
+export function simulate(
+  rules: EffectiveRule[],
+  event: string,
+  ctx: Record<string, unknown>,
+): SimOutcome[] {
   return rules.map((rule) => ({ rule, result: evaluateEca(rule, event, ctx) }));
 }
 
@@ -71,7 +75,8 @@ export function firedOutcomes(outcomes: SimOutcome[]): SimOutcome[] {
 /** Bir eylemin tetiklediği takip olayı (yoksa terminal eylem). */
 export function actionEmits(action: EcaAction): string | undefined {
   if (action.type === "create-task") return "task.created";
-  if (action.type === "set-field") return action.params?.field === "status" ? "task.status.changed" : "task.field.changed";
+  if (action.type === "set-field")
+    return action.params?.field === "status" ? "task.status.changed" : "task.field.changed";
   return undefined; // notify, audit-log, deny, retry, require-approval → terminal
 }
 
@@ -112,7 +117,14 @@ export function simulateChain(
       const res = evaluateEca(r, event, ctx, depth);
       if (!res.fired) continue;
       const emits = actionEmits(r.then);
-      steps.push({ depth, event, rule: r, action: r.then, emits, requiresApproval: r.requiresApproval });
+      steps.push({
+        depth,
+        event,
+        rule: r,
+        action: r.then,
+        emits,
+        requiresApproval: r.requiresApproval,
+      });
       if (emits) queue.push({ event: emits, depth: depth + 1 });
     }
   }

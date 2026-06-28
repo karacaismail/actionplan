@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   DIMENSION_KEYS,
   TaskNodeSchema,
@@ -8,6 +7,7 @@ import {
   makeSkeletonDimensions,
   makeSkeletonPhases,
 } from "@/schemas";
+import { describe, expect, it } from "vitest";
 
 /**
  * Test-önce: şema sözleşmesi gövdeden önce kilitlenir.
@@ -88,9 +88,37 @@ describe("iskelet üreticiler", () => {
   });
 
   it("filledDimensionCount iskelet düğümde 0 döner", () => {
-    const node = TaskNodeSchema.parse(
-      minimalNode({ dimensions: makeSkeletonDimensions() }),
-    );
+    const node = TaskNodeSchema.parse(minimalNode({ dimensions: makeSkeletonDimensions() }));
     expect(filledDimensionCount(node)).toBe(0);
+  });
+});
+
+describe("TaskNode izlenebilirlik (Faz P5)", () => {
+  it("traceability'siz düğüm geriye uyumlu parse olur (alan opsiyonel)", () => {
+    const parsed = TaskNodeSchema.parse(minimalNode());
+    expect(parsed.traceability).toBeUndefined();
+  });
+
+  it("traceability verilince eksik alanları varsayılanla doldurur", () => {
+    const parsed = TaskNodeSchema.parse(
+      minimalNode({ traceability: { repoPath: ["github.com/karacaismail/actionplan"] } }),
+    );
+    expect(parsed.traceability?.implementationStatus).toBe("not-started");
+    expect(parsed.traceability?.repoPath).toEqual(["github.com/karacaismail/actionplan"]);
+    expect(parsed.traceability?.testCommand).toEqual([]);
+    expect(parsed.traceability?.deployTarget).toBeNull();
+  });
+
+  it("geçersiz implementationStatus reddedilir", () => {
+    expect(() =>
+      TaskNodeSchema.parse(minimalNode({ traceability: { implementationStatus: "done" } })),
+    ).toThrow();
+  });
+
+  it("implementationStatus 'verified' kabul edilir", () => {
+    const parsed = TaskNodeSchema.parse(
+      minimalNode({ traceability: { implementationStatus: "verified" } }),
+    );
+    expect(parsed.traceability?.implementationStatus).toBe("verified");
   });
 });

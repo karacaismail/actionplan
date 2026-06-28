@@ -9,25 +9,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const xdim = (P, what) => ({
-  featureDefs: [`${P}: ${what}`, `${P} üst FE kararının alt-detayı; tek sorumluluk`, `${P} örnek dal — granülerlikteki yerini gösterir`],
-  security: [`${P} istemci durumu güvenli; sır istemcide tutulmaz`, `${P} girdi/çıktı XSS-güvenli render`, `${P} hassas veri sunucuda kalır`],
-  codeOptimization: [`${P} saf bileşen/fonksiyon; tipli (TS)`, `${P} tembel yüklenir; bundle etkisi izlenir`, `${P} tekrar eden mantık paylaşılan hook/yardımcıya`],
-  securityOptimization: [`${P} CSP/XSS sertleştirme`, `${P} bağımlılık minimal ve denetli`, `${P} değişikliği sürümlü`],
-  performance: [`${P} ilk-yük bütçesine dahil; kod bölme`, `${P} gereksiz render önlenir (memo)`, `${P} ölçüm (Web Vitals) izlenir`],
-  mobileApps: [`${P} mobil-öncelikli ve duyarlı`, `${P} dokunma hedefleri uygun`, `${P} Capacitor köprüsünde çalışır`],
-  wcag: [`${P} klavye erişimli ve adlandırılmış`, `${P} durumu metinle (kontrast 7:1)`, `${P} hata mesajı ilişkilendirilmiş`],
-  deployment: [`${P} Vite üretim derlemesine girer`, `${P} statik asset CDN'den`, `${P} shared hosting'de SPA olarak çalışır`],
-  eca: [ECA_BOUND, `${P} build/CI olayında doğrulanır (idempotent, zincir ≤6)`, `${P} bağımsız backend otomasyonu tutmaz`],
+  featureDefs: [
+    `${P}: ${what}`,
+    `${P} üst FE kararının alt-detayı; tek sorumluluk`,
+    `${P} örnek dal — granülerlikteki yerini gösterir`,
+  ],
+  security: [
+    `${P} istemci durumu güvenli; sır istemcide tutulmaz`,
+    `${P} girdi/çıktı XSS-güvenli render`,
+    `${P} hassas veri sunucuda kalır`,
+  ],
+  codeOptimization: [
+    `${P} saf bileşen/fonksiyon; tipli (TS)`,
+    `${P} tembel yüklenir; bundle etkisi izlenir`,
+    `${P} tekrar eden mantık paylaşılan hook/yardımcıya`,
+  ],
+  securityOptimization: [
+    `${P} CSP/XSS sertleştirme`,
+    `${P} bağımlılık minimal ve denetli`,
+    `${P} değişikliği sürümlü`,
+  ],
+  performance: [
+    `${P} ilk-yük bütçesine dahil; kod bölme`,
+    `${P} gereksiz render önlenir (memo)`,
+    `${P} ölçüm (Web Vitals) izlenir`,
+  ],
+  mobileApps: [
+    `${P} mobil-öncelikli ve duyarlı`,
+    `${P} dokunma hedefleri uygun`,
+    `${P} Capacitor köprüsünde çalışır`,
+  ],
+  wcag: [
+    `${P} klavye erişimli ve adlandırılmış`,
+    `${P} durumu metinle (kontrast 7:1)`,
+    `${P} hata mesajı ilişkilendirilmiş`,
+  ],
+  deployment: [
+    `${P} Vite üretim derlemesine girer`,
+    `${P} statik asset CDN'den`,
+    `${P} shared hosting'de SPA olarak çalışır`,
+  ],
+  eca: [
+    ECA_BOUND,
+    `${P} build/CI olayında doğrulanır (idempotent, zincir ≤6)`,
+    `${P} bağımsız backend otomasyonu tutmaz`,
+  ],
   aiAgents: [AI_B1, AI_B2, `${P} bileşen/desen önerisini AI verebilir; FE kararını insan onaylar`],
-  testing: [`${P} için bileşen testi + e2e (Playwright)`, `${P} erişilebilirlik (axe) mikro-yolculuğu`, "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"],
-  owasp: [`${P}: A03 XSS/injection render-güvenli`, `${P}: A05 güvenli FE yapılandırma`, `${P}: istemci hataları izlenir`],
-  integration: [`${P} engine/veri katmanıyla tipli arayüz`, `${P} üst FE kararının parçası`, `${P} API sözleşmesini tüketir`],
+  testing: [
+    `${P} için bileşen testi + e2e (Playwright)`,
+    `${P} erişilebilirlik (axe) mikro-yolculuğu`,
+    "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+  ],
+  owasp: [
+    `${P}: A03 XSS/injection render-güvenli`,
+    `${P}: A05 güvenli FE yapılandırma`,
+    `${P}: istemci hataları izlenir`,
+  ],
+  integration: [
+    `${P} engine/veri katmanıyla tipli arayüz`,
+    `${P} üst FE kararının parçası`,
+    `${P} API sözleşmesini tüketir`,
+  ],
   moduleUsage: [`${P} bağımsız sunulmaz; üst FE kararının içinde kullanılır`],
 });
 
@@ -104,9 +162,15 @@ const CONTENT = {
     ],
   },
 
-  "app-frontend-x-molecule": xdim("Frontend Molekülü", "birkaç UI kuralını birleştiren bileşen (ör. form alanı + doğrulama)"),
+  "app-frontend-x-molecule": xdim(
+    "Frontend Molekülü",
+    "birkaç UI kuralını birleştiren bileşen (ör. form alanı + doğrulama)",
+  ),
   "app-frontend-x-element": xdim("Frontend Elementi", "tek bir UI alanı/kuralı (ör. tema token'ı)"),
-  "app-frontend-x-atom": xdim("Frontend Atomu", "bölünemez UI ilkeli (ör. renk token değer nesnesi)"),
+  "app-frontend-x-atom": xdim(
+    "Frontend Atomu",
+    "bölünemez UI ilkeli (ör. renk token değer nesnesi)",
+  ),
 
   "fe-core-ui": {
     featureDefs: [
@@ -154,11 +218,7 @@ const CONTENT = {
       "Olay: API hatası → tipli hata + yeniden-deneme (idempotent UI, zincir ≤6)",
       "Olay: yetkisiz yanıt → oturum yenile/çıkış (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI bileşen/hook önerir; çekirdek mimari kararını insan onaylar",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI bileşen/hook önerir; çekirdek mimari kararını insan onaylar"],
     testing: [
       "Bileşen + hook birim testi; API istemcisi sözleşme testi",
       "Loading/hata/boş-durum e2e + axe",
@@ -370,11 +430,7 @@ const CONTENT = {
       "Olay: tema güncellendi → token'ları yeniden derle + dağıt (idempotent, zincir ≤6)",
       "Olay: kontrast ihlali (yeni token) → CI reddet (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI tema/token önerir; markayı/temayı insan onaylar",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI tema/token önerir; markayı/temayı insan onaylar"],
     testing: [
       "Token kontrast (AAA) otomatik testi",
       "Açık/koyu/yüksek-kontrast görsel + axe testi",
@@ -830,7 +886,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -849,4 +906,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-frontend] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-frontend] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

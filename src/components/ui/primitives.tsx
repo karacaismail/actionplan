@@ -1,7 +1,7 @@
+import { cn } from "@/lib/cn";
 import { STATUS_LABEL, STATUS_VAR, hslVar } from "@/lib/format";
 import { t } from "@/lib/strings";
 import type { TaskStatus } from "@/schemas";
-import { cn } from "@/lib/cn";
 import type { CSSProperties } from "react";
 
 // Bağımsız shadcn/ui bileşenleri (button/badge/card/dialog/tabs) ayrı dosyalarda;
@@ -35,7 +35,7 @@ export function Icon({
   style?: CSSProperties;
   title?: string;
 }) {
-  return <i className={cn("ph", name, className)} style={style} title={title} aria-hidden="true" />;
+  return <i className={cn("ph", name, className)} style={style} title={title} />;
 }
 
 export function StatusBadge({ status }: { status: TaskStatus }) {
@@ -50,6 +50,7 @@ export function StatusBadge({ status }: { status: TaskStatus }) {
 
 export function ProgressBar({ value, color }: { value: number; color?: string }) {
   return (
+    // biome-ignore lint/a11y/useFocusableInteractive: progressbar salt durum göstergesidir, klavyeyle işletilmez; ARIA value alanları (valuenow/min/max) zaten mevcut
     <div
       className="h-2 w-full overflow-hidden rounded-full bg-secondary"
       role="progressbar"

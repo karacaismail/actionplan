@@ -11,9 +11,7 @@ test.describe("Duman testleri", () => {
     await expect(page.getByText("Eylem Planı", { exact: false }).first()).toBeVisible();
 
     // Gösterge Paneli başlığı (h1) görünür olmalı.
-    await expect(
-      page.getByRole("heading", { name: "Gösterge Paneli", level: 1 }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gösterge Paneli", level: 1 })).toBeVisible();
   });
 
   test("WBS ağacı: görev linkine tıklayınca detay sayfası açılır", async ({ page }) => {

@@ -9,9 +9,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const CONTENT = {
@@ -468,21 +478,13 @@ const CONTENT = {
       "Girdi normalizasyonu",
       "Politika sürümlü",
     ],
-    performance: [
-      "Önbelleklenebilir saf molekül",
-      "Tembel başlatma",
-      "Küçük çıktı",
-    ],
+    performance: ["Önbelleklenebilir saf molekül", "Tembel başlatma", "Küçük çıktı"],
     mobileApps: [
       "Molekül mobilde de uygulanır",
       "Yerel bağlam (dil/izin) farkında",
       "Dar ekranda özetli",
     ],
-    wcag: [
-      "Etkileşim klavye erişimli; kontrast 7:1",
-      "Durum metinle",
-      "Hata ilişkilendirilmiş",
-    ],
+    wcag: ["Etkileşim klavye erişimli; kontrast 7:1", "Durum metinle", "Hata ilişkilendirilmiş"],
     deployment: [
       "Üst kaygı ara-katmanıyla dağıtılır",
       "Her serviste uygulanır",
@@ -493,11 +495,7 @@ const CONTENT = {
       "Olay: molekül girdisi politikayı ihlal etti → sınırda reddet + üst kaygıya sinyal (idempotent, zincir ≤6)",
       "Molekül üst kaygı kuralına bağlanır",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI molekül politikası önerir; kesişen kuralı kendisi gevşetemez",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI molekül politikası önerir; kesişen kuralı kendisi gevşetemez"],
     testing: [
       "Politika molekülü birim testi",
       "Üst kaygı entegrasyon testi",
@@ -513,9 +511,7 @@ const CONTENT = {
       "Jurisdiction/politika sözleşmesini tüketir",
       "Çıktısı app'lere uygulanır",
     ],
-    moduleUsage: [
-      "Kesişen molekül bir bileşendir; bağımsız sunulmaz, üst kaygı içinde kullanılır",
-    ],
+    moduleUsage: ["Kesişen molekül bir bileşendir; bağımsız sunulmaz, üst kaygı içinde kullanılır"],
   },
 
   "app-crosscut-x-element": {
@@ -529,31 +525,15 @@ const CONTENT = {
       "Hassas alan maskeli",
       "Yazım yetki+jurisdiction'a bağlı",
     ],
-    codeOptimization: [
-      "Kesişen kural saf doğrulayıcı",
-      "Tip Zod ile",
-      "Tek kaynaktan",
-    ],
+    codeOptimization: ["Kesişen kural saf doğrulayıcı", "Tip Zod ile", "Tek kaynaktan"],
     securityOptimization: [
       "Allowlist temelli; güvensiz değer reddi",
       "Field-level yetki",
       "Güvenli varsayılan",
     ],
-    performance: [
-      "O(1) doğrulama",
-      "Önbelleklenebilir",
-      "Toplu doğrulama",
-    ],
-    mobileApps: [
-      "Alan mobilde yerel biçimle",
-      "Offline doğrulanabilir",
-      "Hata okunur",
-    ],
-    wcag: [
-      "Alan etiketli; hata sesli; kontrast 7:1",
-      "Zorunluluk metinle",
-      "Okuyucuya anlamlı",
-    ],
+    performance: ["O(1) doğrulama", "Önbelleklenebilir", "Toplu doğrulama"],
+    mobileApps: ["Alan mobilde yerel biçimle", "Offline doğrulanabilir", "Hata okunur"],
+    wcag: ["Alan etiketli; hata sesli; kontrast 7:1", "Zorunluluk metinle", "Okuyucuya anlamlı"],
     deployment: [
       "Kural kesişen şema parçası",
       "Her profilde doğrulanır",
@@ -569,11 +549,7 @@ const CONTENT = {
       AI_B2,
       "AI alan/kural önerebilir; politika/maskeleme kuralını kendisi gevşetemez",
     ],
-    testing: [
-      "Sınır-değer doğrulama testi",
-      "Maskeleme testi",
-      "Erişilebilirlik mikro-testi",
-    ],
+    testing: ["Sınır-değer doğrulama testi", "Maskeleme testi", "Erişilebilirlik mikro-testi"],
     owasp: [
       "A03 Injection: allowlist doğrulama",
       "A02 Cryptographic Failures: hassas alan korumalı",
@@ -605,26 +581,10 @@ const CONTENT = {
       "Sabit tip; geçersiz değer reddi (BCP 47 vb.)",
       "Paylaşılır",
     ],
-    securityOptimization: [
-      "En dar biçim doğrulaması",
-      "Güvenli serileştirme",
-      "Bağımlılıksız",
-    ],
-    performance: [
-      "Sabit zaman doğrulama",
-      "İnternalize değer",
-      "Ucuz karşılaştırma",
-    ],
-    mobileApps: [
-      "Atom değeri mobilde özetli",
-      "Offline doğrulanabilir",
-      "Taşmaz",
-    ],
-    wcag: [
-      "Atom etiketli; hata metinle; kontrast 7:1",
-      "Biçim ipuçlu",
-      "Okuyucuya anlamlı",
-    ],
+    securityOptimization: ["En dar biçim doğrulaması", "Güvenli serileştirme", "Bağımlılıksız"],
+    performance: ["Sabit zaman doğrulama", "İnternalize değer", "Ucuz karşılaştırma"],
+    mobileApps: ["Atom değeri mobilde özetli", "Offline doğrulanabilir", "Taşmaz"],
+    wcag: ["Atom etiketli; hata metinle; kontrast 7:1", "Biçim ipuçlu", "Okuyucuya anlamlı"],
     deployment: [
       "Atom tipi kesişen şema çekirdeğinde",
       "Her profilde aynı doğrulama",
@@ -640,16 +600,8 @@ const CONTENT = {
       AI_B2,
       "AI kesişen atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz",
     ],
-    testing: [
-      "Atom biçim/sınır testi (ör. BCP 47)",
-      "Değişmezlik testi",
-      "Serileştirme testi",
-    ],
-    owasp: [
-      "A03 Injection: değer biçim-doğrulanır",
-      "A08 Integrity: atom değişmez",
-      "İzlenebilir",
-    ],
+    testing: ["Atom biçim/sınır testi (ör. BCP 47)", "Değişmezlik testi", "Serileştirme testi"],
+    owasp: ["A03 Injection: değer biçim-doğrulanır", "A08 Integrity: atom değişmez", "İzlenebilir"],
     integration: [
       "Kesişen atom element ve field tanımlarının yapı taşı",
       "Tip sistemine dahil",
@@ -1598,7 +1550,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -1617,4 +1570,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-crosscut] ${applied} kesişen-kaygı düğümü derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-crosscut] ${applied} kesişen-kaygı düğümü derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

@@ -8,33 +8,132 @@
     "family": "archetype-contract"
   },
   "fields": [
-    { "name": "name", "label": "Ad/Unvan", "type": "string", "required": true, "unique": false, "pii": true, "alias": [], "deprecated": false, "protected": false, "enumValues": [] },
-    { "name": "email", "label": "E-posta", "type": "email", "required": true, "unique": true, "pii": true, "alias": [], "deprecated": false, "protected": true, "enumValues": [] },
-    { "name": "phone", "label": "Telefon", "type": "phone", "required": false, "unique": false, "pii": true, "alias": [], "deprecated": false, "protected": false, "enumValues": [] },
-    { "name": "segment", "label": "Segment", "type": "enum", "required": false, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": ["lead", "smb", "enterprise"] },
-    { "name": "status", "label": "Durum", "type": "enum", "required": true, "unique": false, "pii": false, "alias": [], "deprecated": false, "protected": false, "enumValues": ["lead", "active", "churned"] },
-    { "name": "taxId", "label": "Vergi No", "type": "string", "required": false, "unique": false, "pii": true, "alias": [], "deprecated": false, "protected": false, "enumValues": [] }
+    {
+      "name": "name",
+      "label": "Ad/Unvan",
+      "type": "string",
+      "required": true,
+      "unique": false,
+      "pii": true,
+      "alias": [],
+      "deprecated": false,
+      "protected": false,
+      "enumValues": []
+    },
+    {
+      "name": "email",
+      "label": "E-posta",
+      "type": "email",
+      "required": true,
+      "unique": true,
+      "pii": true,
+      "alias": [],
+      "deprecated": false,
+      "protected": true,
+      "enumValues": []
+    },
+    {
+      "name": "phone",
+      "label": "Telefon",
+      "type": "phone",
+      "required": false,
+      "unique": false,
+      "pii": true,
+      "alias": [],
+      "deprecated": false,
+      "protected": false,
+      "enumValues": []
+    },
+    {
+      "name": "segment",
+      "label": "Segment",
+      "type": "enum",
+      "required": false,
+      "unique": false,
+      "pii": false,
+      "alias": [],
+      "deprecated": false,
+      "protected": false,
+      "enumValues": ["lead", "smb", "enterprise"]
+    },
+    {
+      "name": "status",
+      "label": "Durum",
+      "type": "enum",
+      "required": true,
+      "unique": false,
+      "pii": false,
+      "alias": [],
+      "deprecated": false,
+      "protected": false,
+      "enumValues": ["lead", "active", "churned"]
+    },
+    {
+      "name": "taxId",
+      "label": "Vergi No",
+      "type": "string",
+      "required": false,
+      "unique": false,
+      "pii": true,
+      "alias": [],
+      "deprecated": false,
+      "protected": false,
+      "enumValues": []
+    }
   ],
   "fragments": [
-    { "id": "contact", "label": "İletişim", "fields": [
-      { "name": "address", "label": "Adres", "type": "text", "required": false, "unique": false, "pii": true, "alias": [], "deprecated": false, "protected": false, "enumValues": [] }
-    ] }
+    {
+      "id": "contact",
+      "label": "İletişim",
+      "fields": [
+        {
+          "name": "address",
+          "label": "Adres",
+          "type": "text",
+          "required": false,
+          "unique": false,
+          "pii": true,
+          "alias": [],
+          "deprecated": false,
+          "protected": false,
+          "enumValues": []
+        }
+      ]
+    }
   ],
   "relations": [
     { "name": "orders", "kind": "one-to-many", "target": "order", "onDelete": "restrict" },
     { "name": "accountManager", "kind": "many-to-one", "target": "user", "onDelete": "set-null" }
   ],
   "validationRules": [
-    { "id": "v-email-format", "field": "email", "expr": "matches(email, '^[^@]+@[^@]+\\.[^@]+$')", "message": "E-posta biçimi geçersiz" }
+    {
+      "id": "v-email-format",
+      "field": "email",
+      "expr": "matches(email, '^[^@]+@[^@]+\\.[^@]+$')",
+      "message": "E-posta biçimi geçersiz"
+    }
   ],
   "semanticRules": [
-    { "id": "sem-churned-no-active-orders", "description": "Churned müşterinin açık siparişi olmamalı", "invariant": "status != 'churned' || openOrders == 0" }
+    {
+      "id": "sem-churned-no-active-orders",
+      "description": "Churned müşterinin açık siparişi olmamalı",
+      "invariant": "status != 'churned' || openOrders == 0"
+    }
   ],
   "permissions": [
-    { "role": "account-manager", "actions": ["read", "create", "update"], "fieldLevel": { "taxId": "read" } },
+    {
+      "role": "account-manager",
+      "actions": ["read", "create", "update"],
+      "fieldLevel": { "taxId": "read" }
+    },
     { "role": "support", "actions": ["read"], "fieldLevel": { "phone": "read", "taxId": "hidden" } }
   ],
-  "accessPolicy": { "model": "ReBAC", "relations": ["owner", "account-manager"], "attributes": [ { "attr": "region", "op": "eq", "value": "assigned" } ], "tenantScoped": true },
+  "accessPolicy": {
+    "model": "ReBAC",
+    "relations": ["owner", "account-manager"],
+    "attributes": [{ "attr": "region", "op": "eq", "value": "assigned" }],
+    "tenantScoped": true
+  },
   "lifecycle": {
     "states": ["lead", "active", "churned"],
     "initial": "lead",
@@ -43,47 +142,156 @@
       { "from": "active", "to": "churned", "guard": "" }
     ]
   },
-  "linkedSurfaces": [ { "ref": "customer-form", "version": "1.0.0" }, { "ref": "customer-360", "version": "1.0.0" } ],
-  "linkedWorkflows": [ { "ref": "customer-onboarding", "version": "1.0.0" } ],
-  "typedActions": [
-    { "id": "anonymize-pii", "label": "PII Anonimleştir (KVKK)", "riskLevel": "critical", "requiresApproval": true, "rollback": false },
-    { "id": "merge", "label": "Kayıt Birleştir", "riskLevel": "high", "requiresApproval": true, "rollback": true }
+  "linkedSurfaces": [
+    { "ref": "customer-form", "version": "1.0.0" },
+    { "ref": "customer-360", "version": "1.0.0" }
   ],
-  "searchIndex": { "indexedFields": ["email", "status", "segment"], "fullText": ["name"], "vector": true },
-  "auditPolicy": { "enabled": true, "immutable": true, "forensicFields": ["actor", "agent", "model", "promptVersion", "beforeHash", "afterHash"] },
+  "linkedWorkflows": [{ "ref": "customer-onboarding", "version": "1.0.0" }],
+  "typedActions": [
+    {
+      "id": "anonymize-pii",
+      "label": "PII Anonimleştir (KVKK)",
+      "riskLevel": "critical",
+      "requiresApproval": true,
+      "rollback": false
+    },
+    {
+      "id": "merge",
+      "label": "Kayıt Birleştir",
+      "riskLevel": "high",
+      "requiresApproval": true,
+      "rollback": true
+    }
+  ],
+  "searchIndex": {
+    "indexedFields": ["email", "status", "segment"],
+    "fullText": ["name"],
+    "vector": true
+  },
+  "auditPolicy": {
+    "enabled": true,
+    "immutable": true,
+    "forensicFields": ["actor", "agent", "model", "promptVersion", "beforeHash", "afterHash"]
+  },
   "migrationPolicy": {
     "defaultMode": "expand-contract",
     "allowedModes": ["append-only", "expand-contract", "reversible-backfill"],
     "forbidDirect": ["delete", "rename", "type-change"],
-    "requireSnapshot": true, "requireRollback": true, "requireCompatibilityCheck": true,
-    "requireDataImpact": true, "requireDryRun": true, "requireAudit": true, "dataLossNeedsOwnerApproval": true
+    "requireSnapshot": true,
+    "requireRollback": true,
+    "requireCompatibilityCheck": true,
+    "requireDataImpact": true,
+    "requireDryRun": true,
+    "requireAudit": true,
+    "dataLossNeedsOwnerApproval": true
   },
   "retentionPolicy": { "retainDays": 3650, "softDelete": true, "piiAnonymizeAfterDays": 1095 },
   "tenantIsolation": { "strategy": "rls", "tenantField": "tenant_id", "enforced": true },
   "ecaBindings": [
-    { "id": "eca-customer-welcome", "event": "customer.created", "when": [ { "field": "status", "op": "eq", "value": "active" } ], "then": { "type": "notify", "params": { "target": "account-manager", "message": "Yeni aktif müşteri" } }, "maxChainDepth": 6, "requiresApproval": false },
-    { "id": "eca-customer-pii-export-stepup", "event": "customer.export.requested", "when": [ { "field": "includesPii", "op": "eq", "value": true } ], "then": { "type": "step-up", "params": { "reason": "pii-export" } }, "maxChainDepth": 6, "requiresApproval": true }
+    {
+      "id": "eca-customer-welcome",
+      "event": "customer.created",
+      "when": [{ "field": "status", "op": "eq", "value": "active" }],
+      "then": {
+        "type": "notify",
+        "params": { "target": "account-manager", "message": "Yeni aktif müşteri" }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-customer-pii-export-stepup",
+      "event": "customer.export.requested",
+      "when": [{ "field": "includesPii", "op": "eq", "value": true }],
+      "then": { "type": "step-up", "params": { "reason": "pii-export" } },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
   ],
   "rulesetBindings": [
     { "id": "rs-system-pii", "layer": "system", "tenantEditableParams": [], "immutable": true },
-    { "id": "rs-platform-segment", "layer": "platform", "tenantEditableParams": [], "immutable": false },
-    { "id": "rs-tenant-welcome", "layer": "tenant", "tenantEditableParams": ["welcomeMessage", "assignRule"], "immutable": false }
+    {
+      "id": "rs-platform-segment",
+      "layer": "platform",
+      "tenantEditableParams": [],
+      "immutable": false
+    },
+    {
+      "id": "rs-tenant-welcome",
+      "layer": "tenant",
+      "tenantEditableParams": ["welcomeMessage", "assignRule"],
+      "immutable": false
+    }
   ],
   "aiPolicy": {
     "autonomy": "draft",
-    "capabilities": ["read", "suggest-changeset", "archetype-draft", "archetype-prod-update-proposal"],
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
     "allowedTargets": ["archetype"],
     "forbiddenTargets": ["app", "module"],
-    "allowedActions": ["read", "suggest-changeset", "generate-archetype-draft", "update-archetype-draft", "propose-archetype-prod-update"],
-    "forbiddenActions": ["generate-app", "generate-module", "update-app", "update-module", "publish-public", "disable-ruleset", "override-ruleset", "rewrite-history", "direct-prod-write"],
-    "stepUp": ["propose-archetype-prod-update", "delete-field", "change-permission", "disable-protection", "migrate-data"],
-    "rulesetBoundary": { "enforced": true, "canOverride": false, "backendOnly": true, "version": "ai-archetype-eca-v1" },
-    "prodDataPolicy": { "preserveHistory": true, "migrationModes": ["append-only", "expand-contract"], "requireSnapshot": true, "requireRollback": true, "requireCompatibilityCheck": true },
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": ["append-only", "expand-contract"],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
     "subPromptUntrusted": true,
     "killSwitch": true
   },
-  "steelWalls": ["schema-validation", "semantic-validation", "migration-safety", "rebac-abac", "tenant-isolation", "action-allowlist", "prompt-injection-guard", "audit-forensic-log", "rate-cost-abuse-limits", "conformance-tests", "rollback-snapshot-gates", "protected-fields-rules-archetypes", "immutable-ruleset-boundary"],
-  "testFixtures": [ { "name": "Örnek A.Ş.", "email": "info@ornek.com", "segment": "enterprise", "status": "active" } ],
+  "steelWalls": [
+    "schema-validation",
+    "semantic-validation",
+    "migration-safety",
+    "rebac-abac",
+    "tenant-isolation",
+    "action-allowlist",
+    "prompt-injection-guard",
+    "audit-forensic-log",
+    "rate-cost-abuse-limits",
+    "conformance-tests",
+    "rollback-snapshot-gates",
+    "protected-fields-rules-archetypes",
+    "immutable-ruleset-boundary"
+  ],
+  "testFixtures": [
+    { "name": "Örnek A.Ş.", "email": "info@ornek.com", "segment": "enterprise", "status": "active" }
+  ],
   "conformanceTests": [
     { "id": "cf-pii-masked", "assert": "email/phone/taxId yetkisiz rolde maskeli" },
     { "id": "cf-pii-anonymize", "assert": "1095 gün sonra PII anonimleştirilir" }

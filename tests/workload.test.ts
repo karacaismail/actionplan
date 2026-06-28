@@ -1,4 +1,4 @@
-import { allocationStatus, type Load, workloadByAssignee } from "@/engine/workload";
+import { type Load, allocationStatus, workloadByAssignee } from "@/engine/workload";
 import { type Person, type TaskNode, TaskNodeSchema } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
@@ -19,7 +19,8 @@ const person = (id: string, capacityPerDay: number): Person => ({
 });
 
 /** assignee → Load eşlemesi (kolay erişim için). */
-const byId = (loads: Load[]): Record<string, Load> => Object.fromEntries(loads.map((l) => [l.assignee, l]));
+const byId = (loads: Load[]): Record<string, Load> =>
+  Object.fromEntries(loads.map((l) => [l.assignee, l]));
 
 describe("allocationStatus eşikleri", () => {
   it("capacity<=0 → unknown", () => {

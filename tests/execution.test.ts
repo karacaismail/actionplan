@@ -6,8 +6,9 @@ import { describe, expect, it } from "vitest";
  * Yürütme katmanı (dev-ekip): milestone + takvim (schedule) şema alanları ve
  * adam-gün efor rollup + milestone/atama gruplaması. Test-önce.
  */
-const base = (p: Partial<TaskNode> & { id: string; level: TaskNode["level"]; title: string; slug: string }): TaskNode =>
-  TaskNodeSchema.parse(p);
+const base = (
+  p: Partial<TaskNode> & { id: string; level: TaskNode["level"]; title: string; slug: string },
+): TaskNode => TaskNodeSchema.parse(p);
 
 describe("yürütme şeması (milestone + takvim)", () => {
   it("milestone ve schedule alanları varsayılanla gelir (geriye uyumlu)", () => {
@@ -30,7 +31,14 @@ describe("yürütme şeması (milestone + takvim)", () => {
       title: "Y",
       slug: "y",
       milestone: "R1",
-      schedule: { start: "2026-01-01", end: "2026-01-10", actualStart: null, actualEnd: null, baselineStart: null, baselineEnd: null },
+      schedule: {
+        start: "2026-01-01",
+        end: "2026-01-10",
+        actualStart: null,
+        actualEnd: null,
+        baselineStart: null,
+        baselineEnd: null,
+      },
     });
     expect(n.milestone).toBe("R1");
     expect(n.schedule.start).toBe("2026-01-01");
@@ -50,7 +58,14 @@ describe("rollupExecution (adam-gün + milestone + atama)", () => {
       milestone: "M1",
       status: "in-progress",
       effort: { estimate: 5, unit: "d", spent: 2 },
-      schedule: { start: "2026-01-01", end: "2026-01-10", actualStart: null, actualEnd: null, baselineStart: null, baselineEnd: null },
+      schedule: {
+        start: "2026-01-01",
+        end: "2026-01-10",
+        actualStart: null,
+        actualEnd: null,
+        baselineStart: null,
+        baselineEnd: null,
+      },
     }),
     base({
       id: "b",
@@ -62,7 +77,14 @@ describe("rollupExecution (adam-gün + milestone + atama)", () => {
       milestone: "M2",
       status: "done",
       effort: { estimate: 3, unit: "d", spent: 1 },
-      schedule: { start: "2026-01-05", end: "2026-01-20", actualStart: null, actualEnd: null, baselineStart: null, baselineEnd: null },
+      schedule: {
+        start: "2026-01-05",
+        end: "2026-01-20",
+        actualStart: null,
+        actualEnd: null,
+        baselineStart: null,
+        baselineEnd: null,
+      },
     }),
   ];
 

@@ -9,25 +9,87 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
 const LEVELS = ["app", "module", "archetype", "stone", "molecule", "element", "atom"];
-const LEVEL_TR = { module: "Modül", archetype: "ArcheType", stone: "Taş", molecule: "Molekül", element: "Element", atom: "Atom" };
+const LEVEL_TR = {
+  module: "Modül",
+  archetype: "ArcheType",
+  stone: "Taş",
+  molecule: "Molekül",
+  element: "Element",
+  atom: "Atom",
+};
 // 7-seviye kırılımın anlamlı olduğu ürün/sistem kümeleri (doc/meta hariç)
 const EXPAND = new Set([
-  "core-operations", "finance", "supply-chain", "hr", "customer-revenue", "content-collaboration",
-  "data-intelligence", "platform-horizontal", "vertical", "kernel", "scale", "layer1",
-  "frontend", "backend", "build", "sus", "crosscut",
+  "core-operations",
+  "finance",
+  "supply-chain",
+  "hr",
+  "customer-revenue",
+  "content-collaboration",
+  "data-intelligence",
+  "platform-horizontal",
+  "vertical",
+  "kernel",
+  "scale",
+  "layer1",
+  "frontend",
+  "backend",
+  "build",
+  "sus",
+  "crosscut",
 ]);
-const DIMS = ["featureDefs","security","codeOptimization","securityOptimization","performance","mobileApps","wcag","deployment","eca","aiAgents","testing","owasp","integration","moduleUsage"];
-const PHASES = ["requirements","test-plan","db-schema","development","test-qa","verification","release-maintenance"];
-const skelDims = () => Object.fromEntries(DIMS.map((k) => [k, { key: k, title: k, status: "skeleton", items: [], notes: "", prompt: "" }]));
-const skelPhases = () => Object.fromEntries(PHASES.map((p) => [p, { status: "pending", criteria: [], passed: false, notes: "" }]));
+const DIMS = [
+  "featureDefs",
+  "security",
+  "codeOptimization",
+  "securityOptimization",
+  "performance",
+  "mobileApps",
+  "wcag",
+  "deployment",
+  "eca",
+  "aiAgents",
+  "testing",
+  "owasp",
+  "integration",
+  "moduleUsage",
+];
+const PHASES = [
+  "requirements",
+  "test-plan",
+  "db-schema",
+  "development",
+  "test-qa",
+  "verification",
+  "release-maintenance",
+];
+const skelDims = () =>
+  Object.fromEntries(
+    DIMS.map((k) => [
+      k,
+      { key: k, title: k, status: "skeleton", items: [], notes: "", prompt: "" },
+    ]),
+  );
+const skelPhases = () =>
+  Object.fromEntries(
+    PHASES.map((p) => [p, { status: "pending", criteria: [], passed: false, notes: "" }]),
+  );
 
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 const nodes = files.map((f) => JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8")));
 const byId = new Map(nodes.map((n) => [n.id, n]));
 const childrenOf = new Map();
-for (const n of nodes) if (n.parentId) (childrenOf.get(n.parentId) ?? childrenOf.set(n.parentId, []).get(n.parentId)).push(n);
+for (const n of nodes)
+  if (n.parentId)
+    (childrenOf.get(n.parentId) ?? childrenOf.set(n.parentId, []).get(n.parentId)).push(n);
 
 function deepestUnder(appId) {
   let best = byId.get(appId);
@@ -65,14 +127,32 @@ for (const app of apps) {
       order: 99,
       icon: "ph-cube",
       tags: [app.source?.cluster, "ornek", "7-seviye", level].filter(Boolean),
-      dependsOn: [], blocks: [], related: [], refs: [], criticalPath: false,
-      status: "backlog", priority: "medium", owner: null,
+      dependsOn: [],
+      blocks: [],
+      related: [],
+      refs: [],
+      criticalPath: false,
+      status: "backlog",
+      priority: "medium",
+      owner: null,
       effort: { estimate: Math.max(1, 6 - li), unit: "sp", spent: 0 },
-      progress: 0, phase: "requirements", phases: skelPhases(),
-      deliverables: [], acceptanceCriteria: [], risks: [], metrics: [], ecaRules: [],
+      progress: 0,
+      phase: "requirements",
+      phases: skelPhases(),
+      deliverables: [],
+      acceptanceCriteria: [],
+      risks: [],
+      metrics: [],
+      ecaRules: [],
       dimensions: skelDims(),
-      source: { corpus: "synthetic", originalId: "", granularity: "", cluster: app.source?.cluster || "" },
-      state: "taslak", lastUpdated: "",
+      source: {
+        corpus: "synthetic",
+        originalId: "",
+        granularity: "",
+        cluster: app.source?.cluster || "",
+      },
+      state: "taslak",
+      lastUpdated: "",
     };
     fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(node, null, 2)}\n`);
     byId.set(id, node);
@@ -80,4 +160,6 @@ for (const app of apps) {
     created++;
   }
 }
-console.log(`[expand-depth] ${apps.length} app işlendi, ${created} yeni düğüm (molecule/element/atom) eklendi.`);
+console.log(
+  `[expand-depth] ${apps.length} app işlendi, ${created} yeni düğüm (molecule/element/atom) eklendi.`,
+);

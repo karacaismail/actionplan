@@ -9,25 +9,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const xdim = (P, what) => ({
-  featureDefs: [`${P}: ${what}`, `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`, `${P} örnek dal — granülerlikteki yerini gösterir`],
-  security: [`${P} üst ArcheType tenant izolasyonuna uyar`, `${P} çalışan PII sınırda korunur`, `${P} hassas özlük verisi üst katmanda maskelenir`],
-  codeOptimization: [`${P} saf/idempotent tasarlanır`, `${P} üst seviyeyle tipli arayüz`, `${P} tekrar eden mantık paylaşılan yardımcıya`],
-  securityOptimization: [`${P} en az ayrıcalıkla çalışır`, `${P} girdi normalizasyonu ile enjeksiyon daraltılır`, `${P} değişikliği sürümlü`],
-  performance: [`${P} çıktısı önbelleklenebilir`, `${P} tembel başlatılır`, `${P} küçük serileştirilebilir çıktı`],
-  mobileApps: [`${P} UI'si varsa mobilde tek sütun`, `${P} iOS/Android içinde bağımsız çalışabilir`, `${P} dar ekranda okunur`],
-  wcag: [`${P} etkileşimi klavye erişimli ve adlandırılmış`, `${P} durumu metinle bildirilir (kontrast 7:1)`, `${P} hata mesajı ilişkilendirilmiş`],
-  deployment: [`${P} üst ArcheType ile dağıtılır`, `${P} üst yetenekle ölçeklenir`, `${P} shared hosting'de istemci-içi çalışabilir`],
-  eca: [ECA_BOUND, `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`, `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`],
+  featureDefs: [
+    `${P}: ${what}`,
+    `${P} üst ArcheType'ın alt-detayı; tek sorumluluk`,
+    `${P} örnek dal — granülerlikteki yerini gösterir`,
+  ],
+  security: [
+    `${P} üst ArcheType tenant izolasyonuna uyar`,
+    `${P} çalışan PII sınırda korunur`,
+    `${P} hassas özlük verisi üst katmanda maskelenir`,
+  ],
+  codeOptimization: [
+    `${P} saf/idempotent tasarlanır`,
+    `${P} üst seviyeyle tipli arayüz`,
+    `${P} tekrar eden mantık paylaşılan yardımcıya`,
+  ],
+  securityOptimization: [
+    `${P} en az ayrıcalıkla çalışır`,
+    `${P} girdi normalizasyonu ile enjeksiyon daraltılır`,
+    `${P} değişikliği sürümlü`,
+  ],
+  performance: [
+    `${P} çıktısı önbelleklenebilir`,
+    `${P} tembel başlatılır`,
+    `${P} küçük serileştirilebilir çıktı`,
+  ],
+  mobileApps: [
+    `${P} UI'si varsa mobilde tek sütun`,
+    `${P} iOS/Android içinde bağımsız çalışabilir`,
+    `${P} dar ekranda okunur`,
+  ],
+  wcag: [
+    `${P} etkileşimi klavye erişimli ve adlandırılmış`,
+    `${P} durumu metinle bildirilir (kontrast 7:1)`,
+    `${P} hata mesajı ilişkilendirilmiş`,
+  ],
+  deployment: [
+    `${P} üst ArcheType ile dağıtılır`,
+    `${P} üst yetenekle ölçeklenir`,
+    `${P} shared hosting'de istemci-içi çalışabilir`,
+  ],
+  eca: [
+    ECA_BOUND,
+    `${P} girdisi geçersiz → sınırda reddet + üst akışa hata (idempotent, zincir ≤6)`,
+    `${P} bağımsız otomasyon tutmaz; üst kurala bağlanır`,
+  ],
   aiAgents: [AI_B1, AI_B2, `${P} tarifini AI önerebilir; İK kararını insan verir`],
-  testing: [`${P} için birim + üst sözleşme entegrasyon testi`, `${P} sınır/erişilebilirlik mikro-yolculuğu`, "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"],
-  owasp: [`${P}: A03 girdi sınırda doğrulanır`, `${P}: A04 en-az-ayrıcalık tasarım`, `${P}: kabul/red izlenir`],
-  integration: [`${P} üst ArcheType'a tipli arayüzle bağlanır`, `${P} sözleşmeyi tüketir`, `${P} çıktısı üst akışta kullanılır`],
+  testing: [
+    `${P} için birim + üst sözleşme entegrasyon testi`,
+    `${P} sınır/erişilebilirlik mikro-yolculuğu`,
+    "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+  ],
+  owasp: [
+    `${P}: A03 girdi sınırda doğrulanır`,
+    `${P}: A04 en-az-ayrıcalık tasarım`,
+    `${P}: kabul/red izlenir`,
+  ],
+  integration: [
+    `${P} üst ArcheType'a tipli arayüzle bağlanır`,
+    `${P} sözleşmeyi tüketir`,
+    `${P} çıktısı üst akışta kullanılır`,
+  ],
   moduleUsage: [`${P} bağımsız sunulmaz; üst ArcheType içinde kullanılır`],
 });
 
@@ -104,8 +162,14 @@ const CONTENT = {
     ],
   },
 
-  "app-hr-x-stone": xdim("İK Taşı", "bir İK yeteneğinin alt-parça tarifi (ör. izin bakiyesi hesabı)"),
-  "app-hr-x-molecule": xdim("İK Molekülü", "birkaç İK kuralını birleştiren bileşen (ör. bordro kalemi)"),
+  "app-hr-x-stone": xdim(
+    "İK Taşı",
+    "bir İK yeteneğinin alt-parça tarifi (ör. izin bakiyesi hesabı)",
+  ),
+  "app-hr-x-molecule": xdim(
+    "İK Molekülü",
+    "birkaç İK kuralını birleştiren bileşen (ör. bordro kalemi)",
+  ),
   "app-hr-x-element": xdim("İK Elementi", "tek bir İK alanı/kuralı (ör. SGK gün sayısı)"),
   "app-hr-x-atom": xdim("İK Atomu", "bölünemez İK ilkeli (ör. çalışan kimliği değer nesnesi)"),
 
@@ -155,11 +219,7 @@ const CONTENT = {
       "Olay: izin talebi → onay akışı + bakiye güncelle (idempotent, zincir ≤6)",
       "Olay: SGK bildirim dönemi → e-bildirge taslağı üret (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI özlük anomali/izin önerisi üretir; İK kararını insan verir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI özlük anomali/izin önerisi üretir; İK kararını insan verir"],
     testing: [
       "İzin/devam hesap + onay akışı testi",
       "SGK gün/mevzuat doğruluk testi",
@@ -615,7 +675,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -634,4 +695,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-hr] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-hr] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

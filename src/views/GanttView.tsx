@@ -5,7 +5,9 @@ import { taskStore, useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 
-const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+const EChart = lazy(() =>
+  import("@/components/charts/EChart").then((m) => ({ default: m.EChart })),
+);
 
 export function GanttView() {
   const nodes = useTaskStore((s) => s.nodes);
@@ -15,18 +17,40 @@ export function GanttView() {
     () => [...new Set(nodes.map((n) => n.milestone).filter((m): m is string => Boolean(m)))].sort(),
     [nodes],
   );
-  const bars = useMemo(() => toGanttBars(nodes, scope ? { milestone: scope } : undefined), [nodes, scope]);
-  const minDay = useMemo(() => (bars.length ? bars.reduce((m, b) => (b.start < m ? b.start : m), bars[0].start) : null), [bars]);
+  const bars = useMemo(
+    () => toGanttBars(nodes, scope ? { milestone: scope } : undefined),
+    [nodes, scope],
+  );
+  const minDay = useMemo(
+    () => (bars.length ? bars.reduce((m, b) => (b.start < m ? b.start : m), bars[0].start) : null),
+    [bars],
+  );
 
   const option = useMemo(() => {
     if (!bars.length || !minDay) return {};
     return {
       grid: { left: 8, right: 16, top: 16, bottom: 28, containLabel: true },
       tooltip: { trigger: "axis" },
-      xAxis: { type: "value", name: t.gantt.dayAxis, nameTextStyle: { color: "#94a3b8" }, axisLabel: { color: "#94a3b8" } },
-      yAxis: { type: "category", inverse: true, data: bars.map((b) => b.title), axisLabel: { color: "#94a3b8" } },
+      xAxis: {
+        type: "value",
+        name: t.gantt.dayAxis,
+        nameTextStyle: { color: "#94a3b8" },
+        axisLabel: { color: "#94a3b8" },
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: bars.map((b) => b.title),
+        axisLabel: { color: "#94a3b8" },
+      },
       series: [
-        { type: "bar", stack: "g", silent: true, itemStyle: { color: "transparent" }, data: bars.map((b) => dayspan(minDay, b.start)) },
+        {
+          type: "bar",
+          stack: "g",
+          silent: true,
+          itemStyle: { color: "transparent" },
+          data: bars.map((b) => dayspan(minDay, b.start)),
+        },
         {
           type: "bar",
           stack: "g",
@@ -55,7 +79,10 @@ export function GanttView() {
   const freeze = () => {
     for (const b of bars) {
       const n = nodes.find((x) => x.id === b.id);
-      if (n) taskStore.updateNode(n.id, { schedule: { ...n.schedule, baselineStart: n.schedule.start, baselineEnd: n.schedule.end } });
+      if (n)
+        taskStore.updateNode(n.id, {
+          schedule: { ...n.schedule, baselineStart: n.schedule.start, baselineEnd: n.schedule.end },
+        });
     }
   };
 
@@ -101,14 +128,20 @@ export function GanttView() {
           <p className="py-6 text-center text-base text-muted-foreground">{t.gantt.empty}</p>
         ) : (
           <Suspense fallback={<div className="h-[360px]" aria-hidden="true" />}>
-            <EChart option={option} ariaLabel={t.gantt.chartAria} height={Math.max(240, bars.length * 28 + 60)} />
+            <EChart
+              option={option}
+              ariaLabel={t.gantt.chartAria}
+              height={Math.max(240, bars.length * 28 + 60)}
+            />
           </Suspense>
         )}
       </Card>
 
       {slips.length > 0 && (
         <Card className="p-4">
-          <h2 className="mb-3 font-medium">{t.gantt.planBar} → {t.gantt.frozen}</h2>
+          <h2 className="mb-3 font-medium">
+            {t.gantt.planBar} → {t.gantt.frozen}
+          </h2>
           <ul className="flex flex-col divide-y divide-border">
             {slips.map((s) => (
               <li key={s.id} className="flex items-center gap-3 py-2">
@@ -119,7 +152,11 @@ export function GanttView() {
                   {s.slip > 0 ? `+${s.slip}` : s.slip}
                 </span>
                 <span className="text-base text-muted-foreground">{t.gantt.slipUnit}</span>
-                <Link to="/task/$taskId" params={{ taskId: s.id }} className="min-w-0 flex-1 truncate hover:underline">
+                <Link
+                  to="/task/$taskId"
+                  params={{ taskId: s.id }}
+                  className="min-w-0 flex-1 truncate hover:underline"
+                >
                   {s.title}
                 </Link>
               </li>

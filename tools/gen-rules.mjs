@@ -9,7 +9,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
 
 const AUTONOMY = {
   app: "none",
@@ -90,7 +97,10 @@ function rulesFor(n) {
         { field: "actor", op: "eq", value: "ai" },
         { field: "riskScore", op: "gte", value: 80 },
       ],
-      then: { type: "create-task", params: { title: `${t} AI risk incelemesi`, priority: "critical" } },
+      then: {
+        type: "create-task",
+        params: { title: `${t} AI risk incelemesi`, priority: "critical" },
+      },
       maxChainDepth: 6,
       requiresApproval: true,
     },
@@ -118,7 +128,10 @@ function rulesFor(n) {
         { field: "environment", op: "eq", value: "production" },
         { field: "historyPreserved", op: "neq", value: true },
       ],
-      then: { type: "deny", params: { reason: "prod-archetype-update-must-preserve-history", node: n.id } },
+      then: {
+        type: "deny",
+        params: { reason: "prod-archetype-update-must-preserve-history", node: n.id },
+      },
       maxChainDepth: 6,
       requiresApproval: false,
     });
@@ -152,9 +165,16 @@ function policyFor(n) {
     capabilities: caps,
     allowedTargets: n.level === "archetype" ? ["archetype"] : [],
     forbiddenTargets: FORBIDDEN_TARGETS,
-    allowedActions: n.level === "archetype"
-      ? ["read", "suggest-changeset", "generate-archetype-draft", "update-archetype-draft", "propose-archetype-prod-update"]
-      : ["read", "suggest-changeset"],
+    allowedActions:
+      n.level === "archetype"
+        ? [
+            "read",
+            "suggest-changeset",
+            "generate-archetype-draft",
+            "update-archetype-draft",
+            "propose-archetype-prod-update",
+          ]
+        : ["read", "suggest-changeset"],
     forbiddenActions: [
       "generate-app",
       "generate-module",
@@ -166,7 +186,13 @@ function policyFor(n) {
       "rewrite-history",
       "direct-prod-write",
     ],
-    stepUp: ["propose-archetype-prod-update", "delete-field", "change-permission", "disable-protection", "migrate-data"],
+    stepUp: [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data",
+    ],
     rulesetBoundary: {
       enforced: true,
       canOverride: false,
@@ -199,4 +225,6 @@ for (const f of files) {
   fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
   count++;
 }
-console.log(`[gen-rules] ${count} düğüme yapısal ECA kuralı + agentPolicy yazıldı (motor çalıştırabilir).`);
+console.log(
+  `[gen-rules] ${count} düğüme yapısal ECA kuralı + agentPolicy yazıldı (motor çalıştırabilir).`,
+);

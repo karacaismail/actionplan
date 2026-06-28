@@ -1,16 +1,27 @@
 import { Button, Card, Icon, ProgressBar, StatusBadge } from "@/components/ui/primitives";
+import people from "@/data/people.json";
 import { auditNode, filterNodes, groupNodes, isQueryError, parseQuery, sortNodes } from "@/engine";
 import type { BulkPatch, QueryAst, SortDir } from "@/engine";
-import people from "@/data/people.json";
 import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/format";
 import { t } from "@/lib/strings";
 import { LEVEL_META, PRIORITY_LIST, STATUS_LIST, type SavedView, type TaskNode } from "@/schemas";
-import { loadSavedViews, loadViewState, saveSavedViews, saveViewState } from "@/store/viewState";
 import { taskStore, useTaskStore } from "@/store/taskStore";
+import { loadSavedViews, loadViewState, saveSavedViews, saveViewState } from "@/store/viewState";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const COLS = ["wbsCode", "title", "level", "status", "priority", "owner", "milestone", "progress", "effort", "score"] as const;
+const COLS = [
+  "wbsCode",
+  "title",
+  "level",
+  "status",
+  "priority",
+  "owner",
+  "milestone",
+  "progress",
+  "effort",
+  "score",
+] as const;
 type Col = (typeof COLS)[number];
 const PAGE = 50;
 const CTRL =
@@ -44,7 +55,11 @@ export function TableView() {
     return () => clearTimeout(id);
   }, [query]);
   useEffect(() => {
-    saveViewState({ query: debounced, sort: [{ col: sortField, dir: sortDir }], group: groupBy || null });
+    saveViewState({
+      query: debounced,
+      sort: [{ col: sortField, dir: sortDir }],
+      group: groupBy || null,
+    });
   }, [debounced, sortField, sortDir, groupBy]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: sayfa filtre/sıra/grup değişince başa döner
   useEffect(() => setPage(0), [debounced, sortField, sortDir, groupBy]);
@@ -60,9 +75,9 @@ export function TableView() {
   const queryError = isQueryError(parsed) ? parsed.error : null;
   if (!isQueryError(parsed)) lastGood.current = parsed;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scoreOf/lastGood.current türevdir (scoreMap→nodes zaten izleniyor); yeniden-hesap yalnız bu girdilerde
   const sorted = useMemo(
     () => sortNodes(filterNodes(nodes, lastGood.current), sortField, sortDir, scoreOf),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [nodes, debounced, sortField, sortDir],
   );
   const groups = groupBy ? groupNodes(sorted, groupBy) : null;
@@ -138,7 +153,12 @@ export function TableView() {
               aria-invalid={queryError ? true : undefined}
               aria-describedby={queryError ? "filterErr" : undefined}
             />
-            <Button variant="ghost" size="sm" onClick={() => setQuery("")} aria-label={t.table.clear}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setQuery("")}
+              aria-label={t.table.clear}
+            >
               <Icon name="ph-x" className="text-base" />
             </Button>
           </div>
@@ -163,7 +183,12 @@ export function TableView() {
             <label htmlFor="groupBy" className="text-base text-muted-foreground">
               {t.table.group}
             </label>
-            <select id="groupBy" value={groupBy} onChange={(e) => setGroupBy(e.target.value)} className={CTRL}>
+            <select
+              id="groupBy"
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value)}
+              className={CTRL}
+            >
               <option value="">{t.table.noGroup}</option>
               {["level", "status", "milestone", "cluster", "owner", "priority"].map((g) => (
                 <option key={g} value={g}>
@@ -212,7 +237,9 @@ export function TableView() {
         </div>
 
         <details className="text-base">
-          <summary className="tap-target cursor-pointer text-muted-foreground">{t.table.columns}</summary>
+          <summary className="tap-target cursor-pointer text-muted-foreground">
+            {t.table.columns}
+          </summary>
           <div className="mt-2 flex flex-wrap gap-3">
             {COLS.map((c) => (
               <label key={c} className="flex items-center gap-1">
@@ -248,11 +275,18 @@ export function TableView() {
                     type="checkbox"
                     aria-label={t.table.selectAll}
                     checked={sorted.length > 0 && sorted.every((n) => selected.has(n.id))}
-                    onChange={(e) => setSelected(e.target.checked ? new Set(sorted.map((n) => n.id)) : new Set())}
+                    onChange={(e) =>
+                      setSelected(e.target.checked ? new Set(sorted.map((n) => n.id)) : new Set())
+                    }
                   />
                 </th>
                 {visibleCols.map((c) => (
-                  <th key={c} scope="col" aria-sort={ariaSort(c)} className="px-3 py-2 text-left font-medium">
+                  <th
+                    key={c}
+                    scope="col"
+                    aria-sort={ariaSort(c)}
+                    className="px-3 py-2 text-left font-medium"
+                  >
                     <button
                       type="button"
                       onClick={() => toggleSort(c)}
@@ -260,39 +294,68 @@ export function TableView() {
                       aria-label={`${t.table.col[c]} — ${sortDir === "asc" ? t.table.sortDesc : t.table.sortAsc}`}
                     >
                       {t.table.col[c]}
-                      {sortField === c && <Icon name={sortDir === "asc" ? "ph-caret-up" : "ph-caret-down"} className="text-sm" />}
+                      {sortField === c && (
+                        <Icon
+                          name={sortDir === "asc" ? "ph-caret-up" : "ph-caret-down"}
+                          className="text-sm"
+                        />
+                      )}
                     </button>
                   </th>
                 ))}
               </tr>
             </thead>
-            {groups
-              ? groups.map((g) => (
-                  <tbody key={g.key}>
-                    <tr className="bg-secondary">
-                      <th scope="colgroup" colSpan={visibleCols.length + 1} className="px-3 py-1 text-left font-medium">
-                        {g.key} <span className="text-muted-foreground tabular-nums">({g.nodes.length})</span>
-                      </th>
-                    </tr>
-                    {g.nodes.map((n) => (
-                      <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} selected={selected.has(n.id)} onToggle={() => toggleRow(n.id)} />
-                    ))}
-                  </tbody>
-                ))
-              : (
-                <tbody>
-                  {paged?.map((n) => (
-                    <Row key={n.id} n={n} cols={visibleCols} score={scoreOf(n)} selected={selected.has(n.id)} onToggle={() => toggleRow(n.id)} />
+            {groups ? (
+              groups.map((g) => (
+                <tbody key={g.key}>
+                  <tr className="bg-secondary">
+                    <th
+                      scope="colgroup"
+                      colSpan={visibleCols.length + 1}
+                      className="px-3 py-1 text-left font-medium"
+                    >
+                      {g.key}{" "}
+                      <span className="text-muted-foreground tabular-nums">({g.nodes.length})</span>
+                    </th>
+                  </tr>
+                  {g.nodes.map((n) => (
+                    <Row
+                      key={n.id}
+                      n={n}
+                      cols={visibleCols}
+                      score={scoreOf(n)}
+                      selected={selected.has(n.id)}
+                      onToggle={() => toggleRow(n.id)}
+                    />
                   ))}
                 </tbody>
-              )}
+              ))
+            ) : (
+              <tbody>
+                {paged?.map((n) => (
+                  <Row
+                    key={n.id}
+                    n={n}
+                    cols={visibleCols}
+                    score={scoreOf(n)}
+                    selected={selected.has(n.id)}
+                    onToggle={() => toggleRow(n.id)}
+                  />
+                ))}
+              </tbody>
+            )}
           </table>
         )}
       </Card>
 
       {!groups && pageCount > 1 && (
         <nav className="flex items-center justify-center gap-3" aria-label={t.table.pageLabel}>
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+          >
             <Icon name="ph-caret-left" className="text-base" /> {t.table.prev}
           </Button>
           <span className="text-base text-muted-foreground tabular-nums">
@@ -309,12 +372,22 @@ export function TableView() {
         </nav>
       )}
 
-      {selected.size > 0 && <BulkActionBar count={selected.size} onApply={onBulkApply} onClear={() => setSelected(new Set())} />}
+      {selected.size > 0 && (
+        <BulkActionBar
+          count={selected.size}
+          onApply={onBulkApply}
+          onClear={() => setSelected(new Set())}
+        />
+      )}
     </div>
   );
 }
 
-function BulkActionBar({ count, onApply, onClear }: { count: number; onApply: (p: BulkPatch) => void; onClear: () => void }) {
+function BulkActionBar({
+  count,
+  onApply,
+  onClear,
+}: { count: number; onApply: (p: BulkPatch) => void; onClear: () => void }) {
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
   const [owner, setOwner] = useState("");
@@ -336,7 +409,12 @@ function BulkActionBar({ count, onApply, onClear }: { count: number; onApply: (p
       <span className="font-medium tabular-nums">
         {count} {t.table.bulk.selected}
       </span>
-      <select aria-label={t.table.bulk.status} value={status} onChange={(e) => setStatus(e.target.value)} className={CTRL}>
+      <select
+        aria-label={t.table.bulk.status}
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+        className={CTRL}
+      >
         <option value="">{t.table.bulk.noChange}</option>
         {STATUS_LIST.map((s) => (
           <option key={s} value={s}>
@@ -344,7 +422,12 @@ function BulkActionBar({ count, onApply, onClear }: { count: number; onApply: (p
           </option>
         ))}
       </select>
-      <select aria-label={t.table.bulk.priority} value={priority} onChange={(e) => setPriority(e.target.value)} className={CTRL}>
+      <select
+        aria-label={t.table.bulk.priority}
+        value={priority}
+        onChange={(e) => setPriority(e.target.value)}
+        className={CTRL}
+      >
         <option value="">{t.table.bulk.noChange}</option>
         {PRIORITY_LIST.map((p) => (
           <option key={p} value={p}>
@@ -352,7 +435,12 @@ function BulkActionBar({ count, onApply, onClear }: { count: number; onApply: (p
           </option>
         ))}
       </select>
-      <select aria-label={t.table.bulk.owner} value={owner} onChange={(e) => setOwner(e.target.value)} className={CTRL}>
+      <select
+        aria-label={t.table.bulk.owner}
+        value={owner}
+        onChange={(e) => setOwner(e.target.value)}
+        className={CTRL}
+      >
         <option value="">{t.table.bulk.noChange}</option>
         {people.map((pp) => (
           <option key={pp.id} value={pp.id}>
@@ -383,12 +471,25 @@ function Row({
   score,
   selected,
   onToggle,
-}: { n: TaskNode; cols: readonly string[]; score: number; selected: boolean; onToggle: () => void }) {
+}: {
+  n: TaskNode;
+  cols: readonly string[];
+  score: number;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const bandColor = score >= 2.3 ? "#22c55e" : score >= 1.5 ? "#38bdf8" : "#ef4444";
   return (
-    <tr className={`border-border border-b hover:bg-secondary/50 ${selected ? "bg-secondary/40" : ""}`}>
+    <tr
+      className={`border-border border-b hover:bg-secondary/50 ${selected ? "bg-secondary/40" : ""}`}
+    >
       <td className="w-10 px-3 py-2 align-middle">
-        <input type="checkbox" aria-label={t.table.selectRow} checked={selected} onChange={onToggle} />
+        <input
+          type="checkbox"
+          aria-label={t.table.selectRow}
+          checked={selected}
+          onChange={onToggle}
+        />
       </td>
       {cols.map((c) => (
         <td key={c} className="px-3 py-2 align-middle">
@@ -414,7 +515,11 @@ function Row({
           {c === "effort" && <span className="tabular-nums">{n.effort.estimate}</span>}
           {c === "score" && (
             <span className="flex items-center gap-2">
-              <span className="size-2 rounded-full" style={{ background: bandColor }} aria-hidden="true" />
+              <span
+                className="size-2 rounded-full"
+                style={{ background: bandColor }}
+                aria-hidden="true"
+              />
               <span className="tabular-nums">{score}</span>
             </span>
           )}

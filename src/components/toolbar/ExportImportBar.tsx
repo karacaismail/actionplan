@@ -26,7 +26,11 @@ export function ExportImportBar() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t.a11y.exportImport}>
+    <div
+      className="flex flex-wrap items-center gap-2"
+      role="toolbar"
+      aria-label={t.a11y.exportImport}
+    >
       <Button
         size="sm"
         onClick={() => downloadFile("eylem-plani.json", exportJSON(nodes), "application/json")}
@@ -42,25 +46,14 @@ export function ExportImportBar() {
       <Button size="sm" onClick={() => fileRef.current?.click()}>
         <Icon name="ph-file-arrow-up" /> {t.actions.importFile}
       </Button>
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".json,.csv"
-        className="hidden"
-        onChange={onFile}
-        aria-hidden="true"
-      />
+      <input ref={fileRef} type="file" accept=".json,.csv" className="hidden" onChange={onFile} />
       <GitHubSaveDialog />
       {dirty && (
         <span className="text-base text-muted-foreground">
           <Icon name="ph-circle-dashed" /> oturum-içi değişiklik var
         </span>
       )}
-      {msg && (
-        <span className="text-base text-primary" role="status">
-          {msg}
-        </span>
-      )}
+      {msg && <output className="text-base text-primary">{msg}</output>}
     </div>
   );
 }

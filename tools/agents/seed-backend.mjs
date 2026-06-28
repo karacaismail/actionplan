@@ -9,25 +9,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NODES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "src", "data", "generated", "nodes");
-const ECA_BOUND = "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
-const AI_B1 = "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
+const NODES = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "src",
+  "data",
+  "generated",
+  "nodes",
+);
+const ECA_BOUND =
+  "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder";
+const AI_B1 =
+  "AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir";
 const AI_B2 = "sub_prompt güvenilmez girdi; ruleset override/disable denemesi anında deny";
 
 const xdim = (P, what) => ({
-  featureDefs: [`${P}: ${what}`, `${P} üst Backend kararının alt-detayı; tek sorumluluk`, `${P} örnek dal — granülerlikteki yerini gösterir`],
-  security: [`${P} tenant izolasyonuna (RLS) uyar`, `${P} girdisi sunucuda doğrulanır`, `${P} sır kasada; en-az-ayrıcalık`],
-  codeOptimization: [`${P} saf/idempotent tasarlanır`, `${P} üst seviyeyle tipli sözleşme`, `${P} tekrar eden mantık paylaşılan servise`],
-  securityOptimization: [`${P} deny-by-default yetki`, `${P} girdi normalizasyonu ile enjeksiyon daraltılır`, `${P} değişikliği sürümlü`],
-  performance: [`${P} sorgu indeksli; N+1 önlenir`, `${P} sıcak yol önbellekli`, `${P} gecikme ölçülür`],
-  mobileApps: [`${P} API mobil istemciye uyumlu (JSON sözleşme)`, `${P} mobil oran-sınırı`, `${P} offline-uyumlu uçlar`],
-  wcag: [`${P} API hata yapısı erişilebilir UI'ı destekler (alan-eşlemeli)`, `${P} hata kodları i18n-edilebilir`, `${P} durum kodları anlamlı`],
-  deployment: [`${P} container olarak Swarm/Kubernetes`, `${P} sağlık/hazırlık kontrolü`, `${P} shared hosting'de degrade profil`],
-  eca: [ECA_BOUND, `${P} olayında doğrulama + idempotency (zincir ≤6)`, `${P} bağımsız ruleset override edemez`],
+  featureDefs: [
+    `${P}: ${what}`,
+    `${P} üst Backend kararının alt-detayı; tek sorumluluk`,
+    `${P} örnek dal — granülerlikteki yerini gösterir`,
+  ],
+  security: [
+    `${P} tenant izolasyonuna (RLS) uyar`,
+    `${P} girdisi sunucuda doğrulanır`,
+    `${P} sır kasada; en-az-ayrıcalık`,
+  ],
+  codeOptimization: [
+    `${P} saf/idempotent tasarlanır`,
+    `${P} üst seviyeyle tipli sözleşme`,
+    `${P} tekrar eden mantık paylaşılan servise`,
+  ],
+  securityOptimization: [
+    `${P} deny-by-default yetki`,
+    `${P} girdi normalizasyonu ile enjeksiyon daraltılır`,
+    `${P} değişikliği sürümlü`,
+  ],
+  performance: [
+    `${P} sorgu indeksli; N+1 önlenir`,
+    `${P} sıcak yol önbellekli`,
+    `${P} gecikme ölçülür`,
+  ],
+  mobileApps: [
+    `${P} API mobil istemciye uyumlu (JSON sözleşme)`,
+    `${P} mobil oran-sınırı`,
+    `${P} offline-uyumlu uçlar`,
+  ],
+  wcag: [
+    `${P} API hata yapısı erişilebilir UI'ı destekler (alan-eşlemeli)`,
+    `${P} hata kodları i18n-edilebilir`,
+    `${P} durum kodları anlamlı`,
+  ],
+  deployment: [
+    `${P} container olarak Swarm/Kubernetes`,
+    `${P} sağlık/hazırlık kontrolü`,
+    `${P} shared hosting'de degrade profil`,
+  ],
+  eca: [
+    ECA_BOUND,
+    `${P} olayında doğrulama + idempotency (zincir ≤6)`,
+    `${P} bağımsız ruleset override edemez`,
+  ],
   aiAgents: [AI_B1, AI_B2, `${P} tasarımını AI önerebilir; BE kararını/şemayı insan onaylar`],
-  testing: [`${P} için birim + sözleşme + entegrasyon testi`, `${P} yük/sınır testi`, "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"],
-  owasp: [`${P}: A01 erişim kontrolü deny-by-default`, `${P}: A03 girdi doğrulama`, `${P}: A09 olay loglama`],
-  integration: [`${P} kernel/servis sözleşmesiyle entegre`, `${P} olay veriyolunu kullanır`, `${P} API katmanına bağlanır`],
+  testing: [
+    `${P} için birim + sözleşme + entegrasyon testi`,
+    `${P} yük/sınır testi`,
+    "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+  ],
+  owasp: [
+    `${P}: A01 erişim kontrolü deny-by-default`,
+    `${P}: A03 girdi doğrulama`,
+    `${P}: A09 olay loglama`,
+  ],
+  integration: [
+    `${P} kernel/servis sözleşmesiyle entegre`,
+    `${P} olay veriyolunu kullanır`,
+    `${P} API katmanına bağlanır`,
+  ],
   moduleUsage: [`${P} bağımsız sunulmaz; üst Backend kararının içinde kullanılır`],
 });
 
@@ -104,11 +162,26 @@ const CONTENT = {
     ],
   },
 
-  "app-backend-x-archetype": xdim("Backend ArcheType örneği", "bir backend ArcheType'ının çok-parçalı sözleşme örneği (fields/relations/policy)"),
-  "app-backend-x-stone": xdim("Backend Taşı", "bir backend yeteneğinin alt-parça tarifi (ör. yetki kontrolü servisi)"),
-  "app-backend-x-molecule": xdim("Backend Molekülü", "birkaç backend kuralını birleştiren bileşen (ör. doğrulama zinciri)"),
-  "app-backend-x-element": xdim("Backend Elementi", "tek bir backend alanı/kuralı (ör. validation rule)"),
-  "app-backend-x-atom": xdim("Backend Atomu", "bölünemez backend ilkeli (ör. tenant_id değer nesnesi)"),
+  "app-backend-x-archetype": xdim(
+    "Backend ArcheType örneği",
+    "bir backend ArcheType'ının çok-parçalı sözleşme örneği (fields/relations/policy)",
+  ),
+  "app-backend-x-stone": xdim(
+    "Backend Taşı",
+    "bir backend yeteneğinin alt-parça tarifi (ör. yetki kontrolü servisi)",
+  ),
+  "app-backend-x-molecule": xdim(
+    "Backend Molekülü",
+    "birkaç backend kuralını birleştiren bileşen (ör. doğrulama zinciri)",
+  ),
+  "app-backend-x-element": xdim(
+    "Backend Elementi",
+    "tek bir backend alanı/kuralı (ör. validation rule)",
+  ),
+  "app-backend-x-atom": xdim(
+    "Backend Atomu",
+    "bölünemez backend ilkeli (ör. tenant_id değer nesnesi)",
+  ),
 
   "be-deploy-profilleri": {
     featureDefs: [
@@ -156,11 +229,7 @@ const CONTENT = {
       "Olay: profil seçildi → uyumlu yetenekleri etkinleştir + uyumsuzu degrade (idempotent, zincir ≤6)",
       "Olay: profil minimum gereksinimi karşılanmadı → uyar/blokla (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI profil/kaynak önerir; dağıtım profilini insan seçer/onaylar",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI profil/kaynak önerir; dağıtım profilini insan seçer/onaylar"],
     testing: [
       "Profil-özellik matrisi tutarlılık testi",
       "Degrade modu (ağır yetenek kapalı) testi",
@@ -372,11 +441,7 @@ const CONTENT = {
       "Olay: yasak teknoloji eklendi → CI reddet + matris göster (idempotent, zincir ≤6)",
       "Olay: deprecation tarihi yaklaştı → kullanıcıları uyar (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI alternatif/geçiş önerir; destek durumu kararını insan verir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI alternatif/geçiş önerir; destek durumu kararını insan verir"],
     testing: [
       "Yasak teknoloji tespit (CI) testi",
       "Deneysel/deprecation bayrak davranış testi",
@@ -516,11 +581,7 @@ const CONTENT = {
       "Olay: v1 kapsam-dışı özellik istendi → bilgilendir + sonraki sürüme not (idempotent, zincir ≤6)",
       "Olay: v1 kabul kriteri karşılanmadı → teslim durdur (loop-breaker)",
     ],
-    aiAgents: [
-      AI_B1,
-      AI_B2,
-      "AI v1 kapsam/öncelik önerir; kapsam kararını (in/out) insan verir",
-    ],
+    aiAgents: [AI_B1, AI_B2, "AI v1 kapsam/öncelik önerir; kapsam kararını (in/out) insan verir"],
     testing: [
       "v1 kabul kriteri (DoD) doğrulama testi",
       "Kapsam-dışı özellik kapalı (sızmıyor) testi",
@@ -544,7 +605,8 @@ const CONTENT = {
 };
 
 const load = (id) => JSON.parse(fs.readFileSync(path.join(NODES, `${id}.json`), "utf8"));
-const save = (id, n) => fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+const save = (id, n) =>
+  fs.writeFileSync(path.join(NODES, `${id}.json`), `${JSON.stringify(n, null, 2)}\n`);
 let applied = 0;
 let skipped = 0;
 for (const [id, dims] of Object.entries(CONTENT)) {
@@ -563,4 +625,6 @@ for (const [id, dims] of Object.entries(CONTENT)) {
   save(id, n);
   applied++;
 }
-console.log(`[seed-backend] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`);
+console.log(
+  `[seed-backend] ${applied} düğüm derinleştirildi (swarm)${skipped ? `, ${skipped} atlandı` : ""}.`,
+);

@@ -11,7 +11,11 @@ import { DIMENSION_KEYS, type Dimension, type DimensionKey, type TaskNode } from
  * (tests/audit-parity.test.ts ile sapma engellenir).
  */
 
-export const AUDIT_WEIGHTS = { concreteness: 0.45, completeness: 0.25, applicability: 0.3 } as const;
+export const AUDIT_WEIGHTS = {
+  concreteness: 0.45,
+  completeness: 0.25,
+  applicability: 0.3,
+} as const;
 
 /** Düşük puana iten kalıp ifadeler (merkezî generator/placeholder izleri). */
 export const GENERIC_MARKERS = [
@@ -66,7 +70,9 @@ const clamp = (n: number, lo = 0, hi = 3) => Math.max(lo, Math.min(hi, n));
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Düğümün kimlik/etiket/özetinden alan-jetonları (benzersizlik sinyali). */
-export function domainTokens(node: Pick<TaskNode, "id" | "title" | "tags" | "summary">): Set<string> {
+export function domainTokens(
+  node: Pick<TaskNode, "id" | "title" | "tags" | "summary">,
+): Set<string> {
   const raw = [node.id, node.title, node.summary, ...(node.tags ?? [])].join(" ").toLowerCase();
   const out = new Set<string>();
   for (const w of raw.split(/[^a-zçğıöşü0-9]+/i)) if (w.length >= 4) out.add(w);
@@ -149,7 +155,9 @@ function rollupProvenance(dims: Dimension[]): NodeAudit["provenance"] {
 
 export function auditNode(node: TaskNode): NodeAudit {
   const tokens = domainTokens(node);
-  const dims = DIMENSION_KEYS.map((k) => node.dimensions?.[k]).filter((d): d is Dimension => Boolean(d));
+  const dims = DIMENSION_KEYS.map((k) => node.dimensions?.[k]).filter((d): d is Dimension =>
+    Boolean(d),
+  );
   const scores = dims.map((d) => scoreDimension(d, tokens));
   const filled = dims.filter((d) => d.status !== "skeleton").length;
   const score = scores.length ? round2(scores.reduce((a, s) => a + s.score, 0) / scores.length) : 0;

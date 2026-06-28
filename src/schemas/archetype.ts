@@ -75,8 +75,20 @@ export const ArchetypeIdentitySchema = z.object({
  * 2. fields  + 3. fragments
  * -------------------------------------------------------------------------- */
 export const FieldTypeSchema = z.enum([
-  "string", "text", "number", "integer", "boolean", "date", "datetime",
-  "enum", "json", "relation", "currency", "email", "phone", "file",
+  "string",
+  "text",
+  "number",
+  "integer",
+  "boolean",
+  "date",
+  "datetime",
+  "enum",
+  "json",
+  "relation",
+  "currency",
+  "email",
+  "phone",
+  "file",
 ]);
 export const FieldSchema = z.object({
   name: z.string(), // alan adı = field
@@ -138,7 +150,9 @@ export const AccessPolicySchema = z.object({
   /** ReBAC ilişki bazlı: ör. "owner", "team-member" */
   relations: z.array(z.string()).default([]),
   /** ABAC öznitelik koşulları (yapısal) */
-  attributes: z.array(z.object({ attr: z.string(), op: z.string(), value: z.string() })).default([]),
+  attributes: z
+    .array(z.object({ attr: z.string(), op: z.string(), value: z.string() }))
+    .default([]),
   tenantScoped: z.boolean().default(true),
 });
 
@@ -148,7 +162,9 @@ export const AccessPolicySchema = z.object({
 export const LifecycleSchema = z.object({
   states: z.array(z.string()).default(["draft", "active", "archived"]),
   initial: z.string().default("draft"),
-  transitions: z.array(z.object({ from: z.string(), to: z.string(), guard: z.string().default("") })).default([]),
+  transitions: z
+    .array(z.object({ from: z.string(), to: z.string(), guard: z.string().default("") }))
+    .default([]),
 });
 /** Surface/Workflow ArcheType'tan AYRI versiyonlanır → yalnız referans + versiyon. */
 export const LinkedRefSchema = z.object({ ref: z.string(), version: z.string().default("1.0.0") });
@@ -172,13 +188,19 @@ export const AuditPolicySchema = z.object({
   enabled: z.boolean().default(true),
   immutable: z.boolean().default(true),
   /** forensic: actor/agent/model/prompt-version/before-after-hash */
-  forensicFields: z.array(z.string()).default(["actor", "agent", "model", "promptVersion", "beforeHash", "afterHash"]),
+  forensicFields: z
+    .array(z.string())
+    .default(["actor", "agent", "model", "promptVersion", "beforeHash", "afterHash"]),
 });
 export const MigrationPolicySchema = z.object({
   defaultMode: MigrationModeSchema.default("expand-contract"),
-  allowedModes: z.array(MigrationModeSchema).default(["append-only", "expand-contract", "reversible-backfill"]),
+  allowedModes: z
+    .array(MigrationModeSchema)
+    .default(["append-only", "expand-contract", "reversible-backfill"]),
   /** field için doğrudan yasak işlemler — önce deprecated/alias/backfill */
-  forbidDirect: z.array(z.enum(["delete", "rename", "type-change"])).default(["delete", "rename", "type-change"]),
+  forbidDirect: z
+    .array(z.enum(["delete", "rename", "type-change"]))
+    .default(["delete", "rename", "type-change"]),
   requireSnapshot: z.boolean().default(true),
   requireRollback: z.boolean().default(true),
   requireCompatibilityCheck: z.boolean().default(true),

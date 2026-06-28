@@ -7,9 +7,16 @@ import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo } from "react";
 
 // ECharts tembel yüklenir (başlangıç paketinden çıkar).
-const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+const EChart = lazy(() =>
+  import("@/components/charts/EChart").then((m) => ({ default: m.EChart })),
+);
 
-const BAND_COLOR = { strong: "#22c55e", ok: "#38bdf8", weak: "#ef4444", missing: "#64748b" } as const;
+const BAND_COLOR = {
+  strong: "#22c55e",
+  ok: "#38bdf8",
+  weak: "#ef4444",
+  missing: "#64748b",
+} as const;
 
 function bandColor(score: number): string {
   return score >= 2.3 ? BAND_COLOR.strong : score >= 1.5 ? BAND_COLOR.ok : BAND_COLOR.weak;
@@ -31,10 +38,22 @@ export function AuditView() {
           type: "pie",
           radius: ["45%", "70%"],
           data: [
-            { name: t.audit.strong, value: summary.bands.strong, itemStyle: { color: BAND_COLOR.strong } },
+            {
+              name: t.audit.strong,
+              value: summary.bands.strong,
+              itemStyle: { color: BAND_COLOR.strong },
+            },
             { name: t.audit.ok, value: summary.bands.ok, itemStyle: { color: BAND_COLOR.ok } },
-            { name: t.audit.weak, value: summary.bands.weak, itemStyle: { color: BAND_COLOR.weak } },
-            { name: t.audit.missing, value: summary.bands.missing, itemStyle: { color: BAND_COLOR.missing } },
+            {
+              name: t.audit.weak,
+              value: summary.bands.weak,
+              itemStyle: { color: BAND_COLOR.weak },
+            },
+            {
+              name: t.audit.missing,
+              value: summary.bands.missing,
+              itemStyle: { color: BAND_COLOR.missing },
+            },
           ].filter((d) => d.value > 0),
           label: { color: "#cbd5e1" },
         },
@@ -68,7 +87,10 @@ export function AuditView() {
           <h2 className="mb-3 font-medium">{t.audit.byProvenance}</h2>
           <ul className="flex flex-col gap-2">
             {Object.entries(summary.byProvenance).map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between border-border border-b pb-2 text-base last:border-0">
+              <li
+                key={k}
+                className="flex items-center justify-between border-border border-b pb-2 text-base last:border-0"
+              >
                 <span className="text-muted-foreground">{k}</span>
                 <span className="font-medium tabular-nums">{v}</span>
               </li>
@@ -84,9 +106,17 @@ export function AuditView() {
             const a = audits.find((x) => x.id === w.id);
             return (
               <li key={w.id} className="flex items-center gap-3 py-2">
-                <span className="size-2 shrink-0 rounded-full" style={{ background: bandColor(w.score) }} aria-hidden="true" />
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ background: bandColor(w.score) }}
+                  aria-hidden="true"
+                />
                 <span className="w-10 shrink-0 text-right font-mono tabular-nums">{w.score}</span>
-                <Link to="/task/$taskId" params={{ taskId: w.id }} className="min-w-0 flex-1 truncate hover:underline">
+                <Link
+                  to="/task/$taskId"
+                  params={{ taskId: w.id }}
+                  className="min-w-0 flex-1 truncate hover:underline"
+                >
                   {w.title}
                 </Link>
                 {a?.weakest && (
@@ -95,7 +125,9 @@ export function AuditView() {
                   </span>
                 )}
                 {a && a.flags.length > 0 && (
-                  <span className="hidden truncate text-base text-muted-foreground md:inline">{a.flags.slice(0, 2).join(", ")}</span>
+                  <span className="hidden truncate text-base text-muted-foreground md:inline">
+                    {a.flags.slice(0, 2).join(", ")}
+                  </span>
                 )}
               </li>
             );

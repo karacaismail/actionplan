@@ -2,7 +2,11 @@ import type { TaskNode } from "@/schemas";
 
 /** Tüm görevleri tam-doğruluklu JSON olarak dışa aktarır. */
 export function exportJSON(nodes: TaskNode[]): string {
-  return JSON.stringify({ schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes }, null, 2);
+  return JSON.stringify(
+    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes },
+    null,
+    2,
+  );
 }
 
 /**

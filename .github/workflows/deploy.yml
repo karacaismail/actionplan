@@ -1,10 +1,13 @@
-# GitHub Pages dağıtım iş akışı — main'e push veya elle tetikleme ile çalışır.
-# Sıra: kur → tipdenetimi → içerik kalite kapısı → birim test → E2E/axe (dev-server) → Vite üretim derlemesi → deploy.
-# Gateler BLOKLAYICI: tipdenetimi, içerik kapısı, birim test veya E2E/axe kırmızıysa deploy yapılmaz.
+# CI + GitHub Pages dağıtımı.
+#  - main'e PUSH: build (tüm kapılar) + deploy.
+#  - main'e PR: yalnız build (kapılar doğrulanır) — deploy YOK. PR'ın "build" check'i merge için zorunludur.
+# Gateler BLOKLAYICI: tip/lint/içerik/ruleset/surface/audit/veri-kalite/birim/E2E herhangi biri kırmızıysa merge ve deploy engellenir.
 name: Deploy to GitHub Pages
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -35,6 +38,11 @@ jobs:
       - name: Tip denetimi
         run: npm run typecheck
 
+      # Lint kapısı (biome — BLOKLAYICI). Kod stili + statik a11y kuralları (JSX) + import düzeni.
+      # CI ubuntu-x64'te npm install doğru biome ikilisini (cli-linux-x64) çözer.
+      - name: Lint (biome)
+        run: npm run lint
+
       # İçerik kalite kapısı (Faz F2 — BLOKLAYICI). Önce bağımlılıksız node checker (hızlı, rollup gerekmez),
       # sonra kanonik vitest testi. 422 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
       - name: İçerik kalite kapısı (node checker — 422 düğüm)
@@ -59,6 +67,11 @@ jobs:
       - name: Kalite kapısı (audit — golden + köken)
         run: node tools/quality-lint.mjs
 
+      # Veri kalite kapısı (Faz P3 — BLOKLAYICI). owner %100 dolu + geçerli ekip (people.json),
+      # dependsOn/blocks/related referans bütünlüğü (dangling yok), dependsOn grafiği DAG (döngü yok).
+      - name: Veri kalite kapısı (owner + referans bütünlüğü + DAG)
+        run: node tools/agents/check-data-quality.mjs
+
       - name: Birim testleri
         run: npm test
 
@@ -73,16 +86,20 @@ jobs:
           BASE_PATH: /actionplan/
         run: npm run build
 
+      # Pages adımları yalnız gerçek dağıtımda (push); PR'da kapılar doğrulanır ama deploy ETMEZ.
       - name: Pages yapılandırması
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Pages artefaktını yükle
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

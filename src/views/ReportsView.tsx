@@ -1,12 +1,14 @@
 import { Button, Card } from "@/components/ui/primitives";
 import { effortBurnup, milestoneProgress, phaseGateProgress, statusCumulative } from "@/engine";
 import { STATUS_LABEL } from "@/lib/format";
-import { PHASE_META, type WaterfallPhase } from "@/schemas";
 import { t } from "@/lib/strings";
+import { PHASE_META, type WaterfallPhase } from "@/schemas";
 import { useTaskStore } from "@/store/taskStore";
 import { Suspense, lazy, useMemo, useState } from "react";
 
-const EChart = lazy(() => import("@/components/charts/EChart").then((m) => ({ default: m.EChart })));
+const EChart = lazy(() =>
+  import("@/components/charts/EChart").then((m) => ({ default: m.EChart })),
+);
 
 type Tab = "milestone" | "phase" | "effort" | "status";
 
@@ -25,9 +27,19 @@ export function ReportsView() {
       return {
         grid: { left: 8, right: 16, top: 16, bottom: 60, containLabel: true },
         tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: ms.map((m) => m.milestone), axisLabel: { ...axisColor, interval: 0, rotate: 30 } },
+        xAxis: {
+          type: "category",
+          data: ms.map((m) => m.milestone),
+          axisLabel: { ...axisColor, interval: 0, rotate: 30 },
+        },
         yAxis: { type: "value", max: 100, axisLabel: axisColor },
-        series: [{ type: "bar", barMaxWidth: 36, data: ms.map((m) => ({ value: m.progress, itemStyle: { color: "#38bdf8" } })) }],
+        series: [
+          {
+            type: "bar",
+            barMaxWidth: 36,
+            data: ms.map((m) => ({ value: m.progress, itemStyle: { color: "#38bdf8" } })),
+          },
+        ],
       };
     }
     if (tab === "phase") {
@@ -35,11 +47,27 @@ export function ReportsView() {
         grid: { left: 8, right: 16, top: 24, bottom: 50, containLabel: true },
         tooltip: { trigger: "axis" },
         legend: { top: 0, textStyle: axisColor },
-        xAxis: { type: "category", data: ph.map((p) => PHASE_META[p.phase as WaterfallPhase]?.tr ?? p.phase), axisLabel: { ...axisColor, interval: 0, rotate: 30 } },
+        xAxis: {
+          type: "category",
+          data: ph.map((p) => PHASE_META[p.phase as WaterfallPhase]?.tr ?? p.phase),
+          axisLabel: { ...axisColor, interval: 0, rotate: 30 },
+        },
         yAxis: { type: "value", axisLabel: axisColor },
         series: [
-          { type: "bar", name: t.reports.total, data: ph.map((p) => p.total), itemStyle: { color: "#64748b" }, barMaxWidth: 22 },
-          { type: "bar", name: t.reports.passed, data: ph.map((p) => p.passed), itemStyle: { color: "#22c55e" }, barMaxWidth: 22 },
+          {
+            type: "bar",
+            name: t.reports.total,
+            data: ph.map((p) => p.total),
+            itemStyle: { color: "#64748b" },
+            barMaxWidth: 22,
+          },
+          {
+            type: "bar",
+            name: t.reports.passed,
+            data: ph.map((p) => p.passed),
+            itemStyle: { color: "#22c55e" },
+            barMaxWidth: 22,
+          },
         ],
       };
     }
@@ -47,7 +75,11 @@ export function ReportsView() {
       return {
         grid: { left: 8, right: 16, top: 16, bottom: 24, containLabel: true },
         tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: [t.reports.planned, t.reports.spent], axisLabel: axisColor },
+        xAxis: {
+          type: "category",
+          data: [t.reports.planned, t.reports.spent],
+          axisLabel: axisColor,
+        },
         yAxis: { type: "value", axisLabel: axisColor },
         series: [
           {
@@ -68,7 +100,12 @@ export function ReportsView() {
         {
           type: "pie",
           radius: ["45%", "70%"],
-          data: st.filter((s) => s.count > 0).map((s) => ({ name: STATUS_LABEL[s.status as keyof typeof STATUS_LABEL] ?? s.status, value: s.count })),
+          data: st
+            .filter((s) => s.count > 0)
+            .map((s) => ({
+              name: STATUS_LABEL[s.status as keyof typeof STATUS_LABEL] ?? s.status,
+              value: s.count,
+            })),
           label: { color: "#cbd5e1" },
         },
       ],
@@ -91,7 +128,13 @@ export function ReportsView() {
 
       <div className="flex flex-wrap gap-2">
         {TABS.map(([key, label]) => (
-          <Button key={key} variant={tab === key ? "primary" : "ghost"} size="sm" aria-pressed={tab === key} onClick={() => setTab(key)}>
+          <Button
+            key={key}
+            variant={tab === key ? "primary" : "ghost"}
+            size="sm"
+            aria-pressed={tab === key}
+            onClick={() => setTab(key)}
+          >
             {label}
           </Button>
         ))}

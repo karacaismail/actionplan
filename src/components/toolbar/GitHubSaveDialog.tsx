@@ -76,7 +76,11 @@ export function GitHubSaveDialog() {
         <div className="grid grid-cols-[1fr_auto] gap-2">
           <label className="flex flex-col gap-1 text-base">
             {t.github.path}
-            <input className={field} value={filePath} onChange={(e) => setFilePath(e.target.value)} />
+            <input
+              className={field}
+              value={filePath}
+              onChange={(e) => setFilePath(e.target.value)}
+            />
           </label>
           <label className="flex w-24 flex-col gap-1 text-base">
             {t.github.branch}
@@ -102,7 +106,10 @@ export function GitHubSaveDialog() {
             disabled={busy || !token || !owner || !repo}
             onClick={onSave}
           >
-            <Icon name={busy ? "ph-circle-notch" : "ph-floppy-disk"} className={busy ? "animate-spin" : ""} />
+            <Icon
+              name={busy ? "ph-circle-notch" : "ph-floppy-disk"}
+              className={busy ? "animate-spin" : ""}
+            />
             {busy ? t.github.saving : t.github.save}
           </Button>
         </div>
