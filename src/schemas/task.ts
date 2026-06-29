@@ -112,6 +112,34 @@ export const DIMENSION_META: Record<DimensionKey, { tr: string; icon: string }> 
   moduleUsage: { tr: uiStrings.dimensions.moduleUsage, icon: "ph-share-network" },
 };
 
+/* ---- Boyut aileleri (ADR-0027) — 14 boyutu anlamlı kümeleyip "ontoloji yok" boşluğunu kapatır. ---- */
+export const DIMENSION_FAMILIES = [
+  "functional",
+  "runtime-quality",
+  "engineering",
+  "operations",
+  "automation",
+  "verification",
+] as const;
+export const DimensionFamilySchema = z.enum(DIMENSION_FAMILIES);
+export type DimensionFamily = z.infer<typeof DimensionFamilySchema>;
+export const DIMENSION_FAMILY: Record<DimensionKey, DimensionFamily> = {
+  featureDefs: "functional",
+  moduleUsage: "functional",
+  integration: "functional",
+  security: "runtime-quality",
+  securityOptimization: "runtime-quality",
+  performance: "runtime-quality",
+  mobileApps: "runtime-quality",
+  wcag: "runtime-quality",
+  owasp: "runtime-quality",
+  codeOptimization: "engineering",
+  deployment: "operations",
+  eca: "automation",
+  aiAgents: "automation",
+  testing: "verification",
+};
+
 export const DimensionStatusSchema = z.enum(["skeleton", "draft", "filled"]);
 export type DimensionStatus = z.infer<typeof DimensionStatusSchema>;
 
@@ -307,6 +335,49 @@ export const TraceabilitySchema = z.object({
 });
 export type Traceability = z.infer<typeof TraceabilitySchema>;
 
+/* ----------------------------------------------------------------------------
+ * Mühendislik Standardı Bağı (ADR-0027) — düğüm, tek-kaynak standart sözleşmelere
+ * REFERANS verir (yeniden yazmaz). Böylece standart drift'i imkânsızlaşır; CI
+ * (check-standards-coverage) referans bütünlüğünü zorlar. tech-profiles deseninin kardeşi.
+ * -------------------------------------------------------------------------- */
+export const StandardRefsSchema = z.object({
+  techProfileRef: z.string().default(""),
+  architectureRef: z.string().default(""),
+  codingStandardRef: z.string().default(""),
+  shortCodeRef: z.string().default(""),
+  designSystemRef: z.string().default(""),
+  uiComponentRef: z.string().default(""),
+  uxStandardRef: z.string().default(""),
+  dataApiContractRef: z.string().default(""),
+  stateContractRef: z.string().default(""),
+  testingStandardRef: z.string().default(""),
+  qualityGateRef: z.string().default(""),
+  observabilityRef: z.string().default(""),
+  releasePolicyRef: z.string().default(""),
+  aiGovernanceRef: z.string().default(""),
+});
+export type StandardRefs = z.infer<typeof StandardRefsSchema>;
+
+/** Boyut uygulanabilirliği: bir boyut bu düğüme uygulanmıyorsa applies=false + gerekçe. */
+export const ApplicabilitySchema = z.object({
+  applies: z.boolean().default(true),
+  reason: z.string().default(""),
+});
+export type Applicability = z.infer<typeof ApplicabilitySchema>;
+
+/** Standarttan bilinçli sapma — gerekçeli, onaylı, süreli (waiver yaşam döngüsü). */
+export const WaiverSchema = z.object({
+  id: z.string().min(1),
+  /** Feragat kapsamı: bir standardRef anahtarı, bir boyut anahtarı veya serbest kapsam. */
+  scope: z.string().min(1),
+  reason: z.string().min(1),
+  approvedBy: z.string().default(""),
+  date: z.string().default(""),
+  /** Son geçerlilik tarihi (boş = süresiz; gate süreli ister). */
+  expires: z.string().default(""),
+});
+export type Waiver = z.infer<typeof WaiverSchema>;
+
 export const TaskNodeSchema = z
   .object({
     schemaVersion: z.string().default(SCHEMA_VERSION),
@@ -375,6 +446,13 @@ export const TaskNodeSchema = z
 
     // İzlenebilirlik (Faz P5) — plan ↔ gerçek kod artefaktı bağı (opsiyonel; geriye uyumlu)
     traceability: TraceabilitySchema.optional(),
+
+    // Mühendislik standardı bağı (ADR-0027) — düğüm tek-kaynak sözleşmelere REFERANS verir.
+    standardRefs: StandardRefsSchema.default({}),
+    /** Boyut uygulanabilirliği (dimKey → {applies, reason}). Boş = tüm boyutlar uygulanır. */
+    applicability: z.record(DimensionKeySchema, ApplicabilitySchema).default({}),
+    /** Standarttan bilinçli sapma kayıtları (gerekçeli, onaylı, süreli). */
+    waivers: z.array(WaiverSchema).default([]),
 
     // Köken & governance
     source: SourceSchema.optional(),
