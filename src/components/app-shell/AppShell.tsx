@@ -17,6 +17,7 @@ const NAV = [
   { to: "/workload", label: t.nav.workload, icon: "ph-gauge" },
   { to: "/reports", label: t.nav.reports, icon: "ph-chart-line-up" },
   { to: "/audit", label: t.nav.audit, icon: "ph-clipboard-text" },
+  { to: "/standards", label: t.nav.standards, icon: "ph-shield-check" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

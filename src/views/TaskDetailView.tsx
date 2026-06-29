@@ -1,11 +1,13 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
-import { downloadFile, exportTask, getAncestors } from "@/engine";
+import { downloadFile, exportTask, getAncestors, nodeStandards } from "@/engine";
 import { cn } from "@/lib/cn";
 import { PRIORITY_LABEL, STATUS_LABEL, hslVar, levelLabel, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
 import {
+  DIMENSION_FAMILIES,
+  DIMENSION_FAMILY,
   DIMENSION_KEYS,
   DIMENSION_META,
   PHASE_META,
@@ -119,6 +121,7 @@ export function TaskDetailView() {
       <PlanningForm node={node} />
       <PhaseStepper node={node} />
       <Dimensions node={node} />
+      <StandardsRefsPanel node={node} />
       <EcaPanel node={node} />
       <WorkflowPanel node={node} />
       <Relations node={node} />
@@ -307,64 +310,124 @@ function PhaseStepper({ node }: { node: TaskNode }) {
 }
 
 function Dimensions({ node }: { node: TaskNode }) {
+  const familyLabel = t.families as Record<string, string>;
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-3">
       <h2 className="flex items-center gap-2 font-medium">
         <Icon name="ph-stack-plus" className="text-primary" /> {t.detail.dimensions}
       </h2>
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-        {DIMENSION_KEYS.map((key) => {
-          const dim = node.dimensions[key];
-          const meta = DIMENSION_META[key];
-          const isSkeleton = !dim || dim.status === "skeleton" || dim.items.length === 0;
-          return (
-            <Card key={key} className="p-3">
-              <div className="flex items-center gap-2">
-                <Icon name={meta.icon} className="text-primary" />
-                <span className="font-medium">{meta.tr}</span>
-                {!isSkeleton && (
-                  <Badge className="ml-auto text-primary" color={hslVar("--status-done")}>
-                    {dim.items.length} {t.detail.itemsUnit}
-                  </Badge>
-                )}
-              </div>
-              {isSkeleton ? (
-                <p className="mt-2 text-base text-muted-foreground">
-                  <Icon name="ph-dots-three-outline" /> {t.detail.skeletonNotice}
-                </p>
-              ) : (
-                <ul className="mt-2 list-disc pl-5 text-base">
-                  {dim.items.map((item, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: statik, yeniden-sıralanmayan gösterim listesi; metin yinelenebildiğinden indeks anahtarı güvenli
-                    <li key={`${key}-${i}`}>{item}</li>
-                  ))}
-                </ul>
-              )}
-              {dim?.notes && <p className="mt-1 text-base text-muted-foreground">{dim.notes}</p>}
-              {dim?.prompt && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-base text-muted-foreground">
-                    <Icon name="ph-sparkle" className="text-primary" /> {t.detail.aiPrompt}
-                  </summary>
-                  <div className="mt-1 flex items-start gap-2">
-                    <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
-                      {dim.prompt}
-                    </pre>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      aria-label={t.actions.copyPrompt}
-                      onClick={() => navigator.clipboard?.writeText(dim.prompt)}
-                    >
-                      <Icon name="ph-copy" />
-                    </Button>
-                  </div>
-                </details>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+      {DIMENSION_FAMILIES.map((family) => {
+        const keys = DIMENSION_KEYS.filter((k) => DIMENSION_FAMILY[k] === family);
+        return (
+          <div key={family} className="flex flex-col gap-2">
+            <h3 className="text-base font-medium text-muted-foreground">
+              {familyLabel[family] ?? family}
+            </h3>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              {keys.map((key) => {
+                const dim = node.dimensions[key];
+                const meta = DIMENSION_META[key];
+                const na = node.applicability?.[key]?.applies === false;
+                const isSkeleton = !dim || dim.status === "skeleton" || dim.items.length === 0;
+                return (
+                  <Card key={key} className={cn("p-3", na && "opacity-70")}>
+                    <div className="flex items-center gap-2">
+                      <Icon name={meta.icon} className="text-primary" />
+                      <span className="font-medium">{meta.tr}</span>
+                      {na ? (
+                        <Badge className="ml-auto" color={hslVar("--muted-foreground")}>
+                          {t.detail.notApplicable}
+                        </Badge>
+                      ) : !isSkeleton ? (
+                        <Badge className="ml-auto text-primary" color={hslVar("--status-done")}>
+                          {dim.items.length} {t.detail.itemsUnit}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    {na ? (
+                      <p className="mt-2 text-base text-muted-foreground">
+                        {node.applicability[key]?.reason}
+                      </p>
+                    ) : isSkeleton ? (
+                      <p className="mt-2 text-base text-muted-foreground">
+                        <Icon name="ph-dots-three-outline" /> {t.detail.skeletonNotice}
+                      </p>
+                    ) : (
+                      <ul className="mt-2 list-disc pl-5 text-base">
+                        {dim.items.map((item, i) => (
+                          // biome-ignore lint/suspicious/noArrayIndexKey: statik gosterim listesi
+                          <li key={`${key}-${i}`}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {!na && dim?.notes && (
+                      <p className="mt-1 text-base text-muted-foreground">{dim.notes}</p>
+                    )}
+                    {!na && dim?.prompt && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-base text-muted-foreground">
+                          <Icon name="ph-sparkle" className="text-primary" /> {t.detail.aiPrompt}
+                        </summary>
+                        <div className="mt-1 flex items-start gap-2">
+                          <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
+                            {dim.prompt}
+                          </pre>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={t.actions.copyPrompt}
+                            onClick={() => navigator.clipboard?.writeText(dim.prompt)}
+                          >
+                            <Icon name="ph-copy" />
+                          </Button>
+                        </div>
+                      </details>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+function StandardsRefsPanel({ node }: { node: TaskNode }) {
+  const refs = nodeStandards(node);
+  const waivers = node.waivers ?? [];
+  if (refs.length === 0 && waivers.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="flex items-center gap-2 font-medium">
+        <Icon name="ph-shield-check" className="text-primary" /> {t.detail.standards}
+      </h2>
+      {refs.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {refs.map((r) => (
+            <Badge key={r.key} className="text-primary" color={hslVar("--primary")}>
+              {r.name}
+            </Badge>
+          ))}
+        </div>
+      )}
+      {waivers.length > 0 && (
+        <Card className="p-3">
+          <h3 className="mb-1 text-base font-medium text-muted-foreground">{t.detail.waivers}</h3>
+          <ul className="flex flex-col gap-1 text-base">
+            {waivers.map((w) => (
+              <li key={w.id} className="flex items-start gap-2">
+                <Icon name="ph-seal-warning" className="text-primary" />
+                <span>
+                  {w.scope}: {w.reason}
+                  {w.expires ? ` (${w.expires})` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </section>
   );
 }
