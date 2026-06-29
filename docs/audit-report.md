@@ -1,18 +1,18 @@
 # Denetim Raporu (audit)
 
-Üretim: 2026-06-19 · Kaynak: `tools/audit.mjs` · Skorlama: `tools/lib/score.mjs` (uygulama ile ortak).
+Üretim: 2026-06-29 · Kaynak: `tools/audit.mjs` · Skorlama: `tools/lib/score.mjs` (uygulama ile ortak).
 
 Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanabilirlik (0.30)** ağırlıklı bileşik. Düğüm skoru = 14 boyutun ortalaması.
 
 ## Özet
 
-- Toplam düğüm: **424** · skorlanan (en az 1 dolu boyut): **424**
-- Ortalama düğüm skoru: **2.66 / 3**
-- Güçlü (≥2.3): **424** (100%) · Orta (1.5-2.3): **0** (0%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
+- Toplam düğüm: **438** · skorlanan (en az 1 dolu boyut): **438**
+- Ortalama düğüm skoru: **2.67 / 3**
+- Güçlü (≥2.3): **438** (100%) · Orta (1.5-2.3): **0** (0%) · Zayıf (<1.5): **0** (0%) · Boş: **0**
 
 ### Köken dağılımı (provenance)
 
-- swarm: 407
+- swarm: 421
 - human: 17
 
 ### Bayrak dağılımı (en sık kalite sorunları)

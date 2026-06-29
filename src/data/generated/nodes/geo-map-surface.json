@@ -1,0 +1,661 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "geo-map-surface",
+  "wbsCode": "23.2",
+  "level": "archetype",
+  "title": "Geo Harita Yüzeyi (deck.gl + MapLibre)",
+  "slug": "geo-map-surface",
+  "summary": "deck.gl + MapLibre tabanlı, ArcheType geo alanlarını harita olarak gösteren paylaşılan Surface SDK bileşeni; WCAG tablo-fallback, tembel-yüklenen, MVT/H3 tüketir.",
+  "parentId": "app-platform-horizontal",
+  "order": 5,
+  "icon": "ph-map-trifold",
+  "tags": [
+    "platform-horizontal",
+    "geo",
+    "deckgl",
+    "maplibre",
+    "surface",
+    "visualization"
+  ],
+  "dependsOn": [
+    "scale-gis"
+  ],
+  "blocks": [
+    "dist-realestate"
+  ],
+  "related": [
+    "scale-gis",
+    "dist-realestate",
+    "sus-lisans"
+  ],
+  "refs": [
+    "adr: docs/adr-geo-visualization.md"
+  ],
+  "criticalPath": false,
+  "status": "todo",
+  "priority": "high",
+  "owner": "veri-ekibi",
+  "effort": {
+    "estimate": 21,
+    "unit": "d",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "deliverables": [],
+  "acceptanceCriteria": [],
+  "risks": [],
+  "rollback": null,
+  "evidence": [],
+  "metrics": [],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "ScatterplotLayer ile nokta geo alanları (ilan konumu, mağaza) renk/yarıçap encode edilerek render edilir",
+        "GeoJsonLayer ve PolygonLayer ile mahalle/parsel poligonları PostGIS GeoJSON çıktısından çizilir",
+        "HexagonLayer, HeatmapLayer ve H3HexagonLayer ile yoğunluk agregasyonu zoom seviyesine göre sunulur",
+        "MapLibre GL basemap üstüne deck.gl overlay; ArcheType geo alanı pick edilince picking/tooltip ile detay açılır"
+      ],
+      "notes": "Katmanlar ArcheType geo alan tipinden türetilir; tüketici doğrudan deck.gl API yazmaz.",
+      "prompt": "\"Özellik Tanımları\" boyutunu geo-map-surface (deck.gl + MapLibre paylaşılan harita Surface) için üret. Bağlam: ArcheType geo alanlarını scale-gis/PostGIS GeoJSON/MVT'den harita olarak gösterir; ScatterplotLayer/GeoJsonLayer/PolygonLayer/HexagonLayer/H3HexagonLayer; MapLibre basemap; picking/tooltip.",
+      "provenance": "swarm"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Her MVT tile ve GeoJSON sorgusu tenant_id RLS ile kapsamlanır; kapsam dışı parsel asla render edilmez",
+        "Hassas koordinatlar (PII) yaklaşık konuma maskelenir; grid hücresine yuvarlanarak tam adres sızdırılmaz",
+        "Tile önbelleği tenant başına izole anahtarlanır; cache key tenant_id+zoom+xyz ile çapraz okuma engellenir",
+        "Picking/tooltip alanları sunucudan yetki kontrolünden geçer; yetkisiz öznitelik istemciye hiç gönderilmez"
+      ],
+      "notes": "Koordinat PII'si grid maskeleme ile korunur; tile cache tenant izole.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu geo-map-surface için üret. Bağlam: tenant-kapsamlı tile/sorgu (RLS), koordinat PII maskeleme (grid/yaklaşık konum), tile cache izolasyonu.",
+      "provenance": "swarm"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "deck.gl katman fabrikası geo alan tipini katman örneğine eşler; tüketici imperatif katman kurmaz",
+        "GeoJSON/MVT'den deck.gl accessor'a dönüşüm saf, yan etkisiz fonksiyonlarda tutulur ve birim test edilir",
+        "Harita Surface tembel chunk olarak ayrı bundle'a bölünür; deck.gl/maplibre yalnız ihtiyaç anında yüklenir",
+        "Katman fabrikası ve dönüşüm fonksiyonlarında döngüsel karmaşıklık 10 üst sınırıyla denetlenir"
+      ],
+      "notes": "Saf dönüşüm + fabrika deseni test edilebilirliği ve lazy yüklemeyi sağlar.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu geo-map-surface için üret. Bağlam: deck.gl layer fabrikası, saf veri-dönüşüm fonksiyonları, lazy chunk, döngüsel karmaşıklık sınırı.",
+      "provenance": "swarm"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tile istekleri kısa-ömürlü imzalı token (expiry < 5 dk) ile yetkilendirilir; süresi dolan token reddedilir",
+        "Tile ve sorgu uçları istemci/tenant başına rate-limit ile korunur; aşırı viewport taraması engellenir",
+        "deck.gl, maplibre-gl ve geo bağımlılıkları CI'da SCA taramasıyla CVE açısından sürekli denetlenir",
+        "Basemap ve tile için sıkı CSP ile yalnız izinli tile/style origin'lerine bağlantıya izin verilir"
+      ],
+      "notes": "İmzalı expiry token + rate-limit kötüye kullanım ve sızıntı yüzeyini daraltır.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu geo-map-surface için üret. Bağlam: imzalı/expiry tile token, rate-limit, bağımlılık taraması.",
+      "provenance": "swarm"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Vektör veri MVT tile olarak sunulur; zoom-LOD ile uzak zoom'da H3 agregasyon, yakında ham geometri çizilir",
+        "Viewport culling ile yalnız görünür tile/feature yüklenir; ekran dışı katmanlar bellekten düşürülür",
+        "deck.gl GPU instancing ile yüz binlerce nokta tek draw call'da çizilir; CPU döngüsü minimuma iner",
+        "Tile sunucu p95 yanıtı < 200 ms hedeflenir ve sürekli ölçülür; aşımda CDN/önbellek devreye girer"
+      ],
+      "notes": "MVT + zoom-LOD + H3 agregasyon yoğun veride etkileşimi akıcı tutar.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu geo-map-surface için üret. Bağlam: MVT tile + zoom-LOD + H3 agregasyon, viewport culling, GPU instancing, p95 tile < 200ms.",
+      "provenance": "swarm"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Düşük-uç cihaz WebGL uyumu denetlenir; bağlam kaybı/zayıf GPU'da nokta sayısı ve katman düşürülür",
+        "Dokunma pan/zoom kontrolleri ve harita üzeri butonlar en az 44px hedef alanıyla parmak dostu yerleşir",
+        "Sık görülen tile'lar PWA service worker ile çevrimdışı önbelleğe alınır; ağ yokken son harita gezilebilir",
+        "MapLibre tek-parmak pan, iki-parmak zoom/rotate hareketleri mobilde gecikmesiz ve momentum'la çalışır"
+      ],
+      "notes": "Düşük-uç WebGL fallback + PWA tile cache mobil saha kullanımını güvenceler.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu geo-map-surface için üret. Bağlam: WebGL düşük-uç cihaz uyumu, dokunma pan/zoom hedefi en az 44px, çevrimdışı tile cache (PWA).",
+      "provenance": "swarm"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Haritayla aynı veriyi sunan zorunlu tablo/liste fallback'i sağlanır; her feature satır olarak erişilebilir",
+        "WebGL yoksa veya prefers-reduced-data'da azaltılmış-veri yolu devreye girer; harita yerine tablo gösterilir",
+        "Tüm harita kontrolleri (zoom, katman, seçim) klavyeyle tam gezilebilir ve görünür odak sırasıyla işaretlenir",
+        "Ekran okuyucuya katman/sonuç özeti ARIA-live ile sunulur; metin/işaret kontrastı en az 7:1 tutulur"
+      ],
+      "notes": "Tablo/liste fallback aynı veriyi taşır; no-WebGL yolu ve tam klavye zorunludur.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu geo-map-surface için üret. Bağlam: ZORUNLU tablo/liste fallback (aynı veri), no-WebGL/reduce-data yolu, tam klavye, ekran okuyucuya özet (kontrast en az 7:1).",
+      "provenance": "swarm"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Tile sunucu Swarm servisi veya K8s deployment olarak koşar; kaynak limiti ve sağlık denetimiyle ölçeklenir",
+        "Üretilen MVT/raster tile'lar CDN kenarında önbelleğe alınır; tekrar isteklerde origin yükü düşürülür",
+        "Paylaşımlı barındırmada tile sunucu yoksa salt-okunur, önceden üretilmiş statik tile harita servis edilir",
+        "Surface SDK bundle'ı statik varlık olarak yayınlanır; tüketici app'ler sürümlenmiş paketi import eder"
+      ],
+      "notes": "CDN tile cache + shared-hosting statik fallback geniş dağıtım kapsar.",
+      "prompt": "\"Dağıtım\" boyutunu geo-map-surface için üret. Bağlam: tile sunucu Swarm/K8s, CDN tile cache, shared-hosting salt-okunur statik harita.",
+      "provenance": "swarm"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Backend ECA ruleset, AI'ın app/module mutasyon ve harita Surface üretme denemesini deny eder (zincir ≤6)",
+        "Olay: tile/sorgu isteği eşiği aştı -> Koşul: tenant kotası dolu -> Eylem: rate-limit uygula, idempotent",
+        "Olay: imzasız/expired tile token -> Koşul: doğrulama başarısız -> Eylem: isteği reddet ve denetime yaz",
+        "Tüm geo Surface kuralları idempotenttir; döngü kırıcı en fazla 6 adımla yeniden tetiklemeyi durdurur"
+      ],
+      "notes": "Ruleset backend'de çalışır; rate-limit ve deny kuralları zincir ≤6 ile sınırlı.",
+      "prompt": "\"ECA Kuralları\" boyutunu geo-map-surface için üret. Bağlam: backend ruleset; AI app/module mutasyonu deny; tile/sorgu rate-limit; maks 6 zincir.",
+      "provenance": "swarm"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI yalnız ArcheType geo alan taslağı/öneri üretebilir; harita Surface'ı veya app/module üretemez-güncelleyemez",
+        "AI deck.gl katman seçimi/eşleme önerebilir ama Surface SDK kodunu doğrudan prod'a yazamaz, insan onayı şart",
+        "sub_prompt ve geo öznitelik metni güvenilmez kabul edilir; ruleset override/disable denemesi anında deny edilir",
+        "AI tile/sorgu erişim kuralını kendisi gevşetemez; kill-switch ve step-up koruması her öneri akışında geçerlidir"
+      ],
+      "notes": "AI öneri-uygulama ayrımı korunur; Surface ve ruleset AI'a kapalıdır.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu geo-map-surface için üret. Bağlam: AI yalnız ArcheType taslağı/öneri üretebilir; harita Surface'ı veya app/module üretemez/güncelleyemez; ruleset override edemez.",
+      "provenance": "swarm"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "MVT tile üretimi testi: verilen bbox/zoom için beklenen feature sayısı ve geometri kodlaması doğrulanır",
+        "GeoJSON kontrat testi: scale-gis çıktısının şema/SRID/öznitelik sözleşmesine uyduğu doğrulanır",
+        "A11y-fallback testi: WebGL kapalıyken tablo/liste fallback'in aynı veriyi sunduğu axe ile denetlenir",
+        "AI-destekli Playwright ile pan/zoom/seçim yolculuğu otomatize edilir; test döngüsü en fazla 6 turla sınırlı"
+      ],
+      "notes": "Tile-üretim, GeoJSON kontrat ve a11y-fallback testleri çekirdek kapıdır.",
+      "prompt": "\"Testler & QA\" boyutunu geo-map-surface için üret. Bağlam: tile-üretim (MVT) testi, GeoJSON kontrat testi, a11y-fallback testi, AI-destekli Playwright, testing-loop maks 6.",
+      "provenance": "swarm"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "A01 Access Control: tile/feature erişimi tenant kapsamlıdır; yetkisiz parsel tile'ı asla servis edilmez",
+        "A03 Injection: uzamsal sorgular parametreli yürütülür; bbox/zoom girdileri sınır kontrolünden geçirilir",
+        "A10 SSRF: tile-proxy yalnız izinli tile/style origin allowlist'ine erişir; iç ağa istek yönlendirilemez",
+        "LLM01 Prompt Injection: geo öznitelik/etiket metni AI'a talimat olarak çalıştırılmadan izole edilir"
+      ],
+      "notes": "Tehdit yüzeyi A01/A03/A10 ve tile-proxy SSRF korumasıyla daraltılır.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu geo-map-surface için üret. Bağlam: A01 tenant tile erişimi, A03 uzamsal sorgu parametreli, A10 SSRF tile-proxy koruması, LLM01.",
+      "provenance": "swarm"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "scale-gis (PostGIS) MVT/GeoJSON tile sözleşmesini tüketir; geometri verisini yeniden üretmez, ondan okur",
+        "k-surface projeksiyon/Surface sözleşmesine bağlanır; harita bileşeni kabuğa standart Surface API'siyle takılır",
+        "Geo seçim ve viewport değişimi olay üzerinden yayınlanır; tüketici app'ler bu olaylara reaktif bağlanır",
+        "Bağımlılık yönü tek yönlüdür: Surface scale-gis ve k-surface'a bağımlıdır, onlar Surface'ı bilmez"
+      ],
+      "notes": "scale-gis veriyi besler, k-surface projeksiyonu verir; entegrasyon olay tabanlı.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu geo-map-surface için üret. Bağlam: scale-gis (PostGIS/MVT) tüketir, k-surface projeksiyon sözleşmesine bağlanır, olay üzerinden.",
+      "provenance": "swarm"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "dist-realestate ilan harita görünümünü üretilen Surface API'siyle tüketir; doğrudan deck.gl katmanı yazmaz",
+        "dist-sahibinden konum/yoğunluk haritasını aynı paylaşılan Surface üzerinden gömerek tutarlı UX sağlar",
+        "Harita gereken her app geo alanını Surface'a verir; render, fallback ve a11y'yi Surface SDK üstlenir",
+        "Tüketici app'ler tile/sorgu erişimini doğrudan değil, Surface'ın yetkilendirilmiş API'si üzerinden yapar"
+      ],
+      "notes": "Tüketiciler paylaşılan Surface API'sini kullanır; deck.gl'i tekrarlamaz.",
+      "prompt": "\"Modül Kullanımı\" boyutunu geo-map-surface için üret. Bağlam: dist-realestate/dist-sahibinden ve harita gereken her app üretilen Surface API'sini tüketir (doğrudan deck.gl yazmaz).",
+      "provenance": "swarm"
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "geo-map-surface",
+    "granularity": "buyuk-tas",
+    "cluster": "platform-horizontal"
+  },
+  "state": "aday",
+  "lastUpdated": "2026-06-19",
+  "ecaRules": [
+    {
+      "id": "eca-geo-map-surface-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Geo Harita Yüzeyi (deck.gl + MapLibre) tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Geo Harita Yüzeyi (deck.gl + MapLibre) blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "geo-map-surface"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "geo-map-surface"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "geo-map-surface"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Geo Harita Yüzeyi (deck.gl + MapLibre) AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-geo-map-surface-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "geo-map-surface",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-geo-map-surface-archetype-prod-history-deny",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "neq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "prod-archetype-update-must-preserve-history",
+          "node": "geo-map-surface"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-geo-map-surface-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "geo-map-surface",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "milestone": "Platform & Yatay",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": null,
+    "baselineEnd": null
+  },
+  "assignees": [
+    "veri-ekibi"
+  ],
+  "agentPolicy": {
+    "autonomy": "draft",
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
+    "allowedTargets": [
+      "archetype"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  }
+}
