@@ -6,6 +6,7 @@ export * from "./archetype";
 export * from "./ruleset";
 export * from "./surface";
 export * from "./view";
+export * from "./tech";
 
 /** Navigasyon ağacı düğümü (generated/navigation.json) */
 export const NavNodeSchema: z.ZodType<NavNode> = z.lazy(() =>
