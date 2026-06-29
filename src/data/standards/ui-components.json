@@ -1,0 +1,102 @@
+{
+  "id": "ui-components",
+  "name": "UI Bileşen Sözleşmesi Standardı",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Headless Radix tabanlı bileşen API'si (props), controlled/uncontrolled davranış, zorunlu durum kümesi (default/hover/focus/disabled/loading/empty/error), variant+size sistemi, kompozisyon/slot, bileşen başına a11y rolleri, Phosphor ikon ve ≥44px dokunma hedefi.",
+  "appliesTo": ["product-ui", "component-library"],
+  "rules": [
+    {
+      "id": "uic-headless-radix-base",
+      "rule": "Etkileşimli bileşenler (dialog, menu, tabs, tooltip, select, popover, switch, checkbox, slider) Radix UI primitifi üzerine kurulur; zor a11y senaryolarında React Aria kullanılır. Görsel katman yalnız token'lı SCSS ile giydirilir. Sıfırdan div ile a11y davranışı (odak tuzağı, rol, ARIA) yeniden yazmak YASAK; stillenmiş kit bileşeni (MUI/antd/Chakra/Mantine/Flowbite) YASAK.",
+      "rationale": "Headless primitif kanıtlanmış klavye/ARIA davranışını verir; el yapımı a11y kırılgandır.",
+      "severity": "must",
+      "check": "check-tech-profile + import taraması (banned kit) + review"
+    },
+    {
+      "id": "uic-required-states",
+      "rule": "Her etkileşimli bileşen yedi durumu açıkça destekler ve görsel olarak ayırt eder: default, hover, focus-visible, disabled, loading, empty (veri yok), error. Bunlardan loading skeleton/spinner, empty bilgilendirici boş-durum bloğu, error kurtarma eylemli hata bloğu ZORUNLUDUR. Eksik durum (ör. yalnız default + hover) eksik kabul edilir.",
+      "rationale": "Tam durum kapsamı kullanıcıyı belirsizlikte bırakmaz; loading/empty/error gerçek veri yaşam döngüsünü kapsar.",
+      "severity": "must",
+      "check": "Storybook durum kapsama testi (her bileşen için 7 state story) + review"
+    },
+    {
+      "id": "uic-focus-visible-7to1",
+      "rule": "focus-visible durumu HER zaman görünür bir odak halkasıdır: en az 2px kalınlık, bileşen kenarından ≥2px offset, rengi komşu yüzeyle ≥3:1 (tercihen --ap-color-focus-ring ile ≥7:1) kontrast yapar. `outline: none` ancak eşdeğer görünür bir alternatif (box-shadow halkası) eklenmişse kullanılabilir; çıplak outline:none YASAK.",
+      "rationale": "Görünür odak WCAG 2.2 (2.4.7 + 2.4.13 Focus Appearance) gereği; klavye kullanıcısı konumunu kaybetmez.",
+      "severity": "must",
+      "check": "stylelint (outline:none olup focus stili yoksa hata) + a11y review"
+    },
+    {
+      "id": "uic-touch-target-44",
+      "rule": "Tüm tıklanabilir/dokunulabilir hedefler (buton, ikon-buton, switch, checkbox, link-as-button, liste satırı eylemi) en az 44x44px etkili dokunma alanına sahiptir; görsel boyut küçükse şeffaf padding/::before ile dokunma alanı 44px'e tamamlanır. Bitişik hedefler arası boşluk ≥8px (--ap-space-2).",
+      "rationale": "≥44px WCAG 2.2 (2.5.8 Target Size) ve parmak ergonomisi; küçük/bitişik hedef hatalı dokunmaya yol açar.",
+      "severity": "must",
+      "check": "Storybook ölçüm testi + review"
+    },
+    {
+      "id": "uic-controlled-uncontrolled",
+      "rule": "Durum tutan bileşenler hem controlled hem uncontrolled modu destekler: controlled için `value` + `onValueChange` (veya checked/onCheckedChange), uncontrolled için `defaultValue`. İki mod karıştırılamaz; her ikisi aynı anda tanımlanırsa geliştirme modunda uyarı verilir. onChange callback'i imperatif state mutasyonu yapmaz.",
+      "rationale": "Controlled/uncontrolled ikiliği tüketicilere esneklik verir ve Radix sözleşmesiyle hizalanır; karışık mod tahmin edilemez davranış üretir.",
+      "severity": "must",
+      "check": "prop tipi testi (controlled+uncontrolled story) + review"
+    },
+    {
+      "id": "uic-variant-size-api",
+      "rule": "Bileşenler kapalı bir enum üzerinden `variant` ve `size` prop'u sunar: variant ∈ {primary, secondary, ghost, danger}, size ∈ {sm(32px), md(40px), lg(48px)} (yükseklikler 8pt ölçeğinden). Ad-hoc stil prop'u (style/className ile renk-override) ile yeni varyant uydurmak YASAK; yeni varyant token + bileşen sözleşmesine eklenir.",
+      "rationale": "Sabit variant/size enum'u görsel tutarlılığı korur ve kombinasyon patlamasını engeller.",
+      "severity": "should",
+      "check": "tip (union) doğrulaması + review"
+    },
+    {
+      "id": "uic-composition-slot",
+      "rule": "Bileşenler kompozisyon için `asChild` (Radix Slot) veya açık alt-bileşen slot'ları (Card.Header/Card.Body/Card.Footer gibi) sunar; sarmalayıcı eklemek için DOM düğümü zorla enjekte edilmez. İçerik prop'u yerine children tercih edilir; yapısal varyasyon kompozisyonla, prop bayrak bombardımanıyla değil çözülür.",
+      "rationale": "Slot/kompozisyon esnek ve fazladan DOM'suz; aşırı boolean prop bileşeni kırılganlaştırır.",
+      "severity": "should",
+      "check": "API review + Storybook kompozisyon örnekleri"
+    },
+    {
+      "id": "uic-a11y-roles-per-component",
+      "rule": "Her bileşen doğru ARIA rol/öznitelik taşır: ikon-buton `aria-label`; disabled buton `aria-disabled` + odaklanabilirlik korunur; loading bölgesi `aria-busy=\"true\"`; hata mesajı `role=\"alert\"` + ilgili input'a `aria-describedby` ile bağlı; form alanı `<label>` ile programatik bağlı. Yalnız görsel ipucuna (renk/ikon) dayanan, metinsiz a11y YASAK.",
+      "rationale": "Rol/öznitelik ekran okuyucu kullanıcısına bileşenin durumunu iletir; etiketsiz ikon-buton erişilemez.",
+      "severity": "must",
+      "check": "axe-core (jest-axe) bileşen testi sıfır ihlal + review"
+    },
+    {
+      "id": "uic-icons-phosphor-svg",
+      "rule": "Bileşen ikonları Phosphor ikon setinden gelir (CDN öncelikli, fallback FontAwesome); özel ikon yalnız satır-içi/optimize SVG olabilir. Raster (png/jpg) ikon ve emoji (✅, ⚠️ vb.) UI'da YASAK. Anlam taşıyan ikon `aria-hidden=\"false\"` + erişilebilir ad ile, salt-dekoratif ikon `aria-hidden=\"true\"` ile işaretlenir.",
+      "rationale": "Vektör ikon her DPI'de keskin ve tema-renklenebilir; emoji platforma göre değişir ve profesyonel/erişilebilir değil.",
+      "severity": "must",
+      "check": "lint (emoji + raster ikon import yasağı) + review"
+    },
+    {
+      "id": "uic-responsive-behavior",
+      "rule": "Bileşenler içsel olarak akışkandır: sabit px genişlik dayatmaz, kapsayıcıya uyar (max-width token + %); kesme noktaları --ap-breakpoint-{sm:640,md:768,lg:1024,xl:1280}px token'larından okunur. Yatay taşma (overflow-x scroll) yalnız tablo/kod gibi içsel geniş içerik için kabul edilir; düzen yatay kaydırmaya zorlanmaz.",
+      "rationale": "Akışkan + token'lı breakpoint davranışı 320px'den geniş ekrana kadar tutarlı; sabit genişlik mobilde kırılır.",
+      "severity": "should",
+      "check": "Storybook viewport (sm/md/lg) testi + review"
+    }
+  ],
+  "banned": [
+    "antd",
+    "@mui/material",
+    "@chakra-ui/react",
+    "@mantine/core",
+    "flowbite",
+    "bare-outline-none",
+    "emoji-in-ui",
+    "raster-icon",
+    "fixed-px-width-layout",
+    "div-soup-a11y"
+  ],
+  "allowed": [
+    "radix-ui",
+    "react-aria",
+    "phosphor-icons",
+    "fontawesome",
+    "inline-svg",
+    "radix-slot-aschild"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

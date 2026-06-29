@@ -1,0 +1,49 @@
+{
+  "id": "architecture",
+  "name": "Mimari & Sınırlar Standardı",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Katman sınırları, import yönü, bounded-context kapanımı, kernel dokunma kuralı, engine↔UI ayrımı, JSON-as-DB.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "arch-layer-direction",
+      "rule": "Bağımlılık tek yönlü: data(schema) → engine → view. view engine'i import eder; engine view'i veya DOM'u ASLA import etmez.",
+      "rationale": "Döngüsüz bağımlılık + motorun başsız test edilebilirliği.",
+      "severity": "must",
+      "check": "check-dependency-policy + biome import kuralı"
+    },
+    {
+      "id": "arch-bounded-context",
+      "rule": "Her module tek bounded-context'e kapalıdır; başka context'in iç modülünü değil yalnız yayınlanmış sözleşmesini (contract) tüketir.",
+      "rationale": "Bağımsız evrim ve deploy birimi.",
+      "severity": "must",
+      "check": "review + import sınır taraması"
+    },
+    {
+      "id": "arch-engine-pure",
+      "rule": "engine/ saf TypeScript + Zod'dur; React/DOM/IO import etmez. Sunucu durumu TanStack Query'de, UI durumu view'da kalır.",
+      "rationale": "Saf çekirdek = deterministik birim test.",
+      "severity": "must",
+      "check": "biome + check-ui-standards"
+    },
+    {
+      "id": "arch-kernel-expand-contract",
+      "rule": "Kernel/paylaşılan sözleşmeye yalnız genişleterek (expand-contract) dokunulur; kırıcı değişiklik ADR + PR + migration ister.",
+      "rationale": "Geriye uyumluluk; tüketiciler kırılmaz.",
+      "severity": "must",
+      "check": "review + ADR kapısı"
+    },
+    {
+      "id": "arch-json-as-db",
+      "rule": "İçerik JSON-as-DB'de (src/data) tek-kaynaktır; engine okur, UI render eder. İçerik kod içine gömülmez, standartlar düğüme kopyalanmaz (referans verilir).",
+      "rationale": "Tek-kaynak + üretilebilirlik + drift yok.",
+      "severity": "should",
+      "check": "check-standards-coverage"
+    }
+  ],
+  "banned": ["circular-import", "engine-imports-view", "deep-cross-context-import"],
+  "allowed": [],
+  "references": ["docs/adr-0027-engineering-standards.md", "docs/task-to-code-contract.md"]
+}

@@ -1,0 +1,82 @@
+{
+  "id": "short-code",
+  "name": "Kısa Kod & Kapsam Frenleri Standardı",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Küçük PR, dosya/fonksiyon boyut tavanı, döngüsel ve bilişsel karmaşıklık eşikleri, gereksiz soyutlama yasağı, zorunlu allowed-files + non-goals ile AI ajanın kapsam genişlemesini frenler.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "short-pr-size",
+      "rule": "Bir PR'daki net değişiklik (üretilen/lock dosyaları hariç) ≤ 400 satırdır; aşan iş atomik PR'lara bölünür. Tek PR ≤ 20 dosyaya dokunur.",
+      "rationale": "Küçük PR gözden geçirilebilir, geri alınabilir ve regresyon yüzeyi küçüktür.",
+      "severity": "must",
+      "check": "check-pr-size CI kapısı (diff satır sayımı) bloklar"
+    },
+    {
+      "id": "short-file-length",
+      "rule": "Kaynak dosya ≤ 300 satırdır (test/üretilen dosyalar hariç); aşan dosya tek-sorumluluk ekseninde bölünür.",
+      "rationale": "300 satır tavanı tek-sorumluluğu ve gezilebilirliği zorlar.",
+      "severity": "must",
+      "check": "biome veya check-file-length kapısı (max satır) bloklar"
+    },
+    {
+      "id": "short-cyclomatic-complexity",
+      "rule": "Fonksiyon başına döngüsel karmaşıklık ≤ 10; aşan fonksiyon erken-return veya çıkarımla sadeleştirilir.",
+      "rationale": "Karmaşıklık ≤10 test edilebilir dal sayısını ve hata oranını sınırlar.",
+      "severity": "must",
+      "check": "biome (noExcessiveComplexity, maxAllowedComplexity=10) bloklar"
+    },
+    {
+      "id": "short-cognitive-complexity",
+      "rule": "Fonksiyon başına bilişsel karmaşıklık ≤ 15 ve maksimum iç içe yuvalama (nesting) derinliği ≤ 4'tür.",
+      "rationale": "Sığ yuvalama insan okuyucunun fonksiyonu tek seferde kavramasını sağlar.",
+      "severity": "should",
+      "check": "biome (noExcessiveNestedTestSuites / nesting kuralı) + review"
+    },
+    {
+      "id": "short-no-speculative-abstraction",
+      "rule": "Gereksiz soyutlama yasak: bir soyutlama (interface/factory/generic katman) ancak ≥ 2 gerçek çağıran varken eklenir (YAGNI). Tek kullanımlı wrapper ve erken genelleme reddedilir.",
+      "rationale": "Spekülatif soyutlama okunabilirliği düşürür ve değişim maliyetini artırır.",
+      "severity": "should",
+      "check": "review (YAGNI kontrolü) + non-goals doğrulaması"
+    },
+    {
+      "id": "short-allowed-files-required",
+      "rule": "Her görev/PR, dokunulmasına izin verilen dosya/dizin listesini (allowed-files) açıkça bildirir; listede olmayan dosyaya yapılan değişiklik reddedilir.",
+      "rationale": "Allowed-files, AI ajanın istem dışı kapsam genişlemesini mekanik olarak durdurur.",
+      "severity": "must",
+      "check": "check-allowed-files CI kapısı (değişen dosya ∈ allowed-files) bloklar"
+    },
+    {
+      "id": "short-non-goals-required",
+      "rule": "Her görev tanımı en az bir 'non-goal' (kapsam-dışı) maddesi içerir; non-goal'a giren değişiklik PR'da yapılamaz.",
+      "rationale": "Açık non-goals, görevin sınırını ve 'yapılmayacaklar'ı sözleşmeye bağlar.",
+      "severity": "must",
+      "check": "review + görev şeması non-goals alan zorunluluğu"
+    },
+    {
+      "id": "short-no-dead-code",
+      "rule": "Ölü kod (kullanılmayan export, değişken, import, ulaşılamaz dal) ve yorum-satırı haline getirilmiş kod blokları PR'da silinir; bırakılmaz.",
+      "rationale": "Ölü kod bakım yükü ve yanlış güven kaynağıdır; versiyon geçmişi yedeği zaten tutar.",
+      "severity": "must",
+      "check": "biome (noUnusedVariables, noUnusedImports, noDeadCode) bloklar"
+    },
+    {
+      "id": "short-composition-over-inheritance",
+      "rule": "Kod yeniden kullanımı kompozisyonla (fonksiyon/hook/bileşen birleştirme) yapılır; sınıf kalıtım zinciri ≤ 1 seviye ve uygulama kodunda yeni soyut sınıf hiyerarşisi kurulmaz.",
+      "rationale": "Kompozisyon, derin kalıtımın kırılgan taban-sınıf sorununu önler.",
+      "severity": "should",
+      "check": "review + biome (noStaticOnlyClass) "
+    }
+  ],
+  "banned": [
+    "speculative-abstraction",
+    "dead-code",
+    "deep-inheritance",
+    "scope-creep-outside-allowed-files"
+  ],
+  "allowed": ["atomic-pr", "composition", "early-return"],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

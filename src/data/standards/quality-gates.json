@@ -1,0 +1,75 @@
+{
+  "id": "quality-gates",
+  "name": "Kalite Kapıları Standardı",
+  "version": "1.0.0",
+  "family": "testing",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Merge öncesi bloklayıcı kapılar: typecheck 0, biome 0, kapsam eşiği, e2e + axe 0 ihlal (WCAG 2.2 AAA), perf p95 bütçesi, yeşil build ve DoD checklist; herhangi bir kapı kırmızıysa merge yasak.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "gate-typecheck-zero",
+      "rule": "tsc --noEmit (strict mod) 0 hata vermeli; tek tip hatası dahi merge'i bloklar.",
+      "rationale": "Tip hatası taşıyan kod tanım gereği bozuktur.",
+      "severity": "must",
+      "check": "CI 'typecheck' işi (tsc --noEmit) sıfır-çıkış zorunlu; aksi merge bloklu"
+    },
+    {
+      "id": "gate-lint-zero",
+      "rule": "biome check (lint + format) 0 hata/0 uyarı vermeli; biçim farkı veya lint ihlali merge'i bloklar.",
+      "rationale": "Sıfır-uyarı politikası lint borcunun birikmesini engeller.",
+      "severity": "must",
+      "check": "CI 'lint' işi (biome ci) sıfır-çıkış zorunlu"
+    },
+    {
+      "id": "gate-coverage-threshold",
+      "rule": "Birim/entegrasyon test kapsamı satır ve dal (branch) için ≥ %80; değişen dosyalarda (patch coverage) ≥ %90. Eşik altı merge bloklu.",
+      "rationale": "Sayısal kapsam eşiği test-önce disiplinini ölçülebilir kılar.",
+      "severity": "must",
+      "check": "vitest --coverage eşik kapısı (coverage.thresholds) bloklar"
+    },
+    {
+      "id": "gate-e2e-axe-zero",
+      "rule": "Playwright e2e paketi yeşil ve axe-core taraması WCAG 2.2 AA+AAA için 0 ihlal; kontrast ≥ 7:1, tam klavye erişimi ve görünür odak otomatik doğrulanır.",
+      "rationale": "Erişilebilirlik ihlali AAA hedefinde kabul edilemez ve merge'i bloklar.",
+      "severity": "must",
+      "check": "CI 'e2e' + 'axe' işleri 0 ihlal zorunlu"
+    },
+    {
+      "id": "gate-perf-budget",
+      "rule": "Performans bütçesi: kritik etkileşim p95 ≤ 200 ms, ilk anlamlı render p95 ≤ 2500 ms, JS başlangıç paketi ≤ 250 KB gzip. Bütçe aşımı merge'i bloklar.",
+      "rationale": "Sayısal perf bütçesi regresyonu objektif olarak yakalar.",
+      "severity": "must",
+      "check": "CI perf işi (Lighthouse/bundle-size budget) eşik kapısı bloklar"
+    },
+    {
+      "id": "gate-build-green",
+      "rule": "Production build (vite build) ve Prisma migrate kontrolü hatasız tamamlanmalı; kırmızı build merge'i bloklar.",
+      "rationale": "Derlenmeyen veya şema-uyumsuz kod dağıtılamaz.",
+      "severity": "must",
+      "check": "CI 'build' + 'prisma migrate diff' işleri yeşil zorunlu"
+    },
+    {
+      "id": "gate-security-scan",
+      "rule": "OWASP Top 10:2025 odaklı statik tarama ve bağımlılık denetimi (high/critical 0) geçmeli; dangerouslySetInnerHTML ve yasak paket (next, redux, supabase, antd, @mui/material vb.) tespiti merge'i bloklar.",
+      "rationale": "Bilinen yüksek/kritik açık veya yasak bağımlılık taşıyan kod güvensizdir.",
+      "severity": "must",
+      "check": "CI 'security' işi (npm audit + biome noDangerouslySetInnerHtml + banned-deps kontrolü) bloklar"
+    },
+    {
+      "id": "gate-dod-checklist",
+      "rule": "Definition of Done checklist'inin tüm maddeleri işaretli olmalı: testler eklendi, allowed-files/non-goals doğrulandı, doküm/ADR güncellendi, ekran okuyucu denendi. Eksik madde merge'i bloklar.",
+      "rationale": "DoD, kalite kapılarının manuel olmayan boşluklarını kapatır.",
+      "severity": "should",
+      "check": "PR şablonu DoD kutuları + review onayı zorunlu"
+    }
+  ],
+  "banned": [
+    "merge-with-red-ci",
+    "skip-coverage-gate",
+    "ignore-axe-violation",
+    "merge-on-perf-regression"
+  ],
+  "allowed": ["blocking-required-checks", "patch-coverage-gate"],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

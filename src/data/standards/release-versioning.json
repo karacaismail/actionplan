@@ -1,0 +1,84 @@
+{
+  "id": "release-versioning",
+  "name": "Sürümleme & Yayın Standardı",
+  "version": "1.0.0",
+  "family": "devops",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Semantik sürümleme (SemVer), Conventional Commits, otomatik changelog, feature flag ile dağıtım ayrımı, expand-contract migration + rollback, blue-green/canary yayın (Hetzner), GitHub Actions CI → Pages deploy otomasyonu, branch koruması + PR ve doğrulanabilir deploy kanıtı için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "rel-semver",
+      "rule": "Sürümler SemVer 2.0.0'a uyar (MAJOR.MINOR.PATCH): kırıcı değişiklik MAJOR, geriye-uyumlu özellik MINOR, geriye-uyumlu düzeltme PATCH. Yayınlanmış sözleşmeler (StandardContract.version, paylaşılan şema) yalnız MAJOR ile kırılabilir; her kırıcı değişiklik bir ADR ve migration ister. Git etiketi vX.Y.Z formatındadır.",
+      "rationale": "Anlamsal sürüm tüketicilere kırılma riskini makine-okunur biçimde bildirir; keyfî sürüm güveni bozar.",
+      "severity": "must",
+      "check": "release-please/semantic-release sürüm hesabı + tag formatı CI kontrolü"
+    },
+    {
+      "id": "rel-conventional-commits",
+      "rule": "Tüm commit'ler Conventional Commits'e uyar (feat:, fix:, chore:, docs:, refactor:, test:, ci: …); kırıcı değişiklik BREAKING CHANGE: gövdesi veya tip!: ile işaretlenir. Sürüm yükseltmesi ve changelog girişi commit tiplerinden OTOMATİK türetilir, elle yazılmaz. Konu satırı emoji içermez ve ≤ 72 karakterdir.",
+      "rationale": "Yapısal commit mesajı otomatik sürümleme/changelog'un girdisidir; tutarsız mesaj otomasyonu bozar.",
+      "severity": "must",
+      "check": "commitlint (conventional config) PR kapısı + commit-msg hook"
+    },
+    {
+      "id": "rel-changelog",
+      "rule": "CHANGELOG.md her yayında otomatik üretilir (Keep a Changelog formatı): Added/Changed/Deprecated/Removed/Fixed/Security başlıkları, sürüm ve tarih. Her release notu ilgili PR/commit'lere bağlanır. Elle changelog düzenlemesi yasak; kaynak commit geçmişidir.",
+      "rationale": "Otomatik changelog yayın içeriğini izlenebilir ve eksiksiz tutar; elle bakım drift üretir.",
+      "severity": "should",
+      "check": "release otomasyonu changelog üretimi + CI diff kontrolü"
+    },
+    {
+      "id": "rel-feature-flag",
+      "rule": "Yeni/riskli davranış feature flag arkasında birleştirilir; dağıtım (deploy) ile etkinleştirme (release) ayrılır. Bayraklar tipli bir registry'de tanımlanır, varsayılan kapalıdır, sahip + son-kullanım/temizleme tarihi taşır. Ölü (kalıcı açık/kapalı) bayrak ve kod içine gömülü if(env) toggle yasak; bitmiş bayrak temizlenir.",
+      "rationale": "Flag, dağıtımı sürümden ayırarak güvenli aşamalı çıkış ve anında geri-alma sağlar; ölü bayrak teknik borçtur.",
+      "severity": "must",
+      "check": "flag registry şeması + bayat-bayrak (expiry geçmiş) CI taraması"
+    },
+    {
+      "id": "rel-expand-contract-migration",
+      "rule": "Şema/veri göçleri expand-contract (genişlet→çift-yaz/geri-doldur→daralt) ile iki uçlu uyumlu yapılır; tek seferde kırıcı göç yasak. Her migration tersine alınabilir bir down/rollback adımı ve uygulama-öncesi yedek/anlık görüntü tanımlar. Migration'lar sıralı, idempotent ve testten geçer; geri-alma da test edilir.",
+      "rationale": "Expand-contract sıfır-kesinti dağıtım ve güvenli rollback sağlar; geri-alınamaz göç olayda kurtarmayı imkânsız kılar.",
+      "severity": "must",
+      "check": "migration test (up+down) CI kapısı + rollback tatbikat assert"
+    },
+    {
+      "id": "rel-progressive-delivery",
+      "rule": "Üretim yayını blue-green veya canary olarak kademelidir (Hetzner Debian / AMD EPYC host): yeni sürüm yan-yana ayağa kaldırılır, sağlık kontrolü + smoke testten geçince trafik kaydırılır; eşik aşılırsa otomatik geri-alma tetiklenir. Tek-vuruşta tüm trafiğe doğrudan deploy (big-bang) yasak.",
+      "rationale": "Kademeli yayın hata yarıçapını sınırlar ve hızlı geri-alma penceresi verir; big-bang tüm kullanıcıyı aynı anda riske atar.",
+      "severity": "should",
+      "check": "deploy.yml health-check + smoke gate + otomatik rollback adımı"
+    },
+    {
+      "id": "rel-ci-pages-automation",
+      "rule": "Yayın yalnız GitHub Actions ile otomatiktir (private repo): CI sırası test → schema-parity → build → deploy; tüm kapılar yeşil olmadan GitHub Pages'e (karacaismail.github.io/actionplan) deploy edilmez. Elle/manuel deploy ve lokalden push-to-prod yasak. Her deploy commit SHA + sürüm etiketiyle damgalanır.",
+      "rationale": "Tek otomatik yol, denetlenebilir ve tekrarlanabilir yayın garantisidir; elle deploy izlenemeyen prod sapması üretir.",
+      "severity": "must",
+      "check": "GitHub Actions deploy.yml (kapı zinciri) + Pages environment koruması"
+    },
+    {
+      "id": "rel-branch-protection-pr",
+      "rule": "main korumalıdır: doğrudan push yasak, değişiklik PR ile gelir; en az 1 review onayı + tüm zorunlu CI kontrolleri (lint, test, coverage, schema-parity, axe) yeşil + güncel (up-to-date) branch zorunludur. Force-push ve koruma atlama (admin bypass) yasak. Merge sonrası deploy kanıtı (run linki + SHA) PR'a iliştirilir.",
+      "rationale": "Branch koruması + zorunlu kapılar denetlenmemiş kodun prod'a ulaşmasını engeller; deploy kanıtı izlenebilirlik sağlar.",
+      "severity": "must",
+      "check": "GitHub branch protection rules (required checks + reviews) + review"
+    }
+  ],
+  "banned": [
+    "manual-deploy",
+    "direct-push-to-main",
+    "big-bang-release",
+    "irreversible-migration",
+    "hand-edited-changelog",
+    "stale-feature-flag",
+    "force-push-main"
+  ],
+  "allowed": [
+    "semver-tag",
+    "conventional-commit",
+    "expand-contract-migration",
+    "feature-flag-registry",
+    "blue-green-canary"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

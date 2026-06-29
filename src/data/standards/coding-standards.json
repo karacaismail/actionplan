@@ -1,0 +1,77 @@
+{
+  "id": "coding-standards",
+  "name": "Kodlama Standartları",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "İsimlendirme, dosya düzeni, import sırası, tip disiplini, hata yönetimi, biome lint/format, yorum politikası ve SOLID için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "code-naming-convention",
+      "rule": "Dosya/dizin adları kebab-case (task-board.tsx); React bileşenleri ve tip/Zod şemaları PascalCase (TaskBoard, TaskSchema); değişken/fonksiyon camelCase; sabitler UPPER_SNAKE_CASE. Tek harfli ad yalnız döngü sayaç (i/j) ve mapper (x) için.",
+      "rationale": "Tutarlı isimlendirme grep edilebilirliği ve dosya-sembol eşleşmesini garanti eder.",
+      "severity": "must",
+      "check": "biome (useNamingConvention) + check-ui-standards + review"
+    },
+    {
+      "id": "code-import-order",
+      "rule": "Import blokları sırayla: (1) node/builtin, (2) dış paket, (3) iç alias (@/...), (4) göreli (./), her grup arası bir boş satır ve grup içi alfabetik. Yan-etki importları en üstte ayrı bloktadır.",
+      "rationale": "Deterministik import düzeni diff gürültüsünü ve döngüsel bağımlılık riskini azaltır.",
+      "severity": "must",
+      "check": "biome (organizeImports) otomatik düzeltir; CI'da format kapısı bloklar"
+    },
+    {
+      "id": "code-no-any",
+      "rule": "any tipi yasaktır; bilinmeyen veri unknown ile alınır ve sistem sınırında (API/IO/JSON-as-DB okuma/form) Zod şemasıyla doğrulanıp z.infer ile tiplenir. @ts-ignore/@ts-expect-error gerekçeli yorum olmadan yasaktır.",
+      "rationale": "Tip güvenliği sınırlarda kanıtlanır; any kaçağı runtime hatasını derleme zamanından kaçırır.",
+      "severity": "must",
+      "check": "biome (noExplicitAny) + tsc strict 0 hata + review"
+    },
+    {
+      "id": "code-error-handling",
+      "rule": "Hatalar yutulmaz: boş catch yasak; her catch ya tiplenmiş hata fırlatır ya da Result/Either döner ve loglar. Promise'ler await edilir veya açıkça void ile işaretlenir; floating promise yasak.",
+      "rationale": "Sessiz yutulan hata ve yörüngedeki promise, izlenemeyen production arızasının baş nedenidir.",
+      "severity": "must",
+      "check": "biome (noFloatingPromises, useErrorMessage) + review"
+    },
+    {
+      "id": "code-file-layout",
+      "rule": "Bir dosya tek sorumluluk taşır: bir bileşen + onun yardımcıları, ya da bir engine modülü. Barrel (index.ts) yalnız genel API yüzeyi için; iç dosyalar doğrudan import edilir, barrel üzerinden döngü kurulmaz.",
+      "rationale": "Tek-sorumluluk dosyalar küçük PR ve net code-ownership sağlar.",
+      "severity": "should",
+      "check": "review + max-dosya-satırı kapısı (short-code)"
+    },
+    {
+      "id": "code-comment-policy",
+      "rule": "Yorum 'ne'yi değil 'neden'i açıklar; kodu tekrar eden yorum ve yorum içinde ölü kod yasak. Genel API'lerde TSDoc; emoji içeren yorum yasak. TODO/FIXME bir issue referansı (TODO(#123)) içermek zorundadır.",
+      "rationale": "Gürültülü/yanıltıcı yorum bakımı zorlaştırır; referanssız TODO kalıcı borç olur.",
+      "severity": "should",
+      "check": "biome (noEmojis) + review"
+    },
+    {
+      "id": "code-solid-di",
+      "rule": "Bağımlılıklar parametre/props ile enjekte edilir; modül-içi global singleton ve gizli yan etki yasak. Fonksiyon imzası 3 konumsal parametreyi aşarsa adlandırılmış nesne argümanına geçilir.",
+      "rationale": "Bağımlılık enjeksiyonu birim testte mock'lamayı ve SOLID/DIP'i somutlaştırır.",
+      "severity": "should",
+      "check": "review + birim test izolasyonu"
+    },
+    {
+      "id": "code-strict-equality",
+      "rule": "Karşılaştırmada === / !== kullanılır (== yasak); switch ifadeleri exhaustive olur ve TS tarafından kontrol edilir (default ile never tüketimi). Magic number yerine adlandırılmış sabit kullanılır.",
+      "rationale": "Gevşek eşitlik ve eksik switch dalı sessiz mantık hatası üretir.",
+      "severity": "must",
+      "check": "biome (noDoubleEquals, useExhaustiveSwitchCases) + tsc"
+    }
+  ],
+  "banned": [
+    "any-type",
+    "ts-ignore-without-reason",
+    "empty-catch",
+    "floating-promise",
+    "double-equals",
+    "emoji-in-code"
+  ],
+  "allowed": ["unknown-at-boundary", "zod-validated-input", "tsdoc-on-public-api"],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

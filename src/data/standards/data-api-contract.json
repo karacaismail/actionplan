@@ -1,0 +1,102 @@
+{
+  "id": "data-api-contract",
+  "name": "Veri & API Sözleşmesi Standardı",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "GraphQL şema + typed codegen, Prisma model konvansiyonu (PostgreSQL), expand-contract migration + rollback, cursor pagination, idempotency anahtarı, standart hata zarfı, sınırda Zod doğrulama, bounded-context veri sahipliği ve RLS ile tenant izolasyonu için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "data-graphql-schema-codegen",
+      "rule": "API sözleşmesi GraphQL SDL'dir (.graphql) ve TEK kaynaktır; tüm tip/operasyon/hook'lar codegen ile üretilir (resolver tarafı typed, istemci tarafı typed-document-node). Elle yazılmış GraphQL response tipi yasaktır; üretilmiş kod (generated/) düzenlenmez, üretici çalıştırılır. Şema değişikliği önce SDL'de yapılır, sonra codegen yeniden koşar.",
+      "rationale": "Tek-kaynak SDL + codegen, istemci ile sunucu arasındaki tip driftini derleme zamanında imkânsız kılar.",
+      "severity": "must",
+      "check": "graphql-codegen --check (üretilmiş çıktı temiz) + tsc strict + review"
+    },
+    {
+      "id": "data-prisma-model-convention",
+      "rule": "Veritabanı Prisma + PostgreSQL'dir (Supabase istemci/RLS-helper'ları YASAK). Model adı PascalCase tekil (Task), tablo @@map ile snake_case çoğul (tasks); her tabloda id (cuid/uuid), createdAt, updatedAt, tenantId ve soft-delete için deletedAt bulunur. Ham SQL yerine Prisma Client; kaçınılmazsa $queryRaw yalnız parametreli (string interpolation YASAK).",
+      "rationale": "Tek ORM + tutarlı kolon konvansiyonu, tenant filtresi ve audit alanlarının her tabloda var olmasını garanti eder; Supabase yasağı kilitli mimari kararıdır.",
+      "severity": "must",
+      "check": "check-data-quality + prisma validate + grep ile $queryRaw interpolation taraması"
+    },
+    {
+      "id": "data-migration-expand-contract",
+      "rule": "Şema değişikliği iki fazlı expand-contract ile yapılır: (1) expand — geriye uyumlu ekleme (nullable kolon/yeni tablo/çift yazım), eski ve yeni kod birlikte çalışır; (2) contract — eski yol kaldırılır ayrı bir migration'da. Yıkıcı işlem (DROP/NOT NULL/rename) expand fazında yasak. Her migration'ın çalıştırılabilir bir rollback (down) yolu ve idempotent olması zorunludur.",
+      "rationale": "Tek-adımda yıkıcı migration, çalışan eski sürümü ve sıfır-kesinti deploy'u kırar; rollback yoksa hatalı migration geri alınamaz.",
+      "severity": "must",
+      "check": "prisma migrate diff + migration review kapısı (down + expand-contract ispatı)"
+    },
+    {
+      "id": "data-test-first-migration-order",
+      "rule": "Veri değişikliğinde sıra KİLİTLİDİR: önce test (kırmızı), sonra db-schema (Prisma model + migration), sonra development (resolver/repo). Test olmadan migration veya migration olmadan model alanı eklenmesi yasaktır; her yeni alan/ilişki bir conformance veya repo testiyle kapsanır.",
+      "rationale": "Test-önce sıra, şema kararının niyetini kanıtlar ve migration'ı doğrulanabilir kılar; sırayı atlamak doğrulanmamış şema borcu üretir.",
+      "severity": "must",
+      "check": "npm test (schema/repo testleri) + review (commit sırası test→db-schema→development)"
+    },
+    {
+      "id": "data-cursor-pagination",
+      "rule": "Liste sorguları cursor-tabanlı sayfalama kullanır (Relay Connection: edges/node/cursor + pageInfo.hasNextPage/endCursor). OFFSET/LIMIT tabanlı sayfalama YASAK. Her liste alanının varsayılan ve azami first/last sınırı vardır; sınırsız liste dönen alan yasaktır. Sıralama stabil bir bileşik anahtar (ör. createdAt+id) üzerinedir.",
+      "rationale": "Offset pagination büyük tablolarda yavaşlar ve eşzamanlı yazımda kayıt atlar/tekrarlar; cursor + stabil sıralama bunu önler.",
+      "severity": "must",
+      "check": "graphql şema lint (Connection deseni + first/last sınırı) + review"
+    },
+    {
+      "id": "data-idempotency-key",
+      "rule": "Yan etkili (yaratan/ödeme/dış çağrı) mutation'lar bir Idempotency-Key (istemci üretimli uuid) kabul eder; aynı anahtarla tekrar çağrı yeni kayıt yaratmaz, ilk sonucu döner. Anahtar+sonuç en az 24 saat saklanır. İstemci yeniden denemeleri (retry) yalnız idempotent operasyonlarda otomatik yapılır.",
+      "rationale": "Ağ retry'ı ve kullanıcı çift-tıklaması, idempotency anahtarı olmadan çift kayıt/çift tahsilat üretir.",
+      "severity": "must",
+      "check": "repo testi (aynı anahtar → tek kayıt) + review"
+    },
+    {
+      "id": "data-error-envelope",
+      "rule": "Hatalar standart bir zarf ile döner: GraphQL errors[].extensions içinde stabil code (kebab makine kodu, ör. validation-failed/not-found/conflict/unauthorized), correlationId ve gerekirse alan-bazlı issues[]. İstemciye ham exception/stack veya veritabanı mesajı sızdırılmaz; beklenen iş hataları throw değil tiplenmiş hata zarfı ile ifade edilir.",
+      "rationale": "Stabil makine-okunur hata kodu istemci dallanmasını mümkün kılar; ham hata sızıntısı güvenlik ve UX riskidir.",
+      "severity": "must",
+      "check": "contract testi (errors[].extensions.code şeması) + review"
+    },
+    {
+      "id": "data-zod-boundary-validation",
+      "rule": "Tüm dış girdi (GraphQL argümanları, webhook gövdesi, JSON-as-DB okuması, env) sistem sınırında Zod ile doğrulanır ve z.infer ile tiplenir; doğrulanmamış girdi resolver/iş katmanına geçemez. Zod şeması girdi için TEK kaynaktır ve mümkün olduğunda GraphQL şemasıyla aynı kısıtları (min/max/regex) yansıtır.",
+      "rationale": "Sınırda doğrulama, geçersiz veriyi iş mantığına ve veritabanına ulaşmadan reddeder; tip güvenliği yalnız sınırda kanıtlanır.",
+      "severity": "must",
+      "check": "biome (noExplicitAny) + tsc + review (her resolver girişinde Zod parse)"
+    },
+    {
+      "id": "data-bounded-context-ownership",
+      "rule": "Her tablo/agregat tek bir bounded-context'e aittir; başka context o tabloyu doğrudan SELECT/JOIN etmez, yalnız sahibinin yayınladığı GraphQL alanını/sözleşmesini tüketir. Cross-context veri kopyası yalnız açık bir read-model/projection olarak, sahiplik etiketiyle tutulur. Foreign key yalnız aynı context içinde tanımlanır.",
+      "rationale": "Paylaşılan tabloya doğrudan erişim gizli bağ kurar ve bağımsız evrimi/deploy'u kırar; net sahiplik drift'i önler.",
+      "severity": "should",
+      "check": "check-data-quality (tablo→context sahiplik haritası) + review"
+    },
+    {
+      "id": "data-rls-tenant-isolation",
+      "rule": "Çok-kiracılı tablolarda izolasyon PostgreSQL Row-Level Security (RLS) policy'leri ile zorlanır ve her sorgu oturum tenant bağlamını (ör. SET app.tenant_id) ayarlar; izolasyon yalnız uygulama katmanı WHERE filtresine bırakılmaz. tenantId taşımayan çok-kiracılı tablo ve RLS policy'siz tenant tablosu yasaktır. Cross-tenant erişim açık bir admin yolu olarak ayrıca yetkilendirilir.",
+      "rationale": "Uygulama-içi WHERE filtresi tek bir unutulan sorguda kiracılar arası veri sızdırır; RLS bunu veritabanı düzeyinde garanti eder.",
+      "severity": "must",
+      "check": "RLS conformance testi (tenant A, tenant B verisini göremez) + migration review"
+    }
+  ],
+  "banned": [
+    "supabase-client",
+    "offset-pagination",
+    "raw-sql-string-interpolation",
+    "destructive-migration-without-rollback",
+    "untyped-graphql-response",
+    "raw-exception-leak",
+    "missing-tenant-id",
+    "rls-less-tenant-table",
+    "unbounded-list-field"
+  ],
+  "allowed": [
+    "graphql-sdl-codegen",
+    "prisma-postgres",
+    "expand-contract-migration",
+    "cursor-connection-pagination",
+    "idempotency-key",
+    "zod-boundary-validation",
+    "rls-tenant-isolation"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

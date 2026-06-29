@@ -1,0 +1,100 @@
+{
+  "id": "ux-interaction",
+  "name": "UX Etkileşim & Erişilebilirlik Standardı",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Klavye akışı + mantıksal odak sırası, satır-içi form doğrulama (React Hook Form + zod), empty/error kurtarma, optimistic UI, skeleton loading, progressive disclosure, ≥44px mobil ergonomi, reduced-motion saygısı ve WCAG 2.2 AAA durum bildirimi (renk+metin+ikon).",
+  "appliesTo": ["product-ui", "flows", "forms"],
+  "rules": [
+    {
+      "id": "uxi-keyboard-full",
+      "rule": "Her etkileşim klavyeyle TAM tamamlanabilir: tüm aksiyonlar Tab ile erişilebilir, Enter/Space ile tetiklenir, Escape açık katmanı (dialog/menu/popover) kapatır, Ok tuşları liste/menü/tab içinde gezinir. Klavye tuzağı YASAK; modal açıkken odak modal içinde döngüsel tuzaklanır ve kapanınca tetikleyiciye geri döner.",
+      "rationale": "Tam klavye desteği WCAG 2.2 (2.1.1 Keyboard + 2.1.2 No Trap) gereği; fare-only akış erişilemez.",
+      "severity": "must",
+      "check": "klavye etkileşim testi (Testing Library userEvent.tab) + a11y review"
+    },
+    {
+      "id": "uxi-focus-order-logical",
+      "rule": "Odak sırası okuma sırasına (DOM sırası) eşittir; pozitif tabindex (tabindex≥1) YASAK (yalnız 0 veya -1 izinli). Yeni açılan katmanda odak ilk anlamlı öğeye taşınır; içerik dinamik gelince (ör. arama sonucu) odak kaybolmaz veya başa fırlamaz.",
+      "rationale": "Mantıksal odak sırası WCAG 2.4.3; pozitif tabindex tahmin edilemez sıçramalar yaratır.",
+      "severity": "must",
+      "check": "lint (positive-tabindex yasağı) + odak yönetimi testi"
+    },
+    {
+      "id": "uxi-inline-validation-rhf-zod",
+      "rule": "Form doğrulama React Hook Form + zod resolver ile yapılır; doğrulama satır-içidir (alan blur'da veya gönderimde, alanın hemen altında). Hata mesajı `role=\"alert\"` + `aria-invalid=\"true\"` + ilgili alana `aria-describedby` ile bağlanır; mesaj spesifik ve eyleme dönüktür (\"Geçersiz\" değil, \"E-posta @ içermeli\"). Doğrulama mantığı UI'da değil zod şemasında tek-kaynaktır.",
+      "rationale": "Satır-içi + spesifik doğrulama hata düzeltmeyi hızlandırır; zod tek-kaynak istemci/sunucu paritesini garantiler.",
+      "severity": "must",
+      "check": "form testi (geçersiz girdi → role=alert + bağlı mesaj) + review"
+    },
+    {
+      "id": "uxi-status-not-color-only",
+      "rule": "Durum/önem (başarı, uyarı, hata, bilgi) ASLA yalnız renkle iletilmez; her zaman renk + metin etiketi + ayırt edici ikon (Phosphor) birlikte kullanılır. Hata kırmızı + 'Hata:' metni + uyarı ikonu; başarı yeşil + onay metni + check ikonu. Yalnız renk değişimiyle anlam taşımak YASAK.",
+      "rationale": "WCAG 1.4.1 (Use of Color); renk körü kullanıcılar yalnız-renk sinyalini algılayamaz.",
+      "severity": "must",
+      "check": "review + a11y kontrol listesi (her durum bileşeninde metin+ikon zorunlu)"
+    },
+    {
+      "id": "uxi-skeleton-loading",
+      "rule": "Veri çeken yüzeyler boş ekran/ani sıçrama yerine skeleton placeholder gösterir (ölçüleri gerçek içeriğe yakın). İçerik yüklenince layout shift (CLS) olmaz: skeleton ve içerik aynı kutu boyutunu paylaşır. Spinner yalnız <400ms beklenen veya boyutu bilinmeyen işlemler için; uzun/yapılandırılmış yüklemede skeleton tercih edilir. reduced-motion altında skeleton parıltı animasyonu durur.",
+      "rationale": "Skeleton algılanan hızı artırır ve CLS'i (Core Web Vitals) önler; sürekli spinner ilerlemeyi gizler.",
+      "severity": "should",
+      "check": "loading state story + CLS/layout-shift gözden geçirme"
+    },
+    {
+      "id": "uxi-optimistic-ui-rollback",
+      "rule": "Geri-alınabilir, düşük-riskli mutasyonlarda (beğen, işaretle, sırala, taşı) optimistic UI uygulanır: UI anında güncellenir, sunucu hatasında önceki duruma rollback edilir ve kullanıcıya 'Geri alındı' bildirimi gösterilir. Geri-alınamaz/yıkıcı işlemlerde (sil, ödeme, yayınla) optimistic YASAK; açık onay + bekleme durumu gerekir.",
+      "rationale": "Optimistic UI algılanan gecikmeyi sıfırlar; ancak yıkıcı işlemde sessiz rollback kullanıcıyı yanıltır.",
+      "severity": "should",
+      "check": "mutasyon testi (hata → rollback + bildirim) + review"
+    },
+    {
+      "id": "uxi-empty-error-recovery",
+      "rule": "Empty durum yalnız 'veri yok' demez; nedeni açıklar ve birincil kurtarma eylemi sunar (ör. 'Henüz görev yok — İlk görevi ekle'). Error durumu kullanıcıyı çıkmaza sokmaz: insan-okunur mesaj + 'Tekrar dene' eylemi + (varsa) destek/geri dön yolu içerir. Ham hata/stack trace son kullanıcıya gösterilmez.",
+      "rationale": "Yönlendirici empty/error kullanıcıyı akışta tutar; çıplak hata mesajı çıkmaz sokak yaratır.",
+      "severity": "must",
+      "check": "empty/error state story (kurtarma eylemi mevcut) + review"
+    },
+    {
+      "id": "uxi-progressive-disclosure",
+      "rule": "Karmaşık arayüzler progressive disclosure uygular: birincil eylemler önde, gelişmiş/nadir seçenekler ikincil katmanda (accordion, 'Gelişmiş' bölümü, sekme) gizlenir. Varsayılan görünümde aynı anda en kritik bilgi gösterilir; tüm seçenekleri tek ekrana yığmak YASAK. Açılır gizli içerik klavyeyle erişilebilir ve `aria-expanded` ile durumlandırılır.",
+      "rationale": "Aşamalı açığa çıkarma bilişsel yükü azaltır ve yeni kullanıcıyı bunaltmaz.",
+      "severity": "should",
+      "check": "UX review + aria-expanded a11y testi"
+    },
+    {
+      "id": "uxi-mobile-ergonomics-44",
+      "rule": "Mobil/dokunmatik akışta birincil eylemler başparmak erişim bölgesinde (ekranın alt yarısı/altı) konumlanır; tüm dokunma hedefleri ≥44x44px ve bitişikler arası ≥8px boşluklu (uic-touch-target-44 ile hizalı). Hover-only etkileşim (yalnız :hover ile ortaya çıkan menü/tooltip) dokunmatikte eşdeğer dokunma/odak alternatifi olmadan kullanılamaz.",
+      "rationale": "Başparmak-dostu yerleşim + ≥44px hedef mobil hata oranını düşürür; hover-only dokunmatikte erişilemez.",
+      "severity": "must",
+      "check": "viewport (mobil) review + hover-only etkileşim taraması"
+    },
+    {
+      "id": "uxi-reduced-motion",
+      "rule": "Tüm hareket prefers-reduced-motion: reduce sorgusuna saygı duyar: parallax, otomatik-oynatma, büyük geçişler ve dikkat dağıtıcı animasyonlar bu mod altında kapatılır veya ≤1ms'e indirilir; yön/anlam taşıyan geçişler anlık (fade/none) eşdeğerle değiştirilir. Kullanıcı onayı olmadan otomatik oynayan, döngüsel veya yanıp sönen (≤3Hz dışı) hareket YASAK.",
+      "rationale": "Reduced-motion WCAG 2.3.3 (Animation from Interactions) + vestibüler/nöbet güvenliği gereği.",
+      "severity": "must",
+      "check": "reduced-motion media query testi + animasyon envanteri review"
+    }
+  ],
+  "banned": [
+    "keyboard-trap",
+    "positive-tabindex",
+    "color-only-status",
+    "raw-stacktrace-to-user",
+    "optimistic-on-destructive",
+    "hover-only-on-touch",
+    "autoplay-motion-no-consent",
+    "dead-end-error-state"
+  ],
+  "allowed": [
+    "react-hook-form",
+    "zod",
+    "skeleton-loading",
+    "optimistic-ui",
+    "progressive-disclosure",
+    "aria-live-region"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

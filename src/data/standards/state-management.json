@@ -1,0 +1,101 @@
+{
+  "id": "state-management",
+  "name": "Durum Yönetimi Standardı",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Hangi durumun nerede yaşadığı (sunucu=TanStack Query, URL=TanStack Router, yerel UI=useState/useReducer, form=React Hook Form+Zod, tablo=TanStack Table), cache key konvansiyonu + invalidation, optimistic update + rollback, gerekçeli Redux yasağı ve tenant-switch'te cache temizliği için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "state-ownership-placement",
+      "rule": "Durum kaynağına göre TEK yerde tutulur: sunucudan gelen veri TanStack Query'de (yerel state'e kopyalanmaz), URL/filtre/sayfa/sekme TanStack Router search-param'larında, geçici yerel UI (açık/kapalı, hover, taslak input) useState/useReducer'da, form durumu React Hook Form'da, tablo durumu (sıralama/seçim/sayfa) TanStack Table'da. Sunucu verisini useState'e setState ile kopyalamak yasaktır.",
+      "rationale": "Her durum türünün tek doğru sahibi olması çift-kaynak senkron hatalarını ve bayat veriyi ortadan kaldırır.",
+      "severity": "must",
+      "check": "check-ui-standards (useState içinde server verisi taraması) + review"
+    },
+    {
+      "id": "state-server-via-query",
+      "rule": "Tüm sunucu okuması useQuery/useInfiniteQuery, tüm yazımı useMutation üzerinden yapılır; bileşen içinde elle fetch + useEffect + setState ile veri yükleme yasaktır. Mutation başarısında ilgili query'ler invalidate veya setQueryData ile güncellenir; manuel global refetch çağrısı yasaktır.",
+      "rationale": "Query üzerinden tek yol; cache, retry, dedupe ve invalidation'ı merkezîleştirir; elle fetch+useEffect deseni yarış koşulu ve bellek sızıntısı üretir.",
+      "severity": "must",
+      "check": "check-ui-standards (useEffect+fetch deseni) + review"
+    },
+    {
+      "id": "state-query-key-convention",
+      "rule": "Query key'ler yapısal ve hiyerarşiktir: [entity, scope, params] dizi formu (ör. ['task','list',{tenantId,filter}]); serbest string key yasaktır. Key'ler merkezî bir queryKeys factory'sinden üretilir, çağrı yerinde elle yazılmaz. tenantId her tenant-bağımlı key'in ilk parametre nesnesinde yer alır.",
+      "rationale": "Yapısal + factory-üretimli key'ler kısmi invalidation'ı (prefix match) güvenli kılar ve yazım hatasıyla cache ıskalamasını önler.",
+      "severity": "must",
+      "check": "check-ui-standards (queryKeys factory kullanımı) + review"
+    },
+    {
+      "id": "state-invalidation-explicit",
+      "rule": "Cache geçersizleştirme açık ve dar kapsamlıdır: bir mutation yalnız etkilediği entity prefix'ini invalidate eder (invalidateQueries({queryKey:[entity]})); queryClient.invalidateQueries() (argümansız, tümünü süpüren) yasaktır. Liste değiştiren mutation'lar hem listeyi hem etkilenen detayı hedefler.",
+      "rationale": "Argümansız global invalidation tüm uygulamayı gereksiz yeniden çeker (performans + titreme); dar kapsamlı invalidation niyeti nettir.",
+      "severity": "should",
+      "check": "review + check-ui-standards (argümansız invalidateQueries taraması)"
+    },
+    {
+      "id": "state-optimistic-update-rollback",
+      "rule": "Kullanıcı algısını etkileyen mutation'larda optimistic update uygulanır: onMutate'te cancelQueries + önceki cache snapshot + iyimser setQueryData; onError'da snapshot ile rollback; onSettled'da invalidate. Rollback yolu olmayan (snapshot tutmayan) optimistic update yasaktır.",
+      "rationale": "Optimistic update anında geri bildirim verir; rollback olmadan hata anında UI gerçek sunucu durumundan kalıcı olarak sapar.",
+      "severity": "should",
+      "check": "bileşen/integration testi (hata → eski duruma rollback) + review"
+    },
+    {
+      "id": "state-url-as-source",
+      "rule": "Paylaşılabilir/derin-linklenebilir durum (aktif sekme, filtre, arama sorgusu, sayfa, seçili kayıt id'si) TanStack Router search param'larında tutulur ve search şeması Zod ile validate edilir; bu durumu yalnız useState'te tutmak yasaktır. URL durumu okunurken router'ın typed search API'si kullanılır, window.location elle parse edilmez.",
+      "rationale": "URL'de yaşayan durum yenilemeye/paylaşmaya/geri tuşuna dayanır; yalnız bellekte tutulması bu davranışları kırar.",
+      "severity": "should",
+      "check": "review + check-ui-standards (filtre/sekme için search-param kullanımı)"
+    },
+    {
+      "id": "state-form-rhf-zod",
+      "rule": "Tüm formlar React Hook Form + zodResolver ile yönetilir; tek doğrulama kaynağı form için tanımlı Zod şemasıdır ve mümkünse API girdi şemasını paylaşır. Kontrollü input'ları elle useState ile yönetmek, ayrı bir doğrulama kütüphanesi kullanmak veya doğrulamayı yalnız submit'te elle yapmak yasaktır.",
+      "rationale": "RHF+Zod re-render'ı azaltır ve doğrulamayı tek-kaynak yapar; dağınık form state'i tutarsız doğrulama ve gereksiz render üretir.",
+      "severity": "should",
+      "check": "review + check-ui-standards (form için RHF+zodResolver)"
+    },
+    {
+      "id": "state-table-tanstack",
+      "rule": "Veri tabloları (sıralama, kolon görünürlüğü, satır seçimi, sayfa) TanStack Table state modeli ile yönetilir; tablo durumu için ayrı useState yığını kurmak yasaktır. Sunucu-taraflı sıralama/sayfalama, tablo state'ini Query key parametrelerine bağlar (data-api-contract cursor pagination ile uyumlu).",
+      "rationale": "Tablo etkileşim durumunu tek modelde toplamak tutarlılık sağlar ve sunucu sayfalamasıyla temiz entegrasyon kurar.",
+      "severity": "may",
+      "check": "review"
+    },
+    {
+      "id": "state-no-redux",
+      "rule": "Redux / Redux Toolkit ve genel amaçlı global mutable store (ör. tek dev Zustand 'app store') YASAKTIR; sunucu durumu TanStack Query'ye, paylaşılan UI durumu URL'e veya dar kapsamlı React Context'e aittir. Yeni bir global store kütüphanesi eklemek ADR + waiver gerektirir.",
+      "rationale": "Sunucu verisini Redux'a kopyalamak cache/invalidation'ı elle yeniden icat eder ve boilerplate + drift üretir; bu repo Query+Router+Context modelinde kilitlidir.",
+      "severity": "must",
+      "check": "check-dependency-policy (redux/@reduxjs/toolkit allowlist'te değil) + review"
+    },
+    {
+      "id": "state-tenant-switch-reset",
+      "rule": "Kiracı değişiminde (tenant-switch) tüm sunucu cache'i temizlenir: queryClient.clear() çağrılır ve tenant-bağımlı yerel/URL durumu (filtre, seçim) sıfırlanır; eski kiracının verisi yeni bağlamda asla gösterilmez. tenantId Query key'lerinde olduğundan yeni istekler doğal olarak ayrışır, fakat clear ile bayat veri ekranda kalmaz.",
+      "rationale": "Cache temizlenmezse tenant geçişinden sonra bir önceki kiracının verisi anlık görünebilir — ciddi bir veri-sızıntısı ve güven sorunu.",
+      "severity": "must",
+      "check": "integration testi (tenant geçişi → cache boş, eski veri görünmez) + review"
+    }
+  ],
+  "banned": [
+    "redux",
+    "redux-toolkit",
+    "global-mutable-store",
+    "server-state-in-usestate",
+    "manual-fetch-useeffect",
+    "argless-invalidate-queries",
+    "ad-hoc-string-query-key",
+    "optimistic-without-rollback"
+  ],
+  "allowed": [
+    "tanstack-query-server-state",
+    "tanstack-router-url-state",
+    "usestate-local-ui",
+    "react-hook-form-zod",
+    "tanstack-table-state",
+    "scoped-react-context",
+    "query-key-factory"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

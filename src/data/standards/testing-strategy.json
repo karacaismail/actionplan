@@ -1,0 +1,82 @@
+{
+  "id": "testing-strategy",
+  "name": "Test Stratejisi Standardı",
+  "version": "1.0.0",
+  "family": "testing",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Test piramidi (unit/integration/contract/e2e/visual/load/mutation), seviye başına kapsam, coverage eşikleri, test verisi/fixture disiplini (factory + tenant izolasyonu + deterministik), test-önce red→green döngüsü, Playwright + axe (WCAG 2.2 AAA, 0 ihlal) ve şema/sözleşme parite testleri için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "test-pyramid-distribution",
+      "rule": "Test dağılımı piramidi takip eder: unit ≥ %70, integration ~ %20, e2e ≤ %10 (sayı bazında). Katmanlar net ayrılır — engine saf birim testi (DOM yok), integration engine↔veri/sözleşme sınırını, e2e ise gerçek tarayıcıda kullanıcı akışını test eder. Buz-kütlesi (ağır e2e, az unit) anti-deseni reddedilir.",
+      "rationale": "Hızlı/ucuz birim testleri geri bildirim döngüsünü kısaltır; pahalı e2e'ye yığılma CI süresini ve kırılganlığı patlatır.",
+      "severity": "must",
+      "check": "CI test-istatistik kapısı (suite başına sayım) + review"
+    },
+    {
+      "id": "test-first-red-green",
+      "rule": "Test-önce zorunlu: her davranış için önce başarısız (red) test yazılır, sonra geçiren (green) minimum kod, sonra refactor. PR'da uygulama kodu, onu doğrulayan testten önce eklenemez; iş sırası test → db-schema → development olarak sabittir. Hata düzeltmeleri önce hatayı yeniden üreten regresyon testi içermek zorundadır.",
+      "rationale": "Red→green kanıtı testin gerçekten bir şeyi doğruladığını garanti eder; sonradan yazılan test çoğu zaman yanlış pozitiftir.",
+      "severity": "must",
+      "check": "PR review + commit sırası kontrolü (test commit'i kod commit'inden önce)"
+    },
+    {
+      "id": "test-coverage-threshold",
+      "rule": "Çizgi (line) ve dal (branch) kapsamı global ≥ %85, engine/ dizini için ≥ %95; eşik altı CI'yı bloklar. Kapsam yalnız ölçülür değil zorlanır (coverage.thresholds). Kasıtlı muafiyet satır içi gerekçeli /* c8 ignore */ + review onayı ister; kapsam toplamı düşürülemez (ratchet, asla gerilemez).",
+      "rationale": "Ölçülmeyen kapsam keyfîdir; ratchet kuralı kapsamın zamanla erozyonunu önler.",
+      "severity": "must",
+      "check": "vitest --coverage (v8) eşik kapısı + Codecov/ratchet kontrolü"
+    },
+    {
+      "id": "test-e2e-playwright-axe",
+      "rule": "Uçtan uca akışlar Playwright ile gerçek tarayıcıda (chromium + webkit) test edilir; her e2e sayfası @axe-core/playwright ile taranır ve WCAG 2.2 AAA seviyesinde 0 ihlal döndürmek zorundadır. Erişilebilirlik ihlali = test başarısızlığı (uyarı değil). Kritik kullanıcı yolları (WBS düğüm CRUD, board, graph) en az bir e2e ile kaplanır.",
+      "rationale": "AAA + 0-ihlal kapısı erişilebilirliği opsiyonel iyileştirmeden zorunlu sözleşmeye çevirir; gerçek tarayıcı JSDOM'un kaçırdığı regresyonları yakalar.",
+      "severity": "must",
+      "check": "Playwright e2e suite + axe.analyze() violations.length===0 assert"
+    },
+    {
+      "id": "test-contract-schema-parity",
+      "rule": "Her Zod şeması ile onu tüketen JSON-as-DB verisi arasında parite testi bulunur: tüm src/data/**/*.json ilgili şemayla parse edilir ve hata = test başarısızlığı. Standart katalogları StandardContractSchema'ya, WBS düğümleri WbsNodeSchema'ya uyar; şema değişince eski veriyi kıran migration aynı PR'da gelir. Sözleşme (contract) testleri tüketici beklentisini üretici çıktısına karşı doğrular.",
+      "rationale": "Şema-veri driftini derleme/test zamanında yakalar; runtime'da bozuk veri render etmeyi önler.",
+      "severity": "must",
+      "check": "standards.test.ts + schema-parity test (her data dosyası parse) CI kapısı"
+    },
+    {
+      "id": "test-data-factory-isolation",
+      "rule": "Test verisi elle değil factory/builder (override'lı varsayılan nesne) ile üretilir; sabit kodlanmış paylaşılan mutable fixture yasak. Çok-kiracılı (multi-tenant) testlerde her test kendi tenant'ını izole kurar ve sızıntı (cross-tenant okuma) negatif test ile kanıtlanır. Testler deterministiktir: zaman (sahte saat/clock), rastgelelik (sabit seed) ve sıra bağımlılığı enjekte edilir, gerçek tarih/Math.random kullanılmaz.",
+      "rationale": "Factory + izolasyon flaky/sıraya-bağlı testleri ortadan kaldırır; tenant izolasyon testi güvenlik regresyonunu yakalar.",
+      "severity": "must",
+      "check": "review + flake tespiti (testleri --shuffle/--repeat ile çalıştırma) CI kapısı"
+    },
+    {
+      "id": "test-mutation-and-load",
+      "rule": "Engine/ kritik mantığı için mutasyon testi (Stryker) çalıştırılır; mutasyon skoru ≥ %70 hedeflenir, eşik altı raporlanır ve PR'da gerekçelendirilir. Performans-duyarlı uçlar (büyük WBS ağacı, toplu hesap) için yük/performans testi bir bütçe (örn. 1000 düğüm render < 200ms) iddia eder ve regresyonda bloklar.",
+      "rationale": "Yüksek satır kapsamı zayıf testleri gizleyebilir; mutasyon skoru testin gerçek hata-yakalama gücünü ölçer. Yük bütçesi performans regresyonunu erken yakalar.",
+      "severity": "should",
+      "check": "Stryker mutation CI job (skor eşiği) + performans bütçe assert"
+    },
+    {
+      "id": "test-no-skip-no-only",
+      "rule": "Ana dala (main) it.only/describe.only ile gelinemez; .skip yalnız issue referanslı (// skip: #123) ve geçici olabilir. Testler ağ/dış servise gerçek çağrı yapmaz (mock/stub/MSW); kapatılmamış kaynak (timer/handle) bırakmaz.",
+      "rationale": "Sızan only/skip yeşil ama aldatıcı bir suite üretir; gerçek ağ çağrısı CI'yı kırılgan ve yavaş yapar.",
+      "severity": "must",
+      "check": "biome (noFocusedTests) + CI .only/.skip taraması + review"
+    }
+  ],
+  "banned": [
+    "test-only-in-main",
+    "real-network-in-test",
+    "shared-mutable-fixture",
+    "nondeterministic-time-random",
+    "ice-cream-cone-distribution",
+    "coverage-regression"
+  ],
+  "allowed": [
+    "test-factory-builder",
+    "deterministic-clock-seed",
+    "msw-mock",
+    "issue-referenced-skip"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

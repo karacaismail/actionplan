@@ -1,0 +1,87 @@
+{
+  "id": "ai-governance",
+  "name": "Yapay Zeka Yönetişimi Standardı",
+  "version": "1.0.0",
+  "family": "ai",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon/çıktı doğrulama (Zod), maliyet/rate limit, human-in-the-loop onayı, kill-switch, PII redaksiyonu, AI yetki sınırı (uygulama/modül üretemez, ruleset override edemez) ve openclaw + n8n otomasyon sınırı için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "ai-prompt-registry-versioned",
+      "rule": "Tüm üretim promptları sürümlenmiş bir registry'de (src/data ya da prompts/) saklanır; her promptun id, sürüm (SemVer), sahip, amaç ve eval referansı vardır. Kod içine gömülü serbest-metin prompt yasak; prompt değişikliği PR + sürüm yükseltmesi + eval geçişi ister. Çalışma zamanında hangi prompt sürümünün kullanıldığı loglanır.",
+      "rationale": "Sürümlü registry prompt davranışını izlenebilir/geri-alınabilir kılar; gömülü prompt sessiz davranış kaymasına yol açar.",
+      "severity": "must",
+      "check": "prompt-registry şema testi + gömülü-prompt CI taraması + review"
+    },
+    {
+      "id": "ai-model-tool-allowlist",
+      "rule": "Yalnız açıkça allowlist'lenmiş model ve araçlar (tool/function) çağrılabilir; liste dışı model/uç yasak. Her araç çağrısının kapsamı (izin verilen işlemler) tanımlıdır ve AI yalnız bu kapsamda hareket eder. Yeni model/araç eklemek bir ADR + güvenlik incelemesi gerektirir.",
+      "rationale": "Allowlist, beklenmedik/denetlenmemiş model veya yetkili aracın kötüye kullanımını engeller (en az ayrıcalık).",
+      "severity": "must",
+      "check": "allowlist konfig şeması + çağrı-zamanı doğrulama + review"
+    },
+    {
+      "id": "ai-output-validation-zod",
+      "rule": "Tüm AI çıktıları kullanılmadan önce Zod şemasıyla doğrulanır (structured output); şemaya uymayan çıktı reddedilir, asla doğrudan veriye/UI'a/koda yazılmaz. Olgusal iddialar kaynağa dayandırılır ve doğrulanır; kaynaksız/halüsinasyon içerik kullanıcıya sunulmadan işaretlenir. Serbest-metin çıktının doğrudan eval/exec edilmesi yasak.",
+      "rationale": "Zod sınırı halüsinasyon ve biçimsiz çıktının sisteme sızmasını önler; doğrulanmamış AI çıktısı en büyük güvenilirlik riskidir.",
+      "severity": "must",
+      "check": "çıktı parse (Zod safeParse) zorunlu kapısı + birim test"
+    },
+    {
+      "id": "ai-eval-regression-gate",
+      "rule": "Her prompt/model/araç değişikliği sürümlü bir eval setine (girdi→beklenen) karşı koşulur; eval başarı eşiği (örn. ≥ %95 geçer) altına düşen değişiklik birleştirilemez. Regresyon vakaları (geçmiş hatalar) eval setine kalıcı eklenir. Eval CI'da otomatik çalışır ve sonuç PR'a raporlanır.",
+      "rationale": "Eval kapısı AI davranışındaki gizli gerilemeleri sürüm öncesi yakalar; göz kararı 'daha iyi göründü' yeterli değildir.",
+      "severity": "must",
+      "check": "eval-suite CI job (eşik) + regresyon-vakası kapsama kontrolü"
+    },
+    {
+      "id": "ai-human-in-loop-killswitch",
+      "rule": "Geri-alınamaz veya yüksek-etkili AI eylemleri (yazma, dış tetikleme, yayın) yürütülmeden ÖNCE insan onayı (human-in-the-loop) gerektirir; otomatik tam-yetki eylem yasak. Tüm AI iş akışları için anında durduran bir kill-switch (acil kapatma) bulunur ve test edilir; tetiklendiğinde devam eden işler güvenli durur.",
+      "rationale": "İnsan onayı + kill-switch, otonom bir sistemin kontrolden çıkmasına karşı son güvenlik valfidir.",
+      "severity": "must",
+      "check": "onay-akışı testi + kill-switch tatbikat (durdurma) assert"
+    },
+    {
+      "id": "ai-cost-rate-limit-pii",
+      "rule": "Her AI yolu için maliyet ve istek (rate) limiti tanımlıdır; token/çağrı bütçesi aşıldığında çağrı reddedilir veya kuyruğa alınır, sınırsız döngü/özyineleme yasak. Modele giden tüm girdilerden PII (kişisel veri) gönderim öncesi redakte/maskelenir; ham PII'nin third-party modele iletilmesi yasak. Maliyet ve PII-redaksiyon olayları loglanır.",
+      "rationale": "Limit kaçak maliyeti ve servis-dışı kalmayı önler; PII redaksiyonu gizlilik/uyum ihlalini engeller.",
+      "severity": "must",
+      "check": "rate/cost limit middleware testi + PII-redaksiyon birim testi"
+    },
+    {
+      "id": "ai-no-app-generation-authority",
+      "rule": "AI yeni uygulama/modül ÜRETEMEZ veya mevcut modülü kendiliğinden GÜNCELLEYEMEZ ve ruleset/standartları (bu sözleşmeler dâhil) OVERRIDE EDEMEZ; yalnız öneri/taslak üretir, uygulamayı insan PR'ı ile geçer. AI'nın ürettiği her değişiklik normal CI kapılarından (test, lint, schema-parity, review) geçmek zorundadır; standart kapılarını atlayamaz.",
+      "rationale": "AI'nın yetki sınırı, denetlenmemiş otonom kod/standart değişikliğinin sisteme girmesini kategorik olarak engeller.",
+      "severity": "must",
+      "check": "review + CI kapı zorunluluğu (AI çıktısı insan PR'ı olarak akar) + audit log"
+    },
+    {
+      "id": "ai-automation-boundary",
+      "rule": "AI/otomasyon yalnız onaylı araçlarla (openclaw + n8n) ve tanımlı kapsamda yürütülür; bu araçların erişimi en-az-ayrıcalık ile sınırlandırılır ve sırlar (secret) ortam/secret-store'da tutulur, prompt/iş akışına gömülmez. n8n iş akışları sürümlenir; ad-hoc/kayıt-dışı otomasyon ve prod'a doğrudan yetkili erişim yasak. Tüm otomatik eylemler denetim günlüğüne (audit log) yazılır.",
+      "rationale": "Otomasyonu onaylı araçlara ve en-az-ayrıcalığa hapsetmek yan-kanal ve sır sızıntısı riskini düşürür; denetim günlüğü izlenebilirlik sağlar.",
+      "severity": "must",
+      "check": "n8n iş akışı sürüm kontrolü + secret-store taraması + audit log denetimi"
+    }
+  ],
+  "banned": [
+    "ai-generates-app-or-module",
+    "ai-overrides-ruleset",
+    "unvalidated-ai-output",
+    "raw-pii-to-model",
+    "embedded-freeform-prompt",
+    "non-allowlisted-model-or-tool",
+    "autonomous-irreversible-action",
+    "ad-hoc-automation"
+  ],
+  "allowed": [
+    "versioned-prompt-registry",
+    "model-tool-allowlist",
+    "zod-validated-output",
+    "human-in-the-loop",
+    "kill-switch",
+    "pii-redaction",
+    "openclaw-n8n-automation"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

@@ -1,0 +1,103 @@
+{
+  "id": "observability",
+  "name": "Gözlemlenebilirlik Standardı",
+  "version": "1.0.0",
+  "family": "devops",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Yapısal JSON log + correlation/request id, RED/USE metrikleri, dağıtık trace, dashboard, SLO + error-budget'a bağlı alert, değişmez audit event, log seviyesi disiplini, PII-güvenli loglama ve 'çözüldü' iddiası için zorunlu production hata kanıtı formatı.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "obs-structured-logging",
+      "rule": "Tüm loglar yapısal JSON'dur (tek satır/event); console.log ile serbest-metin loglama ve string birleştirmeli mesaj yasaktır. Her log kaydı en az: timestamp (ISO8601), level, message, service, env ve bağlam alanları içerir. Loglama merkezî bir logger üzerinden yapılır, çağrı yerinde elle JSON kurulmaz.",
+      "rationale": "Yapısal log makine ile filtrelenip toplanabilir; serbest-metin log arama/uyarı/korelasyonu imkânsız kılar.",
+      "severity": "must",
+      "check": "biome (noConsoleLog) + review (merkezî logger kullanımı)"
+    },
+    {
+      "id": "obs-correlation-id",
+      "rule": "Her gelen istek bir request-id alır (yoksa üretilir) ve bir correlation-id ile zincirlenir; bu id istek bağlamı (AsyncLocalStorage/context) üzerinden tüm loglara, GraphQL hata zarfına (extensions.correlationId) ve aşağı akış servis çağrılarının başlığına otomatik taşınır. Correlation id taşımayan istek-kapsamlı log yasaktır.",
+      "rationale": "Tek bir kullanıcı işlemini servisler ve loglar arasında uçtan uca izlemek yalnız taşınan korelasyon id'siyle mümkündür.",
+      "severity": "must",
+      "check": "middleware testi (her log + hata zarfı correlationId taşır) + review"
+    },
+    {
+      "id": "obs-red-use-metrics",
+      "rule": "Servisler RED metriklerini (Rate, Errors, Duration) her endpoint/resolver için, kaynaklar USE metriklerini (Utilization, Saturation, Errors) yayınlar. İstek süresi histogram (p50/p95/p99 türetilebilir) olarak, hata sayısı stabil error-code etiketiyle ölçülür. Yüksek-kardinaliteli etiket (ham id, e-posta, serbest metin) metrik label'ı olarak yasaktır.",
+      "rationale": "RED/USE, latency ve hata oranını ölçülebilir kılar; yüksek-kardinalite label metrik sistemini şişirip çökertir.",
+      "severity": "must",
+      "check": "review + metrik-isim/label lint (kardinalite kuralı)"
+    },
+    {
+      "id": "obs-distributed-tracing",
+      "rule": "İstek yolları OpenTelemetry uyumlu trace ile enstrümante edilir; trace context (traceparent) gelen istekten dış çağrılara ve kuyruğa yayılır. Veritabanı sorgusu, dış HTTP ve GraphQL resolver'ları span üretir; span'lar correlation-id ile log'a bağlanır. Manuel/ad-hoc zamanlama logları trace span'ın yerine geçemez.",
+      "rationale": "Dağıtık trace, gecikmenin hangi adımda olduğunu gösterir; korelasyon id ile trace–log köprüsü kök-neden analizini hızlandırır.",
+      "severity": "should",
+      "check": "review + trace context yayılım testi (traceparent dış çağrıda mevcut)"
+    },
+    {
+      "id": "obs-dashboards",
+      "rule": "Her servis için kod ile sürümlenmiş (dashboard-as-code) bir gösterge paneli bulunur; en az RED grafikleri, hata oranı, p95/p99 latency ve SLO/error-budget tüketimi panelde yer alır. Elle tıklanarak kurulmuş, repoda tanımı olmayan dashboard 'mevcut' sayılmaz.",
+      "rationale": "Sürümlenmiş dashboard yeniden üretilebilir ve gözden geçirilebilir; elle kurulan panel kaybolur ve denetlenemez.",
+      "severity": "should",
+      "check": "review (repoda dashboard tanım dosyası) + check-data-quality"
+    },
+    {
+      "id": "obs-alerting-slo-error-budget",
+      "rule": "Uyarılar belge halindeki SLO'lara ve error-budget tüketim hızına (burn-rate) bağlanır; ham eşik (ör. 'CPU > %80') yerine kullanıcı-etkili SLI üzerinden alert tanımlanır. Her alert'in bir runbook bağlantısı, sahibi ve önem derecesi vardır. Runbook'suz veya gürültü üreten (sürekli tetikleyen) alert yasaktır.",
+      "rationale": "Error-budget burn-rate uyarıları gerçek kullanıcı etkisini hedefler; runbook'suz/gürültülü alert uyarı yorgunluğu yaratıp gerçek olayı maskeler.",
+      "severity": "must",
+      "check": "review (alert→SLO + runbook + owner eşlemesi)"
+    },
+    {
+      "id": "obs-audit-events",
+      "rule": "Güvenlik/iş açısından önemli eylemler (yetki değişimi, silme, dışa aktarım, tenant geçişi, ödeme) değişmez (append-only) audit event olarak kaydedilir: actor, action, resource, tenantId, timestamp, correlationId ve sonuç. Audit kaydı normal uygulama log'una karışmaz, ayrı/değiştirilemez bir akışa yazılır ve silinmez/üzerine yazılmaz.",
+      "rationale": "Değişmez audit izi uyumluluk ve adli inceleme için zorunludur; uygulama loguna karışan audit kaydı güvenilir kanıt olmaz.",
+      "severity": "must",
+      "check": "audit testi (kritik eylem → değişmez kayıt + zorunlu alanlar) + review"
+    },
+    {
+      "id": "obs-log-levels",
+      "rule": "Log seviyeleri disiplinlidir: ERROR yalnız eyleme geçilmesi gereken, beklenmeyen arıza için; WARN düşülmüş/yeniden denenmiş durum için; INFO önemli iş olayları için; DEBUG ayrıntı için ve production'da varsayılan kapalı. Beklenen iş hatalarını (doğrulama) ERROR loglamak ve her satırı INFO loglamak yasaktır; production log seviyesi yapılandırma ile ayarlanır.",
+      "rationale": "Tutarlı seviye, alert ve gürültü ayrımını mümkün kılar; yanlış seviye ya gerçek hatayı boğar ya da sahte alarm üretir.",
+      "severity": "should",
+      "check": "review + log seviyesi kullanım taraması"
+    },
+    {
+      "id": "obs-pii-safe-logging",
+      "rule": "Loglara ve metriklere PII/sır yazmak yasaktır: parola, token, tam kart no, e-posta/telefon ham hali, kimlik no gibi alanlar loglamadan önce maskelenir/redakte edilir veya hash'lenir. Redaksiyon merkezî logger'da allowlist/denylist ile zorlanır; ham request body/header'ı olduğu gibi loglamak yasaktır.",
+      "rationale": "Loga sızan PII, KVKK/GDPR ihlali ve sır sızıntısıdır; merkezî redaksiyon bunu çağrı yerine bırakmadan garanti eder.",
+      "severity": "must",
+      "check": "logger redaksiyon testi (PII alanları maskeli) + review (ham body log taraması)"
+    },
+    {
+      "id": "obs-prod-error-evidence",
+      "rule": "Bir production hatası ancak kanıtla 'çözüldü' sayılır: ilgili log/trace/metrik bağlantısı, correlationId, etki penceresi ve düzeltmeyi doğrulayan sinyal (hata oranı normale döndü) bir kanıt formatında kaydedilir. 'Çözüldü' iddiası ekran görüntüsü/log bağı olmadan kabul edilmez; tekrar etmemesi için bir alert veya test eklenir.",
+      "rationale": "Kanıtsız 'düzeltildi', doğrulanmamış ve tekrar edebilen arızadır; kanıt formatı kök-neden ve regresyon korumasını zorunlu kılar.",
+      "severity": "must",
+      "check": "review (kapanışta correlationId + sinyal + regresyon testi/alert kanıtı)"
+    }
+  ],
+  "banned": [
+    "console-log-freetext",
+    "missing-correlation-id",
+    "high-cardinality-metric-label",
+    "pii-in-logs",
+    "raw-request-body-log",
+    "threshold-only-alert-without-slo",
+    "runbookless-alert",
+    "mutable-audit-log",
+    "resolved-without-evidence"
+  ],
+  "allowed": [
+    "structured-json-log",
+    "correlation-request-id",
+    "red-use-metrics",
+    "opentelemetry-tracing",
+    "dashboard-as-code",
+    "slo-error-budget-alert",
+    "append-only-audit-event",
+    "redacted-pii-logging"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

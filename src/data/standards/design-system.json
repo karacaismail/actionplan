@@ -1,0 +1,88 @@
+{
+  "id": "design-system",
+  "name": "Tasarım Sistemi & Token Yönetişimi Standardı",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Tek-kaynak tasarım token taksonomisi (color/space/type-scale/radius/elevation/motion), SCSS + CSS custom property theming, 8pt spacing ölçeği, Roboto/≥300/≥1rem tipografi, dark+light tema ve WCAG 2.2 AAA ≥7:1 kontrast.",
+  "appliesTo": ["product-ui", "design-tokens", "theming"],
+  "rules": [
+    {
+      "id": "ds-token-single-source",
+      "rule": "Tüm tasarım değerleri TEK kaynakta token olarak tanımlanır ve `--ap-<kategori>-<rol>` CSS custom property'lerine derlenir (ör. --ap-color-bg-default, --ap-space-4). Bileşen SCSS'inde ham hex (#RRGGBB), ham px veya 'magic number' YASAK; yalnız var(--ap-*) okunur.",
+      "rationale": "Tek-kaynak token = tutarlılık, drift yok, tema/yeniden-markalama tek dosyadan.",
+      "severity": "must",
+      "check": "stylelint declaration-property-value-disallowed-list (hex + bare px) + review"
+    },
+    {
+      "id": "ds-token-taxonomy",
+      "rule": "Token taksonomisi tam altı kategori içerir: color, space (8pt ölçeği), type-scale, radius, elevation, motion. Her token semantik rol katmanından (ör. color.bg.default, color.text.muted) okunur; ham/primitive token'lar (palette-blue-500) doğrudan bileşende kullanılmaz, yalnız semantik alias'lara beslenir.",
+      "rationale": "Semantik katman bileşenleri palet değişiminden yalıtır; iki katmanlı token mimarisi temayı esnekleştirir.",
+      "severity": "must",
+      "check": "token şema doğrulaması (zod) + review"
+    },
+    {
+      "id": "ds-spacing-8pt",
+      "rule": "Tüm boşluk (margin/padding/gap) ve boyut token'ları 8pt taban ölçeğinin katlarıdır: 4, 8, 12, 16, 24, 32, 48, 64px → --ap-space-1..8 (4px = yarım adım hariç tutulmaz). Ölçek dışı keyfi değer (ör. 7px, 13px) YASAK.",
+      "rationale": "8pt ızgara dikey/yatay ritmi öngörülebilir kılar ve tasarım-kod paritesini garantiler.",
+      "severity": "must",
+      "check": "stylelint scale-disallowed (margin/padding/gap dışı 8'in katı olmayan px) + review"
+    },
+    {
+      "id": "ds-type-roboto-min",
+      "rule": "Tek metin yazı tipi Roboto'dur (--ap-font-family-base: 'Roboto'). font-weight ASLA 300'ün altına inmez (izinli: 300/400/500/700). Gövde/etkileşim metni için en küçük font-size 1rem (16px); 1rem altı yalnız dekoratif olmayan rozet/etiket için ve asla okunabilir içerik için kullanılmaz.",
+      "rationale": "Roboto + ≥300 ağırlık + ≥1rem okunabilirlik ve marka tutarlılığı; ince/küçük metin erişilebilirliği bozar.",
+      "severity": "must",
+      "check": "stylelint font-weight-min + font-size-min lint kuralı + check-ui-standards"
+    },
+    {
+      "id": "ds-type-scale-ratio",
+      "rule": "Tipografi ölçeği modüler 1.250 (Major Third) oranıyla türetilir; type-scale token'ları: 1rem(body), 1.25rem(h4), 1.563rem(h3), 1.953rem(h2), 2.441rem(h1). Satır yüksekliği gövde için ≥1.5, başlıklar için ≥1.2. Ölçek dışı keyfi font-size YASAK.",
+      "rationale": "Sabit oranlı ölçek görsel hiyerarşiyi tutarlı kılar; ≥1.5 satır yüksekliği WCAG 1.4.12 metin aralığını karşılar.",
+      "severity": "should",
+      "check": "token şema doğrulaması + review"
+    },
+    {
+      "id": "ds-theming-css-custom-property",
+      "rule": "Theming yalnız CSS custom property override ile yapılır: tema kökü [data-theme=\"light\"] / [data-theme=\"dark\"] aynı --ap-* token isimlerini farklı değerlerle bağlar. Hem light hem dark tema ZORUNLU sağlanır. Tema değiştirme için JS ile inline stil enjeksiyonu veya SCSS yeniden derlemesi YASAK; çalışma zamanı sadece data-attribute değişir.",
+      "rationale": "CSS custom property tema = FOUC'suz, runtime, SSR-uyumlu tema değişimi; iki tema erişilebilirlik tercihini karşılar.",
+      "severity": "must",
+      "check": "review + her token için light/dark eşleşme testi"
+    },
+    {
+      "id": "ds-contrast-aaa",
+      "rule": "Color token semantik çiftleri (text-on-bg) WCAG 2.2 AAA gerektirir: normal metin kontrast oranı ≥7:1, büyük metin (≥1.5rem bold / ≥1.875rem regular) ≥4.5:1. Her --ap-color-text-* / --ap-color-bg-* kombinasyonu hem light hem dark temada bu eşiği geçer.",
+      "rationale": "AAA ≥7:1 düşük görüşlü kullanıcılar için okunabilirliği garantiler.",
+      "severity": "must",
+      "check": "kontrast hesaplama testi (WCAG relative luminance) tüm semantik çiftlerde"
+    },
+    {
+      "id": "ds-no-tailwind-no-styled-kit",
+      "rule": "Ürün CSS'i yalnız SCSS + CSS custom property token'dır. Ürün kodunda Tailwind (utility-class framework) YASAK. Stillenmiş bileşen kitleri (antd, MUI, Chakra, Mantine, Flowbite) YASAK; bunların import edilmesi conformance kapısını kırar.",
+      "rationale": "Headless + token mimarisi marka kontrolünü ve token tek-kaynağını korur; utility/styled-kit token yönetişimini bypass eder.",
+      "severity": "must",
+      "check": "check-tech-profile (banned dependency taraması) + package.json deny-list"
+    },
+    {
+      "id": "ds-elevation-motion-tokens",
+      "rule": "Gölge/yükselti box-shadow değerleri --ap-elevation-0..4 token'larından okunur (keyfi shadow YASAK). Motion süreleri --ap-motion-duration-{fast:120ms,base:200ms,slow:320ms} ve easing token'larından gelir; prefers-reduced-motion: reduce altında tüm geçiş/animasyon süresi 0'a (veya ≤1ms) düşer.",
+      "rationale": "Token'laştırılmış elevation/motion tutarlı derinlik ve hareket sağlar; reduced-motion vestibüler güvenliği korur.",
+      "severity": "should",
+      "check": "stylelint (bare box-shadow/transition-duration) + reduced-motion media query testi"
+    }
+  ],
+  "banned": [
+    "tailwind",
+    "antd",
+    "@mui/material",
+    "@chakra-ui/react",
+    "@mantine/core",
+    "flowbite",
+    "raw-hex-in-component",
+    "bare-px-spacing",
+    "font-weight-below-300",
+    "inline-style-theming"
+  ],
+  "allowed": ["scss", "css-custom-properties", "roboto", "data-theme-attribute"],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}

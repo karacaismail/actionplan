@@ -1,0 +1,85 @@
+{
+  "id": "dependency-policy",
+  "name": "Bağımlılık Politikası Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Paket allowlist, lisans politikası (lisans-katman federasyonu), SBOM üretimi, lockfile commit + drift yok, npm/pip audit eşiği (CVSS ≥ 7 → 48 saat içinde giderme), yasak-paket listesi (next/redux/flowbite/antd/@mui/material/@chakra-ui/react/@mantine/core/supabase) ve supply-chain provenance için somut ve zorlanabilir kurallar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "dep-allowlist",
+      "rule": "Yeni bir runtime bağımlılığı eklemek açık gerekçe + review onayı ister; küçük yardımcılar (bir-satırlık trivial paket) iç koda alınır, bağımlılık olarak eklenmez. Transitive dâhil tüm paketler bilinen/izlenen kümede olmalı; rastgele/bakımsız (deprecated, >12 ay commit yok) paket reddedilir. Aynı işi yapan ikinci bir kütüphane (duplicate) eklenemez.",
+      "rationale": "Disiplinli bağımlılık girişi saldırı yüzeyini ve bakım yükünü sınırlar; gereksiz/bakımsız paket kalıcı risktir.",
+      "severity": "must",
+      "check": "review + bağımlılık-ekleme PR kapısı (package.json diff) + depcheck"
+    },
+    {
+      "id": "dep-banned-packages",
+      "rule": "Şu paketler ve eşdeğerleri YASAK: next, redux, flowbite, antd, @mui/material, @chakra-ui/react, @mantine/core, supabase. Bunlar veya tek-amaçlı türevleri bağımlılık ağacına (transitive dâhil) giremez. Onaylı yığın: React 19 + Vite + TanStack + ReactFlow + Radix + token tabanlı stil (ADR-0026 tech-profile).",
+      "rationale": "Yasak liste mimari/tech-profile kararlarını (headless + token) zorlar ve çelişen ağır framework'lerin sızmasını engeller.",
+      "severity": "must",
+      "check": "check-dependency-policy / check-tech-profile CI kapısı (yasak paket taraması)"
+    },
+    {
+      "id": "dep-license-policy",
+      "rule": "Yalnız izinli lisanslar (MIT, ISC, Apache-2.0, BSD-2/3-Clause, 0BSD) kabul edilir; copyleft/viral (GPL, AGPL, LGPL, SSPL) ve lisansı bilinmeyen (UNLICENSED/UNKNOWN) paketler reddedilir. Lisanslar lisans-katman federasyonu politikasına göre denetlenir; istisna yalnız ADR + hukuki onay ile mümkündür. Transitive lisanslar da taranır.",
+      "rationale": "Lisans denetimi viral lisans bulaşmasını ve hukuki uyum ihlalini önler.",
+      "severity": "must",
+      "check": "license-checker / SBOM lisans politikası CI kapısı (deny-list)"
+    },
+    {
+      "id": "dep-sbom",
+      "rule": "Her build için makine-okunur SBOM (CycloneDX veya SPDX) üretilir ve sürüm artifaktıyla birlikte saklanır; SBOM tüm doğrudan + transitive bileşenleri, sürümleri ve lisansları listeler. SBOM olmadan release yapılamaz; üretilen SBOM denetim için arşivlenir.",
+      "rationale": "SBOM, tedarik zinciri şeffaflığı ve bir CVE çıktığında etkilenen bileşenin hızlı tespiti için zorunludur.",
+      "severity": "should",
+      "check": "CI SBOM üretim adımı (cyclonedx) + release artifact eki"
+    },
+    {
+      "id": "dep-lockfile-no-drift",
+      "rule": "Lockfile (pnpm-lock.yaml / uv.lock) commit'lidir ve manifesto (package.json / pyproject) ile senkrondur; CI lockfile drift'ini reddeder (pnpm install --frozen-lockfile / uv sync --frozen). Kurulum daima lockfile'dan yapılır; sürümler pinlenir (^/~ ile geniş aralık kritik paketlerde yasak). Lockfile elle düzenlenmez.",
+      "rationale": "Sabit lockfile yeniden-üretilebilir, deterministik build garantiler; drift 'bende çalışıyordu' ve sessiz sürüm sıçramalarının kaynağıdır.",
+      "severity": "must",
+      "check": "CI --frozen-lockfile kapısı + lockfile-package.json senkron kontrolü"
+    },
+    {
+      "id": "dep-audit-cvss-sla",
+      "rule": "Her CI koşusunda npm audit ve pip-audit çalışır; CVSS ≥ 7 (high/critical) açık bir bağımlılık tespit edilirse build bloklanır ve 48 saat içinde giderilir (yükselt/yamala/değiştir) ya da gerekçeli + son-tarihli waiver açılır. Düşük şiddetli bulgular kayda alınır ve periyodik temizlenir; bilinen-savunmasız sürüm prod'a gidemez.",
+      "rationale": "Sabit eşik + SLA, kritik güvenlik açıklarının çözümsüz birikmesini önler ve müdahaleyi ölçülebilir kılar.",
+      "severity": "must",
+      "check": "npm audit + pip-audit CI kapısı (CVSS>=7 fail) + waiver-süresi kontrolü"
+    },
+    {
+      "id": "dep-supply-chain-provenance",
+      "rule": "Paketler yalnız güvenilir kayıt defterlerinden (resmî npm / PyPI) çekilir; mümkünse provenance/imza (npm provenance, sigstore) doğrulanır. Install-time keyfî betik çalıştıran paketler incelenir; typosquat/ele-geçirilmiş sürüm riskine karşı yeni-yayınlanmış majör atlamalar gözden geçirilir. CI/deploy sırlarına bağımlılık betiklerinin erişimi kısıtlanır.",
+      "rationale": "Provenance ve betik denetimi, son yıllarda artan tedarik-zinciri (supply-chain) saldırılarına karşı temel savunmadır.",
+      "severity": "should",
+      "check": "registry kısıtı + provenance doğrulama + install-script review"
+    }
+  ],
+  "banned": [
+    "next",
+    "redux",
+    "flowbite",
+    "antd",
+    "@mui/material",
+    "@chakra-ui/react",
+    "@mantine/core",
+    "supabase",
+    "gpl-licensed",
+    "agpl-licensed",
+    "unknown-license",
+    "lockfile-drift",
+    "unpinned-critical-version",
+    "known-vulnerable-version"
+  ],
+  "allowed": [
+    "package-allowlist",
+    "permissive-license",
+    "cyclonedx-sbom",
+    "frozen-lockfile",
+    "npm-pip-audit",
+    "provenance-verified"
+  ],
+  "references": ["docs/adr-0027-engineering-standards.md"]
+}
