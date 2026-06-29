@@ -12,6 +12,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 const SURFACES = path.join(ROOT, "src", "data", "surface", "surface-catalog.json");
 const WORKFLOWS = path.join(ROOT, "src", "data", "surface", "workflow-catalog.json");
 const RULESETS = path.join(ROOT, "src", "data", "eca", "ruleset-catalog.json");
+const PROFILES = path.join(ROOT, "src", "data", "tech-profiles.json");
 
 const SURFACE_TYPES = [
   "list",
@@ -41,6 +42,8 @@ const surfaces = read(SURFACES, "surface-catalog");
 const workflows = read(WORKFLOWS, "workflow-catalog");
 const rulesets = read(RULESETS, "ruleset-catalog");
 const rulesetIds = new Set(rulesets.map((r) => r.id));
+const techManifest = read(PROFILES, "tech-profiles");
+const profileIds = new Set(techManifest.profiles.map((p) => p.id));
 
 // --- Surfaces ---
 const sIds = new Set();
@@ -56,6 +59,9 @@ for (const s of surfaces) {
   if (s.responsive && !MOBILE.includes(s.responsive.mobile))
     fail(`surface ${tag}: geçersiz responsive.mobile "${s.responsive.mobile}"`);
   if (!s.a11y || !s.a11y.wcag) fail(`surface ${tag}: a11y.wcag yok`);
+  // ÇAPRAZ-REFERANS (ADR-0026): techProfileRef gerçek bir tech-profile'ı işaret etmeli.
+  if (s.techProfileRef && !profileIds.has(s.techProfileRef))
+    fail(`surface ${tag}: techProfileRef "${s.techProfileRef}" tech-profiles.json'da yok`);
 }
 
 // --- Workflows ---

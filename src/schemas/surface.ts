@@ -56,6 +56,9 @@ export const SurfaceContractSchema = z.object({
   a11y: SurfaceA11ySchema.default({}),
   /** Erişebilecek roller (boş = ArcheType izinlerine devre). */
   permissions: z.array(z.string()).default([]),
+  /** Bağlı tech profili (tech-profiles.json id'si). "" = sınıfından devralır.
+   *  Teknoloji Surface seviyesinde bağlanır; ArcheType linkedSurfaces ile miras alır (ADR-0026). */
+  techProfileRef: z.string().default(""),
 });
 export type SurfaceContract = z.infer<typeof SurfaceContractSchema>;
 
