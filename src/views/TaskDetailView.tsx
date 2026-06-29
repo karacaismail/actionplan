@@ -115,6 +115,7 @@ export function TaskDetailView() {
         )}
       </header>
 
+      <NextAction node={node} />
       <PlanningForm node={node} />
       <PhaseStepper node={node} />
       <Dimensions node={node} />
@@ -123,6 +124,61 @@ export function TaskDetailView() {
       <Relations node={node} />
       <Traceability node={node} />
     </div>
+  );
+}
+
+function NextAction({ node }: { node: TaskNode }) {
+  const na = t.nextAction;
+  const rules = na.rules as Record<string, string>;
+  const key =
+    node.status === "done"
+      ? "done"
+      : node.level === "app"
+        ? "app"
+        : node.level === "module" && (node.phase === "requirements" || node.phase === "db-schema")
+          ? "module"
+          : node.phase;
+  const guidance = rules[key] ?? rules[node.phase] ?? "";
+  const coding = key === "development";
+  const tr = node.traceability;
+  const dorIncomplete = coding && (!tr?.repoPath?.length || !tr?.testCommand?.length);
+  return (
+    <Card className="border-primary/40 p-4">
+      <h2 className="mb-2 flex items-center gap-2 font-medium">
+        <Icon name="ph-compass" className="text-primary" /> {na.title}
+      </h2>
+      <p className="text-base">{guidance}</p>
+      <div className="mt-2">
+        <Badge color={coding ? "hsl(142 71% 45%)" : "hsl(38 92% 62%)"}>
+          {coding ? na.codingYes : na.codingNo}
+        </Badge>
+      </div>
+      {coding && (
+        <div className="mt-2 flex flex-col gap-1 text-base text-muted-foreground">
+          <p>
+            {na.branchHint}: <span className="font-mono">task/{node.id}-...</span>
+          </p>
+          {tr?.repoPath?.length ? (
+            <p>
+              {na.repoHint}: {tr.repoPath.join(", ")}
+            </p>
+          ) : null}
+          {tr?.testCommand?.length ? (
+            <p>
+              {na.testHint}: {tr.testCommand.join(", ")}
+            </p>
+          ) : null}
+          {dorIncomplete && <p className="text-destructive">{na.dorMissing}</p>}
+        </div>
+      )}
+      <Link
+        to="/task/$taskId"
+        params={{ taskId: "edu-baslangic-rotasi" }}
+        className="mt-2 inline-block text-primary underline"
+      >
+        {na.guide}
+      </Link>
+    </Card>
   );
 }
 
