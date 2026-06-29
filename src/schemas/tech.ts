@@ -14,7 +14,10 @@ export type TechSurface = z.infer<typeof TechSurfaceSchema>;
 export const CssStrategySchema = z.enum(["scss-tokens", "tailwind", "none"]);
 
 export const TechProfileSchema = z.object({
-  id: z.string().min(1).regex(/^[a-z0-9][a-z0-9-]*$/),
+  id: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9][a-z0-9-]*$/),
   name: z.string().min(1),
   surface: TechSurfaceSchema,
   /** Çalışma zemini (her zaman typescript dahil). */
