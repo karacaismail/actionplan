@@ -41,6 +41,20 @@ Bu liste deploy.yml'daki gercek kapi adlariyla bire-bir eslesmektedir.
 - [ ] `Birim testleri` yesil (`npm test`)
 - [ ] `E2E + axe` yesil (`npm run test:e2e` — Playwright + axe WCAG 2.2)
 - [ ] `Uretim derlemesi` yesil (`npm run build` — Vite + spa404.mjs)
+- [ ] `Tech-profile kapisi` yesil (`node tools/agents/check-tech-profile.mjs`)
+- [ ] `Standart kapsami` yesil (`node tools/agents/check-standards-coverage.mjs`)
+- [ ] `Boyut uygulanabilirligi` yesil (`node tools/agents/check-dimension-applicability.mjs`)
+- [ ] `Waiver yasam dongusu` yesil (`node tools/agents/check-waivers.mjs`)
+- [ ] `Kisa-kod` yesil (`node tools/agents/check-short-code.mjs`)
+- [ ] `Bagimlilik politikasi` yesil (`node tools/agents/check-dependency-policy.mjs`)
+- [ ] `UI standartlari` yesil (`node tools/agents/check-ui-standards.mjs`)
+
+## Standart uyumu (ADR-0027)
+
+- [ ] Dokundugum dugum(ler) ilgili standardlari `standardRefs` ile REFERANS veriyor (yeniden yazmiyor)
+- [ ] Uygulanmayan boyut icin `applicability` gerekce tasiyor (jenerik dolgu yok)
+- [ ] Standarttan sapma varsa `waivers[]` gerekceli + onayli + sureli
+- [ ] Yeni/degisen kural `docs/engineering-standards-index.md` ile tutarli
 
 ## Risk ve geri alma plani
 
