@@ -21,11 +21,7 @@ export function StandardsView() {
 
       <Card className="p-4">
         <h2 className="mb-3 font-medium">{t.standards.familiesTitle}</h2>
-        <div
-          className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
-          role="group"
-          aria-label={t.standards.familyAria}
-        >
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {families.map((g) => (
             <div key={g.family} className="rounded-md border border-border p-3">
               <div className="font-medium">{famLabel[g.family] ?? g.family}</div>
@@ -44,12 +40,8 @@ export function StandardsView() {
 
       <Card className="p-4">
         <h2 className="mb-3 font-medium">{t.standards.coverageTitle}</h2>
-        <div
-          tabIndex={0}
-          role="group"
-          aria-label={t.standards.tableAria}
-          className="overflow-x-auto"
-        >
+        {/* biome-ignore lint/a11y/noNoninteractiveTabindex: kaydırılabilir tablo bölgesi WCAG/axe scrollable-region-focusable için klavyeyle odaklanabilir olmalı; statik kuralla çakışıyor, gerçek erişilebilirlik önceliklidir */}
+        <section className="overflow-x-auto" tabIndex={0} aria-label={t.standards.tableAria}>
           <table className="w-full text-base">
             <thead>
               <tr className="text-left text-muted-foreground">
@@ -72,7 +64,7 @@ export function StandardsView() {
               ))}
             </tbody>
           </table>
-        </div>
+        </section>
       </Card>
     </div>
   );

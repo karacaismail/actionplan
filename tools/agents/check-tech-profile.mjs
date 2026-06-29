@@ -91,8 +91,7 @@ const importRe = /\bfrom\s+["']([^"']+)["']/g;
 const dangerRe = /dangerouslySetInnerHTML\s*[=:]/;
 for (const fp of tsFiles) {
   const code = fs.readFileSync(fp, "utf8");
-  let m;
-  while ((m = importRe.exec(code)))
+  for (const m of code.matchAll(importRe))
     if (isBanned(m[1])) fail(`actionplan: yasak import "${m[1]}" (${path.relative(ROOT, fp)})`);
   if (dangerRe.test(code))
     fail(`actionplan: dangerouslySetInnerHTML yasak (${path.relative(ROOT, fp)})`);
