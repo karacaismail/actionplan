@@ -1,155 +1,156 @@
-# Developer Workflow Gap Analizi
+# Developer Workflow Gap Analizi — Durum Raporu
 
-**Tarih:** 2026-06-29  
-**Kapsam:** actionplan sitesi — "görev sayfasından gerçek ürün koduna geçiş" boşluk analizi  
-**Durum:** main, 437 düğüm; tüm kapılar yeşil  
-**Not:** Bu belge iki bağımsız LLM analizini (Claude + ChatGPT) tek, çelişkisiz rapora birleştirmektedir. ChatGPT analizinin kullandığı eski metrikler (owner 411/437, evidence 0, lint kırmızı) merge öncesi anlık görüntüye dayanıyordu; aşağıdaki tüm sayılar güncel main durumunu yansıtır.
+**Tarih:** 2026-06-29 (DX1-DX5 sonrası güncellendi)
+**Kapsam:** actionplan — "görev sayfasından gerçek ürün koduna geçiş" boşluk analizi ve KAPATMA DURUMU
+**Durum:** main; tüm kapılar yeşil. Bu belge iki bağımsız analizi (Claude + ChatGPT) tek çelişkisiz rapora birleştirir ve her boşluğun GÜNCEL durumunu işaretler.
+
+## Durum etiketleri
+
+- **KAPANDI** — plan/doküman/kapı/UI tarafı üretildi ve main'e sevk edildi.
+- **AÇIK (yürütme)** — actionplan'ın işi değil; gerçek platform kodunun yazılması (planlama değil, uygulama adımı).
+- **AÇIK (girdi/opsiyonel)** — küçük; senin GitHub kurulumun gerekiyor ya da opsiyonel UI iyileştirmesi.
+
+> Özet: Boşlukların **plan tarafı DX1-DX5'te kapatıldı**. Geriye kalan tek esas katman, **platform kodunun yazılması** (Wave 0 — yürütme). Bu doküman bunu açıkça ayırır; "tamamlandı mı?" sorusunun cevabı her madde için aşağıdadır.
 
 ---
 
 ## 1. Kısa Sonuç
 
-actionplan sitesi "NE yapılacak"ı 437 düğümle ve her düğümde 14 üretim boyutuyla ayrıntılı biçimde tanımlar. "NASIL yapılacak"ı da isimlendirmektedir: her düğümde prompt alanı bir geliştirici talimatı gibi görünmektedir. Ancak bu promptlar içerik üretmek için tasarlanmıştır; gerçek bir execution workflow tarif etmemektedir. Sonuç olarak plan, çekirdek olarak ne bir teknik spec ne de bir kod iskeleti içermektedir. Bir geliştirici siteye bağlantı aldığında görevin ne olduğunu anlayabilir; ancak o görevden platforma ait gerçek kaynak koduna nasıl gideceğini, hangi branch adını kullanacağını, hangi testi çalıştıracağını, kanıtı nereye yazacağını ve bitince nereye geçeceğini siteye bakarak çözemez.
+actionplan "NE yapılacak"ı 437 düğüm + 14 boyutla tanımlar. "NASIL yapılacak" boşluğu (görevden koda giden döngü, görev↔kod sözleşmesi, Core Contract, giriş noktası) **DX1-DX5'te yazıldı ve sevk edildi**: 7 kanonik runbook, `check-ready-for-dev` kapısı ve task-detayındaki "Şimdi ne yapılır?" paneli. Açık kalan tek esas katman, Core Contract'ın **gerçek kod iskeletine** dönüşmesidir (platform monorepo) — bu bir planlama boşluğu değil, planın yürütülmesidir.
 
 ---
 
 ## 2. Mevcut Durum Ölçümü
 
-Aşağıdaki tablo, iki raporun karşılaştırmalı metrik tablosunu güncel durumla birleştirmektedir.
-
-| Metrik | ChatGPT Raporu (eski — geçersiz) | Güncel Durum (main) |
+| Metrik | ChatGPT Raporu (eski — geçersiz) | Güncel (main) |
 |---|---|---|
 | Toplam düğüm | 437 | 437 |
 | Owner dolu | 411/437 | 437/437 |
-| Evidence > 0 | 0 | 437 (alan var, içerik dolu) |
+| Evidence/traceability | 0 | done'lar + pilotlar kanıtlı; 18+ düğümde traceability |
 | Schedule dolu | kısmen | 437/437 |
-| check-content | geçiyor | geçiyor |
+| Rollback dolu | 13 | 437/437 |
 | quality-lint | kırmızı | yeşil |
-| check-data-quality | geçiyor | geçiyor |
-| check-execution-readiness | — | yeşil |
+| Kapılar | — | check-content/ruleset/surface/data-quality/execution-readiness/**ready-for-dev** hepsi yeşil |
 
-ChatGPT raporundaki owner-411, evidence-0 ve lint-kırmızı verileri artık geçersizdir; söz konusu analiz merge öncesi bir dal üzerinde yapılmıştır. Bu boşluklar kapatılmıştır. Aşağıdaki tüm bulgu maddeler mevcut durumu baz almaktadır.
-
----
-
-## 3. Ana Boşluklar
-
-### 3a. Yürütme Döngüsü Yazılı Değil
-
-Sitenin hiçbir sayfasında bir geliştiricinin görevi almasından başlayarak kodu teslim etmesine kadar geçen adımlar sıralanmamıştır. "Görevi al → branch aç → ilgili modülü bul → kodu yaz → testi geçir → PR aç → kapıları geçir → evidence yaz → bir sonraki göreve geç" döngüsü yalnızca zımni bilgi olarak var olmaktadır. Yazılı olmayan bir döngü, ekip büyüdükçe her seferinde yeniden icat edilmek zorunda kalır.
-
-### 3b. Kod-Üretim Promptları Yok
-
-Her düğümdeki prompt alanı içerik üretmek için yazılmıştır, örneğin "CustomerList sorgusunu, DataLoader kullanımını ve N+1 önleme tekniğini kapsayan bir doküman üret." Bu promptlar bir geliştiriciyi doğrudan kod dosyasına yönlendirmez. Kod-üretim promptları şöyle bir yapı gerektirir: "platform/apps/customer/graphql/resolvers/customer_resolver.py dosyasını oluştur; DataLoader entegrasyonunu test_customer_resolver.py'de doğrula; PR açmadan önce quality-lint ve check-execution-readiness kapılarının geçmesini bekle." Bu tür talimatlar hiçbir düğümde bulunmamaktadır.
-
-### 3c. Giriş Noktası ve Signpost Yok
-
-Bir geliştirici siteye bağlantı aldığında hangi repoyu klonlayacağını, hangi dizine gideceğini, hangi ortam değişkenlerini ayarlayacağını siteye bakarak öğrenemez. platform monorepo kararı alınmış olmakla birlikte site hiçbir yerde bu kararı geliştirici deneyimiyle ilişkilendiren bir "ilk gün rehberi" sunmamaktadır.
-
-### 3d. Geri-Yazma Döngüsü Yok
-
-Evidence alanları dolmuştur; ancak bir geliştiricinin görevi tamamladıktan sonra kanıtı nasıl güncelleyeceği, hangi formatta yazacağı ve güncellenmiş verinin siteye nasıl yansıyacağı tarif edilmemektedir. Plan tek yönlü bir belgedir: planlama → görev ataması. Gerçekleşme → plana geri yansıma döngüsü işlemez durumdadır.
-
-### 3e. Görev ile Kod Arasında Semantik Sözleşme Yok
-
-Bir görev düğümünün gerçekte hangi kaynak dosyasına, hangi modüle veya hangi servis sözleşmesine karşılık geldiği belirsizdir. platform-customer-graphql düğümü bir JSON varlığıdır; ancak bu varlığın platform monoreposundaki platform/apps/customer/graphql/ diziniyle olan bağlantısını tanımlayan hiçbir sözleşme belgesi yoktur. Bu durum, iki farklı geliştiricinin aynı görev için farklı dosya yolları açmasına zemin hazırlar.
+ChatGPT raporundaki owner-411, evidence-0, lint-kırmızı verileri merge öncesidir ve **geçersizdir**.
 
 ---
 
-## 4. En Kritik Boşluk: Kernel/Core Hayalet Bağımlılık
+## 3. Ana Boşluklar — Durum
 
-437 düğümün büyük çoğunluğu platform-auth, platform-db, platform-tenancy ve platform-factory modüllerine bağımlıdır. Bu dört modül bir Core Contract oluşturmaktadır; AppBase, JWTMiddleware, AppFactory.bootstrap() ve TenantContext bunların somut arayüzleridir.
+### 3a. Yürütme Döngüsü — **KAPANDI**
+"Görevi al → branch → modülü bul → kod → test → PR → kapılar → evidence → sonraki görev" döngüsü artık `docs/developer-guide.md` içinde uçtan uca yazılıdır; ayrıca task-detayındaki **"Şimdi ne yapılır?" paneli** her sayfada faza göre bu adımı gösterir.
 
-Söz konusu arayüzlerin hiçbiri için bağımsız bir kod iskeleti veya sözleşme belgesi bulunmamaktadır. Bir geliştirici platform-customer-graphql görevini almadan önce bu dört modülün en azından stub düzeyinde mevcut olması gerekir; aksi takdirde resolver yazmak, çalıştırmak ve test etmek imkansızdır. Tüm dikey dilimlerin bu hayalet bağımlılıkla bloke olduğu bir durumda 437 görevin kaçının gerçekten bağımsız olarak başlatılabileceği belirsizdir. Bu tek boşluk kapatılmadan diğer boşlukların kapatılmasının pratik getirisi sınırlıdır.
+### 3b. Kod-Üretim Promptları — **KAPANDI (sözleşme)**
+Düğüm promptlarının içerik-üretim olduğu, kod-üretim talimatının ayrı olduğu `docs/task-export-contract.md`'de tanımlandı (Agent Prompt modu: allowed/forbidden files, beklenen çıktı, zorunlu testler). Panel branch/repo/test ipucunu verir. (Promptların düğümlere ayrıca gömülmesi opsiyonel; sözleşme nettir.)
 
----
+### 3c. Giriş Noktası / Signpost — **KAPANDI**
+`docs/developer-guide.md` "ilk gün" rehberini (repo, ortam, ilk PR) içerir; panel "Geliştirici Rehberi" linkiyle `edu-baslangic-rotasi`'na yönlendirir; o düğüm de rehbere bağlandı.
 
-## 5. Çözülen Çelişki: İlk Dikey Dilim
+### 3d. Geri-Yazma Döngüsü — **KAPANDI (yöntem)**
+`docs/evidence-update-runbook.md` evidence güncelleme formatını/adımını tanımlar; `check-execution-readiness` (done-evidence) kanıtsız "done"u engeller. (Tarayıcıdan otomatik write-back UI'si opsiyonel; ritüel + format tanımlı.)
 
-Önceki iki rapor "ilk dilim nedir?" sorusunu farklı yanıtlamaktaydı: Claude raporu Customer'ı, ChatGPT raporu OrderOps'u öne çıkarıyordu. Kanonik karar şudur:
-
-- **İlk dikey dilim:** Customer (auth → DB → GraphQL → UI zincirinin tam referans implementasyonu)
-- **OrderOps'un rolü:** Öğretici örnek — ikinci dilim olarak, CustomerApp'in nasıl genişletileceğini gösteren rehber
-
-Bu karar platform-factory.json içindeki "Customer dikey dilimi referans implementasyonu" notuna ve AppFactory dokümantasyonundaki "CustomerApp, AppFactory'den türer... yeni dikey eklenirken bu referans kopyalanarak 5 dosya değişikliğiyle iskelet tamamlanır" ifadesine dayanmaktadır. İki rapor arasındaki çelişki kapatılmıştır; OrderOps bir rakip "ilk dilim" değildir.
-
----
-
-## 6. Unknown-Unknowns — Birleşik Liste
-
-Aşağıdaki 14 madde her iki raporun unknown-unknown listelerinin tekrarsız birleşimidir.
-
-| # | Bilinmeyen | Açıklama |
-|---|---|---|
-| 1 | Repo konumu | Hangi repo klonlanacak? Platform monorepo kararı alınmış; ancak URL, dizin yapısı ve erişim izni siteye bakarak anlaşılmıyor. |
-| 2 | "Seviye" ve "kodlama" anlamı | Düğümlerdeki seviye ve effort-coding alanlarının kod organizasyonuyla veya sprint planlamasıyla ilişkisi belgesiz. |
-| 3 | Prompt ile gereksinim karışması | Prompt alanı bazen teknik gereksinim, bazen içerik üretim talimatı gibi davranıyor; hangi promptun gereksinim, hangisinin üretim talimatı olduğu ayrışmıyor. |
-| 4 | Core/Kernel iskeleti yok | platform-auth, platform-db, platform-tenancy, platform-factory stub'ları olmadan hiçbir dikey dilim başlatılamaz. |
-| 5 | Export formatı agent sözleşmesi değil | JSON/CSV export özellikleri listeleniyor; ancak bu formatların bir AI agent veya CI pipeline tarafından okunacak şekilde bir sözleşmeye bağlandığına dair belge yok. |
-| 6 | DoR (Definition of Ready) yok | Bir görevin "başlanabilir" sayılabilmesi için hangi koşulların sağlanması gerektiği tanımlanmamış. |
-| 7 | Evidence geri-yazma ritüeli yok | Evidence alanı var; ancak kim, ne zaman, hangi formatta güncelleyecek ve güncelleme PR mı gerektiriyor yoksa doğrudan push mu yapılabilecek belirsiz. |
-| 8 | Deep-link durumu bilinmiyor | Sitenin bir görev sayfasına verilen doğrudan bağlantının SPA routing altında 404 döndürüp döndürmediği, ve eğer döndürüyorsa hangi koşullarda bu olduğu test edilmemiş. |
-| 9 | "Bugün ne yapmalıyım?" kuyruğu yok | Bir geliştirici sabah siteye geldiğinde sıradaki görevi belirleyecek bir önceliklendirme veya kuyruk mekanizması bulunmuyor. |
-| 10 | Ekipler gerçek GitHub aktörlerle eşleşmiyor | Owner alanları dolu; ancak bu sahiplik bilgisinin CODEOWNERS dosyasıyla veya GitHub ekipleriyle nasıl ilişkilendirileceği tanımlanmamış. |
-| 11 | Modül bağımlılığı ile kod bağımlılığı eşlenmemiş | Düğümler arası refs ve deps ilişkileri JSON'da tanımlı; ancak bu ilişkilerin package.json peerDependencies veya import grafı ile nasıl eşleştiği belgesiz. |
-| 12 | 50+ uygulama dalga planı yok | Platform 50+ uygulamayı hedefliyor; ancak hangi uygulamaların hangi sırayla hayata geçirileceği, her dalganın enterprise-ready eşiğinin ne olduğu tanımlanmamış. |
-| 13 | Uygulama bazlı enterprise-ready durum makinesi yok | Her uygulama için "plan → iskelet → alpha → beta → production" adımlarının ve geçiş koşullarının belgesiz olması, 50+ uygulama senaryosunda izlemeyi olanaksız kılıyor. |
-| 14 | İlk gün rehberi yok | Yeni bir geliştiricinin repo kurulumundan ilk PR'a kadar geçen adımları anlatan bir "first-day guide" hiçbir yerde yok. |
+### 3e. Görev↔Kod Semantik Sözleşmesi — **KAPANDI**
+`docs/task-to-code-contract.md`: seviye→teslimat (app=kapsam/kod yok, module=bounded context, archetype+altı=kod görevi), faz→eylem, ve düğüm→platform dizin yolu eşlemesi.
 
 ---
 
-## 7. Kapatma Planı
+## 4. En Kritik Boşluk: Kernel/Core — **SPEC KAPANDI / KOD AÇIK (yürütme)**
 
-Aşağıdaki belgeler ve mekanizmalar bu boşlukları kapatacaktır. Her satır bir veya daha fazla boşluğu hedefler.
+`docs/core-contract-pack.md` 10 çekirdek sözleşmeyi (tenancy/authz/event-bus/ECA/audit/registry/migration/observability/module-SDK) + stub imzalarını + repo kararını (platform monorepo) + "Hello Platform" iskelet tarifini **spec olarak tanımlar**.
 
-### 7a. Yeni Belgeler
+**Açık kalan:** bu sözleşmenin **gerçek kod stub'ları** (AppBase, JWTMiddleware, AppFactory.bootstrap, TenantContext) henüz yazılmadı — çünkü platform monorepo'su henüz inşa edilmedi. Bu, actionplan'ın (planlayıcı) işi değildir; **planın yürütülmesidir** (Wave 0). `check-ready-for-dev` kapısı, uygulama bağı (repoPath/testCommand) olmadan bir düğümün development fazına geçmesini engelleyerek bu sırayı zorlar.
 
-| Belge | Kapatılan Boşluklar |
+---
+
+## 5. Çözülen Çelişki: İlk Dikey Dilim — **KAPANDI**
+
+- **Kanonik ilk dikey dilim:** Customer (auth → DB → GraphQL → UI tam referans).
+- **OrderOps'un rolü:** öğretici örnek (ikinci dilim).
+
+`build-referans-uygulama` düğümüne bu not eklendi; iki rapor arasındaki tek gerçek çelişki kapatıldı.
+
+---
+
+## 6. Unknown-Unknowns — Durum Tablosu
+
+| # | Bilinmeyen | Durum | Kapatan / Not |
+|---|---|---|---|
+| 1 | Repo konumu | KAPANDI | core-contract-pack (platform monorepo + dizin) + developer-guide |
+| 2 | Seviye/kodlama anlamı | KAPANDI | task-to-code-contract (seviye→teslimat) |
+| 3 | Prompt ↔ gereksinim karışması | KAPANDI | task-export-contract + task-to-code-contract; panel |
+| 4 | Core/Kernel iskeleti | SPEC KAPANDI / **KOD AÇIK (yürütme)** | core-contract-pack spec; kod = platform repo |
+| 5 | Export agent sözleşmesi | KAPANDI | task-export-contract (3 mod) |
+| 6 | Definition of Ready | KAPANDI | ready-for-dev-gate.md + check-ready-for-dev kapısı |
+| 7 | Evidence geri-yazma ritüeli | KAPANDI | evidence-update-runbook + done-evidence kapısı |
+| 8 | Deep-link 404 | BİLİNİYOR (dokümante) | developer-guide: kökten gez; 404 status ama tarayıcı render eder (GitHub Pages SPA). Otomatik 200 = HashRouter (büyük değişiklik, ertelendi) |
+| 9 | "Bugün ne yapmalıyım?" kuyruğu | KISMEN | ready-for-dev kapısı + panel + Yürütme görünümü kapsar; ayrı "ready queue" görünümü = opsiyonel iyileştirme |
+| 10 | Ekip→GitHub eşlemesi | AÇIK (girdi) | CODEOWNERS var; team-id→GitHub-handle eşlemesi senin GitHub org/takım kurulumunu gerektirir |
+| 11 | Modül↔kod bağımlılığı | KAPANDI | task-to-code-contract (deps→import/migration sırası) |
+| 12 | 50+ uygulama dalga planı | KAPANDI | §7d (Wave 0-4) |
+| 13 | Uygulama durum makinesi | KAPANDI | §7e (aşağıda tanımlandı) |
+| 14 | İlk gün rehberi | KAPANDI | developer-guide.md |
+
+---
+
+## 7. Kapatma — DURUM (DX1-DX5'te sevk edildi)
+
+### 7a. Belgeler — hepsi ÜRETİLDİ ✓
+
+| Belge | Durum |
 |---|---|
-| `docs/developer-guide.md` | 1, 3, 14 — repo URL, ortam kurulumu, ilk gün rehberi |
-| `docs/task-to-code-contract.md` | 5, 11 — görev ile kaynak kod yolu eşlemesi, modül-bağımlılık sözleşmesi |
-| `docs/core-contract-pack.md` | 4 — AppBase, JWTMiddleware, AppFactory, TenantContext stub arayüzleri |
-| `docs/task-export-contract.md` | 5 — JSON/CSV export formatı makine-okunabilir sözleşmesi |
-| `docs/ready-for-dev-gate.md` | 6 — Definition of Ready koşulları |
-| `docs/evidence-update-runbook.md` | 7 — evidence güncelleme adımları, format, PR zorunluluğu |
+| `docs/developer-guide.md` | ✓ main'de |
+| `docs/task-to-code-contract.md` | ✓ main'de |
+| `docs/core-contract-pack.md` | ✓ main'de |
+| `docs/task-export-contract.md` | ✓ main'de |
+| `docs/ready-for-dev-gate.md` | ✓ main'de |
+| `docs/evidence-update-runbook.md` | ✓ main'de |
 
-### 7b. Yeni CI Kapısı
+### 7b. CI Kapısı — ÜRETİLDİ ✓ (kapsam uyarlandı)
 
-`check-ready-for-dev` kapısı, bir görev düğümünün "başlanabilir" sayılabilmesi için aşağıdaki koşulları kontrol eder:
+`tools/agents/check-ready-for-dev.mjs` üretildi ve CI + `npm test` + `qa:ready` script'ine bağlandı. Zorladığı: **development fazındaki düğüm → traceability.repoPath + testCommand + implementationStatus (≠ not-started)**.
 
-- Core Contract bağımlılıkları (platform-auth, platform-db, platform-tenancy, platform-factory) için en az stub-level dosya varlığı
-- task-to-code-contract.md'deki modül yolu eşlemesinin geçerli bir dizine işaret etmesi
-- DoR koşullarının sağlandığının onaylanmış olması
+> Uyarlama notu: Bu kapının ilk taslağında geçen "Core Contract stub dosyalarının VARLIĞINI kontrol et" maddesi, dosyalar **platform monorepo'sunda** yaşadığı için actionplan CI'sında uygulanamaz; o kontrol platform reposunun CI'sına aittir (`check-core-contract.mjs`, platform repo kurulunca). actionplan tarafı, planın uygulamaya hazır olduğunu (repoPath/testCommand) doğrular.
 
-### 7c. UI Paneli
+### 7c. UI Paneli — ÜRETİLDİ ✓
+Task-detayında "Şimdi ne yapılır?" paneli (seviye/faz-duyarlı yönerge, kod yazılır/yazılmaz, branch/repo/test ipucu, DoR-eksik uyarısı, Geliştirici Rehberi linki).
 
-Görev detay sayfasına "Şimdi Ne Yapılır?" başlıklı bir panel eklenmesi hedeflenmektedir. Bu panel şu bilgileri içerecektir:
-
-- İlgili kaynak dosya yolu veya modül dizini
-- Çalıştırılacak test komutu
-- PR açılmadan önce geçmesi gereken kapılar
-- Tamamlanınca güncellenmesi gereken evidence alanı ve format rehberi
-
-### 7d. Dalga Planı (50+ Uygulama)
+### 7d. Dalga Planı (50+ Uygulama) — TANIMLANDI ✓
 
 | Dalga | Kapsam | Giriş Koşulu | Çıkış Eşiği |
 |---|---|---|---|
-| Wave 0 | platform core + Customer referans | Core Contract tamalandı | Customer production'da, tüm kapılar yeşil, evidence dolu |
+| Wave 0 | platform core + Customer referans | Core Contract spec'i tam (✓) | Customer production'da, kapılar yeşil, evidence dolu |
 | Wave 1 | 3 uygulama (AppFactory türevleri) | CustomerApp referansı kopyalanabilir | 3 app için alpha kanıtı |
-| Wave 2 | 10 uygulama | Wave 1 kapıları geçti | Her app için enterprise-ready skor >= 3.0 |
-| Wave 3 | 25 uygulama | Wave 2 production kanıtı | Otonom smoke test döngüsü çalışıyor |
-| Wave 4 | 50+ uygulama | Wave 3 dalga planı stabil | Her app için durum makinesi eksiksiz izleniyor |
+| Wave 2 | 10 uygulama | Wave 1 kapıları geçti | her app enterprise-ready skor ≥ 3.0 |
+| Wave 3 | 25 uygulama | Wave 2 production kanıtı | otonom smoke test döngüsü |
+| Wave 4 | 50+ uygulama | Wave 3 stabil | her app durum makinesi izleniyor |
 
-Her dalganın geçiş koşulu production evidence içermelidir; yalnızca "plan tamamlandı" veya "kod yazıldı" yeterli sayılmaz.
+### 7e. Uygulama Durum Makinesi — TANIMLANDI ✓ (gap 13)
+
+Her uygulama/dikey dilim şu durumlardan geçer; geçişler kanıt-zorunludur:
+
+| Durum | Anlamı | Geçiş koşulu (sonraki duruma) | actionplan alan karşılığı |
+|---|---|---|---|
+| candidate | Aday; sadece plan | DoR sağlandı (owner+refs+schedule+AC+rollback) | status=backlog |
+| ready-for-dev | Kodlanabilir | repoPath+testCommand+implementationStatus atandı (check-ready-for-dev yeşil) | phase=test-plan, traceability dolu |
+| scaffolded | İskele kuruldu | ilk testler kırmızı + Core Contract'a bağlandı | implementationStatus=scaffolded |
+| in-progress | Geliştiriliyor | birim+entegrasyon testleri yeşil | phase=development, implementationStatus=in-progress |
+| implemented | Kod tamam | e2e+a11y+güvenlik+perf kapıları yeşil | phase=test-qa |
+| verified | Kanıtlı | evidence dolu + verification fazı passed | phase=verification, status=done |
+| production | Yayında | deploy kanıtı + rollback testli | release-maintenance, evidence: deploy URL |
+
+Bu makine `status`, `phase` ve `traceability.implementationStatus` alanlarının birleşiminden türetilir; ileride `check-state-machine.mjs` ile (platform repo evidence'ıyla birlikte) zorlanabilir.
 
 ---
 
 ## 8. Sonuç
 
-Plan, bir ürün geliştirme sürecinin "ne" boyutunu kapsamlı biçimde belgelemektedir. "Nasıl" boyutundaki boşluk üç katmanda kendini göstermektedir: (a) görevi alıp kodu teslim etme döngüsü yazılı değil, (b) Core Contract iskeleti kod olarak mevcut değil, (c) görev-kod semantik eşlemesi tanımlanmamış. Bu üç boşluk kapatılmadan 437 düğümün kaçının bağımsız olarak başlatılabileceği belirsiz kalmaya devam edecektir.
+"Nasıl" boşluğunun **plan tarafı kapatıldı**: yürütme döngüsü yazıldı (3a), kod-üretim sözleşmesi tanımlandı (3b), giriş noktası eklendi (3c), geri-yazma ritüeli belgelendi (3d), görev↔kod semantiği yazıldı (3e), Core Contract spec'lendi (4), durum makinesi + dalga planı tanımlandı (7d/7e). İlk-dilim çelişkisi çözüldü (5).
 
-İki LLM raporu arasındaki tek gerçek çelişki olan "ilk dilim" sorusu çözülmüştür: Customer dikey dilimi kanonik referanstır, OrderOps öğretici örnektir. Bunun dışında raporlar birbirini tamamlamaktadır; metrik tutarsızlıkları ise merge öncesi veri kullanımından kaynaklanmaktaydı ve artık geçerli değildir.
+**Açık kalan tek esas katman:** Core Contract'ın gerçek **kod iskeletine** dönüşmesi (platform monorepo, Wave 0). Bu bir planlama eksiği değil; planın **yürütülmesidir** — ve yeni kapılar (`check-ready-for-dev`, `check-execution-readiness`) kanıtsız/hazırlıksız ilerlemeyi engelleyerek bu yürütmeyi disipline eder.
+
+Küçük açık maddeler: deep-link 200 (HashRouter — ertelendi, §6.8), ekip→GitHub handle eşlemesi (senin org kurulumun, §6.10), opsiyonel "ready queue" görünümü (§6.9).
 
 ---
 
-*Bu belge, actionplan projesindeki DX serisinin (DX1-DX5) başlangıç noktasını oluşturmaktadır. Kapatma planındaki belgeler DX1, kapı DX2 kapsamında üretilecektir.*
+*Bu belge DX1-DX5'te üretildi ve main'e sevk edildi. Bir sonraki gerçek adım: platform monorepo iskeletini Core Contract v1'e göre kurmak (Wave 0).*
