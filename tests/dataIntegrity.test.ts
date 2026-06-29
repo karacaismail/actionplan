@@ -185,3 +185,21 @@ describe("yürütme hazırlığı kapısı (Faz P5+)", () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe("Definition of Ready — development fazı (DX)", () => {
+  it("development fazındaki düğümler repoPath + testCommand + implementationStatus≠not-started taşır", () => {
+    const bad = nodes
+      .filter((n) => n.phase === "development")
+      .filter((n) => {
+        const t = n.traceability;
+        return (
+          (t?.repoPath ?? []).length === 0 ||
+          (t?.testCommand ?? []).length === 0 ||
+          !t?.implementationStatus ||
+          t?.implementationStatus === "not-started"
+        );
+      })
+      .map((n) => n.id);
+    expect(bad).toEqual([]);
+  });
+});
