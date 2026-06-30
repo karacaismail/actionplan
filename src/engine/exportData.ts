@@ -1,20 +1,67 @@
 import type { TaskNode } from "@/schemas";
 
-/** Tüm görevleri tam-doğruluklu JSON olarak dışa aktarır. */
+/** GitHub Pages mutlak taban (export referans URL'leri için). */
+export const PAGES_BASE = "https://karacaismail.github.io/actionplan";
+
+export interface TaskRef {
+  id: string;
+  title: string;
+  /** Mutlak (GitHub Pages) URL. */
+  absoluteUrl: string;
+  /** Uygulama-içi rota (local indirilip çalıştırıldığında da geçerli). */
+  relativeUrl: string;
+}
+
+/** Bir düğüm id'sini tanım + mutlak + göreli URL ile çözer (index varsa başlık dolu). */
+function taskRef(id: string, index?: Map<string, TaskNode>): TaskRef {
+  return {
+    id,
+    title: index?.get(id)?.title ?? id,
+    absoluteUrl: `${PAGES_BASE}/task/${id}`,
+    relativeUrl: `/task/${id}`,
+  };
+}
+
+/**
+ * Tüm görevleri tam-doğruluklu JSON olarak dışa aktarır. `links`: her düğüm id'sinin
+ * başlık + mutlak (Pages) + göreli URL çözüm tablosu → dependsOn/blocks/related id'leri çözülebilir.
+ */
 export function exportJSON(nodes: TaskNode[]): string {
+  const links = Object.fromEntries(
+    nodes.map((n) => [
+      n.id,
+      { title: n.title, absoluteUrl: `${PAGES_BASE}/task/${n.id}`, relativeUrl: `/task/${n.id}` },
+    ]),
+  );
   return JSON.stringify(
-    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes },
+    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes, links },
     null,
     2,
   );
 }
 
 /**
- * Tek bir görevi tam JSON olarak verir (vibecoding prompt'u olarak kullanılır).
- * Kaynak: düğüm verisinin TAMAMI (DOM değil) → sayfaya bileşen eklense de bozulmaz.
+ * Tek bir görevi EKSİKSİZ JSON olarak verir (vibecoding prompt'u). İçerik: düğümün TAMAMI
+ * (14 boyut + prompt'lar + 7 faz + standardRefs/applicability/waivers + evidence) + çözülmüş
+ * `references`: bağımlılık/ilişki her biri tanım (title) + mutlak (Pages) + göreli URL ile.
+ * Kaynak DOM değil veri → sayfaya bileşen eklense de export bozulmaz.
  */
-export function exportTask(node: TaskNode): string {
-  return JSON.stringify(node, null, 2);
+export function exportTask(node: TaskNode, index?: Map<string, TaskNode>): string {
+  const references = {
+    self: {
+      id: node.id,
+      absoluteUrl: `${PAGES_BASE}/task/${node.id}`,
+      relativeUrl: `/task/${node.id}`,
+    },
+    dependsOn: node.dependsOn.map((id) => taskRef(id, index)),
+    blocks: node.blocks.map((id) => taskRef(id, index)),
+    related: node.related.map((id) => taskRef(id, index)),
+  };
+  return JSON.stringify(
+    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), task: node, references },
+    null,
+    2,
+  );
 }
 
 const CSV_COLUMNS = [

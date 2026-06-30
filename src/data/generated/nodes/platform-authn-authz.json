@@ -297,7 +297,7 @@
         "En az ayrıcalık ilkesi uygulaması: kullanıcı rolleri atanırken PermissionMatrix, talep edilen rolün gerektirdiği minimum izin kümesini hesaplar; admin rolü bile varsayılan olarak tam yetki içermez — ek izinler açıkça onaylanmalıdır."
       ],
       "notes": "Auth modülü RS256 JWT akışı + M2M RBAC modeli + resolver düzeyinde zorunlu dekoratör + en az ayrıcalık PermissionMatrix ile kimlik ve yetki katmanını yapısal olarak güvence altına alır.",
-      "prompt": "platform-authn-authz düğümü için featureDefs boyutunu kapsa: RS256 JWT access TTL=15 dk / refresh TTL=7 gün tenant_id/roles/permissions claim, Role-Permission M2M RBAC field-level izin, @require_permission CI merge reddi, PermissionMatrix en az ayrıcalık admin onay zorunluluğu. Çıktı: token üretim kodu, RBAC tablo şeması ve @require_permission dekoratör tanımı. güvenlik sınırı: dekoratörsüz resolver üretime geçemez.",
+      "prompt": "platform-authn-authz düğümü için featureDefs boyutunu kapsa: RS256 JWT access TTL=15 dk / refresh TTL=7 gün tenant_id/roles/permissions claim, Role-Permission M2M RBAC field-level izin, @require_permission CI merge reddi, PermissionMatrix en az ayrıcalık admin onay zorunluluğu. Çıktı: token üretim kodu, RBAC tablo şeması ve @require_permission dekoratör tanımı. güvenlik sınırı: dekoratörsüz resolver üretime geçemez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -312,7 +312,7 @@
         "Token kara liste yönetimi: kullanıcı oturumu kapattığında veya şifresini değiştirdiğinde token jti değeri Redis'e TTL = access_token TTL ile eklenir; sonraki doğrulamada kara listedeki jti HTTP 401 ile reddedilir — anında iptal sağlanır."
       ],
       "notes": "Auth güvenliği Vault RS256 90-gün rotasyonu + kaba kuvvet kilitleme + RBAC servis katmanı yükseltme engeli + Redis jti kara listesiyle saldırı yüzeyini çok katmanlı kapatır.",
-      "prompt": "platform-authn-authz için security boyutunu kapsa: Vault PKI RS256 90 gün rotasyon grace 15 dk, /auth/token 5 başarısız 15 dk kilit WARN logu, RBAC servis katmanı privilege escalation kontrolü (frontend'e güvenilmez), Redis jti kara liste TTL=access_token anında iptal. güvenlik sınırı: şifre değişikliğinde tüm aktif token'lar geçersizleşir. Çıktı: Vault PKI konfigürasyonu, kaba kuvvet middleware kodu ve jti kara liste fonksiyonu.",
+      "prompt": "platform-authn-authz için security boyutunu kapsa: Vault PKI RS256 90 gün rotasyon grace 15 dk, /auth/token 5 başarısız 15 dk kilit WARN logu, RBAC servis katmanı privilege escalation kontrolü (frontend'e güvenilmez), Redis jti kara liste TTL=access_token anında iptal. güvenlik sınırı: şifre değişikliğinde tüm aktif token'lar geçersizleşir. Çıktı: Vault PKI konfigürasyonu, kaba kuvvet middleware kodu ve jti kara liste fonksiyonu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -327,7 +327,7 @@
         "Refresh token rotasyonu sıkıştırması: her refresh işlemi eski token'ı geçersiz kılıp yeni token üretir; Redis'teki jti kara listesi TTL ile otomatik temizlenir ve bellek kullanımı sabit kalır — liste büyümesi 10 000 giriş ile sınırlandırılır."
       ],
       "notes": "Auth kod optimizasyonu Redis izin önbellekleme + tek JOIN RBAC sorgusu + birleşik dekoratör + TTL tabanlı kara liste sıkıştırmasıyla hem hız hem kaynak tasarrufu sağlar.",
-      "prompt": "platform-authn-authz için codeOptimization boyutunu kapsa: Redis TTL=120 s izin önbellek %85 DB azalma, tek JOIN users→roles→permissions N sorgu birleştirme, @require_all_permissions tek döngü optimize dekoratör, refresh jti kara liste TTL otomatik temizleme 10 000 limit. Çıktı: @require_permission önbellek kodu, JOIN SQL sorgusu ve @require_all_permissions dekoratör tanımı. güvenlik sınırı: önbellek zehirlenmesi TTL + rol değişikliği invalidation ile önlenir.",
+      "prompt": "platform-authn-authz için codeOptimization boyutunu kapsa: Redis TTL=120 s izin önbellek %85 DB azalma, tek JOIN users→roles→permissions N sorgu birleştirme, @require_all_permissions tek döngü optimize dekoratör, refresh jti kara liste TTL otomatik temizleme 10 000 limit. Çıktı: @require_permission önbellek kodu, JOIN SQL sorgusu ve @require_all_permissions dekoratör tanımı. güvenlik sınırı: önbellek zehirlenmesi TTL + rol değişikliği invalidation ile önlenir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -342,7 +342,7 @@
         "mTLS servisler arası kimlik doğrulama: auth servisi ile diğer mikroservisler arasında mutual TLS uygulanır; sertifika Vault tarafından 24 saatte bir yenilenir ve süresi dolan sertifikayla bağlantı isteği REJECTED durum kodu ile otomatik reddedilir."
       ],
       "notes": "Auth güvenlik optimizasyonu PyJWT hızlı backend + short-circuit değerlendirme + log özetleme + mTLS servis kimliğiyle hem performans hem savunma derinliği sağlar.",
-      "prompt": "platform-authn-authz için securityOptimization boyutunu kapsa: PyJWT cryptography backend p95 <3 ms doğrulama, @require_permission short-circuit worst-case <10 ms, 100 olay/s log özetleme N events in T seconds SIEM yük koruması, mTLS Vault 24 saat sertifika yenileme REJECTED otomatik red. güvenlik sınırı: süresi dolan sertifika bağlantısı kapatılır. Çıktı: JWT doğrulama konfigürasyonu, short-circuit akış kodu ve mTLS FastAPI lifespan entegrasyonu.",
+      "prompt": "platform-authn-authz için securityOptimization boyutunu kapsa: PyJWT cryptography backend p95 <3 ms doğrulama, @require_permission short-circuit worst-case <10 ms, 100 olay/s log özetleme N events in T seconds SIEM yük koruması, mTLS Vault 24 saat sertifika yenileme REJECTED otomatik red. güvenlik sınırı: süresi dolan sertifika bağlantısı kapatılır. Çıktı: JWT doğrulama konfigürasyonu, short-circuit akış kodu ve mTLS FastAPI lifespan entegrasyonu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -357,7 +357,7 @@
         "Veritabanı rol sorgusu indeksleme: user_roles tablosunda (user_id, tenant_id) bileşik indeks, role_permissions tablosunda (role_id) indeks tanımlanır; RBAC sorgularında sequential scan sıfıra indirilir ve p99 sorgu süresi 20 ms altında tutulur."
       ],
       "notes": "Auth performansı /auth/token executor async + DataLoader toplu izin + token önbellek ≥%90 + RBAC indeks p99 < 20 ms ile düşük gecikme ve yüksek verim sağlar.",
-      "prompt": "platform-authn-authz için performance boyutunu kapsa: POST /auth/token p95 <100 ms asyncio executor bcrypt, DataLoader 10 resolver → 1 sorgu ≥10x azalma, Redis token claim TTL=60 s önbellek ≥%90 Prometheus alert, user_roles (user_id,tenant_id) bileşik indeks p99 <20 ms. Çıktı: asyncio executor bcrypt kodu, DataLoader izin batch fonksiyonu ve indeks oluşturma SQL. güvenlik sınırı: önbellek miss'inde DB'den doğrulama yapılır, yanıt atlanmaz.",
+      "prompt": "platform-authn-authz için performance boyutunu kapsa: POST /auth/token p95 <100 ms asyncio executor bcrypt, DataLoader 10 resolver → 1 sorgu ≥10x azalma, Redis token claim TTL=60 s önbellek ≥%90 Prometheus alert, user_roles (user_id,tenant_id) bileşik indeks p99 <20 ms. Çıktı: asyncio executor bcrypt kodu, DataLoader izin batch fonksiyonu ve indeks oluşturma SQL. güvenlik sınırı: önbellek miss'inde DB'den doğrulama yapılır, yanıt atlanmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -372,7 +372,7 @@
         "Çevrimdışı JWT doğrulama: mobil uygulama RS256 public key'ini yerel olarak önbelleğe alır ve çevrimdışı modda token imza doğrulaması yapabilir; public key güncellenmesi push notification tetikleyicisiyle bildirilir ve eski key 1 saatlik grace period sonrası geçersiz sayılır."
       ],
       "notes": "Auth mobil entegrasyonu Keychain/Keystore belgesi + FIDO2 biyometrik + çok cihaz oturum yönetimi + yerel public key önbellekleme ile güvenli mobil kimlik deneyimi standardını tanımlar.",
-      "prompt": "platform-authn-authz için mobileApps boyutunu kapsa: Keychain/Keystore belgeleme refresh TTL=7 gün tek kullanımlık rotasyon zarar sınırlama, FIDO2/WebAuthn device_credential_assertion biyometrik şifresiz token, user_sessions device_id/platform tüm cihaz çıkış jti kara liste, RS256 public key çevrimdışı önbellek push key güncelleme 1 saat grace. Çıktı: FIDO2 doğrulama kodu, user_sessions tablo şeması ve public key yenileme akışı. güvenlik sınırı: çalınmış refresh token rotasyon sonrası geçersizdir.",
+      "prompt": "platform-authn-authz için mobileApps boyutunu kapsa: Keychain/Keystore belgeleme refresh TTL=7 gün tek kullanımlık rotasyon zarar sınırlama, FIDO2/WebAuthn device_credential_assertion biyometrik şifresiz token, user_sessions device_id/platform tüm cihaz çıkış jti kara liste, RS256 public key çevrimdışı önbellek push key güncelleme 1 saat grace. Çıktı: FIDO2 doğrulama kodu, user_sessions tablo şeması ve public key yenileme akışı. güvenlik sınırı: çalınmış refresh token rotasyon sonrası geçersizdir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -387,7 +387,7 @@
         "Erişilebilir CAPTCHA alternatifi: kaba kuvvet kilitleme sonrasında görsel CAPTCHA yerine zaman bazlı kilitleme tercih edilir; görme engelli kullanıcıların giriş yapması için audio CAPTCHA veya yedek yöntem gerekmez — WCAG 1.1.1 metin alternatifi zorunluluğu backend tarafından CAPTCHA gerektirmeyerek karşılanır."
       ],
       "notes": "Auth WCAG katkısı yapılandırılmış hata mesajı + genel giriş hatası + sessionExpiryWarning subscription + CAPTCHA-sız kilitleme ile erişilebilir kimlik deneyimi altyapısı kurar.",
-      "prompt": "platform-authn-authz için wcag boyutunu kapsa: backend sınırını belirt, code/message/field yapılandırılmış hata yanıtı ekran okuyucu, genel 'kimlik bilgileri geçersiz' WCAG 3.3.1 + güvenlik uyumu, sessionExpiryWarning subscription WCAG 2.2.1 ARIA live region, CAPTCHA-sız zaman kilitleme WCAG 1.1.1. Çıktı: hata yanıt şeması, sessionExpiryWarning subscription tanımı ve kilitleme akış kodu. güvenlik sınırı: hata mesajı hangi alanın hatalı olduğunu açıklamaz.",
+      "prompt": "platform-authn-authz için wcag boyutunu kapsa: backend sınırını belirt, code/message/field yapılandırılmış hata yanıtı ekran okuyucu, genel 'kimlik bilgileri geçersiz' WCAG 3.3.1 + güvenlik uyumu, sessionExpiryWarning subscription WCAG 2.2.1 ARIA live region, CAPTCHA-sız zaman kilitleme WCAG 1.1.1. Çıktı: hata yanıt şeması, sessionExpiryWarning subscription tanımı ve kilitleme akış kodu. güvenlik sınırı: hata mesajı hangi alanın hatalı olduğunu açıklamaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -402,7 +402,7 @@
         "Güvenli ortam değişkeni enjeksiyonu: JWT signing key ID, Vault agent sidecar tarafından konteynere VAULT_TOKEN üzerinden aktarılır; Kubernetes Secret olarak saklanmaz ve deployment manifest'inde plaintext anahtar referansı bulunmaz."
       ],
       "notes": "Auth deployment, bağımsız signing servisi + JWKS sıfır-kesintili anahtar rotasyonu + CPU bazlı HPA + Vault sidecar ile güvenli ve ölçeklenebilir kimlik altyapısı sunar.",
-      "prompt": "platform-authn-authz için deployment boyutunu kapsa: bağımsız FastAPI signing servisi 120 MB imaj, JWKS anahtar rotasyonu 30 dk çakışma sıfır kesinti, HPA CPU %70 maks 10 pod 500m/256Mi resource, Vault agent sidecar VAULT_TOKEN K8s Secret yasağı. Çıktı: Dockerfile signing servisi, JWKS endpoint implementasyonu ve HPA manifest. güvenlik sınırı: signing key Kubernetes Secret'e yazılamaz.",
+      "prompt": "platform-authn-authz için deployment boyutunu kapsa: bağımsız FastAPI signing servisi 120 MB imaj, JWKS anahtar rotasyonu 30 dk çakışma sıfır kesinti, HPA CPU %70 maks 10 pod 500m/256Mi resource, Vault agent sidecar VAULT_TOKEN K8s Secret yasağı. Çıktı: Dockerfile signing servisi, JWKS endpoint implementasyonu ve HPA manifest. güvenlik sınırı: signing key Kubernetes Secret'e yazılamaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -417,7 +417,7 @@
         "Token iptal yayılımı: şifre değişikliği veya hesap deaktivasyon olayı tüm mikroservislere TokenRevocationBroadcast(jti_list, tenant_id) olayını yayar; her servis kendi yerel token önbelleğini bu listeye göre temizler — merkezi kara liste yerine dağıtık geçersizleştirme uygulanır."
       ],
       "notes": "Auth ECA katmanı UserLoggedIn Outbox + PermissionChanged anlık önbellek geçersizleştirme + SecurityAlert brute-force kilitleme + TokenRevocationBroadcast dağıtık iptal ile olay güdümlü kimlik yönetimi kurar.",
-      "prompt": "platform-authn-authz için eca boyutunu kapsa: UserLoggedIn/Out Outbox 7 yıl audit, PermissionChanged token önbellek anlık geçersizleştirme, failed_login 5/10 dk SecurityAlert Slack kilitleme, TokenRevocationBroadcast jti_list dağıtık önbellek temizleme. Çıktı: UserLoggedIn Pydantic şeması, PermissionChanged tüketici kodu ve TokenRevocationBroadcast yayın akışı. güvenlik sınırı: revoke yayını 30 s içinde tüm servislere ulaşmalıdır.",
+      "prompt": "platform-authn-authz için eca boyutunu kapsa: UserLoggedIn/Out Outbox 7 yıl audit, PermissionChanged token önbellek anlık geçersizleştirme, failed_login 5/10 dk SecurityAlert Slack kilitleme, TokenRevocationBroadcast jti_list dağıtık önbellek temizleme. Çıktı: UserLoggedIn Pydantic şeması, PermissionChanged tüketici kodu ve TokenRevocationBroadcast yayın akışı. güvenlik sınırı: revoke yayını 30 s içinde tüm servislere ulaşmalıdır.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -432,7 +432,7 @@
         "AI destekli anomali tespiti: kullanıcı davranış profili (oturum süresi, istek patikası, coğrafi konum) ML modeli ile izlenir; profil dışı davranış skoru ≥ 0.85 olduğunda step-up authentication (ek doğrulama adımı) tetiklenir ve GraphQL mutation engellenir."
       ],
       "notes": "Auth AI katmanı agent_token kısıtlı kapsam + PermissionAuditAgent kullanılmayan izin tespiti + SecurityTestAgent fuzz + ML davranış anomali step-up ile akıllı kimlik güvencesi sağlar.",
-      "prompt": "platform-authn-authz için aiAgents boyutunu kapsa: agent_token TTL=1 h scope=['read:data','write:task'] tam yetki yasağı, PermissionAuditAgent 90 gün kullanılmayan izin PR raporu, SecurityTestAgent deployment fuzz+OWASP sıfır açık zorunluluğu, ML davranış skor ≥0.85 step-up auth GraphQL engelleme. güvenlik sınırı: agent_service_account admin rol alamaz. Çıktı: agent_token üretim kodu, PermissionAuditAgent rapor formatı ve step-up auth akışı.",
+      "prompt": "platform-authn-authz için aiAgents boyutunu kapsa: agent_token TTL=1 h scope=['read:data','write:task'] tam yetki yasağı, PermissionAuditAgent 90 gün kullanılmayan izin PR raporu, SecurityTestAgent deployment fuzz+OWASP sıfır açık zorunluluğu, ML davranış skor ≥0.85 step-up auth GraphQL engelleme. güvenlik sınırı: agent_service_account admin rol alamaz. Çıktı: agent_token üretim kodu, PermissionAuditAgent rapor formatı ve step-up auth akışı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -447,7 +447,7 @@
         "Yük altında izin kontrolü performans testi: k6 ile 1000 eşzamanlı kullanıcı, her biri 50 GraphQL resolver çağrısı yapar; izin denetimi p95 süresi 50 ms altında kalmalı ve başarısız istek oranı %0.1'i geçmemelidir."
       ],
       "notes": "Auth test katmanı 15 JWT birim testi + 30 RBAC entegrasyon vakası + 8 JWT saldırı vektörü + k6 izin p95 < 50 ms ile kapsamlı kimlik güvencesi sağlar.",
-      "prompt": "platform-authn-authz için testing boyutunu kapsa: 15 JWT birim test 5 senaryolu <5 s, 3 rol × 10 resolver 30 RBAC entegrasyon PermissionDeniedError, 8 JWT saldırı vektörü CI none-alg/confusion otomasyonu, k6 1000 kullanıcı × 50 resolver p95 <50 ms %0.1 hata. Çıktı: JWT test fixture kodu, RBAC test matris yapısı ve k6 senaryo tanımı. güvenlik sınırı: none algorithm saldırısı HTTP 401 döndürmelidir.",
+      "prompt": "platform-authn-authz için testing boyutunu kapsa: 15 JWT birim test 5 senaryolu <5 s, 3 rol × 10 resolver 30 RBAC entegrasyon PermissionDeniedError, 8 JWT saldırı vektörü CI none-alg/confusion otomasyonu, k6 1000 kullanıcı × 50 resolver p95 <50 ms %0.1 hata. Çıktı: JWT test fixture kodu, RBAC test matris yapısı ve k6 senaryo tanımı. güvenlik sınırı: none algorithm saldırısı HTTP 401 döndürmelidir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -462,7 +462,7 @@
         "OWASP A10 (Sunucu Tarafı İstek Sahteciliği): token endpoint'i callback URL parametresi kabul etmez; OAuth2 redirect_uri Vault'ta kayıtlı izin verilenler listesine karşı doğrulanır ve kayıtlı olmayan URI HTTP 400 ile reddedilir — SSRF yüzeyi sıfıra indirilir."
       ],
       "notes": "Auth OWASP kapsamı A02 RS256 asimetrik + A07 constant-time doğrulama + A01 DB anlık RBAC revalidation + A10 callback URI whitelist ile kimlik saldırı vektörlerini yapısal olarak kapatır.",
-      "prompt": "platform-authn-authz için owasp boyutunu kapsa: A02 RS256 asimetrik signing key paylaşılmaz, A07 hmac.compare_digest sabit-süre + 200 ms kullanıcı varlık maskeleme, A01 DB anlık rol doğrulama önbellek bypass revalidation, A10 redirect_uri Vault whitelist SSRF sıfırlama. güvenlik sınırı: simetrik JWT key kullanımı konfigürasyonda engellidir. Çıktı: constant-time doğrulama kodu, RBAC revalidation tetikleyicisi ve redirect_uri whitelist kontrolü.",
+      "prompt": "platform-authn-authz için owasp boyutunu kapsa: A02 RS256 asimetrik signing key paylaşılmaz, A07 hmac.compare_digest sabit-süre + 200 ms kullanıcı varlık maskeleme, A01 DB anlık rol doğrulama önbellek bypass revalidation, A10 redirect_uri Vault whitelist SSRF sıfırlama. güvenlik sınırı: simetrik JWT key kullanımı konfigürasyonda engellidir. Çıktı: constant-time doğrulama kodu, RBAC revalidation tetikleyicisi ve redirect_uri whitelist kontrolü.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -477,7 +477,7 @@
         "Audit log SIEM entegrasyonu: auth olayları (giriş, çıkış, izin reddi, token iptal) Elastic SIEM veya Splunk'a Logstash pipeline'ı üzerinden iletilir; her olay OWASP ASVS 7.1 günlükleme gerekliliklerine uygun alanları içerir ve gerçek zamanlı uyarı kuralları tanımlanır."
       ],
       "notes": "Auth entegrasyon katmanı OIDC dış IdP + API Gateway çift katman JWT + SCIM 2.0 sağlama + SIEM ASVS 7.1 audit ile kurumsal kimlik altyapılarıyla tam uyum sağlar.",
-      "prompt": "platform-authn-authz için integration boyutunu kapsa: OIDC AuthAdapter Google/MS/GitHub sub→tenant_user_mapping, Kong/AWS API Gateway /auth/jwks ön doğrulama çift katman, SCIM 2.0 Okta/AzureAD scim_provisioner_token kısıtlı erişim, Logstash SIEM OWASP ASVS 7.1 gerçek zamanlı alert. Çıktı: AuthAdapter OIDC sınıf tanımı, SCIM endpoint güvenlik konfigürasyonu ve Logstash pipeline yapısı. güvenlik sınırı: SCIM endpoint genel erişime kapalıdır.",
+      "prompt": "platform-authn-authz için integration boyutunu kapsa: OIDC AuthAdapter Google/MS/GitHub sub→tenant_user_mapping, Kong/AWS API Gateway /auth/jwks ön doğrulama çift katman, SCIM 2.0 Okta/AzureAD scim_provisioner_token kısıtlı erişim, Logstash SIEM OWASP ASVS 7.1 gerçek zamanlı alert. Çıktı: AuthAdapter OIDC sınıf tanımı, SCIM endpoint güvenlik konfigürasyonu ve Logstash pipeline yapısı. güvenlik sınırı: SCIM endpoint genel erişime kapalıdır.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     },
@@ -492,7 +492,7 @@
         "Geliştirme ortamı hızlı kurulum: docker-compose.yml'de auth-service ve Redis konteynerleri tanımlıdır; make dev-auth komutu konteynerleri ayağa kaldırır, test kullanıcıları ve rolleri seed eder ve /auth/token endpoint'ini yerel 8001 portunda kullanılabilir hale getirir."
       ],
       "notes": "Auth modülü include_router + JWTMiddleware iki satır entegrasyon, DB Permission + Role append ile izin genişletme, yetki kontrollü rol atama API ve make dev-auth tek komut geliştirici kurulumu ile hızlı ve güvenli kullanım sunar.",
-      "prompt": "platform-authn-authz için moduleUsage boyutunu kapsa: include_router + JWTMiddleware iki satır tam koruma, Permission+Role DB append @require_permission genişletme migration otomatik, POST /api/v1/users/{user_id}/roles yetki kontrolü HTTP 403 EscalationAttempt log, make dev-auth docker-compose seed 8001 port. Çıktı: JWTMiddleware kurulum kodu, Permission tanım örneği ve dev-auth make hedef tanımı. güvenlik sınırı: geliştirme seed kullanıcıları üretime taşınamaz.",
+      "prompt": "platform-authn-authz için moduleUsage boyutunu kapsa: include_router + JWTMiddleware iki satır tam koruma, Permission+Role DB append @require_permission genişletme migration otomatik, POST /api/v1/users/{user_id}/roles yetki kontrolü HTTP 403 EscalationAttempt log, make dev-auth docker-compose seed 8001 port. Çıktı: JWTMiddleware kurulum kodu, Permission tanım örneği ve dev-auth make hedef tanımı. güvenlik sınırı: geliştirme seed kullanıcıları üretime taşınamaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
     }

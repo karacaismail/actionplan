@@ -1,3 +1,4 @@
+import { HeaderSearch } from "@/components/app-shell/HeaderSearch";
 import { useTheme } from "@/components/theme/useTheme";
 import { Button, Icon } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
@@ -55,7 +56,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             · {t.appSubtitle}
           </span>
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <HeaderSearch />
           <Button variant="ghost" size="sm" aria-label={t.actions.toggleTheme} onClick={toggle}>
             <Icon name={theme === "dark" ? "ph-sun" : "ph-moon"} className="text-xl" />
           </Button>

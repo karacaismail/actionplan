@@ -22,6 +22,7 @@ import {
 import { taskStore, useTaskStore } from "@/store/taskStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useParams } from "@tanstack/react-router";
+import { Fragment } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -89,20 +90,32 @@ export function TaskDetailView() {
               </Badge>
             )}
           </div>
-          <Button
-            variant="primary"
-            size="sm"
-            aria-label={t.a11y.exportTaskAria}
-            onClick={() =>
-              downloadFile(
-                `${node.wbsCode || node.id}-${node.id}.json`,
-                exportTask(node),
-                "application/json",
-              )
-            }
-          >
-            <Icon name="ph-export" /> {t.actions.exportTask}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              aria-label={t.a11y.exportTaskAria}
+              onClick={() =>
+                downloadFile(
+                  `${node.wbsCode || node.id}-${node.id}.json`,
+                  exportTask(node, index),
+                  "application/json",
+                )
+              }
+            >
+              <Icon name="ph-export" /> {t.actions.exportTask}
+            </Button>
+            <a
+              href={`https://github.com/karacaismail/actionplan/issues/new?template=wbs-node.yml&title=${encodeURIComponent(
+                `[${node.wbsCode || node.id}] ${node.title}`,
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="tap-target inline-flex items-center gap-1.5 rounded-md border border-border px-3 text-base hover:bg-secondary"
+            >
+              <Icon name="ph-github-logo" /> {t.actions.createIssue}
+            </a>
+          </div>
         </div>
         <h1 className="text-2xl font-medium">{node.title}</h1>
         {node.summary && <p className="text-muted-foreground">{node.summary}</p>}
@@ -312,25 +325,25 @@ function PhaseStepper({ node }: { node: TaskNode }) {
 function Dimensions({ node }: { node: TaskNode }) {
   const familyLabel = t.families as Record<string, string>;
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-2">
       <h2 className="flex items-center gap-2 font-medium">
         <Icon name="ph-stack-plus" className="text-primary" /> {t.detail.dimensions}
       </h2>
-      {DIMENSION_FAMILIES.map((family) => {
-        const keys = DIMENSION_KEYS.filter((k) => DIMENSION_FAMILY[k] === family);
-        return (
-          <div key={family} className="flex flex-col gap-2">
-            <h3 className="text-base font-medium text-muted-foreground">
-              {familyLabel[family] ?? family}
-            </h3>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+      <div className="columns-1 gap-2 md:columns-2">
+        {DIMENSION_FAMILIES.map((family) => {
+          const keys = DIMENSION_KEYS.filter((k) => DIMENSION_FAMILY[k] === family);
+          return (
+            <Fragment key={family}>
+              <h3 className="mt-1 mb-2 text-base font-medium text-muted-foreground [column-span:all]">
+                {familyLabel[family] ?? family}
+              </h3>
               {keys.map((key) => {
                 const dim = node.dimensions[key];
                 const meta = DIMENSION_META[key];
                 const na = node.applicability?.[key]?.applies === false;
                 const isSkeleton = !dim || dim.status === "skeleton" || dim.items.length === 0;
                 return (
-                  <Card key={key} className={cn("p-3", na && "opacity-70")}>
+                  <Card key={key} className={cn("mb-2 break-inside-avoid p-3", na && "opacity-70")}>
                     <div className="flex items-center gap-2">
                       <Icon name={meta.icon} className="text-primary" />
                       <span className="font-medium">{meta.tr}</span>
@@ -386,10 +399,10 @@ function Dimensions({ node }: { node: TaskNode }) {
                   </Card>
                 );
               })}
-            </div>
-          </div>
-        );
-      })}
+            </Fragment>
+          );
+        })}
+      </div>
     </section>
   );
 }

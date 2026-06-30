@@ -148,7 +148,7 @@ describe("export/import round-trip", () => {
     expect(result.nodes[0]).toEqual(full); // tam eşitlik (boyut/faz/risk dahil)
   });
 
-  it("exportTask tek görevi tam JSON verir (round-trip, veriden — DOM değil)", () => {
+  it("exportTask EKSİKSİZ task + çözülmüş references (tanım+absolute+relative URL) verir", () => {
     const n = node({
       id: "solo",
       title: "Solo",
@@ -156,9 +156,18 @@ describe("export/import round-trip", () => {
       wbsCode: "9",
       owner: "x",
       progress: 30,
+      dependsOn: ["dep-a"],
     });
-    const back = TaskNodeSchema.parse(JSON.parse(exportTask(n)));
-    expect(back).toEqual(n);
+    const idx = new Map([["dep-a", node({ id: "dep-a", title: "Dep A", slug: "dep-a" })]]);
+    const out = JSON.parse(exportTask(n, idx));
+    expect(TaskNodeSchema.parse(out.task)).toEqual(n);
+    expect(out.references.dependsOn[0]).toMatchObject({
+      id: "dep-a",
+      title: "Dep A",
+      absoluteUrl: "https://karacaismail.github.io/actionplan/task/dep-a",
+      relativeUrl: "/task/dep-a",
+    });
+    expect(out.references.self.relativeUrl).toBe("/task/solo");
   });
 });
 
