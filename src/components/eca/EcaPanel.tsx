@@ -30,6 +30,8 @@ import { useMemo, useState } from "react";
 
 const CATALOG = rulesetCatalogJson as unknown as EcaRulesetPackage[];
 const e = t.eca;
+const ACTION_NAMES = e.actionNames as Record<string, string>;
+const actionLabel = (type: string): string => ACTION_NAMES[type] ?? type;
 
 const LAYER_LABEL: Record<string, string> = {
   system: e.layerSystem,
@@ -120,26 +122,39 @@ function EcaSimulationResult({ outcomes }: { outcomes: SimOutcome[] }) {
   return (
     <div aria-live="polite" className="mt-3">
       {fired.length === 0 ? (
-        <p className="text-muted-foreground">{e.noFire}</p>
+        <p className="flex items-center gap-1 text-base text-muted-foreground">
+          <Icon name="ph-info" className="text-sm" /> {e.noFire}
+        </p>
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium">{`${fired.length} ${e.firedSuffix}`}</p>
           {fired.map((o) => {
             const summary = paramsSummary(o.rule.then.params);
+            const why = o.rule.when
+              .map(
+                (c) =>
+                  `${c.field} ${c.op} ${Array.isArray(c.value) ? c.value.join("/") : String(c.value)}`,
+              )
+              .join(` ${e.condAnd} `);
             return (
               <div
                 key={`${o.rule.source}:${o.rule.id}`}
                 className="rounded-md border border-border p-2"
               >
-                <span className="inline-flex items-center gap-1">
-                  <Icon name="ph-check-circle" className="text-sm" />
-                  <span className="font-medium">{o.rule.then.type}</span>
+                <span className="inline-flex flex-wrap items-center gap-1">
+                  <Icon name="ph-check-circle" className="text-primary text-sm" />
+                  <span className="font-medium">{actionLabel(o.rule.then.type)}</span>
                   {summary && <span className="text-muted-foreground">({summary})</span>}
+                  {o.result.requiresApproval && (
+                    <span className="ml-1">
+                      <ApprovalBadge />
+                    </span>
+                  )}
                 </span>
-                {o.result.requiresApproval && (
-                  <span className="ml-2">
-                    <ApprovalBadge />
-                  </span>
+                {why && (
+                  <p className="mt-1 flex items-center gap-1 text-base text-muted-foreground">
+                    <Icon name="ph-funnel" className="text-xs" /> {e.whyLabel} {why}
+                  </p>
                 )}
               </div>
             );
@@ -155,6 +170,33 @@ function coerce(v: string): string | number | boolean {
   if (v === "false") return false;
   if (v.trim() !== "" && !Number.isNaN(Number(v))) return Number(v);
   return v;
+}
+
+/** Bir koşul alanı için gerçekçi açılır-menü seçenekleri (kuralların koşul değerlerinden türetilir). */
+function fieldOptionValues(eventRules: EffectiveRule[], field: string): string[] {
+  const opts = new Set<string>();
+  for (const r of eventRules)
+    for (const c of r.when)
+      if (c.field === field) {
+        if (c.op === "in" && Array.isArray(c.value)) for (const v of c.value) opts.add(String(v));
+        else opts.add(String(c.value));
+      }
+  if (opts.has("true") || opts.has("false")) {
+    opts.add("true");
+    opts.add("false");
+  }
+  return [...opts];
+}
+
+/** Bir kuralın koşullarını SAĞLAYAN (tetikleyen) ön-dolu senaryo bağlamı. */
+function firingScenario(rule: EffectiveRule | undefined): Record<string, string> {
+  const ctx: Record<string, string> = {};
+  if (!rule) return ctx;
+  for (const c of rule.when) {
+    if (c.op === "in" && Array.isArray(c.value)) ctx[c.field] = String(c.value[0]);
+    else ctx[c.field] = String(c.value);
+  }
+  return ctx;
 }
 
 function EcaChainResult({ chain }: { chain: ChainResult }) {
@@ -200,56 +242,53 @@ function EcaChainResult({ chain }: { chain: ChainResult }) {
   );
 }
 
-function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
+export function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
   const events = useMemo(() => ruleEvents(rules), [rules]);
   const [event, setEvent] = useState(events[0] ?? "");
+  const eventRules = useMemo(() => rules.filter((r) => r.event === event), [rules, event]);
   const fields = useMemo(
-    () =>
-      Array.from(
-        new Set(rules.filter((r) => r.event === event).flatMap((r) => r.when.map((c) => c.field))),
-      ),
-    [rules, event],
+    () => Array.from(new Set(eventRules.flatMap((r) => r.when.map((c) => c.field)))),
+    [eventRules],
   );
-  const [ctxRaw, setCtxRaw] = useState<Record<string, string>>({});
-  const [outcomes, setOutcomes] = useState<SimOutcome[] | null>(null);
-  const [chain, setChain] = useState<ChainResult | null>(null);
+  const [ctx, setCtx] = useState<Record<string, string>>(() => firingScenario(eventRules[0]));
+  const [showChain, setShowChain] = useState(false);
+
+  const coerced = useMemo(() => {
+    const out: Record<string, unknown> = {};
+    for (const f of fields) if (ctx[f] !== undefined && ctx[f] !== "") out[f] = coerce(ctx[f]);
+    return out;
+  }, [ctx, fields]);
+  const outcomes = useMemo(() => simulate(rules, event, coerced), [rules, event, coerced]);
+  const chain = useMemo(
+    () => (showChain ? simulateChain(rules, event, coerced, 6) : null),
+    [showChain, rules, event, coerced],
+  );
 
   if (events.length === 0) return null;
 
-  const buildCtx = (): Record<string, unknown> => {
-    const ctx: Record<string, unknown> = {};
-    for (const f of fields)
-      if (ctxRaw[f] !== undefined && ctxRaw[f] !== "") ctx[f] = coerce(ctxRaw[f]);
-    return ctx;
-  };
-  const onSimulate = () => {
-    setChain(null);
-    setOutcomes(simulate(rules, event, buildCtx())); // SALT-OKUNUR: store'a yazılmaz
-  };
-  const onChain = () => {
-    setOutcomes(null);
-    setChain(simulateChain(rules, event, buildCtx(), 6)); // SALT-OKUNUR çok-adımlı
+  // Olay değişince tetikleyen ön-dolu senaryoya sıfırla (boş input yok → her zaman anlamlı sonuç).
+  const onEvent = (next: string) => {
+    setEvent(next);
+    setShowChain(false);
+    setCtx(firingScenario(rules.filter((r) => r.event === next)[0]));
   };
 
   return (
     <div className="mt-4 rounded-md border border-dashed border-border p-3">
-      <p className="mb-2 flex items-center gap-1 text-base font-medium">
+      <p className="mb-1 flex items-center gap-1 text-base font-medium">
         <Icon name="ph-flask" className="text-sm" />
         {e.simTitle}
         <Badge className="ml-1 text-muted-foreground">{e.simBadge}</Badge>
       </p>
+      <p className="mb-2 text-base text-muted-foreground">{e.scenarioHint}</p>
       <div className="flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-base">
           {e.eventLabel}
           <select
             aria-label={e.simEventAria}
-            className="rounded-md border border-border bg-card px-2 py-1 text-base"
+            className="tap-target rounded-md border border-border bg-card px-2 py-1 text-base"
             value={event}
-            onChange={(ev) => {
-              setEvent(ev.target.value);
-              setOutcomes(null);
-              setChain(null);
-            }}
+            onChange={(ev) => onEvent(ev.target.value)}
           >
             {events.map((ev) => (
               <option key={ev} value={ev}>
@@ -259,27 +298,36 @@ function EcaSimulator({ rules }: { rules: EffectiveRule[] }) {
           </select>
         </label>
         {fields.map((f) => (
-          <label key={f} className="flex flex-col gap-1 text-sm">
+          <label key={f} className="flex flex-col gap-1 text-base">
             {f}
-            <input
+            <select
               aria-label={`${e.ctxAriaPrefix} ${f}`}
-              className="rounded-md border border-border bg-card px-2 py-1 text-base"
-              value={ctxRaw[f] ?? ""}
-              onChange={(ev) => setCtxRaw((p) => ({ ...p, [f]: ev.target.value }))}
-            />
+              className="tap-target rounded-md border border-border bg-card px-2 py-1 text-base"
+              value={ctx[f] ?? ""}
+              onChange={(ev) => setCtx((p) => ({ ...p, [f]: ev.target.value }))}
+            >
+              {fieldOptionValues(eventRules, f).map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
           </label>
         ))}
-        <Button variant="primary" size="sm" onClick={onSimulate}>
-          <Icon name="ph-play" className="text-sm" />
-          {e.simButton}
-        </Button>
-        <Button variant="outline" size="sm" onClick={onChain}>
+        <Button
+          variant={showChain ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setShowChain((v) => !v)}
+        >
           <Icon name="ph-tree-structure" className="text-sm" />
-          {e.chainButton}
+          {showChain ? e.chainHide : e.chainButton}
         </Button>
       </div>
-      {outcomes !== null && <EcaSimulationResult outcomes={outcomes} />}
-      {chain !== null && <EcaChainResult chain={chain} />}
+      {showChain && chain ? (
+        <EcaChainResult chain={chain} />
+      ) : (
+        <EcaSimulationResult outcomes={outcomes} />
+      )}
     </div>
   );
 }
