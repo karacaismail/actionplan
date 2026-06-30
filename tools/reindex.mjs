@@ -25,10 +25,9 @@ for (const n of nodes) {
     (childrenOf.get(n.parentId) ?? childrenOf.set(n.parentId, []).get(n.parentId)).push(n);
 }
 const roots = nodes.filter((n) => !n.parentId);
-const cmp = (a, b) =>
-  (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }) ||
-  (a.order ?? 0) - (b.order ?? 0) ||
-  a.title.localeCompare(b.title, "tr");
+// Sıralama: ÖNCE manuel `order` (öncelik), sonra başlık. (Eski hâli stale wbsCode'u birincil
+// anahtar yapıyordu → öncelik 'order' yok sayılıyor, sıralama kilitleniyordu. ADR: order-öncelikli.)
+const cmp = (a, b) => (a.order ?? 0) - (b.order ?? 0) || a.title.localeCompare(b.title, "tr");
 
 let appIdx = 0;
 function assign(node, code) {
