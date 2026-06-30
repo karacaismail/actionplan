@@ -1,11 +1,11 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import type { TaskNode } from "@/schemas";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 /**
  * EcaPanel bileşen testi (Küme E) — render + SALT-OKUNUR simülasyon akışı.
- * Gerçek ruleset kataloğunu (Küme C) kullanır; düğüm kümesine uyan paket kuralları da görünür.
+ * Simülasyon artık açılır menü + tetikleyen ön-dolu senaryo ile CANLI çalışır (boş input/buton-tıklama yok).
  */
 
 const mockNode = {
@@ -25,10 +25,11 @@ const mockNode = {
 } as unknown as TaskNode;
 
 describe("EcaPanel", () => {
-  it("başlığı, kural sayısını ve simülasyon düğmesini gösterir", () => {
+  it("başlığı, simülasyon bölümünü ve zincir düğmesini gösterir", () => {
     render(<EcaPanel node={mockNode} />);
     expect(screen.getByText("ECA Otomasyon Kuralları")).toBeInTheDocument();
-    expect(screen.getByText("Simüle Et")).toBeInTheDocument();
+    expect(screen.getByText("Simülasyon")).toBeInTheDocument();
+    expect(screen.getByText("Zincir Simüle Et")).toBeInTheDocument();
     // "veri değişmez" güvence etiketi her zaman görünür
     expect(screen.getByText(/veri değişmez/)).toBeInTheDocument();
   });
@@ -39,13 +40,9 @@ describe("EcaPanel", () => {
     expect(screen.getAllByText("task.status.changed").length).toBeGreaterThan(0);
   });
 
-  it("simülasyon eşleşen olayda kuralı tetikler (salt-okunur)", () => {
+  it("ön-dolu tetikleyen senaryo kuralı CANLI tetikler (tıklama yok, salt-okunur)", () => {
     render(<EcaPanel node={mockNode} />);
-    fireEvent.change(screen.getByLabelText("Simüle edilecek olay"), {
-      target: { value: "task.status.changed" },
-    });
-    fireEvent.change(screen.getByLabelText("bağlam: status"), { target: { value: "done" } });
-    fireEvent.click(screen.getByText("Simüle Et"));
+    // Açılır menüler tetikleyen değerlerle ön-dolu → sonuç anında görünür.
     expect(screen.getByText(/kural tetiklenir/)).toBeInTheDocument();
   });
 });
