@@ -382,128 +382,198 @@
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Bu dilim bir ürün özelliği değil, kanıt taşıyıcısı: 14 standardRef'in (architectureRef → aiGovernanceRef) hepsini tek bir uçtan-uca akışta (UI form → GraphQL mutation → RLS'li yazma → evidence kaydı) somutlaştırır.",
+        "Gözlemlenebilir çıktı sözleşmesi: check-standards-coverage 14/14 yeşil, applicability her ref için gerekçeli, evidence[] commit+CI bağlar; eksik herhangi biri düğümü 'aday' durumunda tutar, 'done'a geçirmez.",
+        "Yeni düğümler için kopyalanabilir iskelet: dependsOn=[std-contracts], standardRefs tam, waiver'lar süreli/onaylı — bir geliştirici bu dosyayı şablon alıp kendi alanına uyarlar.",
+        "Kapsam dışı sınır: gerçek iş mantığı, persistans şeması veya kullanıcıya dönük ekran üretmez; yalnızca standartların birbirine nasıl bağlandığını referans olarak sergiler (docs/golden-node-examples.md)."
+      ],
+      "notes": "İşlev = 14 standardı tek dikey dilimde kanıtlama; başarı kapısı check-standards-coverage 14/14 + applicability + evidence.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: referans dilimin gösterdiği işlev/çıktı: tek bir dikey dilimde 14 standardın (architecture..ai-governance) nasıl koştuğunu kanıtlayan örnek; çıktı sözleşmesi ve gözlemlenebilir kabul kriteri.",
+      "provenance": "swarm"
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "RLS deseni: örnek yazma yolu tenant_id taşıyan bir satıra dokunur ve PostgreSQL RLS politikasının sorgu zamanında nasıl filtrelediğini gösterir; politika atlanırsa erişim reddedilir (deny-by-default).",
+        "PII sınıflandırması: dilimdeki örnek alanlar 'pii: true' etiketiyle işaretlenir, log ve evidence çıktısında maskelenir; ham PII hiçbir denetim izine veya bildirime sızmaz.",
+        "RBAC kanıtı: aynı mutation'ı 'owner' rolü çalıştırabilir, 'viewer' reddedilir — yetki kararının kapı noktası (resolver guard) referans olarak gösterilir.",
+        "Ruleset sınırı: agentPolicy.rulesetBoundary.enforced=true ve canOverride=false ile AI'ın güvenlik kurallarını gevşetemeyeceği; forbiddenTargets=[app, module] ile üretim hedefinin yasaklandığı somut örneklenir."
+      ],
+      "notes": "Güvenlik referansı: deny-by-default RLS + PII maskeleme + rol kapısı + override edilemez ruleset (backendOnly).",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: RLS/PII/RBAC desenini nasıl örnekler: satır-seviyesi izolasyon, PII maskeleme, rol-tabanlı yetki; AI'ın app/module yazmasını engelleyen ruleset sınırı.",
+      "provenance": "swarm"
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Tip güvenliği: standardRefs anahtarları (techProfileRef..aiGovernanceRef) bir union/enum tipiyle bağlanır; check-standards-coverage derleme/CI'da çözülmeyen bir ref'i tip hatası gibi yakalar, çalışma zamanına bırakmaz.",
+        "Modülerlik: dilim, standart-çözme mantığını (resolveStandardRef) tek bir saf fonksiyona ayırır; düğüm verisi salt-veridir, davranış paylaşılan yardımcıda yaşar — kopya-yapıştır mantık yoktur.",
+        "Tek sorumluluk: applicability gerekçesi, waiver doğrulaması ve evidence eşlemesi ayrı küçük birimlere bölünür; her biri bağımsız test edilebilir ve başka düğümlerce miras alınır.",
+        "Saf veri sözleşmesi: bu JSON düğümü hiçbir yan etki içermez; tüm türetilen değerler (kapsama yüzdesi, eksik ref listesi) okuma anında hesaplanır, düğüme yazılmaz."
+      ],
+      "notes": "Kod referansı: standardRefs tipli union + saf resolveStandardRef + salt-veri düğüm; mantık paylaşılan yardımcıda.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği/modülerlik: standardRefs şemasının tipli çözümü, tekrar kullanılabilir küçük parçalar, çözücü/yardımcı ayrımı.",
+      "provenance": "swarm"
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Sır yönetimi deseni: dilim hiçbir kimlik bilgisini düğüm verisine gömmez; örnek bağlantılar 'env-ref' yer tutucusuyla anlatılır, gerçek değer dağıtım gizli deposundan (secret store) gelir — repo'da düz metin sır taranmaz.",
+        "CSP referansı: dilimin UI ucu sıkı bir Content-Security-Policy (default-src 'self', inline script yok) varsayar; standardRefs.uiComponentRef bu politikayı miras kabul kriteri olarak işaretler.",
+        "Hız sınırlama: örnek GraphQL mutation'ı kimlik başına token-bucket sınırına tabidir; aşırı çağrı 429 ile reddedilir ve bu sınır observabilityRef altında metrik olarak izlenir.",
+        "Öncelik kuralı: AI çağrı maliyeti göz ardı edilir, güvenlik kapısı asla atlanmaz — risk skoru ≥80 olduğunda eca-golden-slice-ref-risk-quarantine ile insan onaylı karantinaya alınır."
+      ],
+      "notes": "Güvenlik-opt referansı: repo'da sır yok (env-ref) + sıkı CSP + kimlik-başına rate-limit + güvenlik>maliyet.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret/CSP/rate-limit: sır yönetimi deseni, içerik güvenlik politikası, hız sınırlama; AI maliyeti değil güvenlik önceliği.",
+      "provenance": "swarm"
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "İndeksleme deseni: örnek okuma yolu (tenant_id, updated_at) sıralı bir indeks varsayar; standardRefs.dataApiContractRef bu indeksi sözleşmenin parçası sayar, tam-tablo taraması kabul kriterini bozar.",
+        "Önbellek katmanı: standart-çözme sonucu (14 ref → değer) istek başına bir kez hesaplanıp memoize edilir; aynı düğüm için tekrarlı çözümlemede yeniden hesaplama yapılmaz.",
+        "Gecikme bütçesi: dilimin uçtan-uca yolu için 200 ms'lik bir p95 hedefi referans alınır ve observabilityRef altında histogram olarak ölçülür; ihlal CI/operasyon uyarısı tetikler.",
+        "Sayfalama deseni: liste uçları imleç-tabanlı (cursor) sayfalama gösterir, offset değil — büyük veri kümelerinde sabit gecikme korunur."
+      ],
+      "notes": "Performans referansı: (tenant_id, updated_at) indeksi + memoize'lı ref çözümü + 200ms p95 + cursor sayfalama.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: indeks/önbellek/p95: sorgu indeksleme, önbellek katmanı, gecikme hedefi ve ölçümü.",
+      "provenance": "swarm"
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "PWA referansı: dilimin UI ucu manifest + service worker varsayar; uxStandardRef bunu 'kurulabilir, tam-ekran, çevrimdışı açılır' kabul kriteri olarak işaretler.",
+        "Dokunma hedefi: tüm etkileşimli öğeler en az 44×44 CSS pikseli ve aralarında yeterli boşlukla yerleşir; bu ölçü uiComponentRef'in mobil kabul kapısıdır.",
+        "Çevrimdışı dayanıklılık: örnek okuma yolu son başarılı yanıtı önbellekten sunabilir; yazma yolu çevrimdışıyken sıraya alınır ve bağlantı dönünce idempotent biçimde gönderilir.",
+        "Duyarlı düzen: dilim tek-sütun mobil ile çok-sütun masaüstü arasında akışkan kırılım gösterir, sabit piksel genişlik kullanmaz."
+      ],
+      "notes": "Mobil referansı: kurulabilir PWA + ≥44px hedef + çevrimdışı okuma/kuyruklu yazma + akışkan kırılım.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: PWA/≥44px/offline: kurulabilir PWA, dokunma hedefleri, çevrimdışı dayanıklılık.",
+      "provenance": "swarm"
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Kontrast: dilimin tüm metin/arka plan çiftleri WCAG 2.2 AAA eşiğini (normal metin ≥7:1, büyük metin ≥4.5:1) karşılar; tasarım token'ları bu oranı garanti eden paletten miras alınır.",
+        "Tam klavye erişimi: her etkileşim fare olmadan tamamlanabilir; sekme sırası mantıksaldır, tuzak (focus trap) yalnızca modal içinde ve Esc ile çıkışlıdır.",
+        "Anlamlı ARIA: örnek bileşenler doğru rol/ad/durum (aria-label, aria-invalid, aria-live) taşır; ekran okuyucu standart kapsama durumunu (14/14) sesli bildirebilir.",
+        "Görünür odak: klavye odağı her zaman yüksek kontrastlı bir odak halkasıyla görünür kalır; odak asla görsel olarak kaybolmaz — bu uxStandardRef'in AAA kapısıdır."
+      ],
+      "notes": "WCAG referansı: AAA ≥7:1 kontrast + tam klavye + anlamlı ARIA/aria-live + daima görünür odak halkası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast≥7:1/klavye/ARIA/odak: AAA kontrast, tam klavye erişimi, anlamlı ARIA, görünür odak.",
+      "provenance": "swarm"
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Çoklu ortam dağıtımı: dilim Docker Swarm ve Kubernetes hedeflerinin ikisini de referans alır; aynı imaj draft/staging/production ortamlarına ortam değişkeniyle koşulur, kod çatallanması olmaz.",
+        "Sağlık kontrolü: servis bir /healthz hazır-olma ucu sunar; sağlıksız replika trafik almaz ve releasePolicyRef bunu yayın-öncesi kapı olarak şart koşar.",
+        "Üretim koruması: production'a AI kaynaklı archetype güncellemesi yalnızca historyPreserved + snapshotCreated + rollbackReady + compatibilityChecked + append-only/expand-contract göçü ile ve insan onayıyla geçer (eca-golden-slice-ref-archetype-prod-update-gated).",
+        "Geri alma hazırlığı: her dağıtım bir anlık görüntü (snapshot) ve geri-alma planı üretir; uyumsuzluk saptanırsa otomatik geri alma referans davranıştır."
+      ],
+      "notes": "Dağıtım referansı: tek imaj Swarm+K8s + /healthz kapısı + insan onaylı kapılı prod + snapshot/rollback.",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Swarm/K8s/health: konteyner dağıtımı, sağlık kontrolleri, ortam ayrımı.",
+      "provenance": "swarm"
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Olay→aksiyon zinciri: status 'done' olunca owner'a bildirim, 'blocked' olunca yüksek öncelikli çözüm görevi, progress≥100 olunca status='done' — yaşam döngüsü ECA ile sürülür (maxChainDepth=6 ile döngü koruması).",
+        "Backend-zorlamalı sınır: rulesetBoundary.backendOnly=true; kurallar yalnız sunucuda değerlendirilir, istemci kararı güvenilmez — AI veya alt-prompt kuralı gevşetemez (subPromptUntrusted=true).",
+        "AI üretim reddi: ai.generation/update.requested olayında targetLevel app|module ise aksiyon 'deny' (ai-cannot-generate/update-app-or-module); ruleset override talebi de koşulsuz reddedilir.",
+        "İnsan-onaylı geçit: yüksek riskli veya prod-archetype güncelleme aksiyonları requiresApproval=true taşır; otomatik aksiyon güvenlik sınırını asla aşmaz."
+      ],
+      "notes": "ECA referansı: yaşam döngüsü olay→aksiyon + backendOnly zorlama + AI app/module/override deny + onaylı geçit.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend ruleset/olay→aksiyon: olay-koşul-aksiyon kurallarının backend'de zorlanması, AI override edemez.",
+      "provenance": "swarm"
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Yetki seviyesi: agentPolicy.autonomy='draft' ve capabilities yalnız read/suggest-changeset/archetype-draft/archetype-prod-update-proposal — AI öneri üretir, doğrudan yazmaz.",
+        "Kesin yasak: forbiddenActions arasında generate-app, generate-module, update-app, update-module, override-ruleset, rewrite-history, direct-prod-write yer alır; allowedTargets yalnız 'archetype'tır.",
+        "İnsan onayı (step-up): propose-archetype-prod-update, delete-field, change-permission, disable-protection, migrate-data işlemleri stepUp listesindedir ve ek doğrulama olmadan ilerlemez.",
+        "Kill-switch ve güvensiz alt-prompt: killSwitch=true ile tüm AI aksiyonları anında durdurulabilir; subPromptUntrusted=true ile gömülü talimatlara güvenlik sınırını aştıracak yetki verilmez."
+      ],
+      "notes": "AI referansı: draft autonomy + yalnız archetype taslağı + app/module/override yasak + step-up onayı + kill-switch.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız taslak; app/module üretemez; insan onayı: autonomy=draft, izin verilen/yasak hedefler, step-up onayı.",
+      "provenance": "swarm"
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Birim kapsamı: resolveStandardRef ve applicability/waiver doğrulayıcıları için birim testleri — 14 ref'ten biri çözülmezse veya bir waiver süresi geçmişse test kırmızıya döner.",
+        "Uçtan-uca akış: Playwright ile UI form → mutation → RLS'li yazma → evidence yolu bir senaryoda doğrulanır; 'owner' başarılı, 'viewer' reddedilir senaryoları rol kapısını kanıtlar.",
+        "Kapsama kapısı: check-standards-coverage testi acceptanceCriteria'nın makineye okunur halidir — 14/14 yeşil olmadan düğüm 'done' kabul edilmez.",
+        "Test döngüsü: AI yalnızca taslak test senaryosu önerebilir; önerilen test insan tarafından gözden geçirilip onaylanmadan koşu hattına (CI) eklenmez."
+      ],
+      "notes": "Test referansı: ref/waiver birim testleri + Playwright e2e (rol kapısı) + check-standards-coverage kapısı + onaylı AI test önerisi.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit/e2e/Playwright/testing-loop: birim ve uçtan-uca test, tarayıcı testi, AI destekli test döngüsü.",
+      "provenance": "swarm"
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Bozuk erişim kontrolü (A01): RLS + rol kapısı ile her okuma/yazma yetki doğrular; deny-by-default sayesinde eksik kontrol erişimi açmaz, kapatır.",
+        "Enjeksiyon (A03): tüm veri erişimi parametreli sorgu/tipli GraphQL girdisinden geçer; dilimde dize birleştirmeli sorgu deseni bilinçli olarak yoktur.",
+        "Güvenlik yanlış yapılandırması (A05): sıkı CSP, kapalı hata ayrıntısı (stack trace sızıntısı yok) ve en-az-ayrıcalık servis kimliği referans alınır; varsayılanlar güvenli tarafa ayarlıdır.",
+        "Yazılım/veri bütünlüğü (A08): üretim archetype değişiklikleri snapshot + rollback + uyumluluk kontrolü + geçmiş koruma ile imzalanır; doğrulanmamış otomatik değişiklik bütünlüğü bozamaz."
+      ],
+      "notes": "OWASP referansı: A01 RLS/rol, A03 parametreli sorgu, A05 sıkı CSP/güvenli varsayılan, A08 snapshot/rollback bütünlüğü.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10/tehdit yüzeyi: enjeksiyon, bozuk erişim kontrolü, SSRF vb. tehditlerin bu dilimde nasıl ele alındığı.",
+      "provenance": "swarm"
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Çekirdek bağ: dependsOn=[std-contracts] ile dilim, kernel'in standart sözleşmesine bağlıdır; 14 standardRef bu çekirdek kayıttan çözülür, lokal kopya tutulmaz.",
+        "Sözleşme çözümü: techProfileRef='saas-app' ve diğer 13 ref, çekirdek katalogdaki kanonik kimliklere (architecture, coding-standards, ...) eşlenir; eksik eşleme conformance kapısını kırar.",
+        "Uygulanabilirlik gerekçesi: applicability her ref için 'neden geçerli/neden muaf' gerekçesini taşır (ADR-0027 lazy migration); gerekçesiz ref kabul edilmez.",
+        "Sürüm sınırı: rulesetBoundary.version='ai-archetype-eca-v1' ile entegrasyon sürümlüdür; çekirdek ruleset sürümü değişirse uyum yeniden doğrulanır."
+      ],
+      "notes": "Entegrasyon referansı: std-contracts bağı + çekirdekten ref çözümü + gerekçeli applicability + sürümlü ruleset sınırı.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core sözleşme: çekirdek standart sözleşmesiyle (std-contracts) bağ, standardRefs çözümü, sürüm uyumu.",
+      "provenance": "swarm"
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Şablon miras: yeni bir düğüm bu dosyayı kopyalar, id/title/cluster'ı değiştirir ve standardRefs blokunu kendi alanına göre uyarlar — 14 anahtarın hepsi dolu kalmalıdır, boş bırakılamaz.",
+        "Applicability uyarlaması: miras alan düğüm her ref için kendi gerekçesini yazar; bir standart gerçekten geçerli değilse waiver (onaylı + süreli) ekler, ref'i silmez.",
+        "Waiver deseni: wv-golden-design örneği gibi, her muafiyet scope+reason+approvedBy+date+expires taşır; süresi geçmiş waiver conformance kapısında düşer ve yenilenmeyi zorlar.",
+        "Kabul mirası: miras alan düğüm de check-standards-coverage 14/14 + gerekçeli applicability + onaylı waiver kapısını geçmeden 'done' olamaz — altın desen kalite çıtasını taşır."
+      ],
+      "notes": "Kullanım referansı: golden'ı şablon al, 14 ref'i doldur, gerekçeli applicability + süreli waiver ekle, aynı kapıyı geç.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: golden-slice-ref — \"Golden Slice — Tum Standartlari Gecen Referans Dilim\" (büyük taş; küme: frontend). Özet: Tüm standardRefs dolu + applicability gerekçeli + evidence'li örnek dikey dilim; yeni düğümler için altın referans deseni (ADR-0027). Etiketler: golden, reference, standards, adr-0027.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: başka düğümler bu deseni nasıl miras alır: golden düğümü şablon olarak kopyalama, standardRefs/applicability/waiver kalıbını uyarlama.",
+      "provenance": "swarm"
     }
   },
   "source": {

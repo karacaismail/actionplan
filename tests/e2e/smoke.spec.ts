@@ -17,8 +17,8 @@ test.describe("Duman testleri", () => {
   test("WBS ağacı: görev linkine tıklayınca detay sayfası açılır", async ({ page }) => {
     await page.goto("/wbs", { waitUntil: "networkidle" });
 
-    // Arama input'u var olmalı (sayfa beklenen WBS görünümü).
-    await expect(page.getByRole("searchbox")).toBeVisible();
+    // Arama input'u var olmalı (header global + WBS yerel arama olabilir → ilki yeterli).
+    await expect(page.getByRole("searchbox").first()).toBeVisible();
 
     // En az bir WBS görev linki ("/task/<id>") bulunmalı.
     const taskLinks = page.locator('a[href*="/task/"]');

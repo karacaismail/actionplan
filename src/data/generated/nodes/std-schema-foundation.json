@@ -94,128 +94,186 @@
     "featureDefs": {
       "key": "featureDefs",
       "title": "Özellik Tanımları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "TaskNode şemasına standardRefs (14 alanlı ref objesi), applicability (profil→bool harita) ve waivers (dizi) alanlarını ekle; üçü de default değerli olsun.",
+        "DIMENSION_FAMILY sabitini tanımla: 14 boyutu coding/design/test/devops/ai/data ailelerine eşle, böylece her boyut bir standart ailesine bağlanabilsin.",
+        "standardRefs için 14 anahtarlı sabit şema (techProfileRef … aiGovernanceRef) belirle; bilinmeyen anahtar parse’ta reddedilir, tip güvenliği korunur.",
+        "Şemayı tek dosyada (src/schemas/task.ts + standard.ts) topla; alan adları ile downstream conformance kapıları aynı sözlüğü kullansın."
+      ],
+      "notes": "ST-1 = standardRefs + applicability + waivers + DIMENSION_FAMILY şema temeli.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standardRefs/applicability/waivers alanları, DIMENSION_FAMILY eşlemesi, sabit 14 anahtar.",
+      "provenance": "swarm"
     },
     "security": {
       "key": "security",
       "title": "Güvenlik Önlemleri",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "waivers dizisindeki her kayda zorunlu alanlar koy: ruleId, reason, approvedBy, expiresAt; eksik alanlı waiver şema doğrulamasında reddedilir, gizli istisna olamaz.",
+        "applicability haritasını yalnız bilinen profil anahtarlarıyla (web/mobile/shared) sınırla; rastgele anahtar enjeksiyonu parse hatası verir.",
+        "standardRefs alanlarını salt referans (id string) tut; gömülü kural/secret saklamayı şema seviyesinde imkânsız kıl, içerik sızıntısı yüzeyini sıfırla."
+      ],
+      "notes": "Güvenlik = waiver zorunlu alanları + kapalı profil seti + ref-only (gömülü secret yok).",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: waiver zorunlu alanları, kapalı applicability anahtar seti, ref-only kural.",
+      "provenance": "swarm"
     },
     "codeOptimization": {
       "key": "codeOptimization",
       "title": "Kod Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Lazy migration’ı default ile kur: eksik standardRefs/applicability/waivers alanları parse anında varsayılana doldurulur, 438 düğüm tek tek MIGRATE EDİLMEDEN okunur.",
+        "Şema doğrulamasını derleme zamanına çek (statik tip + tek validator); runtime’da tekrarlı şema kurma maliyetini ortadan kaldır.",
+        "DIMENSION_FAMILY’yi sabit (frozen) tablo yap; her boyut→aile çözümü O(1) lookup olsun, döngüsel arama olmasın."
+      ],
+      "notes": "Optimizasyon = default’lu lazy parse (migrate yok) + statik validator + O(1) aile lookup.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: lazy migration default doldurma, derleme-zamanı doğrulama, frozen DIMENSION_FAMILY.",
+      "provenance": "swarm"
     },
     "securityOptimization": {
       "key": "securityOptimization",
       "title": "Güvenlik Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Lazy default'ları append-only yap: eski düğüm dosyasına yazma yok, yalnız bellekte default uygulanır; üretim verisi (438 düğüm) diskte değişmeden korunur.",
+        "Şema değişimini expand-contract kipinde planla: önce yeni opsiyonel alanları ekle (expand), tüm düğümler okunduktan sonra zorunlu kıl (contract); kırılmasız geçiş.",
+        "Şema sürümünü (schemaVersion) her düğümde doğrula; uyumsuz sürüm parse’ta erken reddedilir, sessiz veri bozulması engellenir."
+      ],
+      "notes": "Güvenli geçiş = append-only default + expand-contract + schemaVersion erken kontrol.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: append-only default, expand-contract migrasyon, schemaVersion doğrulama.",
+      "provenance": "swarm"
     },
     "performance": {
       "key": "performance",
       "title": "Performans Optimizasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "438 düğümü tek geçişte parse et; lazy default uygulaması düğüm başına sabit maliyetli olsun, toplam yükleme süresi düğüm sayısıyla doğrusal kalsın.",
+        "standardRefs çözümlemesini tembel (lazy) yap: ref ancak conformance kapısı çağırınca çözülsün, ilk yüklemede 14 alanın tamamı eager okunmasın.",
+        "Şema parse sonucunu süreç içi önbelleğe al; aynı düğüm dosyası tekrar okunduğunda yeniden doğrulama yapılmasın."
+      ],
+      "notes": "Performans = doğrusal tek-geçiş parse + tembel ref çözümleme + parse önbelleği.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: doğrusal 438 düğüm parse, lazy ref çözümleme, parse önbelleği.",
+      "provenance": "swarm"
     },
     "mobileApps": {
       "key": "mobileApps",
       "title": "Mobil Uygulama Uyumu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "applicability haritasına 'mobile' profil anahtarını şema seviyesinde tanımla; bir düğüm bu anahtarı true yaptığında mobil sözleşmeler ona uygulanabilir hale gelir.",
+        "DIMENSION_FAMILY içinde mobileApps boyutunu design ailesine eşle, böylece mobil kuralları uiComponent/uxStandard sözleşmeleriyle aynı kapıdan geçer.",
+        "Mobil profil için default değeri false tut; lazy migration’da eski düğümler yanlışlıkla mobil kapsama girip gereksiz kapıya takılmaz."
+      ],
+      "notes": "Mobil = applicability mobile anahtarı + mobileApps→design aile eşlemesi + default false.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: mobile profil anahtarı, mobileApps aile eşlemesi, güvenli default false.",
+      "provenance": "swarm"
     },
     "wcag": {
       "key": "wcag",
       "title": "WCAG 2.2 AAA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "standardRefs içine uxStandardRef ve uiComponentRef alanlarını ayrı koy; ST-1 bu iki referansı a11y/AAA sözleşmesinin bağlanacağı kanca olarak tanımlar.",
+        "DIMENSION_FAMILY’de wcag boyutunu design ailesine eşle; AAA kontrolü tasarım sözleşmesi ailesi üzerinden tetiklenir, ayrı boru hattı gerekmez.",
+        "applicability ile a11y’nin yalnız UI içeren profillerde geçerli olmasını ifade edebilecek anahtar setini şemada hazır tut (web/mobile true, headless false)."
+      ],
+      "notes": "WCAG = uxStandardRef/uiComponentRef kancaları + wcag→design aile eşlemesi.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: uxStandardRef/uiComponentRef alanları, wcag aile eşlemesi, UI-profil applicability.",
+      "provenance": "swarm"
     },
     "deployment": {
       "key": "deployment",
       "title": "Dağıtım (Swarm/K8s/Shared)",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "standardRefs içine releasePolicyRef alanını ekle; ST-1, dağıtım kapısının düğümden hangi release sözleşmesini okuyacağını şema ile sabitler.",
+        "schemaVersion alanını dağıtım uyumluluk anahtarı yap; deploy aracı, build’in ürettiği düğümlerin şema sürümünü çalışma ortamıyla karşılaştırır.",
+        "Lazy migration sayesinde dağıtım, 438 mevcut düğümü yeniden yazmadan (zero-migration deploy) yeni şemayla canlıya alınabilir."
+      ],
+      "notes": "Dağıtım = releasePolicyRef alanı + schemaVersion uyum anahtarı + zero-migration deploy.",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: releasePolicyRef alanı, schemaVersion uyum kontrolü, migrate-siz dağıtım.",
+      "provenance": "swarm"
     },
     "eca": {
       "key": "eca",
       "title": "ECA Kuralları",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "Şemaya ecaRules dizisini ve standartla ilişkili olay tiplerini (standard.conformance.failed, waiver.expired) tip olarak tanımla; downstream ECA motoru bu tipleri doğrular.",
+        "waivers[].expiresAt alanını ECA için zaman kancası yap; süre dolunca waiver.expired olayını üretebilecek alan şemada hazır olur.",
+        "ECA kuralı şema seviyesinde maxChainDepth zorunluluğu taşısın; standart kaynaklı otomasyon zincirinin patlaması (sonsuz tetikleme) baştan sınırlanır."
+      ],
+      "notes": "ECA = standart olay tipleri + waiver expiresAt kancası + zorunlu maxChainDepth.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standart olay tipleri, waiver expiresAt kancası, maxChainDepth zorunluluğu.",
+      "provenance": "swarm"
     },
     "aiAgents": {
       "key": "aiAgents",
       "title": "AI Ajan Davranışı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "agentPolicy alanını ST-1 şemasının parçası yap; her düğüm forbiddenActions içinde override-ruleset/disable-ruleset taşır, AI bunları şema seviyesinde aşamaz.",
+        "AI yalnız standardRefs/applicability/waivers için suggest-changeset üretebilir; şema, app/module hedefli üretimi forbiddenTargets ile reddeder.",
+        "rulesetBoundary.enforced=true ve canOverride=false alanlarını şemaya gömüp backendOnly işaretle; AI önerisi sınırı sökecek alana yazamaz."
+      ],
+      "notes": "AI ajan = agentPolicy şemada gömülü; ruleset sınırı enforced, AI yalnız öneri.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: agentPolicy şema alanı, suggest-changeset sınırı, rulesetBoundary enforced.",
+      "provenance": "swarm"
     },
     "testing": {
       "key": "testing",
       "title": "Testler & QA",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "standardsSchema.test.ts ile 438 düğümün default’lu lazy parse’ını doğrula: tek bir düğüm bile migration olmadan parse edilemezse test kırmızı olsun.",
+        "Eksik alan senaryosu için test yaz: standardRefs/applicability/waivers içermeyen ham düğüm, default’larla şemaya uymalı (geriye-dönük uyum kanıtı).",
+        "DIMENSION_FAMILY testinde 14 boyutun tamamının bir aileye eşlendiğini doğrula; eşlenmemiş boyut testi kıran açık olur.",
+        "Bilinmeyen anahtar / kapalı profil için negatif test ekle; şema gevşek alan kabul ederse test başarısız sayılsın."
+      ],
+      "notes": "Testler = 438 düğüm lazy parse + eksik-alan geriye uyum + 14 boyut aile kapsamı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 438 düğüm parse testi, eksik-alan default testi, DIMENSION_FAMILY tam kapsam, negatif anahtar testi.",
+      "provenance": "swarm"
     },
     "owasp": {
       "key": "owasp",
       "title": "OWASP & Standartlar",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "standardRefs içine aiGovernanceRef ve dataApiContractRef alanlarını ayrı tut; ST-1, OWASP LLM/Top10 kriterlerinin bağlanacağı sözleşme kancalarını şema ile sabitler.",
+        "waiver şemasındaki zorunlu reason/expiresAt alanları, OWASP kuralı atlanırsa denetlenebilir iz bırakacak şekilde tasarlanır (kör istisna yok).",
+        "DIMENSION_FAMILY’de owasp boyutunu data ailesine eşle; injection/erişim kriterleri dataApiContract sözleşmesiyle aynı aile üzerinden zorlanır."
+      ],
+      "notes": "OWASP = aiGovernanceRef/dataApiContractRef kancaları + denetlenebilir waiver + owasp→data aile.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aiGovernanceRef/dataApiContractRef alanları, denetlenebilir waiver, owasp aile eşlemesi.",
+      "provenance": "swarm"
     },
     "integration": {
       "key": "integration",
       "title": "Kernel/Core Entegrasyonu",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "ST-1 şemasını çekirdek TaskNode tipinin tek genişlemesi olarak tut; standardRefs/applicability/waivers core node’a eklenir, paralel düğüm tipi türetilmez.",
+        "DIMENSION_FAMILY’yi çekirdeğin 14-boyut sözlüğüyle birebir hizala; boyut anahtarları (featureDefs … moduleUsage) core ile aynı stringleri kullanır.",
+        "Lazy migration’ı çekirdek yükleyiciye (loader) entegre et; tüm core düğüm okuma yolu default doldurmadan geçer, ayrı şema-katmanı çatallanması olmaz."
+      ],
+      "notes": "Entegrasyon = core TaskNode tek-genişleme + ortak 14-boyut sözlüğü + core loader lazy parse.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: TaskNode tek genişleme, 14-boyut sözlük hizası, core loader entegrasyonu.",
+      "provenance": "swarm"
     },
     "moduleUsage": {
       "key": "moduleUsage",
       "title": "Modül Kullanımı",
-      "status": "skeleton",
-      "items": [],
-      "notes": "",
-      "prompt": "",
-      "provenance": "template"
+      "status": "filled",
+      "items": [
+        "ST-1 bir orta taş olarak fe-eng-standards modülü (kaya) altında konumlanır; şema temelini, üstündeki 7 CI kapısı ve 14 sözleşme tüketir.",
+        "DIMENSION_FAMILY ve standardRefs şeması tüm modüller için tek-kaynaktır; herhangi bir modül kendi boyut/ref şemasını çatallarsa parite taraması reddeder.",
+        "Modüller şema alanlarını yalnız default’larıyla devralır (zero-config tüketim); yeni bir modül standardRefs’i elle doldurmadan da geçerli düğüm üretebilir."
+      ],
+      "notes": "Modül kullanımı = orta taş şema temeli; tüm modüller tek-kaynak şemayı default ile devralır.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-schema-foundation — \"Standart Sema Temeli (ST-1)\" (metafor: orta taş; küme: frontend). Özet: TaskNode'a standardRefs/applicability/waivers + boyut aileleri (DIMENSION_FAMILY); default'lu lazy migration (438 düğüm dokunulmadan parse). Etiketler: standards, schema, st-1.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: orta taş konumu, tek-kaynak şema, default ile zero-config devralma.",
+      "provenance": "swarm"
     }
   },
   "source": {
