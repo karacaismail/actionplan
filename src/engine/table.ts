@@ -45,7 +45,8 @@ export function sortNodes(
     const va = valueForSort(a, field, scoreOf);
     const vb = valueForSort(b, field, scoreOf);
     if (typeof va === "number" && typeof vb === "number") return (va - vb) * sign;
-    return String(va).localeCompare(String(vb), "tr") * sign;
+    // DOĞAL sıralama: wbsCode/başlık içindeki sayılar sayısal karşılaştırılır ("2" < "10", "1.2" < "1.10").
+    return String(va).localeCompare(String(vb), "tr", { numeric: true }) * sign;
   });
 }
 
