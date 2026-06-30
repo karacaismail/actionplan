@@ -12,7 +12,7 @@ Bu dosya bir öğretici değildir; bir sözleşmedir. Aşağıdaki maddeler "ön
 
 `actionplan` bir **WBS planlama + sözleşme katmanıdır**; çalışan ürün kodu burada **değildir**.
 
-- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (438 düğüm). Engine bu JSON'ları okur, React UI render eder.
+- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (445 düğüm). Engine bu JSON'ları okur, React UI render eder.
 - Gerçek ürün/uygulama kodu `platform` monoreposundadır. `actionplan` o kodu **planlar ve sözleşmeye bağlar**, onu yazmaz.
 - 7 seviye (doğa metaforu): `app` → `module` → `archetype` → `stone` (taş) → `molecule` → `element` → `atom`.
 - 7 waterfall faz: `requirements` → `test-plan` → `db-schema` → `development` → `test-qa` → `verification` → `release-maintenance`.
@@ -140,7 +140,7 @@ Kural: **kırmızı kapıyı "sonra düzeltirim" diye bırakma.** Değişiklik, 
 Özellikle paralel swarm'da çakışmayı önlemek için:
 
 - **Her ajan yalnız kendi shard'ına yazar.** Başka ajanın dosyasına dokunma; üst üste yazma çakışması üretme.
-- Migration/toplu-yeniden-yazma çalıştırma. 438 düğüm dosyaya dokunmadan parse olur (default'lu lazy migration); bir dosya yalnız gerçek değer atanınca yazılır.
+- Migration/toplu-yeniden-yazma çalıştırma. 445 düğüm dosyaya dokunmadan parse olur (default'lu lazy migration); bir dosya yalnız gerçek değer atanınca yazılır.
 - Her PR **küçük ve tek-amaçlı**: kısa-kod bütçesine uy (≤ 400 satır net, ≤ 20 dosya). Aşan iş atomik PR'lara bölünür.
 - Her görev/PR `allowed-files` listesini ve en az bir `non-goal`'ı bildirir; listede olmayan dosyaya dokunma.
 - Sokete-bağlı çalışmada (socket-drop) yazılmış dosyalar diske düşer; onları harvest et, kaybetme.

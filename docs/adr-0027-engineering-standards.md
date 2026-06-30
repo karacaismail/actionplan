@@ -16,7 +16,7 @@ Statü: kabul · ADR-0026'yı (tech-profiles) **genelleştirir**. Kaynak: ChatGP
 
 ## 3. Şema (ADR-0027 alanları — hepsi geriye uyumlu default'lu)
 
-`TaskNodeSchema` (`.strict()`) eklenenler: `standardRefs` (14 ref, default ""), `applicability` (record, default {}), `waivers` (array, default []). **Migration GEREKMEZ:** default'lar `safeParse`'ta dolar; 438 düğüm dosyaya dokunmadan parse olur (**lazy migration** — dosya yalnız değer atanınca yazılır). `evidence[]`/`traceability`/`acceptanceCriteria` ZATEN var; çoğaltılmaz, genişletilir.
+`TaskNodeSchema` (`.strict()`) eklenenler: `standardRefs` (14 ref, default ""), `applicability` (record, default {}), `waivers` (array, default []). **Migration GEREKMEZ:** default'lar `safeParse`'ta dolar; 445 düğüm dosyaya dokunmadan parse olur (**lazy migration** — dosya yalnız değer atanınca yazılır). `evidence[]`/`traceability`/`acceptanceCriteria` ZATEN var; çoğaltılmaz, genişletilir.
 
 ## 4. P0 standart sözleşmeleri (ST-2)
 
@@ -28,7 +28,7 @@ check-standards-coverage (her ref çözülür) · check-dimension-applicability 
 
 ## 6. Unknown-unknowns
 
-Standart yazılı ama uygulanmıyorsa ölü metin (→ CI kapısı zorunlu) · 438 node migration tehlikesi (→ default'lu lazy migration) · applicability yoksa jenerik dolgu (→ N/A alanı) · çapraz-repo senkron (platform/actionplan/projector aynı sözleşmeyi okumalı → check çapraz tarar) · design standardı ölçülemezse anlamsız (→ token + conformance) · AI çıktısı eval'siz ölçülemez (→ ai-governance eval seti) · waiver yaşam döngüsü yoksa kalıcı bypass (→ süreli waiver).
+Standart yazılı ama uygulanmıyorsa ölü metin (→ CI kapısı zorunlu) · 445 node migration tehlikesi (→ default'lu lazy migration) · applicability yoksa jenerik dolgu (→ N/A alanı) · çapraz-repo senkron (platform/actionplan/projector aynı sözleşmeyi okumalı → check çapraz tarar) · design standardı ölçülemezse anlamsız (→ token + conformance) · AI çıktısı eval'siz ölçülemez (→ ai-governance eval seti) · waiver yaşam döngüsü yoksa kalıcı bypass (→ süreli waiver).
 
 ## 7. Non-goals
 

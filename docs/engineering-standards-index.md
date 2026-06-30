@@ -27,7 +27,7 @@ ADR-0027'nin getirdiği ayrım, her düğümün taşıdığı bilgiyi üç ayrı
 
 Grup (1) içeriği düğümün kendisinde yaşar ve düğüme özgüdür. Grup (2) içeriği `src/data/standards/<id>.json` dosyalarında **tek kez** yaşar; düğüm yalnızca anahtarla bağlanır. Grup (3) düğüm ile standart arasındaki ilişkiyi yönetir: bir boyut uygulanmıyorsa gerekçesini (`applicability`), bir standarttan bilinçli sapılıyorsa onaylı+süreli kaydını (`waivers`), bir faz kapısının kanıtını (`evidence`) taşır.
 
-Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; bu nedenle 438 düğüm dosyaya dokunulmadan parse olur (**lazy migration** — dosya yalnız değer atanınca yazılır).
+Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; bu nedenle 445 düğüm dosyaya dokunulmadan parse olur (**lazy migration** — dosya yalnız değer atanınca yazılır).
 
 ---
 

@@ -2,15 +2,15 @@
 
 **Sürüm:** 1.0 · **Tarih:** 2026-06-29
 **Durum:** Kanonik, bağlayıcı. ADR-0027 §3 (geriye uyumlu default'lu şema) ve `src/schemas/task.ts` (`.strict()` + safeParse) türevidir.
-**Kapsam:** ADR-0027 ile gelen üç düğüm alanı — `standardRefs`, `applicability`, `waivers` — ve bunların `src/data/generated/nodes/*.json` (438 düğüm) üzerinde güvenli yazımı.
+**Kapsam:** ADR-0027 ile gelen üç düğüm alanı — `standardRefs`, `applicability`, `waivers` — ve bunların `src/data/generated/nodes/*.json` (445 düğüm) üzerinde güvenli yazımı.
 
 ---
 
 ## Önsöz — Neden "Runbook" ve Neden "Migration Yok"
 
-ADR-0027 üç yeni alan getirdi: `standardRefs` (14 referans), `applicability` (boyut→{applies, reason}) ve `waivers[]`. Klasik bir veritabanı dünyasında 438 satıra yeni kolon eklemek bir migration script'i, bir backfill ve bir rollback planı gerektirirdi. Burada gerektirmiyor. Bu runbook iki şeyi netleştirir: (1) neden bu alanlar 438 düğüm dosyasına DOKUNMADAN devreye girdi (lazy migration); (2) bir geliştirici veya AI ajan gerçekten bir değer SET ettiğinde adım adım nasıl, hangi dosyaya, hangi doğrulamayla yazacağı.
+ADR-0027 üç yeni alan getirdi: `standardRefs` (14 referans), `applicability` (boyut→{applies, reason}) ve `waivers[]`. Klasik bir veritabanı dünyasında 445 satıra yeni kolon eklemek bir migration script'i, bir backfill ve bir rollback planı gerektirirdi. Burada gerektirmiyor. Bu runbook iki şeyi netleştirir: (1) neden bu alanlar 445 düğüm dosyasına DOKUNMADAN devreye girdi (lazy migration); (2) bir geliştirici veya AI ajan gerçekten bir değer SET ettiğinde adım adım nasıl, hangi dosyaya, hangi doğrulamayla yazacağı.
 
-Temel ilke: **dosya yalnızca bir değer SET edildiğinde yazılır.** Hiçbir toplu dönüştürme yoktur. 438 düğümün 430'u bu alanları dosyasında hiç taşımayabilir ve yine de geçerlidir; çünkü Zod şeması okuma anında varsayılanları doldurur.
+Temel ilke: **dosya yalnızca bir değer SET edildiğinde yazılır.** Hiçbir toplu dönüştürme yoktur. 445 düğümün 430'u bu alanları dosyasında hiç taşımayabilir ve yine de geçerlidir; çünkü Zod şeması okuma anında varsayılanları doldurur.
 
 ---
 
@@ -28,15 +28,15 @@ waivers: z.array(WaiverSchema).default([]),
 
 - Bir düğüm JSON'unda `standardRefs` anahtarı HİÇ yoksa, `safeParse` onu `{}` olarak doldurur ve içindeki 14 ref boş string olur. Düğüm geçerli parse olur.
 - Aynısı `applicability` ({}) ve `waivers` ([]) için geçerlidir.
-- Yani 438 düğüm, dosyaları hiç değiştirilmeden, runtime'da tam bir TaskNode'a tamamlanır. ADR-0027 §3'ün ifadesiyle: "default'lar safeParse'ta dolar; 438 düğüm dosyaya dokunmadan parse olur."
+- Yani 445 düğüm, dosyaları hiç değiştirilmeden, runtime'da tam bir TaskNode'a tamamlanır. ADR-0027 §3'ün ifadesiyle: "default'lar safeParse'ta dolar; 445 düğüm dosyaya dokunmadan parse olur."
 
-Bu yüzden bir toplu migration script'i YOK; olması da yanlış olurdu (438 dosyaya gereksiz diff, gereksiz git gürültüsü, gereksiz çakışma riski).
+Bu yüzden bir toplu migration script'i YOK; olması da yanlış olurdu (445 dosyaya gereksiz diff, gereksiz git gürültüsü, gereksiz çakışma riski).
 
 Karşılaştırma — eski (yanlış) vs. lazy (doğru):
 
 | Klasik kolon-ekleme | Lazy migration (ADR-0027) |
 |---|---|
-| 438 satıra ALTER + backfill script | Script yok; default şemada |
+| 445 satıra ALTER + backfill script | Script yok; default şemada |
 | Tüm satırlar yeniden yazılır (büyük diff) | Yalnız değer SET edilen dosya yazılır |
 | Rollback = ters backfill | Rollback = SET edilen alanı sil (default'a döner) |
 | Backfill hatası = yarım veri | Yarım veri imkânsız; eksik = default |
@@ -121,7 +121,7 @@ Bu beş kapı, standards-applicability-matrix.md §6'da tablolanan BLOKLAYICI ka
 
 ---
 
-## 3. 438 Düğüm Güvenlik Kuralı — `.strict()` + safeParse
+## 3. 445 Düğüm Güvenlik Kuralı — `.strict()` + safeParse
 
 Lazy migration'ı güvenli kılan iki mekanizma vardır; ikisi de `src/schemas/task.ts`'dedir.
 
@@ -137,7 +137,7 @@ Pratik uyarı: `.strict()` nedeniyle bir düğüme "deneme" alanı eklemek YASAK
 
 ### 3.2 safeParse — eksik alan default'a tamamlanır, hata fırlatmaz
 
-Yükleme `safeParse` ile yapılır. Eksik (tanımlı ama yokmuş) alanlar default'a tamamlanır; bu yüzden 438 düğümün hiçbiri "alan yok" diye düşmez. `.strict()` ile birlikte oluşan denge nettir:
+Yükleme `safeParse` ile yapılır. Eksik (tanımlı ama yokmuş) alanlar default'a tamamlanır; bu yüzden 445 düğümün hiçbiri "alan yok" diye düşmez. `.strict()` ile birlikte oluşan denge nettir:
 
 | Durum | Sonuç |
 |---|---|
@@ -152,7 +152,7 @@ Bu tablo lazy migration'ın neden hem güvenli hem geri-uyumlu olduğunun özüd
 
 ## 4. Toplu İşlem GEREKMEZ — Anti-Pattern Uyarıları
 
-- **438 dosyayı topluca "migrate etmeye" çalışmak yanlıştır.** ADR-0027 §6 bunu açık "unknown-unknown" tehlikesi sayar ("438 node migration tehlikesi → default'lu lazy migration"). Tüm dosyalara boş `standardRefs: {}` yazmak gereksiz 438-dosyalık diff üretir ve hiçbir değer katmaz (zaten default).
+- **445 dosyayı topluca "migrate etmeye" çalışmak yanlıştır.** ADR-0027 §6 bunu açık "unknown-unknown" tehlikesi sayar ("445 node migration tehlikesi → default'lu lazy migration"). Tüm dosyalara boş `standardRefs: {}` yazmak gereksiz 445-dosyalık diff üretir ve hiçbir değer katmaz (zaten default).
 - **Uygulanır boyutları (`applies: true`) tek tek yazmak yanlıştır.** Varsayılan zaten uygulanırdır; yalnız N/A (applies=false) kararı kaydedilir. Her boyutu her düğüme yazmak ADR-0027'nin kaçınmak istediği "jenerik dolgu"dur.
 - **Boş ref'leri doldurmak için sahte standart uydurmak yanlıştır.** Bir düğümde standart gerçekten uygulanmıyorsa ref boş bırakılır (lazy); olmayan bir standardı uydurursan `check-standards-coverage` kırmızı olur.
 

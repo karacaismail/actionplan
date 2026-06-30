@@ -72,7 +72,7 @@ Altın kural: bir kanıt, onu yazan kişi olmadan, bağımsız bir denetçi tara
 
 ## 4. check-execution-readiness Bağı — Kanıt Nasıl Zorlanır
 
-Kanıt disiplini makineye `tools/agents/check-execution-readiness.mjs` (BLOKLAYICI; `deploy.yml` içinde) ile bağlanır. Bu kapı `src/data/generated/nodes` altındaki 438 düğümü tarar ve üç kuralı zorlar; ilki doğrudan kanıt zorlamasıdır:
+Kanıt disiplini makineye `tools/agents/check-execution-readiness.mjs` (BLOKLAYICI; `deploy.yml` içinde) ile bağlanır. Bu kapı `src/data/generated/nodes` altındaki 445 düğümü tarar ve üç kuralı zorlar; ilki doğrudan kanıt zorlamasıdır:
 
 | Kural | Ne zorlar | Kanıt karşılığı |
 |---|---|---|

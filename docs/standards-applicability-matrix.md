@@ -170,7 +170,7 @@ Kurallar:
 
 ## 6. CI Bağı — Bu Matris Nasıl Zorlanır
 
-Matris insan-okunur disiplindir; makine tarafı üç BLOKLAYICI kapıyla bağlanır (hepsi `src/data/generated/nodes` altındaki 438 düğümü tarar):
+Matris insan-okunur disiplindir; makine tarafı üç BLOKLAYICI kapıyla bağlanır (hepsi `src/data/generated/nodes` altındaki 445 düğümü tarar):
 
 | Kapı (tools/agents) | Ne zorlar | Matristeki karşılığı |
 |---|---|---|

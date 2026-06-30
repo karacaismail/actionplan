@@ -10,7 +10,7 @@ Bu doküman "golden düğüm" desenini tanımlar: tüm `standardRefs` dolu, her 
 
 ## 1. "Golden Slice" Nedir
 
-Golden Slice, sözleşmenin kendi kendini kanıtladığı **dogfooding** referansıdır: en az bir gerçek düğüm, bu repodaki tüm sözleşme alanlarını eksiksiz ve gerekçeli doldurur ve tüm CI kapılarından yeşil geçer. Diğer 438 düğüm bu desene göre olgunlaşır.
+Golden Slice, sözleşmenin kendi kendini kanıtladığı **dogfooding** referansıdır: en az bir gerçek düğüm, bu repodaki tüm sözleşme alanlarını eksiksiz ve gerekçeli doldurur ve tüm CI kapılarından yeşil geçer. Diğer 445 düğüm bu desene göre olgunlaşır.
 
 Golden bir düğüm şu beş koşulu birlikte karşılar:
 

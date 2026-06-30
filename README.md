@@ -1,13 +1,17 @@
 # Eylem Planı — Stratejik WBS & Görev Yönetimi
 
-70+ ürünlük AI-first SaaS framework'ünün **enterprise-grade waterfall** geliştirme sürecini
-planlayan, WBS tabanlı stratejik eylem planı ve görev yönetimi çerçevesi.
+Çok-ürünlü (28 app düğümü; hedef portföy 50+) AI-first SaaS framework'ünün **enterprise-grade
+waterfall** geliştirme sürecini planlayan, WBS tabanlı stratejik eylem planı ve görev yönetimi çerçevesi.
 
 - **Mimari:** Frontend-only, JSON-as-DB (tüm veri `src/data/generated/**.json`), `engine` JSON'u render eder.
 - **Hiyerarşi (doğa metaforu, 7 seviye):** app(dağ) → module(kaya) → archetype(büyük taş) → stone(orta taş) → molecule(küçük taş) → element(toz) → atom.
 - **Her düğüm bir görevdir** ve bir WBS kırılımı + 14 üretim boyutu + 7 waterfall faz taşır.
-- **Stack:** React 19 + Vite + TS, Tailwind + shadcn/ui (Radix), TanStack Router/Query/Table, React Hook Form, Zod, ECharts, React Flow (@xyflow) + ELK.js.
+- **Stack (bu araç = tooling):** React 19 + Vite + TS, Tailwind + headless Radix (özel bileşenler; shadcn/ui değil), TanStack Router/Query/Table, React Hook Form, Zod, ECharts, React Flow (@xyflow) + ELK.js. **Ürün/platform stack'i AYRIDIR:** SCSS + CSS token, headless Radix, Tailwind YOK (bkz. ADR-0026).
 - **Export/Import:** Görevler JSON ve CSV olarak dışa/içe aktarılabilir.
+
+## Dokümanlar
+
+Tüm kanonik dokümanların kategorili dizini: **[docs/README.md](docs/README.md)** — ADR'ler, sözleşmeler, mühendislik standartları (ADR-0027), planlar/yol haritaları, rehberler/runbook'lar, denetim & boşluk raporları.
 
 ## Komutlar
 
