@@ -24,6 +24,7 @@ const ReportsView = lazy(() =>
 const StandardsView = lazy(() =>
   import("@/views/StandardsView").then((m) => ({ default: m.StandardsView })),
 );
+const DocsView = lazy(() => import("@/views/DocsView").then((m) => ({ default: m.DocsView })));
 
 function Loading() {
   return <div className="p-6 text-base text-muted-foreground">Yükleniyor…</div>;
@@ -95,6 +96,17 @@ const standardsRoute = createRoute({
   path: "/standards",
   component: StandardsView,
 });
+// Belgeler: /docs (README dizini) + /docs/$docSlug (tek belge); ikisi de DocsView'a düşer.
+const docsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/docs",
+  component: DocsView,
+});
+const docsSlugRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/docs/$docSlug",
+  component: DocsView,
+});
 
 const routeTree = rootRoute.addChildren([
   dashboardRoute,
@@ -109,6 +121,8 @@ const routeTree = rootRoute.addChildren([
   workloadRoute,
   reportsRoute,
   standardsRoute,
+  docsRoute,
+  docsSlugRoute,
 ]);
 
 export const router = createRouter({
