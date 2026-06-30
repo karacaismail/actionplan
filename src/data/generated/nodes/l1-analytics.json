@@ -15,7 +15,15 @@
     "ab-test",
     "attribution",
     "consent",
-    "ölçüm"
+    "ölçüm",
+    "olay",
+    "toplama",
+    "deney",
+    "dönüşüm",
+    "gizlilik",
+    "izin",
+    "atıf",
+    "dostu"
   ],
   "dependsOn": [
     "cc-privacy",
@@ -154,8 +162,8 @@
       "status": "filled",
       "items": [
         "Pazarlama Ölçümü / Analytics + Deney: olay toplama, dönüşüm hunisi, atıf ve kohort",
-        "Sunucu-taraflı ölçüm (çerez-az), gizlilik-dostu analytics",
-        "Deney (A/B) sonuç analizi ve KPI panosu"
+        "Sunucu-taraflı ölçüm (çerez-az) ve IP anonimleştirmeli, izin-temelli gizlilik-dostu analytics toplama",
+        "A/B deney sonuç analizi (istatistiksel anlamlılık) ve UTM/attribution kırılımlı KPI panosu"
       ],
       "notes": "",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -166,9 +174,9 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Analytics verisi tenant-izole; PII'siz/anonim ölçüm tercih",
-        "İzin (consent) yönetimi; izinsiz izleme yok",
-        "Ham olay erişimi rol bazlı"
+        "Analytics olay verisi tenant başına PostgreSQL RLS ile izole; PII'siz/anonim ölçüm öntanımlı tercih edilir",
+        "Rıza (consent) durumu cc-privacy ile yönetilir; izin verilmeden kişiye-bağlı ziyaretçi izleme başlatılmaz",
+        "Ham ziyaretçi olayına erişim rol bazlı kısıtlanır (least-privilege); yalnız yetkili rol satır düzeyi veriyi görür"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -179,9 +187,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Olay şeması sürümlü; sunucu-taraflı toplama",
-        "Huni/kohort hesabı projeksiyondan",
-        "Atıf modeli yapılandırılabilir"
+        "Olay şeması Zod ile sürümlü (expand-contract) ve sunucu-taraflı toplanır; tip-güvenli, geriye-uyumlu evrim sağlanır",
+        "Dönüşüm hunisi ve kohort hesabı önceden materyalize projeksiyondan okunur; her sorguda ham olay yeniden taranmaz",
+        "UTM/attribution modeli (ilk/son/zaman-azalan dokunuş) yapılandırılabilir; kod değişmeden parametreyle seçilir"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -192,9 +200,9 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Gizlilik-dostu (IP anonimleştirme, çerez-az)",
-        "İzin reddi durumunda yalnız anonim toplam",
-        "Toplulaştırma gizlilik eşikli"
+        "Gizlilik-dostu toplama: IP son okteti maskelenir, çerez-az/sunucu-taraflı çalışır, parmak-izi (fingerprint) yapılmaz",
+        "Ziyaretçi izni reddederse yalnız kişiye-bağlanamayan anonim toplam sayaç tutulur; bireysel olay kaydı yazılmaz",
+        "Raporlarda toplulaştırma gizlilik eşikli (k-anonimlik); eşik altı küçük gruplar yeniden-kimliklendirmeyi önlemek için gizlenir"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -205,9 +213,9 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Olay alımı yüksek-hacim; akış-temelli toplama",
-        "Pano metrikleri önceden hesaplanmış",
-        "Ham olay soğuk depoya arşiv"
+        "Olay alımı yüksek-hacme dayanıklı: akış-temelli (kuyruk + batch) toplama ile yazma uçlarında p95 gecikme < 100ms hedefi",
+        "Pano metrikleri zamanlanmış toplu işle önceden hesaplanır (materyalize); açılışta canlı tarama yerine hazır özet gelir",
+        "Ham ziyaretçi olayı yaşlandıkça soğuk depoya arşivlenir; sıcak katman küçük kalır, sorgular hızlı yanıt verir"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -218,9 +226,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobil olay toplama SDK (gizlilik-dostu)",
-        "iOS/Android push ile dönüşüm/anomali uyarısı",
-        "Dar ekranda KPI panosu"
+        "Mobil olay toplama SDK gizlilik-dostu: izin durumuna saygılı, çevrimdışı kuyruklar ve bağlantı gelince gönderir",
+        "iOS/Android push ile dönüşüm hedef-aşımı ve anomali uyarısı; bildirim öncesi rıza ve eşik kullanıcıca ayarlanır",
+        "Dar ekranda KPI panosu: dokunma hedefleri ≥44px, trend yön oku metinle de gösterilir (salt renge bağlı değil)"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -231,9 +239,9 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Analytics panosu grafiklerine veri tablosu alternatifi",
-        "Trend renk dışında ok+metinle; kontrast 7:1",
-        "Filtre klavye erişimli"
+        "Analytics panosundaki her grafiğe eşdeğer veri tablosu alternatifi sunulur; ekran okuyucu sayıları sırayla okuyabilir",
+        "Dönüşüm/atıf trendi salt renkle değil ok + metin etiketiyle de belirtilir; grafik metin kontrastı ≥7:1 (AAA)",
+        "Pano filtreleri (tarih, segment, UTM) tam klavye ile gezilebilir; görünür odak ve etiketli alanlar korunur"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -244,9 +252,9 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Olay toplayıcı ayrı ölçek; toplama worker",
-        "Sunucu-taraflı ölçüm (tag manager ile)",
-        "Shared hosting'de temel sayfa-görüntüleme"
+        "Olay toplayıcı ucu trafikten bağımsız ölçeklenir (HPA + readiness probe + kaynak limiti); toplama ayrı worker'da",
+        "Sunucu-taraflı ölçüm l1-tagmanager ile yürütülür; istemci-taraflı script yükü azaltılır, izin durumu sunucuda denetlenir",
+        "WordPress sınıfı shared hosting'de yalnız temel sayfa-görüntüleme ölçümü çalışır; ağır worker gerekmez, uyum korunur"
       ],
       "notes": "",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -259,7 +267,7 @@
       "items": [
         "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
         "Olay: dönüşüm gerçekleşti → huniyi güncelle + hedef-aşımı uyar (idempotent, zincir ≤6)",
-        "Olay: deney anlamlı sonuca ulaştı → kazananı işaretle + öner (loop-breaker)"
+        "Olay: A/B deney istatistiksel anlamlılığa ulaştı → kazanan varyantı işaretle ve öner; tekrar tetiklemeyi kıran loop-breaker"
       ],
       "notes": "",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
@@ -283,9 +291,9 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Olay toplama doğruluk + izin kontrolü testi",
-        "Huni/atıf hesabı testi",
-        "A/B sonuç anlamlılık testi; en çok 6 tur"
+        "Olay toplama doğruluğu ve izin (consent) kontrolü testi: izinsiz durumda kişisel olay yazılmadığı kanıtlanır",
+        "Dönüşüm hunisi ve UTM/attribution hesabının doğruluğu unit testle sınanır; modele göre atıf dağılımı doğrulanır",
+        "A/B sonuç anlamlılık hesabı testing-loop ile sınanır (maks 6 tur); yakınsamazsa otomatik karar durur ve raporlanır"
       ],
       "notes": "",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
@@ -296,9 +304,9 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: ham olay erişimi rol bazlı",
-        "LLM06/A02: PII anonimleştirme",
-        "A09 Logging: ölçüm yapılandırma değişiklikleri iz"
+        "OWASP A01 Broken Access Control: ham ziyaretçi olayına erişim rol bazlı kısıtlanır, RLS ile satır düzeyi izolasyon uygulanır",
+        "OWASP A02 / LLM06 Hassas Veri Sızıntısı: PII anonimleştirilir/maskelenir, AI içgörü çıktısına ham kişisel veri taşınmaz",
+        "OWASP A09 Logging & Monitoring: ölçüm/izin yapılandırma değişiklikleri değişmez denetim izine yazılır, anomali izlenir"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -310,8 +318,8 @@
       "status": "filled",
       "items": [
         "Analytics, tüm app olaylarını ölçer; deney modülüyle entegre",
-        "Tag manager ile ölçüm dağıtımı",
-        "KPI'lar BI'ya beslenir"
+        "l1-tagmanager ile ölçüm etiketleri dağıtılır; analytics ham olay sözleşmesini, tag manager taşıma katmanını sağlar",
+        "Hesaplanan KPI ve dönüşüm metrikleri s-bi ve s-predictive modüllerine olay üzerinden beslenir; gevşek bağ korunur"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -322,10 +330,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Analytics + Deney (modül) tüm app'lere ölçüm sağlar",
-        "Pazarlama/ürün app'leri analytics modülünü kullanır"
+        "Platform modülleri ve uygulama katmanları Pazarlama Ölçümü / Analytics + Deney yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "Pazarlama Ölçümü / Analytics + Deney durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "Bağımlılık tek yönlüdür: tüketiciler Pazarlama Ölçümü / Analytics + Deney'e bağlıdır, Pazarlama Ölçümü / Analytics + Deney tüketicinin şemasına bağlı değildir (gevşek bağ).",
+        "Pazarlama Ölçümü / Analytics + Deney bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
-      "notes": "",
+      "notes": "Pazarlama Ölçümü / Analytics + Deney, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-analytics — \"Pazarlama Ölçümü / Analytics + Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Ölçüm ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): web analytics, UTM/attribution yakalama, heatmap, dönüşüm. Etiket taşıma→l1-tagmanager, CRO/A-B/MVT→l1-experiment, rıza→cc-privacy. Ziy Etiketler: analytics, cro, ab-test, attribution, consent, ölçüm.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

@@ -16,7 +16,15 @@
     "aeo",
     "geo",
     "keşfedilebilirlik",
-    "frontpages"
+    "frontpages",
+    "meta",
+    "yapısal",
+    "canonical",
+    "hreflang",
+    "sitemap",
+    "archetype",
+    "kart",
+    "redirect"
   ],
   "dependsOn": [
     "k-control-planes",
@@ -154,8 +162,8 @@
       "status": "filled",
       "items": [
         "Keşfedilebilirlik / SEO Motoru: meta etiket, yapısal veri (schema.org), canonical ve sosyal kart",
-        "Sayfa-bazlı SEO yapılandırma ve içerik analizi",
-        "Open Graph/Twitter kart ve çok-dilli hreflang"
+        "Sayfa-bazlı SEO yapılandırma (başlık/açıklama/canonical) ve on-page içerik analizi; eksik meta alanları rapor edilir",
+        "Open Graph/Twitter Card etiketleri ve hreflang ile çok-dilli karşılık eşleme; geçersiz dil kodu reddedilir"
       ],
       "notes": "",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -166,9 +174,9 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "SEO yapılandırma yetkili; enjekte meta engellenir",
-        "Yapısal veri doğrulanır (geçerli schema.org)",
-        "Çok-dilli içerik tenant-izole"
+        "SEO meta yazımı rol bazlı yetkilendirilir (least-privilege); yetkisiz aktörün enjekte ettiği etiket engellenir",
+        "Üretilen schema.org JSON-LD yayından önce şemaya karşı doğrulanır; geçersiz yapısal veri reddedilir",
+        "Çok-dilli SEO içeriği tenant başına PostgreSQL RLS ile izole; başka kiracının hreflang kaydına erişilemez"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -179,9 +187,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "SEO meta sayfa modelinden türetilir; tek kaynak",
-        "Yapısal veri şablonu ArcheType'tan",
-        "Render sunucu-tarafı (SSR/SSG) SEO için"
+        "SEO meta tek kaynaktan (sayfa modeli) tip-güvenli türetilir; alanlar elle kopyalanmaz, kod tekrarı önlenir",
+        "schema.org yapısal veri şablonu ilgili ArcheType sözleşmesinden üretilir; alan eşlemesi tek yerde tanımlı",
+        "Meta ve JSON-LD sunucu-tarafı (SSR/SSG) gömülerek ilk HTML'de hazır gelir; istemci hidrasyonu beklenmez"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -192,9 +200,9 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Meta/etiket içeriği sanitize (XSS önleme)",
-        "Canonical döngüsü engellenir",
-        "hreflang tutarlılığı doğrulanır"
+        "Meta başlık/açıklama ve OG etiket içeriği HTML-kaçışlı yazılır; saklı script enjeksiyonu (XSS) önlenir (OWASP A03)",
+        "Canonical URL grafiği döngü ve kendine-işaret için denetlenir; zincirli yönlendirme oluşması engellenir",
+        "hreflang çiftleri karşılıklı (dönüş bağı) ve geçerli ISO dil/bölge kodu için doğrulanır; tutarsızlık raporlanır"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -205,9 +213,9 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "SEO meta önbellekli; sayfa yükünü artırmaz",
-        "Yapısal veri önceden üretilmiş",
-        "Core Web Vitals hedefli render"
+        "Üretilmiş SEO meta önbellekte tutulur ve ilk HTML'e gömülür; ek istek doğurmaz, sayfa yükünü artırmaz",
+        "schema.org JSON-LD build sırasında önceden üretilir (SSG); istek anında şablon değerlendirme maliyeti olmaz",
+        "Render Core Web Vitals hedefli: LCP < 2.5s, CLS < 0.1, INP < 200ms; meta enjeksiyonu bu bütçeyi bozmaz"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -218,9 +226,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobil SEO (responsive, hız) öncelikli",
-        "Sosyal kart önizleme mobilde",
-        "AMP/hafif sayfa opsiyonu"
+        "Mobil-öncelikli SEO: responsive görünüm ve düşük yük süresi indeksleme için önceliklendirilir (mobile-first crawl)",
+        "OpenGraph/Twitter kart önizlemesi mobil yönetim ekranında render edilir; dokunma hedefleri ≥44px tasarlanır",
+        "Hafif/AMP benzeri sayfa varyantı opsiyonel; zayıf bağlantıda hızlı açılır, yapısal veri yine de korunur"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -231,9 +239,9 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "SEO erişilebilirlikle örtüşür: başlık hiyerarşisi, alt-metin",
-        "Yapılandırma ekranı klavye erişimli; kontrast 7:1",
-        "Meta alanları etiketli"
+        "SEO erişilebilirlikle örtüşür: tek H1 + sıralı başlık hiyerarşisi ve görsellerde anlamlı alt-metin zorunlu kılınır",
+        "SEO yapılandırma ekranı tam klavye ile gezilebilir, görünür odak sırası korunur ve metin kontrastı ≥7:1 (AAA)",
+        "Meta giriş alanları programatik etiket (label) ve açıklama metniyle bağlanır; ekran okuyucu alanın amacını okur"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -244,12 +252,12 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "SEO render SSR/SSG; meta CDN'den",
-        "Yapısal veri üretici build/runtime",
-        "Shared hosting'de SSG çıktısı (uyumlu)"
+        "SEO çıktısı SSR/SSG ile üretilir ve meta+JSON-LD CDN üzerinden dağıtılır; kenar önbelleği ile kökene yük binmez",
+        "Yapısal veri üretici Kubernetes'te yatay otomatik ölçekleme (HPA), canlılık/hazırlık probu ve kaynak limitiyle çalışır; build ya da runtime modu seçilir",
+        "WordPress sınıfı shared hosting'de statik SSG çıktısı servis edilir; özel runtime gerekmez, uyumluluk korunur"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (yatay otomatik ölçekleme (HPA), canlılık/hazırlık probu + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -259,7 +267,7 @@
       "items": [
         "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
         "Olay: içerik yayınlandı → SEO meta + yapısal veri üret + sitemap'e ekle (idempotent, zincir ≤6)",
-        "Olay: eksik/zayıf SEO tespit → içerik sahibine öneri (loop-breaker)"
+        "Olay: eksik/zayıf SEO (boş açıklama, kayıp canonical) tespit → içerik sahibine öneri üret; tekrar tetiklenmeyi kıran loop-breaker"
       ],
       "notes": "",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
@@ -283,9 +291,9 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Yapısal veri geçerlilik testi (schema.org)",
-        "Meta enjeksiyon (XSS) reddi testi",
-        "hreflang/canonical tutarlılık testi; en çok 6 tur"
+        "Üretilen schema.org JSON-LD'nin geçerliliği unit testle doğrulanır; bozuk şema yayından önce yakalanır",
+        "Meta ve OG alanlarına script enjeksiyonu denemesinin reddedildiği e2e testle kanıtlanır (XSS regresyon koruması)",
+        "hreflang/canonical tutarlılığı testing-loop ile sınanır (maks 6 tur); düzelmezse otomatik düzeltme durur ve raporlanır"
       ],
       "notes": "",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
@@ -296,9 +304,9 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: meta içeriği sanitize",
-        "A05 Misconfiguration: canonical/robots tutarlı",
-        "Erişilebilirlik SEO ile örtüşür"
+        "OWASP A03 Injection: kullanıcı kaynaklı meta/OG içeriği HTML-kaçışla sanitize edilir, etiket enjeksiyonu engellenir",
+        "OWASP A05 Security Misconfiguration: canonical ve robots direktifleri tutarlı tutulur, yanlışlıkla noindex sızması önlenir",
+        "Erişilebilirlik standardı SEO ile örtüşür: anlamlı başlık yapısı hem WCAG hem arama motoru indekslemesini güçlendirir"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -310,8 +318,8 @@
       "status": "filled",
       "items": [
         "SEO, içerik/sayfa ArcheType'larına keşfedilebilirlik sağlar",
-        "Sitemap ve redirect modülleriyle tutarlı",
-        "Programmatic SEO ve AEO ile"
+        "l1-sitemap ve l1-redirect modülleriyle canonical/URL kaynağı üzerinden tutarlı; çakışan yönlendirme oluşmaz",
+        "Programatik SEO (l1-pseo) ve AEO (l1-aeo) modülleri bu çekirdekten meta/yapısal veri sözleşmesini olay üzerinden tüketir"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -322,10 +330,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "SEO Motoru (modül) tüm web içeriğine keşfedilebilirlik sağlar",
-        "Web/pazarlama app'leri SEO modülünü kullanır"
+        "Platform modülleri ve uygulama katmanları Keşfedilebilirlik / SEO Motoru yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "Keşfedilebilirlik / SEO Motoru durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "AI ajan ve otomasyonlar Keşfedilebilirlik / SEO Motoru için yalnız allowlist'teki güvenli aksiyonları çağırır; serbest sorgu/güncelleme yapamaz.",
+        "Keşfedilebilirlik / SEO Motoru bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
-      "notes": "",
+      "notes": "Keşfedilebilirlik / SEO Motoru, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-seo — \"Keşfedilebilirlik / SEO Motoru\" (modül/kaya; küme: Layer 1 modülleri). Özet: Keşfedilebilirlik ailesinin ÇEKİRDEĞİ (Layer 1 in-tree): meta/on-page SEO, schema.org JSON-LD, OpenGraph/Twitter, hreflang. Sitemap→l1-sitemap, redirect→l1-redirect, programatik ür Etiketler: seo, pseo, schema, aeo, geo, keşfedilebilirlik.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

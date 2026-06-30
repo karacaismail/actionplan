@@ -16,7 +16,15 @@
     "aio",
     "llms-txt",
     "answer-engine",
-    "frontpages"
+    "frontpages",
+    "atıf",
+    "cevap",
+    "crawl",
+    "görünürlük",
+    "kaynak",
+    "yapısal",
+    "okunur",
+    "özet"
   ],
   "dependsOn": [
     "k-agent-runtime",
@@ -141,8 +149,8 @@
       "status": "filled",
       "items": [
         "AEO / GEO / LLMO: AI motorlarına (ChatGPT/Perplexity) görünürlük; yapılandırılmış, alıntılanabilir içerik",
-        "Soru-cevap formatı, kaynak güveni ve makine-okunur özetler",
-        "AI tarama (crawl) izni ve içerik atfı yönetimi"
+        "FAQ/HowTo schema ile soru-cevap blokları, kaynak güven sinyalleri ve llms.txt üzerinden makine-okunur özetler",
+        "AI tarama (crawl) izni robots üzerinden yönetilir ve içerik atfının hangi motorda göründüğü izlenir"
       ],
       "notes": "",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -153,9 +161,9 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "AI motorlarına yalnız açık içerik; özel veri sunulmaz",
-        "Tarama izni (robots/AI-specific) yetkili yönetilir",
-        "İçerik atfı/kaynak doğrulanır"
+        "AI motorlarına yalnız herkese-açık içerik sunulur; tenant'a özel veya taslak veri llms.txt ve cevap bloklarına sızmaz",
+        "AI-özel tarama izni (robots ve GPTBot/PerplexityBot direktifleri) rol bazlı yönetilir; yetkisiz değişiklik engellenir",
+        "İçerik atfı ve kaynak URL'si doğrulanır; başka tenant'ın içeriği yanlış kaynağa bağlanamaz (RLS sınırı)"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -166,9 +174,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Makine-okunur özet (yapısal) içerikten türetilir",
-        "Soru-cevap bloğu şablondan; tek kaynak",
-        "AI-crawl uçları önbellekli"
+        "Makine-okunur özet (llms.txt + yapısal blok) içerikten tip-güvenli türetilir; elle yazım yok, tek kaynaktan üretim",
+        "FAQ/HowTo soru-cevap bloğu schema şablonundan üretilir; aynı içerik birden çok motor için yeniden kodlanmaz",
+        "AI-crawl uçları (llms.txt, semantik HTML) önbelleklenir; tekrar eden tarama isteğinde yeniden hesaplama yapılmaz"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -179,9 +187,9 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "AI tarama oran-sınırlı; içerik kazıma kontrollü",
-        "Yanlış-atıf/halüsinasyon için kaynak işaretleme",
-        "Özel içerik AI'ya kapalı (noindex benzeri)"
+        "AI motoru taraması bot başına oran-sınırlı (rate-limit); toplu içerik kazımaya karşı eşik aşımında istek kısılır",
+        "Yanlış-atıf/halüsinasyona karşı her cevap bloğuna kanonik kaynak işareti ve yayın tarihi gömülür (kaynak izlenebilirliği)",
+        "Tenant'a özel içerik AI motorlarına kapatılır (noindex/llms.txt dışında tutma); yalnız onaylı içerik atfa açılır"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -192,9 +200,9 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "AI-okunur uçlar hafif ve önbellekli",
-        "Yapısal özet önceden üretilmiş",
-        "Düşük gecikme (AI crawl dostu)"
+        "AI-okunur uçlar (llms.txt, semantik HTML) sade ve CDN-önbellekli tutulur; gereksiz script/stil yükü taşınmaz",
+        "FAQ/HowTo yapısal özeti içerik yayınında önceden üretilir; AI motoru taraması anında şablon değerlendirme maliyeti olmaz",
+        "Cevap uçları düşük gecikme hedefli (p95 < 200ms); hızlı yanıt AI motorlarının kaynak olarak seçme olasılığını artırır"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -205,9 +213,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "AEO backend; görünürlük metrikleri mobil panoda",
-        "iOS/Android'de AI-atıf raporu",
-        "Dar ekranda görünürlük özeti"
+        "AEO çekirdeği backend'de çalışır; AI-görünürlük ve atıf metrikleri mobil panoda PWA/Capacitor ile izlenir",
+        "iOS/Android'de hangi motorun (ChatGPT/Perplexity/Gemini) atıf verdiğini gösteren rapor; dokunma hedefleri ≥44px",
+        "Dar ekranda atıf payı ve cevap-blok kapsama özeti; trend yön oku metinle de belirtilir, salt renge bağlı değil"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -218,9 +226,9 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Soru-cevap içeriği erişilebilir (başlık/yapı)",
-        "Yapısal veri ekran okuyucuyla uyumlu; kontrast 7:1",
-        "Yönetim ekranı klavye erişimli"
+        "FAQ/HowTo soru-cevap içeriği erişilebilir işaretlenir: anlamlı başlık yapısı ve liste semantiği ekran okuyucuyla uyumlu",
+        "Yapısal veri görünür içerikle eşleşir (gizli-metin tuzağı yok), metin kontrastı ≥7:1 ve odak sırası korunur (AAA)",
+        "AEO yönetim ekranı tam klavye ile gezilebilir; cevap bloğu düzenleyicide görünür odak ve etiketli alanlar bulunur"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -231,9 +239,9 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "AEO uçları SSR/SSG + CDN; AI-crawl dostu",
-        "Görünürlük ölçümü ayrı worker",
-        "Shared hosting'de statik AEO içeriği (uyumlu)"
+        "AEO uçları (llms.txt, cevap blokları) SSR/SSG ile üretilir ve CDN'den AI-crawl dostu şekilde servis edilir",
+        "AI-görünürlük/atıf ölçümü ayrı worker'da çalışır; Kubernetes'te HPA + readiness probe ve kaynak limitiyle ölçeklenir",
+        "WordPress sınıfı shared hosting'de statik AEO içeriği (llms.txt + semantik HTML) servis edilir; özel runtime gerekmez"
       ],
       "notes": "",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -246,7 +254,7 @@
       "items": [
         "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
         "Olay: içerik yayınlandı → makine-okunur özet + soru-cevap üret (idempotent, zincir ≤6)",
-        "Olay: AI motoru içeriği alıntıladı → atfı izle/raporla (loop-breaker)"
+        "Olay: AI motoru (ChatGPT/Perplexity) içeriği alıntıladı → atfı kaydet ve görünürlük panosuna raporla; tekrar tetiklemeyi kıran loop-breaker"
       ],
       "notes": "",
       "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
@@ -270,9 +278,9 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Yapısal özet geçerlilik testi",
-        "Özel içerik AI'ya sızmaz testi",
-        "AI-crawl oran-sınır testi; en çok 6 tur"
+        "llms.txt ve FAQ/HowTo yapısal özetinin geçerliliği unit testle doğrulanır; bozuk şema yayından önce yakalanır",
+        "Tenant'a özel/taslak içeriğin AI uçlarına sızmadığı e2e testle kanıtlanır (atıf kaçağı regresyon koruması)",
+        "AI-crawl oran-sınırı testing-loop ile sınanır (maks 6 tur); eşik düzelmezse otomatik ayar durur ve raporlanır"
       ],
       "notes": "",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
@@ -283,9 +291,9 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: yalnız açık içerik AI'ya",
-        "A04 Insecure Design: kazıma oran-sınırı",
-        "A09 Logging: AI-atıf izlenir"
+        "OWASP A01 Broken Access Control: yalnız herkese-açık içerik AI motorlarına sunulur, özel veri llms.txt dışında tutulur",
+        "OWASP A04 Insecure Design: toplu kazımaya karşı bot başına oran-sınırı tasarıma gömülür, kaynak tüketimi sınırlanır",
+        "OWASP A09 Logging & Monitoring: AI-atıf olayları ve crawl erişimi denetim izine yazılır, anormal tarama tespit edilir"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -296,9 +304,9 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "AEO, SEO ve içerik yayınıyla entegre (AI motorları için)",
-        "Yapısal veri SEO modülünden",
-        "Atıf metrikleri analitiğe"
+        "AEO, l1-seo çekirdeği ve içerik yayını olayıyla entegre; AI motorları için cevap bloğu yayında otomatik üretilir",
+        "schema.org yapısal verisi l1-seo modülünden devralınır; AEO bunu FAQ/HowTo ve llms.txt katmanıyla zenginleştirir",
+        "AI-atıf ve görünürlük metrikleri l1-analytics modülüne olay üzerinden beslenir; raporlama merkezi panoda toplanır"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -309,10 +317,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "AEO/GEO/LLMO (modül) içeriği AI motorlarına görünür kılar",
-        "İçerik/pazarlama app'leri AEO modülünü kullanır"
+        "Platform modülleri ve uygulama katmanları AEO / GEO / LLMO — AI Motorlarına Görünürlük yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "AEO / GEO / LLMO — AI Motorlarına Görünürlük durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "AI ajan ve otomasyonlar AEO / GEO / LLMO — AI Motorlarına Görünürlük için yalnız allowlist'teki güvenli aksiyonları çağırır; serbest sorgu/güncelleme yapamaz.",
+        "AEO / GEO / LLMO — AI Motorlarına Görünürlük bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
-      "notes": "",
+      "notes": "AEO / GEO / LLMO — AI Motorlarına Görünürlük, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-aeo — \"AEO / GEO / LLMO — AI Motorlarına Görünürlük\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: yapılandırılmış cevap blokları, FAQ/HowTo schema, llms.txt, temiz semantik HTML. Hedef: AI Overviews + ChatGPT/Perplexity/Gemini/Claude kaynak olarak atıf ve Etiketler: aeo, geo, llmo, aio, llms-txt, answer-engine.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

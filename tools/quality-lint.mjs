@@ -18,6 +18,13 @@ const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
 const GOLDEN = new Set(["product", "customer", "s-crm"]);
 const GOLDEN_MIN = 2.3;
 const CLAIM_MIN = 2.0;
+// moduleUsage tamlık çıtası: dolu (non-skeleton) moduleUsage en az bu kadar madde + notes taşımalı.
+// "Modül Kullanımı" boyutu sistematik olarak 1-satırda kalmıştı; bu kapı tamlığı kilitler.
+const MU_MIN_ITEMS = 3;
+const isNa = (n, key) => n.applicability?.[key]?.status === "na";
+// Skor tabanı: hiçbir dolu düğüm bu eşiğin altına düşmemeli (içerik zenginleştirme ratchet'i;
+// moduleUsage tamlık + tag zenginleştirme + kısa-madde genişletme sonrası min ≈ 2.46).
+const SCORE_FLOOR = 2.4;
 
 const nodes = fs
   .readdirSync(NODES)
@@ -27,9 +34,22 @@ const nodes = fs
 const violations = [];
 let goldenOk = 0;
 let claimChecked = 0;
+let muChecked = 0;
 
 for (const n of nodes) {
   const a = auditNode(n);
+  // moduleUsage tamlık: N/A değilse ve skeleton değilse ≥3 madde + notes zorunlu.
+  const mu = n.dimensions?.moduleUsage;
+  if (mu && mu.status !== "skeleton" && !isNa(n, "moduleUsage")) {
+    muChecked++;
+    const items = mu.items ?? [];
+    if (items.length < MU_MIN_ITEMS)
+      violations.push(`${n.id}.moduleUsage: ${items.length} madde < ${MU_MIN_ITEMS}`);
+    if (!(mu.notes ?? "").trim()) violations.push(`${n.id}.moduleUsage: notes boş`);
+  }
+  // Tüm dolu düğümler için skor tabanı.
+  if (a.filled > 0 && a.score < SCORE_FLOOR)
+    violations.push(`${n.id}: skor ${a.score} < taban ${SCORE_FLOOR}`);
   if (GOLDEN.has(n.id)) {
     if (a.filled < 14) violations.push(`golden ${n.id}: 14 boyut dolu değil (${a.filled}/14)`);
     if (a.score < GOLDEN_MIN) violations.push(`golden ${n.id}: skor ${a.score} < ${GOLDEN_MIN}`);
@@ -44,7 +64,7 @@ for (const n of nodes) {
 }
 
 console.log(
-  `[quality-lint] golden ok: ${goldenOk}/${GOLDEN.size} · köken-iddialı denetlenen: ${claimChecked} · ihlal: ${violations.length}`,
+  `[quality-lint] golden ok: ${goldenOk}/${GOLDEN.size} · köken-iddialı denetlenen: ${claimChecked} · moduleUsage denetlenen: ${muChecked} · ihlal: ${violations.length}`,
 );
 if (violations.length) {
   for (const v of violations) console.error(`  ✗ ${v}`);

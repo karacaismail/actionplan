@@ -19,7 +19,15 @@
     "voltage",
     "calendar",
     "e-invoice",
-    "lawful-intercept"
+    "lawful-intercept",
+    "bölge",
+    "kapısı",
+    "kısıtlama",
+    "ürün",
+    "coğrafi",
+    "bazlı",
+    "bölgede",
+    "filtre"
   ],
   "dependsOn": [
     "cc-jurisdiction-resolver",
@@ -147,7 +155,7 @@
       "items": [
         "İçerik & Ürün Jurisdiction Kuralları: bölgeye göre sansür, yaş sınırı ve ürün uygunluğu",
         "İçerik filtreleme, yaş-kapısı (age-gate) ve coğrafi kısıtlama",
-        "Yasaklı ürün/içerik bölge eşlemesi"
+        "Yasaklı ürün/içerik bölge eşlemesi: örn. Nazi sembolü DE'de, alkol IR'de engellenir; voltaj/fiş, beden (EU 42/US 9) ve takvim bölgeye göre çözülür"
       ],
       "notes": "",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -160,7 +168,7 @@
       "items": [
         "Kısıtlı içerik yetkisiz bölgede sunulmaz (jurisdiction'a göre)",
         "Yaş doğrulama gizlilik-dostu (PII-min)",
-        "Kural değişimi sürümlü+izli"
+        "Bölge/yaş kısıtlama kuralındaki her değişiklik sürümlenir ve değişmez audit izine (kim/ne zaman/hangi yargı bölgesi) yazılır; geriye dönük kanıt korunur"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -171,9 +179,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "İçerik uygunluğu jurisdiction resolver'dan çözülür",
-        "Yaş-kapısı + coğrafi filtre bildirimsel",
-        "Yasaklı liste indeksli"
+        "İçerik/ürün uygunluğu tek noktadan jurisdiction resolver'dan çözülür; her çağrı bölge kodunu girip izinli/kısıtlı kararını alır, mantık kopyalanmaz",
+        "Yaş-kapısı ve coğrafi filtre bildirimsel (declarative) kural olarak tanımlanır; serbest dallanma yerine veri-odaklı eşleme ile döngüsel karmaşıklık düşük kalır",
+        "Yasaklı ürün/içerik listesi bölge+kategori anahtarıyla indekslenir; uygunluk sorgusu tam tarama yapmadan O(1)/O(log n) erişir"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -186,7 +194,7 @@
       "items": [
         "Bilinmeyen bölge en-kısıtlayıcı kurala düşer",
         "Coğrafi atlatma (VPN) için ek doğrulama opsiyonu",
-        "Yaş-kapısı atlatması engellenir"
+        "Yaş-kapısı atlatması engellenir: karar sunucu tarafında verilir, istemci çerez/parametre ile yaşı yükseltemez, tekrar denemeler rate-limit'lenir"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -198,8 +206,8 @@
       "status": "filled",
       "items": [
         "Uygunluk çözümleme önbellekli (bölge+içerik)",
-        "Filtre indeksli; hızlı",
-        "Yasaklı liste bellekte"
+        "Coğrafi/yaş filtresi bölge+kategori bileşik indeksiyle çalışır; uygunluk kararının p95 gecikmesi ölçülüp eşik altında tutulur",
+        "Yasaklı ürün/içerik listesi sıcak yolda bellek-içi tutulur; her istekte veritabanına gidilmez, N+1 sorgu örüntüsü önlenir"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -237,8 +245,8 @@
       "status": "filled",
       "items": [
         "İçerik jurisdiction kesişen ara-katman; coğrafi çözümleme edge",
-        "Bölge kuralları yapılandırma",
-        "Shared hosting'de temel filtre"
+        "Bölge/yargı kuralları kod yerine versiyonlu yapılandırma olarak tutulur; yeni ülke/kısıt eklemek yeniden derleme değil, yapılandırma dağıtımı gerektirir",
+        "Shared hosting (WordPress sınıfı) ortamında en azından temel bölge/yaş filtresi çalışır; edge çözümleme yoksa sunucu-içi kural devreye girer"
       ],
       "notes": "",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -276,7 +284,7 @@
       "status": "filled",
       "items": [
         "Bölge-bazlı içerik kısıtlama testi (yetkisiz bölgede sunulmaz)",
-        "Yaş-kapısı atlatma reddi testi",
+        "Yaş-kapısı atlatma reddi testi: istemciden yükseltilmiş yaş/çerez ile gelen istek sunucuda reddedilir ve karar audit izine düşer",
         "Bilinmeyen bölge en-kısıtlayıcı testi; en çok 6 tur"
       ],
       "notes": "",
@@ -288,9 +296,9 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: bölge/yaş bazlı içerik erişimi",
-        "A04 Insecure Design: en-kısıtlayıcı varsayılan",
-        "A09 Logging: kısıtlama kararları iz"
+        "A01 Broken Access Control: bölge/yaş bazlı içerik erişimi sunucuda zorlanır; yetkisiz yargı bölgesinden kısıtlı içeriğe erişim engellenir",
+        "A04 Insecure Design: bilinmeyen/çözülemeyen bölge en-kısıtlayıcı varsayılana düşer; güvenli-başarısızlık (fail-closed) ilkesiyle tasarlanır",
+        "A09 Security Logging: her kısıtlama/age-gate kararı (bölge, kural, sonuç) izlenebilir biçimde loglanır; kanıt geriye dönük sorgulanabilir"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -302,8 +310,8 @@
       "status": "filled",
       "items": [
         "Content jurisdiction, jurisdiction resolver eksenlerini içerik/ürüne uygular",
-        "Commerce (ürün uygunluğu) ve CMS ile",
-        "Compliance matrix ile bölge düzenlemeleri"
+        "Commerce (ürün uygunluğu) ve CMS ile sözleşme üzerinden entegredir; yasaklı ürün/içerik kararı satış ve yayın akışına olay olarak iletilir",
+        "Compliance matrix ile bölge düzenlemelerine (KVKK/GDPR, veri-ikamet) bağlanır; yargı bölgesi başına uygunluk kuralları oradan beslenir"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -314,10 +322,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "İçerik & Ürün Jurisdiction (orta taş) bölgesel içerik kurallarını uygular",
-        "İçerik/ürün sunan çok-bölge app'ler bu modülü kullanır"
+        "Tüm app'ler ve yatay servisler İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "Çok-kiracılı erişimde İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim verisi tenant izolasyonu (RLS) ardında kalır; her tüketici yalnız kendi kapsamını görür.",
+        "Üst modül İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
-      "notes": "",
+      "notes": "İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-content-jurisdiction — \"İçerik & Ürün Jurisdiction Kuralları — Sansür, Yaş, Birim, Voltaj, Takvim\" (taş/orta taş; küme: Cross-cutting). Özet: Ülke bazlı içerik kısıtları (Nazi sembolü DE, alkol IR), yaş kısıtlı içerik, birim/beden standardı (EU 42 / US 9), voltaj/fiş, AB e-fatura formatları, takvim sistemleri. Etiketler: crosscut, content, jurisdiction, censorship, age, unit.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

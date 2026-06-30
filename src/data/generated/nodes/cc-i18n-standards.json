@@ -17,7 +17,15 @@
     "cldr",
     "icu",
     "rtl",
-    "collation"
+    "collation",
+    "çeviri",
+    "yerel",
+    "standartları",
+    "fallback",
+    "paketleri",
+    "çoğul",
+    "güvenli",
+    "para"
   ],
   "dependsOn": [
     "l1-misc",
@@ -157,9 +165,9 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Çeviri içeriği sanitize (enjeksiyon önleme)",
-        "Dil/yerel tercihi kullanıcıya ait, tenant-izole",
-        "Çeviri kaynak erişimi rol bazlı"
+        "Çeviri içeriği render öncesi sanitize edilir; ICU yer-tutucularına HTML/script veya format-string enjeksiyonu sızması engellenir",
+        "Kullanıcının dil/yerel (BCP 47) tercihi kendisine ait sayılır ve tenant-izole tutulur (PostgreSQL RLS); kiracılar arası sızıntı olmaz",
+        "Çeviri kaynaklarına (TMS/çeviri paketi) erişim rol bazlı ve en-az-ayrıcalık ilkesiyle verilir; değişiklikler değişmez audit izine yazılır"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -170,9 +178,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Mesajlar ICU MessageFormat; çoğul/cinsiyet doğru",
-        "Yerel veri CLDR'den; tarih/sayı/para tutarlı",
-        "Dil etiketleri BCP 47 doğrulanır"
+        "Tüm kullanıcı metinleri ICU MessageFormat ile yazılır; çoğul (plural) ve cinsiyet (select) seçimleri tek kaynaktan, tip güvenli biçimde çözülür",
+        "Tarih/sayı/para biçimleri Unicode CLDR verisinden tek noktadan türetilir; locale başına elle yazılmış biçim kodu (ölü kod riski) tutulmaz",
+        "Dil etiketleri BCP 47'ye göre ayrıştırılıp doğrulanır (örn. tr-TR, ar-EG); geçersiz/biçimsiz etiket sözleşme sınırında reddedilir"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -185,7 +193,7 @@
       "items": [
         "Eksik çeviri güvenli geri-düşer (fallback); boş gösterilmez",
         "Çeviri enjeksiyonu (format string) engellenir",
-        "RTL/bidi güvenli işleme"
+        "RTL/bidi metin güvenli işlenir: gömülü yön kontrol karakterleri (U+202A–U+202E) izole/temizlenerek görsel kandırma önlenir"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -196,9 +204,9 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çeviri paketleri tembel ve önbellekli",
-        "Yerel biçimleme önbellekli",
-        "Kullanılmayan dil yüklenmez"
+        "Çeviri paketleri locale başına tembel (lazy) yüklenir ve önbeklenir; ilk açılışta yalnız aktif dilin paketi indirilir (p95 yükleme hedefi izlenir)",
+        "Yerel biçimleyiciler (Intl.NumberFormat/DateTimeFormat) locale+seçenek anahtarıyla önbeklenir; her çağrıda yeni biçimleyici örneği kurulmaz",
+        "Kullanılmayan diller bundle'a girmez; locale kodu bölünür (code-split), böylece pasif diller indirme ve ayrıştırma maliyeti getirmez"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -209,9 +217,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde cihaz dili/yerel otomatik; RTL düzen",
-        "iOS/Android yerel tarih/sayı/para biçimi",
-        "Dil değişimi anında uygulanır"
+        "Mobilde cihazın dil/yerel ayarı otomatik okunup BCP 47 etiketine eşlenir; Arapça/İbranice gibi dillerde RTL düzen kendiliğinden uygulanır",
+        "iOS ve Android'de tarih/sayı/para biçimi cihaz CLDR verisiyle yerelleştirilir; dokunma hedefleri yön fark etmeksizin ≥44px korunur",
+        "Dil değişimi yeniden başlatma gerektirmeden anında uygulanır; açık ekranlardaki çoğul/biçim metinleri yeni locale ile yeniden çizilir"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -224,7 +232,7 @@
       "items": [
         "Sayfa dili (lang) doğru işaretli; ekran okuyucu doğru telaffuz",
         "RTL düzen tam erişilebilir; kontrast 7:1",
-        "Dil seçici klavye erişilebilir"
+        "Dil seçici tam klavyeyle kullanılabilir; her seçenek lang ile etiketli, geçerli dil aria-current ile bildirilir, odak görünür kalır"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -236,7 +244,7 @@
       "status": "filled",
       "items": [
         "Çeviri paketleri statik asset/CDN; build veya runtime yükleme",
-        "Çeviri yönetimi (TMS) entegrasyonu",
+        "Çeviri yönetim sistemi (TMS) entegrasyonu CI hattına bağlanır; çeviri güncellemeleri derlenip imzalı çeviri paketi olarak dağıtılır",
         "Shared hosting'de statik çeviri paketleri (uyumlu)"
       ],
       "notes": "",
@@ -275,7 +283,7 @@
       "status": "filled",
       "items": [
         "ICU çoğul/cinsiyet ve biçim doğruluk testi",
-        "RTL/bidi render testi",
+        "RTL/bidi render testi: Arapça/İbranice örneklerde yön, hizalama ve karma yön segment sınırları snapshot ile doğrulanır",
         "Eksik çeviri fallback testi; en çok 6 tur"
       ],
       "notes": "",
@@ -289,7 +297,7 @@
       "items": [
         "A03 Injection: çeviri format-string enjeksiyonu engellenir",
         "A05 Misconfiguration: dil/yerel güvenli varsayılan",
-        "Erişilebilirlik (lang) doğru"
+        "Erişilebilirlik standardı: sayfa ve metin parçası dili lang ile doğru işaretlenir; eksik lang ekran okuyucu telaffuzunu bozduğundan kapıda yakalanır"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -300,9 +308,9 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "i18n standartları tüm UI/içerik metnine uygulanır",
-        "strings.json/çeviri katmanı bu standartları kullanır",
-        "Cultural UX ve identity-models ile tutarlı"
+        "i18n teknik standartları (BCP 47/CLDR/ICU) tüm UI ve içerik metnine ortak çözüm olarak uygulanır; modüller kendi i18n mantığını üretmez",
+        "strings.json/çeviri katmanı bu standartları kullanır; mesaj anahtarları ICU MessageFormat sözleşmesine ve BCP 47 locale eşlemesine uyar",
+        "Cultural UX ve kimlik modelleriyle (identity-models) tutarlıdır; ad sıralama ve collation kuralları aynı locale verisinden beslenir"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -313,10 +321,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "i18n Teknik Standartları (orta taş) tüm app'lere yerelleştirme temeli sağlar",
-        "Çok-dilli tüm app'ler bu standartları kullanır"
+        "Tüm app'ler ve yatay servisler i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "Çok-kiracılı erişimde i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL verisi tenant izolasyonu (RLS) ardında kalır; her tüketici yalnız kendi kapsamını görür.",
+        "Üst modül i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
-      "notes": "",
+      "notes": "i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-i18n-standards — \"i18n Teknik Standartları — BCP 47, CLDR, ICU, RTL\" (taş/orta taş; küme: Cross-cutting). Özet: Locale kodlama (BCP 47), ISO standartları, Unicode CLDR, ICU MessageFormat, RTL, Türkçe i/ı collation tuzağı, pseudo-localization. Etiketler: crosscut, i18n, l10n, bcp-47, cldr, icu.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }

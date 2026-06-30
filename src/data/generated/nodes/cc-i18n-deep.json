@@ -14,7 +14,15 @@
     "i18n",
     "l10n",
     "rtl",
-    "pluralization"
+    "pluralization",
+    "bidi",
+    "yerel",
+    "override",
+    "sıralama",
+    "çoğul",
+    "aware",
+    "biçim",
+    "locale"
   ],
   "dependsOn": [
     "l1-misc"
@@ -142,7 +150,7 @@
       "items": [
         "i18n Derinleştirme: çoğullaştırma (pluralization), RTL/bidi, yerel biçim ve kültürel sıralama (collation)",
         "Dil-özel kurallar (cinsiyet, sayı sınıfı) ve karma yön (bidi) metin",
-        "Yerel sıralama/arama (locale-aware) ve büyük/küçük harf"
+        "Yerel sıralama (collation) ve arama: locale-aware karşılaştırma ile Türkçe i/ı ve büyük/küçük harf doğru çözülür"
       ],
       "notes": "",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -154,8 +162,8 @@
       "status": "filled",
       "items": [
         "Çeviri/yerel veri sanitize; bidi-override saldırısı engellenir",
-        "Yerel veri kaynağı (CLDR) güvenilir",
-        "Dil tercihi tenant-izole"
+        "Yerel veri kaynağı yalnız güvenilir Unicode CLDR sürümünden alınır; dış/kullanıcı kaynaklı locale verisi imza doğrulaması olmadan kabul edilmez",
+        "Kullanıcının dil/yerel tercihi tenant-izole tutulur (PostgreSQL RLS); başka kiracının çeviri/locale ayarı sızdırılmaz"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -166,9 +174,9 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çoğullaştırma ICU kuralından (dil sınıfı)",
-        "Sıralama (collation) locale-aware; bellek-içi",
-        "Bidi algoritması standart (Unicode)"
+        "Çoğullaştırma ICU çoğul kategorilerinden (zero/one/two/few/many/other) türetilir; dil başına elle if-else dallanması yazılmaz",
+        "Sıralama (collation) locale-aware ve bellek-içi anahtar üretir; karşılaştırma O(n log n) sınırında, döngüsel karmaşıklık düşük tutulur",
+        "Bidi yön çözümü Unicode Bidirectional Algorithm (UAX #9) ile yapılır; yöne dair özel/yamalı kod tutulmaz"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -179,9 +187,9 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bidi-override (görsel sahtekarlık) tespit + temizleme",
-        "Eksik dil-kuralı güvenli fallback",
-        "Yerel biçim enjeksiyonu engellenir"
+        "Bidi-override kontrol karakterleri (U+202A–U+202E, U+2066–U+2069) tespit edilip temizlenerek görsel kandırma (spoofing) saldırısı engellenir",
+        "Eksik dil/çoğul kuralı durumunda güvenli fallback zinciri (örn. tr-TR → tr → en) uygulanır; ham anahtar veya boş metin gösterilmez",
+        "Yerel biçim dizesi (format-string) enjeksiyonu engellenir; sayı/tarih kalıbına kullanıcı verisi yer-tutucu olarak değil, parametre olarak girer"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -192,9 +200,9 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Çoğul/biçim kuralları önbellekli",
-        "Sıralama indeksli (locale-aware)",
-        "RTL render maliyeti optimize"
+        "Çoğul ve biçim kuralları derlenmiş halde locale başına önbeklenir; aynı locale için ICU kuralı tekrar ayrıştırılmaz (p95 biçimleme hedefi izlenir)",
+        "Locale-aware sıralama için önceden hesaplanmış collation anahtarı indekslenir; her karşılaştırmada anahtar yeniden üretilmez",
+        "RTL/bidi yeniden düzen (reflow) maliyeti yön bazında bir kez hesaplanıp memoize edilir; yön değişmeden tekrar layout tetiklenmez"
       ],
       "notes": "",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -205,9 +213,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde RTL düzen ve çoğul doğru; cihaz yereli",
-        "iOS/Android bidi metin doğru render",
-        "Dar ekranda yerel biçimler"
+        "Mobilde cihaz yereli (locale) okunup RTL düzen ve çoğul kuralı buna göre uygulanır; dokunma hedefleri RTL'de de ≥44px korunur",
+        "iOS ve Android'de karma yön (bidi) metin platformun yerel bidi motoruyla doğru render edilir; yön kontrol karakterleri sızdırılmaz",
+        "Dar ekranda yerel sayı/tarih/para biçimleri kırpılmadan sığar; uzun çoğul mesajlar taşma yapmadan sarmalanır (wrap)"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -218,9 +226,9 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "RTL/bidi tam erişilebilir; yön doğru işaretli",
-        "Çoğul mesajlar ekran okuyucuda doğru; kontrast 7:1",
-        "Dil-özel telaffuz (lang) doğru"
+        "RTL/bidi içerik tam klavyeyle gezilebilir; yön dir=\"rtl\"/dir=\"auto\" ile doğru işaretlenir, odak sırası görsel akışı izler",
+        "Çoğul mesajlar ekran okuyucuda doğru sayı/biçimle seslendirilir; metin-arka plan kontrastı WCAG 2.2 AAA için ≥7:1 tutulur",
+        "Her metin parçasının dili lang özniteliğiyle işaretlenir; böylece ekran okuyucu dil-özel telaffuzu (sesletim) doğru seçer"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -231,9 +239,9 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "i18n-deep i18n standartları üstünde; CLDR verisi paketli",
-        "Çeviri paketleri dile göre",
-        "Shared hosting'de statik (uyumlu)"
+        "i18n-deep, i18n teknik standartları katmanı üstünde çalışır; gerekli CLDR çoğul/collation verisi imaja paketlenir, runtime'da dış indirme yapılmaz",
+        "Çeviri paketleri dile göre bölünüp ayrı asset olarak yayınlanır; yalnız istenen locale yüklenir, K8s probe'ları paket bütünlüğünü doğrular",
+        "Shared hosting (WordPress sınıfı) ortamında çoğul/biçim çözümü statik olarak çalışır; sunucu tarafı ICU kütüphanesi şartı koşulmaz"
       ],
       "notes": "",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -270,9 +278,9 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Çoğullaştırma (dil sınıfı) doğruluk testi",
-        "RTL/bidi render + bidi-override güvenlik testi",
-        "Locale-aware sıralama testi; en çok 6 tur"
+        "Çoğullaştırma doğruluk testi: her ICU çoğul kategorisi (zero/one/two/few/many/other) için temsili locale'lerde beklenen metin doğrulanır",
+        "RTL/bidi render testi ve bidi-override güvenlik testi: U+202A–U+202E kontrol karakterlerinin temizlendiği snapshot ile kanıtlanır",
+        "Locale-aware sıralama testi (Türkçe i/ı dahil); AI-destekli düzeltme döngüsü en çok 6 tur, düzelmezse rapor üretilir"
       ],
       "notes": "",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
@@ -283,9 +291,9 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection: bidi-override + format enjeksiyonu engellenir",
-        "A05 Misconfiguration: yerel güvenli fallback",
-        "Erişilebilirlik (yön/lang) doğru"
+        "A03 Injection: bidi-override kontrol karakteri ve yerel biçim (format-string) enjeksiyonu girişte temizlenerek engellenir",
+        "A05 Security Misconfiguration: tanımsız locale güvenli varsayılana (fallback) düşer; hatalı/eksik yerel ayar boş veya ham anahtar sızdırmaz",
+        "Erişilebilirlik standardı: metin yönü (dir) ve dil (lang) doğru işaretlenir; yön/dil bilgisi eksik içerik kabul edilmez"
       ],
       "notes": "",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -296,9 +304,9 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "i18n-deep, i18n standartlarını derinleştirir; cultural-ux ile",
-        "Tüm çok-dilli UI/içerikte uygulanır",
-        "Identity models (ad sıralama) ile tutarlı"
+        "i18n-deep, i18n teknik standartları birimini (BCP 47/CLDR/ICU) derinleştirir ve cultural-ux ile sözleşme üzerinden tutarlı çalışır",
+        "Tüm çok-dilli UI ve içerik yüzeylerinde çoğul/RTL/yerel biçim bu birimin sağladığı ortak çözüm üzerinden uygulanır",
+        "Kimlik modelleriyle (ad sıralama/collation) tutarlıdır; aynı locale-aware karşılaştırma kuralı paylaşılır, mükerrer mantık üretilmez"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
@@ -309,10 +317,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "i18n Derinleştirme (orta taş) gelişmiş yerelleştirme sağlar",
-        "Çok-dilli (özellikle RTL) app'ler bu modülü kullanır"
+        "Tüm app'ler ve yatay servisler i18n Derinleştirme — pluralization, RTL, lokal format yüzeyini üretilen API/olay sözleşmesi üzerinden tüketir; doğrudan tabloya erişmez (RLS sınırı).",
+        "i18n Derinleştirme — pluralization, RTL, lokal format durum değişiklikleri olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bunu dinler.",
+        "AI ajan ve otomasyonlar i18n Derinleştirme — pluralization, RTL, lokal format için yalnız allowlist'teki güvenli aksiyonları çağırır; serbest sorgu/güncelleme yapamaz.",
+        "Üst modül i18n Derinleştirme — pluralization, RTL, lokal format birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
-      "notes": "",
+      "notes": "i18n Derinleştirme — pluralization, RTL, lokal format, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-i18n-deep — \"i18n Derinleştirme — pluralization, RTL, lokal format\" (taş/orta taş; küme: Cross-cutting). Özet: Çoğul kuralları diller arası farklı. RTL için layout reverse. Tarih/sayı format yerelleştirme. Etiketler: crosscut, i18n, l10n, rtl, pluralization.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     }
