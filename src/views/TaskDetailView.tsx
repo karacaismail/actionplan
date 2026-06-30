@@ -22,7 +22,6 @@ import {
 import { taskStore, useTaskStore } from "@/store/taskStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useParams } from "@tanstack/react-router";
-import { Fragment } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -322,85 +321,83 @@ function PhaseStepper({ node }: { node: TaskNode }) {
   );
 }
 
-function Dimensions({ node }: { node: TaskNode }) {
+export function Dimensions({ node }: { node: TaskNode }) {
   const familyLabel = t.families as Record<string, string>;
   return (
     <section className="flex flex-col gap-2">
       <h2 className="flex items-center gap-2 font-medium">
         <Icon name="ph-stack-plus" className="text-primary" /> {t.detail.dimensions}
       </h2>
-      <div className="columns-1 gap-2 md:columns-2">
-        {DIMENSION_FAMILIES.map((family) => {
-          const keys = DIMENSION_KEYS.filter((k) => DIMENSION_FAMILY[k] === family);
-          return (
-            <Fragment key={family}>
-              <h3 className="mt-1 mb-2 text-base font-medium text-muted-foreground [column-span:all]">
-                {familyLabel[family] ?? family}
-              </h3>
-              {keys.map((key) => {
-                const dim = node.dimensions[key];
-                const meta = DIMENSION_META[key];
-                const na = node.applicability?.[key]?.applies === false;
-                const isSkeleton = !dim || dim.status === "skeleton" || dim.items.length === 0;
-                return (
-                  <Card key={key} className={cn("mb-2 break-inside-avoid p-3", na && "opacity-70")}>
-                    <div className="flex items-center gap-2">
-                      <Icon name={meta.icon} className="text-primary" />
-                      <span className="font-medium">{meta.tr}</span>
-                      {na ? (
-                        <Badge className="ml-auto" color={hslVar("--muted-foreground")}>
-                          {t.detail.notApplicable}
-                        </Badge>
-                      ) : !isSkeleton ? (
-                        <Badge className="ml-auto text-primary" color={hslVar("--status-done")}>
-                          {dim.items.length} {t.detail.itemsUnit}
-                        </Badge>
-                      ) : null}
+      <div
+        data-testid="dimensions-grid"
+        className="grid grid-cols-1 items-start gap-2 md:grid-cols-2"
+      >
+        {DIMENSION_FAMILIES.flatMap((family) => {
+          return DIMENSION_KEYS.filter((k) => DIMENSION_FAMILY[k] === family).map((key) => {
+            const dim = node.dimensions[key];
+            const meta = DIMENSION_META[key];
+            const na = node.applicability?.[key]?.applies === false;
+            const isSkeleton = !dim || dim.status === "skeleton" || dim.items.length === 0;
+            return (
+              <Card key={key} className={cn("p-3", na && "opacity-70")}>
+                <div className="flex items-center gap-2">
+                  <Icon name={meta.icon} className="text-primary" />
+                  <span className="font-medium">{meta.tr}</span>
+                  {na ? (
+                    <Badge className="ml-auto" color={hslVar("--muted-foreground")}>
+                      {t.detail.notApplicable}
+                    </Badge>
+                  ) : !isSkeleton ? (
+                    <Badge className="ml-auto text-primary" color={hslVar("--status-done")}>
+                      {dim.items.length} {t.detail.itemsUnit}
+                    </Badge>
+                  ) : null}
+                </div>
+                <span className="block text-base text-muted-foreground">
+                  {familyLabel[family] ?? family}
+                </span>
+                {na ? (
+                  <p className="mt-2 text-base text-muted-foreground">
+                    {node.applicability[key]?.reason}
+                  </p>
+                ) : isSkeleton ? (
+                  <p className="mt-2 text-base text-muted-foreground">
+                    <Icon name="ph-dots-three-outline" /> {t.detail.skeletonNotice}
+                  </p>
+                ) : (
+                  <ul className="mt-2 list-disc pl-5 text-base">
+                    {dim.items.map((item, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: statik gosterim listesi
+                      <li key={`${key}-${i}`}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+                {!na && dim?.notes && (
+                  <p className="mt-1 text-base text-muted-foreground">{dim.notes}</p>
+                )}
+                {!na && dim?.prompt && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-base text-muted-foreground">
+                      <Icon name="ph-sparkle" className="text-primary" /> {t.detail.aiPrompt}
+                    </summary>
+                    <div className="mt-1 flex items-start gap-2">
+                      <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
+                        {dim.prompt}
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label={t.actions.copyPrompt}
+                        onClick={() => navigator.clipboard?.writeText(dim.prompt)}
+                      >
+                        <Icon name="ph-copy" />
+                      </Button>
                     </div>
-                    {na ? (
-                      <p className="mt-2 text-base text-muted-foreground">
-                        {node.applicability[key]?.reason}
-                      </p>
-                    ) : isSkeleton ? (
-                      <p className="mt-2 text-base text-muted-foreground">
-                        <Icon name="ph-dots-three-outline" /> {t.detail.skeletonNotice}
-                      </p>
-                    ) : (
-                      <ul className="mt-2 list-disc pl-5 text-base">
-                        {dim.items.map((item, i) => (
-                          // biome-ignore lint/suspicious/noArrayIndexKey: statik gosterim listesi
-                          <li key={`${key}-${i}`}>{item}</li>
-                        ))}
-                      </ul>
-                    )}
-                    {!na && dim?.notes && (
-                      <p className="mt-1 text-base text-muted-foreground">{dim.notes}</p>
-                    )}
-                    {!na && dim?.prompt && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-base text-muted-foreground">
-                          <Icon name="ph-sparkle" className="text-primary" /> {t.detail.aiPrompt}
-                        </summary>
-                        <div className="mt-1 flex items-start gap-2">
-                          <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
-                            {dim.prompt}
-                          </pre>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            aria-label={t.actions.copyPrompt}
-                            onClick={() => navigator.clipboard?.writeText(dim.prompt)}
-                          >
-                            <Icon name="ph-copy" />
-                          </Button>
-                        </div>
-                      </details>
-                    )}
-                  </Card>
-                );
-              })}
-            </Fragment>
-          );
+                  </details>
+                )}
+              </Card>
+            );
+          });
         })}
       </div>
     </section>
