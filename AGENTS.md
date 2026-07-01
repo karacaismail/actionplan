@@ -79,7 +79,7 @@ Bu kilitler ADR'lerle sabitlenmiştir; ajan bunları gevşetemez.
 - Tüm ürün frontend'i **headless**: Radix çekirdek + zor-erişilebilirlikte React Aria. Stillenmiş bileşen kiti ürüne giremez.
 - Ürün CSS = **SCSS + token**. Tailwind yalnızca araç (tooling) yüzeyinde serbest; ürün için değil.
 - Yasak paketler (global): `next`, `redux`, `@reduxjs/toolkit`, `flowbite`, `antd`, `@ant-design/pro-components`, `@mui/material`, `@chakra-ui/react`, `@mantine/core`, `react-markdown`, `markdown-it`, `supabase`.
-- Veri/form/durum ekosistemi: **TanStack** (Router/Query/Table) + RHF/Zod (veya TanStack Form). Backend kilidi: **Prisma + PostgreSQL**.
+- Veri/form/durum ekosistemi: **TanStack** (Router/Query/Table) + RHF/Zod (veya TanStack Form). Backend kilidi: **FastAPI + SQLAlchemy 2.0 / SQLModel + Alembic + PostgreSQL** (Prisma yasak — bkz. `core-contract-pack §1`, `adr-K1-kernel-kimlik`).
 
 ### 4.2 UI standardı kilidi
 - Yazı tipi **Roboto**; font-weight **≥ 300**; taban font boyutu **≥ 1rem**.

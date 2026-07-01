@@ -355,6 +355,22 @@ export const StandardRefsSchema = z.object({
   observabilityRef: z.string().default(""),
   releasePolicyRef: z.string().default(""),
   aiGovernanceRef: z.string().default(""),
+  i18nRef: z.string().default(""),
+  // Yeni standart bağları (opsiyonel, geriye uyumlu): eski JSON'da yoksa parse kırılmaz.
+  // Değer set edilirse check-standards-coverage bunu bir standarda çözmeyi zorlar.
+  g11nRef: z.string().optional(),
+  a11yRef: z.string().optional(),
+  ssoRef: z.string().optional(),
+  oidcRef: z.string().optional(),
+  mfaRef: z.string().optional(),
+  authzRef: z.string().optional(),
+  c13nRef: z.string().optional(),
+  dataNormalizationRef: z.string().optional(),
+  i14yRef: z.string().optional(),
+  c12nRef: z.string().optional(),
+  p13nRef: z.string().optional(),
+  edgeSecurityRef: z.string().optional(),
+  iacRef: z.string().optional(),
 });
 export type StandardRefs = z.infer<typeof StandardRefsSchema>;
 

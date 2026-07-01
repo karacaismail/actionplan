@@ -1,0 +1,85 @@
+{
+  "id": "i18n-standards",
+  "name": "Uluslararasılaştırma & Yerelleştirme Standardı (i18n/l10n)",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027", "adr-0026"],
+  "summary": "Global ürün için zorunlu çapraz-kesen standart: ICU MessageFormat çeviri, CLDR locale biçimleme, RTL, çevrilebilir DB alanları (i18n-text), Locale≠Jurisdiction≠Currency≠Tax≠Timezone≠Data-residency 6-eksen ortogonal çözümleme, çeviri iş akışı ve fallback. Bir app bu standarda uymadan enterprise-ready sayılmaz.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "i18n-message-format",
+      "rule": "Tüm kullanıcı-görünür metin bir çeviri anahtarıyla (ICU MessageFormat) verilir; kaynak kodda ham (hardcoded) kullanıcı metni yasaktır. Çoğul/cinsiyet kuralları ICU ile ifade edilir. Eksik anahtarda dil-geri-düşme (fallback) zinciri çalışır ve çıktıda ASLA ham anahtar gösterilmez.",
+      "rationale": "Ham metin çeviri sürecine giremez ve dile göre değişemez; ICU çoğul/cinsiyet kuralları olmadan doğru cümle kurulamaz.",
+      "severity": "must",
+      "check": "check-i18n (ham-string tarama + eksik-anahtar tarama) + review"
+    },
+    {
+      "id": "i18n-locale-formatting",
+      "rule": "Tarih/saat/sayı/para biçimleme locale-farkında ve CLDR (Unicode yerel-veri) tabanlıdır; sabit (hardcoded) format yasaktır (ör. 01.07.2026 ile 07/01/2026 farkı locale ile çözülür). Saat dilimi (timezone) her zaman açık taşınır; naive datetime yasaktır.",
+      "rationale": "Sabit format yanlış bölgede yanlış/yanıltıcı görünür; naive datetime çok-bölgede veri bozar.",
+      "severity": "must",
+      "check": "check-i18n (Intl/CLDR kullanımı; sabit-format tarama) + review"
+    },
+    {
+      "id": "i18n-rtl-support",
+      "rule": "Sağdan-sola diller (ar/he/fa) için tam düzen desteği zorunludur: mantıksal CSS (margin-inline-start/end, dir=auto), ayna-çevrilmiş ikon/akış, RTL görsel test. Yalnızca LTR varsayan sabit yerleşim yasaktır.",
+      "rationale": "RTL sonradan eklenmesi en pahalı i18n işidir; baştan mantıksal yerleşim gerektirir.",
+      "severity": "must",
+      "check": "check-i18n (logical-property lint) + RTL görsel snapshot testi"
+    },
+    {
+      "id": "i18n-translatable-fields",
+      "rule": "Veritabanında çok-dilli içerik (ürün adı, kategori, açıklama vb.) i18n-text alan tipiyle (locale→değer) tutulur; ArcheType hangi alanının çevrilebilir olduğunu AÇIKÇA beyan eder. Enum değeri ve etiket yerelleştirmesi alias zinciriyle yönetilir; tek-dil sabit metin kolonu global içerikte yasaktır.",
+      "rationale": "Tek-dil kolon global ürünü bloke eder; çevrilebilirlik beyanı olmadan hangi verinin çevrileceği belirsiz kalır.",
+      "severity": "must",
+      "check": "check-i18n (i18n-text beyanı) + archetype conformance testi"
+    },
+    {
+      "id": "i18n-jurisdiction-orthogonal",
+      "rule": "Locale, Jurisdiction, Currency, Tax, Timezone ve Data-residency BAĞIMSIZ (ortogonal) eksenlerdir ve k-jurisdiction (6-eksen resolver) ile çözülür; biri diğerinden türetilmez (ör. tr-TR locale, EUR para, DE vergi olabilir). Bölge/mevzuat farkı kodda değil politika/config katmanında ele alınır (codebase değişmez).",
+      "rationale": "Eksenleri birbirine bağlamak (locale=currency=tax varsaymak) çok-bölge ticareti ve mevzuat uyumunu kırar.",
+      "severity": "must",
+      "check": "check-i18n + jurisdiction conformance (eksen kombinasyonu çakışma testi)"
+    },
+    {
+      "id": "i18n-data-residency",
+      "rule": "Veri-ikamet (data residency) bir jurisdiction eksenidir: bölgeye bağlı veri, sorgu katmanında zorlanır (ör. TR verisi TR'de) ve failover başka bölgeye geçse bile residency kapısı korunur (KVKK/GDPR). Residency etiketsiz kişisel veri tablosu yasaktır.",
+      "rationale": "Uygulama-içi varsayım tek unutulan yolda mevzuat ihlali üretir; failover'da residency kaybı yasal risktir.",
+      "severity": "must",
+      "check": "residency conformance testi (bölge sızıntısı yok) + review"
+    },
+    {
+      "id": "i18n-translation-workflow-and-locale-resolution",
+      "rule": "Çeviri iş akışı taslak→inceleme→yayın kademelidir; AI çeviri ÖNERİR, insan onaylar, makine-çevirisi doğrudan yayınlanmaz. Etkin locale çözümleme sırası KİLİTLİDİR: kullanıcı-tercihi ?? tenant-varsayılanı ?? Accept-Language ?? sistem-varsayılanı; her istek bu locale bağlamını taşır.",
+      "rationale": "Onaysız makine-çevirisi marka/hukuk riskidir; belirsiz locale çözümleme tutarsız deneyim üretir.",
+      "severity": "must",
+      "check": "check-i18n (locale-context taşıma) + çeviri onay akışı review"
+    }
+  ],
+  "banned": [
+    "hardcoded-user-string",
+    "fixed-date-number-format",
+    "naive-datetime",
+    "missing-rtl-support",
+    "raw-translation-key-shown",
+    "machine-translation-direct-publish",
+    "residency-unlabeled-personal-data",
+    "single-language-content-column"
+  ],
+  "allowed": [
+    "icu-messageformat",
+    "cldr-formatting",
+    "i18n-text-field",
+    "jurisdiction-6-axis-resolver",
+    "translation-workflow",
+    "locale-fallback-chain"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/i18n-standard.md",
+    "BCP 47",
+    "Unicode CLDR",
+    "ICU MessageFormat"
+  ]
+}

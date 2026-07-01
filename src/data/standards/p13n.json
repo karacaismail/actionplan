@@ -1,0 +1,64 @@
+{
+  "id": "p13n",
+  "name": "Kişiselleştirme Sözleşmesi Standardı (p13n)",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Kullanıcı-seviyesi kişiselleştirme (personalization): her kullanıcı kendi deneyimini yalnız kendisi için ayarlar. Kapsam: saved view (kayıtlı filtre/sıralama/kolon; user-scoped, sızmaz), dashboard düzeni (widget seçimi/boyutu), per-user preference (dil, sayfa-boyu, yoğunluk). Kullanıcı tercihi tenant varsayılanını (kilit yoksa) system→tenant→user sırasında ezer. TEMEL INVARIANT: görünürlük ≠ yetki — kişiselleştirme yetki/yetenek sınırını genişletmez; kayıtlı görünüm/dashboard yalnız kullanıcının PDP-yetkili ve tenant-capability'li verisini gösterir, yetki-bypass aracı olamaz.",
+  "appliesTo": ["product-ui", "platform-kernel", "user-preferences"],
+  "rules": [
+    {
+      "id": "p13n-user-scoped-no-leak",
+      "rule": "p13n bir user-scoped karardır: ayarı kullanıcının kendisi yapar, yalnız o kullanıcıyı etkiler ve `user_preferences` / `saved_views` / `user_dashboard` tablolarında saklanır. Bir kullanıcının kişisel tercihi/görünümü asla başka kullanıcıya sızmaz — veri hem kullanıcı hem tenant düzeyinde izole edilir (`data-api-contract` RLS). Bir kullanıcı-tercihini tüm tenant'a dağıtmak (c12n ile karıştırmak) YASAK — tenant-geneli ayar `c12n` standardının işidir; tenant admin değil kullanıcının kendisi ayarlar.",
+      "rationale": "p13n = kullanıcı ekseni; c12n = tenant ekseni. Ayrım bozulursa bir kullanıcının kişisel tercihi başka kullanıcıyı etkiler ya da kullanıcı-özel veri sızar. Kullanıcı + tenant çift izolasyonu sızıntıyı engeller.",
+      "severity": "may",
+      "check": "izolasyon e2e testi (A kullanıcı B'nin tercihini/görünümünü göremez) + RLS review"
+    },
+    {
+      "id": "p13n-preference-overrides-within-lock",
+      "rule": "Kullanıcı tercihi (dil, sayfa-boyu, yoğunluk, varsayılan görünüm) `user_preferences` olarak saklanır ve §katman sırasına (system default → tenant → user) uyar: kullanıcı tercihi tenant varsayılanını izin verilen sınırda ezer, ama tenant tercihi `locked` işaretlediyse kullanıcı ONU EZEMEZ. Dil tercihi p13n'de kullanıcı seviyesinde tutulur ama biçimleme/çeviri `i18n-standards`'ın işidir (locale resolution: tenant-default → user-preference). Kilitli bir tenant ayarını kullanıcı tercihiyle geçersiz kılmak YASAK.",
+      "rationale": "Katman sırası kullanıcıya esneklik verirken tenant'a sınır koyma (kilit) gücü bırakır; kilit ihlali tenant'ın zorunlu kıldığı bir ayarı deler. i18n devri çift-tanımı önler.",
+      "severity": "may",
+      "check": "birim testi (kullanıcı tercihi tenant varsayılanını ezer; kilitli ayar ezilemez) + review"
+    },
+    {
+      "id": "p13n-saved-view-persistent-private",
+      "rule": "Saved view: kullanıcı bir liste/tablo yüzeyinde filtre + sıralama + kolon-seçimi + gruplama kombinasyonunu adlandırıp `saved_views` olarak kaydeder; görünüm YALNIZ o kullanıcıya aittir ve başka kullanıcıya sızmaz (user-scoped + tenant izolasyonu). Görünümler kalıcıdır (oturumlar arası korunur). Bir görünümü *paylaşmak* ayrı ve açık bir aksiyondur (paylaşım = kopya veya tenant-seviyesi görünüm önerisi); varsayılan olarak saved view özeldir. Bir saved view'i varsayılan-paylaşımlı yapmak veya kullanıcı onayı olmadan başka kullanıcıya dağıtmak YASAK.",
+      "rationale": "Kalıcı + özel saved view kullanıcının iş bağlamını oturumlar arası korur; varsayılan-özel ilke istenmeden paylaşımı önler. Açık paylaşım aksiyonu niyeti belirginleştirir.",
+      "severity": "may",
+      "check": "entegrasyon testi (saved view kalıcı + varsayılan özel; paylaşım ayrı aksiyon) + review"
+    },
+    {
+      "id": "p13n-visibility-not-authorization",
+      "rule": "TEMEL INVARIANT — görünürlük ≠ yetki: kişiselleştirme yetki/yetenek sınırını GENİŞLETMEZ. Bir saved view/dashboard yalnız kullanıcının o an sahip olduğu yetkiyle (`k-policy-pdp`) ve tenant'ın capability'siyle (`k-capability`) tutarlı çözülür. Kayıtlı bir filtre kullanıcının artık göremediği bir alana atıfsa, o alan görünümden düşürülür (kayıtlı görünüm yetki-bypass aracı olamaz); dashboard widget'ı yalnız kullanıcının PDP-yetkili ve tenant-capability'li verisini gösterebilir. Bir kişiselleştirme ayarını güvenlik-kapısı yerine koymak, ya da kayıtlı görünümle yetki-dışı veriye erişmek YASAK — erişim PDP'de, yetenek Capability'de, izolasyon RLS'te enforce edilir.",
+      "rationale": "Frontend'de bir şeyin görünür olması onun yetkili olduğu anlamına gelmez. Kayıtlı görünüm yetki anlık-görüntüsü değil canlı-yetkiyle çözülmezse yetki-değişiminde bypass doğar; kişiselleştirme sunum katmanıdır, güvenlik değildir.",
+      "severity": "may",
+      "check": "güvenlik testi (yetki-dışı alana atıf görünümden düşürülür; dashboard yetki/yetenek sınırını genişletmez) + review"
+    }
+  ],
+  "banned": [
+    "cross-user-p13n-sizma",
+    "tenant-geneli-p13n-ayari",
+    "kilitli-tenant-ayarini-ezme",
+    "varsayilan-paylasimli-saved-view",
+    "yetki-bypass-saved-view",
+    "dashboard-yetki-genisletme",
+    "gorunurluk-guvenlik-yerine"
+  ],
+  "allowed": [
+    "user-preferences",
+    "saved-views",
+    "user-dashboard",
+    "kalici-ozel-saved-view",
+    "acik-paylasim-aksiyonu",
+    "k-policy-pdp-yetki-cozumu",
+    "k-capability-veri-siniri",
+    "i18n-standards-locale"
+  ],
+  "references": [
+    "docs/standards/09-customization-personalization-standard.md",
+    "docs/capability-entitlement-contract.md",
+    "docs/mode-profile-contract.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

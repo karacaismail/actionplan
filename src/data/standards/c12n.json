@@ -1,0 +1,87 @@
+{
+  "id": "c12n",
+  "name": "Özelleştirme Sözleşmesi Standardı (c12n)",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Tenant-seviyesi özelleştirme (customization): tenant admin bir kez ayarlar, tüm tenant kullanıcılarını etkiler. Kapsam: tema token (beyaz-listeli, WCAG AA korumalı), layout/yoğunluk tercihi, feature flag (Capability entitlement'ı ÖNCE doğrulanır), field visibility (sunum kararı; yetki-gizleme PDP'de ayrı enforce edilir), configurable module (config-driven; if/else yasak, veri yıkılmaz). Efektif değer system-default → tenant → user sırasıyla deterministik çözülür. c12n Capability/Mode-Profile/PDP primitiflerini TÜKETİR, yeniden tanımlamaz.",
+  "appliesTo": ["product-ui", "platform-kernel", "tenant-settings"],
+  "rules": [
+    {
+      "id": "c12n-tenant-scoped",
+      "rule": "c12n bir tenant-scoped karardır: ayarı tenant admin yapar, tüm tenant kullanıcılarını etkiler ve `tenant_settings` / `feature_flags` / `tenant_theme` tablolarında saklanır. Bir tenant ayarı asla kullanıcı-bazında ayrışmaz (yönetici değiştirdiğinde herkes etkilenir); bir tenant başka tenant'ın ayarını göremez/değiştiremez (`data-api-contract` RLS ile izole). Tenant ayarını kullanıcı-özel bir tercih gibi kişi-bazına dağıtmak (p13n ile karıştırmak) YASAK — kullanıcı-özel ayar `p13n` standardının işidir.",
+      "rationale": "c12n = tenant ekseni; p13n = kullanıcı ekseni. Ayrım bozulursa bir kullanıcının ayarı başkasını etkiler ya da tenant ayarı kullanıcı-bazında sızar. Tenant izolasyonu RLS ile ikinci bariyerde garanti edilir.",
+      "severity": "should",
+      "check": "izolasyon entegrasyon testi (A tenant B'nin ayarını göremez) + RLS review"
+    },
+    {
+      "id": "c12n-layer-resolution",
+      "rule": "Efektif değer sabit ve deterministik bir katman sırasıyla çözülür: system default → tenant (c12n) → user (p13n); sonraki katman öncekini yalnız izin verilen sınırlar içinde ezer. Tenant bir tercihi `locked` işaretlerse kullanıcı onu ezemez (kilit c12n'in p13n üzerindeki üstünlüğüdür ve bir tenant kararıdır). Kararın 'neden bu değer?' izi (hangi katmandan geldiği) hata-ayıklama için çözülebilir olmalıdır. Katman sırasını atlayarak (ör. kullanıcı tercihini tenant kilidinin üstüne yazmak) çözüm YASAK.",
+      "rationale": "Sabit katman sırası tercih ve feature-flag çözümünü belirleyici kılar; kilit mekanizması tenant'a p13n'i sınırlama gücü verir. İzlenebilir katman kaynağı debug'ı mümkün kılar.",
+      "severity": "should",
+      "check": "birim testi (system→tenant→user sırası + locked tenant ayarı kullanıcı tarafından ezilemez) + review"
+    },
+    {
+      "id": "c12n-feature-flag-consumes-capability",
+      "rule": "Feature flag bir yeteneği açıp kapatmadan ÖNCE, o yeteneğin tenant için entitlement'ı (plan/grant/trial) olup olmadığını `k-capability` (Capability/Entitlement) primitifine sorar. Capability = 'bu tenant RFQ *kullanabilir mi?*' (lisans/yetenek ekseni); feature flag = 'kullanabildiği yeteneği şu an *açık mı tutuyor?*' (özelleştirme ekseni). Entitlement yoksa flag açılamaz. c12n Capability'yi yeniden tanımlamaz, yalnız ona danışır; app-özel `if feature_x_enabled` bayrağı icat etmek ve `is_enabled` kapısını atlamak YASAK. Capability RBAC ile de karıştırılmaz (RBAC = rol→izin, ayrı eksen).",
+      "rationale": "Yetenek hakkı (entitlement) tek kaynakta (Capability) çözülür; her app kendi flag'ini icat ederse hata yüzeyi tekrarlanır. Entitlement'sız açılan flag lisans/yetenek sınırını deler.",
+      "severity": "should",
+      "check": "birim+entegrasyon testi (entitlement yoksa flag açılamaz; capability→tenant→user sırası) + import taraması (app-özel flag yasağı)"
+    },
+    {
+      "id": "c12n-theme-token-whitelist",
+      "rule": "Tenant teması yalnız `design-system` standardının izin verdiği beyaz-listelenmiş ve doğrulanan tasarım-token'ları (renk paleti, tipografi ölçeği, radius, spacing) üzerinden ayarlanır; token'lar `tenant_theme` olarak saklanır ve runtime'da CSS custom property olarak enjekte edilir. Serbest CSS/stil enjeksiyonu YASAK (güvenlik ve tutarlılık riski). Kontrast invariantı korunur: tenant'ın seçtiği renk kombinasyonu WCAG 2.2 AA kontrast eşiğini geçmelidir; geçmeyen tema reddedilir (a11y tenant tercihine feda edilmez).",
+      "rationale": "Beyaz-liste + doğrulama serbest CSS enjeksiyonunu ve tema drift'ini engeller; WCAG AA invariantı erişilebilirliği tenant özelleştirmesine kurban etmez.",
+      "severity": "should",
+      "check": "birim testi (beyaz-liste dışı token reddedilir) + kontrast testi (AA-altı tema reddedilir) + a11y review"
+    },
+    {
+      "id": "c12n-configurable-module-config-driven",
+      "rule": "Tenant, hangi modüllerin aktif olduğunu ve temel yerleşim/yoğunluk tercihini `tenant_settings` üzerinden ayarlar; aktif modül seti ÖNCE `k-capability` entitlement'ıyla, SONRA tenant flag'iyle çözülür (yetkisi olmayan modül açılamaz). Yapılandırılabilir modül konfigürasyonla açılıp kapanır — runtime navigasyon/menü tenant konfigürasyonundan türetilir; kodda `if module_x_enabled` dallanması YASAK (Mode-Profile'ın config-driven ilkesiyle aynı). Modül kapatılınca canlı verisi silinmez, yalnız arayüzden gizlenir; yeniden açılınca veri korunmuş gelir.",
+      "rationale": "Config-driven modül binlerce koşul dalını tek konfigürasyona indirger; if/else dallanması bakımı imkânsızlaştırır. Veri-koruyan kapatma geri-alınabilirliği garanti eder.",
+      "severity": "should",
+      "check": "entegrasyon testi (modül kapatınca veri silinmez; runtime navigasyon config'ten türer) + statik analiz (if module dallanması yasak)"
+    },
+    {
+      "id": "c12n-mode-profile-read-only",
+      "rule": "İş-modeli (B2B/B2C/…) bileşimi bir özelleştirme DEĞİL `k-mode` (Mode-Profile) primitifinin işidir; c12n onun aktif capability setini yalnız OKUR (`effective_capabilities`) ama mod geçişini (`preview→validate→publish→rollback`) kendisi yapmaz. 'Tenant temasını değiştir' c12n'dir; 'tenant'ı B2C'den B2B'ye geçir' Mode-Profile'dır. c12n Mode-Profile'ı taklit eden ikinci bir mod-anahtarı üretmek veya `if b2b else` dallanması ile mod farkını gömmek YASAK.",
+      "rationale": "İş-modeli geçişi validasyon + insan onayı + rollback gerektiren kontrollü bir işlemdir; c12n bunu taklit ederse geri-alınamaz, veri-yıkan bir ikinci mod-anahtarı doğar. Tek kaynak Mode-Profile'dır.",
+      "severity": "should",
+      "check": "entegrasyon testi (c12n aktif capability setini okur, mod geçişi tetiklemez) + statik analiz (ikinci mod-anahtarı / if b2b yasağı)"
+    },
+    {
+      "id": "c12n-field-visibility-not-security",
+      "rule": "Field visibility bir SUNUM kararıdır (UX sadeleştirme), güvenlik değildir: tenant admin form/liste/detay yüzeylerinde hangi *opsiyonel* alanların gösterileceğini `tenant_settings` görünürlük kurallarıyla ayarlar ve kural `k-schema` alan-tanımına referans verir (alanlar koda gömülü değildir). Kritik ayrım: 'bu alan bu tenant'ta gösterilmesin' (c12n, UX) ≠ 'bu kullanıcı bu alanı görme yetkisine sahip değil' (`k-policy-pdp`, güvenlik) — ikincisi backend'de enforce edilir ve alan API yanıtından çıkarılır. Yetki-tabanlı gizlemeyi yalnız frontend'de yapıp API'yi açık bırakmak YASAK; zorunlu/sistem alanları (`id`, audit) gizlenemez.",
+      "rationale": "Görünürlük ≠ yetki: frontend gizleme güvenlik değildir. Yetki-gizlemesi PDP'de enforce edilmezse yetkisiz kullanıcı alanı API'den okur. Sistem alanlarının gizlenememesi denetlenebilirliği korur.",
+      "severity": "should",
+      "check": "güvenlik testi (yetkisiz alan API yanıtından çıkarılır, yalnız gizlenmez) + review"
+    }
+  ],
+  "banned": [
+    "app-ozel-feature-flag",
+    "entitlement-bypass-flag",
+    "serbest-css-enjeksiyonu",
+    "wcag-alti-tenant-temasi",
+    "if-module-enabled-dallanma",
+    "ikinci-mod-anahtari",
+    "if-b2b-else-gomme",
+    "frontend-only-field-gate",
+    "user-scoped-c12n-ayari"
+  ],
+  "allowed": [
+    "tenant-settings",
+    "feature-flags",
+    "tenant-theme",
+    "beyaz-listeli-tema-token",
+    "config-driven-navigasyon",
+    "k-capability-tuketimi",
+    "k-mode-effective-capabilities-okuma",
+    "k-policy-pdp-yetki-gizleme"
+  ],
+  "references": [
+    "docs/standards/09-customization-personalization-standard.md",
+    "docs/capability-entitlement-contract.md",
+    "docs/mode-profile-contract.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

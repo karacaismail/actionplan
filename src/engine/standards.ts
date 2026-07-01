@@ -4,6 +4,7 @@ import codingStandards from "@/data/standards/coding-standards.json";
 import dataApiContract from "@/data/standards/data-api-contract.json";
 import dependencyPolicy from "@/data/standards/dependency-policy.json";
 import designSystem from "@/data/standards/design-system.json";
+import i18nStandards from "@/data/standards/i18n-standards.json";
 import observability from "@/data/standards/observability.json";
 import qualityGates from "@/data/standards/quality-gates.json";
 import releaseVersioning from "@/data/standards/release-versioning.json";
@@ -24,7 +25,7 @@ import {
 } from "@/schemas";
 
 /**
- * Standards motoru (ADR-0027) — 14 tek-kaynak sözleşmeyi yükler, boyut aile gruplaması ve
+ * Standards motoru (ADR-0027) — 15 tek-kaynak sözleşmeyi yükler, boyut aile gruplaması ve
  * düğüm standardRefs kapsamını türetir. UI (StandardsView + TaskDetailView) bunu okur.
  */
 const RAW = [
@@ -33,6 +34,7 @@ const RAW = [
   shortCode,
   qualityGates,
   designSystem,
+  i18nStandards,
   uiComponents,
   uxInteraction,
   dataApiContract,

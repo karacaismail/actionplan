@@ -1,0 +1,573 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "k-storage",
+  "wbsCode": "3.14",
+  "level": "module",
+  "title": "Object Storage / DAM — Dijital Varlık Sözleşmesi",
+  "slug": "k-storage",
+  "summary": "Her binary/medya varlığı (görsel/video/PDF/3B) tek kernel soyutlamasında. digital_asset bir kez tanımlanır; fiziksel binary sağlayıcı-agnostik object storage'da (S3/MinIO/Spaces/Wasabi/B2/GCS) tutulur, türevleri (asset_rendition) veri olarak yönetilir, erişim süreli imzalı URL veya CDN ile verilir. App doğrudan boto3 çağırmaz; storage istemcisi soyutlanır. PIM Faz 8 DAM/medya kernel karşılığı.",
+  "parentId": "app-layer0",
+  "order": 94,
+  "icon": "ph-images-square",
+  "tags": [
+    "storage",
+    "dam",
+    "object-storage",
+    "s3",
+    "minio",
+    "medya",
+    "pre-signed",
+    "cdn",
+    "kernel",
+    "layer0"
+  ],
+  "dependsOn": [
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [
+    "k-archetype-storage",
+    "k-tenancy",
+    "k-policy-pdp",
+    "k-schema",
+    "k-capability"
+  ],
+  "refs": [
+    "yönerge: docs/k-storage-dam-directive.md",
+    "PIM-v2: docs/reference/PIM-v2-Gereksinim-Analizi.md §Faz 8"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 21,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Object Storage / DAM — Dijital Varlık Sözleşmesi kapsamı + değer nesnesi paydaş onayı",
+        "Kabul kriterleri taslağı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "değer nesnesi için test stratejisi (unit/e2e/a11y)",
+        "Testing-loop (maks 6) tanımı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "değer nesnesi Zod sözleşmesi + expand-contract göç",
+        "tip güvenliği veri sınıflandırması"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Object Storage / DAM — Dijital Varlık Sözleşmesi engine/UI ayrımı",
+        "Lint/tip kapıları yeşil"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "değer nesnesi e2e + axe AAA 0 ihlal",
+        "Kapsam eşiği"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Object Storage / DAM — Dijital Varlık Sözleşmesi DoD + kanıt (evidence)"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Object Storage / DAM — Dijital Varlık Sözleşmesi CI→Pages dağıtımı",
+        "değer nesnesi runbook + geri-alma"
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": "Layer 0 — Atomik Tipler",
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": null,
+    "baselineEnd": null
+  },
+  "deliverables": [
+    "digital_asset / asset_rendition sözleşmesi (docs/k-storage-dam-directive.md referansı)",
+    "Sağlayıcı-agnostik boto3 StorageBackend soyutlaması (S3/MinIO/Spaces/Wasabi/B2/GCS) + multipart + pre-signed URL + CDN",
+    "EXIF/IPTC/XMP metadata çıkarımı + tenant-scoped bucket/prefix izolasyon testleri"
+  ],
+  "acceptanceCriteria": [
+    "Object Storage / DAM — Dijital Varlık Sözleşmesi için değer nesnesi işlevsel kabulü karşılandı",
+    "tip güvenliği + AAA erişilebilirlik kapıları geçti"
+  ],
+  "risks": [
+    {
+      "id": "r-k-storage-1",
+      "desc": "değer nesnesi sözleşmesi/şeması üst katmanla uyumsuzlaşabilir",
+      "severity": "medium",
+      "mitigation": "Sözleşme testleri + sürümleme (expand-contract)"
+    },
+    {
+      "id": "r-k-storage-2",
+      "desc": "doğrulama maliyeti ölçek altında yavaşlayabilir",
+      "severity": "low",
+      "mitigation": "İndeks + önbellek + yük testi"
+    }
+  ],
+  "rollback": "Storage sözleşmesi expand-contract; kapatılırsa varlık erişimi salt-okunur imzalı URL'ye düşer (yeni yükleme durur, mevcut binary korunur, non-prod). Metadata ve binary yıkılmaz; object storage'daki nesneler retention politikasınca kalır.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-k-storage-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Object Storage / DAM — Dijital Varlık Sözleşmesi tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Object Storage / DAM — Dijital Varlık Sözleşmesi blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "k-storage"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "k-storage"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "k-storage"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-storage-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Object Storage / DAM — Dijital Varlık Sözleşmesi AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "digital_asset çekirdek kaydı bir binary/medya varlığını (image/video/document/model3d) tek kez tanımlar; provider/bucket/object_key/checksum alanlarını taşır",
+        "asset_rendition aynı orijinalden çoklu türevi (thumbnail, webp_hero, mp4_720p, kanal-özel varyant) veri olarak bağlar; spec_ref üreten kanal spesifikasyonunu işaret eder",
+        "Erişim süreli pre-signed URL (PUT/GET) veya cdn_enabled ile CloudFront/Fastly origin üzerinden verilir; visibility private/signed/public durum makinesiyle yönetilir",
+        "Varlık yaşam döngüsü status enum'u ile uploading→ready→archived→quarantined akar; fiziksel silme yok, soft-delete + onaylı retention işi kullanılır"
+      ],
+      "notes": "digital_asset ve asset_rendition sözleşmesi PIM Faz 8 DAM/medya kernel karşılığıdır; binary object storage'da, DB'de yalnız referans + metadata tutulur.",
+      "prompt": "k-storage digital_asset/asset_rendition özellik sınırını kapsa: varlık kaydı, çoklu türev, pre-signed URL, CDN ve görünürlük durum makinesini yönergedeki alan adlarıyla tanımla. çıktı: net işlevsel sınır + hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "digital_asset ve asset_rendition tablolarında tenant_id RLS ikinci bariyer: USING (tenant_id = current_setting('app.current_tenant')::uuid); bağlam yoksa fail-closed reddedilir",
+        "object_key her zaman tenant_id/ prefix'iyle başlar; cross-tenant anahtar imzalama girişimi TenantViolationError fırlatır ve audit'lenir (≥10 negatif test)",
+        "Pre-signed URL tenant sınırını genişletemez: imzalanan anahtar aktif tenant prefix'inde olmalı, süre config'li kısa TTL, kapsam tek nesne",
+        "EXIF GPS/konum metadata varsayılan strip'lenir (PII gizlilik); her upload/delete/visibility-değişimi AuditLogger.log() ile actor + resource=digital_asset append-only yazılır"
+      ],
+      "notes": "İzolasyon iki katmanlı: object_key prefix (fiziksel) + PostgreSQL RLS (metadata). Pre-signed URL üretimi PDP erişim kararından sonra çağrılır; k-storage yalnız URL ömrünü/kapsamını uygular.",
+      "prompt": "k-storage güvenlik yüzeyini kapsa: tenant-scoped bucket/prefix izolasyonu, cross-tenant imzalama reddi, RLS, GPS-strip ve append-only audit. güvenlik sınırı: cross-tenant object_key imzalama yasak. çıktı: fail-closed davranış + negatif testler.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tek StorageBackend arayüzü (put/get/delete/presign/multipart) boto3 S3-uyumlu istemci üstünde; S3/MinIO/Spaces/Wasabi/B2 aynı istemci, GCS ayrı adaptör aynı arayüzde",
+        "Doğrudan boto3.client('s3') çağrısı app'te yasak; erişim yalnız sözleşmeli StorageBackend servisinden geçer, provider config'ten seçilir (kod değişmeden)",
+        "digital_asset/asset_rendition tipleri katı Zod/Strawberry sözleşmesiyle üretilir; hardcoded provider/bucket referansı ve serbest storage erişimi elenir",
+        "Ağır varyant üretimi ve EXIF/IPTC/XMP çıkarımı senkron istek yolundan Celery/ARQ worker'a taşınır; StorageBackend yolunda ölü kod elemesi + lint kapısı"
+      ],
+      "notes": "Sağlayıcı-agnostik soyutlama tek arayüzde toplanır; app kodu backend'e bağımlı kalmaz. Ağır iş (varyant, metadata) worker'a offload edilerek istek yolu ince tutulur.",
+      "prompt": "k-storage kod optimizasyonunu kapsa: StorageBackend soyutlaması, doğrudan boto3 yasağı, Zod sözleşmesi ve worker-offload. kısıt: app boto3'ü doğrudan çağıramaz. çıktı: sağlayıcı-agnostik, test-önce üretilen çekirdek.",
+      "provenance": "template"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Object storage kimlik bilgileri (S3/MinIO access key) secret rotasyonuna tabi; StorageBackend en az ayrıcalıkla (yalnız gerekli bucket prefix'i) çalışır",
+        "Pre-signed URL TTL kısa tutulur ve tek-nesne kapsamlıdır; süre dolunca erişim reddedilir, uzun-ömürlü/public varsayılan URL üretilmez",
+        "Yarım kalan multipart upload oturumu (upload_id) retention işiyle temizlenir; orphan multipart maliyet ve saldırı yüzeyi bırakmaz",
+        "boto3/aioboto3 bağımlılıkları CVE taramasından geçer; visibility=public geçişi yalnız approval_ref (insan onayı) ile, veri sızıntısı riski nedeniyle"
+      ],
+      "notes": "Güvenlik sertleştirme storage'a özgü: kısa-TTL imzalı URL, tenant-prefix'e sınırlı en-az-ayrıcalık, orphan multipart temizliği ve public geçişte insan onayı.",
+      "prompt": "k-storage güvenlik optimizasyonunu kapsa: secret rotasyonu, kısa-TTL pre-signed URL, orphan multipart temizliği ve public-geçiş onayı. güvenlik sınırı: public varsayılan yasak, TTL kısa. çıktı: sızıntısız erişim yüzeyi.",
+      "provenance": "template"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tarayıcı pre-signed PUT URL ile binary'yi doğrudan object storage'a yükler; backend proxy'lemez, büyük dosya backend'i tıkamaz",
+        "Büyük binary boto3 senkron çağrıları run_in_executor/aioboto3 ile async offload edilir; event loop büyük dosya isteğinde bloklanmaz (KS-13)",
+        "size_bytes eşiği üstündeki dosyalar multipart oturumuyla parçalı yüklenir/birleşir; checksum (SHA-256/ETag) ile dedup ve bütünlük doğrulama",
+        "cdn_enabled varlıklarda origin object storage, dağıtım CloudFront/Fastly; içerik değişiminde path-bazlı invalidation ile tekrar-indirme azaltılır"
+      ],
+      "notes": "Performans stratejisi I/O-yoğun: doğrudan-yükleme, async offload, multipart ve CDN. Ağır CPU işi (transcode/resize) k-storage dışında image_variants worker'ında kalır.",
+      "prompt": "k-storage performans yüzeyini kapsa: doğrudan pre-signed yükleme, async I/O offload, multipart eşiği ve CDN invalidation. kısıt: ağır iş worker'da, istek yolu bloklanmaz. çıktı: büyük dosya isteğini bloklamayan yol.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-storage mobil medya galerisini kapsa: 320px+ duyarlı, ≥44px dokunma hedefi, düşük-boyut rendition servisi ve pre-signed yükleme ilerlemesi. kısıt: hardcoded provider yok. çıktı: mobilde dayanıklı yükleme/önizleme.",
+      "provenance": "template"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-storage medya galerisi erişilebilirliğini kapsa: zorunlu alt-text (IPTC ön-dolu), klavye gezinme, kontrast ve durum bildirimlerini metinle. kısıt: axe critical=0. çıktı: AA-taban erişilebilir galeri.",
+      "provenance": "template"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "StorageBackend servisi ve metadata API'si Docker Swarm/Kubernetes'te liveness/readiness probe + kaynak limiti ile koşar; object storage endpoint config ile enjekte edilir",
+        "Provider (S3/MinIO/Spaces/Wasabi/B2/GCS) ve bucket bilgisi ortam config'inden gelir; aynı imaj yalnız config değişimiyle farklı sağlayıcıya dağıtılır",
+        "Alembic expand-contract migration ile digital_asset/asset_rendition şeması ilerler; alembic downgrade -1 veri kaybetmeden CI'da çalışır (KS-11)",
+        "Self-host MinIO veya yönetilen S3 seçilebilir; CDN origin (CloudFront/Fastly) ve invalidation dağıtım katmanında yapılandırılır, secret'lar rotasyona tabi"
+      ],
+      "notes": "Dağıtım sağlayıcı-agnostiktir: aynı imaj S3/MinIO/GCS'e config ile bağlanır. Migration downgrade CI kapısı ve probe'lar dayanıklılığı garanti eder.",
+      "prompt": "k-storage dağıtımını kapsa: provider/bucket config-enjeksiyonu, probe'lar, Alembic expand-contract + downgrade ve CDN origin kurulumu. kısıt: kod değişmeden provider değişir. çıktı: config-driven, geri-alınabilir dağıtım.",
+      "provenance": "template"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-storage-ai-app-module-deny, ruleset-override-deny)",
+        "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
+        "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
+        "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile digital_asset/asset_rendition şeması güvenli göç eder"
+      ],
+      "notes": "ECA kuralları AI-güvenlik invariantını backend'de sabitler: app/module üretim ve ruleset override deny, yüksek-risk karantina, zincir döngü-kırıcı (maks 6).",
+      "prompt": "k-storage ECA kurallarını kapsa: AI app/module deny, ruleset-override deny, risk≥80 karantina ve maxChainDepth=6 döngü kırıcı. güvenlik sınırı: ruleset backend-only, override yok. çıktı: deterministik, idempotent kural zinciri.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI yalnız AssetJobDraft önerir (eksik varyant, orphan medya, kalitesiz görsel); doğrudan uygulayamaz, app/module üretemez/güncelleyemez, yalnız changeset önerir",
+        "AI IPTC anahtar kelime/alt-text önerir (draft); ham yazamaz — insan onaylar; approval_ref olmadan kalıcı silme ApprovalRequiredError fırlatır",
+        "AI visibility=public'e tek başına çeviremez (veri sızıntısı riski); provider/bucket politikası autonomy=none, storage backend kararını AI değiştiremez",
+        "sub_prompt güvenilmez girdi kabul edilir; ruleset override/disable denemesi anında deny; kill-switch tetiklenince AI varlık işleri durur"
+      ],
+      "notes": "AI dört-aktör modelinde 'önerir', insan 'onaylar', motor 'uygular'. Storage'a özgü kritik sınır: public-yapma ve kalıcı-silme insan onayı ister; provider kararı AI'a kapalı.",
+      "prompt": "k-storage AI ajan davranışını kapsa: draft-only varlık işi önerisi, approval_ref'siz silme/public yasağı, provider-kararı autonomy=none ve kill-switch. güvenlik sınırı: sub_prompt güvenilmez. çıktı: onaysız prod-write yolu yok.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Sağlayıcı-agnostik entegrasyon: aynı kod S3 ve MinIO backend'e put/get yapıyor (yalnız config farkı); multipart eşik-üstü dosya parçalı yüklenip birleşiyor",
+        "Tenant izolasyonu negatif testi: A tenant B'nin object_key'ini imzalayamıyor (≥10 negatif case); pre-signed URL süre dolunca reddediliyor",
+        "Metadata birim testi: EXIF/IPTC/XMP çıkarılıyor ve GPS strip'leniyor; rendition entegrasyonu bir asset'e çoklu türev bağlanıp kanal-özel varyant çözülüyor",
+        "Audit append-only korunuyor; alembic downgrade -1 veri kaybetmeden çalışıyor; her Strawberry resolver permission_classes taşıyor (contract testi)"
+      ],
+      "notes": "Test stratejisi yönerge §12'deki 9 senaryoyu kapsar, test-önce (kırmızı→yeşil) yazılır; check-core-contract (tenant guard, resolver koruması, audit, indeks) yeşil olmalı.",
+      "prompt": "k-storage test kapsamını kapsa: sağlayıcı-agnostik put/get, multipart, ≥10 cross-tenant negatif case, EXIF/GPS-strip ve downgrade. kısıt: test-önce kırmızı→yeşil. çıktı: 9 senaryo yeşil + contract kapısı.",
+      "provenance": "template"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP Top 10:2025 A01 Broken Access Control: cross-tenant object_key imzalama reddi + PDP erişim kararı + tenant-prefix izolasyonu ile kapatılır",
+        "A08 Software/Data Integrity: checksum (SHA-256/ETag) ile binary bütünlüğü doğrulanır; audit append-only, kurcalanamaz karar-logu tutulur",
+        "A02 Cryptographic Failures: pre-signed URL kısa-TTL imzalı, secret rotasyonu; A05 Misconfiguration: varsayılan private/signed, public opt-in + audit",
+        "Hata formatı {code, message, trace_id, details}; get_logger() kullanılır, print() yasak; sağlayıcı-özel API sözleşmeye sızdırılmaz (S3-uyumlu alt küme)"
+      ],
+      "notes": "OWASP haritalaması storage'a özgü riskleri hedefler: erişim kontrolü (A01), bütünlük (A08), kripto/imzalı URL (A02), yanlış-yapılandırma (A05, public varsayılan yasağı).",
+      "prompt": "k-storage OWASP yüzeyini kapsa: A01 cross-tenant imzalama reddi, A08 checksum bütünlüğü, A02 kısa-TTL imzalı URL ve A05 private-varsayılan. güvenlik sınırı: public opt-in + audit. çıktı: standart-uyumlu erişim.",
+      "provenance": "template"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "k-storage dependsOn=k-tenancy: tenant-kapsamlı bucket/prefix ve RLS hazır olmadan varlık yazılamaz (bir varlık kiracısız var olamaz)",
+        "image_variants işi (30+ pazaryeri spec, resize/crop/WebP) görsel işlemeyi yapar ve sonucu k-storage'a asset_rendition olarak yazar; storage üretmez, saklar/servis eder",
+        "ArcheType'lar kendi medya tablosunu açmaz; bir görsele digital_asset.id + rendition_kind ile referans verir (gömülü URL değil); PIM Faz 8 s3_storage portunu bağlar",
+        "Erişim kararı PDP'nindir (k-policy-pdp); pre-signed URL PDP kararından sonra üretilir; scale-invariant medya işleri idempotent (aynı asset+spec aynı anahtar) + retry"
+      ],
+      "notes": "k-storage kernel primitifi olarak k-tenancy'ye bağımlıdır, PDP'den erişim kararı alır ve image_variants/ArcheType'lardan rendition yazımını tüketir; app'ler doğrudan boto3 açmaz.",
+      "prompt": "k-storage kernel entegrasyonunu kapsa: k-tenancy bağımlılığı, image_variants→rendition yazımı, ArcheType digital_asset.id referansı ve PDP erişim kararı. kısıt: doğrudan DB/boto3 yok. çıktı: sözleşmeli, gevşek bağlı entegrasyon.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "50 app'in hiçbiri kendi S3 istemcisini/bucket adlandırmasını/pre-signed URL üretimini yazmaz; hepsi k-storage StorageBackend sözleşmesini tüketir",
+        "Diğer app'ler digital_asset/asset_rendition'ı üretilen API (Strawberry resolver, permission_classes'lı) üzerinden tüketir; doğrudan DB veya boto3 erişimi yok",
+        "PIM Product ArcheType 'ana görsel' için asset_id + rendition_kind bağlar; medya galerisi ve varyant önizleme surface config'inden türetilir (hardcoded yok)",
+        "image_variants worker'ı k-storage'ı dependsOn'unda listeler; storage önce gelir, varyant üretimi sonucu asset_rendition olarak buraya yazar"
+      ],
+      "notes": "k-storage kernel/layer0 primitifidir; üst app'ler ve ArcheType'lar binary/medya erişimini yalnız bu modülün sözleşmeli servisinden alır, kendi storage istemcisini açmaz.",
+      "prompt": "k-storage modül kullanımını kapsa: app'lerin StorageBackend/API tüketimi, ArcheType asset_id referansı ve image_variants rendition yazımı. kısıt: doğrudan boto3/DB yasak. çıktı: tek soyutlamadan tüketim.",
+      "provenance": "template"
+    }
+  },
+  "source": {
+    "corpus": "content-source",
+    "originalId": "k-storage",
+    "granularity": "kaya",
+    "cluster": "layer0"
+  },
+  "state": "aday",
+  "lastUpdated": "",
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "applicability": {
+    "wcag": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    },
+    "mobileApps": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    }
+  }
+}

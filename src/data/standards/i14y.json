@@ -1,0 +1,99 @@
+{
+  "id": "i14y",
+  "name": "API & Birlikte-Çalışabilirlik Standardı",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Ürünün dışarıyla (public/partner API, webhook, import/export, SDK) sözleşmeli konuşan her yüzeyi için makine-okunur ve CI-zorlanabilir kurallar: OpenAPI 3.1-first REST + codegen'li typed SDK, stable versioning + deprecation penceresi (expand-contract), HMAC-SHA256 imzalı + üstel-backoff retry'li + dead-letter'lı webhook, GraphQL depth/complexity/DataLoader koruması, import/export taşınabilirlik sözleşmesi, rate-limit header görünürlüğü ve REST↔GraphQL hizalı hata şeması. i14y bir çatı standardıdır: API/veri tabanı (GraphQL SDL + codegen, cursor pagination, idempotency-key, hata zarfı, RLS) data-api-contract'ta TANIMLIDIR; bu sözleşme onu KOPYALAMAZ, references[] ile ona işaret eder ve yalnız i14y'ye özgü dışa-açılan entegrasyon katmanını ekler.",
+  "appliesTo": ["public-api", "partner-api", "webhook", "import-export", "sdk"],
+  "rules": [
+    {
+      "id": "i14y-openapi-first-contract",
+      "rule": "REST yüzeyi (webhook alıcıları, import/export uçları, GraphQL-dışı servis-servis çağrıları) OpenAPI 3.1 sözleşmesinden türer ve sözleşme koddan ÖNCE yazılır, TEK doğruluk kaynağıdır. FastAPI route + Pydantic request/response modeli şemayı otomatik üretir; openapi.json repoda sürümlenir ve elle yazılmaz. İstemci tarafı typed SDK bu şemadan codegen ile üretilir (generated/ elle düzenlenmez, üretici çalıştırılır); elle yazılmış REST istemci response tipi YASAKTIR. Yeni uç önce Pydantic modeliyle route olarak tanımlanır, openapi.json yeniden üretilir, sonra istemci codegen koşar.",
+      "rationale": "OpenAPI-first + codegen, REST istemci ile sunucu arasındaki tip driftini derleme/CI zamanında yakalar; elle-yazılmış istemci tipi sözleşme değiştiğinde sessizce kırılır. GraphQL tarafı ayrıca data-api-contract/data-graphql-schema-codegen'de kilitlidir (referans).",
+      "severity": "must",
+      "check": "check-core-contract (openapi.json şema diff temiz) + openapi codegen --check (üretilmiş SDK çıktısı temiz) + tsc strict (istemci) + review"
+    },
+    {
+      "id": "i14y-stable-versioning-deprecation",
+      "rule": "Dışa açılan her API sürümlenir ve kırıcı (breaking) değişiklik geriye-uyumluluk penceresi olmadan yayınlanmaz. REST için sürüm URL-prefix ile (/api/v1/...) taşınır; GraphQL için alan-bazlı @deprecated direktifi kullanılır. Değişiklik iki fazlı ilerler: önce yeni sürüm/alan geriye-uyumlu eklenir (expand) ve eski yol @deprecated + ilan edilmiş kaldırma penceresi (≥ 1 sürüm/duyuru) taşır, tüketiciler taşındıktan SONRA eski yol ayrı bir değişiklikte kaldırılır (contract). Deprecation notu olmayan kırıcı değişiklik (alan kaldırma, tip daraltma, zorunlu alan ekleme) build'i bloklar; bu, data-api-contract/data-migration-expand-contract kuralının API yüzeyine yansımasıdır (referans).",
+      "rationale": "İç şema değişebilir ama bir partner'ın entegre olduğu dış API sürümü/alanı geriye-uyumluluk taahhüdü taşır; sürümsüz kırıcı değişiklik partner entegrasyonunu sessizce kırar. Expand-contract penceresi sıfır-kesinti geçiş sağlar.",
+      "severity": "must",
+      "check": "check-core-contract (openapi.json diff + GraphQL schema diff: deprecation'sız kırıcı değişiklik bloklar) + review"
+    },
+    {
+      "id": "i14y-webhook-signed-retry",
+      "rule": "Ürün dışa olay yayınladığında (kaynak oluşturuldu/güncellendi/silindi, ödeme tamamlandı) webhook gönderir ve her payload HMAC-SHA256 imzasıyla (X-Signature: sha256=... header) ve bir timestamp header'ıyla (X-Timestamp, replay penceresi ≤ 5 dk) gider; alıcı imzayı paylaşılan secret ile yeniden hesaplayıp SABİT-ZAMANLI karşılaştırır ve imza doğrulanmadan gövde iş katmanına geçemez. Webhook gövdesi ayrıca data-api-contract/data-zod-boundary-validation ile aynı sınır-doğrulamasına tabidir (referans). Başarısız teslimat (2xx-dışı veya timeout) üstel geri-çekilmeyle (1s, 2s, 4s, ... azami N) yeniden denenir; teslim edilemeyen olaylar bir dead-letter kaydına düşer ve manuel yeniden-gönderim yolu vardır. Her webhook zorunlu alanları taşır: event_id (UUID), event_type (kebab, ör. order.created), X-Signature, X-Timestamp.",
+      "rationale": "İmzasız webhook sahte olay enjeksiyonuna açıktır; timestamp+replay penceresi tekrar-saldırıyı engeller. Retry + dead-letter olmadan geçici alıcı arızası olayı kalıcı kaybettirir.",
+      "severity": "must",
+      "check": "integration test (geçersiz imza reddedilir; replay penceresi dışı 401; başarısız teslimat N kez denenir ve dead-letter'a düşer) + review"
+    },
+    {
+      "id": "i14y-webhook-idempotent-consumption",
+      "rule": "Webhook tüketimi ve yan-etkili tüm dış-tetikli yazma event_id (webhook) veya Idempotency-Key (REST yazma header) ile idempotent'tir; aynı anahtarla tekrar gelen teslimat/istek yeni etki üretmez, ilk sonucu döner. Bu, data-api-contract/data-idempotency-key temelinin (referans) dış entegrasyona genişletilmiş biçimidir: i14y istemci yeniden denemelerinin (retry) yalnız idempotent operasyonlarda otomatik yapılmasını ve HER retry'ın AYNI anahtarı taşımasını ekler (retry-safe). Anahtar+sonuç en az 24 saat saklanır.",
+      "rationale": "Webhook üstel-backoff retry'ı (i14y-webhook-signed-retry) doğası gereği aynı olayı birden çok kez teslim edebilir; event_id ile idempotent tüketim olmadan retry çift kayıt/çift-tahsilat üretir. Retry-safe kural, ağ yeniden denemesini güvenli kılar.",
+      "severity": "must",
+      "check": "integration test (aynı event_id tekrarı tek etki; aynı Idempotency-Key tek kayıt; retry aynı anahtarı taşır) + review"
+    },
+    {
+      "id": "i14y-graphql-depth-complexity-dataloader",
+      "rule": "GraphQL yüzeyi (Strawberry resolver, data-api-contract/data-graphql-schema-codegen'e referans) pahalı/kötü-niyetli sorgulara karşı sınırlanır: sorgu derinliği (query depth) ≤ 10, her sorgu bir complexity puanı taşır ve tanımlı tavanı aşan sorgu YÜRÜTÜLMEDEN reddedilir. N+1 sorgu problemi istek-kapsamlı DataLoader (batch + cache) ile engellenir; ilişkili alanlar (ör. order.lineItems) DataLoader üzerinden çözülür, doğrudan per-node ORM sorgusu YASAKTIR. Introspection yalnız staging'de açıktır, production'da kapalıdır. Depth/complexity ihlali standart hata zarfıyla (data-api-contract/data-error-envelope'a referans) code: query-too-deep / query-too-complex olarak döner.",
+      "rationale": "Derinlik/karmaşıklık sınırı olmayan public GraphQL, tek bir iç-içe sorguyla DoS'a açıktır; DataLoader olmadan ilişki çözümü N+1 ile veritabanını boğar. Introspection production'da şema yüzeyini gereksiz ifşa eder.",
+      "severity": "must",
+      "check": "integration test (depth > 10 → query-too-deep; tavan-aşan sorgu → query-too-complex; ilişki çözümü tek batch, per-node sorgu yok) + review"
+    },
+    {
+      "id": "i14y-sdk-generation-ready",
+      "rule": "Ürün, tüketici entegrasyonunu kolaylaştırmak için typed SDK ÜRETİMİNE hazır tutulur; SDK elle yazılmaz, sözleşmeden (REST için OpenAPI 3.1, GraphQL için SDL) codegen ile türetilir. Bu i14y'nin 'araç değil hazırlık' kuralıdır: SDK'nın kendisi standart-değil bir araçtır, ancak SDK üretilebilir olma koşulu — her public yüzey için temiz, sürümlü ve TAM-tipli sözleşme — i14y sözleşmesinin bir kuralıdır. Üretilmiş SDK kodu (generated/) elle düzenlenmez; değişiklik sözleşmede yapılır ve üretici yeniden çalıştırılır.",
+      "rationale": "Tam-tipli + sürümlü sözleşme SDK'nın herhangi bir dile codegen ile türetilmesini mümkün kılar; eksik-tipli veya elle-düzeltmeli sözleşme SDK üretimini kırar ve sözleşme↔SDK driftine yol açar.",
+      "severity": "should",
+      "check": "check-core-contract (sözleşme tam-tipli + sürümlü) + codegen --check (sözleşme↔SDK drift build'i bloklar; generated/ elle düzenlenmemiş) + review"
+    },
+    {
+      "id": "i14y-import-export-contract",
+      "rule": "Veri taşınabilirliği (GDPR data portability + müşteri güveni) bir sözleşmeye uyar: en az bir standart format (CSV/JSON/XLSX, domain'e göre), idempotent import (aynı dosya iki kez yüklenince duplicate yok), satır-bazlı sınır-doğrulaması (Pydantic/Zod) ve kısmi başarı raporlaması (geçersiz satırlar tüm import'u düşürmeden hata-raporunda toplanır). Export dosyaları geçici ve süreli imzalı URL ile (≤ 15 dk) HTTPS üzerinden indirilir; büyük export bir background job olarak koşar ve tamamlanınca webhook/e-posta ile bildirilir. Her import satırı bir doğal-anahtar veya idempotency anahtarıyla eşleştirilir.",
+      "rationale": "Idempotent olmayan import tekrar yüklemede çift kayıt üretir; kısmi başarı olmadan tek geçersiz satır 5k+ satırlık import'u düşürür. Süresiz/imzasız export URL'i veri sızıntısı riskidir. Async büyük-export, senkron istek zaman aşımını önler.",
+      "severity": "should",
+      "check": "integration test (5k+ satır import: duplicate yok + geçersiz satır raporda; export URL-expire testi yeşil; büyük export job + bildirim) + review"
+    },
+    {
+      "id": "i14y-rate-limit-header-visibility",
+      "rule": "Dışa açılan uçlar rate-limit durumunu tüketiciye GÖRÜNÜR kılar; enforcement (WAF/DDoS/throttle) edge-security standardının sorumluluğudur ancak SÖZLEŞME YÜZEYİ (hangi header'lar döner, 429 nasıl görünür) i14y'de tanımlıdır. Her hız-sınırlı yanıt X-RateLimit-Limit, X-RateLimit-Remaining ve X-RateLimit-Reset header'larını taşır; sınır aşıldığında yanıt 429 + Retry-After header'ı + standart hata zarfı (data-api-contract/data-error-envelope'a referans, code: rate-limited) döner. İstemci Retry-After'a uyarak yeniden dener (i14y-webhook-idempotent-consumption retry-safe kuralına göre). Ayrıca REST hataları data-api-contract'taki code taksonomisini bir JSON gövdesiyle döndürür ve HTTP durum koduyla hizalanır (400/422 validation-failed, 401 unauthorized, 403 forbidden, 404 not-found, 409 conflict, 429 rate-limited); istemciye ham exception/stack/DB mesajı sızdırılmaz.",
+      "rationale": "Rate-limit görünürlüğü olmadan tüketici sınıra kör çarpar ve agresif retry ile durumu kötüleştirir; X-RateLimit-* + Retry-After istemcinin uyumlu geri-çekilmesini sağlar. REST↔GraphQL hizalı code, tek bir hata-dilinin her dış yüzeyde çalışmasını sağlar (base data-error-envelope, i14y yalnız REST/HTTP eşlemesini ve rate-limited/query-too-complex kodlarını ekler).",
+      "severity": "must",
+      "check": "integration test (sınır aşımında 429 + X-RateLimit-* + Retry-After + rate-limited code; REST 4xx code = GraphQL extensions.code; stack sızmaz) + review"
+    }
+  ],
+  "banned": [
+    "hand-written-rest-client-type",
+    "unsigned-webhook",
+    "webhook-without-retry-or-dead-letter",
+    "breaking-change-without-deprecation-window",
+    "unbounded-graphql-depth",
+    "per-node-orm-resolution-n-plus-1",
+    "production-graphql-introspection",
+    "non-idempotent-import",
+    "unsigned-or-non-expiring-export-url",
+    "raw-exception-leak-rest"
+  ],
+  "allowed": [
+    "openapi-3.1-first-contract",
+    "codegen-typed-sdk",
+    "url-prefix-versioning",
+    "graphql-deprecated-directive",
+    "expand-contract-api-evolution",
+    "hmac-sha256-signed-webhook",
+    "exponential-backoff-retry",
+    "dead-letter-manual-replay",
+    "dataloader-batch-resolution",
+    "cursor-pagination-rest",
+    "idempotency-key-rest",
+    "signed-expiring-export-url",
+    "rate-limit-headers"
+  ],
+  "references": [
+    "src/data/standards/data-api-contract.json",
+    "docs/standards/07-api-interoperability-standard.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

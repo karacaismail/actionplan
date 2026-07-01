@@ -1,0 +1,76 @@
+{
+  "id": "iac",
+  "name": "IaC-Hazırlık & v12n Standardı (DevOps Altyapı)",
+  "version": "1.0.0",
+  "family": "devops",
+  "basedOnAdr": ["adr-0027", "adr-p1"],
+  "summary": "Ürünün üretime nasıl taşındığını tek-kaynak, CI-zorlamalı bir sözleşmeye bağlar (IaC-hazırlık seviyesi). Altyapı elle-tıklama ile değil sürümlenmiş Docker Compose baz + env sözleşmesi ile tanımlanır; deploy hedefi Hetzner + Debian + AMD EPYC + Docker'dır ve aynı commit aynı imaj digest'ini üretir (reproducible: pinned Debian-slim base + lockfile). Tüm gerekli env değişkenleri başlangıçta doğrulanır (eksikse fail-fast); hiçbir parola/anahtar/token repoya düz-metin girmez, secret runtime'da env-injection veya Vault deseniyle enjekte edilir (.env.example commit'li, .env değil). v12n (sanallaştırma/konteyner) bu standarda aittir: imaj minimal-yüzeyli, non-root ve reproducible üretilir. Üretim DB'si yalnız PostgreSQL. YASAK: Next.js, Supabase, Prisma. Tam Terraform/Ansible otomasyonu platform reposunun işidir; bu sözleşme onun ön koşullarını (reproducible + env-validated + secret-free) tanımlar.",
+  "appliesTo": ["infra", "backend"],
+  "rules": [
+    {
+      "id": "iac-compose-reproducible",
+      "rule": "Altyapı elle-tıklama ile değil, sürümlenmiş Docker Compose baz ile tanımlanır: app + kernel modülleri tek Compose dosyasıyla, standalone 'docker compose up' ile ayağa kalkar (L1 kriteri). Build reproducible'dır: aynı commit → aynı imaj digest; base image Debian-slim pinlenir (pinned digest) ve lockfile (pnpm-lock.yaml / uv.lock, dependency-policy ile hizalı) frozen kullanılır. IaC-hazırlık Hetzner + Debian + AMD EPYC + Docker hedefine göre yazılır; üretim DB'si yalnız PostgreSQL'dir ve Next.js/Supabase/Prisma yasaktır. Zero-downtime (rolling/blue-green) stratejisi belgelidir; /health endpoint mevcuttur (JSON status: ok). Tam Terraform/Ansible otomasyonu bu depoda üretilmez (K8s yalnız L3 çok-bölge için opsiyonel); burası hazırlık katmanıdır.",
+      "rationale": "Sürümlenmiş Compose + pinned base + frozen lockfile deploy'u tekrarlanabilir ve denetlenebilir kılar; 'aynı commit aynı imaj' garantisi 'bende çalışıyordu' ve sessiz sürüm sıçramasını önler; standalone up + /health app'i taşınabilir ve load-balancer'a hazır tutar; stack kısıtı mimari/tech-profile kararlarını zorlar.",
+      "severity": "must",
+      "check": "docker compose up standalone kurulum + reproducible build testi (aynı commit → aynı imaj digest) + check-execution-readiness + check-dependency-policy (yasak paket/lockfile) + deploy dry-run (/health OK)"
+    },
+    {
+      "id": "iac-env-validation",
+      "rule": "Tüm gerekli ortam değişkenleri (env) uygulama başlangıcında bir env sözleşmesine göre doğrulanır; eksik veya geçersiz env varsa uygulama fail-fast ile başlamayı REDDEDER (sessizce varsayılana düşmez). Config env'den okunur (12-factor), imaj ortamdan bağımsızdır; aynı imaj çok-tenant/çok-bölge hizmet verir (scale-invariant, k-scale-invariant ile hizalı). .env.example şablonu commit'lidir ve gerçek değer içermez; gerçek .env gitignore'dadır ve commit edilmez.",
+      "rationale": "Başlangıçta env doğrulama, eksik yapılandırmayı runtime'da geç ve belirsiz hataya bırakmadan erken ve net yakalar (fail-fast); env'den config + imaj-bağımsızlığı aynı imajın her ortamda güvenle çalışmasını sağlar; commit'li .env.example gerçek secret'ı sızdırmadan sözleşmeyi belgeler.",
+      "severity": "must",
+      "check": "env-validation testi (eksik/geçersiz env → başlatma reddi, fail-fast) + integration (12-factor config env'den) + gitignore/gitleaks (.env commit'li değil)"
+    },
+    {
+      "id": "iac-secret-management",
+      "rule": "Secret disiplini bu standardın en katı kuralıdır: hiçbir parola/anahtar/token repoya düz-metin GİRMEZ ve git geçmişinde bulunmaz. Secret'lar runtime'da env-injection veya Vault deseniyle enjekte edilir, imaja gömülmez; secret rotasyonu kod değişmeden mümkündür (env sözleşmesi + rotasyon runbook). Secret sızıntısı P0 blocker'dır: gitleaks kırmızıysa merge açılmaz (önerilen check-secrets kapısı). AI secret ekleyemez/okuyamaz (autonomy: none); infra değişiklikleri PR olarak açılır, insan reviewer merge eder ve prod deploy/sürüm-etiketi insan release owner'ındır.",
+      "rationale": "Repoda düz-metin secret kalıcı ve geri-alınamaz sızıntıdır; env/Vault enjeksiyonu sırrı koddan ayırıp rotasyonu mümkün kılar; gitleaks P0 kapısı sızıntıyı merge'ten önce durdurur; AI'ın secret'a dokunamaması ve insan-merge kapısı fail-closed güvenlik tabanını korur.",
+      "severity": "must",
+      "check": "gitleaks / check-secrets CI kapısı (repoda düz-metin secret yok) + deploy dry-run + image inspect (secret imaja gömülü değil) + review (autonomy: none, rotasyon runbook)"
+    },
+    {
+      "id": "iac-v12n-container",
+      "rule": "v12n (sanallaştırma/konteyner) ekseni bu standarda aittir (ayrı v12n.json üretilmez): uygulama container-ready olur ve imaj reproducible + minimal-yüzeyli üretilir. Dockerfile hadolint kurallarına uyar (0 kritik ihlal); base image minimaldir (Debian-slim / distroless, gereksiz paket yok) ve boyut bütçesine tutulur. Container root olarak ÇALIŞMAZ (Dockerfile USER beyanı, non-root). İmaj pinned digest + lockfile ile deterministiktir; config env'den okunur (container-ready, imaj ortamdan bağımsız). K8s topolojisi yalnız L3 çok-bölge için değerlendirilir.",
+      "rationale": "hadolint + minimal base saldırı yüzeyini ve imaj boyutunu küçültür; non-root çalışma konteyner kaçış/etki yarıçapını sınırlar; pinned digest + lockfile deterministik ve denetlenebilir imaj verir; env'den config imajı her ortamda yeniden-kullanılabilir tutar.",
+      "severity": "should",
+      "check": "hadolint (Dockerfile 0 kritik) + reproducible build testi (pinned digest → deterministik imaj) + Dockerfile USER beyanı (non-root) + image inspect (boyut bütçesi) + 12-factor config testi"
+    },
+    {
+      "id": "iac-backup-restore-drill",
+      "rule": "Backup tek başına yetmez; denenmemiş restore işe yaramaz: otomatik yedek + belgelenmiş geri-yükleme + periyodik restore-drill zorunludur. PostgreSQL düzenli yedeklenir (pg_dump/WAL); geri-yükleme adımları runbook'ta belgelidir ve yedekten geri-yükleme en az bir kez test edilmiştir (restore-drill). Alembic migration öncesi DB snapshot alınır (requireSnapshot) ve her migration upgrade() + downgrade() ile geri-alınabilirdir (downgrade sonrası app çalışır). Uygulama-katmanı rollback (Alembic downgrade) ile veri-katmanı restore ayrı ayrı denenmiş olmalıdır (enterprise-dod §2.14). Restore/rollback kararı insan release owner'ındır.",
+      "rationale": "Denenmemiş 'yedek var' iddiası DR'ı ölü metin yapar; restore-drill geri-yüklemenin gerçekten çalıştığını kanıtlar; migration snapshot + dolu downgrade geri-alınamaz deploy'u önler; uygulama ve veri katmanı rollback'inin ayrı doğrulanması kısmi kurtarmayı yakalar.",
+      "severity": "should",
+      "check": "restore-drill CI job (yedekten geri-yükleme çalışıyor) + migration downgrade testi (alembic downgrade -1 sonrası app çalışır) + requireSnapshot kanıtı + review (restore runbook + owner)"
+    }
+  ],
+  "banned": [
+    "plaintext-secret-in-repo",
+    "secret-baked-into-image",
+    "manual-click-deploy",
+    "non-reproducible-build",
+    "silent-env-default",
+    "container-runs-as-root",
+    "empty-migration-downgrade",
+    "untested-restore",
+    "next",
+    "supabase",
+    "prisma"
+  ],
+  "allowed": [
+    "docker-compose-base",
+    "reproducible-build",
+    "pinned-debian-slim-base",
+    "frozen-lockfile",
+    "env-validation-fail-fast",
+    "env-vault-secret-injection",
+    "dotenv-example-committed",
+    "hadolint-minimal-image",
+    "non-root-container",
+    "postgres-backup",
+    "restore-drill"
+  ],
+  "references": [
+    "docs/standards/12-devops-infrastructure-standard.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

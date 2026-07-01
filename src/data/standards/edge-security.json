@@ -1,0 +1,83 @@
+{
+  "id": "edge-security",
+  "name": "Kenar Güvenlik Standardı (Security & Edge)",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027", "adr-p1"],
+  "summary": "Uygulamanın dışa bakan kenarını (edge) güvenlik disiplinine bağlar: WAF-ready yapısal istek loglama (kötü-niyetli-istek görünürlüğü, PII-güvenli redakte), tenant-aware rate limiting (sınır aşımında 429 + Retry-After + RateLimit-* header), zorunlu security header seti (HSTS/CSP/nosniff/frame/referrer), allowlist-driven CORS (wildcard '*' + credential kombinasyonu yasak) ve hedefli-kapsam E2EE beyanı (envelope encryption, sunucuda plaintext yok). Kenar güvenlik kimlik (03) ve yetki (PDP, 04) katmanlarını tamamlar, yerine geçmez: rate-limit hacim eksenidir, yetki kararı PDP'nindir. Repoda/kenar-config'inde düz-metin secret yasaktır (detay iac standardında).",
+  "appliesTo": ["backend", "frontend", "infra"],
+  "rules": [
+    {
+      "id": "edge-waf-ready-log",
+      "rule": "Her gelen istek WAF/SIEM-analiz-edilebilir yapısal JSON olarak (obs-structured-logging ile hizalı) loglanır: metod, yol, kaynak-IP, user-agent, correlation_id, status ve süre alanları tam taşınır. Şüpheli desenler (SQLi/XSS payload, path-traversal, anormal boyut) işaretlenerek loglanır; ham payload PII-güvenli (obs-pii-safe-logging) biçimde redakte edilir ve ham request body/header olduğu gibi loglanmaz. IP/pattern blocklist kancası config-driven'dır (koda gömülmez); bloklanan istek loglanır ve 403 döner. WAF katmanı önde olsun ya da olmasın uygulama bu görünürlüğü kendisi sağlar.",
+      "rationale": "Yapısal, redakte-edilmiş kenar logu kötü-niyetli-istek analizini besler ve adli incelemeyi mümkün kılar; ham body loglamak PII/sır sızdırır, config-driven blocklist ise kuralı koda gömmeden denetlenebilir kılar.",
+      "severity": "must",
+      "check": "middleware testi (istek log alanları tam + yapısal) + integration (kötü istek işaretlenir + redakte; blocklist → 403 + log) + review (ham body log taraması)"
+    },
+    {
+      "id": "edge-rate-limit",
+      "rule": "Her endpoint sınıfı için istek-hızı sınırı (token-bucket/sliding-window) uygulanır; sınır aşımında yanıt 429 döner ve Retry-After + RateLimit-* (RateLimit-Limit/Remaining/Reset) header'ları set edilir. Rate limit tenant-aware'dir: bir tenant'ın trafiği başka tenant'ın kotasını tüketmez; kimlik-öncesi (login) uçlar IP-bazlı, kimlik-sonrası uçlar tenant/actor-bazlı anahtarla sınırlanır. Sayaç dağıtık-uyumlu store'da (ör. Redis) tutulur. Pahalı işlemler (export, rapor, arama) daha sıkı sınırlıdır ve gerekiyorsa async'e (queue) itilir; DDoS sönümleme upstream (CDN/edge proxy) katmanına devredilebilir beyan edilir, app-seviyesi throttle son savunma hattıdır. Rate-limit hacim eksenidir; yetki kararı yerine KULLANILMAZ (o PDP'nindir).",
+      "rationale": "Standart 429 + RateLimit-* header istemciye geri-basınç sinyalini makine-okur verir; tenant-aware kota çapraz-tenant tükenmesini önler; pahalı-uç sıkılaştırma ve throttle son-hat DDoS/kötüye-kullanım yüzeyini sönümler; hacim ile yetkiyi ayırmak iki ekseni karıştırmayı engeller.",
+      "severity": "must",
+      "check": "integration (limit aşımı → 429 + Retry-After/RateLimit-* header; tenant kotası izole; pahalı uç sıkı limit/async) + review (throttle son hat beyanı)"
+    },
+    {
+      "id": "edge-security-headers",
+      "rule": "Her yanıt zorunlu güvenlik header setini merkezî middleware'de taşır: Strict-Transport-Security (HSTS), X-Content-Type-Options: nosniff, X-Frame-Options: DENY (veya CSP frame-ancestors), Referrer-Policy ve Content-Security-Policy. CSP default-src 'self' tabanlıdır; inline script/style unsafe-inline yerine nonce/hash ile açılır, unsafe-eval yasaktır. Yanıtlar sunucu/stack sürüm bilgisini sızdırmaz: Server ve X-Powered-By header'ı çıkarılır ve hata yanıtı stack-trace döndürmez, sabit hata zarfı kullanılır. Header seti çağrı yerinde elle değil merkezî katmanda set edilir.",
+      "rationale": "Zorunlu header seti tarayıcı güven sınırını sıkılaştırır (clickjacking/MIME-sniffing/downgrade/XSS yüzeyini kapatır); 'self' tabanlı CSP + nonce inline-injection'ı kısar; sürüm/stack sızıntısını ve stack-trace yanıtını kapatmak keşif yüzeyini daraltır; merkezî set drift'i önler.",
+      "severity": "must",
+      "check": "integration (yanıt HSTS/nosniff/frame/CSP/referrer header taraması; CSP ihlali raporlanır; Server/X-Powered-By yok; stack-trace yanıtı yok)"
+    },
+    {
+      "id": "edge-cors-allowlist",
+      "rule": "Access-Control-Allow-Origin açık, config-driven bir allowlist'ten okunur; izinsiz origin reddedilir. Access-Control-Allow-Credentials: true yalnız belirli allowlist origin'leriyle kombinlenir; wildcard '*' origin + credential kombinasyonu YASAKTIR (tarayıcı da reddeder, sunucu da izin vermez). İzinli metod ve header'lar açıkça beyan edilir (geniş '*' yerine) ve preflight (OPTIONS) doğru yanıtlanır. CORS allowlist koda gömülmez, yapılandırmadan gelir.",
+      "rationale": "Wildcard origin + credential kombinasyonu çapraz-köken güven sınırını açar ve oturum/credential sızıntısına yol açar; açık allowlist + dar metod/header + doğru preflight güven sınırını sıkı ve denetlenebilir tutar; config-driven liste ortam başına güvenli değişim sağlar.",
+      "severity": "must",
+      "check": "integration (izinsiz origin CORS-reddi alır; wildcard '*' + credential kombinasyonu yok; preflight doğru; izinli metod/header dar)"
+    },
+    {
+      "id": "edge-e2ee-scope",
+      "rule": "E2EE (uçtan-uca şifreleme) tüm portföyde varsayılan-zorunlu DEĞİLDİR; hedefli-kapsamdır: yalnız 'uçtan-uca gizlilik gerektiren' olarak etiketlenmiş veri sınıfları (ör. özel mesaj, hassas doküman) için uygulanır ve kapsam-dışı veri için 'E2EE kapsam-dışı' açıkça beyan edilir. E2EE-etiketli veri sunucuda ASLA düz-metin saklanmaz/loglanmaz; envelope encryption (istemci-tarafı Web Crypto veya KMS-yönetimli anahtar) ile şifreli-blob (encrypted kolon) olarak saklanır ve plaintext'in DB'de bulunması blocker'dır. Taşımada TLS zorunludur (transport encryption) — bu E2EE'nin yerine geçmez, tümleyicidir: E2EE-etiketli veri hem transport-şifreli hem uçtan-uca şifrelidir. Anahtar sunucuya düz-metin gönderilmez.",
+      "rationale": "E2EE'yi her yere dayatmak gereksiz karmaşıklık üretir; hedefli kapsam + açık 'kapsam-dışı' beyanı maliyeti gerçek gizlilik ihtiyacına yönlendirir; sunucu-tarafı plaintext yasağı + envelope encryption gizliliği garanti eder; TLS'i E2EE ile tümleyici (yerine geçmez) tutmak taşıma ile depolama gizliliğini ayrı ayrı korur.",
+      "severity": "must",
+      "check": "review (E2EE kapsam/kapsam-dışı beyanı mevcut; TLS zorunlu config) + integration (E2EE-etiketli veri DB'de plaintext değil — blocker)"
+    },
+    {
+      "id": "edge-secret-no-plaintext",
+      "rule": "Kenar-config'inde ve repoda düz-metin secret (parola/anahtar/token) YASAKTIR; anahtar/sır runtime'da env-injection veya vault deseninden gelir, imaja/koda gömülmez (detay iac standardında tanımlıdır, bu invariant burada tekrarlanır). Kenar-red kararları (429/403) obs-audit-events ve WAF-ready log'a yazılır; ham payload redakte edilir. Bu invariant plan-01 Dalga 4 (scale-invariant + kenar) ile hizalıdır.",
+      "rationale": "Düz-metin secret repoda kalıcı sızıntıdır ve P0 blocker'dır; env/vault enjeksiyonu sırrı koddan ayırır; kenar-red kararlarını değişmez audit'e yazmak güvenlik olaylarının izlenebilirliğini ve adli incelemeyi sağlar.",
+      "severity": "must",
+      "check": "gitleaks (düz-metin secret taraması yeşil) + audit (429/403 kararı loglanır) + review (secret env/vault'tan enjekte)"
+    }
+  ],
+  "banned": [
+    "raw-request-body-log",
+    "cors-wildcard-with-credentials",
+    "rate-limit-as-authz",
+    "missing-security-headers",
+    "csp-unsafe-eval",
+    "server-version-leak",
+    "stacktrace-in-response",
+    "e2ee-plaintext-at-rest",
+    "plaintext-secret-in-repo",
+    "hardcoded-blocklist"
+  ],
+  "allowed": [
+    "waf-ready-structured-log",
+    "config-driven-blocklist",
+    "tenant-aware-rate-limit",
+    "429-with-rate-limit-headers",
+    "central-security-headers",
+    "strict-csp-nonce",
+    "cors-allowlist",
+    "targeted-e2ee-scope",
+    "envelope-encryption",
+    "tls-transport-encryption",
+    "env-vault-secret-injection"
+  ],
+  "references": [
+    "docs/standards/11-security-edge-standard.md",
+    "docs/pdp-policy-contract.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

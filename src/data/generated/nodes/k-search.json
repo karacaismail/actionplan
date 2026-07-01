@@ -1,0 +1,572 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "k-search",
+  "wbsCode": "3.17",
+  "level": "module",
+  "title": "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index)",
+  "slug": "k-search",
+  "summary": "Tenant-scoped index üzerinde full-text + faceted + attribute aramayı, alaka-sıralamayı ve filtre/sort'u sağlayan okuma primitifi. Taban PostgreSQL FTS + GIN index; ölçekte aynı SearchQuery sözleşmesi OpenSearch adaptörüne kayar (app değişmez). Arama != veritabanı sorgusu: index-tabanlı, yaklaşık-alaka, eventual. İzolasyon index seviyesinde (per-tenant-index). PIM ürün/öznitelik aramasını (EAV+JSONB GIN) taşır.",
+  "parentId": "app-layer0",
+  "order": 97,
+  "icon": "ph-magnifying-glass",
+  "tags": [
+    "search",
+    "arama",
+    "fts",
+    "faceted",
+    "opensearch",
+    "index",
+    "kernel",
+    "layer0"
+  ],
+  "dependsOn": [
+    "k-schema",
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [
+    "k-schema",
+    "k-tenancy",
+    "k-policy-pdp",
+    "k-surface",
+    "k-computation"
+  ],
+  "refs": [
+    "yönerge: docs/k-search-directive.md",
+    "PIM-v2: docs/reference/PIM-v2-Gereksinim-Analizi.md §3.1 (arama), §NFR (p95<300ms, 100k+ ürün)"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 21,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) kapsamı + atomik tip paydaş onayı",
+        "Kabul kriterleri taslağı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip için test stratejisi (unit/e2e/a11y)",
+        "Testing-loop (maks 6) tanımı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip Zod sözleşmesi + expand-contract göç",
+        "tip güvenliği veri sınıflandırması"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) engine/UI ayrımı",
+        "Lint/tip kapıları yeşil"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip e2e + axe AAA 0 ihlal",
+        "Kapsam eşiği"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) DoD + kanıt (evidence)"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) CI→Pages dağıtımı",
+        "atomik tip runbook + geri-alma"
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": null,
+    "baselineEnd": null
+  },
+  "deliverables": [
+    "docs/k-search-directive.md (SearchIndex / SearchQuery sözleşmesi; FTS+GIN taban, OpenSearch ölçek-adaptörü)",
+    "PostgreSQL FTS (tsvector + GIN) taban + EAV JSONB GIN attribute index; tenant-scoped index (per-tenant-index)",
+    "p95 bütçesi (100k+ ürün <300ms) + tenant-sızıntı-yok + N+1-yok testleri; check-search-contract CI kapısı"
+  ],
+  "acceptanceCriteria": [
+    "Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) için atomik tip işlevsel kabulü karşılandı",
+    "tip güvenliği + AAA erişilebilirlik kapıları geçti"
+  ],
+  "risks": [
+    {
+      "id": "r-k-search-1",
+      "desc": "atomik tip sözleşmesi/şeması üst katmanla uyumsuzlaşabilir",
+      "severity": "medium",
+      "mitigation": "Sözleşme testleri + sürümleme (expand-contract)"
+    },
+    {
+      "id": "r-k-search-2",
+      "desc": "doğrulama maliyeti ölçek altında yavaşlayabilir",
+      "severity": "low",
+      "mitigation": "İndeks + önbellek + yük testi"
+    }
+  ],
+  "rollback": "Search sözleşmesi expand-contract; kapatılırsa arama PostgreSQL FTS tabana döner (OpenSearch adaptörü devre dışı, yalnız non-prod). Index verisi yeniden-kurulabilir (kaynak veri yıkılmaz); SearchQuery sözleşmesi sabit kalır.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-k-search-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Search — Arama Kernel Primitifi tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Search — Arama Kernel Primitifi blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "k-search"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "k-search"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "k-search"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-search-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Search — Arama Kernel Primitifi AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "SearchIndex bir ArcheType'ın nasıl indeksleneceğini beyan eder: text_fields (alaka ağırlıklı), facet_fields, filter_fields, sort_fields allowlist, analyzer ve tenant_scope",
+        "SearchQuery app'in verdiği tek yapısal istektir (ham SQL/DSL değil): q, filters (eq|in|range), facets, sort ve cursor/limit; tenant_id zorunlu kapsam",
+        "SearchResult hits[] (projeksiyon, tam gövde değil) + facet_counts{} + next_cursor + took_ms (p95 ölçümü) döndürür; offset/limit yasak, yalnız cursor",
+        "Taban PostgreSQL FTS + GIN; veri/eşzamanlılık ölçeğinde aynı SearchQuery sözleşmesi OpenSearch adaptörüne kayar (backend=pg-fts|opensearch, app değişmez)"
+      ],
+      "notes": "Arama != veritabanı sorgusu: index-tabanlı, yaklaşık-alaka, eventual. SearchIndex/SearchQuery §5 sözleşmesi sabittir; PIM ürün/öznitelik aramasını (EAV+JSONB GIN) taşır.",
+      "prompt": "k-search SearchIndex/SearchQuery/SearchResult özellik sınırını kapsa: index beyanı, yapısal sorgu, faceted sonuç, cursor sayfalama ve pg-fts→opensearch adaptörü. çıktı: net işlevsel sınır + hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tenant izolasyonu index seviyesinde: default per-tenant-index fiziksel ayrım (OpenSearch'te ayrı index/alias; PG'de tenant_id zorunlu eş-anahtar + RLS), WHERE'e bırakılmaz",
+        "Hiçbir SearchQuery tenant_id olmadan çalışmaz (fail-closed reddedilir); facet sayımları da tenant-scoped'tur, bir tenant'ın facet'i diğerinin varlığını sızdıramaz",
+        "q metni to_tsquery ile parametreli üretilir; string birleştirme (SQL injection) yasak, yalnız bind parametre; filter/sort yalnız filter_fields/sort_fields allowlist alanlarında",
+        "Görünürlük/maskeleme k-policy-pdp + k-tenancy filtresidir; arama yalnız izinli kümede çalışır, yetki kararı vermez ama tenant sınırını index topolojisiyle zorlar"
+      ],
+      "notes": "Güvenlik çekirdeği tenant-sızıntı-yok'tur: izolasyon uygulama-katmanı WHERE yerine index topolojisine gömülür; ham SQL/DSL reddedilir, tenant_id'siz sorgu fail-closed.",
+      "prompt": "k-search güvenlik yüzeyini kapsa: index-seviyesi per-tenant izolasyon, tenant_id fail-closed, to_tsquery parametreli sorgu ve allowlist filter/sort. güvenlik sınırı: ham SQL/DSL + cross-tenant sorgu yasak. çıktı: sızıntısız arama.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "App WHERE tenant_id / LIKE '%term%' serbest sorgusu yazmaz; yalnız yapısal SearchQuery verir, motor parametreli üretir (check-search-contract ham-SQL aramayı bloklar)",
+        "SearchIndex/SearchQuery tipleri katı Zod/SQLAlchemy sözleşmesiyle üretilir; keyfi sort/filter alanı kabul edilmez (indekssiz alan + saldırı yüzeyi elenir)",
+        "Faceted sonuç + hit projeksiyonu tek indeksli sorguyla döner; facet başına ayrı COUNT (N+1) üretilmez, sorgu sayacı ile doğrulanır",
+        "backend=pg-fts → opensearch geçişi SearchQuery sözleşmesini değiştirmez; yalnız motor/adaptör değişir, app kodu ve testler sabit kalır (ölü kod + lint kapısı)"
+      ],
+      "notes": "Kod optimizasyonu serbest-sorgu yasağı ve tek-tarama'dır: app sadece SearchQuery verir, N+1 facet elenir, adaptör değişimi app'i etkilemez.",
+      "prompt": "k-search kod optimizasyonunu kapsa: serbest-SQL/LIKE yasağı, yapısal SearchQuery, N+1-siz tek indeksli tarama ve sabit-sözleşme adaptör geçişi. kısıt: ham SQL CI'da red. çıktı: index-tabanlı, tekrarsız arama yolu.",
+      "provenance": "template"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "sort/filter allowlist (sort_fields/filter_fields) indekssiz alan taramasını ve enumeration saldırı yüzeyini keser; keyfi alan reddedilir",
+        "to_tsquery + JSONB path operatörleri yalnız bind parametreyle; string birleştirme yok, DSL enjeksiyonu (ham OpenSearch query) engellenir",
+        "per-tenant-index + zorunlu tenant_id bind cross-tenant okumayı imkânsız kılar; shared-filtered yalnız düşük-hacim tenant'ta RLS + açık gerekçeyle seçilir",
+        "OpenSearch/PostgreSQL istemci kimlik bilgileri secret rotasyonuna tabi; index yeniden-kurulabilir, kaynak veri yıkılmaz, erişim en az ayrıcalıkla"
+      ],
+      "notes": "Güvenlik sertleştirme allowlist ve parametreli-sorgu'dur: keyfi sort/filter ve ham DSL saldırı yüzeyi kapatılır; izolasyon topolojiye gömülür.",
+      "prompt": "k-search güvenlik optimizasyonunu kapsa: sort/filter allowlist, bind-only parametreli sorgu, per-tenant-index zorunlu bind ve secret rotasyonu. güvenlik sınırı: keyfi alan + ham DSL yasak. çıktı: dar saldırı yüzeyi.",
+      "provenance": "template"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "100k+ ürünlük tenant'ta full-text + 2 filtre + 3 facet sorgusu p95 < 300ms (PIM-v2 NFR); EXPLAIN'de GIN index kullanımı doğrulanır, seq-scan yoksa geçer",
+        "text_fields tsvector (generated column) üzerine GIN index; ts_rank alaka sıralaması; LIKE '%..%' leading-wildcard yasak (index kullanılmaz, 100k'da seq-scan)",
+        "EAV/JSONB öznitelik değerleri üzerine GIN index (jsonb_path_ops); attribute filtreleri JSONB path operatörleriyle tek indeksli taramada çözülür (N+1 yerine)",
+        "Facet sayımları index-yan hesaplanır (FTS'te GROUP BY + kısmi index; OpenSearch'te aggregation); her istekte tam-tarama yapılmaz, cursor sayfalama offset-derinlik cezasını önler"
+      ],
+      "notes": "Performans bütçesi p95<300ms/100k+ üründür; GIN index (FTS + JSONB), ts_rank alaka, index-yan facet ve cursor sayfalama seq-scan ve N+1'i önler.",
+      "prompt": "k-search performans yüzeyini kapsa: p95<300ms/100k ürün, tsvector+GIN FTS, JSONB GIN attribute ve index-yan facet. kısıt: seq-scan/LIKE yasak, N+1 yok. çıktı: EXPLAIN-doğrulanmış bütçeli arama.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-search mobil arama yüzeyini kapsa: 320px+ duyarlı facet paneli, ≥44px dokunma hedefi, cursor sonsuz-kaydırma ve düşük-yük hit projeksiyonu. kısıt: hardcoded index yok. çıktı: mobilde akıcı faceted arama.",
+      "provenance": "template"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-search arama yüzeyi erişilebilirliğini kapsa: ARIA-bağlı arama kutusu, klavye facet filtreleri, aria-live sonuç bildirimi ve kontrast. kısıt: axe critical=0. çıktı: erişilebilir faceted arama.",
+      "provenance": "template"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Faz 1'de PostgreSQL FTS (tsvector + GIN) yeterli; 100k+ ürün ve artan eşzamanlılıkta OpenSearch adaptörüne geçilir, SearchQuery sözleşmesi sabit kaldığından app değişmez",
+        "OpenSearch cluster Docker Swarm/Kubernetes'te ayrı deployment (Hetzner/Debian/AMD EPYC); readiness/liveness probe + kaynak limiti, index/alias per-tenant kurulur",
+        "Reindex: yazma olayı (§2.3 outbox) index-güncelleme job'ı tetikler (k-worker); index eventual, read-after-write garantisi yok, tam-reindex arka planda koşar",
+        "Alembic expand-contract migration tsvector/GIN kolonlarını ilerletir; downgrade çalışır, index yeniden-kurulabilir (kaynak veri yıkılmaz), check-search-contract deploy'da bloklayıcı"
+      ],
+      "notes": "Dağıtım kademe-geçişidir: pg-fts tabandan OpenSearch'e sözleşme bozmadan; reindex outbox+worker ile eventual, migration downgrade veriyi korur.",
+      "prompt": "k-search dağıtımını kapsa: pg-fts→opensearch kademe geçişi, per-tenant index/alias, outbox-tetikli reindex ve Alembic expand-contract downgrade. kısıt: SearchQuery sözleşmesi bozulmaz. çıktı: ölçek-adaptörlü, geri-alınabilir dağıtım.",
+      "provenance": "template"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-search-ai-app-module-deny, ruleset-override-deny)",
+        "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
+        "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
+        "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile SearchIndex/SearchQuery şeması güvenli göç eder"
+      ],
+      "notes": "ECA kuralları AI-güvenlik invariantını backend'de sabitler: app/module üretim ve ruleset override deny, yüksek-risk karantina, zincir döngü-kırıcı (maks 6).",
+      "prompt": "k-search ECA kurallarını kapsa: AI app/module deny, ruleset-override deny, risk≥80 karantina ve maxChainDepth=6 döngü kırıcı. güvenlik sınırı: ruleset backend-only, override yok. çıktı: deterministik, idempotent kural zinciri.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI arama davranışını önerebilir (eş-anlamlı sözlük, alaka-ağırlığı ayarı, 'bunu mu demek istediniz', facet düzeni taslağı) ve dry-run'da etkisini gösterebilir",
+        "AI aktif SearchIndex tanımını (analyzer, ağırlık, tenant_scope) doğrudan değiştiremez; index tanım değişimi approval_ref ister, index'i yeniden-kuramaz",
+        "AI tenant kapsamını gevşetemez, ham DSL enjekte edemez; app/module üretemez/güncelleyemez, yalnız okur ve insan için changeset önerir",
+        "Arama sonuçlarını AI zenginleştirebilir (özet/açıklama) ama sıralamayı gizlice override edemez — alaka motorun ölçtüğüdür; kill-switch ile AI işleri durur"
+      ],
+      "notes": "AI dört-aktör modelinde arama davranışını 'önerir', insan onaylar, motor uygular. Search'e özgü sınır: index tanımı ve alaka-sıralaması AI'a kapalı; sonuç zenginleştirme sıralamayı gizlice değiştiremez.",
+      "prompt": "k-search AI ajan davranışını kapsa: davranış önerisi + dry-run, aktif SearchIndex/tenant_scope değişim yasağı, ham-DSL yasağı ve alaka-override yasağı. güvenlik sınırı: sub_prompt güvenilmez, approval_ref zorunlu. çıktı: onaysız index-değişim yolu yok.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "p95 bütçesi: 100k+ ürünlük tenant'ta full-text + 2 filtre + 3 facet sorgusu p95 < 300ms; EXPLAIN'de GIN kullanımı doğrulanır, seq-scan yoksa geçer",
+        "Tenant sızıntı yok: A index'ine B verisi yazılıp A adına arama → B'nin hiçbir hit'i/facet sayımı görünmez; tenant_id'siz SearchQuery fail-closed (≥10 çapraz-tenant senaryo)",
+        "N+1 yok: faceted sonuç + hit projeksiyonu tek indeksli sorguyla döner; facet başına ek sorgu üretilmez, sorgu sayacı ile doğrulanır",
+        "pg-fts → opensearch geçişi SearchQuery sözleşmesini bozmadan çalışır; aynı test seti iki backend'de yeşil (check-search-contract deploy'da bloklayıcı)"
+      ],
+      "notes": "Test stratejisi p95 bütçesini ve izolasyonu kanıtlar (§11'in 3 senaryosu): p95<300ms, sıfır tenant-sızıntı (10+ senaryo), N+1 yok; iki backend'de aynı set yeşil.",
+      "prompt": "k-search test kapsamını kapsa: p95<300ms/100k ürün (EXPLAIN GIN), ≥10 cross-tenant sızıntı senaryosu, N+1-siz tek sorgu ve iki-backend paritesi. kısıt: seq-scan yasak. çıktı: 3 senaryo yeşil + contract kapısı.",
+      "provenance": "template"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP Top 10:2025 A03 Injection: q metni to_tsquery ile parametreli, JSONB path bind'li; string birleştirme ve ham DSL enjeksiyonu yasak",
+        "A01 Broken Access Control: per-tenant-index + zorunlu tenant_id bind ile cross-tenant okuma imkânsız; tenant_id'siz SearchQuery fail-closed reddedilir",
+        "A04 Insecure Design: sort/filter allowlist keyfi-alan enumeration'ını keser; cursor sayfalama (offset yasak) derinlik cezasını ve kaynak tüketimini önler",
+        "A09 Logging/Monitoring: took_ms + p95 o11y'ye yansır; yavaş/seq-scan sorgu izlenir, hata {code, message, trace_id, details} formatında"
+      ],
+      "notes": "OWASP haritalaması aramaya özgü riskleri hedefler: injection (A03 parametreli FTS), erişim kontrolü (A01 per-tenant-index), güvenli tasarım (A04 allowlist/cursor).",
+      "prompt": "k-search OWASP yüzeyini kapsa: A03 parametreli to_tsquery, A01 per-tenant-index fail-closed, A04 allowlist/cursor ve A09 p95 izleme. güvenlik sınırı: ham DSL + keyfi alan yasak. çıktı: standart-uyumlu arama.",
+      "provenance": "template"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "k-search dependsOn=[k-schema, k-tenancy]: k-schema ArcheType searchIndex alan tanımını (neyin indeksleneceği) sağlar, k-tenancy izolasyon sınırını (tenant_id, RLS) verir",
+        "Layer-1 hibrit Search ArcheType (BM25 + vektör + facet) bu primitifin üzerine oturur; primitif taban (FTS/GIN, tenant-scoped index, faceted/filter/sort) verir",
+        "Reindex k-worker'ın outbox-tetikli index-güncelleme job'ıyla koşar (index eventual); görünürlük k-policy-pdp filtresidir, arama yalnız izinli kümede çalışır",
+        "PIM ürün/öznitelik aramasını taşır: searchIndex ürün alanlarını (ad/açıklama/marka/kategori) ve EAV özniteliklerini (JSONB GIN) beyan eder, hesaplama k-computation'dadır"
+      ],
+      "notes": "k-search kernel primitifi k-schema (searchIndex tanımı) ve k-tenancy (izolasyon) üzerine kurulur; reindex k-worker ile, görünürlük PDP ile; ArcheType üstüne oturur.",
+      "prompt": "k-search kernel entegrasyonunu kapsa: k-schema+k-tenancy bağımlılığı, Search ArcheType üstlenmesi, k-worker outbox-reindex ve PDP görünürlük filtresi. kısıt: hesap/yetki kararı verilmez. çıktı: sözleşmeli, gevşek bağlı entegrasyon.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "50 app'in hiçbiri kendi LIKE '%..%' sorgusunu yazmaz; hepsi tek SearchQuery sözleşmesini tüketir, motor tenant-scoped index'ten alaka-sıralı sonuç döndürür",
+        "ArcheType searchIndex alanı hangi ürün alanlarının (ad/açıklama/marka/kategori) ve hangi EAV özniteliklerinin indeksleneceğini beyan eder; app ham SQL vermez",
+        "Diğer app'ler faceted/filter/sort'u yapısal SearchQuery ile (üretilen API üzerinden) tüketir; sort/filter yalnız allowlist alanlarında, doğrudan DB/index erişimi yok",
+        "Faz 1 PostgreSQL FTS yeterli (PIM-v2 §10); 100k+ üründe OpenSearch adaptörüne geçilir, SearchQuery sözleşmesi sabit olduğu için tüketen app kodu değişmez"
+      ],
+      "notes": "k-search kernel/layer0 primitifidir; üst app'ler ve ArcheType'lar aramayı yalnız SearchQuery sözleşmesinden alır, kendi ad-hoc SQL/LIKE sorgusunu yazmaz.",
+      "prompt": "k-search modül kullanımını kapsa: app'lerin SearchQuery tüketimi, ArcheType searchIndex beyanı ve pg-fts→opensearch geçişinde sabit sözleşme. kısıt: ham SQL/LIKE yasak. çıktı: tek index sözleşmesinden tüketim.",
+      "provenance": "template"
+    }
+  },
+  "source": {
+    "corpus": "content-source",
+    "originalId": "k-search",
+    "granularity": "kaya",
+    "cluster": "layer0"
+  },
+  "state": "aday",
+  "lastUpdated": "",
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "applicability": {
+    "wcag": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    },
+    "mobileApps": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    }
+  }
+}

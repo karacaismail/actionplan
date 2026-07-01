@@ -1,0 +1,67 @@
+{
+  "id": "authz-rbac-abac",
+  "name": "RBAC/ABAC/ReBAC Yetkilendirme Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027", "adr-p1"],
+  "summary": "Yetkilendirme yüzeyinin (route guard, @RequirePermission, permission-aware rendering) tek karar noktasına (PDP) nasıl bağlandığını tanımlar: RBAC rol/rol-grubu disiplini, ABAC öznitelik beslemesi, ReBAC ilişki grafiği ve PDP'ye delege. Yetki kararı (allow/deny) verilmez, PDP verir; yüzey yalnız uygular (PEP). Frontend gizleme güvenlik değildir — enforcement backend'de, default-deny, superadmin bypass yok, deny kararları audit'lenir.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "authz-rbac-role-group",
+      "rule": "Roller ve rol→izin ilişkisi veri olarak (roles/role_permissions tablosu) saklanır, koda gömülmez; yeni rol eklemek kod değişikliği gerektirmez. Roller hiyerarşik gruplanabilir (role group / rol devralma) ve bir grup üyesi grubun izinlerini devralır; devralma grafiği döngüsüzdür (DAG). Rol atamaları tenant-scoped'tur ve Party'ye (party_role) bağlanır; bir tenant'taki rol başka tenant'ta geçerli değildir. Bu roller PDP target_actor seçicisine girdi olur; RBAC değerlendirme motoru bu standartta yeniden yazılmaz.",
+      "rationale": "Rol=veri, kodsuz güncellenip denetlenebilir; DAG devralma superadmin bypass'a gerek bırakmadan izinleri modeller; tenant-scoped rol çapraz-tenant sızıntısını önler ve karar tek merkezde (PDP) kalır.",
+      "severity": "must",
+      "check": "integration (rol çözümü doğru izin seti + çapraz-tenant rol → deny) + unit (devralma DAG, döngü yakalanır)"
+    },
+    {
+      "id": "authz-abac-attribute-feed",
+      "rule": "Aktör (departman, kıdem), kaynak (owner_id, classification, tenant) ve ortam (zaman, IP-aralığı) öznitelikleri request-context'e toplanır ve PDP'ye girdi verilir; öznitelik toplama yüzeyin işi, koşul değerlendirmesi PDP'nindir. ABAC koşulları yapısal ifadedir (attr/op/value) ve PDP policy.condition alanında yaşar; serbest kod/eval yasaktır. Kaynak öznitelikleri karar anında değerlendirilir: sahiplik/sınıflandırma değişince yetki sonucu değişir.",
+      "rationale": "Öznitelik-bazlı koşul, bağlama duyarlı yetkiyi mümkün kılar; yapısal ifade (eval yerine) denetlenebilir ve güvenlidir; karar anında değerlendirme, bayat yetki kararını (owner değişti ama izin değişmedi) önler.",
+      "severity": "must",
+      "check": "review (yapısal koşul, eval yok) + integration (attribute/owner değişimi kararı değiştirir)"
+    },
+    {
+      "id": "authz-rebac-relation-graph",
+      "rule": "Yetki, aktör ile kaynak arasındaki ilişkiden (owner/member/manager-of) türetilebilir; ilişki grafiği (party_relation + kaynak-ilişki) PDP'ye girdi verilir ve ilişki değerlendirmesi PDP'nindir. Geçişli ilişki (ör. 'yöneticinin yöneticisi') derinlik-sınırlıdır ve sınır config'ten okunur; sınırsız geçiş yasaktır (performans + doğruluk). İlişki grafiği yüzeyde yetki kararına çevrilmez, PDP hybrid modeline beslenir.",
+      "rationale": "İlişki-bazlı yetki, rol/öznitelikle ifade edilemeyen 'kaynağın sahibi/yöneticisi' vakalarını çözer; derinlik sınırı grafiği hem performanslı hem doğru tutar; besleme-yüzeyi ayrımı tek doğruluk kaynağını (PDP) korur.",
+      "severity": "should",
+      "check": "integration (ilişki → yetki) + unit (geçiş derinlik sınırı)"
+    },
+    {
+      "id": "authz-delegate-to-pdp",
+      "rule": "Yetki kararı (allow/deny) yüzeyde HESAPLANMAZ; route guard, API dependency ve frontend hiçbir yerde 'bu kullanıcı yetkili mi?' hesaplamaz — hepsi PDP'ye sorar (evaluate / evaluate_batch, docs/pdp-policy-contract.md). Her korunan endpoint Depends(require(action, resource)) (@RequirePermission) taşır; guard yalnız uygular (PEP), deny ise 403 döner, içinde 'if role ==' karar mantığı yazmak yasaktır. Her mutasyon backend'de yeniden doğrulanır; frontend gizleme güvenlik DEĞİLDİR — permission-aware rendering backend kararını YANSITIR, hesaplamaz, gizli aksiyon yine PEP tarafından reddedilir. Varsayılan hiçbir izin yoktur (default-deny); superadmin bypass yerine açık izinler tanımlanır. Deny kararları (ve kritik allow'lar) PDP decision_log'una yazılır (obs-audit-events ile hizalı). RBAC/ABAC/ReBAC değerlendirme motoru bu standartta yeniden yazılmaz; AI policy/rol değiştiremez (autonomy: none), yalnız draft önerir.",
+      "rationale": "Yüzeyde yetki hesaplamak (if role == admin) ve client-side gizlemeyi güvenlik sanmak iki temel anti-pattern'dir; enforcement backend PEP'te + karar tek merkezde (PDP) olmalı ki bypass, drift ve dağınık doğruluk kaynağı oluşmasın. Default-deny ve deny-audit güvenlik tabanını ve izlenebilirliği garanti eder.",
+      "severity": "must",
+      "check": "integration (yetkisiz → 403; guard karar üretmiyor, PDP çağırıyor) + e2e (UI gizli + API 403 birlikte) + audit (deny loglanır) + review (autonomy: none)"
+    }
+  ],
+  "banned": [
+    "authz-decision-in-surface",
+    "if-role-equals-check",
+    "client-side-authz-as-security",
+    "unprotected-write-endpoint",
+    "superadmin-bypass",
+    "rewrite-policy-engine",
+    "role-matrix-hardcoded",
+    "unbounded-rebac-transitivity",
+    "ai-mutates-policy"
+  ],
+  "allowed": [
+    "role-permission-as-data",
+    "role-group-inheritance-dag",
+    "tenant-scoped-role",
+    "abac-structured-condition",
+    "rebac-relation-graph",
+    "pdp-evaluate-delegation",
+    "require-permission-pep",
+    "permission-aware-rendering-reflect",
+    "default-deny",
+    "deny-decision-audit"
+  ],
+  "references": [
+    "docs/pdp-policy-contract.md",
+    "docs/standards/04-rbac-abac-permission-standard.md",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

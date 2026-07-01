@@ -23,12 +23,29 @@ describe("ST-1 — standardRefs / applicability / waivers şema temeli", () => {
     expect(n.waivers).toEqual([]);
   });
 
-  it("standardRefs 14 sözleşme anahtarını taşır, hepsi default ''", () => {
+  it("standardRefs 15 default'lu sözleşme anahtarını taşır, hepsi default ''", () => {
     const r = StandardRefsSchema.parse({});
-    expect(Object.keys(r).length).toBe(14);
+    // 15 çekirdek anahtar default'ludur; yeni anahtarlar OPSİYONEL (default'suz),
+    // set edilmediğinde parse çıktısında yer almaz (geriye uyumlu).
+    expect(Object.keys(r).length).toBe(15);
     expect(r.designSystemRef).toBe("");
     expect(r.shortCodeRef).toBe("");
     expect(r.codingStandardRef).toBe("");
+  });
+
+  it("yeni opsiyonel ref anahtarları set edilebilir (additive, geriye uyumlu)", () => {
+    const r = StandardRefsSchema.parse({
+      authzRef: "authz-rbac-abac",
+      mfaRef: "mfa",
+      g11nRef: "g11n",
+      a11yRef: "a11y",
+      c13nRef: "c13n",
+    });
+    expect(r.authzRef).toBe("authz-rbac-abac");
+    expect(r.mfaRef).toBe("mfa");
+    expect(r.g11nRef).toBe("g11n");
+    // set edilmeyen yeni anahtar undefined (default'suz optional)
+    expect(r.ssoRef).toBeUndefined();
   });
 
   it("applicability: applies=false + gerekçe taşıyabilir", () => {

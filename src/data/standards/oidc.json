@@ -1,0 +1,54 @@
+{
+  "id": "oidc",
+  "name": "OIDC (OpenID Connect) Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "OpenID Connect entegrasyonu için makine-okunur sözleşme: OIDC discovery ile provider metadata çözümü, id_token imza + claim doğrulaması (iss/aud/exp/nonce), JWKS ile public-key alımı ve rotasyon toleransı, authorization-code + PKCE akışı ve implicit flow yasağı. id_token yalnız kimlik kanıtıdır; yetki kararı PDP'ye delege edilir.",
+  "appliesTo": ["backend", "identity"],
+  "rules": [
+    {
+      "id": "oidc-discovery",
+      "rule": "OIDC provider yapılandırması discovery belgesinden (/.well-known/openid-configuration) çözülür: issuer, authorization/token/jwks_uri endpoint'leri ve desteklenen alg'ler koda gömülmeden config'teki issuer URL'inden yüklenir. Discovery issuer değeri config'teki beklenen issuer ile eşleşmelidir; eşleşmeyen discovery reddedilir. Endpoint'leri elle sabitlemek yasaktır.",
+      "rationale": "Discovery, provider endpoint ve anahtar konumlarını tek kaynaktan alır ve rotasyona uyum sağlar; issuer eşleşme kontrolü yanlış/sahte provider'a bağlanmayı engeller, elle sabitlenen endpoint'ler provider değişiminde sessizce kırılır.",
+      "severity": "must",
+      "check": "integration (discovery → endpoint çözümü) + unit (issuer eşleşme kontrolü)"
+    },
+    {
+      "id": "oidc-token-validation",
+      "rule": "Her id_token doğrulanır: imza (JWKS public-key ile), iss (config issuer'a eşit), aud (client_id'yi içerir), exp/nbf (zaman geçerliliği) ve nonce (istek nonce'una eşit) claim'leri kontrol edilir. RS256/ES256 asimetrik imza zorunludur; alg:none ve HS256 paylaşımlı-sır reddedilir. Doğrulanmamış veya claim'i uyumsuz id_token ile kimlik kabul edilmez ve yetki için PDP'ye girdi yapılmaz.",
+      "rationale": "id_token yalnız tüm claim'leri ve imzası doğrulandığında kimlik kanıtıdır; iss/aud/nonce eksik doğrulama token substitution ve replay saldırısına, alg:none/HS256 ise imza atlatmaya yol açar.",
+      "severity": "must",
+      "check": "integration (code→token + id_token claim doğrulama) + unit (alg:none/HS256 → red)"
+    },
+    {
+      "id": "oidc-jwks-rotation",
+      "rule": "id_token imzası doğrulanırken public-key JWKS endpoint'inden token'ın kid'ine göre seçilir; JWKS önbelleği TTL ile tutulur ve bilinmeyen kid görülünce yenilenir (rotasyon toleransı). JWKS anahtarları koda gömülmez, elle kopyalanmaz; anahtar döndüğünde eski anahtara sabit kalmak veya JWKS'i doğrulamadan güncellememek yasaktır. HTTPS dışı JWKS URL'i kabul edilmez.",
+      "rationale": "Provider imzalama anahtarlarını düzenli rotate eder; kid-tabanlı seçim + kontrollü yenileme rotasyon sırasında hem kesintiyi hem de sahte anahtarla doğrulamayı önler, HTTPS zorunluluğu JWKS'i MITM'e karşı korur.",
+      "severity": "should",
+      "check": "integration (kid rotasyonu → yeni anahtarla doğrulama) + review (JWKS önbellek TTL + HTTPS)"
+    }
+  ],
+  "banned": [
+    "oidc-implicit-flow",
+    "hardcoded-oidc-endpoints",
+    "alg-none-token",
+    "hs256-shared-secret",
+    "unvalidated-id-token",
+    "jwks-key-hardcoded",
+    "insecure-jwks-url"
+  ],
+  "allowed": [
+    "oidc-discovery-metadata",
+    "authorization-code-pkce",
+    "id-token-claim-validation",
+    "rs256-es256-signature",
+    "jwks-kid-rotation",
+    "issuer-audience-nonce-check"
+  ],
+  "references": [
+    "docs/standards/03-authn-authz-iam-standard.md",
+    "docs/adr-0027-engineering-standards.md",
+    "docs/pdp-policy-contract.md"
+  ]
+}

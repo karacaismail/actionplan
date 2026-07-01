@@ -88,6 +88,18 @@ jobs:
       - name: UI standartları kapısı (emoji/styled-kit yok)
         run: node tools/agents/check-ui-standards.mjs
 
+      # i18n/l10n kapısı (ADR-0027 / 15. standart — BLOKLAYICI). i18n-standards.json sözleşmesi
+      # (yedi must kuralı + banned/allowed primitifleri), i18nRef referans bütünlüğü ("i18n-standards"),
+      # i18n-text alanlarının locale beyanı + çeviri anahtarı formatı. Surface i18n alanı uyarı (ratchet).
+      - name: i18n kapısı (locale beyanı + i18nRef bütünlüğü + çeviri anahtarı)
+        run: node tools/agents/check-i18n.mjs
+
+      # Kernel sözleşme paketi kapısı (core-contract-pack §2 — BLOKLAYICI). Beş zorunlu primitifin
+      # (tenant/authz/audit/observability/module-sdk) sözleşme-referansı: §2.x başlık çıpası + arayüz
+      # imzası (backend paket yolu) + API referansı. "Adı geçiyor ama tanımlı değil" driftini bloklar.
+      - name: Kernel sözleşme kapısı (core-contract §2 primitif referansları)
+        run: node tools/agents/check-core-contract.mjs
+
       # Denetim/kalite kapısı (audit golden + köken iddiası — BLOKLAYICI). Golden düğümler
       # (product/customer/s-crm) ≥2.3 ve 14 boyut dolu kalmalı; "human/swarm" köken iddialı
       # düğümler eşik (2.0) altına düşemez. Skorlama uygulama-içi denetim görünümüyle ortak.
@@ -107,6 +119,12 @@ jobs:
       # Definition of Ready kapısı (DX — BLOKLAYICI). development fazındaki düğüm repoPath+testCommand+implementationStatus taşımalı.
       - name: Definition of Ready kapısı (ready-for-dev)
         run: node tools/agents/check-ready-for-dev.mjs
+
+      # Scale-invariant kapısı (ADR-K3 / SCV — BLOKLAYICI). Para/sipariş/stok yazan (financial|order|
+      # inventory etiketli) mutasyon sözleşmesi outbox+idempotency zarfını beyan etmeden merge edilemez;
+      # koruma zarfı sözleşme düğümleri mevcut olmalı. Plan katmanında beyan-tabanlı (kod-seviyesi platform repo).
+      - name: Scale-invariant kapısı (etiketli mutasyon → outbox+idempotency beyanı)
+        run: node tools/agents/check-scale-invariant.mjs
 
       - name: Birim testleri
         run: npm test

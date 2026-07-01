@@ -2,7 +2,7 @@
 
 **Sürüm:** 1.0 · **Tarih:** 2026-06-29
 **Durum:** Kanonik, bağlayıcı. ADR-0027 (mühendislik standardı işletim katmanı) ve task-to-code-contract'ın türevidir; bu ikisiyle çelişen bir madde geçersizdir.
-**Kapsam:** `src/data/standards/*.json` altındaki 14 standart sözleşme, `src/schemas/task.ts` içindeki 14 üretim boyutu ve 7 seviyeli WBS hiyerarşisi.
+**Kapsam:** `src/data/standards/*.json` altındaki 15 standart sözleşme, `src/schemas/task.ts` içindeki 14 üretim boyutu ve 7 seviyeli WBS hiyerarşisi.
 
 ---
 
@@ -39,7 +39,7 @@ Bir düğüm birden fazla yüzefe dokunabilir (ör. archetype hem data-schema he
 
 ## 2. Standart × Seviye Matrisi
 
-Satır: 14 standart sözleşme (dosya adı `src/data/standards/<id>.json`; düğüm bağı `standardRefs.<key>`). Sütun: 7 WBS seviyesi. Hücre: Z/Ö/N/A.
+Satır: 15 standart sözleşme (dosya adı `src/data/standards/<id>.json`; düğüm bağı `standardRefs.<key>`). Sütun: 7 WBS seviyesi. Hücre: Z/Ö/N/A.
 
 Okuma kuralı: app ve module düğümleri `doc-governance` yüzefidir (task-to-code-contract §1: "kapsam ve sözleşme yöneticisidir, kod yazan değil"). Bu yüzden onlarda kod-üretim standartları Ö/N/A'ya düşer; sözleşme/mimari standartları Z kalır. archetype ve altı somut kod + test taşıdığı için kod standartları Z olur.
 
@@ -58,6 +58,7 @@ Okuma kuralı: app ve module düğümleri `doc-governance` yüzefidir (task-to-c
 | testing-strategy | testingStandardRef | Ö | Z | Z | Z | Z | Z | Ö |
 | release-versioning | releasePolicyRef | Z | Z | Z | Ö | N/A | N/A | N/A |
 | ai-governance | aiGovernanceRef | Z | Z | Z | Ö | Ö | N/A | N/A |
+| i18n-standards | i18nRef | Z | Z | Z | Ö | Ö | Ö | N/A |
 | dependency-policy | (ref alanı yok; repo geneli) | Z | Z | Z | Ö | Ö | Ö | N/A |
 | tech-profiles | techProfileRef | Z | Z | Z | Ö | Ö | N/A | N/A |
 
@@ -66,7 +67,33 @@ Notlar:
 - `tech-profiles` standart dosyalarında değil `src/data/tech-profiles.json` içindedir; `techProfileRef` o id havuzuna çözülür (`check-standards-coverage` bunu ayrı havuz olarak doğrular). Yine de seviye uygulanabilirliği açısından bir standart gibi davranır.
 - `dependency-policy` için düğüm üzerinde ayrı bir `standardRefs` anahtarı YOKtur; bu standart repo geneli `check-dependency-policy` kapısıyla zorlanır (allowlist/lisans/lockfile). Matriste seviye disiplinini göstermek için bırakılmıştır; düğüme ref olarak SET edilmez.
 - app/module satırlarında `architecture`, `release-versioning`, `ai-governance`, `tech-profiles` Z kalır: bunlar sözleşme/kapsam kararıdır (bounded-context sınırı, release train, AI yetki seti, headless-lock profili) ve kod yazılmadan da bağlayıcıdır.
+- `i18n-standards`, çevrilebilir metin veya locale/currency/timezone/jurisdiction taşıyan HER seviye ve yüzey sınıfına (app/module/archetype/surface) uygulanır. app/module'de Z'dir çünkü desteklenen locale seti, RTL politikası, fallback zinciri, para/tarih biçimlendirme ve tax-legal-localization + data-residency kararları kapsam düzeyinde alınır; bu politika alt seviyelere miras kalır. archetype'ta Z (çevrilebilir metin ve locale-farkında biçimlendirme somut yüzeyde doğar). stone/molecule/element'te Ö (çevrilebilir string taşıyan bir alt yüzey de aynı politikaya tabidir). Saf-backend sabit veya kullanıcıya görünmeyen/locale taşımayan atom'da N/A: gerekçe olarak "çevrilebilir metin veya locale-farkında değer yok; i18n üst frontend-ui/surface düğümünde kanıtlanır" yazılır. surface yüzeyi `techProfileRef` gibi seviye-üstü bağlanır; taşıdığı çevrilebilir metin için i18n politikasını devralır.
 - atom seviyesinde çoğu standart N/A'dır çünkü atom "tek satır değişiklik, tek sabit"tir (task-to-code-contract §1); kanıtı ve standardı üst düğümden devralır. Yalnız `coding-standards`/`short-code`/`testing-strategy` Ö kalır (tek satır da kodlama kuralına uymalı).
+
+---
+
+## 2.1 Yeni Primitifler × Uygulanabilirlik
+
+Bu oturumda eklenen çekirdek primitifleri (kernel + P0 domain) hangi seviyede/yüzeyde doğduklarını ve hangi standart eksenine bağlandıklarını tek bakışta verir. Bunlar standart sözleşmesi değil, çekirdek düğüm/alan primitifleridir; standart uygulanabilirliği §2/§3 kurallarını izler. Tipik seviye = primitifin en doğal doğduğu WBS seviyesi.
+
+| Primitif | Tipik seviye / yüzey | Ne taşır | Baskın standart ekseni | Not |
+|---|---|---|---|---|
+| Actor | archetype (backend) | Kimlik/rol/özne modeli; PDP girdisi | architecture, data-api-contract | AI üretemez/override edemez; insan onayı (bkz. eca-directive) |
+| Capability | archetype (backend) | İzin/yetenek atomu; PDP değerlendirir | architecture, ai-governance | AI yalnız taslak önerir |
+| PDP (Policy Decision Point) | archetype / module (backend) | Yetki kararı motoru (permit/deny) | architecture, testing-strategy | AI politika değiştiremez |
+| Mode-Profile | module / archetype | Çalışma-modu/özellik profili anahtarı | architecture, tech-profiles | AI üretemez/override edemez |
+| Computation | archetype (backend) | Saf hesap/formül birimi; deterministik | coding-standards, testing-strategy | scale-invariant birimlerle çalışır |
+| field-types | archetype / stone (data-schema) | Tipli alan taksonomisi (locale/currency/unit dahil) | data-api-contract, i18n-standards | locale/currency alanları i18n'e tabi |
+| scale-invariant | archetype / stone | Ölçek/birim-bağımsız değer tipi | coding-standards, data-api-contract | birim dönüşümü kayıpsız |
+| sequence | archetype (backend) | Sıra/numaralandırma üreteci (jurisdiction-farkında olabilir) | data-api-contract | i18n/jurisdiction biçimini devralır |
+| calendar-capacity | module / archetype | Takvim + kapasite/vardiya modeli | data-api-contract, i18n-standards | timezone/locale takvimi i18n'e tabi |
+| genealogy | archetype (data-schema) | Soy-ağacı/izlenebilirlik (lot/batch) grafiği | data-api-contract, testing-strategy | append-only izlenebilirlik |
+| edge-gateway | module (infra-ops) | Kenar/ağ geçidi köprüsü (OT/IoT sınırı) | architecture, observability | data-residency sınırına dikkat |
+| kpi-registry | module / archetype | KPI/metrik tanım kayıt defteri | observability, data-api-contract | tek-kaynak metrik sözleşmesi |
+| aps (advanced planning-scheduling) | module / archetype | İleri planlama-çizelgeleme motoru | architecture, testing-strategy | calendar-capacity + computation tüketir |
+| jurisdiction | module (backend) | Yargı-alanı/vergi/yasal-yerelleştirme + data-residency politikası | i18n-standards, dependency-policy | AI değiştiremez; tax-legal-localization kaynağı |
+
+Kural: bu primitifler doğdukları seviyenin yüzey sınıfına ait Z standart setini (§2, §5) devralır. locale/currency/timezone/jurisdiction taşıyan primitifler (field-types, sequence, calendar-capacity, jurisdiction) ek olarak `i18n-standards` (Z) kapsamındadır. Actor/Capability/PDP/Mode-Profile/jurisdiction politikaları AI tarafından üretilemez veya override edilemez; yalnız taslak önerilir, insan onaylar (claude-ai-archetype-eca-directive.md).
 
 ---
 

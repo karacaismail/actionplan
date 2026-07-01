@@ -1,0 +1,68 @@
+{
+  "id": "sso",
+  "name": "SSO (Single Sign-On) Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Kurumsal müşterinin kendi kimlik sağlayıcısıyla (IdP) tek girişle oturum açması için SAML 2.0 ve OIDC federasyon sözleşmesi: protokol desteği, IdP metadata ile assertion/id_token imza doğrulaması, JIT provisioning, tenant-scoped oturum izolasyonu, IdP config'in koda gömülmemesi ve federatif kimlik olaylarının değişmez audit'e yazılması. Yetki kararı bu katmanda hesaplanmaz; PDP'ye girdi olur.",
+  "appliesTo": ["backend", "identity"],
+  "rules": [
+    {
+      "id": "sso-federated-login",
+      "rule": "SSO iki federasyon protokolünü destekler: OIDC (birincil, authorization-code + PKCE) ve SAML 2.0 (SP-initiated). Her tenant kendi IdP'sini idp_config kaydı ile bağlar; implicit flow ve IdP-initiated SAML (unsolicited response) yasaktır. IdP entegrasyonu tenant-config'ten okunur, endpoint/client-secret koda gömülmez.",
+      "rationale": "İki standart protokol kurumsal IdP'lerin çoğunu kapsar; PKCE ve SP-initiated akış CSRF/replay yüzeyini kapatır, config-driven entegrasyon çok-kiracılı IdP çeşitliliğini koda gömmeden yönetir.",
+      "severity": "must",
+      "check": "integration (IdP login → yerel session) + review (idp_config koda gömülü sır yok)"
+    },
+    {
+      "id": "sso-assertion-validation",
+      "rule": "SAML assertion imzası IdP metadata'daki public-key ile doğrulanır; imzasız, süresi geçmiş (NotOnOrAfter), audience-uyumsuz veya replay edilen assertion reddedilir. OIDC federasyonunda id_token'ın iss/aud/exp/nonce claim'leri doğrulanır. İmza doğrulaması atlanamaz; doğrulanmamış assertion ile oturum açılamaz.",
+      "rationale": "İmza ve audience/exp/nonce doğrulaması olmadan saldırgan sahte assertion ile kimlik uydurabilir; IdP metadata public-key'e bağlama güven zincirini kriptografik olarak sabitler.",
+      "severity": "must",
+      "check": "integration (bozuk/imzasız/replay assertion → red) + unit (nonce/audience doğrulama)"
+    },
+    {
+      "id": "sso-idp-metadata",
+      "rule": "Her tenant'ın IdP metadata'sı (SAML entityID + signing certificate + SSO endpoint; OIDC issuer + discovery URL) idp_config ile sürümlenerek saklanır; sertifika rotasyonu ve süre sonu (expiry) izlenir. Süresi dolmuş/iptal edilmiş signing certificate ile assertion doğrulaması reddedilir. Metadata elle koda kopyalanmaz, config kaynağından yüklenir.",
+      "rationale": "IdP signing certificate'i düzenli rotate olur; süresi dolmuş sertifikayı sessizce kabul etmek sahte imzaya kapı açar, metadata'yı sürümlemek denetlenebilir ve rotasyon-güvenli federasyon sağlar.",
+      "severity": "should",
+      "check": "review (idp_config metadata + expiry izleme) + integration (süresi dolmuş cert → red)"
+    },
+    {
+      "id": "sso-jit-provisioning",
+      "rule": "İlk başarılı SSO girişinde kullanıcı just-in-time provision edilir: IdP claim'lerinden (email, groups) yerel Party ve rol eşlemesi kurulur. Rol eşlemesi PDP policy'sine girdi olarak verilir; yetki bu katmanda hesaplanmaz (if role == admin gibi yetki mantığı yasaktır). Eşleme kuralları config'ten okunur.",
+      "rationale": "JIT provisioning IdP'yi kimlik kaynağı yapıp elle kullanıcı açmayı ortadan kaldırır; rol map'i PDP'ye devretmek kimlik ile yetki katmanlarını ayrı tutar ve drift'i önler.",
+      "severity": "should",
+      "check": "integration (yeni kullanıcı + rol map) + review (yetki mantığı PDP'de)"
+    },
+    {
+      "id": "sso-session-tenant-isolation",
+      "rule": "Bir tenant'ın IdP'siyle açılan SSO oturumu yalnız o tenant kapsamında geçerlidir; oturum idle- ve absolute-timeout taşır ve logout/güvenlik olayında anında iptal edilir. Çapraz-tenant SSO oturumu yasaktır ve PostgreSQL RLS (tenant_id) ile zorlanır; çapraz-tenant kimlik/oturum sızıntısı blocker'dır.",
+      "rationale": "Federatif oturumun tenant sınırını aşması çok-kiracılı izolasyonu kırar ve veri sızıntısı doğurur; timeout + anında iptal ele geçirilmiş oturumun ömrünü sınırlar.",
+      "severity": "must",
+      "check": "integration (çapraz-tenant → red, RLS izolasyon) + integration (timeout/revoke → 401)"
+    }
+  ],
+  "banned": [
+    "saml-idp-initiated-unsolicited",
+    "oidc-implicit-flow",
+    "unsigned-assertion-accept",
+    "idp-config-hardcoded-secret",
+    "expired-signing-cert-accept",
+    "cross-tenant-sso-session",
+    "authz-in-sso-layer"
+  ],
+  "allowed": [
+    "oidc-authorization-code-pkce",
+    "saml2-sp-initiated",
+    "idp-metadata-signature-validation",
+    "jit-provisioning",
+    "tenant-scoped-session",
+    "rls-tenant-isolation"
+  ],
+  "references": [
+    "docs/standards/03-authn-authz-iam-standard.md",
+    "docs/adr-0027-engineering-standards.md",
+    "docs/pdp-policy-contract.md"
+  ]
+}

@@ -19,7 +19,10 @@ Eksik olan: (a) tek makine-okunur manifest, (b) şemada tech-binding alanı, (c)
   taksonomisiyle çakıştığı için isim **tech-profile**.
 - Profiller (yüzey başına, archetype başına DEĞİL):
   - **saas-app** (ürün): React19+Vite+TS, Radix headless, **SCSS+token**, TanStack Router/Query/Table,
-    RHF+Zod form, viz tembel (ECharts/deck.gl/React Flow).
+    RHF+Zod form, viz tembel (ECharts/deck.gl/React Flow). **i18n profili** (global ürün):
+    locale-farkında biçimlendirme = **CLDR** (Intl API; para/tarih/sayı), **RTL(auto)** (dir=auto +
+    mantıksal CSS özellikleri), çoğul/gramer = **ICU MessageFormat**, çeviri anahtarı zorunlu (çıplak
+    string yasak), **pseudo-localization** test kapısı. i18n standardı `i18nRef` ile bağlanır (ADR-0027).
   - **static-frontpage** (ilan/ürün/blog detay, sadece frontend): **Alpine.js** + TS + SCSS, React YOK.
   - **data-viz**: ECharts/deck.gl/React Flow tembel; AntV ancak yetmediğinde.
   - **tooling** (actionplan/projector): ürün değil → **Tailwind serbest**, yine headless + Next/Redux yasak.
@@ -40,6 +43,9 @@ Eksik olan: (a) tek makine-okunur manifest, (b) şemada tech-binding alanı, (c)
 - **Alpine** = yalnız static-frontpage yüzeyi (SaaS app'te yok).
 - **antd/Refine/MUI** = ürün/SDK'da yasak; bir distribution izole sınırında hız için kullanırsa kendi AAA'sını garanti eder, paylaşılan SDK'ya giremez.
 - **Viz** = yalnız tembel-yüklü, ana pakete girmez.
+- **i18n** = saas-app yüzeyinde zorunlu (global ürün): CLDR biçimlendirme + RTL(auto) + ICU çoğul +
+  pseudo-localization kapısı. Kendi çeviri kütüphanesi uydurma yasak; ICU MessageFormat kilit. static-frontpage
+  yüzeyi de çevrilebilir metinde aynı locale/RTL kurallarına tabidir. Kaynak sözleşme: `i18n-standards`.
 
 ## 5. Zorlama (enforcement)
 

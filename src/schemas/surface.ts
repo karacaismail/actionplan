@@ -31,7 +31,8 @@ export const SurfaceResponsiveSchema = z.object({
 });
 
 export const SurfaceA11ySchema = z.object({
-  wcag: z.string().default("2.2-AAA"),
+  /** Erişilebilirlik tabanı; yasal + uygulanabilir seviye. "2.2-AAA" opsiyonel hedef değer olarak kalır (bkz. surface-v2-directive §8). */
+  wcag: z.string().default("2.2-AA"),
   keyboardNav: z.boolean().default(true),
   /** Durum yalnız renkle değil metinle de bildirilir. */
   textStatus: z.boolean().default(true),
@@ -54,6 +55,17 @@ export const SurfaceContractSchema = z.object({
   layout: z.enum(["table", "cards", "split", "grid", "stepper", "chart"]).default("table"),
   responsive: SurfaceResponsiveSchema.default({}),
   a11y: SurfaceA11ySchema.default({}),
+  /** Uluslararasılaştırma beyanı (opsiyonel; geriye-uyumlu, bkz. surface-v2-directive §9).
+   *  locales = desteklenen locale listesi; defaultLocale = varsayılan dil; rtl = yazım yönü;
+   *  messagesRef = çeviri kaynağı referansı (ArcheType i18n-text alanına bağlanır). */
+  i18n: z
+    .object({
+      locales: z.array(z.string()).default([]),
+      defaultLocale: z.string().default("tr"),
+      rtl: z.boolean().default(false),
+      messagesRef: z.string().default(""),
+    })
+    .optional(),
   /** Erişebilecek roller (boş = ArcheType izinlerine devre). */
   permissions: z.array(z.string()).default([]),
   /** Bağlı tech profili (tech-profiles.json id'si). "" = sınıfından devralır.

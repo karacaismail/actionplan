@@ -1,0 +1,70 @@
+{
+  "id": "g11n",
+  "name": "Globalizasyon Stratejisi Standardı (g11n)",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027", "adr-0026"],
+  "summary": "i18n (çok-dile hazırlama) ile l10n (bölgeye uyarlama) üstüne g11n katmanını ekleyen strateji sözleşmesi: Locale, Currency, Tax ve Data-residency BAĞIMSIZ (ortogonal) eksenlerdir; biri diğerinden türetilmez (tr-TR locale + EUR para + DE vergi + TR residency aynı anda olabilir). k-jurisdiction (6-eksen resolver) ile çözülür, eksen kombinasyonu koda değil politika/config katmanına yazılır. i18n/l10n kural değerleri i18n-standards.json içindedir; bu sözleşme onları kopyalamaz, g11n ortogonallik + residency + tenant-izolasyon çatısını tanımlar.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "g11n-axis-orthogonality",
+      "rule": "Locale, Currency, Tax ve Data-residency BAĞIMSIZ (ortogonal) eksenlerdir; hiçbiri diğerinden türetilmez. Bir eksenin değeri diğerini varsaymak yasaktır (locale=currency, currency=tax veya jurisdiction=residency kısayolu kurulamaz). Dört eksen k-jurisdiction (6-eksen resolver) ile çözülür ve her istek çözülmüş eksen bağlamını ayrı ayrı taşır (ör. tr-TR locale, EUR para, DE vergi, TR residency aynı anda geçerli olabilir).",
+      "rationale": "Eksenleri birbirine bağlamak (locale'den currency, currency'den tax türetmek) çok-bölge ticaretini ve mevzuat uyumunu kırar; bir Alman tenant'ın Türk müşterisi tr-TR arayüz + EUR fiyat + DE vergi görebilir.",
+      "severity": "must",
+      "check": "jurisdiction conformance (eksen kombinasyonu çakışma testi: tr-TR + EUR + DE + TR yeşil) + review"
+    },
+    {
+      "id": "g11n-currency-explicit",
+      "rule": "Para tutarları her zaman currency kodu ile birlikte taşınır ve dönülür ({amount, currency}); çıplak float/number para yasaktır çünkü currency ekseni locale'den ortogonaldir. Currency locale'den (ör. Accept-Language) türetilmez; jurisdiction resolver'ın currency ekseninden gelir. Para biçimleme locale-farkındadır (CLDR/Intl) ama para BİRİMİ locale değil currency ekseni tarafından belirlenir.",
+      "rationale": "Çıplak float para birim belirsizliği ve yuvarlama hatası üretir; currency'yi locale'den türetmek çok-para-birimli tenant'ta yanlış birim gösterir (locale=tr iken para EUR olabilir).",
+      "severity": "must",
+      "check": "check-i18n (çıplak-float-para tarama; {amount, currency} sözleşmesi) + jurisdiction conformance"
+    },
+    {
+      "id": "g11n-tax-jurisdiction-axis",
+      "rule": "Vergi (tax) davranışı bağımsız bir jurisdiction eksenidir; kullanıcının locale'i, para birimi veya arayüz dili ile eşitlenemez ve kodda if/else bölge dalıyla değil politika/config katmanında ele alınır (codebase bölgeye göre değişmez). Vergi hesaplama etkin tax-jurisdiction eksenine göre çözülür (ör. DE vergi kuralı), müşterinin locale'inden veya currency'sinden bağımsızdır.",
+      "rationale": "Vergiyi locale/currency ile birleştirmek (tr-TR ⇒ TR vergi varsaymak) sınır-ötesi satışta yanlış vergi uygular; bölge farkını koda gömmek her yeni jurisdiction'da codebase değişikliği ve drift yaratır.",
+      "severity": "must",
+      "check": "jurisdiction conformance (tax ekseni locale/currency'den bağımsız çözülüyor) + review"
+    },
+    {
+      "id": "g11n-data-residency-enforcement",
+      "rule": "Data-residency ayrı bir jurisdiction eksenidir: bölgeye bağlı veri sorgu katmanında zorlanır (ör. TR verisi TR'de kalır) ve failover başka bölgeye geçse bile residency kapısı korunur; hedef bölge dışına veri sızması yasaktır (KVKK/GDPR). Residency etiketi tenant'ın jurisdiction konfigürasyonundan türetilir, koddan değil; residency etiketsiz kişisel veri tablosu yasaktır.",
+      "rationale": "Uygulama-içi tek varsayım tek unutulan yolda mevzuat ihlali üretir; failover'da residency kaybı yasal/güvenlik riskidir ve residency başka bir eksenden (locale/currency) türetilemez.",
+      "severity": "must",
+      "check": "residency conformance testi (bölge sızıntısı yok; failover'da residency korunur) + review"
+    },
+    {
+      "id": "g11n-tenant-axis-isolation",
+      "rule": "Her tenant kendi desteklenen-locale kümesini ve varsayılan jurisdiction eksenlerini (currency/tax/timezone/residency) tanımlar; bir tenant'ın varsayılan eksen değerleri diğerine sızmaz. Eksen çözümlemesi tenant sınırını korur ve residency etiketi tenant jurisdiction konfigürasyonundan türetilir. Global bir varsayılan (tek currency/tek jurisdiction) tüm tenant'lara dayatılamaz.",
+      "rationale": "Tenant'lar farklı jurisdiction profillerinde çalışır; global tek varsayılan bir tenant'ın parasını/vergisini/residency'sini diğerine sızdırır ve çok-bölge SaaS izolasyonunu kırar.",
+      "severity": "must",
+      "check": "integration (tenant eksen izolasyonu: bir tenant'ın varsayılan currency/residency diğerine sızmıyor) + review"
+    }
+  ],
+  "banned": [
+    "locale-derived-currency",
+    "currency-derived-tax",
+    "jurisdiction-derived-residency",
+    "bare-float-money",
+    "region-branch-in-codebase",
+    "residency-lost-on-failover",
+    "global-default-jurisdiction-forced-on-tenant"
+  ],
+  "allowed": [
+    "jurisdiction-6-axis-resolver",
+    "amount-currency-pair",
+    "policy-config-jurisdiction-layer",
+    "per-tenant-jurisdiction-axes",
+    "residency-query-enforcement"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/standards/01-i18n-l10n-g11n-standard.md",
+    "src/data/standards/i18n-standards.json",
+    "BCP 47",
+    "Unicode CLDR",
+    "ISO 4217"
+  ]
+}

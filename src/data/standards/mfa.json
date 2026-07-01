@@ -1,0 +1,68 @@
+{
+  "id": "mfa",
+  "name": "Çok Faktörlü Kimlik Doğrulama (MFA) Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Parola ötesinde ikinci faktör zorunluluğu: TOTP (RFC 6238) ve WebAuthn/FIDO2 enrollment, birinci faktör geçse bile oturumu yarım tutan MFA enforcement, hassas eylemler için step-up doğrulama (izin kararı PDP'de), tek-kullanımlık hash'li kurtarma kodları ve tenant+user-scoped, envelope-şifreli faktör saklama. SMS-OTP yalnız düşük-güvenlik fallback'idir, birincil değildir.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "mfa-factor-types",
+      "rule": "MFA en az iki faktör tipi sunar: TOTP (RFC 6238) ve WebAuthn/FIDO2 (donanım/platform authenticator). Enrollment akışı TOTP için secret üretip QR/otpauth URI ile bağlar ve ilk doğrulamayı zorunlu tutar; WebAuthn için attestation ile credential kaydı yapar. SMS-OTP yalnız düşük-güvenlik fallback'i olarak işaretlenir, birincil faktör olamaz.",
+      "rationale": "TOTP ve WebAuthn phishing'e ve SIM-swap'e karşı SMS'ten güçlüdür; enrollment sırasında ilk doğrulama zorunluluğu kullanıcının faktörü gerçekten kurduğunu kanıtlar.",
+      "severity": "should",
+      "check": "integration (TOTP + WebAuthn enrollment + doğrulama) + review"
+    },
+    {
+      "id": "mfa-enforcement",
+      "rule": "MFA zorunluysa ikinci faktör olmadan oturum tamamlanmaz; birinci faktör (parola) geçse bile oturum `mfa_required` durumunda yarım tutulur ve korumalı API erişimi reddedilir. MFA gerekliliği parolanın geçmesine bağlanamaz; yarım oturum yalnız faktör doğrulama endpoint'lerine erişebilir.",
+      "rationale": "Parola geçince MFA'yı atlamak faktörü etkisizleştirir; yarım oturum modeli ikinci faktörü gerçek bir kapı yapar.",
+      "severity": "must",
+      "check": "integration (2. faktör yok → korumalı erişim reddedilir + yarım oturum)"
+    },
+    {
+      "id": "mfa-step-up",
+      "rule": "Hassas eylem (para transferi, yetki değişimi, tenant geçişi, kredential değişimi) için step-up MFA istenir; mevcut oturumun faktör doğrulaması yeterince taze değilse eylem öncesi yeniden faktör doğrulaması yapılır. Bu eylemin *izinli* olup olmadığı yine PDP'ye (`k-policy-pdp`) sorulur; step-up yetkiyi hesaplamaz, yalnız kimlik tazeliğini kanıtlar. Step-up kararı audit'lenir.",
+      "rationale": "Uzun oturumda çalınmış cookie hassas eylemi yapamasın diye taze faktör kanıtı gerekir; yetkiyi PDP'ye bırakmak kimlik ve yetki katmanlarının karışmasını önler.",
+      "severity": "should",
+      "check": "integration (hassas eylem → step-up challenge + karar-logu)"
+    },
+    {
+      "id": "mfa-recovery",
+      "rule": "Kurtarma kodları tek-kullanımlık üretilir ve yalnız hash'li saklanır (düz-metin yasak); kullanılmış kod tekrar kabul edilmez ve kullanılınca geçersizleşir. Kod seti kullanıcıya bir kez gösterilir, yeniden üretim eski seti iptal eder. Kurtarma akışı da tıpkı normal MFA gibi audit'lenir.",
+      "rationale": "Tek-kullanım + hash saklama, sızmış kurtarma kodunun tekrar kullanımını ve veritabanı sızıntısında düz-metin ifşasını engeller; audit iz kötüye kullanımı görünür kılar.",
+      "severity": "must",
+      "check": "unit (tek-kullanım + hash) + audit (kurtarma olayı kaydı)"
+    },
+    {
+      "id": "mfa-factor-storage",
+      "rule": "MFA faktörleri (`mfa_factors` tablosu) tenant+user-scoped saklanır ve tenant izolasyonu (RLS) altındadır. TOTP secret ve WebAuthn credential materyali envelope-şifreli (KMS/data-key) tutulur; düz-metin secret veya uygulama koduna gömülü anahtar yasaktır. Faktör verisi kimlik servis sınırı dışına (iş modüllerine) sızmaz.",
+      "rationale": "Şifreli, tenant-scoped saklama veritabanı sızıntısında faktör materyalini korur ve çapraz-tenant erişimi engeller; düz-metin secret tüm MFA'yı geçersiz kılar.",
+      "severity": "must",
+      "check": "review (envelope şifreleme + RLS) + migration (mfa_factors tenant-scoped)"
+    }
+  ],
+  "banned": [
+    "sms-otp-as-primary-factor",
+    "mfa-bypass-on-password-only",
+    "plaintext-totp-secret",
+    "reusable-recovery-code",
+    "cross-tenant-mfa-factor-access",
+    "authz-logic-in-mfa-layer"
+  ],
+  "allowed": [
+    "totp-rfc6238-enrollment",
+    "webauthn-fido2-enrollment",
+    "mfa-required-half-session",
+    "step-up-mfa-for-high-risk-action",
+    "single-use-hashed-recovery-codes",
+    "envelope-encrypted-factor-storage",
+    "sms-otp-low-security-fallback"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/standards/03-authn-authz-iam-standard.md",
+    "docs/pdp-policy-contract.md"
+  ]
+}

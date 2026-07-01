@@ -1,0 +1,84 @@
+{
+  "id": "a11y",
+  "name": "Erişilebilirlik (a11y) Standardı",
+  "version": "1.0.0",
+  "family": "design",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "WCAG 2.2 AA taban erişilebilirlik çatısı: semantic HTML + landmark, metin/arka-plan kontrast AA (normal 4.5:1, büyük 3:1), aria-live canlı bölge duyurusu, medya alt-text zorunluluğu ve axe-core CI konformansı. Klavye akışı, dokunma hedefi, focus halkası, form-hata bağı ve renk-dışı sinyal gibi mevcut kurallar ui-components + ux-interaction sözleşmelerinde yaşar; bu standart onları erişilebilirlik ekseninde toplar ve references ile işaret eder, değerlerini kopyalamaz. AAA yüzey-bazlı hedeftir (opt-in), taban AA'nın altına inilmez.",
+  "appliesTo": ["product-ui", "component-library", "flows", "forms", "admin-panel"],
+  "rules": [
+    {
+      "id": "a11y-semantic-html-landmarks",
+      "rule": "Yüzey semantic HTML üzerine kurulur: etkileşimli öğe için doğru element kullanılır (buton `<button>`, bağlantı `<a href>`, başlık `<h1>..<h6>` hiyerarşik), sayfa iskeleti landmark'larla işaretlenir (`<header>`, `<nav>`, `<main>` tek, `<footer>`, gerekli yerde `role=\"region\"` + `aria-label`). `<div onClick>`/`<span onClick>` ile buton/bağlantı taklidi ve başlık atlaması (h1'den h3'e sıçrama) YASAK; bileşen içi ARIA rol detayı `uic-a11y-roles-per-component` sözleşmesinde tanımlıdır.",
+      "rationale": "Semantic element ve landmark, ekran-okuyucuya yapıyı ve gezinme noktalarını ücretsiz verir; div-buton klavye ve ARIA davranışını kaybeder (WCAG 1.3.1 Info and Relationships + 4.1.2 Name, Role, Value).",
+      "severity": "must",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-keyboard-operable",
+      "rule": "Tüm yüzey klavyeyle tam işletilebilir olmalıdır: her aksiyon Tab ile erişilir, Enter/Space ile tetiklenir, Escape açık katmanı kapatır, klavye tuzağı bulunmaz ve odak sırası DOM/okuma sırasına eşittir (pozitif tabindex YASAK). Bu gereksinimin bileşen-düzeyi kural metni `ux-interaction/uxi-keyboard-full` ve `ux-interaction/uxi-focus-order-logical` sözleşmelerindedir; a11y ekseni bu iki kuralın konformansını (klavye-only e2e akış tamamlanır) zorunlu kılar, metnini tekrar yazmaz.",
+      "rationale": "Fare-only akış klavye ve ekran-okuyucu kullanıcısını dışlar; tam klavye işletilebilirliği WCAG 2.1.1 (Keyboard) + 2.1.2 (No Keyboard Trap) tabanıdır.",
+      "severity": "must",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-contrast-aa",
+      "rule": "Metin ve anlam taşıyan grafik/UI bileşeni arka-planına karşı WCAG 2.2 AA kontrastını sağlar: normal metin ≥4.5:1, büyük metin (≥24px veya ≥19px bold) ≥3:1, UI bileşeni/durum grafiği kenarı ≥3:1. Kontrast eşiği tema/tenant token'larında değişmezdir; AA-altı bir palet CI'da reddedilir. AAA (metin 7:1) yalnız yüzey-bazlı hedeftir (opt-in), genel-geçer zorunlu değildir; bu kontrast eşiği focus halkası kontrastından (`uic-focus-visible-7to1`) ayrıdır ve onu kopyalamaz.",
+      "rationale": "Düşük kontrast az-gören kullanıcı için metni okunamaz kılar; AA kontrast tabanı (1.4.3 Contrast Minimum + 1.4.11 Non-text Contrast) tüm tenant temalarında değişmez.",
+      "severity": "must",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-aria-live-announce",
+      "rule": "Sayfa yenilenmeden değişen dinamik içerik (bildirim/toast, canlı arama sonucu sayısı, asenkron durum, form gönderim sonucu) uygun bir `aria-live` bölgesiyle ekran-okuyucuya duyurulur: bilgilendirici güncelleme `aria-live=\"polite\"`, acil/hata `aria-live=\"assertive\"` (veya `role=\"alert\"`), ilerleyen işlem `aria-busy=\"true\"`. Sessiz DOM güncellemesi (görsel değişir ama ekran-okuyucuya duyurulmaz) YASAK. Form-alanı hata bağı (role=alert + aria-describedby) `ux-interaction/uxi-inline-validation-rhf-zod` sözleşmesinde tanımlıdır; bu kural onu tekrar etmez, canlı-bölge mekanizmasını ekler.",
+      "rationale": "Görsel-only güncelleme ekran-okuyucu kullanıcısı için görünmezdir; aria-live bölgesi değişikliği duyurarak WCAG 4.1.3 (Status Messages) karşılığını sağlar.",
+      "severity": "must",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-touch-target-conformance",
+      "rule": "Tüm tıklanabilir/dokunulabilir hedefler en az 44x44px etkili dokunma alanına ve bitişikler arası ≥8px boşluğa sahip olmalıdır. Bu gereksinimin ölçü kuralı `ui-components/uic-touch-target-44` ve mobil ergonomi karşılığı `ux-interaction/uxi-mobile-ergonomics-44` sözleşmelerindedir; a11y ekseni bu hedefin her yüzeyde (yönetici paneli dahil) konformansını zorunlu kılar ve değerini kopyalamaz, references ile işaret eder (WCAG 2.5.8 Target Size Minimum).",
+      "rationale": "Küçük veya bitişik hedef motor-becerisi kısıtlı ve dokunmatik kullanıcı için hatalı dokunmaya yol açar; ≥44px hedef WCAG 2.2 (2.5.8) tabanıdır.",
+      "severity": "should",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-media-alt-text",
+      "rule": "Anlam taşıyan tüm görsel/medya erişilebilir metin taşır: `<img>` anlamlı `alt`, salt-dekoratif görsel boş `alt=\"\"` (veya `aria-hidden=\"true\"`), kullanıcı-yüklemeli medya şema düzeyinde zorunlu `alt_text` alanı olmadan yayın akışına giremez (i18n bağlamında `i18n-text`). Karmaşık grafik/ikon-buton için erişilebilir ad `uic-a11y-roles-per-component` ile hizalıdır; bu kural medya varlığının alt-metin ALANININ varlığını ve zorunluluğunu tanımlar, içerik kalitesini editöryel sürece bırakır.",
+      "rationale": "Alt-text'siz görsel ekran-okuyucu kullanıcısına içerik kaybettirir; alan-düzeyi zorunluluk WCAG 1.1.1 (Non-text Content) karşılığını şema düzeyinde garanti eder.",
+      "severity": "should",
+      "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-axe-ci-conformance",
+      "rule": "Erişilebilirlik CI kapısında otomatik doğrulanır: bileşen taraması (jest-axe) ve e2e taraması (Playwright + axe) WCAG 2.2 AA seviyesinde kritik/serious kategoride SIFIR ihlal vermelidir. `check-ui-standards` kapısı yeşil olmadan ve axe taraması AA'da sıfır kritik/serious ihlal üretmeden yüzey birleştirilemez; AA taban ihlali olan tek bir yüzey bile kabul edilmez. AAA yalnız opt-in yüzeylerde ek hedef olarak ölçülür, kapı koşulu değildir.",
+      "rationale": "Manuel a11y denetimi ölçeklenmez ve regresyon kaçırır; axe-core CI konformansı AA tabanını her merge'de zorlayarak drift'i engeller.",
+      "severity": "must",
+      "check": "check-ui-standards"
+    }
+  ],
+  "banned": [
+    "div-onclick-as-button",
+    "heading-level-skip",
+    "aa-contrast-below-threshold",
+    "silent-dom-update-no-announce",
+    "img-without-alt",
+    "visual-only-captcha",
+    "axe-critical-serious-violation"
+  ],
+  "allowed": [
+    "semantic-html",
+    "aria-landmark",
+    "aria-live-region",
+    "alt-text-field",
+    "jest-axe",
+    "playwright-axe",
+    "wcag-aaa-opt-in"
+  ],
+  "references": [
+    "docs/standards/02-a11y-accessibility-standard.md",
+    "src/data/standards/ui-components.json",
+    "src/data/standards/ux-interaction.json",
+    "docs/adr-0027-engineering-standards.md"
+  ]
+}

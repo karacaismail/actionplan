@@ -1,0 +1,572 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "k-worker",
+  "wbsCode": "3.16",
+  "level": "module",
+  "title": "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi",
+  "slug": "k-worker",
+  "summary": "Uzun süren, tekrar denenebilir veya zamanlanmış işi (AI enrichment, sync, medya, export, analitik) HTTP istek-yanıt döngüsünden ayırıp tenant-izole, retry+backoff'lu, dead-letter'lı, circuit-breaker'lı ve gözlemlenebilir biçimde arka planda çalıştıran kernel primitifi. Celery/ARQ + Redis üzerine oturur; iş kaybolmaz, iki kez etki etmez, sessizce ölmez.",
+  "parentId": "app-layer0",
+  "order": 96,
+  "icon": "ph-queue",
+  "tags": [
+    "worker",
+    "task-queue",
+    "celery",
+    "arq",
+    "retry",
+    "dead-letter",
+    "circuit-breaker",
+    "scheduled",
+    "kernel",
+    "layer0"
+  ],
+  "dependsOn": [
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [
+    "scale-invariant",
+    "k-bus",
+    "k-sequence",
+    "k-boyut1-ops-panel"
+  ],
+  "refs": [
+    "yönerge: docs/k-worker-taskqueue-directive.md",
+    "PIM-v2: §3.1 görev kuyruğu (Celery/ARQ) + §5 NFR dayanıklılık (2026-07-01)"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi kapsamı + atomik tip paydaş onayı",
+        "Kabul kriterleri taslağı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip için test stratejisi (unit/e2e/a11y)",
+        "Testing-loop (maks 6) tanımı"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip Zod sözleşmesi + expand-contract göç",
+        "tip güvenliği veri sınıflandırması"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi engine/UI ayrımı",
+        "Lint/tip kapıları yeşil"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "atomik tip e2e + axe AAA 0 ihlal",
+        "Kapsam eşiği"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi DoD + kanıt (evidence)"
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi CI→Pages dağıtımı",
+        "atomik tip runbook + geri-alma"
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": null,
+    "end": null,
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": null,
+    "baselineEnd": null
+  },
+  "deliverables": [
+    "Job / Task / Schedule sözleşmesi (docs/k-worker-taskqueue-directive.md referansı)",
+    "Celery/ARQ + Redis entegrasyonu: retry+backoff, dead-letter queue, circuit breaker, zamanlanmış iş",
+    "Background-job o11y görünürlüğü + retry tek-etki ve dead-letter testleri"
+  ],
+  "acceptanceCriteria": [
+    "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi için atomik tip işlevsel kabulü karşılandı",
+    "tip güvenliği + AAA erişilebilirlik kapıları geçti"
+  ],
+  "risks": [
+    {
+      "id": "r-k-worker-1",
+      "desc": "atomik tip sözleşmesi/şeması üst katmanla uyumsuzlaşabilir",
+      "severity": "medium",
+      "mitigation": "Sözleşme testleri + sürümleme (expand-contract)"
+    },
+    {
+      "id": "r-k-worker-2",
+      "desc": "doğrulama maliyeti ölçek altında yavaşlayabilir",
+      "severity": "low",
+      "mitigation": "İndeks + önbellek + yük testi"
+    }
+  ],
+  "rollback": "Görev tanımı sürümlü; hatalı retry/DLQ/breaker politikası geri alınır ama kuyruğa alınmış ve dead-letter'daki işler korunur (iş kaybolmaz — replay için saklanır). Modül özellik bayrağıyla devre dışı bırakılırsa yeni iş kuyruklanmaz, koşan iş güvenli tamamlanır (yalnız non-prod'da tam kapatma).",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-k-worker-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "k-worker"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "k-worker"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "k-worker"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-k-worker-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Job kaydı kuyruğa alınan tek işi tutar: job_type (ai_enrichment|sync|media|export|analytics), task_name, payload (JSONB), status durum makinesi (queued→running→succeeded→failed→dead)",
+        "Task registry görev davranışını ve dayanıklılık politikasını beyan eder: retry_policy, dead_letter, circuit_breaker, idempotent, visibility_timeout_s, ai_cost_scope",
+        "Schedule zamanlanmış işi cron/interval_s ile tetikler; overlap_policy (skip|queue|replace) önceki çalışma bitmeden tetiklenmeyi yönetir",
+        "worker.enqueue(job_type, task_name, payload, tenant_id, idempotency_key) tek giriş noktasıdır; iş kaybolmaz, iki kez etki etmez, sessizce ölmez"
+      ],
+      "notes": "k-worker Celery/ARQ + Redis üzerine oturur; PIM-v2'nin beş iş türünü (ai_enrichment/sync/media/export/analytics) tek dayanıklılık zarfında koşar. Job/Task/Schedule §5 sözleşmesi sabittir.",
+      "prompt": "k-worker Job/Task/Schedule özellik sınırını kapsa: enqueue sözleşmesi, job_type enum'u, retry/DLQ/breaker politika alanları ve zamanlanmış iş overlap-policy. çıktı: net durum makinesi + hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Her Job ve Schedule tenant_id taşır ve fail-closed çalışır (§2.1); worker işi çalıştırmadan önce tenant bağlamını set eder, görev içi her sorgu tenant-izole",
+        "Rate-limit ve kuyruk varsayılan tenant kapsamlıdır: bir tenant'ın 5000 ürünlük export'u komşu tenant'ın enrichment'ını boğamaz (noisy-neighbor koruması)",
+        "Platform-genel sistem işleri (tenant_id=NULL) yalnız işletmeci tarafından tanımlanır; tenant kotası (eşzamanlı iş, günlük AI çağrısı) aşılırsa iş reddedilir/ertelenir ve audit'lenir",
+        "payload serbest kod değil veridir; ai_enrichment işleri ai_cost_scope üzerinden token/maliyet muhasebesine ve kill-switch'e kancalıdır"
+      ],
+      "notes": "Güvenlik çekirdeği tenant-adalet ve fail-closed'dır: her iş tenant-scoped kuyrukta koşar, komşu-tenant görünmez, kota aşımı audit'lenir. payload asla kod olarak yürütülmez.",
+      "prompt": "k-worker güvenlik yüzeyini kapsa: tenant_id fail-closed, tenant-scope rate-limit/queue, kota reddi ve payload-veri sınırı. güvenlik sınırı: komşu-tenant boğma yasak, payload kod değil. çıktı: tenant-izole yürütme.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "App kendi threading/cron'unu yazmaz; tüm arka-plan işi k-worker Task kaydı + Schedule ile tanımlanır (tekrarlanan retry/DLQ/adalet yüzeyi elenir)",
+        "Job/Task/Schedule tipleri katı Zod/SQLAlchemy sözleşmesiyle üretilir; enqueue'suz thread/cron açan görev check-worker-contract ile CI'da reddedilir",
+        "İş domain kaydıyla aynı session.commit() içinde platform_outbox'a yazılır; 'sipariş yazıldı ama iş kuyruklanmadı' dual-write kod yolu imkânsızlaşır",
+        "İş mantığı (fiyat/vergi hesabı) k-worker'a gömülmez — o platform_computation'ın işidir; k-worker yalnız yürütme zarfını tutar, ölü kod + lint kapısı uygulanır"
+      ],
+      "notes": "Kod optimizasyonu tekilleştirmedir: her app'in kendi thread/cron'u yerine tek Task/Schedule sözleşmesi; dual-write outbox'la, iş-mantığı ayrımı computation'la sağlanır.",
+      "prompt": "k-worker kod optimizasyonunu kapsa: thread/cron yasağı, enqueue-only giriş, outbox-aynı-transaction dual-write kapatma ve yürütme/iş-mantığı ayrımı. kısıt: enqueue'suz görev CI'da red. çıktı: tek dayanıklılık zarfı.",
+      "provenance": "template"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Redis broker/backend kimlik bilgileri secret rotasyonuna tabi; worker en az ayrıcalıkla çalışır, tenant kotası eşzamanlı iş ve günlük AI çağrısını sınırlar",
+        "ai_cost_scope ile token/maliyet muhasebesi; platform kill-switch (agentPolicy.killSwitch) tetiklenince kuyruğa yeni AI işi alınmaz, koşan iş güvenli durdurulur",
+        "retry_policy/circuit_breaker/dead_letter politikası backend-only ruleset (canOverride:false); AI bu politikayı doğrudan override edemez",
+        "Bağımlılıklar (Celery/ARQ/Redis istemci) CVE taramasından geçer; DLQ'daki iş silinmez ama PII taşıyorsa erişim audit'li ve kapsamlıdır"
+      ],
+      "notes": "Güvenlik sertleştirme bütçe ve yetki sınırıdır: kill-switch AI maliyetini keser, kota noisy-neighbor'ı önler, dayanıklılık politikası AI'a kapalı backend ruleset'tir.",
+      "prompt": "k-worker güvenlik optimizasyonunu kapsa: secret rotasyonu, ai_cost_scope kill-switch, backend-only retry/breaker/DLQ politikası ve kota sınırı. güvenlik sınırı: politika override yok, kill-switch önceliklidir. çıktı: bütçe-korumalı yürütme.",
+      "provenance": "template"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Uzun/tekrarlı/zamanlanmış iş HTTP istek-yanıt döngüsünden ayrılır (AI enrichment ~20sn, 5000 ürün push dakikalar); istek kilitlenmez, timeout'ta veri yarım kalmaz",
+        "Geçici hatada exponential backoff + jitter ile retry (max_attempts'e dek); run_after gecikmeyi taşır, çöken bağımlılıkta circuit breaker boğulmayı keser",
+        "Rate-limit tenant-scope kuyruk-derinliğini dengeler; kuyruk-derinliği, iş gecikmesi (p95/p99), retry oranı ve DLQ birikimi Prometheus'a tenant_id label'ıyla yazılır",
+        "visibility_timeout_s aşan 'asılı' iş yeniden kuyruğa alınır; idempotency_key retry ve worker-replay'de yan-etkiyi tek sefere indirir"
+      ],
+      "notes": "Performans amacı HTTP yolunu ince tutmaktır: ağır/uzun iş worker'a offload edilir, backoff+breaker boğulmayı önler, o11y kuyruk sağlığını p95/p99 ile ölçer.",
+      "prompt": "k-worker performans yüzeyini kapsa: HTTP döngüsünden ayırma, exponential backoff+jitter, tenant-scope kuyruk dengeleme ve p95/p99 o11y ölçümü. kısıt: senkron istek yolu bloklanmaz. çıktı: dayanıklı, ölçülebilir yürütme.",
+      "provenance": "template"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-worker mobil ops panelini kapsa: 320px+ duyarlı kuyruk/DLQ/breaker görünümü, ≥44px dokunma hedefi ve dokunmatik replay. kısıt: hardcoded kuyruk referansı yok. çıktı: mobilde iş görünürlüğü.",
+      "provenance": "template"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [],
+      "notes": "",
+      "prompt": "k-worker ops paneli erişilebilirliğini kapsa: renk-bağımsız durum bildirimi, klavye replay/enable kontrolleri, kontrast ve aria-live DLQ alarmı. kısıt: axe critical=0. çıktı: erişilebilir background-job görünürlüğü.",
+      "provenance": "template"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Celery/ARQ worker'ları ve Redis broker Docker Swarm/Kubernetes'te ayrı deployment; liveness/readiness probe + kaynak limiti, kuyruk-derinliğine göre HPA ölçekleme",
+        "Beat/scheduler tek örnek (overlap önleme) olarak koşar; Schedule cron/interval tetiklemesi merkezî, worker'lar yatay ölçeklenir (Hetzner/Debian/Docker)",
+        "Alembic expand-contract migration Job/Task/Schedule şemasını ilerletir; downgrade çalışır, kuyruğa alınmış ve dead-letter'daki işler göçte korunur",
+        "check-worker-contract deploy.yml'a bloklayıcı adım olarak eklenir: enqueue'suz thread/cron ve idempotent-beyansız yazan görev dağıtımı reddedilir"
+      ],
+      "notes": "Dağıtım worker/broker/scheduler ayrımıdır: worker'lar HPA ile ölçeklenir, scheduler tekil, Redis dayanıklı; migration downgrade işleri kaybetmeden çalışır.",
+      "prompt": "k-worker dağıtımını kapsa: Celery/ARQ worker + Redis broker + tekil scheduler, kuyruk-derinliği HPA ve Alembic expand-contract downgrade. kısıt: enqueue'suz görev CI'da red. çıktı: ölçeklenir, geri-alınabilir dağıtım.",
+      "provenance": "template"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-worker-ai-app-module-deny, ruleset-override-deny)",
+        "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
+        "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
+        "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile Job/Task/Schedule şeması güvenli göç eder"
+      ],
+      "notes": "ECA kuralları AI-güvenlik invariantını backend'de sabitler ve iş yaşam döngüsünü otomatikler; ruleset override yok, yüksek-risk karantina, zincir döngü-kırıcı (maks 6).",
+      "prompt": "k-worker ECA kurallarını kapsa: AI app/module deny, ruleset-override deny, risk≥80 karantina ve maxChainDepth=6 döngü kırıcı. güvenlik sınırı: ruleset backend-only, override yok. çıktı: deterministik, idempotent kural zinciri.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI hangi işlerin çalışması gerektiğini (ör. 200 ürün için enrichment kuyruğa) ve zamanlama parametresini önerebilir; DLQ birikimini analiz edip kök-neden raporlar",
+        "AI prod veriye yazan işi (enrichment apply, sequence commit) approval_ref olmadan tetikleyemez; onaysız apply ApprovalRequiredError fırlatır",
+        "AI retry_policy/circuit_breaker/dead_letter politikasını doğrudan override edemez (backend-only, canOverride:false); app/module üretemez, yalnız changeset önerir",
+        "Tenant kotası veya kill-switch tetiklenince kuyruğa yeni AI işi alınmaz, koşan iş güvenli durdurulur; sub_prompt güvenilmez, ruleset-disable denemesi anında deny"
+      ],
+      "notes": "AI dört-aktör modelinde iş çalıştırmayı 'önerir', insan onaylar, motor uygular. Worker'a özgü kritik sınır: prod-yazan iş approval_ref ister; kill-switch AI işlerini durdurur.",
+      "prompt": "k-worker AI ajan davranışını kapsa: iş/zamanlama önerisi + DLQ kök-neden, approval_ref'siz prod-write yasağı, politika-override yok ve kill-switch. güvenlik sınırı: sub_prompt güvenilmez. çıktı: onaysız prod-write yolu yok.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Retry tek-etki: idempotent görev N kez retry edilir (worker-replay) → N kez çalışır ama yan-etki (stok/para) bir kez oluşur; idempotency_key aynı result_ref'e düşürür",
+        "Dead-letter: max_attempts tükenen görev status=dead, DLQ'ya taşınır, silinmez, alarm üretir; replay elle tetiklenince kaldığı yerden tek-etkiyle koşar",
+        "Circuit breaker: hedefe art arda hata → devre açılır, sonraki işler hızlı-başarısızlık; open_secs sonrası half-open probe başarılıysa devre kapanır",
+        "Tenant izolasyon/adalet: Tenant-A büyük kuyruğu Tenant-B işini geciktirmez; AI-guardrail: enqueue'suz thread/cron CI'da reddedilir, onaysız prod-write ApprovalRequiredError"
+      ],
+      "notes": "Test stratejisi dayanıklılığı kanıtlar (§11'in 5 senaryosu): retry tek-etki, DLQ, breaker, tenant-adalet, AI-guardrail; check-worker-contract deploy'da bloklayıcıdır.",
+      "prompt": "k-worker test kapsamını kapsa: retry tek-etki (idempotency), DLQ+replay, circuit breaker half-open, tenant-adalet ve AI-guardrail. kısıt: enqueue'suz görev CI'da red. çıktı: 5 senaryo yeşil + contract kapısı.",
+      "provenance": "template"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP Top 10:2025 A01 Broken Access Control: her Job/Schedule tenant_id fail-closed; komşu-tenant iş/verisi görünmez, kota aşımı reddedilir",
+        "A04 Insecure Design: idempotency_key + dead-letter + circuit breaker ile çift-etki/veri-kaybı/boğulma tasarımca engellenir (sessiz except:pass yasak)",
+        "A09 Logging/Monitoring Failures: her iş durum geçişi structlog + Prometheus + OpenTelemetry'ye trace_id ile yansır; DLQ ve breaker durumu görünür",
+        "A08 Data Integrity: idempotent görevde retry tek etkiye iner; payload veri olarak doğrulanır, serbest kod yürütülmez, hata {code, message, trace_id, details}"
+      ],
+      "notes": "OWASP haritalaması worker'a özgü riskleri hedefler: erişim kontrolü (A01 tenant), güvenli tasarım (A04 idempotency/DLQ/breaker), gözlemlenebilirlik (A09 o11y).",
+      "prompt": "k-worker OWASP yüzeyini kapsa: A01 tenant fail-closed, A04 idempotency/DLQ/breaker tasarımı, A09 trace'li o11y ve A08 tek-etki bütünlüğü. güvenlik sınırı: sessiz hata yutma yasak. çıktı: standart-uyumlu dayanıklılık.",
+      "provenance": "template"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "k-worker dependsOn=k-tenancy: her iş tenant bağlamı olmadan kuyruğa alınamaz; tüketiciler (enrichment/sync/media/export/analytics ArcheType'ları) enqueue sözleşmesiyle kullanır",
+        "İş platform_outbox (§2.3) ile aynı session.commit() içinde yazılır — worker outbox'ı okuyup Redis kuyruğuna iletir; dual-write hatası kapanır",
+        "idempotency-key scale-invariant platform_idempotency'den gelir; worker retry/replay çift-tahsilat/çift-stok yarışının simülasyon aktörüdür",
+        "k-worker Event Bus'ı ikame etmez (outbox olayı tüketip iş koşar), saga/BPMN tanımlamaz (o platform_workflow'dur); tek-adım iş yürütür"
+      ],
+      "notes": "k-worker kernel primitifi k-tenancy'ye bağımlıdır, outbox'la atomik kuyruklar ve platform_idempotency'yi tüketir; workflow ve computation'dan sınırı nettir.",
+      "prompt": "k-worker kernel entegrasyonunu kapsa: k-tenancy bağımlılığı, outbox-aynı-transaction kuyruklama, platform_idempotency tüketimi ve workflow/computation sınırı. kısıt: Event Bus/saga ikame edilmez. çıktı: atomik, gevşek bağlı yürütme.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "PIM-v2'nin Celery görev katmanı (app/tasks/) k-worker'ı tüketir; ai_enrichment/sync/media/export/analytics türlerinin hepsini tek dayanıklılık zarfında koşar",
+        "Tüketici app'ler thread/cron açmaz; worker.enqueue ile iş kuyruklar (ör. process_pending_enrichments, generate_pending_variants, build_export, monitor_price_parity)",
+        "Diğer app'ler iş durumunu ve o11y metriğini üretilen API/dashboard üzerinden okur; retry/DLQ/breaker politikasını app değil motor merkezî sağlar",
+        "media türü k-storage'ın image_variants işini (generate_pending_variants, cleanup_orphan_media) koşar; sonucu asset_rendition olarak storage'a yazar"
+      ],
+      "notes": "k-worker kernel/layer0 primitifidir; app'ler ve ArcheType'lar arka-plan işini yalnız enqueue sözleşmesinden alır, kendi retry/DLQ/cron'unu yazmaz.",
+      "prompt": "k-worker modül kullanımını kapsa: PIM Celery görev katmanı tüketimi, beş iş türünün enqueue'lanması ve o11y/DLQ görünürlüğü. kısıt: app kendi thread/cron'unu yazmaz. çıktı: tek zarftan tüketim.",
+      "provenance": "template"
+    }
+  },
+  "source": {
+    "corpus": "content-source",
+    "originalId": "k-worker",
+    "granularity": "kaya",
+    "cluster": "layer0"
+  },
+  "state": "aday",
+  "lastUpdated": "",
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "applicability": {
+    "wcag": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    },
+    "mobileApps": {
+      "applies": false,
+      "reason": "Kernel/backend primitifi; DOM/CSS yüzeyi yok"
+    }
+  }
+}

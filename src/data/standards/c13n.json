@@ -1,0 +1,107 @@
+{
+  "id": "c13n",
+  "name": "c13n Kanonikleştirme Standardı",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Aynı anlamı taşıyan farklı biçimlerdeki değeri (slug, URL, Unicode-NFC metin, e-posta, telefon E.164, SKU/ürün-varyant) tek, deterministik ve idempotent bir kanonik biçime indirgeme; kanonik-anahtar üzerinden veritabanı düzeyinde UNIQUE/CHECK kısıtı ve kanonik-eşitlik temelli duplicate tespiti için somut ve zorlanabilir kurallar. Kanonik biçimin tek doğruluk kaynağı backend'dir; frontend yalnız önizler.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "c13n-idempotent-canonical-fn",
+      "rule": "Her kanonik fonksiyon canonicalize() idempotent uygulanır: canonicalize(canonicalize(x)) == canonicalize(x) ve deterministiktir — aynı girdi, çalışma zamanından/locale'den/makineden bağımsız aynı çıktıyı üretir (kanonikleştirme locale-bağımsızdır; locale-bağımlı biçimleme i18n-standards'ın işidir). Fonksiyonlar backend'de platform/kernel/canonical/ altında saf-fonksiyon olarak yaşar; frontend aynı kuralın yalnız önizlemesini (input mask) yapar. Testi olmayan kanonik fonksiyon merge edilmez.",
+      "rationale": "İdempotentlik ve deterministiklik, kanonik biçimin tek ve öngörülebilir olmasını garanti eder; iki kez kanonikleştirmenin bir kez kanonikleştirmekle aynı sonucu vermemesi drift ve yanlış eşitlik üretir.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (f(f(x))==f(x) ve locale-bağımsız aynı çıktı, tüm kanonik fonksiyonlar için)"
+    },
+    {
+      "id": "c13n-slug-canonicalization",
+      "rule": "Slug şu sırayla kanonikleştirilir: NFC normalize → Unicode-aware küçük harfe indir (Türkçe İ/ı özel durumu dahil) → aksan/diakritik ayrıştır ve ASCII'ye indir (ç→c, ğ→g, ş→s) → alfanümerik olmayan her diziyi tek '-' ile değiştir → baş/son '-' kırp → azami uzunluğa (varsayılan 80) kes. Boş slug yasaktır; kaynak metin boşsa entity kimliğinden türetilir. Slug tenant içinde biriciktir; çakışmada sayısal sonek (-2, -3) eklenir ve bu sonek de kanonik fonksiyonun parçasıdır.",
+      "rationale": "Deterministik slug üretimi insan-okunur ve biricik URL parçası sağlar; ASCII-fold ve tenant-biriciklik olmadan çakışan veya taşınamaz slug'lar üretilir.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (sınır-durum tablosu: boş/Türkçe İ-ı/aksan/karışık büyük-küçük) + integration (UNIQUE(tenant_id, slug) + CHECK regex)"
+    },
+    {
+      "id": "c13n-url-canonicalization",
+      "rule": "URL kanonikleştirme yalnız allowlist şemalar (https, mailto, tel) için uygulanır; javascript:/data: reddedilir (open-redirect riski). Adımlar: şemayı küçük harfe indir, host'u küçük harfe indir ve IDN/punycode'a çevir, varsayılan portu kaldır (:443 https, :80 http), yol segmentlerinde ./.. çöz, yüzde-kodlamayı büyük harfe normalize et (%3a→%3A), allowlist dışı takip parametrelerini (utm_*) at, sorgu parametrelerini anahtar-sırasına diz, son '/' kuralını sabitle (kök hariç kaldır). Kanonik URL bir check kolonunda saklanır; kullanıcı-girdili URL'ler bu fonksiyondan geçmeden karşılaştırılmaz.",
+      "rationale": "İki farklı yazımın aynı kaynağa işaret ettiğini ancak kanonik biçim üzerinden tespit edilebilir; allowlist olmadan javascript:/data: gibi şemalar güvenlik açığı üretir.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (javascript:/data: reddi, utm_* atılması, IDN/port/sıralama)"
+    },
+    {
+      "id": "c13n-unicode-nfc",
+      "rule": "Tüm kullanıcı-girdili metin depolama öncesi NFC (Normalization Form C) biçimine indirgenir; sistem-genelinde tek normalizasyon formu NFC'dir ve NFD/NFKC karışımı yasaktır. Kimlik/eşitlik amaçlı alanlarda (slug, kullanıcı-adı, arama anahtarı) ek olarak durum-katlama (case-fold) ve sıfır-genişlik karakter (U+200B) temizliği uygulanır. Sınırda unicodedata.normalize('NFC', s) Pydantic validator'da çağrılır; PostgreSQL kolonları NFC-veri saklar ve gerekli kolonlarda CHECK ile NFC-eşitliği doğrulanır.",
+      "rationale": "Görsel olarak aynı ama byte olarak farklı metinler (é tek kod noktası U+00E9 veya e+U+0301) NFC olmadan == karşılaştırmasında farklı görünür; tek form NFC bunu önler.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (NFD girdi NFC olarak saklanır) + integration (gerekli kolonda CHECK NFC-eşitliği)"
+    },
+    {
+      "id": "c13n-email-identity-key",
+      "rule": "E-posta kanonikleştirme: baş/son boşluk kırp → NFC normalize → yerel-parça ile alan-parçasını (@) ayır → alan-parçasını küçük harfe indir ve IDN'e çevir → yerel-parça büyük-küçük harf korunur (RFC 5321). Sağlayıcı-özel eşitleme (Gmail '.' yoksayma, +etiket ayırma) yalnız duplicate-tespiti için ayrı bir email_identity_key kolonunda tutulur; kullanıcının gönderim adresi asıl biçimiyle saklanır. Geçerlilik doğrulaması (Pydantic EmailStr) sınır-validasyonunun işidir; c13n yalnız kanonik anahtarı üretir.",
+      "rationale": "Aynı posta kutusuna işaret eden farklı yazımlar tek kimliğe indirgenirken gönderilebilir adres korunmalıdır; kimlik-anahtarı ile gönderim-adresini karıştırmak ya çift kayıt ya bozuk gönderim üretir.",
+      "severity": "must",
+      "check": "check-data-quality + integration (gönderim adresi korunur; UNIQUE(email_identity_key) biricik)"
+    },
+    {
+      "id": "c13n-phone-e164",
+      "rule": "Telefon numaraları E.164 biçiminde (+ + ülke kodu + abone numarası, boşluksuz, azami 15 hane) kanonikleştirilir ve DB'de bu biçimde saklanır. Adımlar: görünüm karakterlerini (boşluk, -, (, ), /) at → baştaki '00' uluslararası önekini '+'a çevir → ülke kodu yoksa tenant/kullanıcı varsayılan bölgesinden tamamla → E.164 doğrulaması yap. Ayrıştırma güvenilir bir kütüphane (phonenumbers/libphonenumber) ile yapılır; elle regex ile ülke-kodu tahmini yasaktır. Görüntüleme biçimi i18n katmanında üretilir; depolama daima E.164'tür.",
+      "rationale": "Numara planları ülkeye göre değişir; elle regex ile ülke-kodu tahmini yanlış ayrıştırma üretir. E.164 tek ve karşılaştırılabilir depolama biçimi sağlar.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (kütüphane-ayrıştırma) + integration (CHECK ~ '^\\+[1-9][0-9]{6,14}$')"
+    },
+    {
+      "id": "c13n-sku-variant-canonicalization",
+      "rule": "SKU kanonikleştirme: NFC normalize → boşluk kırp → izin-verilen karakter kümesine (büyük harf, rakam, -, _) indir → büyük harfe çevir (SKU kimlik-eşitliği büyük-küçük harf duyarsız) → tenant içinde biricik. Ürün-varyant anahtarı varyant-eksenlerinin sıralı ve kanonik birleşiminden üretilir: eksen adları kanonik sıraya dizilir, her değer kendi kanonik biçimine indirilir, sonra deterministik biçimde (color=black|size=l) birleştirilir; böylece 'Size=L, Color=Black' ile 'color=black, size=l' aynı varyant-anahtarını üretir. Varyant-eksenleri koda gömülmez, veridir ve k-schema alan-tanımına referans verir.",
+      "rationale": "Farklı eksen sırası veya büyük-küçük harf, kanonik birleşim olmadan çift-varyant üretir; sıralı-kanonik anahtar aynı varyantın tekilliğini garanti eder.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (farklı eksen sırası aynı varyant-anahtarını üretir) + integration (UNIQUE(tenant_id, sku))"
+    },
+    {
+      "id": "c13n-duplicate-unique-constraint",
+      "rule": "Her duplicate-hassas varlık için bir kanonik kimlik anahtarı kolonu (canonical_key) tanımlanır; bu kolon ilgili c13n fonksiyonunun çıktısını saklar ve üzerinde UNIQUE kısıtı bulunur (tenant-kapsamlıysa (tenant_id, canonical_key) bileşiği). Böylece iki kayıt aynı kanonik anahtara indirgeniyorsa ikincisi veritabanı düzeyinde reddedilir — kontrol yalnız uygulama katmanı 'if exists' sorgusuna bırakılmaz (yarış durumunda çift kayıt açar). 'Aynı mı?' kararı bulanık-eşleşme değil kanonik-eşitlik temellidir; bulanık öneri ayrı bir arama katmanının işidir ve kimlik kararı vermez.",
+      "rationale": "Uygulama-içi 'if exists' kontrolü eşzamanlı iki yazımda çift kayıt açar; DB düzeyinde UNIQUE kısıtı bunu son savunma hattı olarak garanti eder.",
+      "severity": "must",
+      "check": "check-data-quality + integration (uygulama if-exists atlansa da ikinci kayıt reddedilir) + concurrency testi (eşzamanlı iki yazımdan biri başarılı)"
+    },
+    {
+      "id": "c13n-db-unique-check-constraints",
+      "rule": "Her canonical_key/slug/E.164/SKU kolonunda: (1) UNIQUE (tenant-kapsamlıysa bileşik) kısıt; (2) biçim-invariantı için CHECK kısıtı (telefon kolonunda phone ~ '^\\+[1-9][0-9]{6,14}$', slug kolonunda küçük-harf-ve-tire regex'i). Kolon zaten kanonik-küçük-harf sakladığı için ek LOWER() fonksiyonel indeksine gerek kalmaz; kanonik biçim depolamada sabittir. Uygulama katmanı kanonik fonksiyonu çağırmayı unutursa CHECK kısıtı yazımı reddeder — veritabanı son savunma hattıdır. PostgreSQL citext yerine 'depola-kanonik' tercih edilir (drift yok).",
+      "rationale": "Uygulama kanonik fonksiyonu çağırmayı unutabilir; CHECK kısıtı kanonik-dışı yazımı DB düzeyinde reddederek biçim-invariantını garanti eder.",
+      "severity": "must",
+      "check": "check-data-quality + integration (kanonik-dışı yazım DB düzeyinde reddedilir)"
+    },
+    {
+      "id": "c13n-migration-expand-contract",
+      "rule": "Kanonik kolon/kısıt ekleme expand-contract ile yapılır: (1) expand — yeni canonical_key kolonu nullable eklenir, backfill migration'ı mevcut satırları kanonikleştirir, uygulama hem eski hem yeni yola yazar; (2) çakışma çözümü — backfill sırasında ortaya çıkan mevcut duplicate'ler bir rapora düşürülür ve insan kararıyla birleştirilir (kör silme yasak); (3) contract — duplicate'ler temizlendikten sonra ayrı bir migration NOT NULL + UNIQUE kısıtını ekler ve eski yol kaldırılır. Her migration idempotent ve çalışan bir down (rollback) yoluna sahiptir; yıkıcı adım (NOT NULL, UNIQUE) asla expand fazında konmaz.",
+      "rationale": "Tek-adımda NOT NULL/UNIQUE eklemek backfill bitmeden çalışan eski sürümü kırar; expand-contract sıfır-kesinti sağlar ve kör silme veri kaybı üretir.",
+      "severity": "must",
+      "check": "check-data-quality + alembic revision --autogenerate diff + migration review (down çalışır, expand fazında yıkıcı-kısıt yok, backfill duplicate'leri rapora düşürür)"
+    }
+  ],
+  "banned": [
+    "nfd-nfkc-mixed-normalization",
+    "manual-regex-phone-parsing",
+    "fuzzy-match-identity-decision",
+    "app-level-only-duplicate-check",
+    "javascript-data-url-scheme",
+    "float-money-storage",
+    "destructive-canonical-migration-without-rollback",
+    "blind-duplicate-backfill-delete",
+    "empty-slug"
+  ],
+  "allowed": [
+    "idempotent-canonical-function",
+    "unicode-nfc-boundary-normalization",
+    "e164-phone-canonicalization",
+    "email-identity-key",
+    "ordered-canonical-variant-key",
+    "canonical-key-unique-constraint",
+    "db-check-format-constraint",
+    "expand-contract-canonical-migration"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/standards/05-c13n-canonicalization-standard.md",
+    "src/data/standards/data-api-contract.json"
+  ]
+}

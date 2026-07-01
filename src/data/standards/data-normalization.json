@@ -1,0 +1,107 @@
+{
+  "id": "data-normalization",
+  "name": "n6n / d10n Veri Normalizasyon Standardı",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Veriyi bütünlük için ilişkilere bölme (idempotent normalize + 3NF tabanı, bileşik alan ayrıştırması, para tam-sayı en-küçük-birim + ISO 4217, sonlu küme enum/referans) ve okuma-performansı için kontrollü/ölçülü biçimde geri-birleştirme (d10n read-model/projection, senkron güvencesi) için somut ve zorlanabilir kurallar. Doğruluk-kaynağı daima normalize kaynak tablodur; denormalize projeksiyon türevdir. n6n P1 (must), d10n P3 (may).",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "n6n-idempotent-normalize-fn",
+      "rule": "Her normalize fonksiyonu normalize() idempotent uygulanır: normalize(normalize(x)) == normalize(x). Normalize fonksiyonları saf ve deterministiktir (yan-etkisiz, aynı girdi→aynı çıktı) ve backend'de platform/kernel/ ilgili modülün normalize katmanında yaşar. Normalizasyon depolama öncesi sınır katmanında (Pydantic validator) çalışır; doğrulanmamış/normalize-edilmemiş veri iş katmanına ve veritabanına geçemez (data-api-contract sınır-doğrulama kuralıyla aynı hat). Testi olmayan normalize fonksiyonu merge edilmez.",
+      "rationale": "İdempotentlik ve sınırda çalışma, normalize-edilmemiş veriyi iş mantığına ve DB'ye ulaşmadan reddeder; iki kez normalize etmenin bir kez normalize etmekten farklı sonuç vermesi tutarsızlık üretir.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (f(f(x))==f(x), deterministiklik, sınır-durum tablosu) + review (normalize sınır katmanında)"
+    },
+    {
+      "id": "n6n-3nf-schema-base",
+      "rule": "Şema tabanı 3NF (Üçüncü Normal Biçim) uygulanır: (1) tekrarlayan grup yok — çok-değerli ilişki ayrı tabloya taşınır (bir siparişin çok kalemi order_items tablosundadır; virgülle-ayrılmış kolon yasak); (2) kısmi-bağımlılık yok — bileşik anahtarın yalnız bir parçasına bağlı alanlar ayrılır; (3) geçişli-bağımlılık yok — anahtar-olmayan bir alana bağlı alanlar ayrı tabloya çıkarılır (city üzerinden gelen country tekrar edilmez, ayrı referans tablosuna gider). 3NF ihlali yalnız kontrollü denormalizasyon (d10n) kuralıyla ve açık etiketle caizdir; 'kolay oldu diye' tekrar tutmak yasaktır. Tüm tablolar data-api-contract konvansiyonunu taşır (id UUID, created_at, updated_at, tenant_id, soft-delete deleted_at).",
+      "rationale": "3NF tekrar ve güncelleme/silme/ekleme anomalilerini önler; virgüllü çok-değerli kolon ve geçişli bağımlılık veri bütünlüğünü bozar.",
+      "severity": "must",
+      "check": "check-data-quality + integration (virgülle-ayrılmış çok-değerli kolon yok; ilişki ayrı tabloda; 3NF ihlali yalnız etiketli d10n ile)"
+    },
+    {
+      "id": "n6n-composite-field-decomposition",
+      "rule": "Bileşik alanlar doğru alt-alanlara ayrıştırılır: tam-ad girdisi ad/soyad (ve varsa unvan) bileşenlerine; posta adresi cadde/şehir/posta-kodu/ülke bileşenlerine ayrılır. Ayrıştırma belirsizse (çok-parçalı ad) ham girdi ayrıca korunur; kör-tahminle veri kaybı yasaktır. Ayrıştırma kuralları koda gömülmez, k-schema alan-tanımına referans verir.",
+      "rationale": "Bileşik alanın doğru alt-alanlara bölünmesi sorgulanabilir ve tutarlı veri sağlar; belirsizlikte ham girdiyi korumamak geri-alınamaz veri kaybı üretir.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (belirsizse ham girdi korunur; kör veri-kaybı yok)"
+    },
+    {
+      "id": "n6n-money-integer-iso4217",
+      "rule": "Para değeri tutar (integer, en küçük para birimi — kuruş) + para-birimi koduna (ISO 4217) bölünür. Para ASLA kayan-nokta (float) olarak saklanmaz; yuvarlama hatası finansal veriyi bozar. Tutar tam-sayı en-küçük-birim (BIGINT) + ayrı currency kolonu olarak tutulur; hesap k-computation primitifinde yapılır.",
+      "rationale": "Float yuvarlama hatası finansal veriyi sessizce bozar; tam-sayı en-küçük-birim + ayrı ISO 4217 currency kesin ve denetlenebilir para gösterimi sağlar.",
+      "severity": "must",
+      "check": "check-data-quality + birim testi (para float olarak saklanmaz; yuvarlama-hatası testi yeşil)"
+    },
+    {
+      "id": "n6n-enum-reference-normalization",
+      "rule": "Sonlu ve tekrar-eden değer kümeleri (durum, tip, ülke, para-birimi) serbest-metin kolon yerine referans/enum ile normalize edilir; böylece 'Aktif'/'aktif'/'ACTIVE' üç ayrı değer olmaz. Değişmez ve koda-bağlı kümeler (sipariş durumu) uygulama-seviyesi enum + DB CHECK/enum-tipi ile; tenant'a-göre genişleyebilen kümeler (kategori) referans tablosu + foreign key ile tutulur. Serbest-metin girdisi enum'a eşlenirken c13n-benzeri girdi-temizliği (trim + NFC + case-fold) uygulanır ama karar kümesi sabittir. Depolanan değer daima kanonik makine-kodudur (active, tr, TRY); locale gösterim etiketi i18n katmanının işidir.",
+      "rationale": "Serbest-metin sonlu küme farklı yazımlarla üç ayrı değere bölünür; enum/referans + CHECK/FK tek kanonik makine-kodunu garanti eder.",
+      "severity": "must",
+      "check": "check-data-quality + integration (serbest-metin durum/tip yok; CHECK/FK zorlar)"
+    },
+    {
+      "id": "n6n-migration-expand-contract",
+      "rule": "Normalize/denormalize şema değişikliği expand-contract ile yapılır. Normalizasyon (denormalize kolonu ayrı tabloya taşıma): (1) expand — yeni normalize tablo/kolon eklenir, backfill mevcut veriyi taşır, uygulama hem eski hem yeni yola yazar; (2) contract — eski denormalize kolon ayrı migration'da kaldırılır. Denormalizasyon eklerken (projeksiyon tablosu) tersi sıra izlenir: projeksiyon eklenir, kaynaktan backfill/rebuild ile doldurulur, tazeleme kancası bağlanır, sonra okuma yolu projeksiyona çevrilir. Her migration idempotent ve çalışan down yoluna sahiptir; yıkıcı adım (kolon DROP, NOT NULL) expand fazında konmaz. Backfill kör-silmez; belirsiz veri rapora düşürülür ve insan onayıyla çözülür.",
+      "rationale": "Tek-adımda yıkıcı şema değişikliği çalışan eski sürümü ve sıfır-kesinti deploy'u kırar; expand-contract + çalışan down güvenli geçiş sağlar.",
+      "severity": "must",
+      "check": "check-data-quality + alembic revision --autogenerate diff + migration review (down çalışır; expand fazında yıkıcı-kısıt yok; backfill kör-silmez)"
+    },
+    {
+      "id": "d10n-only-measured-read-bottleneck",
+      "rule": "Denormalizasyon yalnız yol okuma-yoğun VE ölçülmüş bir performans darboğazı olduğunda caizdir (rapor/dashboard/liste — 'belki hızlı olur' değil, kanıtlı yavaşlık). Kaynak daima 3NF normalize tablo kalır; denormalizasyon istisnadır ve gerekçesi PR'da yazılır. Varsayılan normalize'dir.",
+      "rationale": "Ölçülmemiş denormalizasyon karmaşıklık ve tutarsızlık borcu üretir; yalnız kanıtlı darboğazda ve gerekçeyle caiz olması bunu istisna tutar.",
+      "severity": "may",
+      "check": "check-data-quality + integration (gerekçe PR'da; kaynak daima 3NF normalize kalır) + review"
+    },
+    {
+      "id": "d10n-projection-not-source",
+      "rule": "Denormalize veri açık bir read-model / projection olarak, sahiplik etiketiyle ayrı tutulur — kaynağın yerine geçmez. Projeksiyon yeniden-üretilebilir olmalı: kaynaktan sıfırdan yeniden inşa edilebilir (rebuild yolu vardır), böylece bozulursa kaynaktan tazelenir. Projeksiyon başka context'in tablosunu doğrudan JOIN etmez, yayınlanan sözleşmeyi tüketir; foreign key yalnız aynı context içinde tanımlanır (data-api-contract cross-context kuralıyla aynı). Materialized view veya ayrı projeksiyon tablosu tercih edilir.",
+      "rationale": "Projeksiyon kaynağın yerine geçerse doğruluk-kaynağı belirsizleşir; yeniden-inşa edilebilir türev projeksiyon bozulmada kaynaktan onarılabilir kalır.",
+      "severity": "may",
+      "check": "check-data-quality + integration (projeksiyon sahiplik-etiketli, kaynaktan rebuild eşitlik testi) + review"
+    },
+    {
+      "id": "d10n-sync-staleness-budget",
+      "rule": "Kaynak↔projeksiyon senkronizasyonu belirli bir mekanizmayla sağlanır: kaynak değiştiğinde projeksiyon ya olay-tüketimiyle (kaynak context olay yayınlar, projeksiyon tüketip günceller) ya da zamanlanmış yeniden-hesapla tazelenir; hangi yöntemin kullanıldığı ve kabul edilen gecikme (staleness bütçesi, ör. 'raporlar en çok 5 dk bayat olabilir') belgelenir. Kritik veriye (para/sipariş/stok) dayalı denormalizasyonda kaynak mutasyonu scale-invariant yönergesi uyarınca outbox+idempotency taşır; böylece projeksiyon güncellemesi kaybolmaz ve tekrar-oynatmada çift-saymaz. Projeksiyon güncellemesi başarısız olursa kaynak yazımı geri-alınmaz (kaynak doğruluk-kaynağıdır); projeksiyon yeniden-inşa ile onarılır. Kesin-tutarlılık gereken yerde (bakiye kontrolü) denormalize okuma kullanılmaz, normalize kaynaktan okunur.",
+      "rationale": "Tanımsız senkron mekanizması projeksiyonu sessizce bayatlatır; outbox+idempotency olmadan kritik-veri güncellemesi kaybolur veya tekrar-oynatmada çift sayar.",
+      "severity": "may",
+      "check": "check-data-quality + integration (kaynak değişince projeksiyon tazelenir; staleness aşılmaz; outbox+idempotency tekrar-oynatmada çift-saymaz)"
+    },
+    {
+      "id": "d10n-no-write-path-denormalization",
+      "rule": "Yazma yolunda denormalizasyon — aynı gerçeği iki yazılabilir yerde tutmak — yasaktır; bu tutarsızlık üretir. Yalnız türev okuma projeksiyonu caizdir; yazma tekildir (tek yazılabilir doğruluk-kaynağı). Aynı gerçeğin iki yazılabilir kopyası, biri güncellenip diğeri güncellenmediğinde uzlaştırılamaz çelişki doğurur.",
+      "rationale": "İki yazılabilir yerde aynı gerçek, biri güncellenip diğeri güncellenmediğinde uzlaştırılamaz tutarsızlık üretir; tek yazılabilir kaynak + türev okuma bunu önler.",
+      "severity": "may",
+      "check": "check-data-quality + integration (yalnız türev okuma projeksiyonu; yazma tekildir) + review"
+    }
+  ],
+  "banned": [
+    "float-money-storage",
+    "comma-separated-multivalue-column",
+    "free-text-finite-value-set",
+    "transitive-dependency-column",
+    "unmeasured-denormalization",
+    "write-path-denormalization",
+    "projection-replacing-source",
+    "destructive-migration-without-rollback",
+    "blind-backfill-delete"
+  ],
+  "allowed": [
+    "idempotent-normalize-function",
+    "3nf-schema-base",
+    "money-integer-iso4217",
+    "enum-reference-normalization",
+    "read-model-projection",
+    "outbox-idempotency-sync",
+    "materialized-view-projection",
+    "expand-contract-migration"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/standards/06-data-normalization-standard.md",
+    "src/data/standards/data-api-contract.json"
+  ]
+}

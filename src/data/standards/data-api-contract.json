@@ -1,36 +1,36 @@
 {
   "id": "data-api-contract",
   "name": "Veri & API Sözleşmesi Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "data",
   "basedOnAdr": ["adr-0027"],
-  "summary": "GraphQL şema + typed codegen, Prisma model konvansiyonu (PostgreSQL), expand-contract migration + rollback, cursor pagination, idempotency anahtarı, standart hata zarfı, sınırda Zod doğrulama, bounded-context veri sahipliği ve RLS ile tenant izolasyonu için somut ve zorlanabilir kurallar.",
+  "summary": "GraphQL şema + typed client codegen (Strawberry/Python resolver), SQLAlchemy 2.0 model konvansiyonu (PostgreSQL) + Alembic, expand-contract migration + rollback, cursor pagination, idempotency anahtarı, standart hata zarfı, sınırda Zod/Pydantic doğrulama, bounded-context veri sahipliği ve RLS ile tenant izolasyonu için somut ve zorlanabilir kurallar.",
   "appliesTo": [],
   "rules": [
     {
       "id": "data-graphql-schema-codegen",
-      "rule": "API sözleşmesi GraphQL SDL'dir (.graphql) ve TEK kaynaktır; tüm tip/operasyon/hook'lar codegen ile üretilir (resolver tarafı typed, istemci tarafı typed-document-node). Elle yazılmış GraphQL response tipi yasaktır; üretilmiş kod (generated/) düzenlenmez, üretici çalıştırılır. Şema değişikliği önce SDL'de yapılır, sonra codegen yeniden koşar.",
+      "rule": "API sözleşmesi GraphQL SDL'dir (.graphql) ve TEK kaynaktır; resolver tarafı Strawberry (Python, tip-güvenli), istemci tarafı codegen ile üretilir (typed-document-node). Elle yazılmış GraphQL istemci response tipi yasaktır; üretilmiş kod (generated/) düzenlenmez, üretici çalıştırılır. Şema değişikliği önce SDL/Strawberry tipinde yapılır, sonra istemci codegen yeniden koşar.",
       "rationale": "Tek-kaynak SDL + codegen, istemci ile sunucu arasındaki tip driftini derleme zamanında imkânsız kılar.",
       "severity": "must",
-      "check": "graphql-codegen --check (üretilmiş çıktı temiz) + tsc strict + review"
+      "check": "graphql-codegen --check (üretilmiş istemci çıktısı temiz) + tsc strict (istemci) + mypy/pyright (Strawberry resolver) + review"
     },
     {
-      "id": "data-prisma-model-convention",
-      "rule": "Veritabanı Prisma + PostgreSQL'dir (Supabase istemci/RLS-helper'ları YASAK). Model adı PascalCase tekil (Task), tablo @@map ile snake_case çoğul (tasks); her tabloda id (cuid/uuid), createdAt, updatedAt, tenantId ve soft-delete için deletedAt bulunur. Ham SQL yerine Prisma Client; kaçınılmazsa $queryRaw yalnız parametreli (string interpolation YASAK).",
-      "rationale": "Tek ORM + tutarlı kolon konvansiyonu, tenant filtresi ve audit alanlarının her tabloda var olmasını garanti eder; Supabase yasağı kilitli mimari kararıdır.",
+      "id": "data-sqlalchemy-model-convention",
+      "rule": "Veritabanı SQLAlchemy 2.0 (DeclarativeBase + mapped_column) + PostgreSQL'dir; migration Alembic ile yapılır (Supabase istemci/RLS-helper'ları YASAK). Model sınıfı PascalCase tekil (Task), __tablename__ snake_case çoğul (tasks); her tabloda id (UUID), created_at, updated_at, tenant_id ve soft-delete için deleted_at bulunur. Ham SQL yerine ORM/2.0 select(); kaçınılmazsa text() yalnız bağlı parametrelerle (string interpolation YASAK).",
+      "rationale": "Tek ORM + tutarlı kolon konvansiyonu, tenant filtresi ve audit alanlarının her tabloda var olmasını garanti eder; Supabase yasağı ve Python/SQLAlchemy kilitli mimari kararıdır (Prisma/TS kaldırıldı).",
       "severity": "must",
-      "check": "check-data-quality + prisma validate + grep ile $queryRaw interpolation taraması"
+      "check": "check-data-quality + alembic check (revision autogenerate diff temiz) + grep ile text()/execute string-interpolation taraması"
     },
     {
       "id": "data-migration-expand-contract",
       "rule": "Şema değişikliği iki fazlı expand-contract ile yapılır: (1) expand — geriye uyumlu ekleme (nullable kolon/yeni tablo/çift yazım), eski ve yeni kod birlikte çalışır; (2) contract — eski yol kaldırılır ayrı bir migration'da. Yıkıcı işlem (DROP/NOT NULL/rename) expand fazında yasak. Her migration'ın çalıştırılabilir bir rollback (down) yolu ve idempotent olması zorunludur.",
       "rationale": "Tek-adımda yıkıcı migration, çalışan eski sürümü ve sıfır-kesinti deploy'u kırar; rollback yoksa hatalı migration geri alınamaz.",
       "severity": "must",
-      "check": "prisma migrate diff + migration review kapısı (down + expand-contract ispatı)"
+      "check": "alembic revision --autogenerate diff + migration review kapısı (down + expand-contract ispatı)"
     },
     {
       "id": "data-test-first-migration-order",
-      "rule": "Veri değişikliğinde sıra KİLİTLİDİR: önce test (kırmızı), sonra db-schema (Prisma model + migration), sonra development (resolver/repo). Test olmadan migration veya migration olmadan model alanı eklenmesi yasaktır; her yeni alan/ilişki bir conformance veya repo testiyle kapsanır.",
+      "rule": "Veri değişikliğinde sıra KİLİTLİDİR: önce test (kırmızı), sonra db-schema (SQLAlchemy model + Alembic migration), sonra development (resolver/repo). Test olmadan migration veya migration olmadan model alanı eklenmesi yasaktır; her yeni alan/ilişki bir conformance veya repo testiyle kapsanır.",
       "rationale": "Test-önce sıra, şema kararının niyetini kanıtlar ve migration'ı doğrulanabilir kılar; sırayı atlamak doğrulanmamış şema borcu üretir.",
       "severity": "must",
       "check": "npm test (schema/repo testleri) + review (commit sırası test→db-schema→development)"
@@ -58,7 +58,7 @@
     },
     {
       "id": "data-zod-boundary-validation",
-      "rule": "Tüm dış girdi (GraphQL argümanları, webhook gövdesi, JSON-as-DB okuması, env) sistem sınırında Zod ile doğrulanır ve z.infer ile tiplenir; doğrulanmamış girdi resolver/iş katmanına geçemez. Zod şeması girdi için TEK kaynaktır ve mümkün olduğunda GraphQL şemasıyla aynı kısıtları (min/max/regex) yansıtır.",
+      "rule": "Tüm dış girdi (GraphQL argümanları, webhook gövdesi, JSON-as-DB okuması, env) sistem sınırında doğrulanır: istemcide Zod (z.infer ile tiplenir), backend'de Pydantic/Strawberry tipi; doğrulanmamış girdi resolver/iş katmanına geçemez. Sınır şeması girdi için TEK kaynaktır ve mümkün olduğunda GraphQL şemasıyla aynı kısıtları (min/max/regex) yansıtır.",
       "rationale": "Sınırda doğrulama, geçersiz veriyi iş mantığına ve veritabanına ulaşmadan reddeder; tip güvenliği yalnız sınırda kanıtlanır.",
       "severity": "must",
       "check": "biome (noExplicitAny) + tsc + review (her resolver girişinde Zod parse)"
@@ -91,7 +91,8 @@
   ],
   "allowed": [
     "graphql-sdl-codegen",
-    "prisma-postgres",
+    "sqlalchemy-postgres",
+    "alembic-migrations",
     "expand-contract-migration",
     "cursor-connection-pagination",
     "idempotency-key",
