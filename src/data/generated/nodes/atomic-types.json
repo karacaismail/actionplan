@@ -5,7 +5,7 @@
   "level": "module",
   "title": "Faz 0 — Atomik Tipler",
   "slug": "atomic-types",
-  "summary": "ArcheType engine'i besleyen atomik primitive'ler. Field'ın altındaki tip katmanı.",
+  "summary": "ArcheType engine'i besleyen atomik primitive'ler — Field'ın altındaki değer-tipi katmanı. Üç kademe: Atom (bütün-değer, parametreli value-type) / Fragment (kimliksiz mini-archetype) / ArcheType. Katalog Katman A (taban skaler) + B (semantik değer, Range<T> dahil) + C (referans-değer). Yönerge: docs/atomic-types-directive.md.",
   "parentId": "app-atomic",
   "order": 1,
   "icon": "ph-circle-half",
@@ -41,7 +41,12 @@
     "cc-security"
   ],
   "refs": [
-    "kaynak-korpus: atomic-types"
+    "kaynak-korpus: atomic-types",
+    "yönerge: docs/atomic-types-directive.md",
+    "yönerge: docs/fragments-directive.md",
+    "geliştirici: docs/atomik-tip-gelistirici-yonergesi.md",
+    "netleştirme: docs/atomik-netlestirme-2026-07-01.md",
+    "katalog: docs/atomik-tip-katalogu-tam-2026-07-01.md"
   ],
   "criticalPath": false,
   "status": "backlog",
@@ -149,11 +154,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Faz 0 — Atomik Tipler: ilk kurulan, bölünemez domain ilkellerinin somut kataloğu (Money, Email, TenantId, DateRange, ...)",
-        "Her tipin doğrulama kuralı, biçimi ve eşitlik tanımı",
-        "Üst tüm fazların (Faz 1+) güvendiği değişmez temel"
+        "Üç kademe modeli: Atom = tek kanonik temsili + bütün-değer semantiği olan parametreli value-type; Fragment = kimliksiz mini-archetype (docs/fragments-directive.md); ArcheType = kimlikli varlık",
+        "Katalog Katman A taban skaler (string/decimal/uuid/timestamptz/date/time/duration/boolean/integer/bigint/bytea-ref/json)",
+        "Katalog Katman B semantik değer (Money/Measure/Percentage/I18nText/Email/URL/Phone/TaxId/IBAN/NationalId/Identifier/Term/Recurrence/EnumType/Range<T>) ve Katman C referans-değer (EntityRef/AssetRef/PartyRef/ClauseRef/ExternalId)",
+        "Parametreli atom: Money⟨currency,precision,rounding⟩, Range⟨T,bound-closure⟩, string⟨maxLength,collation⟩; her atom 13 sözleşme boyutunu beyan eder (storage/validation/c13n/compare/index/i18n/null/serialize/surface/security/equality/params/versioning)",
+        "5-test karar kuralı (kimlik→ayrıştırma→bütün-değer→operasyon→genişletme) bir alanın atom/fragment/archetype kademesini belirler"
       ],
-      "notes": "",
+      "notes": "Nihai model docs/atomik-netlestirme-2026-07-01.md ile kilitlendi; currency→Money ve per-tip params şema-terfisi öneri olarak docs/atomic-types-directive.md §5'te.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: atomic-types — \"Faz 0 — Atomik Tipler\" (modül/kaya; küme: Atomik). Özet: ArcheType engine'i besleyen atomik primitive'ler. Field'ın altındaki tip katmanı. Etiketler: atomic, types, primitive.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -305,11 +312,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Atomik Tipler, app-atomic temeli; k-schema ve tüm ArcheType alanlarınca tüketilir",
-        "Aşağı bağımlılığı yok (en temel katman)",
-        "Tüm doğrulama/biçim tek kaynaktan"
+        "Atomik Tipler app-atomic temeli; k-schema ve tüm ArcheType alanları bir atoma/fragment'e dependsOn verir (docs/atom-archetype-bagi-clm-ornegi-2026-07-01.md)",
+        "Aşağı bağımlılığı yok (en temel katman); yukarı doğru Fragment (platform_fragments) ve ArcheType kademelerini besler",
+        "CLM archetype-agreement (Money/Range<date>/PartyRef/ClauseRef), k-obligation (Duration/Recurrence), PIM (Measure/Identifier/AttributeSet) bu katalogdan türer",
+        "Registry bağımlılıkları (ISO-4217/UCUM/ISO-3166/BCP-47/IANA-tz/E.164) versiyonlu; atom doğrulaması registry sürümüne bağlanır"
       ],
-      "notes": "",
+      "notes": "check-atomic-types kapısı (öneri) her FieldType'ın 13 boyutu beyan ettiğini zorlar; Fragment tarafı check-fragments (öneri).",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: atomic-types — \"Faz 0 — Atomik Tipler\" (modül/kaya; küme: Atomik). Özet: ArcheType engine'i besleyen atomik primitive'ler. Field'ın altındaki tip katmanı. Etiketler: atomic, types, primitive.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },

@@ -74,7 +74,10 @@ export const ArchetypeIdentitySchema = z.object({
 /* ----------------------------------------------------------------------------
  * 2. fields  + 3. fragments
  * -------------------------------------------------------------------------- */
+// Atomik tip kataloğu (docs/atomic-types-directive.md, docs/atomik-netlestirme-2026-07-01.md).
+// v1 değerleri korunur (geri-uyum); yeni değerler ADDITIVE eklenir. `relation`=entity-ref.
 export const FieldTypeSchema = z.enum([
+  // v1 (korunur; `currency` → `money` lehine deprecated, geri-uyum için tutulur)
   "string",
   "text",
   "number",
@@ -89,6 +92,38 @@ export const FieldTypeSchema = z.enum([
   "email",
   "phone",
   "file",
+  // Katman A — taban skaler
+  "decimal",
+  "bigint",
+  "uuid",
+  "timestamptz",
+  "time",
+  "duration",
+  "bytea-ref",
+  // Katman B — semantik değer
+  "money",
+  "measure",
+  "percentage",
+  "i18n-text",
+  "geo",
+  "url",
+  "color",
+  "tax-id",
+  "iban",
+  "national-id",
+  "identifier",
+  "term",
+  "recurrence",
+  "range",
+  "signature-field",
+  "enum-alias",
+  // Katman C — referans-değer
+  "asset-ref",
+  "party-ref",
+  "clause-ref",
+  "external-id",
+  // Fragment (mini-archetype) referansı — docs/fragments-directive.md
+  "fragment",
 ]);
 export const FieldSchema = z.object({
   name: z.string(), // alan adı = field
@@ -104,12 +139,24 @@ export const FieldSchema = z.object({
   protected: z.boolean().default(false),
   enumValues: z.array(z.string()).default([]),
   relationTo: z.string().optional(), // type=relation ise hedef archetype id
+  /** Parametreli atom meta (netlestirme §5): precision/scale/maxLength/currencySet/unit/elementType/boundClosure/scheme vb. */
+  params: z.record(z.string(), z.unknown()).optional(),
+  /** type=fragment ise gömülü Fragment id'si (docs/fragments-directive.md) */
+  fragmentRef: z.string().optional(),
+  /** Alan-düzeyi güvenlik sınıfı (U10): PII/PHI/PCI → alan-düzeyi şifreleme/maskeleme */
+  securityClass: z.enum(["none", "pii", "phi", "pci"]).default("none"),
 });
-/** Yeniden kullanılabilir alan grubu (composable). */
+/** Yeniden kullanılabilir alan grubu (composable) = mini-archetype. docs/fragments-directive.md */
 export const FragmentSchema = z.object({
   id: z.string(),
   label: z.string(),
   fields: z.array(FieldSchema).default([]),
+  /** platform_fragments: kanonik platform-katman fragment mı (Address/PersonName/ContactPoint) */
+  canonical: z.boolean().default(false),
+  /** Saklama stratejisi (fragments-directive §7.1): gömülü JSONB veya normalize alt-tablo */
+  storage: z.enum(["embedded", "normalized"]).default("embedded"),
+  /** Alanlar-arası kural (ör. posta-kod ülkeye bağlı doğrulanır) */
+  crossFieldRules: z.array(z.object({ id: z.string(), expr: z.string() })).default([]),
 });
 
 /* ----------------------------------------------------------------------------
