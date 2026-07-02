@@ -171,14 +171,16 @@ const DEFAULT_DOM = {
   perf: "liste sorgusu",
   evt: "durum değişti",
 };
+// Kanonik WBS seviyeleri (tur 3 drift düzeltmesi): eski stone/molecule/element/atom
+// adları schemas/task.ts WBS_LEVELS ile eşleşmiyordu → scope "undefined" üretiyordu.
 const LEVEL_SCOPE = {
   app: "ürün ailesi geneli",
   module: "modül sınırı",
   archetype: "ArcheType tanımı",
-  stone: "alt-yetenek",
-  molecule: "bileşen",
-  element: "alan/kural",
-  atom: "atomik birim",
+  feature: "özellik/alt-yetenek",
+  component: "bileşen",
+  work_unit: "iş birimi",
+  micro_step: "mikro adım/atomik birim",
 };
 
 function hash(s) {
@@ -343,12 +345,48 @@ function enforceBoundaryItems(n) {
   }
 }
 
+// --only-day2 (tur 3): mevcut 14 boyut içeriğini, fazları, kabul kriterlerini ve
+// riskleri EZMEDEN yalnız eksik day-2 boyutlarını (dataLifecycle/observability/
+// reliability) ekler. Varsayılan mod (argümansız) eski davranıştır ve KASITLI
+// çalıştırma gerektirir; kontrollü backfill için tools/agents/backfill-day2-dimensions.mjs tercih edilir.
+const ONLY_DAY2 = process.argv.includes("--only-day2");
+const DAY2_KEYS = ["dataLifecycle", "observability", "reliability"];
+const DAY2_TR = {
+  dataLifecycle: "Veri Yaşam Döngüsü & Uyum",
+  observability: "Gözlemlenebilirlik & Operasyon",
+  reliability: "Dayanıklılık & Süreklilik",
+};
+
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 let updated = 0;
 let kept = 0;
 for (const f of files) {
   const p = path.join(NODES, f);
   const n = JSON.parse(fs.readFileSync(p, "utf8"));
+  if (ONLY_DAY2) {
+    const items = itemsFor(n);
+    let added = 0;
+    for (const k of DAY2_KEYS) {
+      if (!n.dimensions?.[k]) {
+        n.dimensions[k] = {
+          key: k,
+          title: DAY2_TR[k],
+          status: "filled",
+          items: items[k],
+          notes: "",
+          prompt: "",
+          provenance: "swarm",
+          promptVersion: "gen-items-day2-v1",
+        };
+        added++;
+      }
+    }
+    if (added > 0) {
+      fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
+      updated++;
+    } else kept++;
+    continue;
+  }
   if (isBespokeNode(n)) {
     enforceBoundaryItems(n);
     fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);

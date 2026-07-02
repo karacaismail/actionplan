@@ -43,6 +43,19 @@ const REF_KEY_TO_STANDARD = {
   privacyRef: "privacy",
 };
 
+// Riskli düğümde boş tenancy/privacy ref POLİTİKASI (tur 3): WARN, FAIL değil.
+// Gerekçe (ratchet): FAIL, henüz sınıflandırılmamış yüzlerce düğümü tek seferde
+// bloklar ve gerekçesiz toplu ref doldurmaya (jenerik çöp) zorlar. WARN sayısı
+// raporlanır; artışı PR incelemesinde görünür. FAIL'e çevirme kararı insanındır.
+// Desenler apply-tenancy-privacy-refs.mjs ile AYNI tutulmalıdır.
+const TENANCY_RISK =
+  /tenant|tenancy|multi.?tenant|\brls\b|izolasyon|\biam\b|\bsso\b|\boidc\b|\bmfa\b|authz|auth\b|identity|kimlik|yetki/i;
+const PRIVACY_RISK =
+  /kvkk|gdpr|\bpii\b|kişisel veri|privacy|consent|rıza|dsar|müşteri|customer|payroll|bordro|\bhr\b|personel|üye|party|contact|iletişim/i;
+const TENANCY_CLUSTERS = new Set(["kernel", "platform-horizontal"]);
+const PRIVACY_CLUSTERS = new Set(["customer-revenue", "hr", "finance"]);
+const warns = [];
+
 const nodesDir = path.join(ROOT, "src", "data", "generated", "nodes");
 const files = fs.readdirSync(nodesDir).filter((f) => f.endsWith(".json"));
 let withRef = 0;
@@ -50,6 +63,12 @@ let refCount = 0;
 for (const f of files) {
   const n = rj(path.join(nodesDir, f));
   const sr = n.standardRefs || {};
+  const hay = [n.id, n.title, n.summary ?? "", ...(n.tags ?? [])].join(" ");
+  const cluster = n.source?.cluster ?? "";
+  if ((TENANCY_CLUSTERS.has(cluster) || TENANCY_RISK.test(hay)) && !sr.tenancyRef)
+    warns.push(`${n.id}: tenancy-riskli düğümde tenancyRef boş`);
+  if ((PRIVACY_CLUSTERS.has(cluster) || PRIVACY_RISK.test(hay)) && !sr.privacyRef)
+    warns.push(`${n.id}: privacy-riskli düğümde privacyRef boş`);
   let has = false;
   for (const [k, val] of Object.entries(sr)) {
     if (!val) continue;
@@ -75,6 +94,13 @@ for (const f of files) {
 console.log(
   `Standart kapsamı — ${standardIds.size} standart, ${techIds.size} tech-profile; ${withRef}/${files.length} düğümde ≥1 ref (${refCount} ref).`,
 );
+if (warns.length > 0) {
+  console.log(`UYARI (bloklamaz): ${warns.length} riskli düğümde boş tenancy/privacy ref`);
+  for (const w of warns.slice(0, 10)) console.log(`  ! ${w}`);
+  console.log("  → doldurmak için: node tools/agents/apply-tenancy-privacy-refs.mjs --apply");
+} else {
+  console.log("Tenancy/privacy risk kapsaması: riskli düğümlerde boş ref yok ✓");
+}
 if (v.length === 0) {
   console.log("\nSONUÇ: YEŞİL ✓ (referans bütünlüğü tam)");
   process.exit(0);

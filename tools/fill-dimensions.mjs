@@ -307,12 +307,32 @@ function phases(node) {
   return out;
 }
 
+// --only-day2 (tur 3): dolu düğümlerde HİÇBİR mevcut alanı ezmeden yalnız eksik
+// day-2 boyutlarını ekler. Kontrollü backfill için backfill-day2-dimensions.mjs tercih edilir.
+const ONLY_DAY2 = process.argv.includes("--only-day2");
+const DAY2_KEYS = ["dataLifecycle", "observability", "reliability"];
+
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 let filled = 0;
 let skipped = 0;
 for (const f of files) {
   const p = path.join(NODES, f);
   const n = JSON.parse(fs.readFileSync(p, "utf8"));
+  if (ONLY_DAY2) {
+    const all = dims(n);
+    let added = 0;
+    for (const k of DAY2_KEYS) {
+      if (!n.dimensions?.[k]) {
+        n.dimensions[k] = { ...all[k], provenance: "swarm", promptVersion: "fill-day2-v1" };
+        added++;
+      }
+    }
+    if (added > 0) {
+      fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
+      filled++;
+    } else skipped++;
+    continue;
+  }
   const already = Object.values(n.dimensions || {}).some(
     (d) => d.status && d.status !== "skeleton",
   );

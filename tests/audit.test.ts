@@ -71,13 +71,14 @@ describe("audit skorlama", () => {
     expect(s.flags).toContain("generic");
   });
 
-  it("gerçek human düğüm (s-crm) ≥2.0 ve provenance human", () => {
+  it("gerçek düğüm (s-crm) ≥2.0; backfill sonrası 17 kart, köken mixed (human+swarm)", () => {
     const p = path.resolve(process.cwd(), "src/data/generated/nodes/s-crm.json");
     const node = JSON.parse(fs.readFileSync(p, "utf8")) as TaskNode;
     const a = auditNode(node);
-    expect(a.provenance).toBe("human");
+    // Tur 3 backfill: 14 human karta 3 swarm day-2 kartı eklendi → rollup "mixed".
+    expect(a.provenance).toBe("mixed");
     expect(a.score).toBeGreaterThanOrEqual(2.0);
-    expect(a.filled).toBe(14); // miras düğüm: yeni 3 boyutu taşımaz, payda değişmez
+    expect(a.filled).toBe(17);
   });
 });
 

@@ -11,9 +11,10 @@ import {
 } from "../../tools/lib/dimension-semantics.mjs";
 
 /**
- * Semantik boyut sözleşmesi (tur 2) — "2-5 madde" biçim kapısının üstüne ANLAM kapısı:
- * dolu dataLifecycle retention'sız, dolu observability SLO'suz, dolu reliability
- * idempotency'siz olamaz. Boş/iskelet boyut zorlanmaz (lazy migration).
+ * Semantik boyut sözleşmesi (tur 3) — must + anyOf yapısı:
+ * her boyutta MUST kavramlarının TÜMÜ + anyOf ailesinden EN AZ 1 kavram zorunlu.
+ * "2 herhangi kavram" (tur 2) yeterli değildi; SLO'suz observability geçebiliyordu.
+ * Boş/iskelet boyut zorlanmaz (lazy migration).
  */
 
 const NODES = path.resolve(process.cwd(), "src/data/generated/nodes");
@@ -28,56 +29,81 @@ const dim = (key: string, items: string[]) => ({
   provenance: "human",
 });
 
-describe("semantik kural sözleşmesi (fixture)", () => {
-  it("kavram taşıyan observability içeriği geçer", () => {
+describe("semantik kural sözleşmesi — must + anyOf (fixture)", () => {
+  it("observability: SLO + metrik (must) + runbook (anyOf) geçer", () => {
     const d = dim("observability", [
-      "Sipariş akışı için SLO hedefi p99 < 400ms; error-budget %1",
-      "Webhook arızasında runbook: belirti → teşhis → müdahale",
+      "Sipariş akışı için SLO hedefi p95 < 400ms; error-budget %1",
+      "RED metrikleri (rate/error/duration) tanımlı",
+      "Arıza runbook'u: belirti → teşhis → müdahale",
     ]);
     expect(evaluateDimensionSemantics("observability", d).ok).toBe(true);
   });
 
-  it("jenerik observability içeriği kalır (kavram yok)", () => {
-    const d = dim("observability", ["İzleme yapılır", "Loglara bakılır ve raporlanır"]);
+  it("observability: metrik'siz içerik KALIR (must ihlali) — SLO+runbook yetmez", () => {
+    const d = dim("observability", [
+      "SLO hedefi p95 < 400ms; error-budget %1",
+      "Arıza runbook'u hazır; alarm kurulu",
+    ]);
     const r = evaluateDimensionSemantics("observability", d);
     expect(r.ok).toBe(false);
-    expect(r.missing).toContain("SLI/SLO/error-budget");
+    expect(r.missing.some((m: string) => m.startsWith("must:"))).toBe(true);
   });
 
-  it("retention'sız dataLifecycle kalır, retention+DSAR geçer", () => {
-    expect(
-      evaluateDimensionSemantics(
-        "dataLifecycle",
-        dim("dataLifecycle", ["Veriler düzenli temizlenir", "Arşive taşınır"]),
-      ).ok,
-    ).toBe(false);
+  it("dataLifecycle: retention + PII (must) + DSAR (anyOf) geçer; PII'siz kalır", () => {
     expect(
       evaluateDimensionSemantics(
         "dataLifecycle",
         dim("dataLifecycle", [
-          "İletişim kayıtları retention: 24 ay, sonra anonimleştirme (DSAR uyumlu)",
-          "Aylık restore tatbikatı; migration append-only",
+          "İletişim kayıtları (kişisel veri) retention: 24 ay",
+          "Süre dolumunda anonimleştirme; DSAR talebi 30 günde yanıtlanır",
         ]),
       ).ok,
     ).toBe(true);
-  });
-
-  it("idempotency'siz reliability kalır", () => {
     const r = evaluateDimensionSemantics(
-      "reliability",
-      dim("reliability", ["Hatalar yakalanır", "Sistem sağlamdır ve loglanır"]),
+      "dataLifecycle",
+      dim("dataLifecycle", ["Kayıtlar retention takvimiyle silinir", "Aylık backup + restore"]),
     );
     expect(r.ok).toBe(false);
+    expect(r.missing.some((m: string) => m.startsWith("must:"))).toBe(true);
+  });
+
+  it("reliability: failure mode + idempotency (must) + retry (anyOf) geçer; failure-mode'suz kalır", () => {
+    expect(
+      evaluateDimensionSemantics(
+        "reliability",
+        dim("reliability", [
+          "Failure mode listesi: bağımlılık kesintisi, kuyruk taşması",
+          "Yazma uçları idempotency anahtarı taşır; retry 3 deneme + backoff",
+        ]),
+      ).ok,
+    ).toBe(true);
+    const r = evaluateDimensionSemantics(
+      "reliability",
+      dim("reliability", ["Idempotency anahtarı var", "Retry + backoff uygulanır"]),
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it("anyOf tamamen boşsa kalır (must'lar tam olsa bile)", () => {
+    const r = evaluateDimensionSemantics(
+      "observability",
+      dim("observability", ["SLO p99 hedefi tanımlı", "Metrik seti (RED) toplanıyor"]),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.missing.some((m: string) => m.startsWith("anyOf:"))).toBe(true);
   });
 
   it("miras boyutlara karışmaz (security için kural yok)", () => {
     expect(evaluateDimensionSemantics("security", dim("security", ["x"])).ok).toBe(true);
   });
 
-  it("kural seti 3 yeni boyutu kapsar, eşikler ≥2", () => {
+  it("kural seti 3 yeni boyutu kapsar; her boyutta ≥2 must + ≥3 anyOf kavramı", () => {
     expect(SEMANTIC_KEYS.sort()).toEqual(["dataLifecycle", "observability", "reliability"]);
-    for (const k of SEMANTIC_KEYS)
-      expect(SEMANTIC_RULES[k as keyof typeof SEMANTIC_RULES].min).toBeGreaterThanOrEqual(2);
+    for (const k of SEMANTIC_KEYS) {
+      const rule = SEMANTIC_RULES[k as keyof typeof SEMANTIC_RULES];
+      expect(Object.keys(rule.must).length).toBeGreaterThanOrEqual(2);
+      expect(Object.keys(rule.anyOf).length).toBeGreaterThanOrEqual(3);
+    }
   });
 });
 

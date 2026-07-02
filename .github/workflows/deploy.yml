@@ -76,6 +76,12 @@ jobs:
       - name: Boyut uygulanabilirliği kapısı (applies=false ⇒ gerekçe)
         run: node tools/agents/check-dimension-applicability.mjs
 
+      # Semantik boyut kapısı (gap-2026-07-02-06 tur 3 — BLOKLAYICI). Dolu dataLifecycle/
+      # observability/reliability kartında must+anyOf kavram sözleşmesi: retention+PII,
+      # SLO+metrik, failure-mode+idempotency zorunlu. Biçim (2-5 madde) yetmez; anlam aranır.
+      - name: Semantik boyut kapısı (day-2 must+anyOf kavramları)
+        run: node tools/agents/check-dimension-semantics.mjs
+
       - name: Waiver yaşam döngüsü kapısı (gerekçe + onay + süre)
         run: node tools/agents/check-waivers.mjs
 
@@ -135,6 +141,23 @@ jobs:
 
       - name: Execution-contract kapısı (7 yönerge + ADR-A5 storage kilidi)
         run: node tools/agents/check-execution-contract.mjs
+
+      # Aktivasyon kapıları (gap-2026-07-02 — yanlış-güveni kapatır). Dokümanlar bu kapıları
+      # "CI'da çalışıyor" diye anlatıyordu ama dosyaları yoktu; şimdi gerçekten çalışıyorlar.
+      # event-semantics + state-machine + event, sert-fail yalnız imkansız/yasak durumda; eksik
+      # beyan WARN (ratchet). archetype-relation geçersiz kind'da sert-fail, sarkan hedef WARN.
+      - name: Olay anlambilimi kapısı (idempotent-consumer/DLQ + exactly-once yasağı)
+        run: node tools/agents/check-event-semantics.mjs
+
+      - name: İlişki türü kapısı (archetype relation.kind + tree/dag döngü beyanı)
+        run: node tools/agents/check-archetype-relation.mjs
+
+      - name: Durum-makinesi tutarlılık kapısı (status/phase/implementationStatus kayması)
+        run: node tools/agents/check-state-machine-consistency.mjs
+
+      # Sır sızıntısı kapısı (gitleaks yerine hafif desen-tabanlı — repo checklist P0'ını kapatır).
+      - name: Sır sızıntısı kapısı (PAT/anahtar deseni)
+        run: node tools/agents/check-secrets.mjs
 
       - name: Birim testleri
         run: npm test

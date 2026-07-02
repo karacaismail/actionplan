@@ -1,7 +1,7 @@
 // Tip bildirimi — dimension-semantics.mjs'in TS yüzü (score.d.mts deseni).
 export interface SemanticRule {
-  min: number;
-  concepts: Record<string, RegExp>;
+  must: Record<string, RegExp>;
+  anyOf: Record<string, RegExp>;
 }
 export declare const SEMANTIC_RULES: Record<
   "dataLifecycle" | "observability" | "reliability",
