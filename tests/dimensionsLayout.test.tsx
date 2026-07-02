@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * masonry/CSS-columns DEĞİL. CSS `columns` kartları dikey akıtıp tek-sütun gösteriyordu;
  * bu test bir daha o regresyonu (yan yana durmama) sessizce geçirmez.
  */
-const node = TaskNodeSchema.parse({ id: "x-grid", level: "atom", title: "x", slug: "x" });
+const node = TaskNodeSchema.parse({ id: "x-grid", level: "micro_step", title: "x", slug: "x" });
 
 describe("boyut kartları yerleşimi — 2-sütun grid (yan yana)", () => {
   it("dimensions-grid GRID sınıfı taşır, columns(masonry) taşımaz", () => {
@@ -20,8 +20,8 @@ describe("boyut kartları yerleşimi — 2-sütun grid (yan yana)", () => {
     expect(grid.className).not.toMatch(/columns-/);
   });
 
-  it("grid tam 14 boyut kartını doğrudan çocuk olarak render eder", () => {
+  it("grid tam 17 boyut kartını doğrudan çocuk olarak render eder", () => {
     const { getByTestId } = render(<Dimensions node={node} />);
-    expect(getByTestId("dimensions-grid").children.length).toBe(14);
+    expect(getByTestId("dimensions-grid").children.length).toBe(17);
   });
 });

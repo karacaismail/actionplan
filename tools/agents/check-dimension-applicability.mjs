@@ -24,6 +24,9 @@ const DIMENSION_KEYS = new Set([
   "owasp",
   "integration",
   "moduleUsage",
+  "dataLifecycle",
+  "observability",
+  "reliability",
 ]);
 const v = [];
 const fail = (m) => v.push(m);

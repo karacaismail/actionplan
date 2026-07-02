@@ -69,6 +69,22 @@ export interface AuditSummary {
 const clamp = (n: number, lo = 0, hi = 3) => Math.max(lo, Math.min(hi, n));
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/* ----------------------------------------------------------------------------
+ * N/A politikası (gap-2026-07-02-06 karar #2) — DEĞİŞİKLİK score.mjs'E DE YANSITILMALI.
+ * 1) applicability[key].applies === false → boyut denetim paydasına GİRMEZ.
+ * 2) Seviye-bazlı varsayılan N/A: work_unit/micro_step düğümlerinde day-2 operasyon
+ *    boyutları (dataLifecycle, observability) açıkça applies=true denmedikçe N/A sayılır.
+ *    Gerekçe: atom/molekül ölçeğinde SLO-alarm-saklama planı jenerik dolgu üretir.
+ * -------------------------------------------------------------------------- */
+const DEFAULT_NA_LEVELS = new Set(["work_unit", "micro_step"]);
+const DEFAULT_NA_KEYS = new Set<DimensionKey>(["dataLifecycle", "observability"]);
+
+export function isDimensionApplicable(node: TaskNode, key: DimensionKey): boolean {
+  const ap = node.applicability?.[key];
+  if (ap) return ap.applies !== false;
+  return !(DEFAULT_NA_LEVELS.has(node.level) && DEFAULT_NA_KEYS.has(key));
+}
+
 /** Düğümün kimlik/etiket/özetinden alan-jetonları (benzersizlik sinyali). */
 export function domainTokens(
   node: Pick<TaskNode, "id" | "title" | "tags" | "summary">,
@@ -155,9 +171,9 @@ function rollupProvenance(dims: Dimension[]): NodeAudit["provenance"] {
 
 export function auditNode(node: TaskNode): NodeAudit {
   const tokens = domainTokens(node);
-  const dims = DIMENSION_KEYS.map((k) => node.dimensions?.[k]).filter((d): d is Dimension =>
-    Boolean(d),
-  );
+  const dims = DIMENSION_KEYS.filter((k) => isDimensionApplicable(node, k))
+    .map((k) => node.dimensions?.[k])
+    .filter((d): d is Dimension => Boolean(d));
   const scores = dims.map((d) => scoreDimension(d, tokens));
   const filled = dims.filter((d) => d.status !== "skeleton").length;
   const score = scores.length ? round2(scores.reduce((a, s) => a + s.score, 0) / scores.length) : 0;

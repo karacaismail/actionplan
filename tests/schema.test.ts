@@ -1,5 +1,8 @@
 import {
+  DIMENSION_FAMILY,
   DIMENSION_KEYS,
+  DIMENSION_META,
+  LEGACY_DIMENSION_KEYS,
   TaskNodeSchema,
   WATERFALL_PHASES,
   WBS_LEVELS,
@@ -31,10 +34,10 @@ describe("TaskNode şema sabitleri", () => {
       "app",
       "module",
       "archetype",
-      "stone",
-      "molecule",
-      "element",
-      "atom",
+      "feature",
+      "component",
+      "work_unit",
+      "micro_step",
     ]);
   });
 
@@ -46,8 +49,22 @@ describe("TaskNode şema sabitleri", () => {
     );
   });
 
-  it("14 üretim boyutu tanımlı", () => {
-    expect(DIMENSION_KEYS).toHaveLength(14);
+  it("17 üretim boyutu tanımlı (14 miras + 3 day-2 operasyon)", () => {
+    expect(DIMENSION_KEYS).toHaveLength(17);
+    // Miras 14'ün sırası korunur (UI sıralaması bozulmaz), yeni üçlü sona eklenir.
+    expect(DIMENSION_KEYS.slice(0, 14)).toEqual(LEGACY_DIMENSION_KEYS);
+    expect(DIMENSION_KEYS.slice(14)).toEqual(["dataLifecycle", "observability", "reliability"]);
+  });
+
+  it("her boyutun TR başlığı, ikonu ve aile eşlemesi eksiksiz", () => {
+    for (const key of DIMENSION_KEYS) {
+      expect(DIMENSION_META[key].tr.trim().length).toBeGreaterThan(0);
+      expect(DIMENSION_META[key].icon.startsWith("ph-")).toBe(true);
+      expect(DIMENSION_FAMILY[key]).toBeTruthy();
+    }
+    expect(DIMENSION_FAMILY.dataLifecycle).toBe("operations");
+    expect(DIMENSION_FAMILY.observability).toBe("operations");
+    expect(DIMENSION_FAMILY.reliability).toBe("runtime-quality");
   });
 });
 
@@ -75,9 +92,9 @@ describe("TaskNode parse", () => {
 });
 
 describe("iskelet üreticiler", () => {
-  it("14 boyut iskeleti üretir, hepsi skeleton", () => {
+  it("17 boyut iskeleti üretir, hepsi skeleton", () => {
     const dims = makeSkeletonDimensions();
-    expect(Object.keys(dims)).toHaveLength(14);
+    expect(Object.keys(dims)).toHaveLength(17);
     expect(Object.values(dims).every((d) => d.status === "skeleton")).toBe(true);
   });
 

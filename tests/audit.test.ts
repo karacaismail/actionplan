@@ -77,6 +77,67 @@ describe("audit skorlama", () => {
     const a = auditNode(node);
     expect(a.provenance).toBe("human");
     expect(a.score).toBeGreaterThanOrEqual(2.0);
-    expect(a.filled).toBe(14);
+    expect(a.filled).toBe(14); // miras düğüm: yeni 3 boyutu taşımaz, payda değişmez
+  });
+});
+
+describe("audit N/A politikası (17-boyut genişlemesi)", () => {
+  const base = {
+    id: "x-na",
+    title: "x",
+    tags: [],
+    summary: "",
+    source: undefined,
+  } as unknown as TaskNode;
+
+  const filledObservability: Dimension = {
+    ...goldenDim,
+    key: "observability",
+    title: "Gözlemlenebilirlik & Operasyon",
+  };
+
+  it("applies=false işaretli boyut denetim paydasına girmez", () => {
+    const node = {
+      ...base,
+      level: "feature",
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: false, reason: "UI-only düğüm" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+    expect(a.filled).toBe(0);
+  });
+
+  it("work_unit/micro_step seviyesinde dataLifecycle+observability varsayılan N/A", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      dimensions: { observability: filledObservability },
+      applicability: {},
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+  });
+
+  it("varsayılan N/A, açık applies=true ile geri açılır", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: true, reason: "" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).toContain("observability");
+  });
+
+  it("üst seviyede (module) yeni boyutlar varsayılan olarak uygulanır", () => {
+    const node = {
+      ...base,
+      level: "module",
+      dimensions: { observability: filledObservability },
+      applicability: {},
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).toContain("observability");
   });
 });

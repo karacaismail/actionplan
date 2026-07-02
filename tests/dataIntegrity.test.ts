@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { type TaskNode, TaskNodeSchema } from "@/schemas";
+import { DIMENSION_KEYS, type TaskNode, TaskNodeSchema } from "@/schemas";
 import { beforeAll, describe, expect, it } from "vitest";
 
 /**
@@ -69,9 +69,14 @@ describe("üretilmiş veri seti", () => {
     expect(meta.counts.total).toBe(nodes.length);
   });
 
-  it("her düğümün 14 boyutu ve 7 fazı var", () => {
+  it("her düğümün 14 (miras) veya 17 boyutu ve 7 fazı var; tüm anahtarlar geçerli", () => {
+    // Lazy migration: eski düğümler 14 boyutla geçerli kalır (toplu rewrite YOK);
+    // yeni/dokunulan düğümler 17 taşır. Geçersiz anahtar hiçbir düğümde olamaz.
+    const valid = new Set<string>(DIMENSION_KEYS);
     for (const n of nodes) {
-      expect(Object.keys(n.dimensions)).toHaveLength(14);
+      const keys = Object.keys(n.dimensions);
+      expect([14, 17]).toContain(keys.length);
+      expect(keys.filter((k) => !valid.has(k))).toEqual([]);
       expect(Object.keys(n.phases)).toHaveLength(7);
     }
   });
