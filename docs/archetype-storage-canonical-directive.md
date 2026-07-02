@@ -1,7 +1,7 @@
 # ArcheType Storage Canonical Directive — ArcheType Satır Depolamasının Tek Canonical Hükmü
 
 **Tarih:** 2026-07-02
-**Durum:** Öneri (insan ADR onayı bekler — bkz. §15 DoD, ADR-A5 önerisi ve `PENDING-HUMAN-FIXES-2026-07-01.md` C2 kilidi). Bu doküman **default'u önerir**; nihai canonical hükmü **insan** ADR kilidiyle sabitler.
+**Durum:** **Kilitli** (ADR-A5 · insan onayı: 2026-07-02). Canonical default = **shared tablo + JSONB + physical-promotion** (Model c). Bu doküman artık bağlayıcı canonical hükümdür; `archetype-eav-directive`, `archetype-variant-attribute-family-directive` (VAF-10) ve `archetype-uretim-spec §4` bu hükme uyar — üçlü storage çelişkisi kapandı (JSONB default, fiziksel tablo = onaylı terfi istisnası).
 **Kaynak/bağlam:** `archetype-uretim-spec.md §4` (migration & veri koruma), `archetype-uretim-spec.md §12.B` (attribute-set/EAV, runtime + ayrı indeks), `archetype-eav-directive.md §6` (ilişkili tablo vs JSONB kararı), `archetype-variant-attribute-family-directive.md` VAF-10 (runtime öznitelik, şema-migration yok), `core-contract-pack.md §2.6` (Archetype Registry), `core-contract-pack.md §2.8` (Migration Policy), `core-contract-pack.md §3.0.1` (ortak AI-güvenlik invariantı), `adr-K1-kernel-kimlik.md` (Kernel = metadata-driven ArcheType motoru), `k-storage-dam-directive.md` (kardeş 17-bölüm deseni), `wbs-field-semantics.md` (dependsOn anlamı).
 **İlişki:** Bu doküman `k-storage-dam-directive.md` ile **karıştırılmamalıdır**. `k-storage` binary/medya varlığını (görsel, video, PDF) object storage'da tutar; **bu** doküman ArcheType kayıt *satırlarının* (structured veri: alanlar, öznitelikler, ilişkiler) hangi fiziksel şekilde — shared JSONB tablo mu, ArcheType-başına fiziksel tablo mu — tutulacağını hükme bağlar. İki eksen ortogonaldir: bir ArcheType satırı bir `digital_asset.id` referansı taşıyabilir; satırın *kendisi* burada, referans verdiği binary orada. Bu doküman **kod yazmaz**; ArcheType storage stratejisinin davranış sözleşmesini normatif tarif eder. Makine-okunur karşılığı (SQLAlchemy 2.0 modeli, Alembic migration, promotion motoru) ilgili ADR kilitlendiğinde ajan-draft + insan-onay ile `platform` reposunda üretilir.
 
@@ -58,7 +58,7 @@ Sonuç: (a) pratik ama enterprise ölçekte tek başına yetmez; (b) enterprise 
 
 ## 7. Önerilen default (net hüküm önerisi)
 
-Aşağıdaki hüküm bir **öneridir**; §1 Durum uyarınca insan ADR kilidini bekler. Öneri, karşılaştırmanın (§6) ve korpus vizyonunun (`adr-K1`, `archetype-uretim-spec §12.B` "runtime + ayrı indeks") mantıksal sonucudur.
+Aşağıdaki hüküm 2026-07-02'de **ADR-A5 olarak KİLİTLENDİ** (insan onayı); artık canonical default'tur (öneri değil). Karşılaştırmanın (§6) ve korpus vizyonunun (`adr-K1`, `archetype-uretim-spec §12.B` "runtime + ayrı indeks") mantıksal sonucudur.
 
 **Önerilen canonical hüküm: Shared tablo + JSONB + promotion (Model c).**
 
