@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
  * (applicability) ve waiver yaşam döngüsü eklenir. Hepsi GERİYE UYUMLU default'lu:
  * eski 438 düğüm dosya migration'ı OLMADAN parse olur (lazy migration).
  */
-const base = { id: "x-node", level: "atom", title: "x", slug: "x" } as const;
+const base = { id: "x-node", level: "micro_step", title: "x", slug: "x" } as const;
 
 describe("ST-1 — standardRefs / applicability / waivers şema temeli", () => {
   it("eski düğüm (yeni alanlar yok) hâlâ parse olur — lazy migration", () => {

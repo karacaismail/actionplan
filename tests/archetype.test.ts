@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * güvenlik sınırlarını taşıdığını doğrular.
  */
 const DIR = path.resolve(process.cwd(), "src/data/archetypes");
-const FIXTURES = ["product", "customer"];
+const FIXTURES = ["product", "customer", "order"];
 const load = (id: string) => JSON.parse(fs.readFileSync(path.join(DIR, `${id}.json`), "utf8"));
 
 describe("ArcheType sözleşme fixtures", () => {

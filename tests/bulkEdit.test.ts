@@ -3,7 +3,7 @@ import { type TaskNode, TaskNodeSchema } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
 const node = (p: Partial<TaskNode> & { id: string }): TaskNode =>
-  TaskNodeSchema.parse({ level: "atom", title: p.id, slug: p.id, ...p });
+  TaskNodeSchema.parse({ level: "micro_step", title: p.id, slug: p.id, ...p });
 
 const nodes: TaskNode[] = [
   node({ id: "a", status: "todo" }),
