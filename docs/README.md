@@ -115,6 +115,13 @@ Kernel kararlarını **çalıştırılabilir sözleşme + negatif test + kanıt 
 - [dod-evidence-schema-directive.md](dod-evidence-schema-directive.md) — high-risk düğümde makine-kontrol DoD + kanıt şeması + AI sahte-yeşil test tespit ritüeli + 60+ ekip reddetme checklist'i.
 - [deploy-separation-runbooks.md](deploy-separation-runbooks.md) — docs-viewer / local product / Hetzner production 3 ayrı runbook (GitHub Pages ≠ product production deploy).
 
+## 12. Güvenlik + Vibecoding Operasyonu (P1)
+
+Portföy güvenliği ve 60+ yaş, 3 kişilik ekip için AI-üretim operasyonu.
+
+- [marketplace-module-security-directive.md](marketplace-module-security-directive.md) — dış modül güvenlik yaşam döngüsü: module signing, SBOM/provenance, permission-diff, malicious-update karantina, sandbox (ağ/dosya/process default-deny), modül-tablo RLS, exfiltration testleri.
+- [vibecoding-prompt-playbook.md](vibecoding-prompt-playbook.md) — her görevde kopyalanabilir prompt → beklenen dosyalar → test yeşil → negatif test kırmızı→yeşil → manuel kontrol → **reddetme kriteri**; örnek domain (Customer→Order) adım adım büyür.
+
 ---
 
 *Bu dizin elle güncellenir. Yeni doküman eklerken ilgili kategoriye bir satır ekle (boşluk kalmasın).*

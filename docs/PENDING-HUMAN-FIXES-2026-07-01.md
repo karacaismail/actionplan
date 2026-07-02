@@ -1,6 +1,6 @@
 # Bekleyen İnsan-Düzeltmeleri — 2026-07-01
 
-Durum: AI-DRAFT (öneri). Sahip: **İnsan (Kullanıcı/Admin)**. Merge yetkisi yalnız insandadır.
+Durum: **ÇÖZÜLDÜ (2026-07-02)** — aşağıdaki maddelerin tümü uygulandı: **C1** `AGENTS.md:82` artık `FastAPI + SQLAlchemy 2.0` (Prisma kaldırıldı); **C2** altı ADR (A1/A2/A3/A4/K1/P1) **Kilitli** (insan onayı: ismail); üç "hayalet kapı" (`check-i18n`, `check-core-contract`, `check-scale-invariant`) yazıldı ve `deploy.yml`'de koşuyor. **Ek:** ADR-A5 (ArcheType storage canonical = shared-tablo+JSONB+promotion) 2026-07-02'de Kilitlendi. Bu dosya tarihsel kayıt olarak korunur; yeni bir insan-fix kalmadı.
 Kapsam: Bu dosya **yalnız insanın yapması gereken canon düzeltmelerini** listeler. Aşağıdaki maddeler `AGENTS.md` §7 gereği **kanonik sözleşme** dosyalarına dokunur; AI ajan bunları doğrudan yeniden yazamaz, yalnız değişiklik önerir (changeset). Her madde tam diff ile verilmiştir; insan gözden geçirip elle uygular.
 
 Neden ayrı dosya: `AGENTS.md` §7 "Kanonik Dokümanlar ve Düzenleme Yetkisi" — `AGENTS.md`, ADR'ler ve `src/data/standards/*.json` yalnız insan onayıyla değişir. RECONCILE işi (`00-standards-index.md`, `14-enterprise-readiness-checklist.md`) AI tarafından yapıldı; ama aşağıdakiler canon olduğu için AI DOKUNMADI, yalnız diff önerdi.
