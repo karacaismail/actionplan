@@ -86,15 +86,30 @@ const DIM = {
     kapsa:
       "bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden)",
   },
+  dataLifecycle: {
+    tr: "Veri Yaşam Döngüsü & Uyum",
+    kapsa:
+      "veri sınıfları (PII/finansal/log), retention (saklama) süresi, silme/anonimleştirme (DSAR/KVKK), yedekleme + restore tatbikatı, migration modu (append-only/expand-contract)",
+  },
+  observability: {
+    tr: "Gözlemlenebilirlik & Operasyon",
+    kapsa:
+      "SLI/SLO hedefi, metrik + yapısal log + trace kapsamı, alarm eşiği, dashboard, runbook adımları, on-call müdahale",
+  },
+  reliability: {
+    tr: "Dayanıklılık & Süreklilik",
+    kapsa:
+      "failure mode listesi, retry/backoff + idempotency, circuit breaker, DLQ (dead-letter kuyruğu), RTO/RPO hedefi, degrade (kademeli işlev kaybı) davranışı",
+  },
 };
 const LEVEL = {
-  app: "uygulama/dağ",
-  module: "modül/kaya",
-  archetype: "ArcheType/büyük taş",
-  stone: "taş/orta taş",
-  molecule: "molekül/küçük taş",
-  element: "element/toz",
-  atom: "atom",
+  app: "uygulama/ada",
+  module: "modül/dağ",
+  archetype: "ArcheType/kaya",
+  feature: "özellik/taş",
+  component: "bileşen/kum",
+  work_unit: "iş birimi/molekül",
+  micro_step: "mikro adım/atom",
 };
 const CLUSTER = {
   kernel: "Kernel",

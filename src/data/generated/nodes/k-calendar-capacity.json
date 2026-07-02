@@ -485,16 +485,58 @@
       "notes": "'X iş günü sonra' tek yetkili kaynak; vardiya değişikliği tek yerde yönetilir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu düğüm için üret.\nBağlam: k-calendar-capacity — üretim takvimi + iş-merkezi kapasitesi + business-time; vardiya/tatil/planlı duruş, 'X iş günü sonra' hesabı, APS ve teslim-tarihi girdisi (kernel primitifi).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir; her maddeyi bu düğümün gerçek işleviyle ilişkilendir, generic ifade kullanma.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: modül/solver sınırı, üretilen API üzerinden tüketim (doğrudan DB yok), tenant izolasyonu",
       "provenance": "template"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time verisi sınıflandırılır: PII taşımadığı veri envanteriyle beyan edilir; retention 12 ay",
+        "Retention dolunca Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time kayıtları silinir/anonimleştirilir; DSAR talebi 30 gün içinde yanıtlanır",
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time yedeği günlük; 6 ayda bir restore tatbikatı kanıtlanır; migration expand-contract/append-only"
+      ],
+      "notes": "Kernel kümesi bağlamında veri envanteri temeli; swarm turunda alan-bazında derinleştirilecek.",
+      "prompt": "\"Veri Yaşam Döngüsü & Uyum\" boyutunu Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time (module, Kernel kümesi) için derinleştir. Kapsa: veri sınıfları, retention takvimi, silme/anonimleştirme (DSAR/KVKK), yedek/restore, migration modu. Kısıt: mevcut 14 boyut içeriğiyle çelişme; AI app/module üretemez sınırı geçerli. Çıktı: 3-5 sayfaya-özgü madde.",
+      "provenance": "swarm",
+      "promptVersion": "backfill-day2-v1"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time SLO: p95 500ms, kullanılabilirlik %99.5; error-budget aylık izlenir",
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time RED metrikleri (rate/error/duration) + yapısal log alanları (correlation-id) toplanır",
+        "Alarm eşiği error-budget tüketimine bağlı; Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time runbook'u belirti → teşhis → müdahale adımlarını içerir"
+      ],
+      "notes": "Kernel kümesi bağlamında day-2 izleme temeli; dashboard/on-call detayı swarm turunda.",
+      "prompt": "\"Gözlemlenebilirlik & Operasyon\" boyutunu Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time (module, Kernel kümesi) için derinleştir. Kapsa: SLI/SLO hedefi, metrik-log-trace kapsamı, alarm eşiği, runbook, on-call. Kısıt: mevcut 14 boyut içeriğiyle çelişme; AI app/module üretemez sınırı geçerli. Çıktı: 3-5 sayfaya-özgü madde.",
+      "provenance": "swarm",
+      "promptVersion": "backfill-day2-v1"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time failure mode listesi: bağımlılık kesintisi, zaman aşımı, kısmi yazım",
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time yazma uçları idempotency anahtarı taşır; retry 3 deneme + üstel backoff, kalıcı hata DLQ'ya düşer",
+        "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time için RTO 30 dk / RPO 30 dk; kritik bağımlılık düşünce degrade (kademeli işlev kaybı) davranışı tanımlı"
+      ],
+      "notes": "Kernel kümesi bağlamında dayanıklılık temeli; circuit-breaker eşiği swarm turunda kalibre edilecek.",
+      "prompt": "\"Dayanıklılık & Süreklilik\" boyutunu Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time (module, Kernel kümesi) için derinleştir. Kapsa: failure mode listesi, retry/backoff + idempotency, circuit breaker, DLQ, RTO/RPO, degrade davranışı. Kısıt: mevcut 14 boyut içeriğiyle çelişme; AI app/module üretemez sınırı geçerli. Çıktı: 3-5 sayfaya-özgü madde.",
+      "provenance": "swarm",
+      "promptVersion": "backfill-day2-v1"
     }
   },
   "source": {
     "corpus": "content-source",
     "originalId": "k-calendar-capacity",
-    "granularity": "kaya",
+    "granularity": "dag",
     "cluster": "kernel"
   },
   "state": "aday",
-  "lastUpdated": "2026-07-01",
+  "lastUpdated": "2026-07-02",
   "agentPolicy": {
     "autonomy": "none",
     "capabilities": [
@@ -546,5 +588,8 @@
     },
     "subPromptUntrusted": true,
     "killSwitch": true
+  },
+  "standardRefs": {
+    "tenancyRef": "tenancy"
   }
 }

@@ -16,7 +16,7 @@ describe("Faz 0 — şema + görünüm kalıcılığı", () => {
   });
 
   it("TaskNode.assignees default [] + schedule.baseline null (geriye uyumlu)", () => {
-    const n = TaskNodeSchema.parse({ id: "x", level: "atom", title: "X", slug: "x" });
+    const n = TaskNodeSchema.parse({ id: "x", level: "micro_step", title: "X", slug: "x" });
     expect(n.assignees).toEqual([]);
     expect(n.schedule.baselineStart).toBeNull();
     expect(n.schedule.baselineEnd).toBeNull();

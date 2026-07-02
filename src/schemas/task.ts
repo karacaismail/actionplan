@@ -7,19 +7,19 @@ import { z } from "zod";
  * Şema, TS tiplerinin tek kaynağıdır (z.infer ile türetilir).
  */
 
-export const SCHEMA_VERSION = "1.0.0";
+export const SCHEMA_VERSION = "1.1.0"; // 1.1.0: 17 boyut (dataLifecycle, observability, reliability) + tenancyRef/privacyRef
 
 /* ----------------------------------------------------------------------------
  * 7-seviye doğa-metaforu hiyerarşisi
  * -------------------------------------------------------------------------- */
 export const WBS_LEVELS = [
-  "app", // dağ
-  "module", // kaya
-  "archetype", // büyük taş
-  "stone", // orta taş
-  "molecule", // küçük taş
-  "element", // toz tanesi
-  "atom", // atom
+  "app", // ada
+  "module", // dağ
+  "archetype", // kaya
+  "feature", // taş
+  "component", // kum
+  "work_unit", // molekül
+  "micro_step", // atom
 ] as const;
 export const WbsLevelSchema = z.enum(WBS_LEVELS);
 export type WbsLevel = z.infer<typeof WbsLevelSchema>;
@@ -29,10 +29,10 @@ export const LEVEL_META: Record<WbsLevel, { tr: string; metaphor: string; depth:
   app: { ...uiStrings.levels.app, depth: 0 },
   module: { ...uiStrings.levels.module, depth: 1 },
   archetype: { ...uiStrings.levels.archetype, depth: 2 },
-  stone: { ...uiStrings.levels.stone, depth: 3 },
-  molecule: { ...uiStrings.levels.molecule, depth: 4 },
-  element: { ...uiStrings.levels.element, depth: 5 },
-  atom: { ...uiStrings.levels.atom, depth: 6 },
+  feature: { ...uiStrings.levels.feature, depth: 3 },
+  component: { ...uiStrings.levels.component, depth: 4 },
+  work_unit: { ...uiStrings.levels.work_unit, depth: 5 },
+  micro_step: { ...uiStrings.levels.micro_step, depth: 6 },
 };
 
 /* ----------------------------------------------------------------------------
@@ -74,9 +74,11 @@ export const PhaseGateSchema = z.object({
 export type PhaseGate = z.infer<typeof PhaseGateSchema>;
 
 /* ----------------------------------------------------------------------------
- * 14 üretim boyutu (kullanıcı prompt-block seti)
+ * 17 üretim boyutu (14 miras + 3 day-2 operasyon — gap-2026-07-02-06)
+ * Miras 14'ün sırası KORUNUR (UI sıralaması + eski JSON'lar bozulmaz);
+ * yeni üçlü sona eklenir. Eski düğümler 14 boyutla geçerli kalır (lazy migration).
  * -------------------------------------------------------------------------- */
-export const DIMENSION_KEYS = [
+export const LEGACY_DIMENSION_KEYS = [
   "featureDefs", // Özellik tanımları
   "security", // Güvenlik önlemleri
   "codeOptimization", // Kod optimizasyonu
@@ -91,6 +93,12 @@ export const DIMENSION_KEYS = [
   "owasp", // OWASP & güvenlik standartları
   "integration", // Kernel/Core/modules/apps entegrasyonu
   "moduleUsage", // Module ise diğer app'lerin kullanımı
+] as const;
+export const DIMENSION_KEYS = [
+  ...LEGACY_DIMENSION_KEYS,
+  "dataLifecycle", // Veri yaşam döngüsü & uyum (saklama, silme, yedekleme, migration, KVKK/GDPR)
+  "observability", // Gözlemlenebilirlik & operasyonel hazırlık (SLO, alarm, runbook)
+  "reliability", // Dayanıklılık & süreklilik (hata modları, retry/idempotency, RTO/RPO)
 ] as const;
 export const DimensionKeySchema = z.enum(DIMENSION_KEYS);
 export type DimensionKey = z.infer<typeof DimensionKeySchema>;
@@ -110,6 +118,9 @@ export const DIMENSION_META: Record<DimensionKey, { tr: string; icon: string }> 
   owasp: { tr: uiStrings.dimensions.owasp, icon: "ph-bug-beetle" },
   integration: { tr: uiStrings.dimensions.integration, icon: "ph-plugs-connected" },
   moduleUsage: { tr: uiStrings.dimensions.moduleUsage, icon: "ph-share-network" },
+  dataLifecycle: { tr: uiStrings.dimensions.dataLifecycle, icon: "ph-database" },
+  observability: { tr: uiStrings.dimensions.observability, icon: "ph-chart-line-up" },
+  reliability: { tr: uiStrings.dimensions.reliability, icon: "ph-shield-plus" },
 };
 
 /* ---- Boyut aileleri (ADR-0027) — 14 boyutu anlamlı kümeleyip "ontoloji yok" boşluğunu kapatır. ---- */
@@ -138,6 +149,10 @@ export const DIMENSION_FAMILY: Record<DimensionKey, DimensionFamily> = {
   eca: "automation",
   aiAgents: "automation",
   testing: "verification",
+  // Day-2 operasyon ekseni (gap-2026-07-02-06): operations ailesi 1→3 üyeye çıkar.
+  dataLifecycle: "operations",
+  observability: "operations",
+  reliability: "runtime-quality",
 };
 
 export const DimensionStatusSchema = z.enum(["skeleton", "draft", "filled"]);
@@ -371,6 +386,10 @@ export const StandardRefsSchema = z.object({
   p13nRef: z.string().optional(),
   edgeSecurityRef: z.string().optional(),
   iacRef: z.string().optional(),
+  /** Çok-kiracılık izolasyon standardı (gap-2026-07-02-06 karar #3) — boyut değil, referans. */
+  tenancyRef: z.string().optional(),
+  /** Kişisel veri/KVKK-GDPR standardı — dataLifecycle boyutunun tek-kaynak sözleşme bağı. */
+  privacyRef: z.string().optional(),
 });
 export type StandardRefs = z.infer<typeof StandardRefsSchema>;
 

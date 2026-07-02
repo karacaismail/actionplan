@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  */
 const node = (
   p: Partial<Omit<TaskNode, "schedule">> & { id: string; schedule?: Partial<Schedule> },
-): TaskNode => TaskNodeSchema.parse({ level: "atom", title: p.id, slug: p.id, ...p });
+): TaskNode => TaskNodeSchema.parse({ level: "micro_step", title: p.id, slug: p.id, ...p });
 
 describe("toGanttBars", () => {
   it("tarihsiz (start veya end null) düğümleri dışlar", () => {

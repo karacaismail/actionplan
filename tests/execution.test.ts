@@ -12,7 +12,7 @@ const base = (
 
 describe("yürütme şeması (milestone + takvim)", () => {
   it("milestone ve schedule alanları varsayılanla gelir (geriye uyumlu)", () => {
-    const n = base({ id: "x", level: "atom", title: "X", slug: "x" });
+    const n = base({ id: "x", level: "micro_step", title: "X", slug: "x" });
     expect(n.milestone).toBeNull();
     expect(n.schedule).toEqual({
       start: null,
@@ -27,7 +27,7 @@ describe("yürütme şeması (milestone + takvim)", () => {
   it("schedule ve milestone değerleri parse edilir", () => {
     const n = base({
       id: "y",
-      level: "atom",
+      level: "micro_step",
       title: "Y",
       slug: "y",
       milestone: "R1",
@@ -50,7 +50,7 @@ describe("rollupExecution (adam-gün + milestone + atama)", () => {
     base({ id: "root", level: "module", title: "Root", slug: "root", parentId: null }),
     base({
       id: "a",
-      level: "atom",
+      level: "micro_step",
       title: "A",
       slug: "a",
       parentId: "root",
@@ -69,7 +69,7 @@ describe("rollupExecution (adam-gün + milestone + atama)", () => {
     }),
     base({
       id: "b",
-      level: "atom",
+      level: "micro_step",
       title: "B",
       slug: "b",
       parentId: "root",

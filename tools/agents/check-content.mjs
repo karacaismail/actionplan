@@ -63,7 +63,11 @@ const DIMENSION_KEYS = [
   "owasp",
   "integration",
   "moduleUsage",
+  "dataLifecycle",
+  "observability",
+  "reliability",
 ];
+const VALID_KEYS = new Set(DIMENSION_KEYS);
 
 function terms(n) {
   return Array.from(
@@ -91,8 +95,10 @@ const v = { marker: [], specific: [], format: [], repeat: [], dims: [] };
 const counts = new Map();
 
 for (const n of nodes) {
-  if (Object.keys(n.dimensions || {}).length !== 14)
-    v.dims.push(`${n.id}: ${Object.keys(n.dimensions || {}).length} boyut`);
+  // Lazy migration: miras düğüm 14, yeni/dokunulan düğüm 17 boyut taşır; geçersiz anahtar yasak.
+  const dimKeys = Object.keys(n.dimensions || {});
+  if (!(dimKeys.length === 14 || dimKeys.length === 17) || dimKeys.some((k) => !VALID_KEYS.has(k)))
+    v.dims.push(`${n.id}: ${dimKeys.length} boyut`);
   for (const [key, dim] of filled(n)) {
     // Biçim: 2-5 madde (altın düğümler 2 maddeyle de kaliteli); moduleUsage min 1 (yaprak/app düğümlerde meşru).
     const len = dim.items.length;
@@ -121,7 +127,7 @@ for (const [k, label] of [
   ["specific", "sınır-dışı içerik"],
   ["format", "2-5 madde biçimi"],
   ["repeat", "çapraz tekrar (≥5×)"],
-  ["dims", "14 boyut"],
+  ["dims", "14/17 boyut"],
 ]) {
   const list = v[k];
   console.log(

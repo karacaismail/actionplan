@@ -9,7 +9,7 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 
 const node = (id: string, patch: Partial<TaskNode> = {}): TaskNode =>
-  TaskNodeSchema.parse({ id, level: "atom", title: id.toUpperCase(), slug: id, ...patch });
+  TaskNodeSchema.parse({ id, level: "micro_step", title: id.toUpperCase(), slug: id, ...patch });
 
 describe("browser-storage kalıcılık (override)", () => {
   beforeEach(() => clearOverrides());

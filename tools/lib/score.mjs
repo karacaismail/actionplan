@@ -30,7 +30,27 @@ export const DIMENSION_KEYS = [
   "owasp",
   "integration",
   "moduleUsage",
+  "dataLifecycle",
+  "observability",
+  "reliability",
 ];
+
+// N/A politikası — src/engine/audit.ts isDimensionApplicable'ın birebir aynası
+// (seviye-bazlı varsayılan N/A + risk istisnası; açık applicability her zaman kazanır).
+const DEFAULT_NA_LEVELS = new Set(["work_unit", "micro_step"]);
+const DEFAULT_NA_KEYS = new Set(["dataLifecycle", "observability"]);
+export const RISK_SIGNAL =
+  /\bpii\b|kvkk|gdpr|kişisel veri|migration|göç|backfill|webhook|retry|idempoten|queue|kuyruk|outbox|dlq|dead.?letter|cron|\bjob\b|worker|background|yedek|backup|restore|saga|stream/i;
+export function hasRiskSignal(node) {
+  const hay = [node.id, node.title, node.summary, ...(node.tags ?? [])].join(" ");
+  return RISK_SIGNAL.test(hay);
+}
+export function isDimensionApplicable(node, key) {
+  const ap = node.applicability?.[key];
+  if (ap) return ap.applies !== false;
+  if (!(DEFAULT_NA_LEVELS.has(node.level) && DEFAULT_NA_KEYS.has(key))) return true;
+  return hasRiskSignal(node);
+}
 
 const SHORT_ITEM = 35;
 const VAGUE_ITEM = 60;
@@ -114,7 +134,9 @@ function rollupProvenance(dims) {
 
 export function auditNode(node) {
   const tokens = domainTokens(node);
-  const dims = DIMENSION_KEYS.map((k) => node.dimensions?.[k]).filter(Boolean);
+  const dims = DIMENSION_KEYS.filter((k) => isDimensionApplicable(node, k))
+    .map((k) => node.dimensions?.[k])
+    .filter(Boolean);
   const scores = dims.map((d) => scoreDimension(d, tokens));
   const filled = dims.filter((d) => d.status !== "skeleton").length;
   const score = scores.length ? round2(scores.reduce((a, s) => a + s.score, 0) / scores.length) : 0;

@@ -1,0 +1,49 @@
+{
+  "id": "tenancy",
+  "name": "Çok-Kiracılık (Multi-Tenancy) İzolasyon Standardı",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Tenant izolasyonunun tek-kaynak sözleşmesi: PostgreSQL RLS varsayılan, tenant_id zorunluluğu, cross-tenant erişim yasağı, tenant-bazlı kota/limit, izolasyon testi kanıtı. Düğümler tenancyRef ile referans verir; içerik kopyalanmaz (drift yok).",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "tenancy-rls-default",
+      "rule": "Tenant verisi taşıyan her PostgreSQL tablosunda Row-Level Security (RLS) etkin ve varsayılan-kapalı (deny-by-default) politikayla kurulur; RLS'siz tenant tablosu şemaya giremez. Hibrit strateji (schema-per-tenant + RLS) tenant boyutuna göre seçilir ve düğümün traceability.tenantStrategy alanında beyan edilir.",
+      "rationale": "İzolasyon uygulama koduna bırakılırsa tek unutulan WHERE tenant_id sızıntı üretir; RLS ihlali veritabanı katmanında keser.",
+      "severity": "must",
+      "check": "migration review + izolasyon e2e testi (tenant-A verisi tenant-B oturumunda 0 satır)"
+    },
+    {
+      "id": "tenancy-id-propagation",
+      "rule": "tenant_id; API isteğinden, kuyruk mesajından ve background job bağlamından uçtan uca taşınır (context propagation). tenant_id'siz veri yazma isteği reddedilir; 'default tenant' fallback'i yasaktır.",
+      "rationale": "Kuyruk/job yolunda tenant bağlamı düşerse veri yanlış kiracıya yazılır; fallback bu hatayı sessizleştirir.",
+      "severity": "must",
+      "check": "sözleşme testi: tenant_id'siz yazma → 4xx; job/queue payload şemasında tenant_id zorunlu alan"
+    },
+    {
+      "id": "tenancy-cross-access-ban",
+      "rule": "Cross-tenant okuma/yazma yalnız açık platform-admin yetkisi + denetim kaydı (audit log) ile mümkündür; AI ajanları dahil hiçbir otomatik süreç cross-tenant mutasyon yapamaz.",
+      "rationale": "Destek/operasyon ihtiyacı meşrudur ama izsiz cross-tenant erişim hem güvenlik hem KVKK ihlalidir.",
+      "severity": "must",
+      "check": "authz testi + audit log kaydı zorunluluğu (auditLogRef)"
+    },
+    {
+      "id": "tenancy-quota-limits",
+      "rule": "Tenant başına kaynak kotası (satır/depolama/istek oranı) tanımlıdır ve aşımda kademeli davranış (throttle → bildirim → blok) uygulanır; tek tenant'ın diğerlerini aç bırakması (noisy neighbor) engellenir.",
+      "rationale": "Kota yoksa bir tenant'ın toplu importu tüm platformun p95'ini bozar.",
+      "severity": "should",
+      "check": "yük testi senaryosu + rate-limit konfigürasyonu review"
+    },
+    {
+      "id": "tenancy-isolation-evidence",
+      "rule": "Her yayın öncesi izolasyon test paketi koşar ve kanıtı (evidence) düğüme bağlanır: iki test tenant'ı ile CRUD + arama + rapor akışlarında sızıntı 0 olmalıdır.",
+      "rationale": "İzolasyon 'kurulumda doğruydu' ile yaşamaz; her şema değişikliği yeni sızıntı yüzeyi açar.",
+      "severity": "must",
+      "check": "CI e2e izolasyon paketi (deploy bloklayıcı)"
+    }
+  ],
+  "banned": ["default-tenant fallback", "RLS'siz tenant tablosu", "izinsiz cross-tenant sorgu"],
+  "allowed": ["schema-per-tenant", "rls", "hybrid"],
+  "references": ["docs/gap-2026-07-02-06-boyut-analizi.md"]
+}

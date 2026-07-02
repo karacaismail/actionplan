@@ -71,12 +71,100 @@ describe("audit skorlama", () => {
     expect(s.flags).toContain("generic");
   });
 
-  it("gerçek human düğüm (s-crm) ≥2.0 ve provenance human", () => {
+  it("gerçek düğüm (s-crm) ≥2.0; backfill sonrası 17 kart, köken mixed (human+swarm)", () => {
     const p = path.resolve(process.cwd(), "src/data/generated/nodes/s-crm.json");
     const node = JSON.parse(fs.readFileSync(p, "utf8")) as TaskNode;
     const a = auditNode(node);
-    expect(a.provenance).toBe("human");
+    // Tur 3 backfill: 14 human karta 3 swarm day-2 kartı eklendi → rollup "mixed".
+    expect(a.provenance).toBe("mixed");
     expect(a.score).toBeGreaterThanOrEqual(2.0);
-    expect(a.filled).toBe(14);
+    expect(a.filled).toBe(17);
+  });
+});
+
+describe("audit N/A politikası (17-boyut genişlemesi)", () => {
+  const base = {
+    id: "x-na",
+    title: "x",
+    tags: [],
+    summary: "",
+    source: undefined,
+  } as unknown as TaskNode;
+
+  const filledObservability: Dimension = {
+    ...goldenDim,
+    key: "observability",
+    title: "Gözlemlenebilirlik & Operasyon",
+  };
+
+  it("applies=false işaretli boyut denetim paydasına girmez", () => {
+    const node = {
+      ...base,
+      level: "feature",
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: false, reason: "UI-only düğüm" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+    expect(a.filled).toBe(0);
+  });
+
+  it("work_unit/micro_step seviyesinde dataLifecycle+observability varsayılan N/A", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      dimensions: { observability: filledObservability },
+      applicability: {},
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+  });
+
+  it("risk izi taşıyan atomda (webhook/PII/migration) varsayılan N/A DEVRE DIŞI", () => {
+    for (const riskTag of ["webhook", "pii", "migration"]) {
+      const node = {
+        ...base,
+        level: "micro_step",
+        tags: [riskTag],
+        dimensions: { observability: filledObservability },
+        applicability: {},
+      } as unknown as TaskNode;
+      const a = auditNode(node);
+      expect(a.dimensions.map((d) => d.key)).toContain("observability");
+    }
+  });
+
+  it("riskli atomda bile açık applies=false (insan kararı) kazanır", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      tags: ["webhook"],
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: false, reason: "salt-okunur proxy" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+  });
+
+  it("varsayılan N/A, açık applies=true ile geri açılır", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: true, reason: "" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).toContain("observability");
+  });
+
+  it("üst seviyede (module) yeni boyutlar varsayılan olarak uygulanır", () => {
+    const node = {
+      ...base,
+      level: "module",
+      dimensions: { observability: filledObservability },
+      applicability: {},
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).toContain("observability");
   });
 });

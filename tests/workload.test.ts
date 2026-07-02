@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /** Düğüm fabrikası — şema varsayılanlarını uygular, testte yalnız ilgili alanlar verilir. */
 const node = (p: Partial<TaskNode> & { id: string }): TaskNode =>
-  TaskNodeSchema.parse({ level: "atom", title: p.id, slug: p.id, ...p });
+  TaskNodeSchema.parse({ level: "micro_step", title: p.id, slug: p.id, ...p });
 
 /** Adam-gün eforlu kısayol. */
 const dNode = (id: string, estimate: number, extra: Partial<TaskNode> = {}): TaskNode =>

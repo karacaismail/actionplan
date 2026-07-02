@@ -3,7 +3,7 @@ import { DIMENSION_KEYS, TaskNodeSchema } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
 const node = (refs: Record<string, string>) =>
-  TaskNodeSchema.parse({ id: "x", level: "atom", title: "x", slug: "x", standardRefs: refs });
+  TaskNodeSchema.parse({ id: "x", level: "micro_step", title: "x", slug: "x", standardRefs: refs });
 
 describe("standards motoru (ADR-0027)", () => {
   it("15 standart yüklenir ve şemaya uyar", () => {
