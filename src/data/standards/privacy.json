@@ -1,0 +1,49 @@
+{
+  "id": "privacy",
+  "name": "Kişisel Veri & KVKK/GDPR Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Kişisel veri işlemenin tek-kaynak sözleşmesi: veri envanteri + sınıflandırma, amaç/dayanak kaydı, retention takvimi, DSAR (erişim/silme/taşıma) süreci, anonimleştirme kuralı, PII-güvenli loglama. dataLifecycle boyutunun standart bağıdır; düğümler privacyRef ile referans verir.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "privacy-data-inventory",
+      "rule": "Kişisel veri işleyen her modül veri envanteri tutar: alan bazında veri sınıfı (PII/hassas/finansal), işleme amacı, hukuki dayanak ve saklama süresi. Envantersiz PII alanı şemaya eklenemez.",
+      "rationale": "KVKK m.10/16 ve GDPR Art.30 kayıt yükümlülüğü envantersiz karşılanamaz; ihlal bildirimi de envantersiz yapılamaz.",
+      "severity": "must",
+      "check": "şema review: yeni PII alanı → envanter kaydı zorunlu (dataLifecycle boyutunda beyan)"
+    },
+    {
+      "id": "privacy-retention-schedule",
+      "rule": "Her veri sınıfı için retention (saklama) süresi tanımlıdır ve süre dolumunda otomatik silme veya anonimleştirme çalışır; 'süresiz saklama' ancak yasal zorunlulukla ve gerekçeli waiver ile mümkündür.",
+      "rationale": "Amaçla sınırlılık ilkesi: süresi dolmuş kişisel veri hem hukuki risk hem gereksiz saldırı yüzeyidir.",
+      "severity": "must",
+      "check": "retention job'ı + tatbikat kanıtı; waiver'lar check-waivers kapısından geçer"
+    },
+    {
+      "id": "privacy-dsar-process",
+      "rule": "Veri sahibi hakları (DSAR: erişim, düzeltme, silme/unutulma, taşınabilirlik) için uçtan uca süreç vardır: talep → kimlik doğrulama → 30 gün içinde yanıt → silme kanıtı. Silme, yedekler için de planlıdır (yedek rotasyonunda temizlenir).",
+      "rationale": "Silme hakkı yalnız canlı DB'de silmekle karşılanmaz; yedekte yaşayan PII ihlaldir.",
+      "severity": "must",
+      "check": "DSAR e2e senaryosu + silme kanıtı (evidence) formatı"
+    },
+    {
+      "id": "privacy-pii-safe-logging",
+      "rule": "Log, trace ve hata mesajlarına ham PII yazılamaz; zorunlu bağlam maskelenir/redakte edilir (e-posta → e***@..., TCKN asla). AI prompt'larına giden bağlam da aynı redaksiyondan geçer.",
+      "rationale": "Log'daki PII retention'ı takvimsiz, erişimi geniştir — en sık sızıntı kanalıdır; LLM bağlamı da dahil.",
+      "severity": "must",
+      "check": "log lint deseni + observability standardı obs-pii-safe kuralıyla çapraz referans"
+    },
+    {
+      "id": "privacy-anonymization-rule",
+      "rule": "Anonimleştirme geri döndürülemez olmalıdır (hash+salt takma-adlaştırması 'anonim' sayılmaz); raporlama/analitik ihtiyaçları anonim veya toplulaştırılmış (aggregate) veriyle karşılanır.",
+      "rationale": "Geri döndürülebilir takma-adlaştırma KVKK/GDPR'da hâlâ kişisel veridir; yanlış 'anonim' etiketi sahte güvence üretir.",
+      "severity": "should",
+      "check": "anonimleştirme fonksiyonu review + yeniden-tanımlama (re-identification) testi"
+    }
+  ],
+  "banned": ["log'a ham PII", "süresiz saklama (waiver'sız)", "envantersiz PII alanı"],
+  "allowed": ["maskeleme", "toplulaştırma", "geri döndürülemez anonimleştirme"],
+  "references": ["docs/gap-2026-07-02-06-boyut-analizi.md"]
+}

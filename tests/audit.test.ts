@@ -119,6 +119,32 @@ describe("audit N/A politikası (17-boyut genişlemesi)", () => {
     expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
   });
 
+  it("risk izi taşıyan atomda (webhook/PII/migration) varsayılan N/A DEVRE DIŞI", () => {
+    for (const riskTag of ["webhook", "pii", "migration"]) {
+      const node = {
+        ...base,
+        level: "micro_step",
+        tags: [riskTag],
+        dimensions: { observability: filledObservability },
+        applicability: {},
+      } as unknown as TaskNode;
+      const a = auditNode(node);
+      expect(a.dimensions.map((d) => d.key)).toContain("observability");
+    }
+  });
+
+  it("riskli atomda bile açık applies=false (insan kararı) kazanır", () => {
+    const node = {
+      ...base,
+      level: "micro_step",
+      tags: ["webhook"],
+      dimensions: { observability: filledObservability },
+      applicability: { observability: { applies: false, reason: "salt-okunur proxy" } },
+    } as unknown as TaskNode;
+    const a = auditNode(node);
+    expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
+  });
+
   it("varsayılan N/A, açık applies=true ile geri açılır", () => {
     const node = {
       ...base,

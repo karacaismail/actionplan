@@ -70,19 +70,32 @@ const clamp = (n: number, lo = 0, hi = 3) => Math.max(lo, Math.min(hi, n));
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /* ----------------------------------------------------------------------------
- * N/A politikası (gap-2026-07-02-06 karar #2) — DEĞİŞİKLİK score.mjs'E DE YANSITILMALI.
+ * N/A politikası (gap-2026-07-02-06 karar #2 + tur-2 risk inceltmesi) —
+ * DEĞİŞİKLİK score.mjs'E DE YANSITILMALI.
  * 1) applicability[key].applies === false → boyut denetim paydasına GİRMEZ.
  * 2) Seviye-bazlı varsayılan N/A: work_unit/micro_step düğümlerinde day-2 operasyon
  *    boyutları (dataLifecycle, observability) açıkça applies=true denmedikçe N/A sayılır.
  *    Gerekçe: atom/molekül ölçeğinde SLO-alarm-saklama planı jenerik dolgu üretir.
+ * 3) RİSK İSTİSNASI: düğümün kimliği/başlığı/özeti/etiketleri riskli iş yükü izi
+ *    taşıyorsa (PII silen, migration çalıştıran, webhook/kuyruk/job işleyen atom)
+ *    varsayılan N/A DEVRE DIŞI kalır — bu düğümler day-2 planından muaf tutulamaz.
+ *    Açık applicability kaydı her zaman kazanır (insan kararı > sezgisel).
  * -------------------------------------------------------------------------- */
 const DEFAULT_NA_LEVELS = new Set(["work_unit", "micro_step"]);
 const DEFAULT_NA_KEYS = new Set<DimensionKey>(["dataLifecycle", "observability"]);
+export const RISK_SIGNAL =
+  /\bpii\b|kvkk|gdpr|kişisel veri|migration|göç|backfill|webhook|retry|idempoten|queue|kuyruk|outbox|dlq|dead.?letter|cron|\bjob\b|worker|background|yedek|backup|restore|saga|stream/i;
+
+export function hasRiskSignal(node: Pick<TaskNode, "id" | "title" | "summary" | "tags">): boolean {
+  const hay = [node.id, node.title, node.summary, ...(node.tags ?? [])].join(" ");
+  return RISK_SIGNAL.test(hay);
+}
 
 export function isDimensionApplicable(node: TaskNode, key: DimensionKey): boolean {
   const ap = node.applicability?.[key];
   if (ap) return ap.applies !== false;
-  return !(DEFAULT_NA_LEVELS.has(node.level) && DEFAULT_NA_KEYS.has(key));
+  if (!(DEFAULT_NA_LEVELS.has(node.level) && DEFAULT_NA_KEYS.has(key))) return true;
+  return hasRiskSignal(node); // riskli atom: varsayılan N/A uygulanmaz
 }
 
 /** Düğümün kimlik/etiket/özetinden alan-jetonları (benzersizlik sinyali). */

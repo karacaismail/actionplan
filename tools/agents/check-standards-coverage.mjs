@@ -39,6 +39,8 @@ const REF_KEY_TO_STANDARD = {
   c13nRef: "c13n",
   c12nRef: "c12n",
   i18nRef: "i18n-standards",
+  tenancyRef: "tenancy",
+  privacyRef: "privacy",
 };
 
 const nodesDir = path.join(ROOT, "src", "data", "generated", "nodes");

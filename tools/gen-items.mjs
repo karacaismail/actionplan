@@ -285,6 +285,21 @@ function itemsFor(n) {
             `${T}, üst app içinde ${e1} işlevini sağlar (${scope})`,
             `Diğer app'ler ${e2}'yi üretilen API üzerinden tüketir (doğrudan DB yok)`,
           ],
+    dataLifecycle: [
+      `${T} kapsamındaki ${e1} verisi sınıflandırılır (PII/finansal/log) + retention süresi tanımlanır`,
+      `${d.reg} gereği silme/anonimleştirme (DSAR) prosedürü + yedek/restore tatbikatı`,
+      `${e2} migration'ı append-only/expand-contract; geçmiş veri rewrite edilmez`,
+    ],
+    observability: [
+      `${T} için SLI/SLO hedefi + '${e1}' akışında RED metrikleri ve yapısal log`,
+      "Alarm eşiği error-budget'a bağlı; dashboard + trace korelasyonu",
+      `Runbook: '${e2}' arızasında belirti → teşhis → müdahale; on-call sahipliği`,
+    ],
+    reliability: [
+      `${T} failure mode listesi; '${e1}' çağrılarında retry/backoff + idempotency anahtarı`,
+      "Circuit breaker + DLQ politikası; degrade davranışı tanımlı",
+      `${e2} için RTO/RPO hedefi + geri dönüş kanıtı`,
+    ],
   };
 }
 

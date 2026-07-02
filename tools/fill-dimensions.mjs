@@ -28,6 +28,9 @@ const DIMS = [
   "owasp",
   "integration",
   "moduleUsage",
+  "dataLifecycle",
+  "observability",
+  "reliability",
 ];
 const DIM_TR = {
   featureDefs: "Özellik Tanımları",
@@ -44,6 +47,9 @@ const DIM_TR = {
   owasp: "OWASP & Standartlar",
   integration: "Kernel/Core Entegrasyonu",
   moduleUsage: "Modül Kullanımı",
+  dataLifecycle: "Veri Yaşam Döngüsü & Uyum",
+  observability: "Gözlemlenebilirlik & Operasyon",
+  reliability: "Dayanıklılık & Süreklilik",
 };
 const PHASES = [
   "requirements",
@@ -159,12 +165,20 @@ const LEVEL_TR = {
   app: "uygulama",
   module: "modül",
   archetype: "ArcheType",
-  stone: "taş",
-  molecule: "molekül",
-  element: "element",
-  atom: "atom",
+  feature: "özellik",
+  component: "bileşen",
+  work_unit: "iş birimi",
+  micro_step: "mikro adım",
 };
-const EFFORT = { app: 55, module: 21, archetype: 13, stone: 8, molecule: 5, element: 3, atom: 2 };
+const EFFORT = {
+  app: 55,
+  module: 21,
+  archetype: 13,
+  feature: 8,
+  component: 5,
+  work_unit: 3,
+  micro_step: 2,
+};
 
 function dims(node) {
   const cp = CP[node.source?.cluster] || DEFAULT_CP;
@@ -245,6 +259,21 @@ function dims(node) {
             `Bu ${lv}, üst app içinde ${cp.d} işlevini sağlar`,
             "Diğer app'ler olay/araç kapsamı üzerinden tüketir (doğrudan DB erişimi yok)",
           ],
+    dataLifecycle: [
+      `${cp.d} verisi için sınıflandırma (PII/finansal/log) + retention (saklama) süresi tanımı`,
+      "Silme/anonimleştirme prosedürü (DSAR/KVKK) + yedekleme ve restore tatbikatı",
+      "Migration modu: append-only veya expand-contract; geçmiş veri rewrite edilmez",
+    ],
+    observability: [
+      `${cp.d} için SLI/SLO hedefi + RED metrikleri ve yapısal log kapsamı`,
+      "Alarm eşiği error-budget'a bağlı; dashboard + trace korelasyonu",
+      "Runbook: belirti → teşhis → müdahale adımları; on-call sahipliği",
+    ],
+    reliability: [
+      `${cp.d} failure mode listesi + retry/backoff ve idempotency anahtarı`,
+      "Circuit breaker + DLQ (dead-letter) politikası; degrade davranışı tanımlı",
+      "RTO/RPO hedefi + geri dönüş (rollback/restore) kanıtı",
+    ],
   };
   const out = {};
   for (const k of DIMS)
