@@ -39,14 +39,11 @@ function computePatternMetrics() {
   for (const rec of recs) {
     const base = rec.eski.trim().replace(/[.;]\s*$/, "");
     const suf = rec.yeni.slice(base.length).replace(/^[\s—-]+/, "");
-    const key =
-      rec.dimension +
-      "|" +
-      suf
-        .split(titles[rec.node] ?? rec.node)
-        .join("T")
-        .replace(/\d+/g, "N")
-        .slice(0, 80);
+    const key = `${rec.dimension}|${suf
+      .split(titles[rec.node] ?? rec.node)
+      .join("T")
+      .replace(/\d+/g, "N")
+      .slice(0, 80)}`;
     g.set(key, (g.get(key) ?? 0) + 1);
   }
   const counts = [...g.values()];
