@@ -17,13 +17,10 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { evaluateDimensionSemantics } from "../lib/dimension-semantics.mjs";
+import { loadRewriteLayer, maskItem as mask } from "../lib/pattern-layer.mjs";
 import { poolsFor } from "../lib/pattern-pools.mjs";
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
-const MAP_PATH = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
 const APPLY = process.argv.includes("--apply");
 const li = process.argv.indexOf("--limit");
 const LIMIT = li > -1 ? Number(process.argv[li + 1]) : 9;
@@ -31,90 +28,8 @@ const LIMIT = li > -1 ? Number(process.argv[li + 1]) : 9;
 const BANNED =
   /uygun şekilde|gerekli önlemler|performans iyileştirilir|erişilebilirlik sağlanır|güvenlik uygulanır|standartlara uyum|best practice|\btodo\b|tanımlanacak|doldurulacak/i;
 
-const mask = (text, title) => text.split(title).join("T").replace(/\d+/g, "N").slice(0, 90);
-
-// 1) Node cache + mapping (base kaynağı)
-const nodeCache = {};
-for (const f of fs.readdirSync(NODES).filter((f) => f.endsWith(".json"))) {
-  const n = JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8"));
-  nodeCache[n.id] = { f, n };
-}
-const mapRecs = fs.existsSync(MAP_PATH)
-  ? JSON.parse(fs.readFileSync(MAP_PATH, "utf8")).mapping
-  : [];
-const baseByItem = new Map(); // node|dim|tamMadde -> orijinal kısa base
-for (const r of mapRecs)
-  baseByItem.set(`${r.node}|${r.dimension}|${r.yeni}`, r.eski.trim().replace(/[.;]\s*$/, ""));
-
-// 2) Rewrite-katmanı envanteri: base'li maddeler + bilinen-havuz-imzalı base'siz maddeler
-const knownSigs = new Set();
-for (const { n } of Object.values(nodeCache)) {
-  const pools = poolsFor(n);
-  for (const [dim, arr] of Object.entries(pools))
-    for (const v of arr) knownSigs.add(`${dim}|${mask(v, n.title)}`);
-}
-// enrich-weak-nodes (v1) extras şablon imzaları — bunlar da rewrite-katmanıdır.
-const ENRICH_TEMPLATES = [
-  ["performance", "T kritik ucu için pN Nms eşiği; darboğaz adayı"],
-  [
-    "performance",
-    "T yük regresyon testi CI'da eşik korumalı; keyset sayfalama + seçici indeks planı",
-  ],
-  ["featureDefs", "T işlev sınırı: girdi/çıktı beyanı + durum akışı; hata yolu ayrı senaryo"],
-  ["featureDefs", "T non-goal beyanı: komşu modül sorumluluğuna taşan davranış kapsam dışıdır"],
-  ["codeOptimization", "T engine/görünüm ayrımıyla modüler; fonksiyon karmaşıklık tavanı N, lint"],
-  ["codeOptimization", "T ölü kod elemesi refactor bütçesinde; tip güvenliği strict modda"],
-  ["securityOptimization", "T sırları N günde rotasyon; rate-limit N istek/dk; en az ayrıcalık"],
-  ["securityOptimization", "T bağımlılıkları pinli + SBOM üretimi CI'da; imzasız yapıt reddedilir"],
-  ["mobileApps", "T yüzeyi responsive PWA; dokunma alanı Npx üstü tutulur, offline taslak"],
-  ["mobileApps", "T cihaz matrisi: iOS/Android WebView + Chrome extension köprüsü; izin istemleri"],
-  ["wcag", "T ekran yolunda klavye gezinme sırası ve görünür odak tanımlı; kontrast N:N"],
-  ["wcag", "T için axe AAA taraması N ihlal kanıtıyla CI'da; ARIA etiketleri alan bazında"],
-  [
-    "deployment",
-    "T çalışma hedefi Docker Swarm/KNs; env-config ayrımı + healthcheck probe tanımlı",
-  ],
-  ["deployment", "T rollback: önceki imaj etiketi ile N dk içinde geri dönüş"],
-  [
-    "integration",
-    "T, kernel sözleşmesiyle tipli arayüz üzerinden konuşur; bağımlılık yönü yalnız aşağı",
-  ],
-  [
-    "integration",
-    "T olay yayını veriyolu üzerinden; sözleşme kırılırsa contract testi kırmızı yakar",
-  ],
-  [
-    "testing",
-    "T: unit + contract + negatif senaryo (yetkisiz erişim N kayıt) ayrımı; golden fixture",
-  ],
-  ["testing", "T e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır"],
-  ["owasp", "T yüzeyinde AN erişim + AN injection karşı kontrolleri; girdi doğrulama zod"],
-  ["owasp", "T negatif güvenlik testi kanıtı: yetki aşımı denemesi denetim izine düşer"],
-  ["security", "T erişimi tenant-scoped + deny-by-default; değişmez audit izi zorunlu"],
-  ["security", "T PII alanları maskeli; en az ayrıcalık rol matrisi tanımlı"],
-];
-for (const [dim, tpl] of ENRICH_TEMPLATES) knownSigs.add(`${dim}|${tpl.slice(0, 90)}`);
-// enrich imzaları prefix-eşleşmeli de tanınsın:
-const knownPrefixes = ENRICH_TEMPLATES.map(([dim, tpl]) => [dim, tpl.slice(0, 60)]);
-
-const groups = new Map(); // sig -> [{id, dim, idx, item, base?}]
-for (const { n } of Object.values(nodeCache)) {
-  for (const [dim, card] of Object.entries(n.dimensions ?? {})) {
-    (card?.items ?? []).forEach((item, idx) => {
-      const base = baseByItem.get(`${n.id}|${dim}|${item}`);
-      // base'li maddede imza EK kısmından üretilir (grup, eklenen kalıbı temsil eder);
-      // base'siz maddede tam maddeden.
-      const sigText = base ? item.slice(base.length).replace(/^[\s—-]+/, "") : item;
-      const masked = mask(sigText, n.title);
-      const sig = `${dim}|${masked}`;
-      const known =
-        knownSigs.has(sig) || knownPrefixes.some(([d, p]) => d === dim && masked.startsWith(p));
-      if (!base && !known) return; // rewrite-katmanı dışı (miras/elyazımı/backfill) — dokunma
-      if (!groups.has(sig)) groups.set(sig, []);
-      groups.get(sig).push({ id: n.id, dim, idx, item, base });
-    });
-  }
-}
+// Gruplama TEK KAYNAKTAN (pattern-layer): kapı ile araç aynı envanteri görür.
+const { nodeCache, mapRecs, groups, NODES, MAP_PATH } = loadRewriteLayer();
 
 const use = new Map(); // varyant-imza kullanım sayacı (mevcut dağılım yüklenir)
 for (const [sig, arr] of groups) use.set(sig, arr.length);

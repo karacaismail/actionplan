@@ -159,8 +159,8 @@
         "Transactional Outbox: veritabanı işlemiyle atomik olay yayını; en-az-bir-kez teslim",
         "Olay tablosu + relay; çift-yazım (dual-write) sorununu çözer",
         "Sıralı ve idempotent tüketim için olay kimliği",
-        "Transactional Outbox işlev sınırı: girdi/çıktı beyanı + durum akışı; hata yolu ayrı senaryo olarak kabul kriterine bağlı",
-        "Transactional Outbox non-goal beyanı: komşu modül sorumluluğuna taşan davranış kapsam dışıdır (sözleşme testiyle korunur)"
+        "Transactional Outbox işlev sınırı durum makinesiyle çizilir; geçersiz geçiş hata yolu senaryosudur",
+        "Transactional Outbox işlev beyanı örnek girdi/çıktı çiftleriyle somutlanır; kabul ölçütü eklidir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
@@ -200,8 +200,8 @@
         "En-az-bir-kez + tüketicide idempotency → çift işlem yok",
         "Yayınlanamayan olay yeniden-deneme + ölü-mektup kuyruğu (DLQ)",
         "Relay oran-sınırlı; aşağı sistem korunur",
-        "Transactional Outbox sırları 90 günde rotasyon; rate-limit 120 istek/dk; en az ayrıcalık gözden geçirmesi çeyreklik",
-        "Transactional Outbox bağımlılıkları pinli + SBOM üretimi CI'da; imzasız yapıt reddedilir"
+        "Transactional Outbox imaj imzası doğrulanır (signed); ayrıcalık düşürme sertleştirme listesindedir",
+        "CSP başlıkları Transactional Outbox yüzeyinde zorunludur; bağımlılık taraması eşiklidir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -214,9 +214,9 @@
       "items": [
         "Relay toplu yayın; gecikme bütçesi izlenir",
         "Outbox tablosu temizleme (yayınlananlar arşiv)",
-        "Yüksek hacimde bölümleme — DB kilit bekleme eşiği Transactional Outbox yazma yolunda 100 ms; çekişme metriği panoda izlenir",
-        "Transactional Outbox kritik ucu için p95 300ms eşiği; darboğaz adayı join zinciri — RED duration metriğiyle izlenir",
-        "Transactional Outbox yük regresyon testi CI'da eşik korumalı; keyset sayfalama + seçici indeks planı gözden geçirilir"
+        "Yüksek hacimde bölümleme — kademeli yükleme Transactional Outbox listelerinde iskelet-durumla desteklenir",
+        "arka plan yenileme Transactional Outbox önbelleğini kullanıcıyı bekletmeden tazeler",
+        "derin-ofset Transactional Outbox listelerinde keyset ile engellenir; sorgu bütçesi p99 400ms"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -229,7 +229,7 @@
       "items": [
         "Outbox backend; gecikme/DLQ izleme mobilde salt-okuma",
         "iOS/Android push ile DLQ birikme uyarısı",
-        "Dar ekranda yayın gecikme özeti — Transactional Outbox PWA yüzeyinde offline taslak + dokunma alanı 44px üstü davranışıyla cihaz matrisinde doğrulanır"
+        "Dar ekranda yayın gecikme özeti — Transactional Outbox PWA güncellemesi arka planda iner; yeniden-yükleme istemi 44px hedefiyle sunulur"
       ],
       "notes": "",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -242,7 +242,7 @@
       "items": [
         "Outbox/DLQ panosu klavye+okuyucu erişimli",
         "Durum renk dışında metin+ikonla; kontrast 7:1",
-        "DLQ olay detayı yapılandırılmış — Transactional Outbox ekran yolunda klavye sırası + görünür odakla; axe AAA 0 ihlal kanıtı CI'dadır"
+        "DLQ olay detayı yapılandırılmış — Transactional Outbox form etiketleri aria ile eşlenir; hata duyurusu ekran okuyucuda testlidir"
       ],
       "notes": "",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -295,7 +295,7 @@
         "Atomiklik testi (olay ve veri birlikte ya hep ya hiç)",
         "En-az-bir-kez + tüketici idempotency testi (çift işlem yok)",
         "DLQ ve yeniden-deneme testi; en çok 6 tur",
-        "Transactional Outbox: unit + contract + negatif senaryo (yetkisiz erişim 0 kayıt) ayrımı; golden fixture kanıtı",
+        "Transactional Outbox eşzamanlılık senaryosu (yarış/tekrar giriş) ayrı test sınıfındadır",
         "Transactional Outbox e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",

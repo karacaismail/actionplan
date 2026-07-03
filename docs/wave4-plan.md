@@ -29,13 +29,20 @@ bu turun hedefi.
    hizalı elle yeniden yazıldı.
 6. **ADR-0028 taslağı** (ölçülü-kısa muafiyeti): motor DEĞİŞMEDİ; ayrı PR önerisi.
 
-## Sonuç ve dürüst sınır
+## W4.1 düzeltmesi — ölçüm-uygulama sapması ve kapanışı
 
-short 256→96, borç 166→43, performance-borcu 81→19, WARN 2.549→2.263,
-mapping-serisi kalıp 40→? / max 62→24 civarı (kapı ölçümüyle kilitli), skor düşüşü 0.
-**Max ≤9 hedefi TUTMADI** (24): tek-şablonlu kartlarda değişim yalnız must-taşıyan
-varyantlarla mümkün; bu alt-kümenin 9-kapasitesi matematiksel tavan oluşturdu
-(kanıt: normalize son turlarında atlanan=138 "uygun-varyant-yok"). Tam ≤9, W5'te
-kalan ~10 boyuta +40-50 must-garantili varyant + tek-şablonlu kartlara ikinci-madde
-stratejisi ister. Ratchet artışı kilitledi (patterns10plus + maxPatternGroup
-weak-content baseline'ına eklendi).
+Merge-öncesi denetimde bulundu: WARN-takviye append dalgası normalizasyondan SONRA
+koştuğu için rewrite-katmanı yeniden şişmişti (max 63'e dönmüştü) ve ilk rapor bayat
+ölçüme dayanıyordu. Kalıcı çözüm: gruplama mantığı `tools/lib/pattern-layer.mjs`'e
+tekilleştirildi — normalize-patterns (yazıcı) ve check-weak-content (CI ratchet)
+AYNI fonksiyonu kullanır; kapıdaki sayı ile aracın gördüğü sayı bir daha ayrışamaz.
+Ek olarak 10 boyuta must+anyOf-garantili ~60 yeni varyant eklendi ve normalize
+yakınsayana kadar koşuldu.
+
+## Sonuç (W4.1 sonrası)
+
+short 256→96, borç 166→43, performance-borcu 81→19, WARN 2.549→2.254,
+rewrite-katmanı (canonical, append dahil): **10+ grup 0, en büyük grup 9** —
+her iki kalıp hedefi TAM tuttu. Skor düşüşü 0. Kalıp-normalize toplamı 1.179 madde.
+Ratchet: patterns10plus=0 ve maxPatternGroup=9 weak-content baseline'ına kilitli;
+history mapping-serisi ara ölçümü (42/24) denetim izi olarak korur.

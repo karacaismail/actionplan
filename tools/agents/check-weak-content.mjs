@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadRewriteLayer, rewriteLayerStats } from "../lib/pattern-layer.mjs";
 import { computeWeakStats } from "./report-weak-content.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -23,36 +24,11 @@ const WRITE = process.argv.includes("--write-baseline");
 
 const s = computeWeakStats();
 
-// Kalıp-ratchet metrikleri (W4): mapping-serisi (rewrite kayıtları) üzerinden
-// maskeli-imza grupları — 10+ grup sayısı ve en büyük grup ARTAMAZ.
-function computePatternMetrics() {
-  const MAP = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
-  if (!fs.existsSync(MAP)) return { patterns10plus: 0, maxPatternGroup: 0 };
-  const recs = JSON.parse(fs.readFileSync(MAP, "utf8")).mapping ?? [];
-  const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
-  const titles = {};
-  for (const f of fs.readdirSync(NODES).filter((f) => f.endsWith(".json"))) {
-    const n = JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8"));
-    titles[n.id] = n.title;
-  }
-  const g = new Map();
-  for (const rec of recs) {
-    const base = rec.eski.trim().replace(/[.;]\s*$/, "");
-    const suf = rec.yeni.slice(base.length).replace(/^[\s—-]+/, "");
-    const key = `${rec.dimension}|${suf
-      .split(titles[rec.node] ?? rec.node)
-      .join("T")
-      .replace(/\d+/g, "N")
-      .slice(0, 80)}`;
-    g.set(key, (g.get(key) ?? 0) + 1);
-  }
-  const counts = [...g.values()];
-  return {
-    patterns10plus: counts.filter((c) => c >= 10).length,
-    maxPatternGroup: counts.length ? Math.max(...counts) : 0,
-  };
-}
-const pat = computePatternMetrics();
+// Kalıp-ratchet metrikleri (W4.1): rewrite-KATMANI (madde-bazlı, append/enrich
+// dahil) TEK KAYNAKTAN ölçülür — normalize-patterns aracıyla aynı gruplama.
+// 10+ grup sayısı ve en büyük grup ARTAMAZ.
+const layer = rewriteLayerStats(loadRewriteLayer().groups);
+const pat = { patterns10plus: layer.tenPlus, maxPatternGroup: layer.maxGroup };
 
 const current = {
   emptyButNotNa: s.totals.emptyButNotNa,

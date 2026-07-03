@@ -4,7 +4,7 @@ Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + comp
 
 ## Toplam sınıf dağılımı
 
-short-items kartı: 96 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2263 · bilinçli N/A: 44
+short-items kartı: 96 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2254 · bilinçli N/A: 44
 
 Top-40 zayıf node ortalama skoru: **2.852**
 
@@ -14,9 +14,9 @@ Top-40 zayıf node ortalama skoru: **2.852**
 |---|---|---|---|---|---|
 | featureDefs | 1 | 0 | 0 | 289 | 290 |
 | codeOptimization | 0 | 0 | 0 | 285 | 285 |
-| securityOptimization | 33 | 0 | 0 | 246 | 279 |
-| performance | 14 | 0 | 0 | 228 | 242 |
+| securityOptimization | 33 | 0 | 0 | 242 | 275 |
 | testing | 1 | 0 | 0 | 240 | 241 |
+| performance | 14 | 0 | 0 | 223 | 237 |
 | owasp | 1 | 0 | 0 | 220 | 221 |
 | mobileApps | 4 | 0 | 0 | 190 | 194 |
 | deployment | 3 | 0 | 0 | 162 | 165 |
