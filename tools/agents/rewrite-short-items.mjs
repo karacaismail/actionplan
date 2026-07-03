@@ -256,9 +256,17 @@ for (const t of targets) {
 }
 
 fs.mkdirSync(path.join(ROOT, "reports"), { recursive: true });
+// Çok-geçişli koşularda mapping BİRLEŞTİRİLİR (üzerine yazma kaybı W2'de yaşandı — düzeltme).
+const MAP_PATH = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
+let prevMapping = [];
+if (APPLY && fs.existsSync(MAP_PATH)) {
+  const prev = JSON.parse(fs.readFileSync(MAP_PATH, "utf8"));
+  if (prev.mode?.startsWith("apply")) prevMapping = prev.mapping ?? [];
+}
+const merged = [...prevMapping, ...mapping];
 fs.writeFileSync(
-  path.join(ROOT, "reports", "short-items-wave2-mapping.json"),
-  `${JSON.stringify({ mode: APPLY ? "apply" : "dry-run", stats, mapping }, null, 2)}\n`,
+  MAP_PATH,
+  `${JSON.stringify({ mode: APPLY ? "apply" : "dry-run", toplam: merged.length, stats, mapping: APPLY ? merged : mapping }, null, 2)}\n`,
 );
 console.log(
   `rewrite-short-items — mod: ${APPLY ? "APPLY" : "DRY-RUN"} | band: ${NODE_BAND} node + zorunlu aileler | kart bütçesi: ${MAX_CARDS}`,
