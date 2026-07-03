@@ -65,7 +65,12 @@ export function domainTokens(node) {
 }
 const hasGeneric = (s) => {
   const low = s.toLowerCase();
-  return GENERIC_MARKERS.some((m) => low.includes(m));
+  // audit.ts aynası: tek-kelimeli marker kelime sınırıyla ("metodoloji"deki "todo" yanlış-pozitifi).
+  return GENERIC_MARKERS.some((m) =>
+    m.includes(" ")
+      ? low.includes(m)
+      : new RegExp(`(^|[^a-zçğıöşü])${m}([^a-zçğıöşü]|$)`, "i").test(low),
+  );
 };
 
 export function scoreDimension(dim, tokens) {
