@@ -31,6 +31,7 @@ const arg = (name, def) => {
 const NODE_BAND = arg("--nodes", 160);
 const MAX_CARDS = arg("--maxCards", 400);
 
+const MAP_PATH_INIT = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
 const DAY2 = new Set(["dataLifecycle", "observability", "reliability"]);
 const PRIORITY_DIMS = [
   "performance",
@@ -89,56 +90,78 @@ function suffixPool(key, n) {
       `${T} kritik yolunda p95 ${P95}ms eşiğine bağlanır; RED duration metriğiyle izlenir`,
       `yük regresyon testi CI eşiğiyle korunur; keyset sayfalama/indeks planı ${T} sorguları için gözden geçirilir`,
       `ölçüm noktası: ${T} uç gecikmesi; eşik aşımı alarmı error-budget'a bağlıdır`,
+      `darboğaz analizi ${T} için profiling ile yapılır; bütçe aşımı build uyarısı üretir`,
+      `${T} sorgu planı EXPLAIN ile gözden geçirilir; regresyon eşiği p99 ${P95 + 100}ms`,
     ],
     mobileApps: [
       `${T} PWA yüzeyinde offline taslak + dokunma alanı 44px üstü davranışıyla cihaz matrisinde doğrulanır`,
       `iOS/Android WebView + extension köprüsünde ${T} izin istemleri gerekçeli test edilir`,
       `responsive kırılımları ${T} ekranında cihaz matrisi testiyle kanıtlanır`,
+      `${T} küçük-ekran akışı tek-elle kullanım hedefiyle cihazda test edilir`,
+      `ağ kesintisinde ${T} kuyruklanmış işlemlerin senkronu senaryoyla doğrulanır`,
     ],
     wcag: [
       `${T} ekran yolunda klavye sırası + görünür odakla; axe AAA 0 ihlal kanıtı CI'dadır`,
       `ARIA etiketleri ${T} alanlarında bire bir; kontrast 7:1 üstü doğrulanır`,
       `ekran okuyucu duyuruları ${T} akışında senaryo testiyle kanıtlanır`,
+      `${T} form hataları metinle duyurulur; durum göstergesi renkten bağımsızdır`,
+      `odak tuzağı taraması ${T} modal/çekmece akışında ayrıca koşulur`,
     ],
     deployment: [
       `${T} Swarm/K8s hedefinde healthcheck probe + env-config ayrımıyla; rollback önceki imajla ${RB} dk`,
       `dağıtım kanıtı: ${T} imaj etiketi + smoke testi; geri dönüş release-versioning sözleşmesine bağlı`,
       `config/sır ayrımı ${T} ortam değişkenleriyle; drift kontrolü CI'da`,
+      `${T} sürümü mavi-yeşil geçişle alınır; smoke sonrası trafik anahtarlanır`,
+      `ortam farkları ${T} için tek manifest kaynağından türetilir; drift alarmı kurulur`,
     ],
     securityOptimization: [
       `${T} sırları ${SR} günde rotasyonla; rate-limit ${RL} istek/dk zorlanır`,
       `bağımlılıklar pinli + SBOM taraması ${T} CI hattında; imzasız yapıt reddedilir`,
       `en az ayrıcalık gözden geçirmesi ${T} rolleri için çeyreklik kanıtlanır`,
+      `${T} yüzeyinde kullanılmayan uç kapatılır; izin envanteri çeyreklik daraltılır`,
+      `tedarik zinciri: ${T} bağımlılık güncellemeleri imzalı PR + kapı koşusuyla alınır`,
     ],
     integration: [
       `${T} contract testiyle korunur; sözleşme kırılırsa CI kırmızı yakar (data-api-contract)`,
       `olay veriyolu yayını ${T} için idempotent tüketici sözleşmesine bağlıdır`,
       `bağımlılık yönü ${T} için yalnız aşağı; tipli arayüz dışı çağrı testle engellenir`,
+      `${T} şema değişikliği tüketicilere expand-contract adımıyla duyurulur`,
+      `geriye-uyumsuz değişiklik ${T} sözleşme sürümünü artırır; uyum matrisi CI koşusundadır`,
     ],
     testing: [
       `${T} için unit + contract + negatif senaryo ayrımıyla; golden fixture kanıtı CI'da`,
       `e2e yolculuğu ${T} akışında Playwright'ta kırmızı→yeşil kanıtla bağlanır`,
       `yetkisiz erişim denemesi ${T} testinde 0 kayıt döner (negatif kanıt)`,
+      `${T} sınır-değer ve hata-yolu senaryoları ayrı fixture setiyle koşulur`,
+      `mutasyon testi örneklemi ${T} kritik fonksiyonlarında periyodik koşulur`,
     ],
     owasp: [
       `${T} yüzeyinde A01 erişim + A03 injection karşı kontrolüyle; negatif test kanıtı zorunlu`,
       `girdi doğrulama ${T} uçlarında zod sözleşmesiyle; ihlal denetim izine düşer`,
       `tehdit sınıfı eşlemesi ${T} için ASVS kontrol listesine bağlanır`,
+      `${T} oturum/kimlik akışı A07 kontrol listesiyle gözden geçirilir`,
+      `SSRF/dış çağrı yüzeyi ${T} için allowlist ile sınırlandırılır`,
     ],
     featureDefs: [
       `${T} sınırı girdi/çıktı beyanı + hata yolu senaryosuyla kabul kriterine bağlanır`,
       `durum akışı ${T} için ayrık senaryo olarak sözleşme testinde doğrulanır`,
       `non-goal beyanı ${T} kapsam sınırını komşu modüle karşı korur`,
+      `${T} kabul senaryoları verilen/eğer/o-zaman formatında sürümlenir`,
+      `${T} çıktı sözleşmesi örnek yüklerle (sample payload) belgelenir`,
     ],
     security: [
       `${T} erişimi tenant-scoped deny-by-default kuralıyla; audit izi değişmezdir`,
       `PII alanları ${T} kapsamında maskeli; rol matrisi en az ayrıcalıkla tanımlıdır`,
       `komşu-tenant negatif testi ${T} için 0 satır döner (izolasyon kanıtı)`,
+      `${T} yetki matrisi rol×eylem tablosuyla sürümlenir; sapma testi koşar`,
+      `oturum yaşam döngüsü ${T} için süre + uzaktan iptal kurallarıyla tanımlıdır`,
     ],
     codeOptimization: [
       `${T} karmaşıklık tavanı ${CX} lint kapısıyla zorlanır (coding-standards)`,
       `engine/görünüm ayrımı ${T} modüler sınırıyla korunur; strict tip modu açık`,
       `ölü kod elemesi ${T} refactor bütçesinde izlenir`,
+      `${T} bağımlılık grafiği döngüsüz tutulur; katman ihlali lint kapısında yakalanır`,
+      `ortak yardımcılar ${T} için tek pakette toplanır; kopya-blok taraması CI hattındadır`,
     ],
     eca: [
       `${T} kuralları zincir derinliği 6 sınırı + idempotency anahtarıyla çalışır`,
@@ -166,6 +189,28 @@ for (const f of files) {
 all.sort((a, b) => a.audit.score - b.audit.score);
 const inBand = new Set(all.slice(0, NODE_BAND).map((t) => t.n.id));
 const targets = all.filter((t) => inBand.has(t.n.id) || FORCE_FAMILIES.test(t.n.id));
+
+// W3: kalıp-kullanım dengesi — aynı kalıp 10+ kez tekrar etmesin.
+// Mevcut mapping'deki (önceki dalgalar) kullanımlar da sayaca yüklenir.
+const PATTERN_LIMIT = 9;
+const patternUse = new Map();
+const normalizePattern = (suffix, title) => {
+  let x = suffix.split(title).join("T");
+  x = x.replace(/\d+/g, "N");
+  return x.slice(0, 80);
+};
+if (fs.existsSync(MAP_PATH_INIT)) {
+  try {
+    const prev = JSON.parse(fs.readFileSync(MAP_PATH_INIT, "utf8"));
+    for (const rec of prev.mapping ?? []) {
+      const base = rec.eski.trim().replace(/[.;]\s*$/, "");
+      const suf = (rec.yeni ?? "").slice(base.length).replace(/^\s*—\s*/, "");
+      const titleGuess = rec.node; // kaba: id; title normalize aşağıda ayrıca yapılır
+      const key = normalizePattern(suf, titleGuess);
+      patternUse.set(key, (patternUse.get(key) ?? 0) + 1);
+    }
+  } catch {}
+}
 
 const mapping = [];
 const stats = {
@@ -206,7 +251,25 @@ for (const t of targets) {
     shortIdx.forEach((idx, k) => {
       const old = items[idx];
       const base = old.trim().replace(/[.;]\s*$/, "");
-      const suffix = pool[(hash(n.id + key) + k) % pool.length];
+      let suffix = null;
+      {
+        const start = (hash(n.id + key) + k) % pool.length;
+        let best = null;
+        let bestUse = Number.POSITIVE_INFINITY;
+        for (let off = 0; off < pool.length; off++) {
+          const cand = pool[(start + off) % pool.length];
+          const use = patternUse.get(normalizePattern(cand, n.title)) ?? 0;
+          if (use < bestUse) {
+            bestUse = use;
+            best = cand;
+          }
+        }
+        if (bestUse >= PATTERN_LIMIT) {
+          ok = false;
+          return; // tüm varyantlar limitte — kartı atla (kalıp şişirme yasak)
+        }
+        suffix = best;
+      }
       const candidate = `${base} — ${suffix}`;
       if (BANNED.test(candidate)) {
         stats.bannedBlocked++;
@@ -222,6 +285,10 @@ for (const t of targets) {
         ok = false;
         return;
       }
+      patternUse.set(
+        normalizePattern(suffix, n.title),
+        (patternUse.get(normalizePattern(suffix, n.title)) ?? 0) + 1,
+      );
       newItems[idx] = candidate;
       cardMap.push({
         node: n.id,
@@ -256,8 +323,11 @@ for (const t of targets) {
 }
 
 fs.mkdirSync(path.join(ROOT, "reports"), { recursive: true });
-// Çok-geçişli koşularda mapping BİRLEŞTİRİLİR (üzerine yazma kaybı W2'de yaşandı — düzeltme).
-const MAP_PATH = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
+// Çok-geçişli koşularda mapping BİRLEŞTİRİLİR. DRY-RUN ana dosyayı EZMEZ
+// (W3'te dry-run'ın ana dosyayı ezmesi 815 kaydı geçici kaybettirdi — düzeltme).
+const MAP_PATH = APPLY
+  ? path.join(ROOT, "reports", "short-items-wave2-mapping.json")
+  : path.join(ROOT, "reports", "short-items-mapping-dryrun.json");
 let prevMapping = [];
 if (APPLY && fs.existsSync(MAP_PATH)) {
   const prev = JSON.parse(fs.readFileSync(MAP_PATH, "utf8"));
