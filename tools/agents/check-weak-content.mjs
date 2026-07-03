@@ -33,9 +33,23 @@ console.log(
 );
 
 if (WRITE) {
+  // Borç geçmişi korunur: önceki taban history'e itilir (denetim izi).
+  let history = [];
+  if (fs.existsSync(BASELINE)) {
+    const prev = JSON.parse(fs.readFileSync(BASELINE, "utf8"));
+    history = prev.history ?? [];
+    const prevSnap = {
+      emptyButNotNa: prev.emptyButNotNa,
+      generic: prev.generic,
+      shortItems: prev.shortItems,
+      top40AvgScore: prev.top40AvgScore,
+    };
+    if (JSON.stringify(prevSnap) !== JSON.stringify(current))
+      history.push({ date: new Date().toISOString().slice(0, 10), ...prevSnap });
+  }
   fs.writeFileSync(
     BASELINE,
-    `${JSON.stringify({ _aciklama: "Weak-content ratchet baseline'ı — kötüleşme kapıyı kırar; iyileşme --write-baseline ile bilinçli kilitlenir.", ...current }, null, 2)}\n`,
+    `${JSON.stringify({ _aciklama: "Weak-content ratchet baseline'ı — kötüleşme kapıyı kırar; iyileşme --write-baseline ile bilinçli kilitlenir. history: önceki tabanlar (denetim izi).", ...current, history }, null, 2)}\n`,
   );
   console.log(`Baseline yazıldı → ${path.relative(ROOT, BASELINE)}`);
 }
