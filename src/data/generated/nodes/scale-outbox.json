@@ -158,9 +158,11 @@
       "items": [
         "Transactional Outbox: veritabanı işlemiyle atomik olay yayını; en-az-bir-kez teslim",
         "Olay tablosu + relay; çift-yazım (dual-write) sorununu çözer",
-        "Sıralı ve idempotent tüketim için olay kimliği"
+        "Sıralı ve idempotent tüketim için olay kimliği",
+        "Transactional Outbox işlev sınırı: girdi/çıktı beyanı + durum akışı; hata yolu ayrı senaryo olarak kabul kriterine bağlı",
+        "Transactional Outbox non-goal beyanı: komşu modül sorumluluğuna taşan davranış kapsam dışıdır (sözleşme testiyle korunur)"
       ],
-      "notes": "",
+      "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
@@ -171,7 +173,7 @@
       "items": [
         "Outbox olayları tenant-etiketli; yük doğrulanır",
         "Relay kimliği dar yetki; olay içeriği şemaya uyar",
-        "Hassas yük maskeli yayınlanır — PII alanları Transactional Outbox kapsamında maskeli; rol matrisi en az ayrıcalıkla tanımlıdır"
+        "Hassas yük maskeli yayınlanır — Transactional Outbox yetki denetimi negatif senaryolarla her sürümde koşulur (deny kanıtı)"
       ],
       "notes": "",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -184,7 +186,7 @@
       "items": [
         "Olay aynı transaction'da yazılır; ayrı yayın yoktur (atomiklik)",
         "Relay polling/CDC ile; yayınlanan işaretlenir",
-        "Olay şeması sürümlü — ölü kod elemesi Transactional Outbox refactor bütçesinde izlenir"
+        "Olay şeması sürümlü — Transactional Outbox kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)"
       ],
       "notes": "",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -197,9 +199,11 @@
       "items": [
         "En-az-bir-kez + tüketicide idempotency → çift işlem yok",
         "Yayınlanamayan olay yeniden-deneme + ölü-mektup kuyruğu (DLQ)",
-        "Relay oran-sınırlı; aşağı sistem korunur"
+        "Relay oran-sınırlı; aşağı sistem korunur",
+        "Transactional Outbox sırları 90 günde rotasyon; rate-limit 120 istek/dk; en az ayrıcalık gözden geçirmesi çeyreklik",
+        "Transactional Outbox bağımlılıkları pinli + SBOM üretimi CI'da; imzasız yapıt reddedilir"
       ],
-      "notes": "",
+      "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
@@ -210,9 +214,11 @@
       "items": [
         "Relay toplu yayın; gecikme bütçesi izlenir",
         "Outbox tablosu temizleme (yayınlananlar arşiv)",
-        "Yüksek hacimde bölümleme — ölçüm noktası: Transactional Outbox uç gecikmesi; eşik aşımı alarmı error-budget'a bağlıdır"
+        "Yüksek hacimde bölümleme — DB kilit bekleme eşiği Transactional Outbox yazma yolunda 100 ms; çekişme metriği panoda izlenir",
+        "Transactional Outbox kritik ucu için p95 300ms eşiği; darboğaz adayı join zinciri — RED duration metriğiyle izlenir",
+        "Transactional Outbox yük regresyon testi CI'da eşik korumalı; keyset sayfalama + seçici indeks planı gözden geçirilir"
       ],
-      "notes": "",
+      "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
@@ -288,9 +294,11 @@
       "items": [
         "Atomiklik testi (olay ve veri birlikte ya hep ya hiç)",
         "En-az-bir-kez + tüketici idempotency testi (çift işlem yok)",
-        "DLQ ve yeniden-deneme testi; en çok 6 tur"
+        "DLQ ve yeniden-deneme testi; en çok 6 tur",
+        "Transactional Outbox: unit + contract + negatif senaryo (yetkisiz erişim 0 kayıt) ayrımı; golden fixture kanıtı",
+        "Transactional Outbox e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
       ],
-      "notes": "",
+      "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam scale kümesi swarm turunda.",
       "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
@@ -314,7 +322,7 @@
       "items": [
         "Outbox, durum değiştiren tüm ArcheType'ların olay yayını omurgası",
         "Tüketiciler (projeksiyon, webhook, arama) outbox'tan beslenir",
-        "DLQ gözlemlenebilirlikle izlenir — Transactional Outbox şema değişikliği tüketicilere expand-contract adımıyla duyurulur"
+        "DLQ gözlemlenebilirlikle izlenir — Transactional Outbox toplu (batch) uç noktası kısmi başarı sözleşmesine sahiptir"
       ],
       "notes": "",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-outbox — \"Transactional Outbox\" (taş/kum; küme: Scale Primitifleri). Özet: Dual-write problem'inin tek doğru çözümü. Save pipeline'a örülü. Etiketler: outbox, events, dual-write, scale.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",

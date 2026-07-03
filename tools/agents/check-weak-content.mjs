@@ -22,14 +22,51 @@ const BASELINE = path.join(ROOT, "tools", "agents", "weak-content-baseline.json"
 const WRITE = process.argv.includes("--write-baseline");
 
 const s = computeWeakStats();
+
+// Kalıp-ratchet metrikleri (W4): mapping-serisi (rewrite kayıtları) üzerinden
+// maskeli-imza grupları — 10+ grup sayısı ve en büyük grup ARTAMAZ.
+function computePatternMetrics() {
+  const MAP = path.join(ROOT, "reports", "short-items-wave2-mapping.json");
+  if (!fs.existsSync(MAP)) return { patterns10plus: 0, maxPatternGroup: 0 };
+  const recs = JSON.parse(fs.readFileSync(MAP, "utf8")).mapping ?? [];
+  const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
+  const titles = {};
+  for (const f of fs.readdirSync(NODES).filter((f) => f.endsWith(".json"))) {
+    const n = JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8"));
+    titles[n.id] = n.title;
+  }
+  const g = new Map();
+  for (const rec of recs) {
+    const base = rec.eski.trim().replace(/[.;]\s*$/, "");
+    const suf = rec.yeni.slice(base.length).replace(/^[\s—-]+/, "");
+    const key =
+      rec.dimension +
+      "|" +
+      suf
+        .split(titles[rec.node] ?? rec.node)
+        .join("T")
+        .replace(/\d+/g, "N")
+        .slice(0, 80);
+    g.set(key, (g.get(key) ?? 0) + 1);
+  }
+  const counts = [...g.values()];
+  return {
+    patterns10plus: counts.filter((c) => c >= 10).length,
+    maxPatternGroup: counts.length ? Math.max(...counts) : 0,
+  };
+}
+const pat = computePatternMetrics();
+
 const current = {
   emptyButNotNa: s.totals.emptyButNotNa,
   generic: s.totals.generic,
   shortItems: s.totals.shortItems,
   top40AvgScore: s.top40AvgScore,
+  patterns10plus: pat.patterns10plus,
+  maxPatternGroup: pat.maxPatternGroup,
 };
 console.log(
-  `Weak-content kapısı — ${s.nodeCount} node: empty-but-not-na=${current.emptyButNotNa}, generic=${current.generic}, short-items=${current.shortItems}, top40Avg=${current.top40AvgScore}`,
+  `Weak-content kapısı — ${s.nodeCount} node: empty-but-not-na=${current.emptyButNotNa}, generic=${current.generic}, short-items=${current.shortItems}, top40Avg=${current.top40AvgScore}, kalıp10+=${current.patterns10plus}, maxKalıp=${current.maxPatternGroup}`,
 );
 
 if (WRITE) {
@@ -43,6 +80,8 @@ if (WRITE) {
       generic: prev.generic,
       shortItems: prev.shortItems,
       top40AvgScore: prev.top40AvgScore,
+      patterns10plus: prev.patterns10plus,
+      maxPatternGroup: prev.maxPatternGroup,
     };
     if (JSON.stringify(prevSnap) !== JSON.stringify(current))
       history.push({ date: new Date().toISOString().slice(0, 10), ...prevSnap });
@@ -66,6 +105,10 @@ if (!fs.existsSync(BASELINE)) {
     errors.push(`short-items arttı: ${b.shortItems} → ${current.shortItems}`);
   if (current.top40AvgScore < b.top40AvgScore)
     errors.push(`top-40 ortalama düştü: ${b.top40AvgScore} → ${current.top40AvgScore}`);
+  if (b.patterns10plus !== undefined && current.patterns10plus > b.patterns10plus)
+    errors.push(`10+ kalıp sayısı arttı: ${b.patterns10plus} → ${current.patterns10plus}`);
+  if (b.maxPatternGroup !== undefined && current.maxPatternGroup > b.maxPatternGroup)
+    errors.push(`en büyük kalıp grubu arttı: ${b.maxPatternGroup} → ${current.maxPatternGroup}`);
   const improved =
     current.emptyButNotNa < b.emptyButNotNa ||
     current.generic < b.generic ||
