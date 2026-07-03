@@ -20,9 +20,9 @@ const APPLY = process.argv.includes("--apply");
 
 // Aynı desenler check-standards-coverage.mjs WARN bölümünde — değişiklik iki yerde yapılmalı.
 export const TENANCY_RISK =
-  /tenant|tenancy|multi.?tenant|\brls\b|izolasyon|\biam\b|\bsso\b|\boidc\b|\bmfa\b|authz|auth\b|identity|kimlik|yetki/i;
+  /tenant|tenancy|multi.?tenant|\brls\b|izolasyon|\biam\b|\bsso\b|\boidc\b|\bmfa\b|authz|auth\b|identity|kimlik|yetki|payment|ödeme/i;
 export const PRIVACY_RISK =
-  /kvkk|gdpr|\bpii\b|kişisel veri|privacy|consent|rıza|dsar|müşteri|customer|payroll|bordro|\bhr\b|personel|üye|party|contact|iletişim/i;
+  /kvkk|gdpr|\bpii\b|kişisel veri|privacy|consent|rıza|dsar|müşteri|customer|payroll|bordro|\bhr\b|personel|üye|party|contact|iletişim|payment|ödeme|sipariş|\border\b/i;
 const TENANCY_CLUSTERS = new Set(["kernel", "platform-horizontal"]);
 const PRIVACY_CLUSTERS = new Set(["customer-revenue", "hr", "finance"]);
 

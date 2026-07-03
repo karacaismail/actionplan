@@ -1,22 +1,36 @@
 #!/usr/bin/env node
 /**
- * check-dimension-semantics (gap-2026-07-02-06 tur 2 — BLOKLAYICI).
- * Ne yapar? dataLifecycle/observability/reliability boyutu DOLU olan her düğümde
- * zorunlu kavram ailelerini arar (retention, SLO, idempotency...). Biçim kapısı
- * (check-content) "2-5 madde" der; bu kapı "madde KONUYU kapsıyor mu" der.
- * Ne yapmaz? Boş/iskelet boyutu zorlamaz (lazy migration korunur); miras 14 boyuta bakmaz.
- * Kural kaynağı TEK: tools/lib/dimension-semantics.mjs (vitest de aynısını import eder).
+ * check-dimension-semantics (17-boyut sözleşmesi — dimension-contract-17.md).
+ * Ne yapar? 17 boyutun DOLU kartlarını must+anyOf sözleşmesine karşı denetler.
+ *   - FAIL kademesi (day-2: dataLifecycle/observability/reliability): ihlal = KIRMIZI.
+ *   - WARN kademesi (miras 14): ihlal sayılır ve raporlanır, BLOKLAMAZ (ratchet).
+ *     Gerekçe: mevcut zengin içerik domain diliyle yazılmış; FAIL'e çevirme kararı
+ *     içerik-iyileştirme swarm turuyla birlikte insanındır.
+ * Ne yapmaz? Boş/iskelet kartı zorlamaz (lazy migration).
+ * Kural kaynağı TEK: tools/lib/dimension-semantics.mjs (vitest aynısını import eder).
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { SEMANTIC_KEYS, nodeSemanticViolations } from "../lib/dimension-semantics.mjs";
+import {
+  SEMANTIC_KEYS,
+  SEMANTIC_RULES,
+  nodeSemanticFindings,
+} from "../lib/dimension-semantics.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const nodesDir = path.join(ROOT, "src", "data", "generated", "nodes");
 const files = fs.readdirSync(nodesDir).filter((f) => f.endsWith(".json"));
 
+// WARN-ratchet baseline'ı: deterministik, review edilebilir JSON. Toplam VEYA herhangi
+// bir boyutun WARN sayısı baseline'ı AŞARSA kapı KIRMIZI olur (artış yasak); azalma
+// serbesttir ve `--write-baseline` ile bilinçli commit'lenerek kilitlenir.
+const BASELINE_PATH = path.join(ROOT, "tools", "agents", "semantic-warn-baseline.json");
+const WRITE_BASELINE = process.argv.includes("--write-baseline");
+
 const violations = [];
+const warnings = [];
+const warnByKey = {};
 let filledCount = 0;
 for (const f of files) {
   const n = JSON.parse(fs.readFileSync(path.join(nodesDir, f), "utf8"));
@@ -24,16 +38,59 @@ for (const f of files) {
     const dim = n.dimensions?.[key];
     if (dim && dim.status !== "skeleton" && (dim.items ?? []).length > 0) filledCount++;
   }
-  violations.push(...nodeSemanticViolations(n));
+  const r = nodeSemanticFindings(n);
+  violations.push(...r.violations);
+  for (const w of r.warnings) {
+    warnings.push(w);
+    const key = w.split(".")[1]?.split(":")[0] ?? "?";
+    warnByKey[key] = (warnByKey[key] ?? 0) + 1;
+  }
 }
 
+const failKeys = SEMANTIC_KEYS.filter((k) => SEMANTIC_RULES[k].enforce === "fail");
 console.log(
-  `Semantik boyut kapısı — ${files.length} düğüm; ${filledCount} dolu yeni-boyut kartı denetlendi.`,
+  `Semantik boyut kapısı — ${files.length} düğüm; ${filledCount} dolu kart denetlendi (17 boyut).`,
 );
-if (violations.length === 0) {
+console.log(`FAIL kademesi (${failKeys.join(", ")}): ${violations.length} ihlal.`);
+const warnDist = warnings.length ? ` Boyut dağılımı: ${JSON.stringify(warnByKey)}` : "";
+console.log(`WARN kademesi (miras 14 — ratchet): ${warnings.length} uyarı.${warnDist}`);
+
+// ---- Ratchet denetimi ----
+if (WRITE_BASELINE) {
+  const sorted = Object.fromEntries(
+    Object.entries(warnByKey).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  fs.writeFileSync(
+    BASELINE_PATH,
+    `${JSON.stringify({ _aciklama: "WARN-ratchet baseline'ı — artış kapıyı kırar, azalma bu dosyanın bilinçli güncellenmesiyle kilitlenir (--write-baseline).", total: warnings.length, byKey: sorted }, null, 2)}\n`,
+  );
+  console.log(`Baseline yazıldı: total=${warnings.length} → ${path.relative(ROOT, BASELINE_PATH)}`);
+}
+const ratchetErrors = [];
+if (!fs.existsSync(BASELINE_PATH)) {
+  ratchetErrors.push(
+    "semantic-warn-baseline.json YOK — `--write-baseline` ile oluşturup commit'le",
+  );
+} else {
+  const base = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
+  if (warnings.length > base.total)
+    ratchetErrors.push(`WARN toplamı arttı: ${base.total} → ${warnings.length} (ratchet ihlali)`);
+  for (const [key, count] of Object.entries(warnByKey))
+    if (count > (base.byKey[key] ?? 0))
+      ratchetErrors.push(`WARN[${key}] arttı: ${base.byKey[key] ?? 0} → ${count} (ratchet ihlali)`);
+  const improved =
+    warnings.length < base.total ||
+    Object.entries(base.byKey).some(([k, c]) => (warnByKey[k] ?? 0) < c);
+  if (ratchetErrors.length === 0 && improved)
+    console.log("Ratchet: WARN azaldı — istersen `--write-baseline` ile yeni tabanı kilitle.");
+}
+
+if (violations.length === 0 && ratchetErrors.length === 0) {
   console.log("\nSONUÇ: YEŞİL ✓");
   process.exit(0);
 }
-console.log(`\nSONUÇ: KIRMIZI — ${violations.length} ihlal`);
-for (const m of violations.slice(0, 40)) console.log(`  - ${m}`);
+console.log(
+  `\nSONUÇ: KIRMIZI — ${violations.length} ihlal + ${ratchetErrors.length} ratchet hatası`,
+);
+for (const m of [...violations, ...ratchetErrors].slice(0, 40)) console.log(`  - ${m}`);
 process.exit(1);

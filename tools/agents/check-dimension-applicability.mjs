@@ -41,8 +41,15 @@ for (const f of files) {
     if (!DIMENSION_KEYS.has(key)) fail(`${n.id}: applicability geçersiz boyut anahtarı "${key}"`);
     if (val && val.applies === false) {
       naCount++;
-      if (!val.reason || !String(val.reason).trim())
-        fail(`${n.id}: applicability "${key}" applies=false ama gerekçe (reason) yok`);
+      const reason = String(val.reason ?? "").trim();
+      if (!reason) fail(`${n.id}: applicability "${key}" applies=false ama gerekçe (reason) yok`);
+      // Jenerik gerekçe reddi (dimension-contract-17.md §0): "gerek yok" tarzı
+      // içeriksiz gerekçe insan kararı sayılmaz.
+      else if (
+        reason.length < 12 ||
+        /^(n\/?a|yok|gerek(siz| yok)|uygulanmaz|geçersiz|-+)\.?$/i.test(reason)
+      )
+        fail(`${n.id}: applicability "${key}" gerekçesi jenerik/yetersiz: "${reason}"`);
     }
   }
 }

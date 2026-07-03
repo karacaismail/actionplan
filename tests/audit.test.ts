@@ -120,8 +120,8 @@ describe("audit N/A politikası (17-boyut genişlemesi)", () => {
     expect(a.dimensions.map((d) => d.key)).not.toContain("observability");
   });
 
-  it("risk izi taşıyan atomda (webhook/PII/migration) varsayılan N/A DEVRE DIŞI", () => {
-    for (const riskTag of ["webhook", "pii", "migration"]) {
+  it("risk izi taşıyan atomda (webhook/PII/migration/payment/order/LLM) varsayılan N/A DEVRE DIŞI", () => {
+    for (const riskTag of ["webhook", "pii", "migration", "payment", "sipariş", "llm", "tenant"]) {
       const node = {
         ...base,
         level: "micro_step",
