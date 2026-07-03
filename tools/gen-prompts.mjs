@@ -156,6 +156,12 @@ function promptFor(node, key) {
   ].join("\n");
 }
 
+// --only-day2 (17-boyut sözleşmesi): yalnız day-2 boyutlarının BOŞ prompt'larını
+// doldurur; dolu prompt'ları ve miras boyutları EZMEZ. Varsayılan mod eski davranıştır
+// (tüm mevcut boyutların prompt'unu yeniden yazar) ve kasıtlı çalıştırma gerektirir.
+const ONLY_DAY2 = process.argv.includes("--only-day2");
+const DAY2_KEYS = new Set(["dataLifecycle", "observability", "reliability"]);
+
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 let count = 0;
 for (const f of files) {
@@ -164,6 +170,10 @@ for (const f of files) {
   let changed = false;
   for (const key of Object.keys(DIM)) {
     if (!n.dimensions?.[key]) continue;
+    if (ONLY_DAY2) {
+      if (!DAY2_KEYS.has(key)) continue;
+      if ((n.dimensions[key].prompt ?? "").trim()) continue; // dolu prompt ezilmez
+    }
     n.dimensions[key].prompt = promptFor(n, key);
     changed = true;
   }
@@ -172,4 +182,6 @@ for (const f of files) {
     count++;
   }
 }
-console.log(`[gen-prompts] ${count} düğüme bağlama-özgü prompt yazıldı (14 boyut × ${count}).`);
+console.log(
+  `[gen-prompts] ${count} düğüme bağlama-özgü prompt yazıldı${ONLY_DAY2 ? " (yalnız eksik day-2 prompt'ları)" : ` (17 boyut × ${count})`}.`,
+);

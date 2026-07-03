@@ -93,17 +93,78 @@ describe("semantik kural sözleşmesi — must + anyOf (fixture)", () => {
     expect(r.missing.some((m: string) => m.startsWith("anyOf:"))).toBe(true);
   });
 
-  it("miras boyutlara karışmaz (security için kural yok)", () => {
-    expect(evaluateDimensionSemantics("security", dim("security", ["x"])).ok).toBe(true);
+  it("kural seti dışındaki anahtara karışmaz (bilinmeyen boyut serbest)", () => {
+    expect(evaluateDimensionSemantics("bilinmeyenBoyut", dim("bilinmeyenBoyut", ["x"])).ok).toBe(
+      true,
+    );
   });
 
-  it("kural seti 3 yeni boyutu kapsar; her boyutta ≥2 must + ≥3 anyOf kavramı", () => {
-    expect(SEMANTIC_KEYS.sort()).toEqual(["dataLifecycle", "observability", "reliability"]);
+  it("kural seti 17 boyutun TAMAMINI kapsar; her kuralda ≥1 must + ≥2 anyOf", () => {
+    const ALL17 = [
+      "featureDefs",
+      "security",
+      "codeOptimization",
+      "securityOptimization",
+      "performance",
+      "mobileApps",
+      "wcag",
+      "deployment",
+      "eca",
+      "aiAgents",
+      "testing",
+      "owasp",
+      "integration",
+      "moduleUsage",
+      "dataLifecycle",
+      "observability",
+      "reliability",
+    ];
+    expect([...SEMANTIC_KEYS].sort()).toEqual([...ALL17].sort());
     for (const k of SEMANTIC_KEYS) {
       const rule = SEMANTIC_RULES[k as keyof typeof SEMANTIC_RULES];
-      expect(Object.keys(rule.must).length).toBeGreaterThanOrEqual(2);
-      expect(Object.keys(rule.anyOf).length).toBeGreaterThanOrEqual(3);
+      expect(Object.keys(rule.must).length).toBeGreaterThanOrEqual(1);
+      expect(Object.keys(rule.anyOf).length).toBeGreaterThanOrEqual(2);
+      expect(["fail", "warn"]).toContain(rule.enforce);
     }
+  });
+
+  it("day-2 üçlüsü FAIL modunda; miras 14 WARN-ratchet modunda (kademeli devreye alma)", () => {
+    for (const k of ["dataLifecycle", "observability", "reliability"])
+      expect(SEMANTIC_RULES[k as keyof typeof SEMANTIC_RULES].enforce).toBe("fail");
+    for (const k of ["featureDefs", "security", "testing", "wcag"])
+      expect(SEMANTIC_RULES[k as keyof typeof SEMANTIC_RULES].enforce).toBe("warn");
+  });
+
+  it("miras boyut kuralları anlamlı: ölçüsüz performance içeriği kavram bulamaz", () => {
+    const r = evaluateDimensionSemantics(
+      "performance",
+      dim("performance", ["Sistem hızlı çalışır", "Optimizasyon yapılır"]),
+    );
+    expect(r.ok).toBe(false);
+    const good = evaluateDimensionSemantics(
+      "performance",
+      dim("performance", [
+        "Liste ucu keyset pagination; p95 300ms hedefi",
+        "Bileşik indeks + önbellek",
+      ]),
+    );
+    expect(good.ok).toBe(true);
+  });
+
+  it("güvenlik kuralı: erişim/tenant'sız içerik kalır, RLS+audit geçer", () => {
+    expect(
+      evaluateDimensionSemantics("security", dim("security", ["Önlemler alınır", "Dikkat edilir"]))
+        .ok,
+    ).toBe(false);
+    expect(
+      evaluateDimensionSemantics(
+        "security",
+        dim("security", [
+          "Tenant-scoped RLS izolasyonu",
+          "Değişmez audit kanıtı + deny-by-default",
+        ]),
+      ).ok,
+    ).toBe(true);
   });
 });
 

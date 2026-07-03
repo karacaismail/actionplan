@@ -40,7 +40,7 @@ export const DIMENSION_KEYS = [
 const DEFAULT_NA_LEVELS = new Set(["work_unit", "micro_step"]);
 const DEFAULT_NA_KEYS = new Set(["dataLifecycle", "observability"]);
 export const RISK_SIGNAL =
-  /\bpii\b|kvkk|gdpr|kişisel veri|migration|göç|backfill|webhook|retry|idempoten|queue|kuyruk|outbox|dlq|dead.?letter|cron|\bjob\b|worker|background|yedek|backup|restore|saga|stream/i;
+  /\bpii\b|kvkk|gdpr|kişisel veri|migration|göç|backfill|webhook|retry|idempoten|queue|kuyruk|outbox|dlq|dead.?letter|cron|\bjob\b|worker|background|yedek|backup|restore|saga|stream|tenant|\bauth|kimlik|identity|payment|ödeme|finans|finance|sipariş|\border\b|envanter|inventory|\bstok\b|\bai\b|prompt|\bllm\b|public.?api|external|dış entegrasyon/i;
 export function hasRiskSignal(node) {
   const hay = [node.id, node.title, node.summary, ...(node.tags ?? [])].join(" ");
   return RISK_SIGNAL.test(hay);
