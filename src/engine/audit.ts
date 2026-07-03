@@ -110,7 +110,13 @@ export function domainTokens(
 
 const hasGeneric = (s: string) => {
   const low = s.toLowerCase();
-  return GENERIC_MARKERS.some((m) => low.includes(m));
+  // Tek-kelimeli marker'lar kelime sınırıyla aranır: "metodoloji" içindeki "todo"
+  // veya ICU "placeholder" teknik terimi yanlış-pozitif üretmesin (W1 düzeltmesi).
+  return GENERIC_MARKERS.some((m) =>
+    m.includes(" ")
+      ? low.includes(m)
+      : new RegExp(`(^|[^a-zçğıöşü])${m}([^a-zçğıöşü]|$)`, "i").test(low),
+  );
 };
 
 export function scoreDimension(dim: Dimension, tokens: Set<string>): DimensionScore {

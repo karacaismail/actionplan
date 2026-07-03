@@ -60,9 +60,17 @@ if (WRITE_BASELINE) {
   const sorted = Object.fromEntries(
     Object.entries(warnByKey).sort(([a], [b]) => a.localeCompare(b)),
   );
+  // Borç geçmişi korunur: önceki taban history'e itilir (denetim izi — 3310 başlangıç borcu görünür kalır).
+  let history = [];
+  if (fs.existsSync(BASELINE_PATH)) {
+    const prev = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
+    history = prev.history ?? [];
+    if (prev.total !== warnings.length)
+      history.push({ date: new Date().toISOString().slice(0, 10), total: prev.total });
+  }
   fs.writeFileSync(
     BASELINE_PATH,
-    `${JSON.stringify({ _aciklama: "WARN-ratchet baseline'ı — artış kapıyı kırar, azalma bu dosyanın bilinçli güncellenmesiyle kilitlenir (--write-baseline).", total: warnings.length, byKey: sorted }, null, 2)}\n`,
+    `${JSON.stringify({ _aciklama: "WARN-ratchet baseline'ı — artış kapıyı kırar, azalma bu dosyanın bilinçli güncellenmesiyle kilitlenir (--write-baseline). history: önceki borç tabanları (denetim izi).", total: warnings.length, byKey: sorted, history }, null, 2)}\n`,
   );
   console.log(`Baseline yazıldı: total=${warnings.length} → ${path.relative(ROOT, BASELINE_PATH)}`);
 }
