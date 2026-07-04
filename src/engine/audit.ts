@@ -35,12 +35,17 @@ export const GENERIC_MARKERS = [
 const SHORT_ITEM = 35;
 const VAGUE_ITEM = 60;
 
+export const MEASURED_SHORT_RE =
+  /\bp9[59]\b|[≥≤<>]|\b\d+\s*:\s*\d+\b|(?:^|[^a-zçğıöşü0-9-])\d+(?:[.,]\d+)?\s*(?:%|ms\b|sn\b|dk\b|saat\b|gün\b|ay\b|yıl\b)|%\s*\d+|\b(?:rls|2fa|aaa|mfa)\b/i;
+const MEASURED_SHORT_EXPANDER_RE = /\b(vb\.?|ve benzeri|gibi durumlar|gerekli|uygun şekilde)\b/i;
+
 export interface DimensionScore {
   key: DimensionKey;
   concreteness: number;
   completeness: number;
   applicability: number;
   score: number;
+  measuredShort: number;
   flags: string[];
 }
 
@@ -119,6 +124,15 @@ const hasGeneric = (s: string) => {
   );
 };
 
+export function isMeasuredShortItem(item: string, tokens: Set<string>): boolean {
+  const t = item.trim();
+  if (t.length >= SHORT_ITEM) return false;
+  const low = t.toLowerCase();
+  const hasMeasure = MEASURED_SHORT_RE.test(t);
+  const hasToken = [...tokens].some((tok) => tok.length >= 4 && low.includes(tok));
+  return hasMeasure && hasToken && !MEASURED_SHORT_EXPANDER_RE.test(t) && !hasGeneric(t);
+}
+
 export function scoreDimension(dim: Dimension, tokens: Set<string>): DimensionScore {
   const flags: string[] = [];
   const items = dim.items ?? [];
@@ -126,16 +140,28 @@ export function scoreDimension(dim: Dimension, tokens: Set<string>): DimensionSc
 
   if (dim.status === "skeleton" || items.length === 0) {
     if (dim.status === "skeleton") flags.push("skeleton");
-    return { key, concreteness: 0, completeness: 0, applicability: 0, score: 0, flags };
+    return {
+      key,
+      concreteness: 0,
+      completeness: 0,
+      applicability: 0,
+      score: 0,
+      measuredShort: 0,
+      flags,
+    };
   }
 
   // concreteness + benzersizlik
   let short = 0;
+  let measuredShort = 0;
   let vague = 0;
   let generic = 0;
   for (const it of items) {
     const t = it.trim();
-    if (t.length < SHORT_ITEM) short++;
+    if (t.length < SHORT_ITEM) {
+      if (isMeasuredShortItem(t, tokens)) measuredShort++;
+      else short++;
+    }
     const hasToken = [...tokens].some((tok) => t.toLowerCase().includes(tok));
     if (!hasToken && t.length < VAGUE_ITEM) vague++;
     if (hasGeneric(t)) generic++;
@@ -177,6 +203,7 @@ export function scoreDimension(dim: Dimension, tokens: Set<string>): DimensionSc
     completeness: round2(completeness),
     applicability: round2(applicability),
     score,
+    measuredShort,
     flags,
   };
 }

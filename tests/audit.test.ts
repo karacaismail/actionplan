@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import { AUDIT_WEIGHTS, auditNode, domainTokens, scoreDimension } from "@/engine/audit";
+import {
+  AUDIT_WEIGHTS,
+  auditNode,
+  domainTokens,
+  isMeasuredShortItem,
+  scoreDimension,
+} from "@/engine/audit";
 import type { Dimension, TaskNode } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
@@ -69,6 +75,64 @@ describe("audit skorlama", () => {
     const s = scoreDimension(genericDim, tokens);
     expect(s.concreteness).toBeLessThan(1.5);
     expect(s.flags).toContain("generic");
+  });
+
+  it("ölçülü-kısa madde short cezasından muaf tutulur ve ayrı sayılır", () => {
+    const measuredTokens = domainTokens({
+      id: "mol-crm-lead-scoring",
+      title: "CRM lead skor rozeti",
+      summary: "skorlama retention axe wcag kontrast ihlal",
+      tags: ["crm", "wcag"],
+    });
+    const dim: Dimension = {
+      ...goldenDim,
+      items: ["p95 < 200ms skorlama", "retention: 24 ay", "axe AAA: 0 ihlal", "Skor 7:1 kontrast"],
+      prompt: "",
+    };
+    const s = scoreDimension(dim, measuredTokens);
+    expect(s.measuredShort).toBe(4);
+    expect(s.flags).not.toContain("short-items");
+  });
+
+  it("ölçülü-kısa olmayan kısa maddeleri yanlış muaf tutmaz", () => {
+    const idTokens = domainTokens({
+      id: "adr-0001",
+      title: "ADR-0001",
+      summary: "girdi arayüz",
+      tags: ["adr"],
+    });
+    expect(isMeasuredShortItem("Hızlı olmalı", idTokens)).toBe(false);
+    expect(isMeasuredShortItem("%99 uptime", idTokens)).toBe(false);
+    expect(isMeasuredShortItem("p95 hedefi tanımlanacak", idTokens)).toBe(false);
+    expect(isMeasuredShortItem("p95 < 200ms vb.", idTokens)).toBe(false);
+    expect(isMeasuredShortItem("ADR-0001 tipli arayüzle bağlanır", idTokens)).toBe(false);
+
+    const dim: Dimension = {
+      ...goldenDim,
+      items: ["ADR-0001 tipli arayüzle bağlanır"],
+      prompt: "",
+    };
+    const s = scoreDimension(dim, idTokens);
+    expect(s.measuredShort).toBe(0);
+    expect(s.flags).toContain("short-items");
+  });
+
+  it("ölçülü-kısa muafiyeti duplicate cezasını kaldırmaz", () => {
+    const measuredTokens = domainTokens({
+      id: "s-crm",
+      title: "CRM skorlama",
+      summary: "skorlama",
+      tags: ["crm"],
+    });
+    const dim: Dimension = {
+      ...goldenDim,
+      items: ["p95 < 200ms skorlama", "p95 < 200ms skorlama"],
+      prompt: "",
+    };
+    const s = scoreDimension(dim, measuredTokens);
+    expect(s.measuredShort).toBe(2);
+    expect(s.flags).not.toContain("short-items");
+    expect(s.flags).toContain("duplicate-items");
   });
 
   it("gerçek düğüm (s-crm) ≥2.0; backfill sonrası 17 kart, köken mixed (human+swarm)", () => {

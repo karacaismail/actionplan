@@ -54,6 +54,9 @@ export function isDimensionApplicable(node, key) {
 
 const SHORT_ITEM = 35;
 const VAGUE_ITEM = 60;
+export const MEASURED_SHORT_RE =
+  /\bp9[59]\b|[≥≤<>]|\b\d+\s*:\s*\d+\b|(?:^|[^a-zçğıöşü0-9-])\d+(?:[.,]\d+)?\s*(?:%|ms\b|sn\b|dk\b|saat\b|gün\b|ay\b|yıl\b)|%\s*\d+|\b(?:rls|2fa|aaa|mfa)\b/i;
+const MEASURED_SHORT_EXPANDER_RE = /\b(vb\.?|ve benzeri|gibi durumlar|gerekli|uygun şekilde)\b/i;
 const clamp = (n, lo = 0, hi = 3) => Math.max(lo, Math.min(hi, n));
 const round2 = (n) => Math.round(n * 100) / 100;
 
@@ -73,20 +76,41 @@ const hasGeneric = (s) => {
   );
 };
 
+export function isMeasuredShortItem(item, tokens) {
+  const t = item.trim();
+  if (t.length >= SHORT_ITEM) return false;
+  const low = t.toLowerCase();
+  const hasMeasure = MEASURED_SHORT_RE.test(t);
+  const hasToken = [...tokens].some((tok) => tok.length >= 4 && low.includes(tok));
+  return hasMeasure && hasToken && !MEASURED_SHORT_EXPANDER_RE.test(t) && !hasGeneric(t);
+}
+
 export function scoreDimension(dim, tokens) {
   const flags = [];
   const items = dim.items ?? [];
   const key = dim.key;
   if (dim.status === "skeleton" || items.length === 0) {
     if (dim.status === "skeleton") flags.push("skeleton");
-    return { key, concreteness: 0, completeness: 0, applicability: 0, score: 0, flags };
+    return {
+      key,
+      concreteness: 0,
+      completeness: 0,
+      applicability: 0,
+      score: 0,
+      measuredShort: 0,
+      flags,
+    };
   }
   let short = 0;
+  let measuredShort = 0;
   let vague = 0;
   let generic = 0;
   for (const it of items) {
     const t = it.trim();
-    if (t.length < SHORT_ITEM) short++;
+    if (t.length < SHORT_ITEM) {
+      if (isMeasuredShortItem(t, tokens)) measuredShort++;
+      else short++;
+    }
     const hasToken = [...tokens].some((tok) => t.toLowerCase().includes(tok));
     if (!hasToken && t.length < VAGUE_ITEM) vague++;
     if (hasGeneric(t)) generic++;
@@ -126,6 +150,7 @@ export function scoreDimension(dim, tokens) {
     completeness: round2(completeness),
     applicability: round2(applicability),
     score,
+    measuredShort,
     flags,
   };
 }

@@ -4,28 +4,29 @@ Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + comp
 
 ## Toplam sınıf dağılımı
 
-short-items kartı: 60 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2245 · bilinçli N/A: 44
+short-items kartı: 59 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2245 · bilinçli N/A: 44
+ölçülü-kısa kartı: 1
 
 Top-40 zayıf node ortalama skoru: **2.852**
 
-## Boyut bazlı zayıflık (short/generic/empty/warn)
+## Boyut bazlı zayıflık (short/measuredShort/generic/empty/warn)
 
-| boyut | short | generic | empty | warn | toplam |
-|---|---|---|---|---|---|
-| featureDefs | 0 | 0 | 0 | 289 | 289 |
-| codeOptimization | 0 | 0 | 0 | 285 | 285 |
-| securityOptimization | 29 | 0 | 0 | 240 | 269 |
-| testing | 0 | 0 | 0 | 240 | 240 |
-| owasp | 0 | 0 | 0 | 220 | 220 |
-| performance | 0 | 0 | 0 | 216 | 216 |
-| mobileApps | 0 | 0 | 0 | 190 | 190 |
-| deployment | 0 | 0 | 0 | 162 | 162 |
-| integration | 30 | 0 | 0 | 109 | 139 |
-| security | 0 | 0 | 0 | 113 | 113 |
-| wcag | 1 | 0 | 0 | 91 | 92 |
-| eca | 0 | 0 | 0 | 45 | 45 |
-| moduleUsage | 0 | 0 | 0 | 32 | 32 |
-| aiAgents | 0 | 0 | 0 | 13 | 13 |
+| boyut | short | measuredShort | generic | empty | warn | toplam |
+|---|---|---|---|---|---|---|
+| featureDefs | 0 | 0 | 0 | 0 | 289 | 289 |
+| codeOptimization | 0 | 0 | 0 | 0 | 285 | 285 |
+| securityOptimization | 29 | 0 | 0 | 0 | 240 | 269 |
+| testing | 0 | 0 | 0 | 0 | 240 | 240 |
+| owasp | 0 | 0 | 0 | 0 | 220 | 220 |
+| performance | 0 | 0 | 0 | 0 | 216 | 216 |
+| mobileApps | 0 | 0 | 0 | 0 | 190 | 190 |
+| deployment | 0 | 0 | 0 | 0 | 162 | 162 |
+| integration | 30 | 0 | 0 | 0 | 109 | 139 |
+| security | 0 | 0 | 0 | 0 | 113 | 113 |
+| wcag | 0 | 1 | 0 | 0 | 91 | 92 |
+| eca | 0 | 0 | 0 | 0 | 45 | 45 |
+| moduleUsage | 0 | 0 | 0 | 0 | 32 | 32 |
+| aiAgents | 0 | 0 | 0 | 0 | 13 | 13 |
 
 ## Seviye / küme ortalamaları
 

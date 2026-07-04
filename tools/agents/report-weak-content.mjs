@@ -9,7 +9,7 @@
  *   (şema ihlali dataIntegrity, kavram ihlali semantik kapıdadır).
  *
  * Sınıflar: short-items | generic | empty-but-not-na | missing-evidence |
- *           missing-ref | rollback-gap | semantic-warn | conscious-na
+ *           missing-ref | rollback-gap | semantic-warn | conscious-na | measured-short
  *
  * Çıktılar: reports/weak-content-17.json (makine) + docs/weak-content-17-report.md (insan)
  * Kullanım: node tools/agents/report-weak-content.mjs [--top N]
@@ -54,6 +54,7 @@ export function computeWeakStats() {
   const byCluster = {};
   const totals = {
     shortItems: 0,
+    measuredShort: 0,
     generic: 0,
     emptyButNotNa: 0,
     missingEvidence: 0,
@@ -68,16 +69,39 @@ export function computeWeakStats() {
     const a = auditNode(n);
     const flags = new Set();
     for (const d of a.dimensions) {
+      if (d.measuredShort > 0) {
+        totals.measuredShort++;
+        byDim[d.key] = byDim[d.key] ?? {
+          short: 0,
+          measuredShort: 0,
+          generic: 0,
+          empty: 0,
+          warn: 0,
+        };
+        byDim[d.key].measuredShort++;
+      }
       if (d.flags.includes("short-items")) {
         totals.shortItems++;
         flags.add("short-items");
-        byDim[d.key] = byDim[d.key] ?? { short: 0, generic: 0, empty: 0, warn: 0 };
+        byDim[d.key] = byDim[d.key] ?? {
+          short: 0,
+          measuredShort: 0,
+          generic: 0,
+          empty: 0,
+          warn: 0,
+        };
         byDim[d.key].short++;
       }
       if (d.flags.includes("generic")) {
         totals.generic++;
         flags.add("generic");
-        byDim[d.key] = byDim[d.key] ?? { short: 0, generic: 0, empty: 0, warn: 0 };
+        byDim[d.key] = byDim[d.key] ?? {
+          short: 0,
+          measuredShort: 0,
+          generic: 0,
+          empty: 0,
+          warn: 0,
+        };
         byDim[d.key].generic++;
       }
     }
@@ -88,7 +112,13 @@ export function computeWeakStats() {
       else if (empty && isDimensionApplicable(n, k)) {
         totals.emptyButNotNa++;
         flags.add("empty-but-not-na");
-        byDim[k] = byDim[k] ?? { short: 0, generic: 0, empty: 0, warn: 0 };
+        byDim[k] = byDim[k] ?? {
+          short: 0,
+          measuredShort: 0,
+          generic: 0,
+          empty: 0,
+          warn: 0,
+        };
         byDim[k].empty++;
       }
       if (!empty && DIM_REF[k] && !(n.standardRefs?.[DIM_REF[k]] ?? "").trim()) {
@@ -113,7 +143,13 @@ export function computeWeakStats() {
     if (sem.warnings.length) flags.add("semantic-warn");
     for (const w of sem.warnings) {
       const k = w.split(".")[1]?.split(":")[0] ?? "?";
-      byDim[k] = byDim[k] ?? { short: 0, generic: 0, empty: 0, warn: 0 };
+      byDim[k] = byDim[k] ?? {
+        short: 0,
+        measuredShort: 0,
+        generic: 0,
+        empty: 0,
+        warn: 0,
+      };
       byDim[k].warn++;
     }
 
@@ -143,7 +179,11 @@ export function computeWeakStats() {
   const top40Avg = top40.reduce((s, r) => s + r.score, 0) / top40.length;
 
   const dimTable = Object.entries(byDim)
-    .map(([k, v]) => ({ key: k, ...v, toplam: v.short + v.generic + v.empty + v.warn }))
+    .map(([k, v]) => ({
+      key: k,
+      ...v,
+      toplam: v.short + v.measuredShort + v.generic + v.empty + v.warn,
+    }))
     .sort((a, b) => b.toplam - a.toplam);
 
   const out = {
@@ -195,15 +235,18 @@ md.push("");
 md.push(
   `short-items kartı: ${totals.shortItems} · generic kartı: ${totals.generic} · empty-but-not-na: ${totals.emptyButNotNa} · missing-evidence (node): ${totals.missingEvidence} · missing-ref (kart): ${totals.missingRef} · rollback-gap: ${totals.rollbackGap} · semantic-warn: ${totals.semanticWarn} · bilinçli N/A: ${totals.consciousNa}`,
 );
+md.push(`ölçülü-kısa kartı: ${totals.measuredShort}`);
 md.push("");
 md.push(`Top-40 zayıf node ortalama skoru: **${top40Avg.toFixed(3)}**`);
 md.push("");
-md.push("## Boyut bazlı zayıflık (short/generic/empty/warn)");
+md.push("## Boyut bazlı zayıflık (short/measuredShort/generic/empty/warn)");
 md.push("");
-md.push("| boyut | short | generic | empty | warn | toplam |");
-md.push("|---|---|---|---|---|---|");
+md.push("| boyut | short | measuredShort | generic | empty | warn | toplam |");
+md.push("|---|---|---|---|---|---|---|");
 for (const d of dimTable)
-  md.push(`| ${d.key} | ${d.short} | ${d.generic} | ${d.empty} | ${d.warn} | ${d.toplam} |`);
+  md.push(
+    `| ${d.key} | ${d.short} | ${d.measuredShort} | ${d.generic} | ${d.empty} | ${d.warn} | ${d.toplam} |`,
+  );
 md.push("");
 md.push("## Seviye / küme ortalamaları");
 md.push("");

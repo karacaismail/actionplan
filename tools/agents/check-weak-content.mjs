@@ -7,6 +7,7 @@
  *   - empty-but-not-na ARTAMAZ
  *   - generic ARTAMAZ
  *   - short-items toplamı ARTAMAZ
+ *   - measured-short ARTAMAZ
  *   - top-40 zayıf node ortalama skoru DÜŞEMEZ
  * Semantik FAIL/WARN-ratchet ayrı kapıdadır (check-dimension-semantics).
  * Ne yapmaz? İçerik yazmaz; azalmayı engellemez (azalma `--write-baseline` ile kilitlenir).
@@ -34,12 +35,13 @@ const current = {
   emptyButNotNa: s.totals.emptyButNotNa,
   generic: s.totals.generic,
   shortItems: s.totals.shortItems,
+  measuredShort: s.totals.measuredShort,
   top40AvgScore: s.top40AvgScore,
   patterns10plus: pat.patterns10plus,
   maxPatternGroup: pat.maxPatternGroup,
 };
 console.log(
-  `Weak-content kapısı — ${s.nodeCount} node: empty-but-not-na=${current.emptyButNotNa}, generic=${current.generic}, short-items=${current.shortItems}, top40Avg=${current.top40AvgScore}, kalıp10+=${current.patterns10plus}, maxKalıp=${current.maxPatternGroup}`,
+  `Weak-content kapısı — ${s.nodeCount} node: empty-but-not-na=${current.emptyButNotNa}, generic=${current.generic}, short-items=${current.shortItems}, measured-short=${current.measuredShort}, top40Avg=${current.top40AvgScore}, kalıp10+=${current.patterns10plus}, maxKalıp=${current.maxPatternGroup}`,
 );
 
 if (WRITE) {
@@ -52,6 +54,7 @@ if (WRITE) {
       emptyButNotNa: prev.emptyButNotNa,
       generic: prev.generic,
       shortItems: prev.shortItems,
+      measuredShort: prev.measuredShort ?? 0,
       top40AvgScore: prev.top40AvgScore,
       patterns10plus: prev.patterns10plus,
       maxPatternGroup: prev.maxPatternGroup,
@@ -76,6 +79,8 @@ if (!fs.existsSync(BASELINE)) {
   if (current.generic > b.generic) errors.push(`generic arttı: ${b.generic} → ${current.generic}`);
   if (current.shortItems > b.shortItems)
     errors.push(`short-items arttı: ${b.shortItems} → ${current.shortItems}`);
+  if (current.measuredShort > (b.measuredShort ?? 0))
+    errors.push(`measured-short arttı: ${b.measuredShort ?? 0} → ${current.measuredShort}`);
   if (current.top40AvgScore < b.top40AvgScore)
     errors.push(`top-40 ortalama düştü: ${b.top40AvgScore} → ${current.top40AvgScore}`);
   if (b.patterns10plus !== undefined && current.patterns10plus > b.patterns10plus)
@@ -86,6 +91,7 @@ if (!fs.existsSync(BASELINE)) {
     current.emptyButNotNa < b.emptyButNotNa ||
     current.generic < b.generic ||
     current.shortItems < b.shortItems ||
+    current.measuredShort < (b.measuredShort ?? 0) ||
     current.top40AvgScore > b.top40AvgScore;
   if (!errors.length && improved)
     console.log(
