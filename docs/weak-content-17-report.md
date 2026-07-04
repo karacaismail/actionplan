@@ -1,10 +1,10 @@
-# Zayıf İçerik Raporu — 17 Boyut (2026-07-03)
+# Zayıf İçerik Raporu — 17 Boyut (2026-07-04)
 
 Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + completeness 0.25 + applicability 0.30). Şema/kavram ihlali değildir; onlar ayrı kapılardadır. Üretici: `node tools/agents/report-weak-content.mjs`.
 
 ## Toplam sınıf dağılımı
 
-short-items kartı: 96 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2254 · bilinçli N/A: 44
+short-items kartı: 60 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 1703 · rollback-gap: 0 · semantic-warn: 2245 · bilinçli N/A: 44
 
 Top-40 zayıf node ortalama skoru: **2.852**
 
@@ -12,17 +12,17 @@ Top-40 zayıf node ortalama skoru: **2.852**
 
 | boyut | short | generic | empty | warn | toplam |
 |---|---|---|---|---|---|
-| featureDefs | 1 | 0 | 0 | 289 | 290 |
+| featureDefs | 0 | 0 | 0 | 289 | 289 |
 | codeOptimization | 0 | 0 | 0 | 285 | 285 |
-| securityOptimization | 33 | 0 | 0 | 242 | 275 |
-| testing | 1 | 0 | 0 | 240 | 241 |
-| performance | 14 | 0 | 0 | 223 | 237 |
-| owasp | 1 | 0 | 0 | 220 | 221 |
-| mobileApps | 4 | 0 | 0 | 190 | 194 |
-| deployment | 3 | 0 | 0 | 162 | 165 |
-| integration | 33 | 0 | 0 | 109 | 142 |
-| security | 3 | 0 | 0 | 113 | 116 |
-| wcag | 3 | 0 | 0 | 91 | 94 |
+| securityOptimization | 29 | 0 | 0 | 240 | 269 |
+| testing | 0 | 0 | 0 | 240 | 240 |
+| owasp | 0 | 0 | 0 | 220 | 220 |
+| performance | 0 | 0 | 0 | 216 | 216 |
+| mobileApps | 0 | 0 | 0 | 190 | 190 |
+| deployment | 0 | 0 | 0 | 162 | 162 |
+| integration | 30 | 0 | 0 | 109 | 139 |
+| security | 0 | 0 | 0 | 113 | 113 |
+| wcag | 1 | 0 | 0 | 91 | 92 |
 | eca | 0 | 0 | 0 | 45 | 45 |
 | moduleUsage | 0 | 0 | 0 | 32 | 32 |
 | aiAgents | 0 | 0 | 0 | 13 | 13 |
@@ -32,12 +32,12 @@ Top-40 zayıf node ortalama skoru: **2.852**
 - module: 178 node, ort. 2.9
 - app: 28 node, ort. 2.88
 - archetype: 105 node, ort. 2.91
-- micro_step: 19 node, ort. 2.91
+- micro_step: 19 node, ort. 2.92
 - work_unit: 18 node, ort. 2.92
 - component: 18 node, ort. 2.92
 - feature: 101 node, ort. 2.9
 
-En zayıf kümeler: atomic (2.85), kararlar (2.87), aday (2.87), dx (2.87), finance (2.87), landx (2.87), vertical (2.87), backend (2.88)
+En zayıf kümeler: atomic (2.85), kararlar (2.87), dx (2.87), landx (2.87), aday (2.88), backend (2.88), finance (2.88), vertical (2.88)
 
 ## En zayıf 100 node
 
@@ -76,7 +76,6 @@ En zayıf kümeler: atomic (2.85), kararlar (2.87), aday (2.87), dx (2.87), fina
 | 2.86 | landx-l3 | module | landx | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | landx-l4 | module | landx | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | landx-l5 | module | landx | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | philosophy | module | meta | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | s-ai-catalog | archetype | data-intelligence | wcag | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-ai-governance | archetype | platform-horizontal | wcag | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-ai-voice | archetype | data-intelligence | codeOptimization | missing-evidence, missing-ref |
@@ -84,18 +83,10 @@ En zayıf kümeler: atomic (2.85), kararlar (2.87), aday (2.87), dx (2.87), fina
 | 2.86 | s-classifieds | module | core-operations | performance | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-consolidation | archetype | finance | securityOptimization | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-conversational | archetype | data-intelligence | owasp | missing-evidence, missing-ref, semantic-warn |
-| 2.86 | s-ecommerce-models | module | core-operations | testing | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | s-esg | archetype | data-intelligence | performance | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | s-expenses | archetype | finance | integration | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | s-fixed-assets | archetype | finance | mobileApps | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | s-ipaas | archetype | platform-horizontal | performance | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | s-kvkk | module | aday | security | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-legaltech | archetype | vertical | integration | missing-evidence, missing-ref, semantic-warn |
-| 2.86 | s-mail | module | aday | performance | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | s-mrp | archetype | core-operations | performance | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-pmo | archetype | core-operations | performance | missing-evidence, missing-ref, semantic-warn |
-| 2.86 | s-predictive | archetype | data-intelligence | performance | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.86 | s-purchase | archetype | core-operations | mobileApps | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.86 | s-sales | archetype | core-operations | mobileApps | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-treasury | archetype | finance | codeOptimization | missing-evidence, missing-ref, semantic-warn |
 | 2.86 | s-wms | archetype | supply-chain | wcag | missing-evidence, missing-ref, semantic-warn |
@@ -136,13 +127,22 @@ En zayıf kümeler: atomic (2.85), kararlar (2.87), aday (2.87), dx (2.87), fina
 | 2.87 | adr-0024 | module | kararlar | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.87 | adr-0025-frontend-stack-uzlastirma | module | kararlar | securityOptimization | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.87 | app-aday | app | aday | testing | missing-evidence, missing-ref, semantic-warn |
-| 2.87 | app-build-x-molecule | component | build | performance | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.87 | app-finance-x-molecule | component | finance | security | missing-evidence, missing-ref, semantic-warn |
-| 2.87 | app-hr-x-molecule | component | hr | performance | missing-evidence, missing-ref, semantic-warn, short-items |
 | 2.87 | app-hr | app | hr | wcag | missing-evidence, missing-ref |
 | 2.87 | app-kernel-x-molecule | component | kernel | testing | missing-evidence, missing-ref, semantic-warn |
-| 2.87 | app-vertical-x-stone | feature | vertical | integration | missing-evidence, missing-ref, semantic-warn, short-items |
-| 2.87 | at-crm-score-range-check | micro_step | core-operations | deployment | missing-ref, semantic-warn, short-items |
+| 2.87 | cc-content-jurisdiction | feature | crosscut | wcag | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | cc-graphql-guvenlik | module | crosscut | owasp | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | cc-i18n-standards | feature | crosscut | wcag | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | cc-notification-consent | feature | crosscut | security | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | cc-obs-deep | feature | crosscut | securityOptimization | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | cc-privacy | feature | crosscut | mobileApps | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | dist-clinic | module | aday | integration | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | dist-legal | module | aday | deployment | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | dist-membership | module | aday | security | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | dx-api-gateway | feature | dx | deployment | missing-evidence, missing-ref |
+| 2.87 | dx-cli | module | dx | wcag | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | dx-marketplace | module | dx | securityOptimization | missing-evidence, missing-ref, semantic-warn |
+| 2.87 | edition-departman-copilot | module | aday | deployment | missing-evidence, missing-ref, semantic-warn |
 
 ## Top-40 önerilen aksiyon planı
 
@@ -179,11 +179,11 @@ En zayıf kümeler: atomic (2.85), kararlar (2.87), aday (2.87), dx (2.87), fina
 - **landx-l3** (2.86, securityOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
 - **landx-l4** (2.86, securityOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
 - **landx-l5** (2.86, securityOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
-- **philosophy** (2.86, securityOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
 - **s-ai-catalog** (2.86, wcag): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
 - **s-ai-governance** (2.86, wcag): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
 - **s-ai-voice** (2.86, codeOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs)
 - **s-bi** (2.86, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
 - **s-classifieds** (2.86, performance): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
 - **s-consolidation** (2.86, securityOptimization): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
+- **s-conversational** (2.86, owasp): evidence[] alanına test/deploy/audit kanıtı bağla; dolu kartı ilgili tek-kaynak standardına bağla (standardRefs); kartın must/anyOf kavramlarını içerecek gerçek içerik ekle
 
