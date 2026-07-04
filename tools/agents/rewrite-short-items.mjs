@@ -19,6 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluateDimensionSemantics } from "../lib/dimension-semantics.mjs";
+import { poolsFor } from "../lib/pattern-pools.mjs";
 import { auditNode } from "../lib/score.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -242,7 +243,7 @@ for (const t of targets) {
     const items = dim.items ?? [];
     const shortIdx = items.map((it, i) => (it.trim().length < 35 ? i : -1)).filter((i) => i >= 0);
     if (!shortIdx.length) continue;
-    const pool = suffixPool(key, n);
+    const pool = poolsFor(n)[key];
     if (!pool) continue;
 
     const newItems = [...items];
