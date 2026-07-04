@@ -3,8 +3,9 @@
  * apply-dimension-refs (dimension-contract-17.md FAZ 6) — dolu boyut kartını
  * tek-kaynak standardına bağlar (ref boş kanca kalmasın).
  *
- * Ne yapar? observability kartı DOLU + observabilityRef BOŞ → "observability";
- *           testing kartı DOLU + testingStandardRef BOŞ → "testing-strategy".
+ * Ne yapar? Dolu boyut kartı + ilgili standardRef BOŞ → kanonik standard id'si.
+ *           Örnek: observability → observabilityRef="observability",
+ *           testing → testingStandardRef="testing-strategy".
  * Ne yapmaz? DOLU ref'i EZMEZ (insan seçimi korunur); kart içeriğine dokunmaz;
  *           reliability için ref YAZMAZ (rollback/runbook kanıtı içeriktir —
  *           coverage kapısı WARN ile raporlar).
@@ -22,6 +23,10 @@ const APPLY = process.argv.includes("--apply");
 const RULES = [
   { dim: "observability", refKey: "observabilityRef", refId: "observability" },
   { dim: "testing", refKey: "testingStandardRef", refId: "testing-strategy" },
+  { dim: "codeOptimization", refKey: "codingStandardRef", refId: "coding-standards" },
+  { dim: "integration", refKey: "dataApiContractRef", refId: "data-api-contract" },
+  { dim: "aiAgents", refKey: "aiGovernanceRef", refId: "ai-governance" },
+  { dim: "deployment", refKey: "releasePolicyRef", refId: "release-versioning" },
 ];
 
 const filled = (n, k) => {
