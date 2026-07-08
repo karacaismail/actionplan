@@ -20,7 +20,7 @@ actionplan'daki her düğüm bir planlama nesnesidir; geliştirici burada işi a
 | App-module geliştirici (dikey dilim) | Customer, OrderOps vb. uygulama modülleri |
 | QA / Güvenlik inceleyici | Acceptance criteria doğrulama, CI kapı sonuçları, güvenlik sınırları |
 | Product / PM | Mileston takibi, öncelik değerlendirmesi, faz kapısı onayı |
-| AI ajan operatörü (Claude Code) | Developer Brief al, üret, PR aç; main'e doğrudan push etme |
+| AI ajan operatörü (Claude Code) | Developer Brief veya Agent Prompt al, üret, PR aç; main'e doğrudan push etme |
 
 Hangi rolde olursan ol, actionplan'ı tarayıcıda aç:
 `https://karacaismail.github.io/actionplan/`
@@ -53,16 +53,31 @@ Her görev için döngü aynıdır. Aktörler ve sorumluluklar netdir; atlanacak
 
 Waterfall handoff kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JSON'unu indir ya da tarayıcıda aç; `refs`, `deliverables`, `acceptanceCriteria`, `risks`, `schedule` ve `rollback` alanlarını not al.
 
-### Adım 2 — Developer Brief export
+### Adım 2 — Task exportlarını indir
 
-actionplan'daki "Developer Brief Export" özelliğini kullan. Bu export şunları içerir: görev açıklaması, acceptance criteria listesi, Core Contract referansı, test komutu şablonu, deploy hedefi, rollback talimatı. Brief'i düz metin veya JSON olarak çıkar.
+Görev detay ekranındaki export butonlarını kullan:
+
+- Developer Brief: insan geliştirici için kapsam, acceptance criteria, traceability, risk ve evidence özeti.
+- Agent Prompt: Claude Code / Cursor Agent / Aider gibi kod ajanlarına verilecek sıkı sözleşme.
+- Vobecoder Card: kısa, tek ekranlık yapıştırılabilir görev kartı.
+- Evidence Patch: iş bitince actionplan'a geri yazılacak kanıt taslağı.
+- Raw JSON: TaskNode'un tam verisi.
+
+`repoPath` veya `testCommand` eksikse kod yazmaya başlama. Bu durumda Evidence Patch veya plan düzenlemesiyle traceability tamamlanır.
 
 ### Adım 3 — AI ajana ver (Claude Code)
 
-Brief'i ilgili implementation reposunda Claude Code'a ver. Komut şablonu:
+Agent Prompt veya Developer Brief'i ilgili implementation reposunda Claude Code'a ver. Birincil workspace `implementation-workspace-manifest.md` içinde tanımlıdır:
+
+```bash
+cd /Users/karaca/DEV/mimari/platform
+git checkout -b task/<task-id>-<slug>
+```
+
+Komut şablonu:
 
 ```
-claude "Bu Developer Brief'e göre task/<task-id> için kod üret.
+claude "Bu Agent Prompt'a göre task/<task-id> için kod üret.
 Referanslar: <refs>
 Acceptance Criteria: <liste>
 Kısıt: Test-önce çalış; her AC için önce kırmızı test, sonra geçer kod."
@@ -76,7 +91,7 @@ AI ajanı main'e doğrudan push etmez. Üretir, PR açar; karar insana aittir.
 
 Backend stack: FastAPI + Strawberry GraphQL + SQLAlchemy 2.0/SQLModel + Alembic + PostgreSQL.
 Frontend stack: React + Vite + TanStack Router + TanStack Query.
-Bu stack'in dışına çıkma. Next.js ve Supabase yasaktır.
+Bu stack'in dışına çıkma. Next.js, Supabase, Prisma, Redux ve Flowbite yasaktır.
 
 ### Adım 5 — Uret / Eleştir / Islet ritueli (3'lu)
 
@@ -125,21 +140,21 @@ Platforma yeni katılan bir geliştirici için somut adımlar:
 **0–15 dakika: Ortam hazırlığı**
 
 ```bash
-# Implementation reposunu klonla.
-# Repo URL'si onboarding/org bilgisinden gelir; traceability.repoPath yalnız repo içi yol bilgisidir.
-git clone <implementation-repo-url>
-cd <implementation-repo>
+# Birincil implementation checkout'u.
+cd /Users/karaca/DEV/mimari/platform
 
 # Python ortamı (backend)
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+cd apps/api
+uv run --python 3.12 pytest -q
 
 # Node ortamı (frontend)
-cd apps/frontend && npm install
+cd ../..
+corepack enable
+pnpm install
 
 # Veritabanını kur (Docker ile)
-docker compose up -d db
-alembic upgrade head
+make up
+make health
 ```
 
 **15–30 dakika: actionplan'da gorev sec**
@@ -162,7 +177,7 @@ pytest tests/unit/test_<modül>.py -v
 # Beklenen: FAILED (henüz kod yok)
 
 # Frontend için
-npm run test -- --run <ComponentAdi>.test.tsx
+pnpm test:surface
 # Beklenen: FAILED
 ```
 
@@ -174,7 +189,7 @@ Minimum geçer kodu yaz; testleri yeşile getir. Fazla mühendislik yapma.
 pytest tests/unit/test_<modül>.py -v
 
 # Frontend testleri yeşil mi?
-npm run test -- --run <ComponentAdi>.test.tsx
+pnpm test:surface
 
 # Commit
 git add -A

@@ -1,15 +1,15 @@
 # Task Export Sözleşmesi
 
-Sürüm: 1.0 — 2026-06-29
-Durum: Kanonik
+Sürüm: 1.1 — 2026-07-08
+Durum: Kanonik / uygulanmış
 
 ---
 
 ## Genel Bakış
 
-actionplan'daki "Export this task" işlevi bugün bir TaskNode'un ham JSON dump'ını indirmektedir. Bu sözleşme o ham JSON'u, üç farklı tüketicinin ihtiyacına göre biçimlendirilmiş üç export moduna dönüştüren kuralları tanımlar. Ham JSON bu üç modun ortak ham girdisidir; sözleşme veritabanı şemasına veya uygulama koduna dokunmaz.
+actionplan'daki görev detay ekranı bir TaskNode'u beş ayrı artifact olarak dışa aktarır: Raw JSON, Developer Brief, Agent Prompt, Evidence Patch ve Vobecoder Card.
 
-UI'ya üç export seçeneği eklenmesi ayrı bir iş olarak planlanmalıdır (bkz. DX4 görev kaydı). Bu doküman o işin gereksinimleri için bağlayıcı referanstır.
+Raw JSON tam veri taşıyan kanonik girdidir. Diğer dört artifact aynı veriyi geliştirici, AI ajanı, kanıt geri-yazımı ve kısa vibecoding/vobecoding operasyonu için biçimlendirir. Export katmanı veritabanı şemasını veya implementation reposu kodunu değiştirmez; yalnızca görev sözleşmesini indirilebilir hale getirir.
 
 ---
 
@@ -29,13 +29,15 @@ Aşağıdaki bölümleri sırayla içerir.
 
 Seviye/faz yorumlama kuralları:
 
-| level | phase | Yapılır | Yapılmaz |
-|---|---|---|---|
-| epic | backlog | Kapsam netleştirilir, bağımlılıklar belirlenir | Kod yazılmaz, mimari kararlar verilmez |
-| epic | development | Implementasyon sırası belirlenir, sprint planlanır | Alt görevler atlanarak doğrudan üretime geçilmez |
-| feature | development | Belirtilen repoPath'te belirtilen dosyalara dokunulur | Kapsam dışı modüller değiştirilmez |
-| task | development | Birim + entegrasyon testi yazılır, AC karşılanır | Başka task'ların testleri kırılmaz |
-| task | test-plan | Test senaryoları yazılır, veri hazırlanır | Üretim kodu değiştirilmez |
+| level | doğa metaforu | phase | Yapılır | Yapılmaz |
+|---|---|---|---|---|
+| app | ada | requirements/backlog | Ürün adası, kapsam ve sınır netleştirilir | Kod yazılmaz, alt seviye sözleşmeler atlanmaz |
+| module | dağ | requirements/db-schema | Modül dağı, domain ve entegrasyon sınırı çıkarılır | Doğrudan UI/API implementasyonuna atlanmaz |
+| archetype | kaya | requirements/test-plan | Kaya sözleşmesi, veri modeli ve davranış kuralları netleştirilir | Yeni app/module üretilmez |
+| feature | taş | development | Belirtilen kullanıcı akışı veya yetenek için repoPath'te çalışılır | Kapsam dışı feature değiştirilmez |
+| component | kum | development | UI/API/parça düzeyi test-önce implementasyon yapılır | Başka component'ların davranışı kırılmaz |
+| work_unit | molekül | development/test-qa | İnce yürütme dilimi tamamlanır, test + evidence üretilir | Kanıt olmadan done yapılmaz |
+| micro_step | atom | test-plan/development | Atomik kontrol, test veya küçük değişiklik yapılır | Bir atomdan daha geniş refactor yapılmaz |
 
 **Bağımlılıklar**
 
@@ -109,7 +111,7 @@ Açıkça listelenir. Aşağıdaki öğeler her zaman yasaktır ve görev içeri
 | Alan | Değer |
 |---|---|
 | Format | unified diff / patch dosyası |
-| Hedef branch | `feature/[task.id]-[slug]` |
+| Hedef branch | `task/<task-id>-<slug>` |
 | Commit mesajı formatı | `[task.id] [task.title]: kısa açıklama` |
 
 **Zorunlu testler**
@@ -217,8 +219,30 @@ Geliştirici `platform/apps/customer/models.py` değişikliğini tamamladı, PR 
 
 ---
 
+## Mod 4 — Vobecoder Card Export (Kısa yapıştırılabilir kart)
+
+### Ne zaman kullanılır
+
+Vibecoding/vobecoding akışında geliştiricinin veya operatörün uzun Developer Brief yerine kısa, tek ekranlık bir görev kartı yapıştırması gerektiğinde kullanılır. Bu kart tam sözleşmenin yerine geçmez; hızlı yürütme komutudur.
+
+### İçerik şablonu
+
+Kart aşağıdaki alanları taşır:
+
+| Alan | Açıklama |
+|---|---|
+| Yapıştırılacak prompt | Görev başlığı, actionplan URL'si, workspace kökü, hedef yol, test komutu |
+| Kurallar | Test-önce, küçük değişiklik, yasak stack, main/master push yasağı |
+| Beklenen dosyalar | `traceability.repoPath` değerleri |
+| Çalıştırılacak test | Birincil `traceability.testCommand` |
+| Red flag | Test yoksa, negatif test yoksa, hedef dışı dosya varsa veya AI yalnız açıklama yazdıysa reddet |
+
+`repoPath` veya `testCommand` eksikse kart açık biçimde `NO-GO` üretir. Bu sinyal kod yazmaya başlama izni değildir; eksik traceability alanlarının tamamlanması gerekir.
+
+---
+
 ## Ham JSON Export ile ilişki
 
-Mevcut "Export this task" butonu TaskNode'un tam ham JSON'unu indirir. Bu üç modun tümü o ham JSON'u girdi olarak kullanır; ham JSON hiçbir zaman kaldırılmaz. UI'ya eklenecek üç seçenek (Developer Brief, Agent Prompt, Evidence Update) ham JSON download'un yanına eklenir, onu değiştirmez.
+Raw JSON butonu TaskNode'un tam ham JSON'unu indirir. Developer Brief, Agent Prompt, Evidence Patch ve Vobecoder Card aynı ham veriyi girdi olarak kullanır; ham JSON hiçbir zaman kaldırılmaz.
 
 Ham JSON, özellikle otomasyon pipeline'larında ve CI adımlarında girdi olarak kullanılmaya devam edebilir.

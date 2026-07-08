@@ -20,6 +20,7 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 
 - [task-to-code-contract.md](task-to-code-contract.md) — Bir WBS düğümünün yazılım-teslimat karşılığı: seviye→teslimat, faz→eylem, "şimdi ne yapılır" karar ağacı.
 - [task-export-contract.md](task-export-contract.md) — Görev/JSON dışa aktarım sözleşmesi (tam içerik + çözülmüş bağımlılık URL'leri).
+- [implementation-workspace-manifest.md](implementation-workspace-manifest.md) — Görev exportlarının yönleneceği implementation checkout'u, repo kökleri, komutlar ve yasak stack sınırı.
 - [core-contract-pack.md](core-contract-pack.md) — Çekirdek sözleşme paketi v1 (kapsamlı temel sözleşmeler).
 - [app-distribution-contract.md](app-distribution-contract.md) — Uygulama dağıtım sözleşmesi: global app'in izole/SDK sınırı, paylaşım ve dağıtım kuralları.
 - [icerik-kalite-sozlesmesi.md](icerik-kalite-sozlesmesi.md) — İçerik kalitesi tanımı ("Definition of Deep"): bir boyut ne zaman "yeterli".

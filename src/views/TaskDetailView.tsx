@@ -1,7 +1,13 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
-import { downloadFile, exportTask, getAncestors, nodeStandards } from "@/engine";
+import {
+  type TaskArtifactMode,
+  downloadFile,
+  exportTaskArtifact,
+  getAncestors,
+  nodeStandards,
+} from "@/engine";
 import { cn } from "@/lib/cn";
 import { PRIORITY_LABEL, STATUS_LABEL, hslVar, levelLabel, levelVar } from "@/lib/format";
 import { t } from "@/lib/strings";
@@ -53,6 +59,10 @@ export function TaskDetailView() {
 
   const ancestors = getAncestors(index, node.id).slice(0, -1);
   const color = hslVar(levelVar(node.level));
+  const downloadArtifact = (mode: TaskArtifactMode) => {
+    const artifact = exportTaskArtifact(node, mode, index);
+    downloadFile(artifact.filename, artifact.content, artifact.mime);
+  };
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
@@ -93,14 +103,40 @@ export function TaskDetailView() {
             <Button
               variant="primary"
               size="sm"
+              aria-label={t.actions.exportDeveloperBrief}
+              onClick={() => downloadArtifact("developer-brief")}
+            >
+              <Icon name="ph-file-text" /> {t.actions.exportDeveloperBrief}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={t.actions.exportAgentPrompt}
+              onClick={() => downloadArtifact("agent-prompt")}
+            >
+              <Icon name="ph-robot" /> {t.actions.exportAgentPrompt}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={t.actions.exportVobecoderCard}
+              onClick={() => downloadArtifact("vobecoder-card")}
+            >
+              <Icon name="ph-clipboard-text" /> {t.actions.exportVobecoderCard}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={t.actions.exportEvidencePatch}
+              onClick={() => downloadArtifact("evidence-patch")}
+            >
+              <Icon name="ph-file-arrow-up" /> {t.actions.exportEvidencePatch}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               aria-label={t.a11y.exportTaskAria}
-              onClick={() =>
-                downloadFile(
-                  `${node.wbsCode || node.id}-${node.id}.json`,
-                  exportTask(node, index),
-                  "application/json",
-                )
-              }
+              onClick={() => downloadArtifact("raw-json")}
             >
               <Icon name="ph-export" /> {t.actions.exportTask}
             </Button>

@@ -42,7 +42,19 @@ export {
   deriveBlocks,
 } from "./resolve";
 export type { NodeIndex } from "./resolve";
-export { exportJSON, exportTask, exportCSV, downloadFile, CSV_COLUMNS } from "./exportData";
+export {
+  exportJSON,
+  exportTask,
+  exportDeveloperBrief,
+  exportAgentPrompt,
+  exportEvidencePatch,
+  exportVobecoderCard,
+  exportTaskArtifact,
+  exportCSV,
+  downloadFile,
+  CSV_COLUMNS,
+} from "./exportData";
+export type { TaskArtifactMode } from "./exportData";
 export { importJSON, importCSV, parseCSV } from "./importData";
 export type { ImportResult } from "./importData";
 export {

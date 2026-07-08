@@ -6,9 +6,14 @@ import {
   computeCriticalPath,
   evaluateAgentPolicy,
   evaluateEca,
+  exportAgentPrompt,
   exportCSV,
+  exportDeveloperBrief,
+  exportEvidencePatch,
   exportJSON,
   exportTask,
+  exportTaskArtifact,
+  exportVobecoderCard,
   getAncestors,
   importCSV,
   importJSON,
@@ -168,6 +173,144 @@ describe("export/import round-trip", () => {
       relativeUrl: "/task/dep-a",
     });
     expect(out.references.self.relativeUrl).toBe("/task/solo");
+  });
+
+  it("developer brief görev, workspace, test ve evidence sözleşmesini taşır", () => {
+    const n = node({
+      id: "customer-graphql",
+      title: "Customer GraphQL",
+      slug: "customer-graphql",
+      wbsCode: "2.3.4",
+      phase: "development",
+      deliverables: ["Resolver testleri", "Mutation implementasyonu"],
+      acceptanceCriteria: ["Tenant filtresi zorunlu", "Idempotency anahtarı zorunlu"],
+      traceability: {
+        repoPath: ["apps/api/modules/customer/graphql"],
+        testCommand: ["uv run --python 3.12 pytest apps/api/tests/customer -q"],
+        deployTarget: "staging",
+        implementationStatus: "implemented",
+      },
+      evidence: ["ADR linki okundu"],
+      risks: [
+        { id: "R1", desc: "tenant sızıntısı", severity: "high", mitigation: "tenant testleri" },
+      ],
+    });
+    const brief = exportDeveloperBrief(n);
+
+    expect(brief).toContain("# Developer Brief");
+    expect(brief).toContain("Code-start verdict: GO for code-start");
+    expect(brief).toContain("Local path: `/Users/karaca/DEV/mimari/platform`");
+    expect(brief).toContain("| AC-1 | Tenant filtresi zorunlu |");
+    expect(brief).toContain("pull-request-url");
+    expect(brief).toContain("https://karacaismail.github.io/actionplan/task/customer-graphql");
+  });
+
+  it("agent prompt kod ajanı için izinli yol, yasak stack ve branch sözleşmesini taşır", () => {
+    const n = node({
+      id: "customer-ui",
+      title: "Customer UI",
+      slug: "customer-ui",
+      phase: "development",
+      acceptanceCriteria: ["Liste ekranı tenant verisini gösterir"],
+      traceability: {
+        repoPath: ["apps/web/routes/customer"],
+        testCommand: ["pnpm test:surface"],
+        implementationStatus: "implemented",
+      },
+      dependsOn: ["customer-graphql"],
+    });
+    const idx = new Map([
+      [
+        "customer-graphql",
+        node({ id: "customer-graphql", title: "Customer GraphQL", slug: "customer-graphql" }),
+      ],
+    ]);
+    const prompt = exportAgentPrompt(n, idx);
+
+    expect(prompt).toContain("# Agent Task Contract");
+    expect(prompt).toContain("Code-start verdict: GO for code-start");
+    expect(prompt).toContain("`apps/web/routes/customer`");
+    expect(prompt).toContain(
+      "Do not use forbidden stack: Next.js, Supabase, Prisma, Redux, Flowbite.",
+    );
+    expect(prompt).toContain("Create branch `task/customer-ui-customer-ui`");
+    expect(prompt).toContain("https://karacaismail.github.io/actionplan/task/customer-graphql");
+  });
+
+  it("evidence patch done kapısı için geri-yazma JSON patch taslağı üretir", () => {
+    const n = node({
+      id: "ready-node",
+      title: "Ready Node",
+      slug: "ready-node",
+      traceability: {
+        repoPath: [],
+        testCommand: [],
+        deployTarget: null,
+        implementationStatus: "not-started",
+      },
+    });
+    const out = JSON.parse(exportEvidencePatch(n));
+
+    expect(out.mode).toBe("evidence-update-patch");
+    expect(out.patch).toContainEqual(expect.objectContaining({ op: "add", path: "/evidence/-" }));
+    expect(out.patch).toContainEqual(
+      expect.objectContaining({
+        op: "replace",
+        path: "/traceability/implementationStatus",
+        value: "verified",
+      }),
+    );
+    expect(out.patch).toContainEqual(
+      expect.objectContaining({ op: "add", path: "/traceability/repoPath/-" }),
+    );
+    expect(out.patch).toContainEqual(
+      expect.objectContaining({ op: "replace", path: "/status", value: "done" }),
+    );
+  });
+
+  it("traceability eksikse evidence patch önce traceability alanını ekler", () => {
+    const n = node({ id: "missing-trace", title: "Missing Trace", slug: "missing-trace" });
+    const out = JSON.parse(exportEvidencePatch(n));
+
+    expect(out.patch[0]).toMatchObject({
+      op: "add",
+      path: "/traceability",
+    });
+  });
+
+  it("vobecoder kartı kısa yapıştırılabilir görev sözleşmesi ve NO-GO sinyali verir", () => {
+    const n = node({ id: "no-test", title: "No Test", slug: "no-test" });
+    const card = exportVobecoderCard(n);
+
+    expect(card).toContain("# Vobecoder Task Card");
+    expect(card).toContain("NO-GO: testCommand eksik");
+    expect(card).toContain("NO-GO: repoPath eksik");
+    expect(card).toContain("Yasak stack kullanma: Next.js, Supabase, Prisma, Redux, Flowbite.");
+  });
+
+  it("exportTaskArtifact modlara göre doğru dosya adını ve mime tipini döndürür", () => {
+    const n = node({ id: "artifact", title: "Artifact", slug: "artifact", wbsCode: "1.2" });
+
+    expect(exportTaskArtifact(n, "developer-brief")).toMatchObject({
+      filename: "1.2-artifact-developer-brief.md",
+      mime: "text/markdown",
+    });
+    expect(exportTaskArtifact(n, "agent-prompt")).toMatchObject({
+      filename: "1.2-artifact-agent-prompt.md",
+      mime: "text/markdown",
+    });
+    expect(exportTaskArtifact(n, "evidence-patch")).toMatchObject({
+      filename: "1.2-artifact-evidence-patch.json",
+      mime: "application/json",
+    });
+    expect(exportTaskArtifact(n, "vobecoder-card")).toMatchObject({
+      filename: "1.2-artifact-vobecoder-card.md",
+      mime: "text/markdown",
+    });
+    expect(exportTaskArtifact(n, "raw-json")).toMatchObject({
+      filename: "1.2-artifact-raw.json",
+      mime: "application/json",
+    });
   });
 });
 

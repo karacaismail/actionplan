@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "primaryWorkspaceId": "platform",
+  "workspaces": [
+    {
+      "id": "platform",
+      "name": "Meta Platform",
+      "role": "primary-implementation-repo",
+      "localPath": "/Users/karaca/DEV/mimari/platform",
+      "repoUrl": null,
+      "repoStatus": "local-checkout-no-remote-configured",
+      "defaultBranch": "main",
+      "branchPattern": "task/<task-id>-<slug>",
+      "roots": {
+        "backend": "apps/api",
+        "frontend": "apps/web",
+        "sharedUi": "packages/ui",
+        "infra": "infra"
+      },
+      "stack": {
+        "backend": ["FastAPI", "GraphQL", "PostgreSQL", "SQLAlchemy 2.0", "SQLModel", "Alembic"],
+        "frontend": ["Vite", "React 19", "TypeScript", "TanStack Router", "Radix", "SCSS"],
+        "tooling": ["pnpm 9.12.3", "Python 3.12", "uv", "pytest", "Docker Compose"],
+        "forbidden": ["Next.js", "Supabase", "Prisma", "Redux", "Flowbite"]
+      },
+      "commands": {
+        "setup": [
+          { "cwd": ".", "command": "corepack enable" },
+          { "cwd": ".", "command": "pnpm install" }
+        ],
+        "backendTest": [{ "cwd": "apps/api", "command": "uv run --python 3.12 pytest -q" }],
+        "frontendTest": [
+          { "cwd": ".", "command": "pnpm test:tokens" },
+          { "cwd": ".", "command": "pnpm test:smoke" },
+          { "cwd": ".", "command": "pnpm test:surface" },
+          { "cwd": ".", "command": "pnpm test:storefront" }
+        ],
+        "fullStackLocal": [
+          { "cwd": ".", "command": "make up" },
+          { "cwd": ".", "command": "make health" }
+        ],
+        "defaultVerification": [
+          { "cwd": ".", "command": "make test" },
+          { "cwd": ".", "command": "pnpm test" }
+        ]
+      },
+      "evidence": {
+        "requiredForDone": ["pull-request-url", "ci-run-url", "test-log", "manual-check-note"],
+        "writeBackDoc": "docs/evidence-update-runbook.md"
+      }
+    }
+  ]
+}
