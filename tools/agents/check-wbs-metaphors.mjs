@@ -230,6 +230,7 @@ function checkTrackedText() {
     /^(README\.md|docs\/|src\/|tools\/|tests\/|public\/|reports\/|package\.json$)/.test(file),
   );
   for (const file of files) {
+    if (file === "tools/agents/check-wbs-metaphors.mjs") continue;
     if (file === "public/data/nodes.json") continue;
     let text;
     try {
