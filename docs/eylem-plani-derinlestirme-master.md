@@ -2,6 +2,8 @@
 
 > Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
 
+> Doc-maintainer notu (2026-07-08): Bu master plan içindeki ajan/swarm ifadeleri actionplan dokümantasyon ve plan içeriği üretimi içindir. Codex/actionplan doc-maintainer bu planı platform, kernel, SDK, app-core, module veya app geliştirme izni olarak yorumlamaz; güncel rol sınırı `docs/doc-maintainer-operating-boundary.md` içindedir.
+
 
 Sürüm: 1.0 · Tarih: 2026-06-18 · Hedef repo/klasör: `actionplan/` · Temel commit: `e461e9b`
 

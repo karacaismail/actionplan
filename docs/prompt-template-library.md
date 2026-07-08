@@ -6,6 +6,8 @@ Durum: Referans. `src/data/generated/nodes/*.json` içindeki gerçek `dimensions
 
 Bu kütüphane, bir düğümün 17 üretim boyutundan her birini AI ile doldururken kullanılacak prompt şablonlarını tanımlar. Amaç: her boyut promptunun **somut, bağlama-özgü ve standart-bilinçli** olmasını sağlamak; jenerik çöp üretimini sözleşmeyle yasaklamak.
 
+Doc-maintainer sınırı: Bu şablonlar actionplan düğüm içeriği ve implementation ajan prompt artifact'i içindir. Codex/actionplan doc-maintainer bu şablonu takip ederek platform kodu üretmez; yalnız promptların ve düğüm içeriklerinin geliştiriciye yeterli hale gelmesini sağlar (`docs/doc-maintainer-operating-boundary.md`).
+
 ---
 
 ## 1. Ortak İskelet (Tüm Boyutlar İçin)

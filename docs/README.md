@@ -72,6 +72,7 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [developer-workflow-gap-analysis.md](developer-workflow-gap-analysis.md) — Geliştirici akışı boşluk analizi.
 - [kernel-sdk-app-sequence-gap-report-2026-07-08.md](kernel-sdk-app-sequence-gap-report-2026-07-08.md) — Kernel → SDK → app-core → app module sırası gap raporu ve uygulanan düzeltme.
 - [doc-maintainer-boundary-gap-report-2026-07-08.md](doc-maintainer-boundary-gap-report-2026-07-08.md) — Codex/doc-maintainer rol sınırı denetimi ve uygulanan dokümantasyon düzeltmeleri.
+- [implementation-prompt-boundary-gap-report-2026-07-08.md](implementation-prompt-boundary-gap-report-2026-07-08.md) — Claude/Cursor/vibecoding prompt dokümanlarındaki kalan rol sınırı riskleri ve düzeltmeleri.
 - [execution-readiness-gap.md](execution-readiness-gap.md) — Execution readiness boşluk analizi.
 - [enterprise-dod.md](enterprise-dod.md) — Enterprise-ready uygulama "Definition of Done".
 - [core-enterprise-maturity-ladder.md](core-enterprise-maturity-ladder.md) — Çekirdek kurumsal olgunluk merdiveni: enterprise-hazırlık seviyeleri ve geçiş kapıları.

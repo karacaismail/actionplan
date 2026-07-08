@@ -1,5 +1,7 @@
 # Claude Directive: AI ArcheType + Backend ECA Guardrails
 
+Durum: Güvenlik ve AI-yetki sınırı yönergesi. Bu doküman actionplan içindeki ECA/agentPolicy sözleşmesini tarif eder; Codex/actionplan doc-maintainer için platform kodu yazma talimatı değildir. Implementation tarafına aktarılacaksa geliştirici veya implementation ajan operatörü `developer-guide.md`, `task-export-contract.md` ve `doc-maintainer-operating-boundary.md` sınırlarıyla birlikte kullanır.
+
 ## Current Finding
 
 The current worktree already has structural ECA (`src/engine/eca.ts`) and generated `agentPolicy` data, but the previous policy was too permissive: `tools/gen-rules.mjs` assigned `apply-gated` autonomy to `app` and `module` nodes and generated publish-oriented rules. This conflicts with the security boundary below.

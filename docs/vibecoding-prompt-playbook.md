@@ -5,6 +5,7 @@
 **Kime:** actionplan WBS düğümlerini `platform` monoreposunda gerçek koda çeviren, kalabalık olmayan, "AI kod yazsın ama biz kontrol edelim" diyen küçük ekip.
 **Kaynak/bağlam (REFERANS — kopyalama):** `docs/prompt-template-library.md` (17 üretim boyutu prompt iskeleti — yapıştırılacak prompt deseni buradan gelir), `docs/dod-evidence-schema-directive.md` (yüksek-risk DoD + kanıt + sahte-yeşil tespiti + reddetme ritüeli — kanıt ve red kuralları buraya bağlanır), `docs/task-to-code-contract.md` (seviye→teslimat, faz→eylem, Customer dikey dilimi — hangi seviyede ne teslim edildiği buradan gelir).
 **İlişki:** Bu doküman üç kanonik sözleşmenin **operasyonel yüzüdür**. `prompt-template-library.md` "boyut promptu nasıl yazılır?", `dod-evidence-schema-directive.md` "kanıt yeterli mi, AI çıktısı sahte-yeşil mi?", `task-to-code-contract.md` "bu seviye ne teslim eder?" sorularını yanıtlar; bu playbook üçünü tek bir **çalışma bloğu** halinde birleştirir: bir görev için AI'a ne yapıştırılır, ne beklenir, nasıl reddedilir. Üçüyle çelişmez; çelişki çıkarsa kaynak sözleşme kazanır (özellikle `task-to-code-contract.md` kanoniktir).
+**Doc-maintainer sınırı:** Bu playbook, geliştirici veya implementation ajan operatörü içindir. Codex/actionplan doc-maintainer bu promptları uygulayıp platform kodu üretmez; yalnız playbook'un eksik, çelişkili veya yetersiz dokümantasyonunu düzeltir. Kanonik rol sınırı: `docs/doc-maintainer-operating-boundary.md`.
 
 ---
 

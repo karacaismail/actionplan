@@ -4,6 +4,7 @@ Tarih: 2026-07-02
 Kapsam: `actionplan` WBS/sözleşme deposu, özellikle `level = micro_step` olan atom görevleri.  
 Kullanım: Tarihsel gap raporu ve iyileştirme backlog'u olarak okunur; doğrudan kodlama promptu değildir. Güncel kodlama/handoff kaynağı `docs/developer-guide.md`, `docs/task-export-contract.md`, `docs/implementation-workspace-manifest.md` ve görev detay ekranındaki Developer Brief / Agent Prompt / Vobecoder Card exportlarıdır.
 Amaç: Kernel geliştirildikten sonra atom seviyesindeki görev tanımlarında ne eksik, hangi atom görevleri eksik, hangi bilinmeyen-bilinmeyenler var ve Claude hangi fazlarla ilerlemeli sorularını tek raporda kapatmak.
+Doc-maintainer sınırı: Bu rapordaki Claude/prompt bölümleri implementation operatörü için tarihsel yönlendirmedir. Codex/actionplan doc-maintainer bunları uygulayıp ürün kodu yazmaz; yalnız eksik handoff dokümantasyonunu iyileştirir (`docs/doc-maintainer-operating-boundary.md`).
 
 ---
 

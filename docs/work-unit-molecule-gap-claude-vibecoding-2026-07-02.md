@@ -4,6 +4,7 @@ Tarih: 2026-07-02
 Kapsam: `actionplan` WBS/sözleşme deposu, özellikle `level = work_unit` olan molekül görevleri.  
 Kullanım: Tarihsel gap raporu ve iyileştirme backlog'u olarak okunur; doğrudan kodlama promptu değildir. Güncel kodlama/handoff kaynağı `docs/developer-guide.md`, `docs/task-export-contract.md`, `docs/implementation-workspace-manifest.md` ve görev detay ekranındaki Developer Brief / Agent Prompt / Vobecoder Card exportlarıdır.
 Amaç: Kernel geliştirildikten sonra `work_unit / molekül` seviyesindeki görev tanımlarında ne eksik, hangi work_unit görevleri eksik, hangi bilinmeyen-bilinmeyenler var ve Claude hangi fazlarla ilerlemeli sorularını tek raporda kapatmak.
+Doc-maintainer sınırı: Bu rapordaki Claude/prompt bölümleri implementation operatörü için tarihsel yönlendirmedir. Codex/actionplan doc-maintainer bunları uygulayıp ürün kodu yazmaz; yalnız eksik handoff dokümantasyonunu iyileştirir (`docs/doc-maintainer-operating-boundary.md`).
 
 ---
 
