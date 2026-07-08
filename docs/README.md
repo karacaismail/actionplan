@@ -1,6 +1,6 @@
 # actionplan — Doküman Dizini
 
-Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `docs/` klasörünü açınca bu sayfayı gösterir.) Amaç: hiçbir doküman "fark edilmemiş" kalmasın. Toplam 38 doküman + repo kökünde 4 dosya.
+Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `docs/` klasörünü açınca bu sayfayı gösterir.) Amaç: hiçbir doküman "fark edilmemiş" kalmasın.
 
 **Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `task-to-code-contract.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
 
@@ -25,6 +25,7 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 - [icerik-kalite-sozlesmesi.md](icerik-kalite-sozlesmesi.md) — İçerik kalitesi tanımı ("Definition of Deep"): bir boyut ne zaman "yeterli".
 - [wbs-field-semantics.md](wbs-field-semantics.md) — WBS ilişki alanlarının (dependsOn/blocks/related) anlam sözleşmesi.
 - [ready-for-dev-gate.md](ready-for-dev-gate.md) — Definition of Ready: development fazına geçiş kapısı (10/10).
+- [waterfall-developer-handoff.md](waterfall-developer-handoff.md) — Geliştirici başlayabilir mi sorusunun go/no-go cevabı; plan-start ile code-start ayrımı.
 - [release-policy.md](release-policy.md) — Sürüm/yayın politikası (semver, changelog, rollback).
 - [waiver-policy.md](waiver-policy.md) — Standarttan bilinçli sapmanın (waiver) yaşam döngüsü: gerekçe + onay + süre.
 
@@ -55,6 +56,7 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 ## 5. Rehberler & Runbook'lar
 
 - [developer-guide.md](developer-guide.md) — **Geliştirici rehberi (buradan başla)**: repo nasıl çalışır, akış.
+- [waterfall-developer-handoff.md](waterfall-developer-handoff.md) — Waterfall geliştirici handoff kapısı ve başlangıç koşulları.
 - [evidence-update-runbook.md](evidence-update-runbook.md) — Kanıt (evidence) güncelleme adım adım runbook.
 
 ## 6. Denetim & Boşluk (Gap) Raporları

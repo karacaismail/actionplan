@@ -8,9 +8,9 @@ Bu rehber, actionplan'a bağlantı alan her geliştirici için tek kanonik başl
 ## 1. Buradan Başla
 
 actionplan, uygulama kodu içermeyen, frontend-only bir WBS (Work Breakdown Structure) planlayıcısıdır.
-Görevi, "ne yapılacak"ın kaynak doğruluğunu ve kanıt deposunu tutmaktır.
-Gerçek uygulama kodu burada değil, ayrı bir `platform` monoreposunda yaşar.
-actionplan'daki her düğüm bir planlama nesnesidir; o düğüme karşılık gelen kodu platform monoreposunda yazarsın.
+Görevi, başka projenin enterprise-grade waterfall yol haritasını, geliştirici iş tanımlarını ve teslimat kanıtı disiplinini tutmaktır.
+Gerçek uygulama kodu burada değil, ayrı implementation reposunda yaşar.
+actionplan'daki her düğüm bir planlama nesnesidir; geliştirici burada işi anlar, waterfall fazını yürütür, kod gerekiyorsa ilgili implementation reposunda çalışır.
 
 **Rolünü seç.** Hangi rolde olduğuna karar ver ve aşağıdaki ilgili bölüme git.
 
@@ -36,10 +36,10 @@ Rastgele bir WBS sayfasından başlama. Bağlamı anlamadan koda atlamak yanlı�
 Doğru sıra şudur:
 
 1. Execution veya Gantt görünümünü aç; aktif fazı gör.
-2. Tablo görünümünde `implementationStatus: not-started` ve `readyForDev: true` filtresi uygula.
-3. "Definition of Ready" kapısından geçmiş (ready-for-dev-gate yeşil) bir düğüm seç. Kapıdan geçmemiş görevi alma; eksik bilgiyle başlamak seni daha sonra engelleyecektir.
-4. Düğümü aç, tüm alanları oku: `description`, `acceptanceCriteria`, `coreContractRef`, `traceability.repoPath`, `schedule`, `risks`.
-5. Bir bağımlılık varsa (`dependencies` alanı) önce bağımlılığın tamamlandığını doğrula.
+2. `qa:waterfall` kapısı yeşilse requirements/backlog düğümleri geliştiriciye devredilebilir waterfall tanımı taşır. Bu aşamada `evidence[]`, `repoPath` ve `testCommand` boş olabilir; bunlar gerçek yürütme çıktısıdır.
+3. Kod yazılacak iş arıyorsan yalnız `phase=development` düğümleri için `ready-for-dev` kapısını bekle. Requirements/test-plan/db-schema fazları da geliştirici işidir, fakat bu fazlarda çıktı kod değil; kapsam, test planı, şema kararı ve kanıt beklentisidir.
+4. Düğümü aç, tüm alanları oku: `title`, `summary`, `level`, `phase`, `deliverables`, `acceptanceCriteria`, `risks`, `refs`, `dimensions`, `schedule`, `rollback`.
+5. Bir bağımlılık varsa (`dependsOn` alanı) önce bağımlılığın durumunu doğrula.
 
 Kanonsel ilk dikey dilim Customer'dır: platform-customer-model, platform-customer-graphql, platform-customer-ui, platform-customer-seed sıralamasıyla ilerler. OrderOps ise build referans uygulamasıdır, canlı pilot değil; öğretici bir örnek olarak okunabilir.
 
@@ -51,7 +51,7 @@ Her görev için döngü aynıdır. Aktörler ve sorumluluklar netdir; atlanacak
 
 ### Adım 1 — Hazır görevi al
 
-Readiness kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JSON'unu indir ya da tarayıcıda aç; `coreContractRef` ve `acceptanceCriteria` alanlarını not al.
+Waterfall handoff kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JSON'unu indir ya da tarayıcıda aç; `refs`, `deliverables`, `acceptanceCriteria`, `risks`, `schedule` ve `rollback` alanlarını not al.
 
 ### Adım 2 — Developer Brief export
 
@@ -59,11 +59,11 @@ actionplan'daki "Developer Brief Export" özelliğini kullan. Bu export şunlar�
 
 ### Adım 3 — AI ajana ver (Claude Code)
 
-Brief'i platform monoreposunda Claude Code'a ver. Komut şablonu:
+Brief'i ilgili implementation reposunda Claude Code'a ver. Komut şablonu:
 
 ```
 claude "Bu Developer Brief'e göre task/<task-id> için kod üret.
-Core Contract: <coreContractRef>
+Referanslar: <refs>
 Acceptance Criteria: <liste>
 Kısıt: Test-önce çalış; her AC için önce kırmızı test, sonra geçer kod."
 ```
@@ -72,7 +72,7 @@ AI ajanı main'e doğrudan push etmez. Üretir, PR açar; karar insana aittir.
 
 ### Adım 4 — Test-önce kodla (Core Contract + AC odaklı)
 
-Platform monoreposunda çalış. Her acceptance criterion için önce başarısız testi yaz, sonra geçer kodu üret. Bu ritüeli atlamak CI kapısında takılmanı sağlar.
+İlgili implementation reposunda çalış. Kod fazındaysan her acceptance criterion için önce başarısız testi yaz, sonra geçer kodu üret. Requirements/test-plan/db-schema fazındaysan çıktı kod değil; sözleşme, test planı, şema/migration kararı ve kanıt beklentisidir.
 
 Backend stack: FastAPI + Strawberry GraphQL + SQLAlchemy 2.0/SQLModel + Alembic + PostgreSQL.
 Frontend stack: React + Vite + TanStack Router + TanStack Query.
@@ -101,7 +101,7 @@ PR açıklaması zorunlu bölümler:
 
 ### Adım 7 — CI kapilari
 
-Dört kapı yeşil olmalı: `check-content`, `quality-lint`, `check-data-quality`, `check-execution-readiness`.
+Plan reposunda bu kapılar yeşil olmalı: `check-content`, `quality-lint`, `check-data-quality`, `check-waterfall-handoff`, `check-ready-for-dev`, `check-execution-readiness`.
 Herhangi biri kırmızıysa merge edilmez. Kırmızı kapıyı geç; insan onayı beklemeden önce CI temiz olmalı.
 
 ### Adım 8 — Insan review ve merge
@@ -125,9 +125,10 @@ Platforma yeni katılan bir geliştirici için somut adımlar:
 **0–15 dakika: Ortam hazırlığı**
 
 ```bash
-# Platform monoreposunu klonla (platform repo URL'sini traceability.repoPath alanından al)
-git clone <platform-monorepo-url>
-cd platform
+# Implementation reposunu klonla.
+# Repo URL'si onboarding/org bilgisinden gelir; traceability.repoPath yalnız repo içi yol bilgisidir.
+git clone <implementation-repo-url>
+cd <implementation-repo>
 
 # Python ortamı (backend)
 python -m venv .venv && source .venv/bin/activate
@@ -144,12 +145,12 @@ alembic upgrade head
 **15–30 dakika: actionplan'da gorev sec**
 
 actionplan'ı tarayıcıda aç: `https://karacaismail.github.io/actionplan/`
-Tablo görünümünde `readyForDev: true` filtrele. Customer dikey diliminden en küçük tamamlanmamış görevi seç (genellikle platform-customer-model veya platform-customer-seed).
-Görev JSON'unu oku; `acceptanceCriteria` listesini bir metin editörüne kopyala.
+Execution, Gantt veya Tablo görünümünden owner/priority/criticalPath değerlerine göre sıradaki düğümü seç.
+Requirements fazındaysa kapsam + AC + risk + rollback kontrolü yap; development fazındaysa `repoPath` ve `testCommand` dolu olmalı.
 
 **30–60 dakika: Kirmizi test yaz**
 
-Branch aç:
+Yalnız development fazındaysan branch aç:
 ```bash
 git checkout -b task/<task-id>-<slug>
 ```
@@ -211,11 +212,11 @@ actionplan'ın kendisinde kod değişikliği yapılmaz. actionplan yalnızca pla
 
 Kod şu hiyerarşiye göre yazılır:
 
-- Core katman (auth, DB, AppFactory, tenant izolasyonu): platform monoreposunun `core/` dizininde.
-- Uygulama modülleri (Customer, OrderOps vb.): platform monoreposunun `apps/<app-slug>/` dizininde.
-- Shared kütüphaneler (ortak tipler, schema araçları): platform monoreposunun `packages/` dizininde.
+- Core katman (auth, DB, AppFactory, tenant izolasyonu): implementation reposunun `core/` dizininde.
+- Uygulama modülleri (Customer, OrderOps vb.): implementation reposunun `apps/<app-slug>/` dizininde.
+- Shared kütüphaneler (ortak tipler, schema araçları): implementation reposunun `packages/` dizininde.
 
-Hangi dosyanın nereye gittiği task-to-code-contract.md ve core-contract-pack.md belgelerinde tanımlanmıştır. Bu sözleşmeleri ihlal eden PR CI'da reddedilir.
+Hangi seviyede kod yazılıp yazılmayacağı task-to-code-contract.md ve core-contract-pack.md belgelerinde tanımlanmıştır. Bu sözleşmeleri ihlal eden PR CI'da reddedilir.
 
 ---
 
@@ -230,13 +231,14 @@ Bu rehber, actionplan ekosisteminin genel bakışıdır. Ayrıntılar için:
 | `docs/task-export-contract.md` | Developer Brief export JSON şeması |
 | `docs/evidence-update-runbook.md` | PR merge sonrası kanıtı plana geri yazma ritüeli |
 | `docs/ready-for-dev-gate.md` | Definition of Ready kapısı kriterleri |
+| `docs/waterfall-developer-handoff.md` | Bu repo kapsamındaki go/no-go kararı ve geliştirici başlangıç sözleşmesi |
 
 ---
 
 ## 8. Sikca Sorular
 
 **actionplan'daki bir görevin kodunu bulamıyorum, nerede?**
-Görev JSON'undaki `traceability.repoPath` alanına bak. Bu alan platform monoreposundaki yolu işaret eder.
+Görev `requirements`, `test-plan` veya `db-schema` fazındaysa kod henüz beklenmez; önce faz çıktısını üret. `development` fazındaki görevlerde `traceability.repoPath` implementation reposu içindeki yolu işaret eder.
 
 **Bir kapı sürekli kırmızı; ne yapmalıyım?**
 CI logunu oku, hangi kontrol başarısız olduğunu bul. `check-data-quality` genellikle eksik alan, `check-execution-readiness` genellikle eksik bağımlılık gösterir. Sorunu görev JSON'unda çöz, ardından tekrar dene.

@@ -1,126 +1,93 @@
-# Definition of Ready — Development Fazı Kapısı
+# Definition of Ready — Code-Start Kapısı
 
-Sürüm: 1.0 — 2026-06-29
+Sürüm: 1.1 — 2026-07-08
 Durum: Kanonik
-
----
 
 ## Genel Bakış
 
-Bu doküman, bir TaskNode'un `development` fazına geçmeden önce karşılaması gereken zorunlu koşulları tanımlar. Bu koşullar üç yerde uygulanır: planlama toplantısında manuel kontrol, `check-ready-for-dev.mjs` aracıyla makine kapısı, CI pipeline'a bağlı otomatik engel.
+Bu doküman, bir TaskNode'un **kod yazma aşamasına** geçmeden önce karşılaması gereken zorunlu koşulları tanımlar.
 
-"Hazır" tanımı olmadan geliştirme fazına alınan görevler orta sprint'te bloke olur, kapsam kayar ve faz kapıları anlamsızlaşır. Bu doküman o kaymanın önüne geçen bağlayıcı kuraldır.
+Önemli ayrım:
 
----
+- `check-waterfall-handoff.mjs`: tüm düğümlerin geliştiriciye devredilebilir waterfall plan tanımı taşıdığını kontrol eder.
+- `check-ready-for-dev.mjs`: yalnız `phase=development` düğümlerinde code-start koşullarını kontrol eder.
+- `check-execution-readiness.mjs`: dev+ ve done aşamalarında kanıt ve yürütme koşullarını kontrol eder.
 
-## 1. Zorunlu Alanlar
+Bu yüzden requirements/backlog aşamasında `evidence[]`, `repoPath` veya `testCommand` boşluğu blocker değildir. Bu alanlar ancak gerçek test-plan/development yürütmesi başladığında doldurulur.
 
-Bir görev development fazına alınmadan aşağıdaki alanların tümü dolu olmalıdır. Tek bir eksik alan görevi geçersiz kılar.
+## 1. Code-Start Zorunlu Alanları
 
-Alanlar, TaskNode şemasındaki karşılıklarıyla listelenmektedir.
+Bir düğüm `phase=development` olduğunda aşağıdaki alanlar zorunludur:
 
 | Alan | TaskNode yolu | Kural |
 |---|---|---|
-| Sahip | `owner` | Boş olamaz; geçerli bir ekip üyesi kimliği olmalı |
-| Repo yolu | `traceability.repoPath` | Monorepo içinde var olan bir dizin yolu olmalı |
-| Test komutu | `traceability.testCommand` | Çalıştırılabilir bir komut; yerel ortamda en az bir kez geçmiş olmalı |
-| Uygulama artifact | `traceability.repoPath` + `deliverables` | En az 1 somut implementasyon çıktısı (dosya, migration, endpoint vb.) |
-| Kabul kriterleri | `acceptanceCriteria` | En az 1 kriter; ölçülebilir, test edilebilir ifade olmalı |
-| Bağımlılıklar | `dependsOn` | Tümü `done` durumunda VEYA her biri için bilinçli "waived" kararı kayıtlı olmalı |
-| Rollback | `risks` veya `notes` | Neyin nasıl geri alınacağı açıklanmış olmalı |
-| Üst deliverable bağı | `phase` hiyerarşisi | Bu görevin hangi epic/feature deliverable'ına katkı sağladığı belirli olmalı |
-| Branch adı önerisi | `traceability` veya `notes` | `feature/[task.id]-[slug]` formatında önerilmiş olmalı |
-| Beklenen kanıt listesi | `acceptanceCriteria` veya ilgili `phases[*].criteria` | Done kapısında üretilecek kanıt türleri önceden tanımlı olmalı; `evidence[]` yalnız gerçek çalıştırma çıktısı/URL/yol için kullanılır |
+| Repo yolu | `traceability.repoPath[]` | Implementation reposu içindeki hedef yol veya yollar dolu olmalı |
+| Test komutu | `traceability.testCommand[]` | Bu düğümü doğrulayacak komut veya komutlar dolu olmalı |
+| Uygulama durumu | `traceability.implementationStatus` | `not-started` olamaz; `scaffolded`, `in-progress`, `implemented` veya `verified` olmalı |
 
-### Bağımlılık waiver kuralı
+`repoPath` gerçek dosya sisteminde var mı kontrolü actionplan CI'ının işi değildir; bu kontrol implementation reposunun CI'ında yapılır. actionplan yalnızca plan düğümünün code-start için yeterli izlenebilirlik taşımasını zorlar.
 
-`dependsOn` listesindeki bir görev `done` değilse, bağımlılık otomatik olarak engel oluşturur. Engelin kaldırılması için görev sahibinin `notes` alanına tarih ve gerekçesiyle birlikte "waived" kararını kaydetmesi zorunludur. Gerekçesiz waiver geçersizdir.
+## 2. Makine Kapısı
 
----
+Komut:
 
-## 2. readyForDev Türetilmiş Alan ve Skor
-
-`check-ready-for-dev.mjs` aracı her TaskNode için aşağıdaki tablodaki alanları kontrol eder ve bir toplam skor hesaplar. Her alan 1 puan değerindedir. 10 alan kontrolü yapılır; 10/10 yeşil, herhangi bir eksik kırmızıdır. Kısmi skor kabul edilmez.
-
-| No | Kontrol edilen alan | Yeşil koşul | Kırmızı koşul |
-|---|---|---|---|
-| 1 | `owner` | Dolu | Boş veya null |
-| 2 | `traceability.repoPath` | Dolu ve monorepo'da mevcut | Boş veya yanlış yol |
-| 3 | `traceability.testCommand` | Dolu | Boş |
-| 4 | `deliverables` | En az 1 öğe | Boş dizi |
-| 5 | `acceptanceCriteria` | En az 1 öğe | Boş dizi |
-| 6 | `dependsOn` bağımlılık durumu | Tümü done veya waived | En az 1 açık bağımlılık |
-| 7 | `risks` veya `notes` rollback | Rollback içeren kayıt var | Hiç rollback bilgisi yok |
-| 8 | Üst deliverable bağı | Parent epic/feature done ya da active | Orphan görev (parent yok) |
-| 9 | Branch adı önerisi | `traceability` veya `notes`'ta mevcut | Hiç belirtilmemiş |
-| 10 | Beklenen kanıt listesi | `acceptanceCriteria` veya ilgili faz kriterlerinde en az 1 kanıt beklentisi var | Kanıt beklentisi hiç belirtilmemiş |
-
-`readyForDev` alanı araç tarafından türetilir; doğrudan veritabanına yazılmaz. Her kapı çalıştırmasında hesaplanır.
-
----
-
-## 3. UI "Ready to Code" Kuyruğu Önerisi
-
-actionplan arayüzüne aşağıdaki UI öğelerinin eklenmesi önerilmektedir. Bu öneri ayrı bir iş olarak planlanmalıdır.
-
-**Ready to Code kuyruğu:** Yalnızca `readyForDev` skoru 10/10 olan ve `phase = development` olan görevleri listeleyen bir filtreli görünüm. Geliştirici sabah çalışmaya başlarken tek bir bakışla alınabilecek işleri görür.
-
-**Doğrudan kodlama değil uyarısı:** `phase` değeri `backlog`, `db-schema` veya `test-plan` olan görevler kuyrukta görünmez. Bu fazlardaki görevlerin kart görünümüne "Bu görev doğrudan kodlama gerektirmez — önce [phase] çıktısı tamamlanmalıdır" uyarısı eklenir.
-
-**App/module backlog uyarısı:** Bir görevin `deliverables` listesinde "yeni uygulama" veya "yeni modül" ifadesi geçiyorsa, o görev otomatik olarak `backlog` fazında kilitlenir ve "Bu görev development fazına alınmadan mimari onay gerektirir" etiketi gösterilir. Bu kural, AI ajanın veya geliştiricinin kapsam dışı modül üretmesini önleyen UI katmanı destekçisidir.
-
----
-
-## 4. Makine Kapısı — check-ready-for-dev.mjs
-
-Bu araç `tools/agents/check-ready-for-dev.mjs` yolunda oluşturulacaktır. Mevcut `check-execution-readiness.mjs` aracının yanına eklenir; onu değiştirmez.
-
-Araç aşağıdaki işlevi yerine getirir.
-
-**Girdi:** Tek bir TaskNode JSON nesnesi veya `platform-content/*.json` dosyasından yüklenen düğüm listesi.
-
-**Kontrol kapsamı:** Yalnızca `phase = development` olan düğümler değerlendirilir. Diğer fazlar atlanır; uyarı üretilmez.
-
-**Çıktı formatı:** Her düğüm için aşağıdaki yapıda çıktı üretir.
-
-```
-[PASS] task-id: "Görev başlığı" — 10/10 hazır
-[FAIL] task-id: "Görev başlığı" — 7/10 hazır
-  Eksik: traceability.repoPath, acceptanceCriteria, dependsOn[1] açık
+```bash
+node tools/agents/check-ready-for-dev.mjs
 ```
 
-**Çıkış kodu:** En az bir FAIL varsa araç exit kodu 1 ile çıkar. CI bu kodu engel olarak yorumlar.
+Kapsam:
 
-**CI bağlantısı:** Araç `npm test` ve GitHub Actions CI pipeline'ına bağlanır. Development fazına yeni düğüm ekleyen her commit bu kapıyı tetikler. Kapıyı geçemeyen commit merge edilemez.
+- `phase != development` olan düğümler atlanır.
+- `phase=development` olan her düğüm için üç zorunlu alan kontrol edilir.
+- En az bir ihlal varsa exit code `1` döner ve CI kırılır.
 
-**npm test bağlantısı:** `package.json` scripts bölümüne aşağıdaki satır eklenir:
+Örnek çıktı:
 
-```json
-"check:ready": "node tools/agents/check-ready-for-dev.mjs"
+```text
+[ready-for-dev] development fazı: 0 düğüm · ihlal: 0
+SONUÇ: YEŞİL ✓ — development düğümleri repoPath+testCommand+implementationStatus taşıyor.
 ```
 
-Bu komut `npm test` zincirinin bir parçası haline getirilir. Yerel geliştirici de commit öncesinde aynı kapıyı çalıştırabilir.
+Development fazında düğüm yoksa bu sonuç doğrudur. Bu durum "ürün kodu tamamlandı" anlamına gelmez; yalnızca henüz code-start fazına alınmış düğüm olmadığını gösterir.
 
-**check-execution-readiness.mjs ile ilişki:** Mevcut araç done kapısını ve execution readiness'ı kontrol eder. Yeni araç yalnızca "geliştirmeye başlanabilir mi?" sorusunu yanıtlar. İkisi birbirini tamamlar; çakışan kontrol yoktur.
+## 3. Waterfall-Start İle Farkı
 
----
+Geliştiricinin waterfall çalışmasına başlaması için code-start kapısı gerekmez. Requirements, test-plan ve db-schema fazlarında geliştirici şunları üretir:
 
-## 5. Faz Geçiş Kuralları
+- kapsam ve dahil/dahil değil kararı
+- kabul kriterleri
+- risk ve rollback netliği
+- test stratejisi
+- şema/migration kararı
+- evidence beklentisi
 
-Bir görev bir fazdan bir sonrakine geçerken DoR eşiğinin karşılanmış olması beklenir. Geçiş aşağıdaki sırayı izler.
+Bu plan-start koşulları `check-waterfall-handoff.mjs` ile korunur.
 
-`backlog` veya `db-schema` fazındaki bir görev `test-plan` fazına geçmeden önce şunlar tamamlanmış olmalıdır: kapsam netleştirilmiş (`acceptanceCriteria` taslağı var), bağımlılıklar tanımlanmış (`dependsOn` dolu), sorumlu belirlenmiş (`owner` dolu).
+## 4. Done Kapısıyla Farkı
 
-`test-plan` fazındaki bir görev `development` fazına geçmeden önce Section 1'deki tüm zorunlu alanlar eksiksiz dolu olmalıdır. `check-ready-for-dev.mjs` kapısı 10/10 skoru döndürmelidir. Bu koşul sağlanmadan faz geçişi reddedilir.
+Bu kapı "başlanabilir mi?" sorusunu yanıtlar. "Bitti mi?" sorusunu yanıtlamaz.
 
-`development` fazındaki bir görev `done` statüsüne geçmeden önce mevcut `check-execution-readiness.mjs` kapısı çalışır: evidence kaydı, verification linki, `implementationStatus = complete` koşulları aranır.
+Bir düğüm `status=done` olduğunda `check-execution-readiness.mjs` devreye girer ve şunları zorlar:
 
-Faz geçiş özeti:
+- `evidence[]` dolu
+- verification fazı geçmiş
+- dev+ fazlarda owner, refs, schedule, AC ve rollback dolu
 
-| Kaynak faz | Hedef faz | Gerekli eşik |
-|---|---|---|
-| backlog / db-schema | test-plan | owner + dependsOn tanımlı + AC taslak |
-| test-plan | development | Section 1 tüm alanlar + check-ready-for-dev 10/10 |
-| development | done | check-execution-readiness done kapısı |
+Kanıtsız done yasaktır; fakat requirements aşamasında kanıt boşluğu doğaldır.
 
-Bu üç eşik birbirini kesmez ve sıralıdır; bir eşiği atlayarak bir sonrakine geçilemez.
+## 5. Go/No-Go
+
+Kod yazmaya başla:
+
+- Düğüm `phase=development`.
+- `check-ready-for-dev.mjs` yeşil.
+- Bağımlılık veya blocked durumu yok.
+
+Kod yazmaya başlama:
+
+- Düğüm requirements, test-plan veya db-schema fazında.
+- `repoPath` veya `testCommand` eksik.
+- `implementationStatus=not-started`.
+- Düğüm blocked.
+
+Bu karar, `docs/waterfall-developer-handoff.md` içindeki plan-start kararıyla birlikte okunmalıdır.

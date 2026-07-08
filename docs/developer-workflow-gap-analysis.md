@@ -1,6 +1,6 @@
 # Developer Workflow Gap Analizi — Durum Raporu
 
-**Tarih:** 2026-06-29 (DX1-DX5 sonrası güncellendi)
+**Tarih:** 2026-07-08 (waterfall handoff sonrası güncellendi)
 **Kapsam:** actionplan — "görev sayfasından gerçek ürün koduna geçiş" boşluk analizi ve KAPATMA DURUMU
 **Durum:** main; tüm kapılar yeşil. Bu belge iki bağımsız analizi (Claude + ChatGPT) tek çelişkisiz rapora birleştirir ve her boşluğun GÜNCEL durumunu işaretler.
 
@@ -10,13 +10,13 @@
 - **AÇIK (yürütme)** — actionplan'ın işi değil; gerçek platform kodunun yazılması (planlama değil, uygulama adımı).
 - **AÇIK (girdi/opsiyonel)** — küçük; senin GitHub kurulumun gerekiyor ya da opsiyonel UI iyileştirmesi.
 
-> Özet: Boşlukların **plan tarafı DX1-DX5'te kapatıldı**. Geriye kalan tek esas katman, **platform kodunun yazılması** (Wave 0 — yürütme). Bu doküman bunu açıkça ayırır; "tamamlandı mı?" sorusunun cevabı her madde için aşağıdadır.
+> Özet: Boşlukların **plan tarafı kapatıldı**. actionplan ürün kodu değil; başka projenin enterprise-grade waterfall yol haritası ve geliştirici iş tanımı deposudur. Geriye kalan esas katman, implementation reposunda kodun yazılmasıdır (Wave 0 — yürütme).
 
 ---
 
 ## 1. Kısa Sonuç
 
-actionplan "NE yapılacak"ı 437 düğüm + 14 boyutla tanımlar. "NASIL yapılacak" boşluğu (görevden koda giden döngü, görev↔kod sözleşmesi, Core Contract, giriş noktası) **DX1-DX5'te yazıldı ve sevk edildi**: 7 kanonik runbook, `check-ready-for-dev` kapısı ve task-detayındaki "Şimdi ne yapılır?" paneli. Açık kalan tek esas katman, Core Contract'ın **gerçek kod iskeletine** dönüşmesidir (platform monorepo) — bu bir planlama boşluğu değil, planın yürütülmesidir.
+actionplan "NE yapılacak"ı 467 düğüm + 17 boyutla tanımlar. Görevden waterfall yürütmeye geçiş boşluğu kapalıdır: `developer-guide`, `task-to-code-contract`, `ready-for-dev-gate`, `evidence-update-runbook` ve `waterfall-developer-handoff` birlikte plan-start ile code-start ayrımını tanımlar. Açık kalan gerçek kod iskeleti, actionplan planlama boşluğu değil, implementation reposunda yürütülecek Wave 0 işidir.
 
 ---
 
@@ -24,13 +24,15 @@ actionplan "NE yapılacak"ı 437 düğüm + 14 boyutla tanımlar. "NASIL yapıla
 
 | Metrik | ChatGPT Raporu (eski — geçersiz) | Güncel (main) |
 |---|---|---|
-| Toplam düğüm | 437 | 437 |
-| Owner dolu | 411/437 | 437/437 |
-| Evidence/traceability | 0 | done'lar + pilotlar kanıtlı; 18+ düğümde traceability |
-| Schedule dolu | kısmen | 437/437 |
-| Rollback dolu | 13 | 437/437 |
+| Toplam düğüm | 437 | 467 |
+| Üretim boyutu | 14 | 17 |
+| Owner dolu | 411/437 | 467/467 |
+| Evidence/traceability | 0 | requirements/backlog için blocker değil; done/development kapılarında zorunlu |
+| Schedule dolu | kısmen | 467/467 |
+| Phase criteria dolu | kısmen | 467/467 |
+| Rollback dolu | 13 | 467/467 |
 | quality-lint | kırmızı | yeşil |
-| Kapılar | — | check-content/ruleset/surface/data-quality/execution-readiness/**ready-for-dev** hepsi yeşil |
+| Kapılar | — | check-content/ruleset/surface/data-quality/execution-readiness/ready-for-dev/**waterfall-handoff** yeşil |
 
 ChatGPT raporundaki owner-411, evidence-0, lint-kırmızı verileri merge öncesidir ve **geçersizdir**.
 
@@ -57,9 +59,9 @@ Düğüm promptlarının içerik-üretim olduğu, kod-üretim talimatının ayr�
 
 ## 4. En Kritik Boşluk: Kernel/Core — **SPEC KAPANDI / KOD AÇIK (yürütme)**
 
-`docs/core-contract-pack.md` 10 çekirdek sözleşmeyi (tenancy/authz/event-bus/ECA/audit/registry/migration/observability/module-SDK) + stub imzalarını + repo kararını (platform monorepo) + "Hello Platform" iskelet tarifini **spec olarak tanımlar**.
+`docs/core-contract-pack.md` 10 çekirdek sözleşmeyi (tenancy/authz/event-bus/ECA/audit/registry/migration/observability/module-SDK) + stub imzalarını + implementation repo kararını + "Hello Platform" iskelet tarifini **spec olarak tanımlar**.
 
-**Açık kalan:** bu sözleşmenin **gerçek kod stub'ları** (AppBase, JWTMiddleware, AppFactory.bootstrap, TenantContext) henüz yazılmadı — çünkü platform monorepo'su henüz inşa edilmedi. Bu, actionplan'ın (planlayıcı) işi değildir; **planın yürütülmesidir** (Wave 0). `check-ready-for-dev` kapısı, uygulama bağı (repoPath/testCommand) olmadan bir düğümün development fazına geçmesini engelleyerek bu sırayı zorlar.
+**Açık kalan:** bu sözleşmenin **gerçek kod stub'ları** (AppBase, JWTMiddleware, AppFactory.bootstrap, TenantContext) implementation reposunda yazılacaktır. Bu, actionplan'ın (planlayıcı) işi değildir; **planın yürütülmesidir** (Wave 0). `check-ready-for-dev` kapısı, uygulama bağı (repoPath/testCommand) olmadan bir düğümün development fazına geçmesini engelleyerek bu sırayı zorlar.
 
 ---
 
@@ -76,15 +78,15 @@ Düğüm promptlarının içerik-üretim olduğu, kod-üretim talimatının ayr�
 
 | # | Bilinmeyen | Durum | Kapatan / Not |
 |---|---|---|---|
-| 1 | Repo konumu | KAPANDI | core-contract-pack (platform monorepo + dizin) + developer-guide |
+| 1 | Repo konumu | KAPANDI | core-contract-pack (implementation repo + dizin) + developer-guide |
 | 2 | Seviye/kodlama anlamı | KAPANDI | task-to-code-contract (seviye→teslimat) |
 | 3 | Prompt ↔ gereksinim karışması | KAPANDI | task-export-contract + task-to-code-contract; panel |
-| 4 | Core/Kernel iskeleti | SPEC KAPANDI / **KOD AÇIK (yürütme)** | core-contract-pack spec; kod = platform repo |
+| 4 | Core/Kernel iskeleti | SPEC KAPANDI / **KOD AÇIK (yürütme)** | core-contract-pack spec; kod = implementation repo |
 | 5 | Export agent sözleşmesi | KAPANDI | task-export-contract (3 mod) |
 | 6 | Definition of Ready | KAPANDI | ready-for-dev-gate.md + check-ready-for-dev kapısı |
 | 7 | Evidence geri-yazma ritüeli | KAPANDI | evidence-update-runbook + done-evidence kapısı |
 | 8 | Deep-link 404 | BİLİNİYOR (dokümante) | developer-guide: kökten gez; 404 status ama tarayıcı render eder (GitHub Pages SPA). Otomatik 200 = HashRouter (büyük değişiklik, ertelendi) |
-| 9 | "Bugün ne yapmalıyım?" kuyruğu | KISMEN | ready-for-dev kapısı + panel + Yürütme görünümü kapsar; ayrı "ready queue" görünümü = opsiyonel iyileştirme |
+| 9 | "Bugün ne yapmalıyım?" kuyruğu | KAPANDI (sözleşme) | waterfall-developer-handoff + developer-guide + Execution/Gantt görünümü; ayrı filtreli UI opsiyonel |
 | 10 | Ekip→GitHub eşlemesi | AÇIK (girdi) | CODEOWNERS var; team-id→GitHub-handle eşlemesi senin GitHub org/takım kurulumunu gerektirir |
 | 11 | Modül↔kod bağımlılığı | KAPANDI | task-to-code-contract (deps→import/migration sırası) |
 | 12 | 50+ uygulama dalga planı | KAPANDI | §7d (Wave 0-4) |
@@ -105,12 +107,15 @@ Düğüm promptlarının içerik-üretim olduğu, kod-üretim talimatının ayr�
 | `docs/task-export-contract.md` | ✓ main'de |
 | `docs/ready-for-dev-gate.md` | ✓ main'de |
 | `docs/evidence-update-runbook.md` | ✓ main'de |
+| `docs/waterfall-developer-handoff.md` | ✓ main'de |
 
 ### 7b. CI Kapısı — ÜRETİLDİ ✓ (kapsam uyarlandı)
 
-`tools/agents/check-ready-for-dev.mjs` üretildi ve CI + `npm test` + `qa:ready` script'ine bağlandı. Zorladığı: **development fazındaki düğüm → traceability.repoPath + testCommand + implementationStatus (≠ not-started)**.
+`tools/agents/check-ready-for-dev.mjs` üretildi ve CI + `qa:ready` script'ine bağlandı. Zorladığı: **development fazındaki düğüm → traceability.repoPath + testCommand + implementationStatus (≠ not-started)**.
 
-> Uyarlama notu: Bu kapının ilk taslağında geçen "Core Contract stub dosyalarının VARLIĞINI kontrol et" maddesi, dosyalar **platform monorepo'sunda** yaşadığı için actionplan CI'sında uygulanamaz; o kontrol platform reposunun CI'sına aittir (`check-core-contract.mjs`, platform repo kurulunca). actionplan tarafı, planın uygulamaya hazır olduğunu (repoPath/testCommand) doğrular.
+`tools/agents/check-waterfall-handoff.mjs` üretildi ve CI + `qa:waterfall` script'ine bağlandı. Zorladığı: **tüm düğümler → owner + schedule + phase criteria + deliverables + acceptanceCriteria + risks + rollback + refs + 17 boyut**. Bu kapı evidence/repoPath/testCommand boşluğunu requirements/backlog aşamasında blocker saymaz; o alanlar gerçek yürütme fazlarında ayrı kapılarla zorlanır.
+
+> Uyarlama notu: Bu kapının ilk taslağında geçen "Core Contract stub dosyalarının VARLIĞINI kontrol et" maddesi, dosyalar implementation reposunda yaşadığı için actionplan CI'sında uygulanamaz; o kontrol implementation reposunun CI'sına aittir. actionplan tarafı, planın uygulamaya hazır olduğunu (repoPath/testCommand) doğrular.
 
 ### 7c. UI Paneli — ÜRETİLDİ ✓
 Task-detayında "Şimdi ne yapılır?" paneli (seviye/faz-duyarlı yönerge, kod yazılır/yazılmaz, branch/repo/test ipucu, DoR-eksik uyarısı, Geliştirici Rehberi linki).
@@ -139,7 +144,7 @@ Her uygulama/dikey dilim şu durumlardan geçer; geçişler kanıt-zorunludur:
 | verified | Kanıtlı | evidence dolu + verification fazı passed | phase=verification, status=done |
 | production | Yayında | deploy kanıtı + rollback testli | release-maintenance, evidence: deploy URL |
 
-Bu makine `status`, `phase` ve `traceability.implementationStatus` alanlarının birleşiminden türetilir; ileride `check-state-machine.mjs` ile (platform repo evidence'ıyla birlikte) zorlanabilir.
+Bu makine `status`, `phase` ve `traceability.implementationStatus` alanlarının birleşiminden türetilir; ileride implementation repo evidence'ıyla birlikte zorlanabilir.
 
 ---
 
@@ -147,10 +152,10 @@ Bu makine `status`, `phase` ve `traceability.implementationStatus` alanlarının
 
 "Nasıl" boşluğunun **plan tarafı kapatıldı**: yürütme döngüsü yazıldı (3a), kod-üretim sözleşmesi tanımlandı (3b), giriş noktası eklendi (3c), geri-yazma ritüeli belgelendi (3d), görev↔kod semantiği yazıldı (3e), Core Contract spec'lendi (4), durum makinesi + dalga planı tanımlandı (7d/7e). İlk-dilim çelişkisi çözüldü (5).
 
-**Açık kalan tek esas katman:** Core Contract'ın gerçek **kod iskeletine** dönüşmesi (platform monorepo, Wave 0). Bu bir planlama eksiği değil; planın **yürütülmesidir** — ve yeni kapılar (`check-ready-for-dev`, `check-execution-readiness`) kanıtsız/hazırlıksız ilerlemeyi engelleyerek bu yürütmeyi disipline eder.
+**Açık kalan tek esas katman:** Core Contract'ın gerçek **kod iskeletine** dönüşmesi (implementation repo, Wave 0). Bu actionplan planlama eksiği değil; planın **yürütülmesidir**. Yeni kapılar (`check-waterfall-handoff`, `check-ready-for-dev`, `check-execution-readiness`) plan-start, code-start ve done ayrımını ayrı ayrı korur.
 
-Küçük açık maddeler: deep-link 200 (HashRouter — ertelendi, §6.8), ekip→GitHub handle eşlemesi (senin org kurulumun, §6.10), opsiyonel "ready queue" görünümü (§6.9).
+Küçük açık maddeler: deep-link 200 (HashRouter — ertelendi, §6.8) ve ekip→GitHub handle eşlemesi (org kurulumu, §6.10). Bunlar geliştiricinin waterfall çalışmasına başlamasını engellemez.
 
 ---
 
-*Bu belge DX1-DX5'te üretildi ve main'e sevk edildi. Bir sonraki gerçek adım: platform monorepo iskeletini Core Contract v1'e göre kurmak (Wave 0).*
+*Bu belge 2026-07-08'de 467 düğüm / 17 boyut gerçekliğine göre güncellendi. Bir sonraki gerçek adım: implementation repo Wave 0 işlerini Core Contract v1'e göre yürütmek.*

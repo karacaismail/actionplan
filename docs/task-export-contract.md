@@ -66,7 +66,7 @@ Seviye/faz yorumlama kuralları:
 
 Seviye: task | Faz: development | Sahip: [owner] | Durum: in-progress
 
-Bu görev platform monorepo'da [repoPath] yolundaki modülü etkiler.
+Bu görev implementation repo'da [repoPath] yolundaki modülü etkiler.
 Yapılmayacaklar: başka tenant modüllerine dokunulmaz, migration dışı DDL çalıştırılmaz.
 ```
 
@@ -180,9 +180,9 @@ Aşağıdaki alanları patch işlemi olarak içerir:
 | Patch yolu | Kaynak | Açıklama |
 |---|---|---|
 | `/evidence/-` | Geliştirici/ajan girişi | PR linki, commit hash, test sonucu |
-| `/traceability/repoPath` | Gerçek repo yolu | Uygulama sırasında netleşen yol |
-| `/traceability/testCommand` | Çalışan komut | Doğrulanmış test komutu |
-| `/traceability/implementationStatus` | `partial` / `complete` | Uygulama durumu |
+| `/traceability/repoPath/-` | Gerçek repo yolu | Uygulama sırasında netleşen repo-içi yol |
+| `/traceability/testCommand/-` | Çalışan komut | Doğrulanmış test komutu |
+| `/traceability/implementationStatus` | `implemented` / `verified` | Uygulama durumu |
 | `/schedule/actualStart` | ISO 8601 | Gerçek başlangıç tarihi |
 | `/schedule/actualEnd` | ISO 8601 | Gerçek bitiş tarihi |
 | `/status` | `done` / `in-progress` | Yeni durum |
@@ -194,7 +194,7 @@ Aşağıdaki alanları patch işlemi olarak içerir:
 | Patch yolu | Beklenen değer |
 |---|---|
 | `/evidence` | done kapısı için en az 1 kayıt |
-| `/traceability/implementationStatus` | `complete` |
+| `/traceability/implementationStatus` | `verified` |
 | `/traceability/deployTarget` | Hedef ortam |
 
 **Taslak patch formatı**
@@ -202,12 +202,11 @@ Aşağıdaki alanları patch işlemi olarak içerir:
 ```json
 [
   { "op": "add",     "path": "/evidence/-",
-    "value": { "type": "pr", "ref": "https://github.com/org/platform/pull/42",
-               "timestamp": "2026-06-29T14:00:00Z" } },
-  { "op": "replace", "path": "/traceability/implementationStatus", "value": "complete" },
-  { "op": "replace", "path": "/traceability/repoPath",  "value": "platform/apps/customer" },
-  { "op": "replace", "path": "/traceability/testCommand", "value": "pytest platform/apps/customer/tests -x" },
-  { "op": "replace", "path": "/schedule/actualEnd",    "value": "2026-06-29T18:00:00Z" },
+    "value": "PR geçti: https://github.com/org/platform/pull/42; ci:https://github.com/org/platform/actions/runs/11234567890" },
+  { "op": "replace", "path": "/traceability/implementationStatus", "value": "verified" },
+  { "op": "add", "path": "/traceability/repoPath/-", "value": "platform/apps/customer" },
+  { "op": "add", "path": "/traceability/testCommand/-", "value": "pytest platform/apps/customer/tests -x" },
+  { "op": "replace", "path": "/schedule/actualEnd", "value": "2026-06-29" },
   { "op": "replace", "path": "/status",               "value": "done" }
 ]
 ```

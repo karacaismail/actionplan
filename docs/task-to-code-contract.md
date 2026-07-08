@@ -21,7 +21,7 @@ Temel ayrımı baştan koy: app ve module düğümleri kapsam ve sözleşme yön
 
 Her WBS seviyesinin doğa metaforu bir büyüklük/soyutluk sinyalidir; gerçek yazılım karşılığı ise aşağıdaki tabloda.
 
-Tablo okunuşu: "Kod yazılır mı?" sütunu platform monoreposuna gerçek kod commit edilip edilmeyeceğini gösterir. actionplan JSON'larını düzenlemek kod değil, veri güncellemesidir; o sütunun dışındadır.
+Tablo okunuşu: "Kod yazılır mı?" sütunu implementation reposuna gerçek kod commit edilip edilmeyeceğini gösterir. actionplan JSON'larını düzenlemek kod değil, veri güncellemesidir; o sütunun dışındadır.
 
 | Seviye | Metafor | Yazılım karşılığı | Kod yazılır mı? | Branch açılır mı? | PR/merge? | Deploy? | Evidence zorunlu mu? |
 |---|---|---|---|---|---|---|---|
@@ -110,7 +110,7 @@ Adım 3 — Seviye + faz + status birleşimi:
 
 ### Branch
 
-Branch yalnızca platform monoreposunda açılır; actionplan'da veri/docs değişiklikleri için ayrı branch gerekmez (main branch koruması uygulanır, PR zorunludur).
+Branch yalnızca implementation reposunda açılır; actionplan'da veri/docs değişiklikleri için ayrı branch gerekmez (main branch koruması uygulanır, PR zorunludur).
 
 Platform monoreposunda kural:
 
@@ -119,7 +119,7 @@ Platform monoreposunda kural:
 - component: `component/<slug>` veya üst feature branch'i içinde
 - work_unit ve micro_step: component ya da feature branch'i içinde
 
-app ve module için platform monoreposunda branch açılmaz; bu seviyeler sözleşme ve kapsam belgesi taşır.
+app ve module için implementation reposunda branch açılmaz; bu seviyeler sözleşme ve kapsam belgesi taşır.
 
 ### PR ve Merge
 
@@ -260,9 +260,9 @@ Bu tablo karar ağacının kullandığı `TaskNode` alanlarını ve nasıl yorum
 | `dependsOn` | string[] | Hangi düğüm önce bitmeli? (kritik yol) |
 | `blocks` | string[] | Bu düğüm hangi düğümleri bekletiyor? |
 | `evidence` | string[] | Faz kanıtları; URL veya dosya referansı |
-| `repoPath` | string | Platform monoreposundaki dosya/dizin yolu |
-| `testCommand` | string | CI'da çalıştırılacak test komutu |
-| `deployTarget` | string | Staging/prod ortam URL veya Kubernetes namespace |
+| `traceability.repoPath` | string[] | Implementation reposundaki dosya/dizin yolu |
+| `traceability.testCommand` | string[] | CI'da çalıştırılacak test komutu |
+| `traceability.deployTarget` | string | Staging/prod ortam URL veya Kubernetes namespace |
 | `rollback` | string | Geri-alma komutu veya runbook referansı |
 
 ---
