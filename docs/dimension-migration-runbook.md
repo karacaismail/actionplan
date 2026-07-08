@@ -33,13 +33,13 @@ waivers: z.array(WaiverSchema).default([]),
 - Aynısı `applicability` ({}) ve `waivers` ([]) için geçerlidir.
 - Yani düğümler, dosyaları hiç değiştirilmeden, runtime'da tam bir TaskNode'a tamamlanır. ADR-0027 §3'ün ifadesiyle: default'lar `safeParse` sırasında dolar; dosya yalnız değer set edilince yazılır.
 
-Bu yüzden bir toplu migration script'i YOK; olması da yanlış olurdu (445 dosyaya gereksiz diff, gereksiz git gürültüsü, gereksiz çakışma riski).
+Bu yüzden bir toplu migration script'i YOK; olması da yanlış olurdu (tüm generated dosyalara gereksiz diff, gereksiz git gürültüsü, gereksiz çakışma riski).
 
 Karşılaştırma — eski (yanlış) vs. lazy (doğru):
 
 | Klasik kolon-ekleme | Lazy migration (ADR-0027) |
 |---|---|
-| 445 satıra ALTER + backfill script | Script yok; default şemada |
+| Tüm generated dosyalara ALTER + backfill script | Script yok; default şemada |
 | Tüm satırlar yeniden yazılır (büyük diff) | Yalnız değer SET edilen dosya yazılır |
 | Rollback = ters backfill | Rollback = SET edilen alanı sil (default'a döner) |
 | Backfill hatası = yarım veri | Yarım veri imkânsız; eksik = default |
@@ -124,7 +124,7 @@ Bu beş kapı, standards-applicability-matrix.md §6'da tablolanan BLOKLAYICI ka
 
 ---
 
-## 3. 445 Düğüm Güvenlik Kuralı — `.strict()` + safeParse
+## 3. Generated Düğüm Güvenlik Kuralı — `.strict()` + safeParse
 
 Lazy migration'ı güvenli kılan iki mekanizma vardır; ikisi de `src/schemas/task.ts`'dedir.
 
@@ -155,7 +155,7 @@ Bu tablo lazy migration'ın neden hem güvenli hem geri-uyumlu olduğunun özüd
 
 ## 4. Toplu İşlem GEREKMEZ — Anti-Pattern Uyarıları
 
-- **445 dosyayı topluca "migrate etmeye" çalışmak yanlıştır.** ADR-0027 §6 bunu açık "unknown-unknown" tehlikesi sayar ("445 node migration tehlikesi → default'lu lazy migration"). Tüm dosyalara boş `standardRefs: {}` yazmak gereksiz 445-dosyalık diff üretir ve hiçbir değer katmaz (zaten default).
+- **Generated dosyaları topluca "migrate etmeye" çalışmak yanlıştır.** ADR-0027 §6 bunu açık "unknown-unknown" tehlikesi sayar ("toplu node migration tehlikesi → default'lu lazy migration"). Tüm dosyalara boş `standardRefs: {}` yazmak gereksiz geniş diff üretir ve hiçbir değer katmaz (zaten default).
 - **Uygulanır boyutları (`applies: true`) tek tek yazmak yanlıştır.** Varsayılan zaten uygulanırdır; yalnız N/A (applies=false) kararı kaydedilir. Her boyutu her düğüme yazmak ADR-0027'nin kaçınmak istediği "jenerik dolgu"dur.
 - **Boş ref'leri doldurmak için sahte standart uydurmak yanlıştır.** Bir düğümde standart gerçekten uygulanmıyorsa ref boş bırakılır (lazy); olmayan bir standardı uydurursan `check-standards-coverage` kırmızı olur.
 

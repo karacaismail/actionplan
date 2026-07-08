@@ -27,6 +27,24 @@ const forbidText = (file, text, label = text) => {
 const forbidContent = (file, content, text, label = text) => {
   if (content.includes(text)) failures.push(`${file}: eski/yanlis ifade kaldi: ${label}`);
 };
+const forbidPatternInLines = (file, content, pattern, label) => {
+  const lines = content.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i += 1) {
+    pattern.lastIndex = 0;
+    if (pattern.test(lines[i])) {
+      failures.push(`${file}:${i + 1}: eski/yanlis ifade kaldi: ${label}`);
+    }
+  }
+};
+const listMarkdownFiles = (dir) => {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...listMarkdownFiles(fullPath));
+    else if (entry.isFile() && entry.name.endsWith(".md")) files.push(fullPath);
+  }
+  return files;
+};
 
 const manifest = readJson("src", "data", "workspace-manifest.json");
 const primary = manifest.workspaces?.find((w) => w.id === manifest.primaryWorkspaceId);
@@ -141,6 +159,35 @@ for (const file of activeCurrentFiles) {
   }
   for (const stale of ["PostgreSQL/Prisma", "Prisma + PostgreSQL", "erişim katmanı (Prisma)"]) {
     forbidContent(file, content, stale, stale);
+  }
+}
+
+const publishedDocsStalePatterns = [
+  { pattern: /14\s+(?:üretim\s+)?boyut[\w\u00c0-\u017f]*/gi, label: "14 boyut" },
+  { pattern: /14['’]?l[ıiüu]/gi, label: "14'lu boyut/export dili" },
+  { pattern: /14\s*[→-]\s*17/g, label: "14 -> 17 gecis dili" },
+  {
+    pattern: /422\s+(?:JSON\s+)?(?:düğüm|dugum|görev|gorev|node)/gi,
+    label: "422 node/gorev",
+  },
+  { pattern: /424\s+(?:düğüm|dugum|node)/gi, label: "424 node" },
+  {
+    pattern: /407\s+(?:düğüm|dugum|görev|gorev|sayfa|şablon|template)/gi,
+    label: "407 node/sablon",
+  },
+  { pattern: /31\s+(?:düğüm|dugum).*?14/gi, label: "31 eski boyutlu dugum" },
+  {
+    pattern:
+      /PostgreSQL\/Prisma|PostgreSQL \+ Prisma|Prisma \+ PostgreSQL|erişim katmanı \(Prisma\)/gi,
+    label: "Prisma stack drift",
+  },
+];
+
+for (const absFile of listMarkdownFiles(rel("docs"))) {
+  const file = path.relative(ROOT, absFile);
+  const content = read(file);
+  for (const { pattern, label } of publishedDocsStalePatterns) {
+    forbidPatternInLines(file, content, pattern, label);
   }
 }
 

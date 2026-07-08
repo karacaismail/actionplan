@@ -54,10 +54,10 @@ Bu dağılımın sonucu: WBS yukarı seviye plan ve sözleşme açısından zeng
 | `dependsOn` boş | 19/19 |
 | `evidence` boş | 17/19 |
 | AC içinde test/kanıt eşlemesi geçen | 0/19 |
-| 14 boyutu dolu | 19/19 |
+| 17 üretim boyutu dolu | 19/19 |
 | İnsan kaynaklı/review işaretli boyut | 3/19 |
 
-Yorum: 14 boyutun dolu olması yanıltıcı. Çoğu swarm içerik üretimi. Atomun gerçek kod hedefi, test komutu, kabul kriteri-test eşlemesi ve platform dosya yolu yoksa `filled dimension` bir geliştirme hazır sinyali değildir.
+Yorum: 17 üretim boyutunun dolu olması yanıltıcı. Çoğu swarm içerik üretimi. Atomun gerçek kod hedefi, test komutu, kabul kriteri-test eşlemesi ve platform dosya yolu yoksa `filled dimension` bir geliştirme hazır sinyali değildir.
 
 ### 1.3 Mevcut atom envanteri
 

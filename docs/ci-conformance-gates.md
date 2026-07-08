@@ -76,7 +76,7 @@ Aşağıdaki kapılar ADR-0026/0027'den önce de vardı ve standart katmanıyla 
 
 ### check-content
 
-- Ne zorlar: İçerik kalite kapısı (node checker — 422 düğüm). Düğüm içeriğinin kalıp/golden ölçütlerini karşılaması.
+- Ne zorlar: İçerik kalite kapısı (node checker — 467 düğüm, exact-17 üretim boyutu). Düğüm içeriğinin kalıp/golden ölçütlerini karşılaması.
 - Dosya yolu: `tools/agents/check-content.mjs`
 - Yeşil koşul: Tüm düğümler içerik kalite eşiğini geçer.
 - Veri doldukça nasıl dişlenir: Düğüm sayısı ve içerik beklentileri arttıkça eşik yükselir.

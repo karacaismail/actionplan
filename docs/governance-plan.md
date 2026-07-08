@@ -143,7 +143,7 @@ npm run test:e2e
 
 - [ ] `typecheck` yesil
 - [ ] `lint` (biome) yesil
-- [ ] `test:content` (422 dugum icerik kapisi) yesil
+- [ ] `qa:content` (467 dugum / exact-17 icerik kapisi) yesil
 - [ ] `check-ruleset` (ECA katalog) yesil
 - [ ] `check-surface` (Surface/Workflow katalog) yesil
 - [ ] `quality-lint` (audit golden + koken) yesil

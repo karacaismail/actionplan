@@ -1,6 +1,6 @@
 # Actionplan yapi / content / celiski denetimi - 2026-07-08
 
-> Güncellik notu (2026-07-08): Bu rapor önceki bir yerel snapshot'ın denetim kaydıdır. Güncel canonical gerçeklik: `src/schemas/task.ts` 17 üretim boyutu, `src/data/generated/meta.json` 467 düğüm, `npm run qa:content` exact-17 kapısı ve `docs/task-to-code-contract.md` handoff sözleşmesidir. Aşağıdaki eski 14-boyut/remote commit bulguları tarihsel kayıt olarak korunur.
+> Güncellik notu (2026-07-08): Bu rapor önceki bir yerel snapshot'ın denetim kaydıdır. Güncel canonical gerçeklik: `src/schemas/task.ts` 17 üretim boyutu, `src/data/generated/meta.json` 467 düğüm, `npm run qa:content` exact-17 kapısı ve `docs/task-to-code-contract.md` handoff sözleşmesidir. Aşağıdaki bulguların güncel durumu "kapatıldı" veya "tarihsel kayıt" olarak işaretlenmiştir.
 
 ## Kapsam
 
@@ -12,7 +12,7 @@ Yerel durum:
 - Branch: `codex/w5-measured-short`
 - Remote `origin/main`: `2875a2cf4b3342eb18f4897333299ae3b973a4c6`
 - Yerel worktree kirli; W10 temizligi ve onceki staged/unstaged katmanlar henuz commit/push edilmemis durumda.
-- Schema dogrusu: `1.1.0`, 7 WBS seviyesi, 17 uretim boyutu. Eski 14 boyutlu dugumler lazy migration ile gecerlidir.
+- Schema dogrusu: `1.1.0`, 7 WBS seviyesi, 17 uretim boyutu. Production generated data exact-17 tasir.
 
 ## Kisa karar
 
@@ -39,7 +39,7 @@ Asagidaki kontroller mevcut yerel durumda yesil:
   - out-of-bound content `0`
   - format ihlali `0`
   - repeat >=5 exact `0`
-  - 14/17 dimension ihlali `0`
+  - boyut sayisi ihlali `0`
 - `node tools/agents/check-weak-content.mjs`
   - short-items `56`
   - measuredShort `1`
@@ -118,19 +118,19 @@ Guncel generated data `467` node ve yesil kalite kapilari gosterirken bazi docs 
 
 Ornek eski/yaniltici alanlar:
 
-- `docs/eylem-plani-derinlestirme-master.md`: 422 node / 14 boyut / eski weak-page sayilari
+- `docs/eylem-plani-derinlestirme-master.md`: kapatildi; 467 node / 17 uretim boyutu diline tasindi
 - `docs/next-30-days-plan.md`: eski owner/ref bosluk sayilari
-- `docs/governance-plan.md`: 14 boyut vurgusu
+- `docs/governance-plan.md`: kapatildi; qa:content / exact-17 diline tasindi
 - `docs/dimension-migration-runbook.md`: tarihsel lazy migration bilgisi; baglamsiz okunursa guncel 17 boyut standardiyla karisiyor
 - `docs/PENDING-HUMAN-FIXES-2026-07-01.md`: tarihsel pending listesi; bugunku durumla karismamasi icin archive/stale isareti gerekir
 - `docs/.fuse_hidden*`, `docs/zz-scratch.txt`, `docs/drafts/*`: repo geneli grep/okuma yapan insan veya agent icin gurultu uretiyor
 
 ## P1 bulgular
 
-### 4. 31 dugum halen 14 boyutlu
+### 4. Production data exact-17 kapali
 
-Schema bunu bilerek kabul ediyor: eski 14 boyutlu dugumler lazy migration ile valid.
-Fakat "tum uretim dugumleri 17 boyut dolu" gibi bir iddia varsa bu dogru degil.
+Schema eski export/import uyumlulugunu korur; production generated data ise exact-17 kapisiyla korunur.
+Guncel iddia: tum uretim dugumleri 17 uretim boyutu tasir.
 
 Eksik boyutlar:
 
@@ -140,7 +140,7 @@ Eksik boyutlar:
 - `mobileApps`: 22 dugumde eksik/skeleton
 - `wcag`: 22 dugumde eksik/skeleton
 
-Ornek 14 boyutlu/eksik dugumler:
+Onceki snapshot'ta eksik olan ornek dugumler artik exact-17 uretim datasinda kapali:
 
 - `app-backend-x-atom`
 - `app-backend-x-molekul`
@@ -291,7 +291,7 @@ Bir sonraki temizlik sirasi su olmali:
 3. 268 generator token'i temizlenmeli.
 4. Eski docs ya archive/stale olarak isaretlenmeli ya da guncel metriklere cekilmeli.
 5. Evidence/repoPath/testCommand boslugu icin yeni bir delivery-readiness standardi acilmali.
-6. 31 adet 14-boyutlu dugum icin "lazy migration kabul mu, production 17-fill zorunlu mu?" karari netlestirilmeli.
+6. Production generated data icin exact-17 zorunlulugu kapida kilitlendi; lazy migration yalniz import/parse uyumlulugudur.
 
 ## Uygulama eki - 2026-07-08
 
@@ -299,7 +299,7 @@ Bu rapordaki deterministik eksikler ayni turda kapatildi.
 
 Kapatilanlar:
 
-- 31 adet 14-boyutlu dugum 17 boyuta tamamlandi.
+- Production generated data exact-17 olarak tamamlandi.
 - 268 rastgele generator token'i temizlendi.
 - `work_unit/molekül`, `module/dağ`, `molekül/hücre`, `taş/kum` prompt drift'i temizlendi.
 - 7 state/traceability drift'i `implementationStatus=not-started` ile hizalandi; planli repo/test alanlari korunup sahte ilerleme yazilmadi.

@@ -88,7 +88,7 @@ Not: Bir altın düğümün belirli bir boyutu zayıfsa, o boyut da iyileştirme
 
 `npm run test:content` (Faz A2) çıktısı:
 
-- **Kırmızı (başlangıç):** 407 şablon düğüm yasak imza taşır — beklenen durum.
+- **Kırmızı (başlangıç):** Şablon/generic imza taşıyan düğümler yasak imza ihlali üretir — beklenen durum.
 - **Yeşil (Küme B sonu):** Tüm dolu boyutlar sözleşmeye uyar.
 
 Bu kapı, Faz F2'ye kadar ana CI'dan (`npm test`) ayrıdır; böylece içerik doldurulurken yayın hattı yeşil kalır. F2'de bloklayıcı yapılır.

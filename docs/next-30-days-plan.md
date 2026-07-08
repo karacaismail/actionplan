@@ -19,7 +19,7 @@ P1 (repo gerçeklik denetim raporu) ve P2 (Enterprise DoD + TaskNode şema-boşl
 
 ## Hafta 1 (Gün 1–7) — P3-impl: Owner/Refs/Deps Otomatik Doldurma + CI Kapısı
 
-Bu hafta çıktısı: 424 düğümün tamamında owner/assignees alanı dolu, refs alanında minimum referans var, dependsOn component/work_unit/micro_step seviyesinde tamamlanmış, CI bu üç alanı kontrol eden bloklayıcı kapı çalışıyor.
+Bu hafta çıktısı: 467 düğümün tamamında owner/assignees alanı dolu, refs alanında minimum referans var, dependsOn component/work_unit/micro_step seviyesinde tamamlanmış, CI bu üç alanı kontrol eden bloklayıcı kapı çalışıyor.
 
 ### Gün 1 — Test Önce (KIRMIZI YAKMAK)
 
@@ -85,7 +85,7 @@ Kim: Sistem (`tools/derive-deps.mjs`) + kontrol.
 
 Beklenen davranış: component, bağlı olduğu feature/taşa dependsOn içeriyor olmalı. Eğer derive-deps bu seviyeyi atlıyorsa, araç içine ek kural eklenir: bir component/work_unit/micro_step düğümünün dependsOn boşsa, `parentId` zincirinden bir üst seviyenin id'si varsayılan dependsOn olarak atanır.
 
-Kırık referans yoktu (önceden doğrulandı), bu yüzden mevcut 312 dolu dependsOn bozulmaz; sadece 112 boş olana ekleme yapılır.
+Kırık referans yoktu (önceden doğrulandı), bu yüzden mevcut dolu dependsOn bağlantıları bozulmaz; yalnız boş olanlara ekleme yapılır.
 
 İnsan onayı: `node tools/derive-deps.mjs --dry-run` çıktısında beklenmedik bağlantı var mı incelenir.
 
@@ -116,7 +116,7 @@ Tüm generator'lar sırayla koşturulur: `gen-assignees` → `gen-refs` → `der
 Beklenen son durum Hafta 1 sonunda:
 
 - owner boş: 411'den < 30'a düşmeli (bespoke + edge-case'ler hariç).
-- refs boş: 422'den < 200'e düşmeli.
+- refs boşluğu: < 200'e düşmeli.
 - component/work_unit/micro_step dependsOn boş: 55'ten < 10'a düşmeli.
 - CI kapısı aktif ve bloklayıcı.
 
@@ -220,7 +220,7 @@ Bu hafta çıktısı: `evidence` alanı UI'da görünür, 3 pilot düğümde dol
 
 Kim: Sistem (şema) + Kullanıcı.
 
-`src/schemas/task.ts` incelenir. `evidence` alanı zaten var ama 424/424 boş ve UI'da gösterilmiyor. Bu aşamada:
+`src/schemas/task.ts` incelenir. `evidence` alanı zaten var; eski snapshot'ta boştu ve UI'da gösterilmiyordu. Bu aşamada:
 
 Test önce: `tests/evidenceDisplay.spec.ts` (Playwright) yazılır — CRM zincirindeki `molekul-crm-score-field-validator` düğümü için evidence verisi fixture'a eklenir; UI'da `evidence` bölümü görünür ve veri doğru render ediliyor mu kontrol edilir.
 

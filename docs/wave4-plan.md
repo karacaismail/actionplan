@@ -18,7 +18,7 @@ bu turun hedefi.
 
 1. **pattern-pools.mjs** (yeni TEK KAYNAK): performance 5→30 varyant (cache/stale,
    queue-lag/backpressure, bundle/hydration, cold-start, DB-lock, dış-API timeout,
-   batch-SLO aileleri dahil); toplam ~200 varyant, 14 boyut.
+   batch-SLO aileleri dahil); toplam ~200 varyant, 17 üretim boyutu.
 2. **normalize-patterns.mjs** (yeni, kalıcı): rewrite-katmanında 9+ grupların fazlasını
    kullanım-dengeli + SEMANTİK-GEÇEN varyantla değiştirir (base'li maddede orijinal
    kısa base AYNEN korunur; enrich maddesinde tam-değişim). **918 madde normalize edildi.**

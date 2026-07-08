@@ -9,9 +9,9 @@
 
 ## 1. Bu repo ne işe yarıyor?
 
-`actionplan`, 50+ (README'de "70+") ürünlük bir AI-first SaaS framework'ünün **enterprise-grade waterfall geliştirme sürecini planlayan** WBS tabanlı bir görev yönetimi aracıdır. Uygulamaların kaynak kodu burada değildir; bu repo, o uygulamaların **ne zaman, hangi sırayla, hangi kapıları geçerek** yapılacağını tarif eden düğümleri (424 adet) tutar.
+`actionplan`, 50+ (README'de "70+") ürünlük bir AI-first SaaS framework'ünün **enterprise-grade waterfall geliştirme sürecini planlayan** WBS tabanlı bir görev yönetimi aracıdır. Uygulamaların kaynak kodu burada değildir; bu repo, o uygulamaların **ne zaman, hangi sırayla, hangi kapıları geçerek** yapılacağını tarif eden düğümleri (467 adet) tutar.
 
-Mimari olarak frontend-only, JSON-as-DB bir SPA'dır. Veri kaynağı `public/data/nodes.json` (424 düğüm; build sonrası `dist/data` kopyası da oluşur) ve `src/data/generated/nodes/*.json` (her düğüm ayrı dosya, 424 dosya). Şema tek kaynak `src/schemas/task.ts` — Zod ile tanımlı, TS tipleri buradan türetiliyor.
+Mimari olarak frontend-only, JSON-as-DB bir SPA'dır. Veri kaynağı `public/data/nodes.json` (467 düğüm; build sonrası `dist/data` kopyası da oluşur) ve `src/data/generated/nodes/*.json` (her düğüm ayrı dosya). Şema tek kaynak `src/schemas/task.ts` — Zod ile tanımlı, TS tipleri buradan türetiliyor.
 
 Codex'in varsaydığı gibi ayrı bir `platform` reposu yoktur ve GitHub hesabında bulunmamaktadır. `platform` terimi bu repoda bir uygulama kategorisine işaret eder: WBS hiyerarşisinde `app-platform-horizontal` kimliğiyle (`wbsCode: "23"`, `level: "app"`) kayıtlı bir küme. Ayrıca `tools/agents/seed-platform-horizontal.mjs` dosyası bu kümenin içerik tohumlamasını yapar. Dolayısıyla "platform build-out" meselesi ayrı bir repoya gerek duymadan actionplan içinde WBS düğüm seti olarak ele alınabilir — bu karar zaten örtük olarak hayata geçirilmiş durumdadır.
 
@@ -32,7 +32,7 @@ Aktif geliştirme kolu: `icerik-derinlestirme` (HEAD = `1f12cd1`, "enterprise-re
 
 ## 3. Intentional, generated ve şüpheli dosyalar
 
-HEAD ile `origin/main` arasında 532 dosya farklıdır (`git diff --stat HEAD origin/main`). Bu farkın büyük çoğunluğu, `src/data/generated/nodes/` altındaki 424 adet JSON dosyasıdır. Bu dosyalar `tools/agents/seed-*.mjs` araçları ve `npm run ingest` pipeline'ı tarafından otomatik üretilmekte, elle yazılmamaktadır. `generated` sınıfında ayrıca `public/data/nodes.json` (432 KB'lık birleşik JSON, reindex aracıyla üretilir), `public/data/audit.json` ve `dist/` içeriği bulunur.
+Bu bölüm 2026-06-28 tarihli branch snapshot'ını anlatır; güncel main gerçeği 467 generated node ve 17 üretim boyutudur. `src/data/generated/nodes/` altındaki JSON dosyaları `tools/agents/seed-*.mjs` araçları ve `npm run gen:reindex` pipeline'ı tarafından otomatik üretilmekte, elle yazılmamaktadır. `generated` sınıfında ayrıca `public/data/nodes.json` (birleşik JSON, reindex aracıyla üretilir), `public/data/audit.json` ve `dist/` içeriği bulunur.
 
 El emeği ("intentional") dosyalar şunlardır: `src/schemas/task.ts` (Zod şema tek kaynağı), `src/store/taskStore.ts`, `src/store/viewState.ts`, `src/store/persist.ts`, `src/engine/*.ts` (audit, bulk, execution, gantt, query, reports, table, workload — 10 modül), `src/views/*.tsx` (11 görünüm), `src/components/eca/EcaPanel.tsx` ve `WorkflowPanel.tsx`, `src/data/eca/ruleset-catalog.json`, `src/data/surface/surface-catalog.json` ve `workflow-catalog.json`, `src/schemas/ruleset.ts`, `src/schemas/surface.ts`, `tools/quality-lint.mjs`, `tools/gen-rules.mjs`, `tools/agents/check-*.mjs`, `tests/e2e/a11y.spec.ts`, `package.json`, `.gitignore`, `.github/workflows/deploy.yml`.
 
@@ -54,7 +54,7 @@ Bu bölüm üç eksen üzerinde örgütlenmiştir.
 
 Önce commit'lenmesi gerekenler: `src/schemas/task.ts` (tüm şema değişiklikleri burada birikmiş), engine modülleri (`src/engine/*.ts`), ECA ve Surface katalogları (`src/data/eca/ruleset-catalog.json`, `src/data/surface/*.json`), `src/schemas/ruleset.ts`, `src/schemas/surface.ts`, `tools/quality-lint.mjs`, `tools/agents/check-*.mjs`, `tests/`, `.github/workflows/deploy.yml`. Bunlar reviewable, work_unit emeği değişikliklerdir ve `feat/enterprise-readiness` branch'inde kendi başlarına bir commit oluşturabilir.
 
-`src/data/generated/nodes/*.json` ve `public/data/nodes.json` ayrı bir commit olarak işlenmelidir — "generated: 424 düğüm içerik güncellemesi" şeklinde etiketlenerek. Bu sayede diff'e bakıldığında work_unit emeği değişikliklerle karışmaz.
+`src/data/generated/nodes/*.json` ve `public/data/nodes.json` ayrı bir commit olarak işlenmelidir — "generated: 467 düğüm içerik güncellemesi" şeklinde etiketlenerek. Bu sayede diff'e bakıldığında work_unit emeği değişikliklerle karışmaz.
 
 Önce `.gitignore`'a eklenmesi / görmezden gelinmesi gerekenler: `dist/`, `vite.config.ts.timestamp-*`, `vitest.config.ts.timestamp-*`, `docs/.write-test-2`, `node_modules/` (zaten `.gitignore`'da olması lazım — kontrol edilmeli).
 
@@ -65,7 +65,7 @@ Bu bölüm üç eksen üzerinde örgütlenmiştir.
 ## Codex Raporundaki İki Hatanın Düzeltmesi
 
 **Hata A — "Veri modeli zayıf / eksik alan" iddiası yanlıştır.**  
-`src/schemas/task.ts` incelendiğinde şemanın son derece zengin olduğu görülmektedir. Ana `TaskNodeSchema` içinde şu alanlar mevcuttur: `deliverables`, `acceptanceCriteria`, `risks` (RiskSchema dizisi: id/desc/severity/mitigation), `rollback`, `evidence`, `metrics` (key/target çiftleri), `dimensions` (14 üretim boyutu: featureDefs/security/codeOptimization/securityOptimization/performance/mobileApps/wcag/deployment/eca/aiAgents/testing/owasp/integration/moduleUsage), `ecaRules` (EcaRuleSchema dizisi: yapısal event/condition/action motoru), `agentPolicy` (AgentPolicySchema: autonomy/capabilities/allowedTargets/forbiddenTargets/allowedActions/forbiddenActions/stepUp/rulesetBoundary/prodDataPolicy/killSwitch), `schedule` (start/end/actualStart/actualEnd/baselineStart/baselineEnd), `milestone`, `assignees`, `phases` (7 waterfall faz kapısı), `cost`, `source`, `state` (maturity). Sorun şema eksikliği değil, bu alanların çoğunun boş (null/[]) kalmasıdır. Özellikle `owner` 411/424 düğümde boş, `refs` 422/424'te boş, `assignees` 424/424'te boş ve ortalama `progress` 1.71'dir. Bu bir içerik/süreç olgunluk sorunudur, şema tasarım sorunudur değil.
+`src/schemas/task.ts` incelendiğinde şemanın son derece zengin olduğu görülmektedir. Ana `TaskNodeSchema` içinde şu alanlar mevcuttur: `deliverables`, `acceptanceCriteria`, `risks` (RiskSchema dizisi: id/desc/severity/mitigation), `rollback`, `evidence`, `metrics` (key/target çiftleri), `dimensions` (17 üretim boyutu: featureDefs/security/codeOptimization/securityOptimization/performance/mobileApps/wcag/deployment/eca/aiAgents/testing/owasp/integration/moduleUsage/dataLifecycle/observability/reliability), `ecaRules` (EcaRuleSchema dizisi: yapısal event/condition/action motoru), `agentPolicy` (AgentPolicySchema: autonomy/capabilities/allowedTargets/forbiddenTargets/allowedActions/forbiddenActions/stepUp/rulesetBoundary/prodDataPolicy/killSwitch), `schedule` (start/end/actualStart/actualEnd/baselineStart/baselineEnd), `milestone`, `assignees`, `phases` (7 waterfall faz kapısı), `cost`, `source`, `state` (maturity). Sorun şema eksikliği değil, bu alanların çoğunun plan/handoff olgunluğuna göre faz kapılarıyla doldurulması gereğidir; exact-17 üretim boyutu artık production kapısıyla korunur.
 
 **Hata B — "SPA 404 riski" iddiası yanlıştır.**  
 `tools/spa404.mjs` dosyası `dist/index.html`'i `dist/404.html`'e kopyalar. Bu araç `npm run build` scripti içinde (`"build": "vite build && node tools/spa404.mjs"`) doğrudan çağrılmaktadır. `dist/404.html` dosyasının repoda mevcut olduğu da doğrulanmıştır. GitHub Pages'in SPA derin-URL fallback mekanizması eksiksiz çalışmaktadır.
@@ -76,19 +76,13 @@ Bu bölüm üç eksen üzerinde örgütlenmiştir.
 
 | Metrik | Değer | Kaynak |
 |---|---|---|
-| Toplam düğüm | 424 | `public/data/nodes.json` (node -e) |
-| owner boş | 411 / 424 | doğrulandı |
-| refs boş | 422 / 424 | doğrulandı |
-| dependsOn boş | 112 / 424 | doğrulandı |
-| assignees boş | 411 / 424 | doğrulandı |
-| progress ortalaması | 1.71 | doğrulandı |
-| status: backlog | 407 | doğrulandı |
-| status: in-progress | 9 | doğrulandı |
-| status: todo | 5 | doğrulandı |
-| status: done | 3 | doğrulandı |
-| phase: db-schema | 411 | doğrulandı |
-| phase: development | 6 | doğrulandı |
-| Vitest testleri | 148 / 20 dosya, yeşil | önceden çalıştırıldı |
+| Toplam düğüm | 467 | `public/data/nodes.json` / `src/data/generated/meta.json` |
+| üretim boyutu | 17 | `src/schemas/task.ts` |
+| exact-17 ihlali | 0 | `npm run qa:content` / `npm run qa:dimensions` |
+| contentQuality | 467 / 467 yeşil | `npm run qa:content` |
+| weak-content generic | 0 | `npm run qa:dimensions` |
+| semantic FAIL/WARN | 0 / 0 | `npm run qa:dimensions` |
+| Vitest testleri | yeşil | CI ve lokal QA |
 | CI kapıları | typecheck + content + ruleset + surface + quality-lint, tümü yeşil | önceden çalıştırıldı |
 | HEAD commit | 1f12cd1 | git log |
 | main'den ilerideki commit sayısı | 25 | git log |

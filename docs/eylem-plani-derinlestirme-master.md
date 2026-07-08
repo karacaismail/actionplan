@@ -16,13 +16,13 @@ Bu doküman, `actionplan` projesinin denetiminde tespit edilen eksiklerin kapat�
 `actionplan` iki katmandan oluşur ve bu plan ikisini **bilinçle ayrı tutar**:
 
 - **Araç (panel):** `src/` altındaki React/Vite/TanStack uygulaması. Jira/ClickUp benzeri bir WBS + görev yönetim panelidir. Görev tanımlarını okur, ağaç/pano/grafik olarak gösterir, JSON/CSV dışa-içe aktarır. Bu katman çalışan koddur ve canlıdadır.
-- **Plan içeriği (görev tanımları):** `src/data/generated/nodes/**` altındaki 422 JSON düğümü. Her düğüm bir görevin/sayfanın TANIMIDIR — gelecekteki ürünün (`platform/`) nasıl yapılması gerektiğini anlatan yönergedir. Bu katman veridir; çalışan ürün kodu değildir.
+- **Plan içeriği (görev tanımları):** `src/data/generated/nodes/**` altındaki 467 JSON düğümü. Her düğüm bir görevin/sayfanın TANIMIDIR — gelecekteki ürünün (`platform/`) nasıl yapılması gerektiğini anlatan yönergedir. Bu katman veridir; çalışan ürün kodu değildir.
 
 Bu planın asıl konusu **plan içeriğinin derinliği** ve **sözleşme katmanlarının tamamlanmasıdır**. `platform/` ürün implementasyonu bu planın kapsamı dışındadır (non-goal).
 
 ### 0.2 Çözülecek eksikler (denetim sonucu)
 
-1. **İçerik derinliği (birincil):** 422 görev sayfasının 407'sinde 14 boyutun maddeleri kalıptan üretilmiş (tema-kelime ikamesi); gerçek, sayfaya-özel, derin "enterprise" içerik değil. Yalnız 15 sayfa (CRM + kernel) zengin.
+1. **İçerik derinliği (birincil):** 467 görev düğümünün 17 üretim boyutu exact-17 kapısıyla izlenir; kalıp/generic içerik, boş ama N/A olmayan kart ve eski boyut sayısı üretim kapısında bloklanır.
 2. **Hazır ECA/ruleset paket kataloğu yok:** Kurallar sayfa-başı üretiliyor; yeniden kullanılabilir paketler (ArcheType update safety, field rename migration, tenant isolation breach, prompt injection guard, approval escalation) tanımlı değil.
 3. **Surface ve Workflow zayıf tanımlı:** ArcheType'tan ayrı, ayrı versiyonlanan sözleşmeler olmaları gerekirken yalnız referans (ref+version) düzeyinde anılıyor; Product/Customer gibi ayrı şema/fixture seviyesinde tanımlı değil.
 4. **Panel görünürlüğü (ikincil):** Görev detayında yapısal `ecaRules`, `agentPolicy`, riskler/teslimatlar/kabul kriterleri gösterilmiyor; "kuralı simüle et" yok.
@@ -108,7 +108,7 @@ Belirsizliği önlemek için her eylemde aktör açıkça yazılır.
 
 ---
 
-## 5. 14 boyut kalite rubriği (içerik derinliğinin ÖLÇÜTÜ)
+## 5. 17 üretim boyutu kalite rubriği (içerik derinliğinin ÖLÇÜTÜ)
 
 Bu rubrik, "derin enterprise içerik" iddiasını ölçülebilir kritere çevirir. Küme B'deki her sayfa, her boyut için bu kritere göre yazılır ve `contentQuality` kapısıyla denetlenir. Her boyut için: **ne sorar**, **derin içerik ne içerir**, **zayıf (kalıp) örnek**, **kabul kriteri**.
 
@@ -189,7 +189,7 @@ Bu rubrik, "derin enterprise içerik" iddiasını ölçülebilir kritere çeviri
 ## 6. Master İçindekiler (küme → faz)
 
 - **Küme A — Temel ve Yönetişim:** A1 kalite sözleşmesi · A2 contentQuality kapısı · A3 provenance veri modeli · A4 swarm sıkılaştırma · A5 otomasyon iskeleti (opsiyonel).
-- **Küme B — İçerik Derinleştirme (407 sayfa):** B0 pilot · B1–B27 node-cluster fazları · B28 doc/ADR düğümleri · B29 çapraz-tutarlılık konsolidasyonu.
+- **Küme B — İçerik Derinleştirme (467 düğüm):** B0 pilot · B1–B27 node-cluster fazları · B28 doc/ADR düğümleri · B29 çapraz-tutarlılık konsolidasyonu.
 - **Küme C — ECA/Ruleset Hazır Paket Kataloğu:** C1 paket şeması · C2–C6 beş çekirdek güvenlik paketi · C7 operasyonel paketler · C8 conformance+bağlama · C9 katalog gösterim.
 - **Küme D — Surface ve Workflow Sözleşmeleri:** D1 Surface şema · D2 Workflow şema · D3 Product fixture · D4 Customer fixture · D5 ilişki+versiyon+conformance.
 - **Küme E — Panel Görünürlük ve Simülasyon (ikincil):** E1 ECA gösterimi · E2 agentPolicy/çelik duvar · E3 simülasyon · E4 risk/teslimat/kabul · E5 shadcn hizalama.
@@ -204,7 +204,7 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
 
 ## Faz A1 — İçerik kalite sözleşmesi (Definition of Deep)
 
-**Amaç:** Bölüm 5'teki 14 boyut rubriğini, makinenin ve insanın aynı şekilde uygulayabileceği bir sözleşmeye bağlamak. "Derin enterprise içerik" öznel olmaktan çıkar, ölçütlü olur.
+**Amaç:** Bölüm 5'teki 17 üretim boyutu rubriğini, makinenin ve insanın aynı şekilde uygulayabileceği bir sözleşmeye bağlamak. "Derin enterprise içerik" öznel olmaktan çıkar, ölçütlü olur.
 
 **Bağımlılık:** Yok (ilk faz).
 
@@ -214,14 +214,14 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
 2. **Veri modeli / şema etkisi:** Şema değişmez; yalnız `docs/icerik-kalite-sozlesmesi.md` adında bir yan-doküman + boyut başına eşik tablosu (min madde, min sayfaya-özel madde, yasak kalıp listesi).
 3. **Geliştirme yaklaşımı:**
    - **E-A1.1 — Boyut eşik tablosu.**
-     - [ ] T-A1.1.1: 14 boyut için min/maks madde sayısı, min "sayfaya-özel" madde sayısı belirle.
+     - [ ] T-A1.1.1: 17 üretim boyutu için min/maks madde sayısı, min "sayfaya-özel" madde sayısı belirle.
      - [ ] T-A1.1.2: Yasak jenerik kalıp listesi çıkar (ör. "net işlevsel sınır (ArcheType tanımı)", boş tema-ikamesi imzaları).
      - [ ] T-A1.1.3: Boyut başına 1 "iyi" + 1 "kötü" örnek yaz (rubrik somutlaşsın).
    - **E-A1.2 — Altın referans seçimi.**
      - [ ] T-A1.2.1: `s-crm`, `k-surface`, `k-control-planes` gibi zengin 15 düğümü "altın" listele.
      - [ ] T-A1.2.2: Bu 15 düğümün hangi boyutlarının gerçekten örnek-kalite olduğunu işaretle (hepsi olmayabilir).
 4. **Edge case / riskler:** Eşik çok katı → meşru ortak terimler (RLS, audit) reddedilir; azaltma: alan-bazlı istisna listesi. Eşik çok gevşek → kalıp içerik geçer; azaltma: çapraz-düğüm benzerlik kapısı (A2).
-5. **DoD:** `docs/icerik-kalite-sozlesmesi.md` mevcut; 14 boyut için eşik + yasak kalıp + örnekler dolu; 15 altın düğüm listesi onaylı.
+5. **DoD:** `docs/icerik-kalite-sozlesmesi.md` mevcut; 17 üretim boyutu için eşik + yasak kalıp + örnekler dolu; altın düğüm listesi onaylı.
 
 ## Faz A2 — contentQuality test kapısı (çelik duvar)
 
@@ -231,7 +231,7 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
 
 **Aktörler:** Sistem kapıyı koşar; CI kapıyı bloklayıcı yapar (Faz F2); AI ajan çıktısı kapıdan geçmeden kabul edilmez; İnsan örneklem denetimi yapar.
 
-1. **Test planı (önce):** `tests/contentQuality.test.ts` yazılır ve **başta KIRMIZI** yanar (407 düğüm jenerik). Doğruladıkları:
+1. **Test planı (önce):** `tests/contentQuality.test.ts` yazılır ve şablon/generic içerik varsa **KIRMIZI** yanar. Doğruladıkları:
    - Yasak kalıp imzası hiçbir maddede yok (A1 listesi).
    - Düğüm-özgüllüğü: her boyutun en az N maddesi düğümün title/tags/summary'sinden bir terim içerir.
    - Çapraz-düğüm benzerlik tavanı: iki düğümün aynı boyuttaki maddeleri Jaccard benzerliği eşiği aşmaz (kopya/şablon yakalama).
@@ -245,8 +245,8 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
      - [ ] T-A2.1.4: Biçim/sayım kontrolü.
    - **E-A2.2 — İstisna ve eşik ayarı.**
      - [ ] T-A2.2.1: Alan istisna listesi (ortak meşru terimler) + eşik kalibrasyonu altın düğümlerle.
-4. **Edge case / riskler:** Türkçe kök/çekim farkları terim eşleşmesini şaşırtır → normalize (küçük harf, ek-toleransı). Benzerlik kapısı yavaş (422×14) → boyut-bazlı grupla, O(n²) yerine imza-kümeleme.
-5. **DoD:** `contentQuality.test.ts` mevcut; altın 15 düğüm geçiyor; 407 düğüm bilinçli olarak KIRMIZI (bu beklenen başlangıç); eşikler kalibre.
+4. **Edge case / riskler:** Türkçe kök/çekim farkları terim eşleşmesini şaşırtır → normalize (küçük harf, ek-toleransı). Benzerlik kapısı yavaş (467×17) → boyut-bazlı grupla, O(n²) yerine imza-kümeleme.
+5. **DoD:** `contentQuality.test.ts` mevcut; altın düğümler geçiyor; şablon/generic içerik kırmızı yakıyor; eşikler kalibre.
 
 ## Faz A3 — Provenance ve izlenebilirlik veri modeli
 
@@ -263,9 +263,9 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
      - [ ] T-A3.1.1: `provenance/promptVersion/lastReviewed` ekle, default ver.
      - [ ] T-A3.1.2: `dataIntegrity.test.ts` + conformance güncelle (alanlar opsiyonel/uyumlu).
    - **E-A3.2 — Geriye dönük damgalama.**
-     - [ ] T-A3.2.1: Mevcut 407 düğümü `template`, 15 altın düğümü `human` damgala (tek seferlik script — yalnız veri, kod değil).
+     - [ ] T-A3.2.1: Mevcut düğümleri `template`, `swarm` veya `human` kökeniyle damgala (tek seferlik script — yalnız veri, kod değil).
 4. **Edge case / riskler:** `.strict()` şema bilinmeyen alanı reddeder → ekleme şart; migration güvenliği: yeni alan append-only (silme/rename yok). 
-5. **DoD:** Şema yeni alanları taşıyor; tüm 422 düğüm geçerli; provenance dağılımı `meta.json`'a yansıyor (407 template / 15 human başlangıç).
+5. **DoD:** Şema yeni alanları taşıyor; tüm 467 düğüm geçerli; provenance dağılımı `meta.json`'a yansıyor.
 
 ## Faz A4 — Swarm sıkılaştırma (içerik üretim motoru)
 
@@ -311,9 +311,9 @@ Bu küme, içerik derinleştirme başlamadan önce kurulması gereken ölçüm, 
 
 ---
 
-# KÜME B — İçerik Derinleştirme (407 sayfa × 14 boyut)
+# KÜME B — İçerik Derinleştirme (467 düğüm × 17 üretim boyutu)
 
-Bu küme planın ağırlık merkezidir. 407 zayıf (kalıp) sayfanın 14 boyutunu, Bölüm 5 rubriğine ve Küme A kapısına göre gerçek, sayfaya-özel, derin içeriğe çevirir. Çalışma **node-cluster bazlı fazlara** bölünür; her faz tek bir küme (ör. finance) ile sınırlıdır ki paralel ajanlar çakışmasın ve PR'lar incelenebilir kalsın.
+Bu küme planın ağırlık merkezidir. 467 düğümün 17 üretim boyutunu, Bölüm 5 rubriğine ve Küme A kapısına göre gerçek, sayfaya-özel, derin içerik olarak tutar. Çalışma **node-cluster bazlı fazlara** bölünür; her faz tek bir küme (ör. finance) ile sınırlıdır ki paralel ajanlar çakışmasın ve PR'lar incelenebilir kalsın.
 
 ### B kümesi ortak faz şablonu (her Bx fazı bunu izler)
 
@@ -344,7 +344,7 @@ Her cluster, 6-8 düğümlük partilere bölünür (görev setleri = partiler). 
 3. **Geliştirme yaklaşımı:**
    - **E-B0.1 — Pilot koşusu.**
      - [ ] T-B0.1.1: `agents:swarm -- --cluster=kernel --concurrency=2` koş.
-     - [ ] T-B0.1.2: 11 zayıf düğümün 14 boyutu derinleşti mi, kapı yeşil mi?
+     - [ ] T-B0.1.2: Pilot düğümlerin 17 üretim boyutu derinleşti mi, kapı yeşil mi?
      - [ ] T-B0.1.3: 4 altın düğüm değişmedi mi (provenance=human korundu)?
    - **E-B0.2 — Kalite ayarı.**
      - [ ] T-B0.2.1: Çıktıyı altın komşularla kıyasla; prompt/eşik ayarı gerekiyorsa Küme A'ya geri besle.
@@ -457,7 +457,7 @@ Aşağıdaki her faz, ortak şablonu (yukarıda) izler. Her fazda **Odak** satı
 - **DoD:** 22 düğüm yeşil (doküman-kalite).
 
 ### Faz B21 — kararlar / ADR (26 sayfa, karar kaydı)
-- **Odak:** Mimari Karar Kayıtları (ADR). Doküman-kalite: her ADR için bağlam/karar/sonuç netliği + ilgili ArcheType/feature'a bağ (integration). 14 boyut yerine ADR-özel kriter.
+- **Odak:** Mimari Karar Kayıtları (ADR). Doküman-kalite: her ADR için bağlam/karar/sonuç netliği + ilgili ArcheType/feature'a bağ (integration). 17 üretim boyutu ADR bağlamına göre uygulanır; alakasız boyutlar gerekçeli N/A olur.
 - **Partiler:** [ ] B21-p1..p4.
 - **DoD:** 26 ADR'de bağlam-karar-sonuç dolu + çapraz-bağlar mevcut.
 
@@ -499,14 +499,14 @@ Aşağıdaki her faz, ortak şablonu (yukarıda) izler. Her fazda **Odak** satı
 
 **Aktörler:** Sistem benzerlik/tutarlılık kapısını koşar; Kullanıcı çatışmaları çözer; AI ajan önerir.
 
-1. **Test planı (önce):** Global çapraz-düğüm benzerlik kapısı (tüm 422 düğüm, boyut-bazlı); terim tutarlılık kontrolü (App/Module/ArcheType/field kullanımı); üst-alt çelişki kontrolü.
+1. **Test planı (önce):** Global çapraz-düğüm benzerlik kapısı (tüm 467 düğüm, boyut-bazlı); terim tutarlılık kontrolü (App/Module/ArcheType/field kullanımı); üst-alt çelişki kontrolü.
 2. **Veri modeli:** Yok (okur + nokta düzeltme).
 3. **Geliştirme yaklaşımı:**
    - **E-B28.1 — Global benzerlik taraması.** [ ] T-B28.1.1: Eşik üstü çiftleri raporla. [ ] T-B28.1.2: Tekrarları farklılaştır.
    - **E-B28.2 — Terim/sözlük tutarlılığı.** [ ] T-B28.2.1: Sözlük dışı/yanlış terim kullanımını düzelt.
    - **E-B28.3 — Üst-alt tutarlılık.** [ ] T-B28.3.1: parent-child çelişkilerini gider.
 4. **Edge case/risk:** Aşırı farklılaştırma yapay çeşitlilik üretir → insan denetimi. 
-5. **DoD:** Global benzerlik eşiği altında; terim tutarlı; üst-alt çelişki yok; 422/422 `contentQuality` yeşil; `meta.json` provenance dağılımı güncel (hedef: template ≈ 0, swarm+human = 422).
+5. **DoD:** Global benzerlik eşiği altında; terim tutarlı; üst-alt çelişki yok; 467/467 `contentQuality` yeşil; `meta.json` provenance dağılımı güncel.
 
 ---
 
@@ -778,7 +778,7 @@ Mount kilidi takılırsa (yalnız sandbox sorunu, Mac'te olmaz): `rm -f $(find .
 ## Ek B — DoD master checklist (küme kapıları)
 
 - [ ] Küme A: kalite sözleşmesi + contentQuality kapısı + provenance + swarm sıkılaştırma hazır; altın 15 düğüm yeşil.
-- [ ] Küme B: 422/422 `contentQuality` yeşil; global benzerlik eşiği altında; provenance template≈0.
+- [ ] Küme B: 467/467 `contentQuality` yeşil; global benzerlik eşiği altında; provenance template≈0.
 - [ ] Küme C: paket şeması + 5 çekirdek + operasyonel paketler conformance yeşil; sayfa `eca` boyutları paketlere bağlı; ölü referans yok.
 - [ ] Küme D: Surface/Workflow şema + Product/Customer fixture + versiyon uyumu yeşil.
 - [ ] Küme E: ECA/agentPolicy/risk gösterimi + simülasyon; e2e+axe yeşil; "yürütmez" uyarısı net.
@@ -811,7 +811,7 @@ Tanım: sistemin şu an fark etmediği risk sınıfı. Periyodik (çeyreklik) so
 - **R7 — UI "simüle = çalıştır" yanılgısı (düşük):** Azaltma: net "yürütmez" etiketi.
 - **R8 — Mount git tuzağı (düşük):** kilit takılır. Azaltma: Ek A lock temizleme; git Mac'te.
 
-## Ek E — Node-cluster sayım tablosu (toplam 422)
+## Ek E — Node-cluster sayım tablosu (toplam 467)
 
 | Küme | Sayfa | Tip | İlgili Faz |
 |---|---|---|---|

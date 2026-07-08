@@ -23,7 +23,7 @@ Neden ayrı dosya: `AGENTS.md` §7 "Kanonik Dokümanlar ve Düzenleme Yetkisi" �
 
 Mevcut metin (satır 82):
 ```
-- Veri/form/durum ekosistemi: **TanStack** (Router/Query/Table) + RHF/Zod (veya TanStack Form). Backend kilidi: **Prisma + PostgreSQL**.
+- Eski yanlış ifade: backend kilidi Node/Prisma ORM gibi okunuyordu. Güncel doğru stack: **FastAPI + SQLAlchemy 2.0 / SQLModel + Alembic + PostgreSQL**.
 ```
 
 Önerilen metin (satır 82):
@@ -36,11 +36,11 @@ Unified diff:
 --- a/AGENTS.md
 +++ b/AGENTS.md
 @@ -82 +82 @@
--- Veri/form/durum ekosistemi: **TanStack** (Router/Query/Table) + RHF/Zod (veya TanStack Form). Backend kilidi: **Prisma + PostgreSQL**.
+-- Eski yanlış ifade: backend kilidi Node/Prisma ORM gibi okunuyordu. Güncel doğru stack: FastAPI + SQLAlchemy 2.0 / SQLModel + Alembic + PostgreSQL.
 +- Veri/form/durum ekosistemi: **TanStack** (Router/Query/Table) + RHF/Zod (veya TanStack Form). Backend: **FastAPI + SQLAlchemy 2.0 / SQLModel + Alembic + PostgreSQL**.
 ```
 
-Gerekçe: Repo backend'i Python/FastAPI + SQLAlchemy 2.0'dır (bkz. `numeronym-siniflandirma.md` §2 ORM satırı, `core-contract-pack.md` Alembic migration atıfları, `adr-K1-kernel-kimlik.md` stack kilidi). "Prisma" (Node/TS ORM) bu stack'te kullanılmaz; satırdaki "Prisma + PostgreSQL" hatalıdır ve `enterprise-standards-audit-2026-07-01.md` C1'de zaten boşluk olarak işaretlidir. "Backend kilidi" ifadesi "Backend" olarak yumuşatıldı çünkü SQLModel/SQLAlchemy alternatifi açık bırakılıyor; kesin kilidi insan tercih ederse "Backend kilidi:" öneki korunabilir.
+Gerekçe: Repo backend'i Python/FastAPI + SQLAlchemy 2.0'dır (bkz. `numeronym-siniflandirma.md` §2 ORM satırı, `core-contract-pack.md` Alembic migration atıfları, `adr-K1-kernel-kimlik.md` stack kilidi). Prisma (Node/TS ORM) bu stack'te kullanılmaz; eski backend kilidi beyanı hatalıydı ve `enterprise-standards-audit-2026-07-01.md` C1'de zaten boşluk olarak işaretlidir. "Backend kilidi" ifadesi "Backend" olarak yumuşatıldı çünkü SQLModel/SQLAlchemy alternatifi açık bırakılıyor; kesin kilidi insan tercih ederse "Backend kilidi:" öneki korunabilir.
 
 ---
 

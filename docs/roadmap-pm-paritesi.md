@@ -80,7 +80,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 
 ## Faz 1 — Tablo görünümü + filtre DSL + kayıtlı görünümler
 
-**Amaç:** 424 düğümü tek ekranda sıralanabilir/filtrelenebilir/gruplanabilir bir grid'de dilimlemek; Jira "saved filter" paritesi.
+**Amaç:** 467 düğümü tek ekranda sıralanabilir/filtrelenebilir/gruplanabilir bir grid'de dilimlemek; Jira "saved filter" paritesi.
 
 **1) Test planı (önce)**
 - `tableModel.test.ts`: kolon türetme, sıralama (alan + yön), gruplama anahtarı, filtre entegrasyonu (query AST → görünür satır kümesi).
@@ -92,7 +92,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 
 **3) Geliştirme yaklaşımı**
 - TanStack Table (`useReactTable`) — sıralama/gruplama/seçim state'i tabloda; filtre `filterNodes(ast)` ile ÖN-filtre (TanStack global filter yerine engine kullan → tutarlılık).
-- Büyük liste: satır sanallaştırma (yoğunlukta) veya milestone/level grupla + sayfalı; ilk sürümde 424 satır kabul edilir, gerekirse `@tanstack/virtual`.
+- Büyük liste: satır sanallaştırma (yoğunlukta) veya milestone/level grupla + sayfalı; ilk sürümde 467 satır kabul edilir, gerekirse `@tanstack/virtual`.
 - URL + localStorage senkronu: aktif sorgu querystring'e yazılır (paylaşılabilir), localStorage'a düşer.
 
 **4) UI tanımı**
@@ -158,7 +158,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 
 **3) Geliştirme yaklaşımı**
 - ECharts `custom` seri + `renderItem` ile yatay bar Gantt (SVG renderer; mevcut `EChart` sarmalayıcı). Bağımlılık okları ilk sürümde opsiyonel (kritik yol vurgusu yeterli).
-- Kapsam seçici: app/milestone bazlı (424 barı aynı anda çizme → grupla/scope).
+- Kapsam seçici: app/milestone bazlı (467 barı aynı anda çizme → grupla/scope).
 - Baseline: "Planı dondur" aksiyonu → baseline alanlarını set (override persist); Gantt'ta iki şeritli (plan soluk + gerçek dolu) gösterim.
 
 **4) UI tanımı**
@@ -303,6 +303,6 @@ Cowork içi alt-ajanlar oturum-içi yoldur; **ürün/CI yolunda** ajan koşumu k
 
 **Ölçüm (her faz):** yeni testler yeşil + mevcut kapılar bozulmadı + audit ortalaması düşmedi + paket boyutu kabul sınırında (ağır görünümler tembel) + canlı doğrulama.
 
-**Riskler:** (a) paylaşılan dosyalarda paralel ajan çakışması → fazlar arası dosya sahipliği netleştirilir, ajanlar izole node/util dosyalarında çalışır; (b) 424 satır tablo/Gantt performansı → sanallaştırma/scope; (c) çok-kullanıcılı gerçek senaryolar backend ister → bilinçli kapsam dışı (assignee yalnız veri).
+**Riskler:** (a) paylaşılan dosyalarda paralel ajan çakışması → fazlar arası dosya sahipliği netleştirilir, ajanlar izole node/util dosyalarında çalışır; (b) 467 satır tablo/Gantt performansı → sanallaştırma/scope; (c) çok-kullanıcılı gerçek senaryolar backend ister → bilinçli kapsam dışı (assignee yalnız veri).
 
 **Dogfooding (öneri):** Bu 8 fazı, aracın KENDİ WBS'ine düğüm olarak ekle (her faz = archetype/feature, alt adımlar = component/work_unit) → araç kendi geliştirme planını yönetir, audit/yürütme/Gantt görünümlerini kendi yol haritasıyla test eder.

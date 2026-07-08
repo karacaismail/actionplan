@@ -24,9 +24,9 @@ actionplan "NE yapılacak"ı 467 düğüm + 17 boyutla tanımlar. Görevden wate
 
 | Metrik | ChatGPT Raporu (eski — geçersiz) | Güncel (main) |
 |---|---|---|
-| Toplam düğüm | 437 | 467 |
-| Üretim boyutu | 14 | 17 |
-| Owner dolu | 411/437 | 467/467 |
+| Toplam düğüm | eski rapor | 467 |
+| Üretim boyutu | eski set | 17 |
+| Owner dolu | eski rapor | 467/467 |
 | Evidence/traceability | 0 | requirements/backlog için blocker değil; done/development kapılarında zorunlu |
 | Schedule dolu | kısmen | 467/467 |
 | Phase criteria dolu | kısmen | 467/467 |

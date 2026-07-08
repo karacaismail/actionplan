@@ -1,7 +1,7 @@
-# 14 Üretim Boyutu — Eksik Analizi ve Genişletme Önerisi (2026-07-02)
+# Üretim Boyutu Genişletme Analizi — 17 Boyut Sonucu (2026-07-02)
 
-**Durum:** taslak — insan onayı bekler (ADR adayı).
-**Kapsam:** `src/schemas/task.ts` içindeki `DIMENSION_KEYS` (14 boyut), `src/data/strings.json` `dimensions` bloğu, ADR-0027 işletim katmanı, 467 WBS düğümü.
+**Durum:** tamamlandı — ADR-0028/day-2 genişlemesi production gerçekliğine işlendi.
+**Kapsam:** `src/schemas/task.ts` içindeki `DIMENSION_KEYS` (17 üretim boyutu), `src/data/strings.json` `dimensions` bloğu, ADR-0027 işletim katmanı, 467 WBS düğümü.
 **Kardeş dosyalar:** `gap-2026-07-02-00-index.md` (master), `adr-0027-engineering-standards.md`, `dimension-migration-runbook.md`.
 
 Terimler (ilk geçtikleri yer): Boyut (dimension) = her WBS düğümünde ayrı izlenen içerik kartı (iskelet/taslak/dolu). standardRef = düğümün tek-kaynak standart sözleşmesine verdiği referans; içerik kopyalamaz. Applicability = "bu boyut bu düğüme uygulanmaz" kaydı (gerekçe zorunlu). Lazy migration = yeni alanın dosyalara toplu yazılmaması; Zod şeması okuma anında varsayılanı doldurur. KVKK/GDPR = kişisel veri koruma mevzuatları. SLO = servis seviyesi hedefi. RTO/RPO = felaket sonrası dönüş süresi / kabul edilebilir veri kaybı penceresi.
@@ -10,7 +10,7 @@ Terimler (ilk geçtikleri yer): Boyut (dimension) = her WBS düğümünde ayrı 
 
 ## 0. Tek cümlelik hüküm
 
-Mevcut 14 boyut "ürünü doğru inşa etme" eksenini iyi kapsıyor; boş kalan eksen **"ürün üretimde yaşarken ne olur"** eksenidir — veri yaşam döngüsü ve mevzuat uyumu, gözlemlenebilirlik/operasyonel hazırlık ve dayanıklılık/süreklilik için hiçbir boyutun, hiçbir standardRef'in ve hiçbir düğüm alanının tam sahibi yoktur. Öneri: 14 → **17** (üç yeni boyut); geri kalan sekiz aday eksik ise ADR-0027 gereği boyut değil, referans veya mevcut alan kanalıyla kapatılır.
+Güncel 17 üretim boyutu "ürünü doğru inşa etme" ve **"ürün üretimde yaşarken ne olur"** eksenlerini birlikte kapsar: veri yaşam döngüsü ve mevzuat uyumu, gözlemlenebilirlik/operasyonel hazırlık ve dayanıklılık/süreklilik artık üretim boyutu olarak izlenir; geri kalan aday eksikler ADR-0027 gereği referans veya mevcut alan kanalıyla kapatılır.
 
 ---
 
@@ -26,7 +26,7 @@ Karar ölçütü tek cümle: **cevap düğüme göre değişiyorsa boyut, deği�
 
 ---
 
-## 2. Mevcut 14'ün kapsama haritası — ne yapar, ne yapmaz
+## 2. Güncel 17'li setin kapsama haritası — ne yapar, ne yapmaz
 
 Mevcut set (aile eşlemesiyle): featureDefs, moduleUsage, integration (functional) · security, securityOptimization, performance, mobileApps, wcag, owasp (runtime-quality) · codeOptimization (engineering) · deployment (operations) · eca, aiAgents (automation) · testing (verification).
 
@@ -100,13 +100,13 @@ Aktörler: **insan (sen)** ADR onayı ve içerik kararı verir; **AI ajan** tasl
 
 **Adım 5 — çapraz repo.** projector `content-source` üreteçleri ve overlay'ler yeni anahtarları tanımalı; aksi halde docs sitesi 17'liyi 14 gösterir. Bu, actionplan PR'ı merge edildikten sonra ayrı bir projector PR'ıdır.
 
-**Riskler / edge case'ler:** (a) içerik yükü — 3 kart × dolu doldurulmaya kalkışılırsa jenerik çöp üretilir; ADR-0027'nin N/A ilkesi burada da bağlayıcıdır, kart ancak gerçek içerik varsa doldurulur; (b) swarm prompt'ları (`tools/agents/prompt-template.md`) 14'e gömülü referans içeriyorsa güncellenmeli; (c) eski export/import edilmiş JSON'lar `.strict()` şemada sorun çıkarmaz çünkü eksik anahtar hata değildir — fakat 17'li export'u 14'lü eski sürüme geri import etmek bilinmeyen anahtar hatası verir (şema sürümü `1.1.0`'a yükseltilmeli).
+**Riskler / edge case'ler:** (a) içerik yükü — day-2 kartları doldurulurken jenerik çöp üretilmemeli; ADR-0027'nin N/A ilkesi burada da bağlayıcıdır, kart ancak gerçek içerik varsa doldurulur; (b) swarm prompt'ları (`tools/agents/prompt-template.md`) güncel 17 üretim boyutunu tek kaynak olarak kullanmalı; (c) eski export/import edilmiş JSON'lar `.strict()` şemada sorun çıkarmaz çünkü eksik anahtar hata değildir — üretim export'u 17 boyut taşır ve şema sürümü `1.1.0`'dır.
 
 ---
 
 ## 6. Bilinçli yapılmayanlar (non-goals)
 
-Mevcut 14 boyuttan hiçbiri silinmez/yeniden adlandırılmaz (ADR-0027 non-goal'u korunur). `security`+`securityOptimization`+`owasp` birleştirmesi bu kapsamda değildir; ayrı bir v2 ADR'ında, veri migration maliyetiyle birlikte tartılmalıdır. Mühendislik standartları boyutlaştırılmaz. Bu rapor kod değiştirmez — insan onayından sonra yukarıdaki sırayla ayrı bir PR'da uygulanır.
+Mevcut üretim boyutlarından hiçbiri silinmez/yeniden adlandırılmaz (ADR-0027 non-goal'u korunur). `security`+`securityOptimization`+`owasp` birleştirmesi bu kapsamda değildir; ayrı bir v2 ADR'ında, veri migration maliyetiyle birlikte tartılmalıdır. Mühendislik standartları boyutlaştırılmaz. Güncel production veri seti exact-17 kapısıyla korunur.
 
 ## 7. Karar noktaları (insan onayı gereken)
 

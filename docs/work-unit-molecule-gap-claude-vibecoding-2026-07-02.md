@@ -57,10 +57,10 @@ Yorum: Work_unit sayısı component sayısıyla neredeyse bire bir. Bu gerçek �
 | `dependsOn` boş | 18/18 |
 | `evidence` boş | 17/18 |
 | AC içinde test/kanıt eşlemesi geçen | 1/18 |
-| 14 boyutu dolu | 18/18 |
+| 17 üretim boyutu dolu | 18/18 |
 | İnsan kaynaklı/review işaretli boyut | 2/18 |
 
-Yorum: 14 boyut dolu olsa bile work_unit yürütülebilir sayılmaz. Work_unit seviyesinde asıl değer `repoPath`, `testCommand`, concrete function/class name, positive/negative test, parent component bağı ve child micro_step roll-up'ıdır.
+Yorum: 17 üretim boyutu dolu olsa bile work_unit yürütülebilir sayılmaz. Work_unit seviyesinde asıl değer `repoPath`, `testCommand`, concrete function/class name, positive/negative test, parent component bağı ve child micro_step roll-up'ıdır.
 
 ### 1.3 Mevcut work_unit envanteri
 

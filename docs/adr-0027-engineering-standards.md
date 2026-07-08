@@ -2,7 +2,7 @@
 
 Statü: kabul · ADR-0026'yı (tech-profiles) **genelleştirir**. Kaynak: ChatGPT Codex gap-analizi + iç unknown-unknowns analizi (boyut ontolojisi, "sözleşme-değil-içerik", per-node applicability, CI kapısı, çapraz-repo).
 
-Güncellik notu (2026-07-08): ADR-0027 ilk kararı 14 miras boyut üzerinde kurulmuştu. Güncel üretim seti ADR-0028/day-2 genişlemesiyle 17 boyuttur (`dataLifecycle`, `observability`, `reliability` eklendi); standart referans, applicability, waiver ve aileleme ilkeleri 17 boyutun tamamına uygulanır.
+Güncellik notu (2026-07-08): ADR-0027 ilk kararı miras üretim boyutu seti üzerinde kurulmuştu. Güncel üretim seti ADR-0028/day-2 genişlemesiyle 17 boyuttur (`dataLifecycle`, `observability`, `reliability` eklendi); standart referans, applicability, waiver ve aileleme ilkeleri 17 boyutun tamamına uygulanır.
 
 ## 1. Sorun (doğrulanmış)
 

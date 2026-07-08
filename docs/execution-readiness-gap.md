@@ -1,14 +1,14 @@
 # Execution Readiness Gap Analizi
 
 **Tarih:** 2026-06-28
-**Kapsam:** actionplan nodes.json — 424 düğüm
+**Kapsam:** actionplan nodes.json — eski snapshot
 **Soru:** Bu plan neden execution-ready değil? Enterprise execution-ready olmak için ne gerekiyor?
 
 ---
 
 ## 1. Temel Kavram: "Node Var" ile "Enterprise Execution-Ready" Farkı
 
-424 düğüm var. WBS hiyerarşisi çizilmiş, schemaVersion 1.0.0, title/summary/wbsCode dolu, risks/acceptanceCriteria/deliverables alanları var. Bu "WBS kataloğu var" anlamına gelir.
+Eski snapshot'ta WBS hiyerarşisi çizilmiş, schemaVersion 1.0.0, title/summary/wbsCode dolu, risks/acceptanceCriteria/deliverables alanları vardı. Bu "WBS kataloğu var" anlamına gelir.
 
 Enterprise execution-ready olmak farklı bir durumdur. Bir planı execution-ready yapan şey şudur: herhangi bir düğümü alan bir ekip, o düğümden bağımsız olarak şu soruların yanıtını düğümün içinde bulabilmeli:
 
@@ -18,47 +18,47 @@ Enterprise execution-ready olmak farklı bir durumdur. Bir planı execution-read
 4. Hangi belgeler, testler, PR'lar tamamlandığında bu iş done sayılır?
 5. Bu işin durumu bugün itibarıyla gerçekte nedir?
 
-Şu anda bu soruların hiçbiri 424 düğümün 411'inde yanıtsız.
+Eski snapshot'ta bu soruların büyük çoğunluğu yanıtsızdı.
 
 ---
 
 ## 2. Neden Execution-Ready Değil: Boşlukların Etkisi
 
-### 2.1 Owner Yok — Sorumluluk Yok (411/424 düğüm)
+### 2.1 Owner Yok — Sorumluluk Yok
 
-411 düğümde `owner` boş. Bu şu anlama gelir: bir düğüm "backlog" kaldığında onu ilerletmekle yükümlü kimse yok. Proje yönetim sistemlerinde "atanmamış iş" kategorik olarak ilerlemeyen iştir. Bir CI kapısı olmadan bu durum sonsuz backlog üretir.
+Eski snapshot'ın büyük çoğunluğunda `owner` boştu. Bu şu anlama gelir: bir düğüm "backlog" kaldığında onu ilerletmekle yükümlü kimse yok. Proje yönetim sistemlerinde "atanmamış iş" kategorik olarak ilerlemeyen iştir. Bir CI kapısı olmadan bu durum sonsuz backlog üretir.
 
-Daha kritik olanı: 26/27 app-level düğüm owner boş. Uygulamaların sahipliği tanımlanmamışken modül ve alt düzey sahipliği atamak anlamsız; sahiplik hiyerarşi boyunca yukarıdan aşağıya türetilmek zorunda.
+Daha kritik olanı: app-level düğümlerin çoğunda owner boştu. Uygulamaların sahipliği tanımlanmamışken modül ve alt düzey sahipliği atamak anlamsız; sahiplik hiyerarşi boyunca yukarıdan aşağıya türetilmek zorunda.
 
-Mevcut durum: sadece CRM zinciri (13 düğüm, tek ekip) ve 2 archetype düğümü (customer, product) atanmış. 411 düğüm yetim.
+Eski durum: sadece CRM zinciri ve birkaç archetype düğümü atanmıştı; geri kalan büyük çoğunluk yetimdi.
 
-### 2.2 Refs Yok — Kaynak İzlenemiyor (422/424 düğüm)
+### 2.2 Refs Yok — Kaynak İzlenemiyor
 
-`refs` alanı bir düğümün dayandığı teknik artefaktları (ADR, şema dosyası, archetype sözleşmesi, PR, confluence sayfası) tutar. 422 düğümde boş.
+`refs` alanı bir düğümün dayandığı teknik artefaktları (ADR, şema dosyası, archetype sözleşmesi, PR, confluence sayfası) tutar. Eski snapshot'ta büyük çoğunlukta boştu.
 
 Sonuç: bir düğümün gerekliliği sorgulandığında hangi karardan kaynaklandığı bilinmiyor. Audit veya değişim yönetimi sırasında bir düğümü değiştirmek istediğinizde etkinin nereden kaynaklandığını izleyemezsiniz. "Neden bu düğüm var?" sorusu yanıtsız kalıyor.
 
-### 2.3 Bağımlılık Eksik — Sıralama Belirsiz (112/424 düğüm)
+### 2.3 Bağımlılık Eksik — Sıralama Belirsiz
 
-112 düğümde `dependsOn` boş. Bu düğümler için hangi işlerin tamamlanması gerektiği bilinmiyor. Kritik olan şu: component/work_unit/micro_step seviyesindeki tüm 55 düğümde dependsOn tamamen boş. Bu seviyeler teorik olarak birbirine en sıkı bağlı katmanlardır.
+Eski snapshot'ta çok sayıda düğümde `dependsOn` boştu. Bu düğümler için hangi işlerin tamamlanması gerektiği bilinmiyordu. Kritik olan şu: component/work_unit/micro_step seviyesinde dependsOn boşluğu, teorik olarak en sıkı bağlı olması gereken katmanlarda sıralama belirsizliği üretir.
 
-dependsOn dolu olan 312 düğümde kırık referans yok (iyi haber). Ancak dolu olması, içeriğin doğru sıralamayı yansıttığını garanti etmiyor — bu ayrı bir insan doğrulaması gerektirir.
+dependsOn dolu olan eski snapshot düğümlerinde kırık referans yoktu (iyi haber). Ancak dolu olması, içeriğin doğru sıralamayı yansıttığını garanti etmiyor — bu ayrı bir insan doğrulaması gerektirir.
 
-### 2.4 Schedule Yok — Zaman Çizelgesi Yok (421/424 düğüm)
+### 2.4 Schedule Yok — Zaman Çizelgesi Yok
 
-421 düğümde `schedule.start` ve `schedule.end` null. Kritik yolun (8 düğüm) ne zaman tamamlanacağı hesaplanamıyor. Sprint planlaması, kaynak dengeleme, milestone takibi yapılamıyor.
+Eski snapshot'ın büyük çoğunluğunda `schedule.start` ve `schedule.end` null idi. Kritik yolun ne zaman tamamlanacağı hesaplanamıyordu. Sprint planlaması, kaynak dengeleme, milestone takibi yapılamıyordu.
 
 3 düğümde tarih dolu (atom-crm-email-regex, molekul-crm-score-field-validator, atom-crm-score-range-check) — bunlar zaten `done`, yani geçmişe dair tarih girilmiş.
 
-### 2.5 Evidence Yok — Tamamlanma İspat Edilemiyor (424/424 düğüm)
+### 2.5 Evidence Yok — Tamamlanma İspat Edilemiyor
 
-424 düğümde `evidence` boş. DoD (enterprise-dod.md) her katman için ölçülebilir kanıt belgesi gerektiriyor: test sonuçları, PR linkleri, erişilebilirlik raporu, şema kayıt belgesi. Hiçbir düğümde bu yok.
+Eski snapshot'ta `evidence` boştu. DoD (enterprise-dod.md) her katman için ölçülebilir kanıt belgesi gerektiriyor: test sonuçları, PR linkleri, erişilebilirlik raporu, şema kayıt belgesi.
 
 "done" işaretli 3 düğüm bile evidence içermiyor. Bu düğümlerin gerçekten tamamlandığını doğrulayacak kanıt yok — status manuel atanmış, desteksiz.
 
 ### 2.6 Progress 1.71 / 100 — Fiili İlerleme Neredeyse Sıfır
 
-424 düğümde ortalama progress 1.71. Done olan 3 düğüm bu ortalamayı zaten maksimize ediyor. Kalan 421 düğümün progress ortalaması ~0.
+Eski snapshot'ta ortalama progress neredeyse sıfırdı. Done olan az sayıdaki düğüm bu ortalamayı zaten maksimize ediyordu.
 
 Yorumu: plan var, içerik iskelet olarak girilmiş, ama gerçek iş %0'a yakın.
 
@@ -68,11 +68,11 @@ Yorumu: plan var, içerik iskelet olarak girilmiş, ama gerçek iş %0'a yakın.
 
 ### 3.1 Phase Marker Olarak Kullanılıyor
 
-411/424 düğüm `phase: db-schema`. Bu faz WBS'de "şema tasarımı" fazını temsil etmeli; ancak kullanım biçimine bakıldığında başlangıç marker'ı gibi davranıyor. Gerçek fazlardan geçmemiş her düğüm db-schema'ya atanmış. Bu, faz raporlamasını anlamsız kılıyor: tüm plan "şema aşamasında" görünüyor.
+Eski snapshot'ın büyük çoğunluğu `phase: db-schema` idi. Bu faz WBS'de "şema tasarımı" fazını temsil etmeli; ancak kullanım biçimine bakıldığında başlangıç marker'ı gibi davranıyordu. Gerçek fazlardan geçmemiş her düğüm db-schema'ya atanmıştı. Bu, faz raporlamasını anlamsız kılıyordu.
 
 ### 3.2 Boilerplate İçerik Kalite Sinyalini Bastırıyor
 
-407/424 düğümde risks aynı iki kalıp cümle. 411/424 düğümde deliverables'ın ilk kalemi "Testler + dokümantasyon". 407/424 düğümde acceptanceCriteria "KVKK + AAA erişilebilirlik kapıları geçti". Bu boilerplate varlığı içeriğin dolu görünmesini sağlıyor; ancak içerik düğüme özgü değil. Kalite kapısı bu boilerplate varlığını "dolu" olarak geçiriyor.
+Eski snapshot'ın büyük çoğunluğunda risks aynı iki kalıp cümleyi, deliverables ilk kalemi "Testler + dokümantasyon" metnini, acceptanceCriteria ise "KVKK + AAA erişilebilirlik kapıları geçti" kalıbını taşıyordu. Bu boilerplate varlığı içeriğin dolu görünmesini sağlıyor; ancak içerik düğüme özgü değil.
 
 ### 3.3 59 Scaffold Düğüm Temizlenmemiş
 
@@ -92,10 +92,10 @@ Aşağıdaki maddeler öncelik sırasına göre verilmiştir. Her madde bir ön 
 Her app-level düğüme bir ekip (veya yük taşıyan) atanmalı. Atama yukarıdan aşağıya miras yoluyla veya generator ile yapılabilir; ancak içerik doğrulaması insan onayı gerektirir. Owner olmadan ne CI kapısı ne de progress takibi işe yarar.
 
 **Seviye 2 — Kaynak referansları (refs)**
-Her düğüm dayandığı ADR veya şema sözleşmesine en az bir ref içermeli. Minimum: app-level düğümler için ADR linki, module düğümler için archetype sözleşmesi yolu. 424 düğüm için tam doluluk hedeflenmeli; öncelik app + module katmanı (176 düğüm).
+Her düğüm dayandığı ADR veya şema sözleşmesine en az bir ref içermeli. Minimum: app-level düğümler için ADR linki, module düğümler için archetype sözleşmesi yolu. 467 düğüm için tam doluluk hedeflenmeli; öncelik app + module katmanı.
 
 **Seviye 3 — Bağımlılık zinciri tamamlanması**
-112 boş dependsOn düğümü, özellikle component/work_unit/micro_step (55 düğüm), bağımlılık zinciri kurulmalı. Bu yapılmadan sprint sıralama ve paralel iş planlama mümkün değil.
+Boş dependsOn düğümleri, özellikle component/work_unit/micro_step katmanında, bağımlılık zincirine bağlanmalı. Bu yapılmadan sprint sıralama ve paralel iş planlama mümkün değil.
 
 **Seviye 4 — Zaman çizelgesi**
 Her düğüme en azından sprint veya çeyrek bazında `schedule.start` / `schedule.end` girilmeli. Bu yokken teslim tarihi verilemez, gecikmeler ölçülemiyor.
@@ -115,11 +115,11 @@ risks, deliverables, acceptanceCriteria alanlarında düğüme özgü içerik ya
 
 | Boyut | Şu an | Execution-ready için gerekli |
 |---|---|---|
-| Sorumluluk | 13/424 owner dolu | 424/424 dolu (generator + insan onayı) |
-| Kaynak izlenebilirlik | 2/424 refs dolu | 424/424 dolu (önce 176 app+module) |
-| Bağımlılık zinciri | 312/424 dolu, component/work_unit/micro_step boş | 424/424 dolu, tüm seviyelerde geçerli |
-| Zaman hedefi | 3/424 tarih dolu | 424/424 dolu (sprint veya çeyrek granülerliğinde) |
-| Tamamlanma kanıtı | 0/424 evidence | CI entegrasyonu + 424/424 doluluk |
+| Sorumluluk | eski snapshot'ta düşük owner doluluğu | 467/467 dolu (generator + insan onayı) |
+| Kaynak izlenebilirlik | eski snapshot'ta düşük refs doluluğu | 467/467 dolu (önce app+module) |
+| Bağımlılık zinciri | eski snapshot'ta kısmi doluluk, alt seviye boşlukları | 467/467 dolu, tüm seviyelerde geçerli |
+| Zaman hedefi | eski snapshot'ta düşük tarih doluluğu | 467/467 dolu (sprint veya çeyrek granülerliğinde) |
+| Tamamlanma kanıtı | eski snapshot'ta evidence yok | CI entegrasyonu + 467/467 doluluk |
 | İçerik özgünlüğü | Boilerplate hakimiyeti | Düğüme özgü risks/deliverables/AC |
 | Sahte düğüm | 59 scaffold | Temizle veya etiketle |
-| İlerleme | %0.7 (3/424 done) | Fonksiyonel milestone; en az bir app uçtan uca |
+| İlerleme | eski snapshot'ta çok düşük | Fonksiyonel milestone; en az bir app uçtan uca |
