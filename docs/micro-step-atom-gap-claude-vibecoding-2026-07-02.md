@@ -12,6 +12,8 @@ Doc-maintainer sınırı: Bu rapordaki Claude/prompt bölümleri implementation 
 
 Bu rapor 2026-07-02 anlık denetimidir. 2026-07-08 itibarıyla actionplan'da vibecoding handoff yüzeyi eklendi: Developer Brief, Agent Prompt, Evidence Patch, Vobecoder Card, implementation workspace manifesti ve `qa:vibecoding` kapısı yayındadır. Bu, rapordaki "hangi alan eksik" teşhisini tarihsel backlog olarak bırakır; ancak hiçbir micro_step/atom düğümünü otomatik code-start `GO` yapmaz. Güncel kural: `phase=development` + dolu `traceability.repoPath` + dolu `traceability.testCommand` + `implementationStatus != not-started` olmadan kod yazılmaz.
 
+Ek güncelleme (2026-07-08): implementation workspace artık `docs/implementation-workspace-manifest.md` ve `src/data/workspace-manifest.json` ile tanımlıdır: `/Users/karaca/DEV/mimari/platform`, branch `master`, remote yok. Bu rapordaki "platform repo var mı/path bilinmiyor" türü eski teşhisler tarihsel kayıt olarak kalır; güncel code-start için workspace manifesti, traceability alanları ve `kernel-sdk-app-delivery-sequence.md` birlikte uygulanır.
+
 ---
 
 ## 0. Tek Hüküm
@@ -536,7 +538,7 @@ Kabul:
 
 Yap:
 
-1. Gerçek platform repo var mı, yok mu netleştir.
+1. Workspace manifestindeki `/Users/karaca/DEV/mimari/platform` checkout'unu, branch `master` gerçeğini ve hedef parent work_unit/component yapısını code-start öncesi doğrula.
 2. Shared hosting iddiası hangi deploy topolojisini kastediyor, karar yaz.
 3. Legal hold vs retention conflict için test senaryosu yaz.
 4. Generated CRUD write bypass için statik/dinamik test yaz.

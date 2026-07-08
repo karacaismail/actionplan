@@ -12,6 +12,8 @@ Doc-maintainer sınırı: Bu rapordaki Claude/prompt bölümleri implementation 
 
 Bu rapor 2026-07-02 anlık denetimidir. 2026-07-08 itibarıyla actionplan'da vibecoding handoff yüzeyi eklendi: Developer Brief, Agent Prompt, Evidence Patch, Vobecoder Card, implementation workspace manifesti ve `qa:vibecoding` kapısı yayındadır. Bu, rapordaki "hangi alan eksik" teşhisini tarihsel backlog olarak bırakır; ancak hiçbir work_unit/molekül düğümünü otomatik code-start `GO` yapmaz. Güncel kural: `phase=development` + dolu `traceability.repoPath` + dolu `traceability.testCommand` + `implementationStatus != not-started` olmadan kod yazılmaz.
 
+Ek güncelleme (2026-07-08): implementation workspace artık `docs/implementation-workspace-manifest.md` ve `src/data/workspace-manifest.json` ile tanımlıdır: `/Users/karaca/DEV/mimari/platform`, branch `master`, remote yok. Bu rapordaki "platform repo var mı/path bilinmiyor" türü eski teşhisler tarihsel kayıt olarak kalır; güncel code-start için workspace manifesti, traceability alanları ve `kernel-sdk-app-delivery-sequence.md` birlikte uygulanır.
+
 ---
 
 ## 0. Tek Hüküm
@@ -380,7 +382,7 @@ Work_unit seviyesinde asıl evidence unit testtir. Mevcut AC'ler genellikle test
 
 | Unknown unknown | Neden tehlikeli | Claude'un yapacağı probe |
 |---|---|---|
-| Gerçek platform repo path bilinmiyor | Work_unit kodlanamaz | Platform repo path ve modül yapısı doğrulanmalı |
+| Tarihsel: gerçek platform repo path bilinmiyordu; güncel: workspace manifestinde tanımlı | Work_unit yine de otomatik code-start olmaz | `docs/implementation-workspace-manifest.md` + `src/data/workspace-manifest.json` + düğüm `traceability.repoPath/testCommand` birlikte doğrulanmalı |
 | Work_unit sınırı fazla büyük | Claude component/feature kadar büyük diff üretir | Her work_unit tek function/class/test pack sınırına indirilmeli |
 | Work_unit sınırı fazla küçük | Atom ile work_unit karışır, WBS şişer | Tek assertion atom, tek validator function work_unit kuralı |
 | Mock sahte-yeşili | Unit test mock'un kendi dönüşünü test eder | High-risk'te gerçek adapter/testcontainer veya fake değil in-memory domain store |
@@ -557,7 +559,7 @@ Kabul:
 
 Yap:
 
-1. Gerçek platform repo var mı netleştir.
+1. Workspace manifestindeki `/Users/karaca/DEV/mimari/platform` checkout'unu, branch `master` gerçeğini ve hedef modül yapısını code-start öncesi doğrula.
 2. Work_unit granülerliği için 5 örnek doğru, 5 örnek yanlış sınıflandırma üret.
 3. Mock sahte-yeşilini yakalayan test politikası yaz.
 4. Generated CRUD write bypass probe'u yaz.

@@ -148,17 +148,17 @@ Bu checklist mevcut boşlukları gizlemez; şu şekilde uygulanır: yazılmamı�
 
 | Boşluk | Etki | Düzeltme | Priority |
 |---|---|---|---|
-| `check-i18n` yazılmamış (2026-07-01 doğrulandı: dosya yok) | S-14/N-01 deklare + `g11n.json` sözleşmesi VAR, ama kapı zorlamıyor | `check-i18n.mjs` yaz + `deploy.yml`'e ekle | P1 |
-| `check-core-contract` yazılmamış (2026-07-01 doğrulandı: dosya yok) | N-05 (i14y) sözleşmesi VAR ama zorlanmıyor | kapı yaz veya atıfları düzelt | P1 |
-| `check-scale-invariant` yazılmamış (2026-07-01 doğrulandı: dosya yok) | `scale-invariant-directive.md` atıflı ama outbox/idempotency zorlanmıyor | `check-scale-invariant.mjs` yaz + `deploy.yml`'e ekle | P1 |
-| `check-secrets`/gitleaks koşmuyor | secret sızıntısı sessiz geçebilir | gitleaks kapısı ekle | P0 |
+| `check-i18n` yazılmamıştı (2026-07-01 snapshot) | KAPANDI: i18n/l10n/g11n sözleşmesi artık kapıyla zorlanıyor | `tools/agents/check-i18n.mjs` + `deploy.yml` mevcut | P1 |
+| `check-core-contract` yazılmamıştı (2026-07-01 snapshot) | KAPANDI: core sözleşme referansları artık kapıyla zorlanıyor | `tools/agents/check-core-contract.mjs` + `deploy.yml` mevcut | P1 |
+| `check-scale-invariant` yazılmamıştı (2026-07-01 snapshot) | KAPANDI: plan/sözleşme düzeyi outbox/idempotency invariantı artık kapıyla zorlanıyor | `tools/agents/check-scale-invariant.mjs` + `deploy.yml` mevcut | P1 |
+| `check-secrets`/gitleaks koşmuyordu | KISMEN KAPANDI: hafif desen-tabanlı secret kapısı koşuyor; tam git-geçmişi/entropi gitleaks hardening ayrı iştir | `tools/agents/check-secrets.mjs` + `deploy.yml` mevcut | P0 |
 | restore-drill CI job yok | L2 backup/restore kanıtsız | periyodik restore-drill job | P1 |
 | Beş primitif şemada yok (C6) | Mode-Profile/Capability/PDP modellenemez | ADR + `archetype.ts` şeması (`plan-01` D1) | P0 |
-| `AGENTS.md:82` Prisma (C1) | ajan yanlış-üretim riski | insan elle SQLAlchemy'ye düzeltir (bkz. `PENDING-HUMAN-FIXES-2026-07-01.md`) | P0 |
+| `AGENTS.md:82` Prisma (C1) | KAPANDI: güncel stack FastAPI + SQLAlchemy 2.0/SQLModel + Alembic + PostgreSQL | `AGENTS.md` ve `PENDING-HUMAN-FIXES-2026-07-01.md` çözüldü notu | P0 |
 
-Bu satırlar kapatılana kadar ilgili master satırları "PASS" değil "TODO (kapı yok)" işaretlenir; bir app o standarda dayanıyorsa waiver (`waiver-policy.md`: gerekçe+onay+süre) ile geçici geçebilir.
+Bu satırlar kapalıysa ilgili master satırları tekrar "kapı yok" gerekçesiyle TODO sayılmaz. Kalan açık riskler platform runtime kanıtı, restore-drill job ve beş primitif şemasıdır; bir app o standarda dayanıyorsa waiver (`waiver-policy.md`: gerekçe+onay+süre) yalnız gerçek açık risk için kullanılabilir.
 
-RECONCILE notu (2026-07-01, güncellendi): Bu paketin **sözleşme** boşlukları kapandı — 13 sözleşmenin tamamı (`g11n`, `a11y`, `authz-rbac-abac`, `c13n`, `data-normalization`, `i14y`, `c12n`, `p13n`, `sso`, `mfa`, `oidc`, `edge-security`, `iac`) artık `src/data/standards/*.json`'da VAR. Üç eksik **CI kapısı** (`check-i18n`, `check-core-contract`, `check-scale-invariant`) de **yazıldı** ve `deploy.yml`'e eklendi. Genel ilke bakidir: yazılmamış bir kapı (ör. gitleaks) "yeşil sanılmaz" (§12 anti-pattern).
+RECONCILE notu (2026-07-01, güncellendi): Bu paketin **sözleşme** boşlukları kapandı — 13 sözleşmenin tamamı (`g11n`, `a11y`, `authz-rbac-abac`, `c13n`, `data-normalization`, `i14y`, `c12n`, `p13n`, `sso`, `mfa`, `oidc`, `edge-security`, `iac`) artık `src/data/standards/*.json`'da VAR. Üç eksik **CI kapısı** (`check-i18n`, `check-core-contract`, `check-scale-invariant`) ve hafif `check-secrets` kapısı da **yazıldı** ve `deploy.yml`'e eklendi. Genel ilke bakidir: yazılmamış bir kapı "yeşil sanılmaz" (§12 anti-pattern).
 
 ---
 

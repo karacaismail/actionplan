@@ -1,8 +1,10 @@
 # Gap Analizi — ARCHETYPE Katmanı (2026-07-02)
 
 - Kapsam: `docs/archetype-*.md`, `atomic-types-directive.md`, `atomik-*.md`, `fragments-directive.md`, `golden-node-examples.md`, `dod-evidence-schema-directive.md`, `pim-*.md`, `claude-ai-archetype-eca-directive.md`, `src/schemas/archetype.ts`, `src/data/archetypes/*`.
-- Durum: current. `elestiri-01-archetype-2026-07-01` dosyasını günceller.
+- Durum: tarihsel snapshot / güncel notlarla okunur. `elestiri-01-archetype-2026-07-01` dosyasını 2026-07-02 itibarıyla günceller.
 - Şiddet ölçeği ve terimler için `gap-2026-07-02-00-index.md`.
+
+Güncel kullanım notu (2026-07-08): Bu rapordaki "workflow/ledger/order/inventory/messaging/check-archetype-relation yok" teşhislerinin bir bölümü artık kapanmıştır. `docs/workflow-directive.md`, `docs/archetype-ledger-directive.md`, `docs/archetype-order-line-item-directive.md`, `docs/archetype-inventory-stock-directive.md`, `docs/archetype-messaging-thread-directive.md` ve `tools/agents/check-archetype-relation.mjs` vardır. Kalan risk, bu sözleşmelerin platform runtime implementation kanıtına ve daha geniş fixture/conformance kapsamına bağlanmasıdır.
 
 ---
 
@@ -43,11 +45,11 @@ Codex ekseninde archetype tarafı ilerlemiş: variant-attribute-family, eav, tax
 
 ## 4. Boşluklar
 
-Önce "isimlendirilmiş ama yazılmamış" ile "hiç yok" ayrımı: Workflow her yerde birinci sınıf kavram olarak *adlandırılır* ama yönergesi **hiç yoktur** — bu en kritik açıktır.
+Önce "isimlendirilmiş ama yazılmamış" ile "runtime kanıtı henüz yok" ayrımı: 2026-07-02'de Workflow her yerde birinci sınıf kavram olarak *adlandırılıyor* ama yönergesi yoktu; 2026-07-08 itibarıyla yönerge vardır. Güncel kritik açık, workflow motorunun platform implementation/evidence paketidir.
 
 ### P0 — kurucu boşluklar
 
-**G-A1. Workflow yönergesi hiç yok.** `LifecycleSchema` (states/initial/transitions + guard) çekirdek şemada var ve iki fixture'da kullanılıyor; ama bu basit doğrusal durum makinesidir. `archetype-uretim-spec §2` Workflow'u Surface'in kardeşi, "ayrı versiyonlanır" birinci sınıf kavram olarak *adlandırır*; `linkedWorkflows` her yerde referanslanır — ama `workflow-directive.md` **hiç yoktur** (paralel branch, SLA timer, escalation olan gerçek iş akışı motoru tanımsız). Onay zinciri gereken her ürün (PMS, HRMS, accounting, CLM) boşta referansa güvenir.
+**G-A1. Workflow yönergesi yoktu; yönerge kapandı, runtime kanıtı kaldı.** `LifecycleSchema` (states/initial/transitions + guard) çekirdek şemada var ve iki fixture'da kullanılıyor; ama bu basit doğrusal durum makinesidir. `workflow-directive.md` artık paralel branch, SLA timer, escalation ve gerçek iş akışı motoru sözleşmesini tanımlar. Kalan P0 risk: bu motorun platform implementation kanıtı, fixture kapsamı ve `check-workflow-contract` gibi workflow-motor-özel kapısı henüz bu audit kapsamında doğrulanmamıştır.
 
 **G-A2. Çift-taraflı muhasebe (ledger/journal) metamodeli yok.** Grep 0. Accounting + MRP costing (§12.D "costing değişimi yeni dönem açar" = dönem-kapatma varsayar) yapısal olarak ledger gerektirir; yok.
 
@@ -77,7 +79,7 @@ Codex ekseninde archetype tarafı ilerlemiş: variant-attribute-family, eav, tax
 
 - `check-atomic-types` **içi-boş**: 17 tip-adı string'ini `archetype.ts`'te arar; dokümanın vaat ettiği "13 sözleşme boyutu" per-FieldType denetimini yapmaz.
 - `check-fragments` **içi-boş**: şemada 3 alan-adı altstring'i arar; fragment örneğini doğrulamaz (zaten fixture'da kanonik fragment yok).
-- `check-archetype-relation` **YOK** ama `archetype-tree-relation-directive.md` "zorunludur" der → P0 yanlış-güven (index §6).
+- `check-archetype-relation` için 2026-07-02'de **YOK** teşhisi doğruydu; 2026-07-08 itibarıyla `tools/agents/check-archetype-relation.mjs` vardır ve `qa:flow`/CI zincirine bağlıdır. Kalan risk kapı yokluğu değil, kapının plan/sözleşme ilişki beyanını denetlemesi ve platform runtime davranışını doğrudan doğrulamamasıdır.
 - Sonuç: archetype katmanında gerçek örnek verinin (yalnız 2 fixture) conformance'ı hiçbir kapı tarafından kod-seviyesinde doğrulanmıyor.
 
 ---
@@ -85,7 +87,7 @@ Codex ekseninde archetype tarafı ilerlemiş: variant-attribute-family, eav, tax
 ## 6. Unknown-unknowns (archetype)
 
 - Fragment→ArcheType terfi yolu hiç denenmemiş: `fragments-directive §11` temiz bir "kimlik testi" tanımlar ama göçün şema mı, veri mi, ikisi mi olduğu ve `platform` aracının var olup olmadığı belirsiz.
-- `linkedWorkflows` var olmayan bir sözleşmeye işaret ediyor (G-A1); her yönergenin terminoloji bölümü Workflow'u var sayar ama teslim edilmemiştir.
+- `linkedWorkflows` artık `workflow-directive.md` ile sözleşmeye bağlanmıştır; kalan bilinmeyen, gerçek `workflow_def`/`workflow_instance` implementation ve kanıt paketidir.
 - Eşzamanlı/işbirlikli düzenleme çatışması hiçbir yerde ele alınmamış (optimistic locking / CRDT / last-write-wins?) — AI ile eşzamanlı düzenleme hedefi için kör nokta.
 - "2 fixture" durumu kasıtlı minimal referans mı, yoksa yürütme boşluğu mu (18 ürün onlarca archetype ister, 2 var) — hiçbir doküman "X ürünü için N archetype yazılacak" demiyor; "yolunda" ile "çok geride" ayırt edilemiyor.
 
@@ -97,6 +99,6 @@ Codex ekseninde archetype tarafı ilerlemiş: variant-attribute-family, eav, tax
 2. **Veri modeli.** Önce Money atomunu gerçekten uygula; sonra sırayla: Workflow (durum makinesi veri modeli), Ledger/journal, Order/line-item, Inventory/stok-hareketi, Messaging/thread, Payroll. Her biri `archetype-uretim-spec` şablonunu izlesin. (Aktör: AI taslak → insan onay.)
 3. **Geliştirme yaklaşımı.** v3 archetype yönergelerini "taslak"tan çıkar; 2 fixture'ı önce kurala uygun hale getir (referans örnek olmalılar), sonra ilk dikey dilim için gerçek archetype üret.
 4. **Edge-case/risk.** Çapraz-ArcheType değişmezleri ("order total = satırların toplamı" satırlar ayrı aggregate iken); Mode-Profile ↔ storage-canonical terfi etkileşimi; eşzamanlı düzenleme.
-5. **Adımlar.** Önce kapı + fixture düzeltmesi → Money → Workflow yönergesi → Ledger → Order → Inventory → Messaging → Payroll → BOM/routing tam yönergesi.
+5. **Adımlar.** Önce kapı + fixture düzeltmesi → Money → Workflow implementation/evidence → Ledger/Order/Inventory/Messaging implementation evidence → Payroll → BOM/routing tam yönergesi.
 
 Bu turda UYGULANDI: `docs/workflow-directive.md`, `docs/archetype-ledger-directive.md`, `docs/archetype-order-line-item-directive.md`, `docs/archetype-inventory-stock-directive.md`, `docs/archetype-messaging-thread-directive.md` TAM yazıldı; `src/data/archetypes/order.json` fixture eklendi ve `tests/archetype.test.ts`'e dahil edildi (sarkan `order` referansı çözüldü); `tools/agents/check-archetype-relation.mjs` gerçek kapı olarak eklendi + `deploy.yml`'e bağlandı (geçersiz `kind` sert-fail, sarkan hedef WARN). Money atomunun gerçek uygulaması + BOM/routing/payroll yönergeleri sıradaki tur.

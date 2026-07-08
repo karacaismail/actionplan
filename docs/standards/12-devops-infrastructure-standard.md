@@ -47,7 +47,7 @@ CI/CD, main'e her merge'i denetleyen bloklayıcı kapı hattıdır ve şu şekil
 | `check-tech-profile` | Stack manifesti, headless kilidi, global yasak-lib (next/redux/MUI…) | `tools/agents/check-tech-profile.mjs` |
 | `check-secrets` (ÖNERİLEN — YENİ) | gitleaks: repoda düz-metin secret yok | `tools/agents/check-secrets.mjs` (henüz yok — `plan-01` D4) |
 
-Not: `check-secrets` ve restore-drill job'ı bugün `deploy.yml`'de **koşmuyor** (`enterprise-standards-audit-2026-07-01.md` Ek); bu standart onları `plan-01` Dalga 4 iş kalemi olarak zorunlu-kapı hedefi yapar. CI/CD hattı yeşil olmadan hiçbir sürüm etiketlenmez (`release-policy.md`: tag/release insan tarafından atılır).
+Not: 2026-07-08 itibarıyla hafif desen-tabanlı `check-secrets` kapısı `deploy.yml`'de koşar. Kalan açık DevOps hardening işi tam git-geçmişi/entropi gitleaks taraması ve restore-drill job'ıdır. CI/CD hattı yeşil olmadan hiçbir sürüm etiketlenmez (`release-policy.md`: tag/release insan tarafından atılır).
 
 ---
 
