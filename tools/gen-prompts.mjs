@@ -3,7 +3,7 @@
  * gen-prompts — her düğümün her boyutu için BAĞLAMA-ÖZGÜ bir AI prompt'u üretir
  * (dimensions[k].prompt). Prompt; düğümün id/başlık/seviye/küme/özet/etiketlerini gömer
  * → her düğümde benzersiz + "prompt niteliğinde" (Rapor 2 çözümü; 348× tekrar biter).
- * Bu prompt'lar "Export this task" ile dışa aktarılıp vibecoding ajanına verilir.
+ * Bu prompt'lar Raw JSON / Agent Prompt exportlarıyla vibecoding ajanına bağlam olarak verilir.
  * Yalnız dimensions[*].prompt alanını yazar; items/notes/şema korunur.
  */
 import fs from "node:fs";

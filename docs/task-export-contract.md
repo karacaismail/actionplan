@@ -66,9 +66,9 @@ Seviye/faz yorumlama kuralları:
 ```
 # Developer Brief — [task.title]
 
-Seviye: task | Faz: development | Sahip: [owner] | Durum: in-progress
+Seviye: feature / taş | Faz: development | Sahip: [owner] | Durum: in-progress
 
-Bu görev implementation repo'da [repoPath] yolundaki modülü etkiler.
+Bu görev implementation repo'da [repoPath] yolundaki feature/component dilimini etkiler.
 Yapılmayacaklar: başka tenant modüllerine dokunulmaz, migration dışı DDL çalıştırılmaz.
 ```
 

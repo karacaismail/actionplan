@@ -76,8 +76,8 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [gap-2026-07-02-02-archetype.md](gap-2026-07-02-02-archetype.md) — ArcheType katmanı boşluk raporu: workflow, ledger, order, inventory, messaging ve fixture eksikleri.
 - [gap-2026-07-02-03-surface.md](gap-2026-07-02-03-surface.md) — Surface katmanı boşluk raporu: panel tier, archetypeRef çapraz-kontrolü ve eksik yüzey tipleri.
 - [gap-2026-07-02-05-uygulama-raporu.md](gap-2026-07-02-05-uygulama-raporu.md) — 2026-07-02 uygulama raporu: eklenen yönergeler, kapılar, fixture ve kalan insan-kararı işleri.
-- [work-unit-molecule-gap-claude-vibecoding-2026-07-02.md](work-unit-molecule-gap-claude-vibecoding-2026-07-02.md) — Work unit / molekül seviyesi yürütülebilirlik ve Claude vibecoding gap raporu.
-- [micro-step-atom-gap-claude-vibecoding-2026-07-02.md](micro-step-atom-gap-claude-vibecoding-2026-07-02.md) — Micro step / atom seviyesi yürütülebilirlik ve Claude vibecoding gap raporu.
+- [work-unit-molecule-gap-claude-vibecoding-2026-07-02.md](work-unit-molecule-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Work unit / molekül yürütülebilirlik gap raporu; güncel handoff için Developer Brief / Agent Prompt exportları kullanılır.
+- [micro-step-atom-gap-claude-vibecoding-2026-07-02.md](micro-step-atom-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Micro step / atom yürütülebilirlik gap raporu; güncel handoff için Developer Brief / Agent Prompt exportları kullanılır.
 
 ## 7. AI Yönergeleri
 

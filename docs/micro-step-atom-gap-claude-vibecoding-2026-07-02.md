@@ -2,8 +2,14 @@
 
 Tarih: 2026-07-02  
 Kapsam: `actionplan` WBS/sözleşme deposu, özellikle `level = micro_step` olan atom görevleri.  
-Kullanım: Bu dosya Claude Code / Cursor / başka bir vibecoding ajanına tek prompt olarak verilebilir.  
+Kullanım: Tarihsel gap raporu ve iyileştirme backlog'u olarak okunur; doğrudan kodlama promptu değildir. Güncel kodlama/handoff kaynağı `docs/developer-guide.md`, `docs/task-export-contract.md`, `docs/implementation-workspace-manifest.md` ve görev detay ekranındaki Developer Brief / Agent Prompt / Vobecoder Card exportlarıdır.
 Amaç: Kernel geliştirildikten sonra atom seviyesindeki görev tanımlarında ne eksik, hangi atom görevleri eksik, hangi bilinmeyen-bilinmeyenler var ve Claude hangi fazlarla ilerlemeli sorularını tek raporda kapatmak.
+
+---
+
+## Güncel Statü Notu — 2026-07-08
+
+Bu rapor 2026-07-02 anlık denetimidir. 2026-07-08 itibarıyla actionplan'da vibecoding handoff yüzeyi eklendi: Developer Brief, Agent Prompt, Evidence Patch, Vobecoder Card, implementation workspace manifesti ve `qa:vibecoding` kapısı yayındadır. Bu, rapordaki "hangi alan eksik" teşhisini tarihsel backlog olarak bırakır; ancak hiçbir micro_step/atom düğümünü otomatik code-start `GO` yapmaz. Güncel kural: `phase=development` + dolu `traceability.repoPath` + dolu `traceability.testCommand` + `implementationStatus != not-started` olmadan kod yazılmaz.
 
 ---
 

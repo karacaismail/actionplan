@@ -99,7 +99,7 @@ requireText("docs/task-export-contract.md", "Vobecoder Card", "Vobecoder Card so
 requireText("docs/task-export-contract.md", "app | ada", "doga metaforu seviye tablosu");
 forbidText(
   "docs/task-export-contract.md",
-  "UI'ya üç export seçeneği eklenmesi ayrı bir iş olarak planlanmalıdır",
+  "export seçeneği eklenmesi ayrı bir iş olarak planlanmalıdır",
   "planlanmamis UI export ifadesi",
 );
 requireText(
