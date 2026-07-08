@@ -3,7 +3,7 @@
  * check-core-contract (core-contract-pack §2 — BLOKLAYICI). Kernel sözleşme paketinin (§2 Kernel
  * Sözleşmeleri) beş ZORUNLU primitifinin — tenant / authz / audit / observability / module-sdk —
  * sözleşme-referanslarının VARLIĞINI doğrular. Her primitif için: (1) §2.x başlık çıpası,
- * (2) arayüz imzası (kanonik backend paket import yolu, ör. `backend/platform_tenancy`),
+ * (2) arayüz imzası (kanonik backend paket import yolu, ör. `apps/api/platform_tenancy`),
  * (3) uygulama-tüketimi çıpası ("Uygulama tüketimi" ya da eşdeğer arayüz beyanı) beklenir.
  * Bir primitif sözleşmesi eksik/kopmuşsa (dokümanda beyan yoksa) exit 1 — böylece dokümanların
  * adını andığı ama tanımlamadığı sözleşme drift'i (C7 bulgusu) bloklanır.
@@ -40,31 +40,31 @@ const PRIMITIVES = [
   {
     key: "tenant",
     heading: /###\s*2\.1\s+Tenant Context/,
-    sig: /backend\/platform_tenancy/,
+    sig: /apps\/api\/platform_tenancy/,
     api: /require_tenant/,
   },
   {
     key: "authz",
     heading: /###\s*2\.2\s+Identity\s*\/\s*AuthZ/,
-    sig: /backend\/platform_authn_authz/,
+    sig: /apps\/api\/platform_authn_authz/,
     api: /RequirePermission/,
   },
   {
     key: "audit",
     heading: /###\s*2\.5\s+Audit Log/,
-    sig: /backend\/platform_audit/,
+    sig: /apps\/api\/platform_audit/,
     api: /AuditLogger/,
   },
   {
     key: "observability",
     heading: /###\s*2\.9\s+Observability/,
-    sig: /backend\/platform_observability/,
+    sig: /apps\/api\/platform_observability/,
     api: /get_logger/,
   },
   {
     key: "module-sdk",
     heading: /###\s*2\.10\s+Module SDK/,
-    sig: /backend\/platform_sdk/,
+    sig: /apps\/api\/platform_sdk/,
     api: /class\s+AppModule/,
   },
 ];

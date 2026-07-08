@@ -35,10 +35,13 @@ Bu checkout'ta uzak GitHub remote'u kanıtlanmadığı için exportlar repo URL'
 |---|---|
 | `apps/api` | FastAPI + GraphQL backend |
 | `apps/web` | Vite + React frontend |
+| `packages/sdk` | Kernel public sözleşmelerinden türeyen typed SDK ve generator çıktıları |
 | `packages/ui` | Paylaşılan UI paketleri |
 | `infra` | Altyapı ve çalışma ortamı dosyaları |
 
 Task exportlarında `traceability.repoPath` boşsa kod yazmaya başlanmaz. Önce ilgili kök altında gerçek hedef yol belirlenir ve Evidence Patch veya plan verisi güncellenir.
+
+Teknik teslim sırası için `docs/kernel-sdk-app-delivery-sequence.md` esas alınır: kernel hazır olmadan SDK, SDK hazır olmadan app-core, app-core hazır olmadan app module development başlatılmaz.
 
 ---
 

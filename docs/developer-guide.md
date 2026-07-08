@@ -43,6 +43,18 @@ Doğru sıra şudur:
 
 Kanonsel ilk dikey dilim Customer'dır: platform-customer-model, platform-customer-graphql, platform-customer-ui, platform-customer-seed sıralamasıyla ilerler. OrderOps ise build referans uygulamasıdır, canlı pilot değil; öğretici bir örnek olarak okunabilir.
 
+### Teknik teslim sırası
+
+Görev bulma sırası ile platformun teknik doğum sırası karıştırılmaz. Platform hattı bağlayıcı olarak şöyledir:
+
+1. Kernel geliştirilir.
+2. Kernel public sözleşmelerinden SDK geliştirilir.
+3. SDK ile app'e özgü core module geliştirilir.
+4. App-core sonrasında app'in ihtiyacı olan diğer module'ler geliştirilir.
+5. App, hazır module'lerin release train/kompozisyon etiketi olarak paketlenir.
+
+Bu sıranın ayrıntısı `docs/kernel-sdk-app-delivery-sequence.md` içindedir. App düğümü kod yazma yeri değildir; app-core module ve app module'leri implementation reposunda, task-to-code sözleşmesinin izin verdiği archetype ve alt seviyelerde kodlanır.
+
 ---
 
 ## 3. Yürütme Döngüsü
@@ -227,11 +239,13 @@ actionplan'ın kendisinde kod değişikliği yapılmaz. actionplan yalnızca pla
 
 Kod şu hiyerarşiye göre yazılır:
 
-- Core katman (auth, DB, AppFactory, tenant izolasyonu): implementation reposunun `core/` dizininde.
-- Uygulama modülleri (Customer, OrderOps vb.): implementation reposunun `apps/<app-slug>/` dizininde.
-- Shared kütüphaneler (ortak tipler, schema araçları): implementation reposunun `packages/` dizininde.
+- Kernel/backend katmanı (auth, DB, tenant izolasyonu, event/outbox, audit, observability, module registry): implementation reposunun `apps/api/platform_*` paketlerinde.
+- SDK katmanı: implementation reposunun `packages/sdk` dizininde; kernel public sözleşmelerinden türetilir, elle drift ettirilmez.
+- App'e özgü core module: implementation reposunda `apps/api/platform_<app_slug>_core` ve gerektiğinde `apps/web/src/apps/<app_slug>` altında.
+- App'in diğer module'leri (Customer, OrderOps vb.): app-core sonrasında `apps/api/platform_<app_slug>_<module_slug>` ve ilgili frontend projection altında.
+- Shared UI kütüphaneleri: implementation reposunun `packages/ui` dizininde.
 
-Hangi seviyede kod yazılıp yazılmayacağı task-to-code-contract.md ve core-contract-pack.md belgelerinde tanımlanmıştır. Bu sözleşmeleri ihlal eden PR CI'da reddedilir.
+Hangi seviyede kod yazılıp yazılmayacağı task-to-code-contract.md, kernel-sdk-app-delivery-sequence.md ve core-contract-pack.md belgelerinde tanımlanmıştır. Bu sözleşmeleri ihlal eden PR CI'da reddedilir.
 
 ---
 
@@ -242,6 +256,7 @@ Bu rehber, actionplan ekosisteminin genel bakışıdır. Ayrıntılar için:
 | Belge | Amaç |
 |---|---|
 | `docs/task-to-code-contract.md` | Görev JSON alanı ile kod konumu / test türü eşlemesi |
+| `docs/kernel-sdk-app-delivery-sequence.md` | Kernel → SDK → app-core → app module → app assembly teslim sırası |
 | `docs/core-contract-pack.md` | Platform core katmanının mimari sözleşmesi |
 | `docs/task-export-contract.md` | Developer Brief export JSON şeması |
 | `docs/evidence-update-runbook.md` | PR merge sonrası kanıtı plana geri yazma ritüeli |

@@ -116,6 +116,13 @@ Aşağıdaki kapılar ADR-0026/0027'den önce de vardı ve standart katmanıyla 
 - Yeşil koşul: `phase = development` olan her düğüm `docs/ready-for-dev-gate.md` Bölüm 2'deki 10 alan kontrolünü 10/10 geçer.
 - Veri doldukça nasıl dişlenir: Daha çok düğüm development fazına aktıkça kapı her birini tek tek 10/10 zorunlu tutar.
 
+### check-delivery-sequence
+
+- Ne zorlar: Kernel → SDK → app-core → app module → app assembly teknik teslim sırasının kanonik dokümanda, developer handoff dokümanlarında, workspace manifestte, export promptta ve CI zincirinde aynı kalması.
+- Dosya yolu: `tools/agents/check-delivery-sequence.mjs`
+- Yeşil koşul: `docs/kernel-sdk-app-delivery-sequence.md` mevcut; task-to-code, developer-guide, waterfall handoff, core contract, app distribution, workspace manifest ve docs index bu sözleşmeye bağlı; SDK kökü `packages/sdk`; eski `backend/` / `frontend/apps/` kök dili core/app dağıtım belgelerinde kalmamış.
+- Veri doldukça nasıl dişlenir: SDK veya app-core sözleşmesi genişledikçe bu kapıya yeni zorunlu referans ve path denetimi eklenir; böylece app/module geliştiricisi sırayı tersinden başlatamaz.
+
 ---
 
 ## 3. evidence ve DoR İçin Ayrı Kapı Yoktur
@@ -146,5 +153,6 @@ Bu nedenle yeni eklenen kapılar yalnızca standart referansı, uygulanabilirlik
 | check-data-quality | Veri tutarlılığı (DAG) | `tools/agents/check-data-quality.mjs` | Mevcut |
 | check-execution-readiness | evidence + yürütme | `tools/agents/check-execution-readiness.mjs` | Mevcut (evidence kapsar) |
 | check-ready-for-dev | Definition of Ready | `tools/agents/check-ready-for-dev.mjs` | Mevcut (DoR kapsar) |
+| check-delivery-sequence | Kernel/SDK/app-core teslim sırası | `tools/agents/check-delivery-sequence.mjs` | Mevcut |
 
 Kaynaklar: kapı tanımları `.github/workflows/deploy.yml`; standart sözleşmeleri `src/data/standards/*.json`; düğüm bağı `src/schemas/task.ts`; standart şema `src/schemas/standard.ts`. İlgili kararlar: `docs/adr-0026-tech-profiles.md`, `docs/adr-0027-engineering-standards.md`. Hub: `docs/engineering-standards-index.md`.

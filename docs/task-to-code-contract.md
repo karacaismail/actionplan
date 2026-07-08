@@ -41,6 +41,20 @@ PR/merge kuralı: bir düğüm "done" sayılabilmesi için ilgili waterfall faz�
 
 deploy kuralı: app düğümü tek başına deploy birimi değildir; o, altındaki tüm modüllerin tamamlanmasıyla oluşan release train'in etiketidir. Gerçek deploy birimi staging → prod geçişi yapabilen en küçük bağımsız katman olan archetype'tır.
 
+### Platform doğum sırası — kernel → SDK → app-core → app module → app
+
+Seviye/faz karar ağacının üstünde bir teknik teslim sırası daha vardır. Platform geliştirme hattı şu sırayı izler:
+
+1. Kernel geliştirilir.
+2. Kernelin public sözleşmelerinden SDK geliştirilir.
+3. SDK ile app'e özgü core module geliştirilir.
+4. App-core sonrasında app'in ihtiyacı olan diğer module'ler geliştirilir.
+5. App, hazır module'lerin release train/kompozisyon etiketi olarak paketlenir.
+
+Bu sıra `docs/kernel-sdk-app-delivery-sequence.md` içinde bağlayıcı olarak tanımlıdır. Bu doküman seviye/faz master sözleşmesi olmaya devam eder; sequence dokümanı bu sözleşmenin teknik teslim sırası eklentisidir.
+
+Sonuç: app sayfasından doğrudan kod yazılmaz; app-core module hazır olmadan app module development başlatılmaz; SDK hazır olmadan app-core production kodu yazılmaz; kernel sözleşmesi hazır olmadan SDK üretilmez.
+
 ---
 
 ## 2. Faz → Eylem

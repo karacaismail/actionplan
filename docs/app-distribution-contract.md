@@ -22,8 +22,9 @@ Not: Bu doküman **kod yazmaz**. `platform` reposunun paketleme/izolasyon/lisans
 
 Bu doküman boyunca kullanılan jargon, ilk geçişte açıklanır:
 
-- **Kernel (çekirdek):** Tüm uygulamaların paylaştığı, `core-contract-pack.md`'de tanımlı runtime sözleşmesi ve primitifler kümesi (tenant context, identity/authz, event bus + outbox, audit, module SDK, archetype registry, workflow registry vb.). Kod olarak `backend/platform_*` paketleri.
+- **Kernel (çekirdek):** Tüm uygulamaların paylaştığı, `core-contract-pack.md`'de tanımlı runtime sözleşmesi ve primitifler kümesi (tenant context, identity/authz, event bus + outbox, audit, module SDK, archetype registry, workflow registry vb.). Kod olarak `apps/api/platform_*` paketleri.
 - **App (uygulama / dikey dilim):** Satılabilir bir ürün birimi. Bir iş problemini uçtan uca çözer (ör. Fatura, CRM, Envanter). Bir veya birden çok **module**'den oluşur.
+- **App-core module:** Tek bir app'in zorunlu ilk module'ü. App slug'ını, capability listesini, event namespace'ini, ortak domain sözlüğünü, policy varsayılanlarını ve module composition kuralını taşır. Kernel değildir; yalnız kendi app'ine aittir. Ayrıntılı sıra: `kernel-sdk-app-delivery-sequence.md`.
 - **Module (modül):** Kernele bağlanan en küçük çalışan yazılım birimi. `core-contract-pack §2.10 Module SDK`'daki `AppModule` arayüzünü uygular (`slug`, `version`, `register_routes`, `register_graphql`, `on_startup`, ...). Bir app, module'lerin paketlenmiş kümesidir.
 - **Kernel primitifi:** Kernelin sunduğu, her isteğin dayandığı temel yetenek. Örnekler: `k-tenancy` (kiracı bağlamı), `k-identity` + `k-authz` (kimlik + yetki), `k-capability` (yetenek/entitlement anahtarı), `k-actor` (insan/sistem/ajan ayrımı), `k-policy-pdp` (Policy Decision Point — yetki kararı motoru), `k-jurisdiction` (Locale/Currency/Tax/Timezone/Residency 6-eksen çözümleme). Bunlar app değil, kernelin parçasıdır; app **tüketir**.
 - **Capability (yetenek):** `k-capability` primitifi tarafından yönetilen, "bu kurulum X yeteneğini çalıştırmaya yetkili mi?" sorusuna cevap veren adlandırılmış izin birimi. Lisanslamanın ve feature-gate'in taşıyıcısıdır.
@@ -54,7 +55,7 @@ Bu dördü sağlanmadan bir app "bağımsız satılabilir" sayılmaz; bu, olgunl
 
 Bir app'i bağımsız paketlemek için önce onun **ne tükettiğini** açıkça beyan etmesi gerekir: hangi kernel primitiflerine, hangi module'lere, hangi capability'lere dayanıyor ve hangi kernel sürümüyle uyumlu. Bu beyan olmadan paketleyici (§7'deki geliştirici/CI) hangi kodu pakete koyacağını, hangi capability'yi lisanslayacağını bilemez.
 
-App manifest, `k-mod-l` (module-loader) ve `k-plugin` mekanizmasının **üstünde** çalışan bildirimsel bir sözleşmedir: manifest neyin gerekli olduğunu söyler, `k-mod-l` gerekli module'leri yükler, `k-plugin` çalışma zamanında bağlar. Manifest app'in kökünde (`frontend/apps/<app-slug>/` ve backend paket kümesinin yanında) tek dosya olarak yaşar; makine-okunur (JSON/TOML).
+App manifest, `k-mod-l` (module-loader) ve `k-plugin` mekanizmasının **üstünde** çalışan bildirimsel bir sözleşmedir: manifest neyin gerekli olduğunu söyler, `k-mod-l` gerekli module'leri yükler, `k-plugin` çalışma zamanında bağlar. Manifest app'in kökünde (`apps/web/src/apps/<app-slug>/` ve `apps/api/platform_<app_slug>_core` paketinin yanında) tek dosya olarak yaşar; makine-okunur (JSON/TOML).
 
 ### 2.2 Manifest alanları
 
@@ -65,7 +66,7 @@ Aşağıdaki tablo, her app manifest'inin taşıması gereken zorunlu ve opsiyon
 | `app_slug` | Zorunlu | App'in benzersiz tanımlayıcısı (ör. `invoice`, `crm`). Satış/lisans/deploy'da birincil anahtar. |
 | `app_version` | Zorunlu | App'in kendi semantik sürümü (semver). Kernel sürümünden bağımsızdır. |
 | `kernel_range` | Zorunlu | Uyumlu kernel sürüm aralığı (semver aralığı, ör. `>=2.0.0 <3.0.0`). App'in çalışması için gereken kernel sürüm bandı. Bkz. §6. |
-| `modules[]` | Zorunlu | App'i oluşturan module slug'ları (`AppModule.slug` değerleri). `k-mod-l` bu listeyi yükler. En az bir module. |
+| `modules[]` | Zorunlu | App'i oluşturan module slug'ları (`AppModule.slug` değerleri). İlk kayıt app-core module olmalıdır (`<app-slug>-core`). `k-mod-l` bu listeyi yükler. En az bir module. |
 | `kernel_primitives[]` | Zorunlu | App'in doğrudan tükettiği kernel primitifleri (ör. `k-tenancy`, `k-authz`, `k-audit`, `k-jurisdiction`). Beyan edilmeyen primitifin çağrılması `check-primitive-usage` (§7) ile yakalanır. |
 | `capabilities_required[]` | Zorunlu | App'in çalışması için gereken capability'ler (ör. `invoice:core`, `invoice:e-fatura`). Lisans/entitlement bunlardan çözülür (§4). |
 | `capabilities_optional[]` | Opsiyonel | Feature-gate ile açılıp kapanabilen isteğe bağlı capability'ler (ör. `invoice:multi-currency`). Yoksa app temel modda çalışır. |
@@ -156,7 +157,7 @@ Tek-app standalone kurulumun minimum bileşenleri:
 
 | Bileşen | Rol | Kaynak |
 |---|---|---|
-| Kernel runtime | Tenant/authz/audit/event-bus/PDP/jurisdiction primitifleri | `backend/platform_*` (paylaşılan) |
+| Kernel runtime | Tenant/authz/audit/event-bus/PDP/jurisdiction primitifleri | `apps/api/platform_*` (paylaşılan) |
 | App module'leri | O app'in `AppModule`'leri | `modules[]` manifest listesi |
 | PostgreSQL | Kalıcılık (tek üretim motoru) | `core-contract-pack §1` (Postgres dışı yasak) |
 | Redis | Event bus (Redis Streams) + capability/authz önbelleği | `core-contract-pack §2.3` |

@@ -2,7 +2,7 @@
 
 Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `docs/` klasörünü açınca bu sayfayı gösterir.) Amaç: hiçbir doküman "fark edilmemiş" kalmasın.
 
-**Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `task-to-code-contract.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
+**Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `task-to-code-contract.md` → `kernel-sdk-app-delivery-sequence.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
 
 ---
 
@@ -19,6 +19,7 @@ Mimari kararların kayıt defteri. (Not: 25 numaralı ADR ayrıca WBS'te `app-ka
 Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayıcı belgeler.
 
 - [task-to-code-contract.md](task-to-code-contract.md) — Bir WBS düğümünün yazılım-teslimat karşılığı: seviye→teslimat, faz→eylem, "şimdi ne yapılır" karar ağacı.
+- [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel → SDK → app-core → app module → app assembly teknik teslim sırası.
 - [task-export-contract.md](task-export-contract.md) — Görev/JSON dışa aktarım sözleşmesi (tam içerik + çözülmüş bağımlılık URL'leri).
 - [implementation-workspace-manifest.md](implementation-workspace-manifest.md) — Görev exportlarının yönleneceği implementation checkout'u, repo kökleri, komutlar ve yasak stack sınırı.
 - [core-contract-pack.md](core-contract-pack.md) — Çekirdek sözleşme paketi v1 (kapsamlı temel sözleşmeler).
@@ -68,6 +69,7 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [data-quality-report.md](data-quality-report.md) — Veri kalitesi raporu (nodes.json).
 - [repo-reality-audit.md](repo-reality-audit.md) — Repo gerçeklik denetimi (plan vs gerçek kod).
 - [developer-workflow-gap-analysis.md](developer-workflow-gap-analysis.md) — Geliştirici akışı boşluk analizi.
+- [kernel-sdk-app-sequence-gap-report-2026-07-08.md](kernel-sdk-app-sequence-gap-report-2026-07-08.md) — Kernel → SDK → app-core → app module sırası gap raporu ve uygulanan düzeltme.
 - [execution-readiness-gap.md](execution-readiness-gap.md) — Execution readiness boşluk analizi.
 - [enterprise-dod.md](enterprise-dod.md) — Enterprise-ready uygulama "Definition of Done".
 - [core-enterprise-maturity-ladder.md](core-enterprise-maturity-ladder.md) — Çekirdek kurumsal olgunluk merdiveni: enterprise-hazırlık seviyeleri ve geçiş kapıları.

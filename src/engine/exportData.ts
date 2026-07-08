@@ -243,6 +243,7 @@ Do not ask clarifying questions. If the task is not code-start ready, stop after
 - Local path: \`${PRIMARY_WORKSPACE.localPath}\`
 - Backend root: \`${PRIMARY_WORKSPACE.roots.backend}\`
 - Frontend root: \`${PRIMARY_WORKSPACE.roots.frontend}\`
+- SDK root: \`${PRIMARY_WORKSPACE.roots.sdk}\`
 - Shared UI root: \`${PRIMARY_WORKSPACE.roots.sharedUi}\`
 - Infra root: \`${PRIMARY_WORKSPACE.roots.infra}\`
 

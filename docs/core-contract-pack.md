@@ -16,10 +16,12 @@ Tüm platform kodu tek bir private GitHub reposunda yaşar. Repo adı: `platform
 
 | Dizin | Sorumluluk |
 |---|---|
-| `backend/` | FastAPI servisleri, GraphQL resolver'ları, SQLAlchemy modelleri, Alembic migration'ları, Celery task'ları |
-| `frontend/` | React + Vite uygulaması; her dikey dilim `frontend/apps/<app-slug>/` altında ayrı workspace |
+| `apps/api/` | FastAPI servisleri, GraphQL resolver'ları, SQLAlchemy modelleri, Alembic migration'ları, Celery task'ları |
+| `apps/web/` | React + Vite uygulaması; her dikey dilim `apps/web/src/apps/<app-slug>/` altında ayrı projection |
+| `packages/sdk/` | Kernel public sözleşmelerinden türeyen typed SDK ve generator çıktıları |
+| `packages/ui/` | Paylaşılan UI bileşenleri ve tasarım sistemi tüketimi |
 | `infra/` | Dockerfile'lar, Kubernetes manifest'leri, GitHub Actions workflow'ları, Hetzner + Debian konfigürasyonları |
-| `tests/` | Çapraz-servis entegrasyon ve E2E testleri; her servisin kendi birim testleri `backend/<pkg>/tests/` altındadır |
+| `tests/` | Çapraz-servis entegrasyon ve E2E testleri; her servisin kendi birim testleri `apps/api/<pkg>/tests/` altındadır |
 | `docs/` | ADR'ler, sözleşme dokümanları, runbook'lar; bu dosya dahil |
 | `scripts/` | Tek seferlik migration yardımcıları, local dev bootstrap, veri tohumlama araçları |
 
@@ -32,6 +34,14 @@ Stack kısıtları (mutlak yasak):
 - Supabase kullanılamaz.
 - Üretim veritabanı olarak PostgreSQL dışı motor kullanılamaz.
 - ORM olarak SQLAlchemy 2.0 / SQLModel dışı araç kullanılamaz.
+
+### 1.1 Teknik Teslim Sırası
+
+Kernel sözleşmesi önce gelir. Platform geliştirme hattı `docs/kernel-sdk-app-delivery-sequence.md` içinde kanonik olarak şu sıraya kilitlidir:
+
+`kernel -> SDK -> app'e özgü core module -> app module'leri -> app assembly`
+
+Bu pack kernel ve Module SDK sözleşmelerinin kaynağıdır. SDK, bu public sözleşmelerden türetilir. App-core module, SDK hazır olmadan production koduna başlamaz. App'in diğer module'leri, app-core module hazır olmadan development'a alınmaz.
 
 ---
 
@@ -48,7 +58,7 @@ Her sözleşme üç bölümden oluşur: amaç, arayüz taslağı / imza, uygulam
 **Arayüz taslağı.**
 
 ```python
-# backend/platform_tenancy/context.py
+# apps/api/platform_tenancy/context.py
 
 from contextvars import ContextVar
 from uuid import UUID
@@ -116,7 +126,7 @@ Token boyutu hedefi: en fazla 1 KB. İzin listesi token'a gömülmez; runtime'da
 **GraphQL yetki direktifi.**
 
 ```python
-# backend/platform_authn_authz/permissions.py
+# apps/api/platform_authn_authz/permissions.py
 
 import strawberry
 from strawberry.permission import BasePermission
@@ -175,7 +185,7 @@ CREATE TABLE platform_outbox (
 **Yayıncı arayüzü.**
 
 ```python
-# backend/platform_events/publisher.py
+# apps/api/platform_events/publisher.py
 
 class EventPublisher:
     async def publish(
@@ -194,7 +204,7 @@ class EventPublisher:
 **Tüketici arayüzü.**
 
 ```python
-# backend/platform_events/consumer.py
+# apps/api/platform_events/consumer.py
 
 class EventConsumer:
     async def subscribe(self, event_type: str, handler: Callable) -> None:
@@ -229,7 +239,7 @@ class EventConsumer:
 **Runtime arayüzü.**
 
 ```python
-# backend/platform_eca/runtime.py
+# apps/api/platform_eca/runtime.py
 
 class ECARuntime:
     async def evaluate(
@@ -279,7 +289,7 @@ REVOKE UPDATE, DELETE ON platform_audit_log FROM PUBLIC;
 **Kayıt arayüzü.**
 
 ```python
-# backend/platform_audit/logger.py
+# apps/api/platform_audit/logger.py
 
 class AuditLogger:
     async def log(
@@ -305,7 +315,7 @@ class AuditLogger:
 **Registry arayüzü.**
 
 ```python
-# backend/platform_archetype/registry.py
+# apps/api/platform_archetype/registry.py
 
 class ArchetypeRegistry:
     def register(self, archetype: ArchetypeDefinition) -> None:
@@ -329,7 +339,7 @@ class ArchetypeRegistry:
 **Registry arayüzü.**
 
 ```python
-# backend/platform_workflow/registry.py
+# apps/api/platform_workflow/registry.py
 
 class WorkflowRegistry:
     def register(self, workflow: WorkflowDefinition) -> None:
@@ -408,7 +418,7 @@ def downgrade() -> None: ...  # Boş bırakmak yasaktır.
 **Arayüz taslağı.**
 
 ```python
-# backend/platform_observability/context.py
+# apps/api/platform_observability/context.py
 
 from contextvars import ContextVar
 import structlog
@@ -433,7 +443,7 @@ def get_logger(name: str) -> structlog.BoundLogger:
 **AppModule arayüzü.**
 
 ```python
-# backend/platform_sdk/module.py
+# apps/api/platform_sdk/module.py
 
 from abc import ABC, abstractmethod
 from fastapi import FastAPI
@@ -477,7 +487,7 @@ class AppModule(ABC):
 **Kayıt mekanizması.**
 
 ```python
-# backend/platform_sdk/registry.py
+# apps/api/platform_sdk/registry.py
 
 class ModuleRegistry:
     _modules: dict[str, AppModule] = {}
@@ -496,7 +506,7 @@ class ModuleRegistry:
 **Uygulama tüketimi.**
 
 ```python
-# backend/platform_customer/module.py
+# apps/api/platform_customer/module.py
 
 from platform_sdk import AppModule, ModuleRegistry
 
@@ -653,11 +663,11 @@ Bu bölüm, platform'u sıfırdan ayağa kaldırmak için minimum bileşenleri t
 
 ### Adım 1. Repo ve Paket Yapısı
 
-`platform` monorepo oluştur. `backend/platform_tenancy/`, `backend/platform_authn_authz/`, `backend/platform_observability/`, `backend/platform_sdk/` paketleri için dizin yapısını kur. Her paket `__init__.py` ve `pyproject.toml` içerir. `frontend/apps/shell/` workspace'ini ekle.
+`platform` monorepo oluştur. `apps/api/platform_tenancy/`, `apps/api/platform_authn_authz/`, `apps/api/platform_observability/`, `apps/api/platform_sdk/` paketleri için dizin yapısını kur. Her paket `__init__.py` ve `pyproject.toml` içerir. `apps/web/src/apps/shell/` workspace'ini ekle.
 
 ### Adım 2. Temel FastAPI Uygulaması
 
-`backend/main.py` içinde FastAPI uygulaması oluştur. Lifespan event'inde tüm `AppModule` instance'larını `ModuleRegistry`'den alarak `register_routes()` ve `on_startup()` çağır. `/healthz` endpoint'ini ekle; tüm kayıtlı modüllerin `healthz()` yanıtlarını birleştirerek döner.
+`apps/api/main.py` içinde FastAPI uygulaması oluştur. Lifespan event'inde tüm `AppModule` instance'larını `ModuleRegistry`'den alarak `register_routes()` ve `on_startup()` çağır. `/healthz` endpoint'ini ekle; tüm kayıtlı modüllerin `healthz()` yanıtlarını birleştirerek döner.
 
 ### Adım 3. TenantContext Middleware
 
@@ -665,11 +675,11 @@ Bu bölüm, platform'u sıfırdan ayağa kaldırmak için minimum bileşenleri t
 
 ### Adım 4. İlk Tenant-Aware Sorgu
 
-`backend/platform_customer/` paketi içinde `Customer` SQLAlchemy modeli oluştur; `tenant_id` UUID kolonu ve `(tenant_id, created_at DESC)` bileşik indeksi zorunludur. Alembic migration yaz (expand pattern). Strawberry GraphQL tipi ve `CustomerQuery` resolver'ı oluştur; resolver `require_tenant` ve `RequirePermission("customer:read")` ile korunur. `CustomerModule`'u `ModuleRegistry`'ye kaydet.
+`apps/api/platform_customer/` paketi içinde `Customer` SQLAlchemy modeli oluştur; `tenant_id` UUID kolonu ve `(tenant_id, created_at DESC)` bileşik indeksi zorunludur. Alembic migration yaz (expand pattern). Strawberry GraphQL tipi ve `CustomerQuery` resolver'ı oluştur; resolver `require_tenant` ve `RequirePermission("customer:read")` ile korunur. `CustomerModule`'u `ModuleRegistry`'ye kaydet.
 
 ### Adım 5. React Shell
 
-`frontend/apps/shell/` içinde Vite + React projesi oluştur. TanStack Router ile iki route tanımla: `/` (dashboard) ve `/customers`. `@platform/design-tokens` paketini import et. TanStack Query ile GraphQL `CustomerList` sorgusunu bağla. Route loader'da sorgu prefetch et.
+`apps/web/src/apps/shell/` içinde Vite + React projesi oluştur. TanStack Router ile iki route tanımla: `/` (dashboard) ve `/customers`. `@platform/design-tokens` paketini import et. TanStack Query ile GraphQL `CustomerList` sorgusunu bağla. Route loader'da sorgu prefetch et.
 
 ### Adım 6. Doğrulama
 
@@ -704,12 +714,12 @@ Bu script ileride `scripts/check-core-contract.mjs` olarak yazılacaktır. Aşa�
 
 | Kontrol | Yöntem |
 |---|---|
-| Tenant guard varlığı | `backend/**/*.py` dosyalarında `@router.*` veya `async def` içeren satırların `require_tenant` veya `Depends(require_tenant)` içerip içermediğini kontrol et; içermeyenleri listele |
+| Tenant guard varlığı | `apps/api/**/*.py` dosyalarında `@router.*` veya `async def` içeren satırların `require_tenant` veya `Depends(require_tenant)` içerip içermediğini kontrol et; içermeyenleri listele |
 | Resolver koruması | Strawberry şema SDL'ini parse et; `permission_classes` içermeyen field tanımlarını raporla |
 | `tenant_id` kolon varlığı | Tüm SQLAlchemy model dosyalarını tara; `tenant_id` kolonu olmayan `Base` alt sınıflarını listele |
 | Migration downgrade | `downgrade()` gövdesi `pass` olan migration dosyalarını tespit et |
-| Hardcoded renk | `frontend/**/*.tsx` ve `frontend/**/*.css` dosyalarında `#[0-9a-fA-F]{3,6}` ve `rgb(` pattern'larını ara; `var(--token-` olmayan renk kullanımlarını raporla |
-| Logger kullanımı | `backend/**/*.py` dosyalarında `print(` çağrılarını tespit et |
+| Hardcoded renk | `apps/web/**/*.tsx` ve `apps/web/**/*.css` dosyalarında `#[0-9a-fA-F]{3,6}` ve `rgb(` pattern'larını ara; `var(--token-` olmayan renk kullanımlarını raporla |
+| Logger kullanımı | `apps/api/**/*.py` dosyalarında `print(` çağrılarını tespit et |
 | Bundle boyutu | Vite build çıktısında gzip sonrası 150 KB sınırını aşan chunk'ları raporla |
 | Audit log çağrısı | Mutation endpoint'lerinde (HTTP POST/PUT/PATCH/DELETE veya GraphQL mutation) `audit_logger.log` çağrısı eksikse listele |
 
@@ -771,7 +781,7 @@ Kısaca: **AI önerir → insan onaylar → motor uygular.** Hiçbir v2 primitif
 **İmza taslağı.**
 
 ```python
-# backend/platform_actor/models.py
+# apps/api/platform_actor/models.py
 
 from enum import Enum
 from datetime import datetime
@@ -803,7 +813,7 @@ class RoleBinding(Base):
 ```
 
 ```python
-# backend/platform_actor/service.py
+# apps/api/platform_actor/service.py
 
 class ActorService:
     async def bind_role(self, draft: RoleBindingDraft, approval_ref: ApprovalRef) -> RoleBinding:
@@ -835,7 +845,7 @@ class ActorService:
 **İmza taslağı.**
 
 ```python
-# backend/platform_capability/models.py
+# apps/api/platform_capability/models.py
 
 class Capability(Base):
     __tablename__ = "platform_capability"
@@ -854,7 +864,7 @@ class PlanCapability(Base):
 ```
 
 ```python
-# backend/platform_capability/service.py
+# apps/api/platform_capability/service.py
 
 class CapabilityService:
     def is_enabled(self, tenant_id: UUID, capability: str) -> bool:
@@ -886,7 +896,7 @@ class CapabilityService:
 **İmza taslağı.**
 
 ```python
-# backend/platform_pdp/engine.py
+# apps/api/platform_pdp/engine.py
 
 from dataclasses import dataclass
 
@@ -928,7 +938,7 @@ class PolicyDecisionPoint:
 **İmza taslağı.**
 
 ```python
-# backend/platform_mode_profile/models.py
+# apps/api/platform_mode_profile/models.py
 
 class ModeProfile(Base):
     __tablename__ = "platform_mode_profile"
@@ -943,7 +953,7 @@ class ModeProfile(Base):
 ```
 
 ```python
-# backend/platform_mode_profile/flow.py
+# apps/api/platform_mode_profile/flow.py
 
 class ModeSwitchFlow:
     async def preview(self, tenant_id: UUID, target: ModeProfileDraft) -> ModeDiff:
@@ -981,7 +991,7 @@ class ModeSwitchFlow:
 **İmza taslağı.**
 
 ```python
-# backend/platform_computation/models.py
+# apps/api/platform_computation/models.py
 
 class ComputationDef(Base):
     __tablename__ = "platform_computation_def"
@@ -1020,7 +1030,7 @@ class ComputationEngine:
 **İmza taslağı.**
 
 ```python
-# backend/platform_fieldtypes/types.py
+# apps/api/platform_fieldtypes/types.py
 
 class Money(TypeDecorator):
     """value (Decimal) + currency (ISO-4217) + precision + rounding_mode.
@@ -1060,7 +1070,7 @@ class AttributeSet(TypeDecorator):
 **İmza taslağı.**
 
 ```python
-# backend/platform_scale_invariant/guard.py
+# apps/api/platform_scale_invariant/guard.py
 
 class WritePolicy(BaseModel):
     idempotency_required: bool = True     # default-on
@@ -1103,7 +1113,7 @@ class Waiver(Base):
 **İmza taslağı.**
 
 ```python
-# backend/platform_sequence/service.py
+# apps/api/platform_sequence/service.py
 
 class SequenceService:
     async def reserve(self, seq_key: str, tenant_id: UUID) -> Reservation:
@@ -1141,7 +1151,7 @@ class SequenceService:
 **İmza taslağı.**
 
 ```python
-# backend/platform_calendar/service.py
+# apps/api/platform_calendar/service.py
 
 class CalendarService:
     async def capacity(self, work_center_id: UUID, day: date, tenant_id: UUID) -> CapacitySlot:
@@ -1180,7 +1190,7 @@ class CapacityCalendar(Base):
 **İmza taslağı.**
 
 ```python
-# backend/platform_genealogy/service.py
+# apps/api/platform_genealogy/service.py
 
 class GenealogyService:
     async def link(self, parent_lots: list[LotRef], child: LotRef, op: str, tenant_id: UUID) -> None:
@@ -1218,7 +1228,7 @@ class GenealogyService:
 **İmza taslağı.**
 
 ```python
-# backend/platform_edge/gateway.py
+# apps/api/platform_edge/gateway.py
 
 class EdgeGateway:
     async def read_tag(self, node_id: str, protocol: str) -> TagValue:
@@ -1256,7 +1266,7 @@ class EdgeGateway:
 **İmza taslağı.**
 
 ```python
-# backend/platform_kpi/registry.py
+# apps/api/platform_kpi/registry.py
 
 class KpiDef(Base):
     __tablename__ = "platform_kpi_def"
@@ -1290,7 +1300,7 @@ class KpiService:
 **İmza taslağı.**
 
 ```python
-# backend/platform_aps/solver.py
+# apps/api/platform_aps/solver.py
 
 class ApsSolver:
     async def schedule(self, request: ScheduleRequest) -> ScheduleProposal:
@@ -1325,7 +1335,7 @@ class ApsSolver:
 **İmza taslağı.**
 
 ```python
-# backend/platform_surface_runtime/runtime.py
+# apps/api/platform_surface_runtime/runtime.py
 
 class SurfaceKind(str, Enum):
     FEED = "feed"; VIDEO = "video"; MAP = "map"; CHAT = "chat"
@@ -1373,7 +1383,7 @@ class SurfaceRuntime:
 **İmza taslağı.**
 
 ```python
-# backend/platform_jurisdiction/context.py
+# apps/api/platform_jurisdiction/context.py
 
 from contextvars import ContextVar
 
@@ -1393,7 +1403,7 @@ def require_jurisdiction(request: Request) -> JurisdictionContext:
     Eksikse fail-closed reddedilir. Altı eksen BAĞIMSIZ set edilir/doğrulanır.
     """
 
-# backend/platform_jurisdiction/residency.py
+# apps/api/platform_jurisdiction/residency.py
 def assert_residency(target_region: str, jctx: JurisdictionContext) -> None:
     """Veri yazılacak/işlenecek bölge, data_residency ile uyumsuzsa ResidencyViolationError."""
 ```

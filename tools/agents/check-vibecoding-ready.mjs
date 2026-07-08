@@ -63,7 +63,7 @@ if (primary) {
   if (!primary.branchPattern?.includes("<task-id>") || !primary.branchPattern?.includes("<slug>")) {
     failures.push("workspace-manifest: branchPattern task id ve slug placeholder tasimali");
   }
-  for (const key of ["backend", "frontend", "sharedUi", "infra"]) {
+  for (const key of ["backend", "frontend", "sdk", "sharedUi", "infra"]) {
     if (!primary.roots?.[key]) failures.push(`workspace-manifest: roots.${key} eksik`);
   }
   for (const stack of ["Next.js", "Supabase", "Prisma", "Redux", "Flowbite"]) {

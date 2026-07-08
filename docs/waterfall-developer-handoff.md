@@ -72,6 +72,18 @@ Kod yazmaya başlanması için düğümün `phase=development` olması ve `check
 
 Bu alanlar requirements aşamasında zorlanmaz.
 
+## Teknik Teslim Sırası Kapısı
+
+Code-start yalnız faza bakmaz; platformun doğum sırasına da uyar. Bağlayıcı sıra:
+
+1. Kernel.
+2. SDK.
+3. App'e özgü core module.
+4. App'in ihtiyacı olan diğer module'ler.
+5. App assembly / release train.
+
+Bu sıra `docs/kernel-sdk-app-delivery-sequence.md` içinde kanoniktir. Kernel sözleşmesi hazır değilse SDK development başlatılmaz. SDK hazır değilse app-core production kodu yazılmaz. App-core hazır değilse app'in diğer module'leri development'a alınmaz. App düğümü doğrudan kod yazma yeri değildir; app assembly yalnız hazır module'leri paketler.
+
 ## Done Kapısı
 
 Bir düğüm `done` sayılmadan önce `check-execution-readiness.mjs` kapısından geçer. Bu kapı kanıtsız tamamlanmayı engeller:
