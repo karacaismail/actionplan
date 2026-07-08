@@ -42,16 +42,19 @@ describe("dimension-contract-17 drift kapısı", () => {
     expect(DOC).toContain("Yeni boyut eklenmez");
   });
 
-  it("WARN-ratchet baseline'ı mevcut, deterministik ve 14 miras boyutu kapsıyor", () => {
+  it("WARN-ratchet baseline'ı mevcut, deterministik ve miras-14 ile sınırlı", () => {
     const base = JSON.parse(
       fs.readFileSync(
         path.resolve(process.cwd(), "tools/agents/semantic-warn-baseline.json"),
         "utf8",
       ),
     );
-    expect(base.total).toBeGreaterThan(0);
+    expect(base.total).toBeGreaterThanOrEqual(0);
     const keys = Object.keys(base.byKey);
     expect(keys).toEqual([...keys].sort()); // deterministik sıralama (review edilebilir diff)
     for (const k of keys) expect(LEGACY).toContain(k); // yalnız warn-kademesi boyutları
+    expect(Object.values<number>(base.byKey).reduce((sum, count) => sum + count, 0)).toBe(
+      base.total,
+    );
   });
 });
