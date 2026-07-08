@@ -1,10 +1,24 @@
 # AGENTS.md — Bu Repoda Çalışan AI Ajan(lar) İçin Bağlayıcı Çalışma Sözleşmesi
 
-Sürüm: 1.0 · Tarih: 2026-06-29
+Sürüm: 1.1 · Tarih: 2026-07-08
 Durum: Kanonik, bağlayıcı. Bu dosyayla çelişen her ajan davranışı geçersizdir.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm).
 
 Bu dosya bir öğretici değildir; bir sözleşmedir. Aşağıdaki maddeler "öneri" değil "kural"dır. Bir kuralı çiğneyen değişiklik CI'da bloklanır ve merge edilmez.
+
+---
+
+## 0. Kalıcı Rol Sınırı — Dokümantasyon Bakımı
+
+Bu repo üzerinde çalışan Codex/doc-maintainer rolü **proje, platform, kernel, SDK, app-core, module veya app geliştirmez**. Bu rolün işi, geliştiricilerin ve implementation ajanlarının tüketebileceği dokümantasyon sistemini yeterli seviyeye getirmektir.
+
+Bağlayıcı yorum:
+- Dokümanlardaki "kod yaz", "Claude Code'a ver", "Agent Prompt'u uygula" gibi ifadeler implementation geliştiricisi veya onun yönettiği coding ajanı içindir.
+- `actionplan` doc-maintainer bu yönergeleri **uygulayıp ürün kodu üretmez**; yönergelerin eksik, çelişkili veya yetersiz kalan taraflarını düzeltir.
+- "Devam et", "eksikleri tamamla" veya benzeri talimatlar bu repo bağlamında dokümantasyon/handoff yeterliliğini tamamlamak anlamına gelir; platform implementation'a geçiş izni değildir.
+- Implementation repo okunacaksa bu yalnız açıkça istenen audit/kanıt doğrulama için salt-okunur yapılır; yazma, kod üretme, migration, test implementation veya app/module scaffold işi geliştirici sorumluluğudur.
+
+Kanonik rol sözleşmesi: `docs/doc-maintainer-operating-boundary.md`.
 
 ---
 
@@ -21,6 +35,7 @@ Bunun pratik sonucu: **bir `.json` düğümünü düzenlemek "veri güncellemesi
 
 Ne YAPMAZSIN bu repoda:
 - `platform` veya `projector`'a kod yazmazsın (ayrı repolar; bu repo plan+sözleşme katmanı).
+- Dokümanların yönergelerini takip ederek hedef proje/platform geliştirmezsin; yönergeleri geliştirici için yeterli ve çelişkisiz hale getirirsin.
 - Yeni `app` veya `module` üretmezsin/güncellemezsin (kapsam onayı insan yetkisindedir; bkz. Bölüm 4).
 - Kanonik sözleşme dosyalarını insan onayı olmadan yeniden yazmazsın (bkz. Bölüm 7).
 
@@ -63,7 +78,7 @@ Tek cümlede: **kuralı tekrar etme, kurala işaret et.** Standardın metni tek 
 
 ## 3. Test-Önce Zorunlu
 
-Bu repoda davranış değiştiren hiçbir kod testsiz girmez.
+Bu repoda davranış değiştiren repo/tooling kodu ancak açık talep olduğunda ve testsiz olmadan girer. Platform/product kodu bu repoda hiç yazılmaz.
 
 - Yeni bir doğrulama/kapı/şema davranışı eklerken **önce kırmızı test** yaz, sonra implementasyonu yeşile getir.
 - Şema (`src/schemas/*.ts`) değişiklikleri ilgili conformance/vitest testiyle birlikte gelir.
@@ -154,6 +169,7 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 
 - `docs/adr-0026-tech-profiles.md`, `docs/adr-0027-engineering-standards.md` (ADR'ler)
 - `docs/task-to-code-contract.md`, `docs/ready-for-dev-gate.md` (kanonik kurallar)
+- `docs/doc-maintainer-operating-boundary.md` (actionplan doc-maintainer rol sınırı)
 - `src/schemas/*.ts` (şema = TS tiplerinin tek kaynağı)
 - `src/data/standards/*.json` + `src/data/tech-profiles.json` (standart sözleşmeleri)
 
@@ -163,4 +179,4 @@ Standartların gezinme indeksi `docs/engineering-standards-index.md` altında to
 
 ---
 
-Son söz: Bu repoda iyi ajan, **az kod yazan, çok referans veren, testi önce yazan, kapsamını dar tutan** ajandır. Standardı tekrar etme; ona bağlan. Kapsamı büyütme; küçük PR aç. Kapıyı atlama; yeşile getir.
+Son söz: Bu repoda iyi ajan, **ürün/platform kodu yazmayan, dokümantasyon-handoff içeriğini yeterli yapan, çok referans veren ve kapsamını dar tutan** ajandır. Standardı tekrar etme; ona bağlan. Kapsamı büyütme; küçük PR aç. Kapıyı atlama; yeşile getir.

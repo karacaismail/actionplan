@@ -2,7 +2,7 @@
 
 Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `docs/` klasörünü açınca bu sayfayı gösterir.) Amaç: hiçbir doküman "fark edilmemiş" kalmasın.
 
-**Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `task-to-code-contract.md` → `kernel-sdk-app-delivery-sequence.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
+**Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `doc-maintainer-operating-boundary.md` → `task-to-code-contract.md` → `kernel-sdk-app-delivery-sequence.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
 
 ---
 
@@ -19,6 +19,7 @@ Mimari kararların kayıt defteri. (Not: 25 numaralı ADR ayrıca WBS'te `app-ka
 Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayıcı belgeler.
 
 - [task-to-code-contract.md](task-to-code-contract.md) — Bir WBS düğümünün yazılım-teslimat karşılığı: seviye→teslimat, faz→eylem, "şimdi ne yapılır" karar ağacı.
+- [doc-maintainer-operating-boundary.md](doc-maintainer-operating-boundary.md) — actionplan üzerinde çalışan Codex/doc-maintainer için dokümantasyon bakım rolü ile implementation coding rolünü ayıran bağlayıcı sınır.
 - [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel → SDK → app-core → app module → app assembly teknik teslim sırası.
 - [task-export-contract.md](task-export-contract.md) — Görev/JSON dışa aktarım sözleşmesi (tam içerik + çözülmüş bağımlılık URL'leri).
 - [implementation-workspace-manifest.md](implementation-workspace-manifest.md) — Görev exportlarının yönleneceği implementation checkout'u, repo kökleri, komutlar ve yasak stack sınırı.
@@ -70,6 +71,7 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [repo-reality-audit.md](repo-reality-audit.md) — Repo gerçeklik denetimi (plan vs gerçek kod).
 - [developer-workflow-gap-analysis.md](developer-workflow-gap-analysis.md) — Geliştirici akışı boşluk analizi.
 - [kernel-sdk-app-sequence-gap-report-2026-07-08.md](kernel-sdk-app-sequence-gap-report-2026-07-08.md) — Kernel → SDK → app-core → app module sırası gap raporu ve uygulanan düzeltme.
+- [doc-maintainer-boundary-gap-report-2026-07-08.md](doc-maintainer-boundary-gap-report-2026-07-08.md) — Codex/doc-maintainer rol sınırı denetimi ve uygulanan dokümantasyon düzeltmeleri.
 - [execution-readiness-gap.md](execution-readiness-gap.md) — Execution readiness boşluk analizi.
 - [enterprise-dod.md](enterprise-dod.md) — Enterprise-ready uygulama "Definition of Done".
 - [core-enterprise-maturity-ladder.md](core-enterprise-maturity-ladder.md) — Çekirdek kurumsal olgunluk merdiveni: enterprise-hazırlık seviyeleri ve geçiş kapıları.

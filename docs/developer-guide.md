@@ -20,7 +20,14 @@ actionplan'daki her düğüm bir planlama nesnesidir; geliştirici burada işi a
 | App-module geliştirici (dikey dilim) | Customer, OrderOps vb. uygulama modülleri |
 | QA / Güvenlik inceleyici | Acceptance criteria doğrulama, CI kapı sonuçları, güvenlik sınırları |
 | Product / PM | Mileston takibi, öncelik değerlendirmesi, faz kapısı onayı |
-| AI ajan operatörü (Claude Code) | Developer Brief veya Agent Prompt al, üret, PR aç; main'e doğrudan push etme |
+| Dokümantasyon bakım ajanı (Codex/actionplan) | Eksik veya çelişkili dokümantasyonu düzelt, handoff'u yeterli hale getir; ürün/platform kodu yazma |
+| Implementation ajan operatörü (Claude Code/Cursor/Aider) | Developer Brief veya Agent Prompt'u implementation reposunda uygulat, PR aç; main'e doğrudan push etme |
+
+### Dokümantasyon bakım rolü
+
+Codex/actionplan doc-maintainer bu rehberi takip ederek platform, kernel, SDK, app-core, module veya app kodu yazmaz. Bu rolün işi; kapsam, acceptance criteria, risk, rollback, referans, traceability, export ve handoff ifadelerini geliştirici için yeterli hale getirmektir.
+
+Bu rehberdeki Claude Code, Cursor, Aider veya Agent Prompt adımları implementation geliştiricisinin ya da onun yönettiği coding ajanının adımlarıdır. actionplan doc-maintainer yalnız bu adımların dokümantasyonunu iyileştirir; implementation workspace'e geçip kod üretmez.
 
 Hangi rolde olursan ol, actionplan'ı tarayıcıda aç:
 `https://karacaismail.github.io/actionplan/`
@@ -80,6 +87,8 @@ Görev detay ekranındaki export butonlarını kullan:
 ### Adım 3 — AI ajana ver (Claude Code)
 
 Agent Prompt veya Developer Brief'i ilgili implementation reposunda Claude Code'a ver. Birincil workspace `implementation-workspace-manifest.md` içinde tanımlıdır:
+
+Bu adım actionplan üzerinde çalışan dokümantasyon bakım ajanının adımı değildir. Doc-maintainer burada yalnız Agent Prompt/Developer Brief içeriğini eksiksiz ve çelişkisiz hale getirir; kod üretme işi geliştirici veya implementation ajan operatörü tarafından ayrı repo/branch'te yürütülür.
 
 ```bash
 cd /Users/karaca/DEV/mimari/platform
@@ -235,7 +244,7 @@ PR açıklamasında şu bilgiler zorunludur:
 
 ## 6. Hangi Seviyede Kod Yazilir
 
-actionplan'ın kendisinde kod değişikliği yapılmaz. actionplan yalnızca planlama verisini tutar.
+actionplan'ın kendisinde ürün/platform kod değişikliği yapılmaz. actionplan yalnızca planlama verisini ve dokümantasyon sözleşmelerini tutar. Codex/doc-maintainer için bu hüküm mutlak sınırdır: eksik yönergeyi tamamlar, ancak yönergeyi uygulayıp ürünü geliştirmez.
 
 Kod şu hiyerarşiye göre yazılır:
 
@@ -256,6 +265,7 @@ Bu rehber, actionplan ekosisteminin genel bakışıdır. Ayrıntılar için:
 | Belge | Amaç |
 |---|---|
 | `docs/task-to-code-contract.md` | Görev JSON alanı ile kod konumu / test türü eşlemesi |
+| `docs/doc-maintainer-operating-boundary.md` | actionplan doc-maintainer rol sınırı: dokümantasyon bakım işi ile implementation coding ayrımı |
 | `docs/kernel-sdk-app-delivery-sequence.md` | Kernel → SDK → app-core → app module → app assembly teslim sırası |
 | `docs/core-contract-pack.md` | Platform core katmanının mimari sözleşmesi |
 | `docs/task-export-contract.md` | Developer Brief export JSON şeması |
@@ -275,6 +285,9 @@ CI logunu oku, hangi kontrol başarısız olduğunu bul. `check-data-quality` ge
 
 **AI ajanı bir şeyi yanlış ürettiyse kim karar verir?**
 İnsan geliştirici. AI ajanı öneri üretir, PR açar; karar her zaman insana aittir. "Eleştir" adımını geç, doğrulama satırlarını PR'a ekle.
+
+**Codex/actionplan bu rehbere göre platformu geliştirecek mi?**
+Hayır. Codex/actionplan doc-maintainer yalnız dokümantasyon, sözleşme, export, gap raporu ve handoff içeriğini yeterli hale getirir. Platform/kernel/SDK/app/module kodu geliştirici veya onun yönettiği implementation ajanının işidir.
 
 **OrderOps'u canlı pilot olarak kullanabilir miyim?**
 Hayır. OrderOps bir build referans uygulamasıdır; canlı pilot değildir. Öğretici referans örnek olarak incelenebilir.

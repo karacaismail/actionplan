@@ -7,7 +7,9 @@ Durum: Kanonik
 
 ## Amaç
 
-Bu doküman, actionplan görev exportlarının hangi implementation workspace'e yönleneceğini tanımlar. actionplan uygulama kodu üretmez; geliştirici veya AI ajanı kod gerekiyorsa burada tanımlanan ayrı checkout'ta çalışır.
+Bu doküman, actionplan görev exportlarının hangi implementation workspace'e yönleneceğini tanımlar. actionplan uygulama kodu üretmez; geliştirici veya implementation ajan operatörü kod gerekiyorsa burada tanımlanan ayrı checkout'ta çalışır.
+
+Bu manifest bir yönlendirme sözleşmesidir; actionplan üzerinde çalışan Codex/doc-maintainer için uygulama izni değildir. Doc-maintainer bu checkout'a geçip kernel, SDK, app-core, module veya app kodu yazmaz; yalnız workspace bilgisinin, stack sınırının, test komutlarının ve handoff beklentisinin doğru belgelenmesini sağlar.
 
 Makine-okunur kaynak: `src/data/workspace-manifest.json`
 

@@ -11,6 +11,12 @@ actionplan'daki görev detay ekranı bir TaskNode'u beş ayrı artifact olarak d
 
 Raw JSON tam veri taşıyan kanonik girdidir. Diğer dört artifact aynı veriyi geliştirici, AI ajanı, kanıt geri-yazımı ve kısa vibecoding/vobecoding operasyonu için biçimlendirir. Export katmanı veritabanı şemasını veya implementation reposu kodunu değiştirmez; yalnızca görev sözleşmesini indirilebilir hale getirir.
 
+## Aktör Sınırı
+
+Bu sözleşmedeki Agent Prompt, Developer Brief ve Vobecoder Card çıktıları implementation geliştiricisinin veya onun yönettiği coding ajanının tüketmesi içindir. actionplan üzerinde çalışan Codex/doc-maintainer bu artifact'leri uygulayıp platform, kernel, SDK, app-core, module veya app kodu yazmaz.
+
+Doc-maintainer'ın görevi export sözleşmesini, alan açıklamalarını, yasakları, kabul ölçütlerini ve kanıt beklentisini çelişkisiz hale getirmektir. Export'un kod üretim tarafı ayrı implementation repo/branch'inde, geliştirici sorumluluğunda yürütülür.
+
 ---
 
 ## Mod 1 — Developer Brief Export (İnsan için Markdown)
