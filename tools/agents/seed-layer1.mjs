@@ -456,7 +456,7 @@ const CONTENT = {
     ],
   },
 
-  "app-layer1-x-molecule": {
+  "app-layer1-x-kum": {
     featureDefs: [
       "Layer1 kırılımının Molekül örneği: bir yatay yeteneğin bileşen düzeyi tarifi",
       "Molekül, bir layer1 modülünün çalışabilir en küçük bileşeni",
@@ -513,10 +513,10 @@ const CONTENT = {
     moduleUsage: ["Yatay molekül bir bileşendir; bağımsız sunulmaz, üst modül içinde kullanılır"],
   },
 
-  "app-layer1-x-element": {
+  "app-layer1-x-molekul": {
     featureDefs: [
-      "Layer1 kırılımının Element örneği: tek bir yatay alan/kural (ör. bildirim kanalı tercihi)",
-      "Element, yatay modül sözleşmesindeki en küçük anlamlı alan/kural",
+      "Layer1 kırılımının Work_unit örneği: tek bir yatay alan/kural (ör. bildirim kanalı tercihi)",
+      "Work_unit, yatay modül sözleşmesindeki en küçük anlamlı alan/kural",
       "Örnek dal; yatay alan kuralının granülerlikteki yeri",
     ],
     security: [
@@ -549,7 +549,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: alan değeri kuralı ihlal etti → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz",
+      "Work_unit tek başına otomasyon yazmaz",
     ],
     aiAgents: [
       AI_B1,
@@ -567,12 +567,12 @@ const CONTENT = {
       "Değişiklik izli",
     ],
     integration: [
-      "Element üst molekül ve ArcheType field sözleşmesine bağlanır",
+      "Work_unit üst molekül ve ArcheType field sözleşmesine bağlanır",
       "Yatay modül şema doğrulamasına dahil",
       "Surface görünürlüğü bu kurala göre",
     ],
     moduleUsage: [
-      "Yatay element bir alan/kuraldır; bağımsız sunulmaz, modül field tanımının parçası",
+      "Yatay work_unit bir alan/kuraldır; bağımsız sunulmaz, modül field tanımının parçası",
     ],
   },
 
@@ -604,13 +604,13 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom otomasyon tetiklemez; üst kurallara değer sağlar",
-      "Olay: değer geçersiz → üst element reddeder (idempotent)",
+      "Olay: değer geçersiz → üst work_unit reddeder (idempotent)",
     ],
     aiAgents: [AI_B1, AI_B2, "AI yatay atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz"],
     testing: ["Atom biçim/sınır testi", "Değişmezlik testi", "Serileştirme testi"],
     owasp: ["A03 Injection: değer biçim-doğrulanır", "A08 Integrity: atom değişmez", "İzlenebilir"],
     integration: [
-      "Yatay atom element ve field tanımlarının yapı taşı",
+      "Yatay atom work_unit ve field tanımlarının yapı taşı",
       "Tip sistemine dahil",
       "Üst seviyeler birleştirir",
     ],
@@ -758,7 +758,7 @@ const CONTENT = {
       "İndirme dosya modülü/nesne deposundan",
     ],
     moduleUsage: [
-      "Veri Dışa Aktarma (orta taş) tüm app'lere export yeteneği sağlar",
+      "Veri Dışa Aktarma (taş) tüm app'lere export yeteneği sağlar",
       "Liste/rapor içeren tüm ArcheType'lar export modülünü kullanır",
     ],
   },
@@ -830,7 +830,7 @@ const CONTENT = {
       "Geri-alma audit modülüne bağlı",
     ],
     moduleUsage: [
-      "Veri İçe Aktarma (orta taş) tüm app'lere toplu veri girişi sağlar",
+      "Veri İçe Aktarma (taş) tüm app'lere toplu veri girişi sağlar",
       "Veri yükleme gerektiren tüm ArcheType'lar import modülünü kullanır",
     ],
   },
@@ -902,7 +902,7 @@ const CONTENT = {
       "Idempotency primitifini kullanır",
     ],
     moduleUsage: [
-      "Inbound Webhook (orta taş) dış-sistem olay alımını sağlar",
+      "Inbound Webhook (taş) dış-sistem olay alımını sağlar",
       "Dış entegrasyon gerektiren app'ler bu modülü kullanır",
     ],
   },
@@ -1546,7 +1546,7 @@ const CONTENT = {
       "Eş-anlamlı sözlük içerik/katalogdan",
     ],
     moduleUsage: [
-      "Arama Derinleştirme (orta taş) Search yeteneğini güçlendirir",
+      "Arama Derinleştirme (taş) Search yeteneğini güçlendirir",
       "Arama-yoğun app'ler bu iyileştirmeleri kullanır",
     ],
   },
@@ -1618,7 +1618,7 @@ const CONTENT = {
       "Digest bildirimle birlikte",
     ],
     moduleUsage: [
-      "Quiet Hours (orta taş) bildirim zamanlamasını yumuşatır",
+      "Quiet Hours (taş) bildirim zamanlamasını yumuşatır",
       "Bildirim gönderen tüm app'ler sessiz-saat desenini kullanır",
     ],
   },

@@ -79,7 +79,7 @@ describe("audit skorlama", () => {
 
   it("ölçülü-kısa madde short cezasından muaf tutulur ve ayrı sayılır", () => {
     const measuredTokens = domainTokens({
-      id: "mol-crm-lead-scoring",
+      id: "kum-crm-lead-scoring",
       title: "CRM lead skor rozeti",
       summary: "skorlama retention axe wcag kontrast ihlal",
       tags: ["crm", "wcag"],

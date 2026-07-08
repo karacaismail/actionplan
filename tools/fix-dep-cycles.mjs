@@ -8,7 +8,7 @@
  *   dönüşmesinden kaynaklanır.
  * Ne yapar? Tek bir DFS ile back-edge'leri (geri kenar) bulur ve dependsOn'dan çıkarır;
  *   bilgi kaybı olmasın diye çıkarılan kenarı `related`'a taşır (ilişki korunur, döngü kalkar).
- *   DFS, hiyerarşi sırasıyla (app→atom) yürür; böylece "alt-seviye → üst-seviye" ters kenarları
+ *   DFS, hiyerarşi sırasıyla (ada→atom) yürür; böylece "alt-seviye → üst-seviye" ters kenarları
  *   tercihen kaldırılır (üst-seviyenin alt-seviyeye bağımlılığı doğru yön olarak KALIR).
  * Ne yapmaz? deliverable/faz/owner gibi alanlara dokunmaz; yalnız dependsOn/related yazar.
  *   Deterministiktir (sıralı gezinme) — her çalıştırmada aynı sonucu verir.
@@ -20,7 +20,15 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
 
-const LEVEL_RANK = { app: 0, module: 1, archetype: 2, stone: 3, molecule: 4, element: 5, atom: 6 };
+const LEVEL_RANK = {
+  app: 0,
+  module: 1,
+  archetype: 2,
+  feature: 3,
+  component: 4,
+  work_unit: 5,
+  micro_step: 6,
+};
 
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
 const byId = new Map();

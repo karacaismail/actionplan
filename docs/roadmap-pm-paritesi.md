@@ -305,5 +305,5 @@ Cowork içi alt-ajanlar oturum-içi yoldur; **ürün/CI yolunda** ajan koşumu k
 
 **Riskler:** (a) paylaşılan dosyalarda paralel ajan çakışması → fazlar arası dosya sahipliği netleştirilir, ajanlar izole node/util dosyalarında çalışır; (b) 424 satır tablo/Gantt performansı → sanallaştırma/scope; (c) çok-kullanıcılı gerçek senaryolar backend ister → bilinçli kapsam dışı (assignee yalnız veri).
 
-**Dogfooding (öneri):** Bu 8 fazı, aracın KENDİ WBS'ine düğüm olarak ekle (her faz = archetype/stone, alt adımlar = molecule/element) → araç kendi geliştirme planını yönetir, audit/yürütme/Gantt görünümlerini kendi yol haritasıyla test eder.
+**Dogfooding (öneri):** Bu 8 fazı, aracın KENDİ WBS'ine düğüm olarak ekle (her faz = archetype/feature, alt adımlar = component/work_unit) → araç kendi geliştirme planını yönetir, audit/yürütme/Gantt görünümlerini kendi yol haritasıyla test eder.
 

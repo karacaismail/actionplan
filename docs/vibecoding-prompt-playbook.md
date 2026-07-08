@@ -61,8 +61,8 @@ Aşağıdaki tablo sekiz üniteyi, her ünitenin seviye karşılığını (`task
 
 | Ünite | Konu | Seviye (contract §1) | Ürettiği örnek artefakt | Önceki üniteye bağı |
 |---|---|---|---|---|
-| u01 | Kimlik / atomlar | atom / element | `CustomerId`, `Email`, `Money` atom tanımları + test-vektörleri | — (başlangıç) |
-| u02 | CRUD | stone | `Customer` create/read/update servis metodu + testler | u01 atomlarını kullanır (`CustomerId`, `Email`) |
+| u01 | Kimlik / atomlar | atom / work_unit | `CustomerId`, `Email`, `Money` atom tanımları + test-vektörleri | — (başlangıç) |
+| u02 | CRUD | feature | `Customer` create/read/update servis metodu + testler | u01 atomlarını kullanır (`CustomerId`, `Email`) |
 | u03 | ArcheType | archetype | `Customer` entity + GraphQL tipi + UI bileşen haritası | u02 servisini sözleşmeye projekte eder |
 | u04 | Veritabanı | archetype (db-schema fazı) | `customers` tablosu Alembic migration + RLS + downgrade | u03 entity'sini tabloya bağlar |
 | u05 | GraphQL API | archetype | `customer` query + `createCustomer` mutation resolver | u03/u04 üzerine API yüzeyi kurar |
@@ -143,7 +143,7 @@ Bu blokta AI'ın en olası sahte-yeşilleri ve reddetme kriteri (`dod-evidence-s
 
 ## 8. Worked Blok 2 — u02: CRUD (`Customer` create servisi)
 
-Bu blok, u01 atomlarını kullanarak `Customer` create/read servis metodunu üretir. `task-to-code-contract.md §1`'e göre stone seviyesi "tek bir kullanıcı hikayesini karşılayan, bağımsız test edilebilir kod parçası"dır. Örnek süreklilik: bu servis u01'in `CustomerId` ve `Email` atomlarını kullanır (kopmaz). Aktör: ekip üyesi promptu yapıştırır; AI servis + testi önerir; insan doğrulama testinin ve validasyon-red testinin geçişini görür.
+Bu blok, u01 atomlarını kullanarak `Customer` create/read servis metodunu üretir. `task-to-code-contract.md §1`'e göre feature seviyesi "tek bir kullanıcı hikayesini karşılayan, bağımsız test edilebilir kod parçası"dır. Örnek süreklilik: bu servis u01'in `CustomerId` ve `Email` atomlarını kullanır (kopmaz). Aktör: ekip üyesi promptu yapıştırır; AI servis + testi önerir; insan doğrulama testinin ve validasyon-red testinin geçişini görür.
 
 ### 8.1 Claude/Cursor'a yapıştır
 
@@ -151,9 +151,9 @@ Bu blok, u01 atomlarını kullanarak `Customer` create/read servis metodunu üre
 
 ```
 "Customer create servisi" üret. u01'de tanımlı CustomerId ve Email atomlarını kullan.
-Bağlam: u02 — "Customer CRUD" (stone/somut özellik; küme: platform-customer).
+Bağlam: u02 — "Customer CRUD" (feature/somut özellik; küme: platform-customer).
 Özet: Customer create ve read servis metodu; geçersiz email reddedilir, id atomu üretilir.
-Etiketler: customer, crud, stone, validation.
+Etiketler: customer, crud, feature, validation.
 
 Çıktı: Python + FastAPI servis katmanı. Bir CustomerService üret:
 - create_customer(email: Email, name: str) -> Customer — Email atomunu doğrular.
@@ -172,7 +172,7 @@ Mock kullanma; gerçek in-memory repository ya da test-container ile test et (mo
 
 ### 8.2 Şu dosyalar oluşmalı
 
-Stone seviyesi kod + test teslim eder (`task-to-code-contract.md §1`):
+Feature seviyesi kod + test teslim eder (`task-to-code-contract.md §1`):
 
 - `platform/backend/domain/customer/service.py` — `CustomerService` (create_customer, get_customer).
 - `platform/backend/domain/customer/repository.py` — in-memory veya SQLAlchemy repository arayüzü.
@@ -200,7 +200,7 @@ Sıra: (1) `create_customer` içinde email doğrulaması **yokken** → `test_in
 
 ### 8.5 Şu ekranı manuel kontrol et
 
-Stone seviyesinde henüz UI yoktur; manuel kontrol, servisin FastAPI üzerinden elle çağrılmasıdır. Ekip üyesi `platform/backend`'de bir REPL veya `pytest -s` ile `create_customer(Email("gecersiz"), "X")` çağırır ve **hata fırlatıldığını gözle** doğrular. Beklenen gözlem: geçersiz email `ValidationError` fırlatır, sessizce kabul edilmez. Bu, negatif testin gerçek davranışı yakaladığının ekran-dışı manuel kanıtıdır.
+Feature seviyesinde henüz UI yoktur; manuel kontrol, servisin FastAPI üzerinden elle çağrılmasıdır. Ekip üyesi `platform/backend`'de bir REPL veya `pytest -s` ile `create_customer(Email("gecersiz"), "X")` çağırır ve **hata fırlatıldığını gözle** doğrular. Beklenen gözlem: geçersiz email `ValidationError` fırlatır, sessizce kabul edilmez. Bu, negatif testin gerçek davranışı yakaladığının ekran-dışı manuel kanıtıdır.
 
 ### 8.6 AI şu hatayı yaparsa REDDET
 

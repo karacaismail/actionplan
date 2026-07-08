@@ -7,7 +7,7 @@ Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + comp
 short-items kartı: 56 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 460 · missing-ref (kart): 0 · rollback-gap: 0 · semantic-warn: 0 · bilinçli N/A: 44
 ölçülü-kısa kartı: 1
 
-Top-40 zayıf node ortalama skoru: **2.861**
+Top-40 zayıf node ortalama skoru: **2.862**
 
 ## Boyut bazlı zayıflık (short/measuredShort/generic/empty/warn)
 
@@ -21,31 +21,28 @@ Top-40 zayıf node ortalama skoru: **2.861**
 
 - module: 178 node, ort. 2.92
 - app: 28 node, ort. 2.89
+- micro_step: 19 node, ort. 2.93
 - archetype: 105 node, ort. 2.92
-- micro_step: 19 node, ort. 2.92
-- work_unit: 18 node, ort. 2.92
 - component: 18 node, ort. 2.95
+- work_unit: 18 node, ort. 2.92
 - feature: 101 node, ort. 2.91
 
-En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), meta (2.89), vertical (2.89), dx (2.9), edu (2.9)
+En zayıf kümeler: atomic (2.86), aday (2.89), backend (2.89), landx (2.89), meta (2.89), vertical (2.89), dx (2.9), edu (2.9)
 
 ## En zayıf 100 node
 
 | skor | id | seviye | küme | en zayıf boyut | bayraklar |
 |---|---|---|---|---|---|
 | 2.80 | app-backend | app | backend | mobileApps | missing-evidence |
-| 2.83 | app-build-x-molecule | component | build | codeOptimization | missing-evidence |
+| 2.83 | app-build-x-kum | component | build | codeOptimization | missing-evidence |
 | 2.83 | app-layer1 | app | layer1 | mobileApps | missing-evidence |
-| 2.85 | app-data-intelligence-x-stone | feature | data-intelligence | wcag | missing-evidence |
+| 2.85 | app-data-intelligence-x-tas | feature | data-intelligence | wcag | missing-evidence |
 | 2.85 | app-frontend | app | frontend | security | missing-evidence |
 | 2.85 | atomic-types | module | atomic | deployment | missing-evidence |
 | 2.85 | s-pos | archetype | core-operations | mobileApps | missing-evidence |
 | 2.86 | app-customer-revenue | app | customer-revenue | mobileApps | missing-evidence |
-| 2.86 | app-finance-x-stone | feature | finance | mobileApps | missing-evidence |
+| 2.86 | app-finance-x-tas | feature | finance | mobileApps | missing-evidence |
 | 2.86 | app-supply-chain | app | supply-chain | codeOptimization | missing-evidence |
-| 2.86 | app-sus-x-atom | micro_step | sus | featureDefs | missing-evidence |
-| 2.86 | app-sus-x-element | work_unit | sus | featureDefs | missing-evidence |
-| 2.86 | app-vertical-x-element | work_unit | vertical | featureDefs | missing-evidence |
 | 2.86 | cc-security | feature | crosscut | deployment | missing-evidence |
 | 2.86 | dist-realestate | module | aday | deployment | missing-evidence |
 | 2.86 | l1-search | module | layer1 | security | missing-evidence |
@@ -55,12 +52,14 @@ En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), me
 | 2.86 | stack-messaging | module | aday | eca | missing-evidence |
 | 2.87 | app-atomic | app | atomic | deployment | missing-evidence |
 | 2.87 | app-hr | app | hr | wcag | missing-evidence |
+| 2.87 | app-sus-x-atom | micro_step | sus | featureDefs | missing-evidence |
+| 2.87 | app-sus-x-molekul | work_unit | sus | featureDefs | missing-evidence |
 | 2.87 | app-sus | app | sus | mobileApps | missing-evidence |
+| 2.87 | app-vertical-x-molekul | work_unit | vertical | featureDefs | missing-evidence |
 | 2.87 | cc-i18n-standards | feature | crosscut | wcag | missing-evidence |
 | 2.87 | dx-api-gateway | feature | dx | deployment | missing-evidence |
 | 2.87 | dx-workflow | module | dx | deployment | missing-evidence |
 | 2.87 | edition-onmuhasebe | module | aday | deployment | missing-evidence |
-| 2.87 | el-crm-score-weight-config | work_unit | core-operations | mobileApps | missing-evidence |
 | 2.87 | fe-ai-rt | feature | frontend | deployment | missing-evidence |
 | 2.87 | fe-cdn | feature | frontend | wcag | missing-evidence |
 | 2.87 | fe-core-ui | feature | frontend | eca | missing-evidence |
@@ -98,12 +97,10 @@ En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), me
 | 2.88 | app-crosscut | app | crosscut | performance | missing-evidence |
 | 2.88 | app-data-intelligence | app | data-intelligence | mobileApps | missing-evidence |
 | 2.88 | app-dx | app | dx | performance | missing-evidence |
-| 2.88 | app-hr-x-molecule | component | hr | security | missing-evidence |
-| 2.88 | app-kernel-x-element | work_unit | kernel | security | missing-evidence |
+| 2.88 | app-hr-x-kum | component | hr | security | missing-evidence |
 | 2.88 | app-layer0 | app | layer0 | securityOptimization | missing-evidence |
 | 2.88 | app-platform-horizontal | app | platform-horizontal | wcag | missing-evidence |
 | 2.88 | app-scale | app | scale | securityOptimization | missing-evidence |
-| 2.88 | app-vertical-x-atom | micro_step | vertical | featureDefs | missing-evidence |
 | 2.88 | be-deploy-profilleri | module | backend | deployment | missing-evidence |
 | 2.88 | be-sdk | module | backend | security | missing-evidence |
 | 2.88 | cc-cultural-ux | feature | crosscut | deployment | missing-evidence |
@@ -133,22 +130,22 @@ En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), me
 | 2.88 | l1-tagmanager | module | layer1 | owasp | missing-evidence |
 | 2.88 | landx-l2 | module | landx | integration | missing-evidence, short-items |
 | 2.88 | landx-l4 | module | landx | integration | missing-evidence, short-items |
+| 2.88 | landx-l5 | module | landx | integration | missing-evidence, short-items |
+| 2.88 | molekul-crm-score-weight-config | work_unit | core-operations | mobileApps | missing-evidence |
+| 2.88 | s-accounting | archetype | finance | codeOptimization | missing-evidence |
 
 ## Top-40 önerilen aksiyon planı
 
 - **app-backend** (2.80, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-build-x-molecule** (2.83, codeOptimization): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-build-x-kum** (2.83, codeOptimization): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-layer1** (2.83, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-data-intelligence-x-stone** (2.85, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-data-intelligence-x-tas** (2.85, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-frontend** (2.85, security): evidence[] alanına test/deploy/audit kanıtı bağla
 - **atomic-types** (2.85, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **s-pos** (2.85, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-customer-revenue** (2.86, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-finance-x-stone** (2.86, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-finance-x-tas** (2.86, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-supply-chain** (2.86, codeOptimization): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-sus-x-atom** (2.86, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-sus-x-element** (2.86, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
-- **app-vertical-x-element** (2.86, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
 - **cc-security** (2.86, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **dist-realestate** (2.86, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **l1-search** (2.86, security): evidence[] alanına test/deploy/audit kanıtı bağla
@@ -158,12 +155,14 @@ En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), me
 - **stack-messaging** (2.86, eca): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-atomic** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-hr** (2.87, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-sus-x-atom** (2.87, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-sus-x-molekul** (2.87, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
 - **app-sus** (2.87, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
+- **app-vertical-x-molekul** (2.87, featureDefs): evidence[] alanına test/deploy/audit kanıtı bağla
 - **cc-i18n-standards** (2.87, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
 - **dx-api-gateway** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **dx-workflow** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **edition-onmuhasebe** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
-- **el-crm-score-weight-config** (2.87, mobileApps): evidence[] alanına test/deploy/audit kanıtı bağla
 - **fe-ai-rt** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **fe-cdn** (2.87, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
 - **fe-core-ui** (2.87, eca): evidence[] alanına test/deploy/audit kanıtı bağla
@@ -176,4 +175,5 @@ En zayıf kümeler: atomic (2.86), backend (2.88), aday (2.89), landx (2.89), me
 - **l1-party** (2.87, wcag): evidence[] alanına test/deploy/audit kanıtı bağla
 - **l1-pseo** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **l1-webhook-in** (2.87, testing): evidence[] alanına test/deploy/audit kanıtı bağla
+- **landx-l1** (2.87, integration): evidence[] alanına test/deploy/audit kanıtı bağla; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
 

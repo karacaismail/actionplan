@@ -162,11 +162,11 @@ const CONTENT = {
     ],
   },
 
-  "app-frontend-x-molecule": xdim(
+  "app-frontend-x-kum": xdim(
     "Frontend Molekülü",
     "birkaç UI kuralını birleştiren bileşen (ör. form alanı + doğrulama)",
   ),
-  "app-frontend-x-element": xdim("Frontend Elementi", "tek bir UI alanı/kuralı (ör. tema token'ı)"),
+  "app-frontend-x-molekul": xdim("Frontend Elementi", "tek bir UI alanı/kuralı (ör. tema token'ı)"),
   "app-frontend-x-atom": xdim(
     "Frontend Atomu",
     "bölünemez UI ilkeli (ör. renk token değer nesnesi)",
@@ -235,7 +235,7 @@ const CONTENT = {
       "Tema/i18n ile",
     ],
     moduleUsage: [
-      "FE Çekirdek (orta taş) tüm UI'ların temel bileşen/veri katmanını sağlar",
+      "FE Çekirdek (taş) tüm UI'ların temel bileşen/veri katmanını sağlar",
       "Tüm görünümler çekirdek UI üzerine kurulur",
     ],
   },
@@ -307,7 +307,7 @@ const CONTENT = {
       "CI affected hedefleme ile",
     ],
     moduleUsage: [
-      "Monorepo İskeleti (orta taş) tüm FE'nin yapı temelini sağlar",
+      "Monorepo İskeleti (taş) tüm FE'nin yapı temelini sağlar",
       "Tüm app/paketler bu iskelet içinde yaşar",
     ],
   },
@@ -379,7 +379,7 @@ const CONTENT = {
       "Stack yasakları proje genelinde",
     ],
     moduleUsage: [
-      "FE Kilitli Kararlar (orta taş) FE temel seçimlerini sabitler",
+      "FE Kilitli Kararlar (taş) FE temel seçimlerini sabitler",
       "Tüm FE çalışması bu kilitlere uyar",
     ],
   },
@@ -519,7 +519,7 @@ const CONTENT = {
       "Tema/asset ile",
     ],
     moduleUsage: [
-      "CDN Stratejisi (orta taş) tüm statik içeriğin dağıtımını sağlar",
+      "CDN Stratejisi (taş) tüm statik içeriğin dağıtımını sağlar",
       "Tüm web app'leri asset'lerini CDN üzerinden sunar",
     ],
   },
@@ -591,7 +591,7 @@ const CONTENT = {
       "Sürüm metrikleri observability'ye",
     ],
     moduleUsage: [
-      "FE Deploy (orta taş) web+mobil yayın stratejisini sağlar",
+      "FE Deploy (taş) web+mobil yayın stratejisini sağlar",
       "Tüm FE app'leri bu deploy akışını kullanır",
     ],
   },
@@ -663,7 +663,7 @@ const CONTENT = {
       "Native köprü kamera/konum (gis) ile",
     ],
     moduleUsage: [
-      "Capacitor Mobil (orta taş) tek kod tabanından mobil app sağlar",
+      "Capacitor Mobil (taş) tek kod tabanından mobil app sağlar",
       "Mobil gerektiren tüm app'ler bu yaklaşımı kullanır",
     ],
   },
@@ -735,7 +735,7 @@ const CONTENT = {
       "Senkron engine/API ile",
     ],
     moduleUsage: [
-      "FE AI + Realtime + Offline (orta taş) modern istemci yeteneklerini sağlar",
+      "FE AI + Realtime + Offline (taş) modern istemci yeteneklerini sağlar",
       "AI/canlı/offline gerektiren app'ler bu yetenekleri kullanır",
     ],
   },
@@ -807,7 +807,7 @@ const CONTENT = {
       "Performans bütçesi deploy kapısına",
     ],
     moduleUsage: [
-      "FE Tooling (orta taş) test/kalite/izleme altyapısını sağlar",
+      "FE Tooling (taş) test/kalite/izleme altyapısını sağlar",
       "Tüm FE app'leri bu tooling kapılarından geçer",
     ],
   },
@@ -879,7 +879,7 @@ const CONTENT = {
       "Veri stack kararı (PostgreSQL/Prisma) ile tutarlı",
     ],
     moduleUsage: [
-      "FE Anti-Stack (orta taş) kullanılmayacakları ve gerekçelerini sabitler",
+      "FE Anti-Stack (taş) kullanılmayacakları ve gerekçelerini sabitler",
       "Tüm FE çalışması anti-listeye uyar",
     ],
   },

@@ -92,7 +92,7 @@ Aşağıdaki gereksinimler `plan-01` Dalga 1'in party modülü promptunu bağlar
 - **Alembic migration:** expand-contract deseni; `downgrade()` dolu ve CI'da `alembic downgrade -1` ile test edilir (boş downgrade yasak).
 - **Strawberry GraphQL:** `PartyType`, `PartyRoleType`, `PartyRelationType`; resolver'lar `Depends(require_tenant)` + `RequirePermission(...)` ile korunur; N+1'i DataLoader ile engelle (bir party'nin rolleri tek batch'te). Her resolver en az bir `permission_classes` içerir.
 - **Audit:** Her `bind_role` / `revoke_role` / party mutasyonu `AuditLogger.log()` ile `actor` + `resource=party_role` yazılır (v1 §2.5).
-- **Servis arayüzü:** `effective_roles(party_id, at)` verilen anda geçerli (`valid_from <= at < valid_to`) rolleri döndürür; `resolve_context(party_id, role, context)` bir rolün belirli bağlamda geçerli olup olmadığını çözer.
+- **Servis arayüzü:** `effective_roles(party_id, micro_step)` verilen anda geçerli (`valid_from <= micro_step < valid_to`) rolleri döndürür; `resolve_context(party_id, role, context)` bir rolün belirli bağlamda geçerli olup olmadığını çözer.
 - **Hata formatı:** `{code, message, trace_id, details}` (v1 §3.1); `get_logger()` kullanılır, `print()` yasak.
 
 ## 8. Frontend gereksinimleri
@@ -151,7 +151,7 @@ Bu tablo `k-party` için zorunlu test senaryolarını ve türlerini tanımlar.
 ## 13. Acceptance criteria
 
 - Aynı party bağlama göre buyer + seller + employee rollerini aynı anda taşıyabiliyor ve her biri doğru bağlamda çözülüyor.
-- `effective_roles(party_id, at)` verilen tarihteki geçerli rolleri (yalnız `valid_from <= at < valid_to`) döndürüyor.
+- `effective_roles(party_id, micro_step)` verilen tarihteki geçerli rolleri (yalnız `valid_from <= micro_step < valid_to`) döndürüyor.
 - Cross-tenant erişim en az 10 negatif test case ile reddediliyor ve audit'leniyor.
 - AI rol bağlamayı yalnız `draft` olarak öneriyor; `approval_ref` olmadan `bind_role` reddediliyor.
 - `party_role` PDP `subject` girdisi olarak okunabiliyor; PDP kararı role bakıyor.
@@ -187,7 +187,7 @@ Aşağıdaki tablo, bu sözleşmenin izlenebilir gereksinimlerini kimlik + katma
 | AP-02 | `party_role` bağlam-kapsamlı + temporal (valid_from/to) | Backend/Data | P0 | Unit+Integration | Rol bağlamla ve zamanla çözülür | kernel-team |
 | AP-03 | Polimorfizm: tek party çoklu eşzamanlı rol | Backend | P0 | Integration | 3 rol tek party'de doğru | kernel-team |
 | AP-04 | `party_relation` ilişki grafiği (employs/owns/represents) | Backend/Data | P1 | Unit | İlişki kenarı yazılır/sorgulanır | kernel-team |
-| AP-05 | `effective_roles(party_id, at)` temporal çözüm | Backend | P0 | Unit | Verilen anda geçerli roller doğru | kernel-team |
+| AP-05 | `effective_roles(party_id, micro_step)` temporal çözüm | Backend | P0 | Unit | Verilen anda geçerli roller doğru | kernel-team |
 | AP-06 | Bağlam-çözümü (tenant/channel/app filtresi) | Backend | P1 | Integration | Rol yalnız geçerli bağlamda çözülür | kernel-team |
 | AP-07 | Tenant izolasyonu + RLS ikinci bariyer | Security | P0 | Integration(neg) | ≥10 cross-tenant negatif case reddedilir | security-team |
 | AP-08 | Rol mutasyonu audit (append-only) | Security | P0 | Integration | bind/revoke audit'e düşer | security-team |

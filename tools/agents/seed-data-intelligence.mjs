@@ -386,7 +386,7 @@ const CONTENT = {
     ],
   },
 
-  "app-data-intelligence-x-stone": {
+  "app-data-intelligence-x-tas": {
     featureDefs: [
       "Veri & Zeka kırılımının Taş (alt-yetenek) örneği: bir AI/veri yeteneğinin alt-parça tarifi",
       "Taş, bir ArcheType içindeki çalışabilir alt-yetenek (ör. embedding üretici)",
@@ -455,7 +455,7 @@ const CONTENT = {
     moduleUsage: ["AI taşı bir alt-yetenektir; bağımsız sunulmaz, üst ArcheType içinde kullanılır"],
   },
 
-  "app-data-intelligence-x-molecule": {
+  "app-data-intelligence-x-kum": {
     featureDefs: [
       "Veri & Zeka kırılımının Molekül örneği: birkaç AI/veri kuralını birleştiren bileşen",
       "Molekül, AI alt-yeteneğinin çalışabilir en küçük bileşeni (ör. yeniden-sıralama)",
@@ -524,10 +524,10 @@ const CONTENT = {
     moduleUsage: ["AI molekülü bir bileşendir; bağımsız sunulmaz, üst yetenek içinde kullanılır"],
   },
 
-  "app-data-intelligence-x-element": {
+  "app-data-intelligence-x-molekul": {
     featureDefs: [
-      "Veri & Zeka kırılımının Element örneği: tek bir veri alanı veya AI kuralı (ör. güven eşiği)",
-      "Element, AI/veri sözleşmesindeki en küçük anlamlı alan/kural",
+      "Veri & Zeka kırılımının Work_unit örneği: tek bir veri alanı veya AI kuralı (ör. güven eşiği)",
+      "Work_unit, AI/veri sözleşmesindeki en küçük anlamlı alan/kural",
       "Örnek dal; AI alan kuralının granülerlikteki yeri",
     ],
     security: [
@@ -568,7 +568,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: AI çıktısı güven eşiğini geçemedi → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz; üst kurala girdi sağlar",
+      "Work_unit tek başına otomasyon yazmaz; üst kurala girdi sağlar",
     ],
     aiAgents: [
       AI_B1,
@@ -586,7 +586,7 @@ const CONTENT = {
       "Alan/eşik değişikliği izli",
     ],
     integration: [
-      "Element, üst molekül ve ArcheType field sözleşmesine bağlanır",
+      "Work_unit, üst molekül ve ArcheType field sözleşmesine bağlanır",
       "Veri şema doğrulamasına dahil",
       "Surface projeksiyonunda görünürlük bu kurala göre",
     ],
@@ -639,7 +639,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom seviyesi otomasyon tetiklemez; üst kurallara veri değeri sağlar",
-      "Olay: vektör/skor geçersiz → üst element kuralı reddeder (idempotent)",
+      "Olay: vektör/skor geçersiz → üst work_unit kuralı reddeder (idempotent)",
     ],
     aiAgents: [
       AI_B1,
@@ -657,7 +657,7 @@ const CONTENT = {
       "Kabul/red izlenebilir",
     ],
     integration: [
-      "Veri atomu, element ve field tanımlarının yapı taşı",
+      "Veri atomu, work_unit ve field tanımlarının yapı taşı",
       "Veri tip sistemine dahil",
       "Üst seviyeler atomu birleştirir",
     ],

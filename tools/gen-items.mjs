@@ -171,8 +171,7 @@ const DEFAULT_DOM = {
   perf: "liste sorgusu",
   evt: "durum değişti",
 };
-// Kanonik WBS seviyeleri (tur 3 drift düzeltmesi): eski stone/molecule/element/atom
-// adları schemas/task.ts WBS_LEVELS ile eşleşmiyordu → scope "undefined" üretiyordu.
+// Kanonik WBS seviyeleri: schemas/task.ts WBS_LEVELS ile birebir eşleşir.
 const LEVEL_SCOPE = {
   app: "ürün ailesi geneli",
   module: "modül sınırı",

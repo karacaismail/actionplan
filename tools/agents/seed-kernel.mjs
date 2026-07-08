@@ -64,7 +64,7 @@ const SEED = {
       ],
       codeOptimization: [
         "Surface tanımından KOD ÜRETİMİ (runtime reflection yok) → generated TS tipleri",
-        "Tek kaynak: şema→tip→form; el ile senkron yok",
+        "Tek kaynak: şema→tip→form; work_unit ile senkron yok",
       ],
       securityOptimization: [
         "Alan görünürlük allowlist (deny-by-default)",
@@ -256,7 +256,7 @@ const SEED = {
         "Projection çıktısı yalnız izinli alanları açar",
       ],
       codeOptimization: [
-        "Sözleşmeden test ÜRETİMİ (el ile test yazımı azalır)",
+        "Sözleşmeden test ÜRETİMİ (work_unit ile test yazımı azalır)",
         "Tek kaynak: sözleşme → conformance + tipler",
       ],
       securityOptimization: [

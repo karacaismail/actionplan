@@ -15,11 +15,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
 
 const MAP = {
-  "st-crm-lead-mgmt": {
+  "tas-crm-lead-mgmt": {
     repoPath: ["platform/backend/app/crm/lead_mgmt/"],
     testCommand: ["pytest platform/backend/tests/crm/test_lead_mgmt.py -v"],
   },
-  "el-crm-score-weight-config": {
+  "molekul-crm-score-weight-config": {
     repoPath: ["platform/backend/app/crm/scoring/weights.py"],
     testCommand: ["pytest platform/backend/tests/crm/test_score_weights.py -v"],
   },

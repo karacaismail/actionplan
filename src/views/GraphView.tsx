@@ -170,10 +170,10 @@ function buildSvg(laid: LaidOut, title: string): string {
     app: "#3bc0f0",
     module: "#33d9b2",
     archetype: "#b08cf0",
-    stone: "#f0b03b",
-    molecule: "#ef7fc0",
-    element: "#5fd97f",
-    atom: "#bfbfbf",
+    feature: "#f0b03b",
+    component: "#ef7fc0",
+    work_unit: "#5fd97f",
+    micro_step: "#bfbfbf",
   };
 
   const lines: string[] = [];

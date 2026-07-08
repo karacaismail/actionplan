@@ -3,7 +3,12 @@ import type { TaskNode } from "@/schemas";
 export type NodeIndex = Map<string, TaskNode>;
 
 export function indexById(nodes: TaskNode[]): NodeIndex {
-  return new Map(nodes.map((n) => [n.id, n]));
+  const index: NodeIndex = new Map();
+  for (const n of nodes) {
+    index.set(n.id, n);
+    for (const alias of n.aliases ?? []) index.set(alias, n);
+  }
+  return index;
 }
 
 export function getChildren(nodes: TaskNode[], parentId: string): TaskNode[] {

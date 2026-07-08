@@ -162,15 +162,15 @@ const CONTENT = {
     ],
   },
 
-  "app-customer-revenue-x-stone": xdim(
+  "app-customer-revenue-x-tas": xdim(
     "Müşteri & Gelir Taşı",
     "bir gelir yeteneğinin alt-parça tarifi (ör. indirim hesabı)",
   ),
-  "app-customer-revenue-x-molecule": xdim(
+  "app-customer-revenue-x-kum": xdim(
     "Müşteri & Gelir Molekülü",
     "birkaç gelir kuralını birleştiren bileşen (ör. teklif satırı)",
   ),
-  "app-customer-revenue-x-element": xdim(
+  "app-customer-revenue-x-molekul": xdim(
     "Müşteri & Gelir Elementi",
     "tek bir gelir alanı/kuralı (ör. indirim oranı)",
   ),

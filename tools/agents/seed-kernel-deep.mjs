@@ -104,7 +104,7 @@ const CONTENT = {
   "k-terminoloji": {
     featureDefs: [
       "Bağlayıcı adlandırma sözleşmesi: kernel (sistemin kalbi), core (app'in kalbi), module (genişletme birimi), SDK",
-      "Terminoloji düğümü kavram çakışmalarını çözer: App=dağ, Module=kaya, ArcheType=büyük taş, field=alan",
+      "Terminoloji düğümü kavram çakışmalarını çözer: App=ada, Module=dağ, ArcheType=kaya, field=alan",
       "Her terimin tek tanımı vardır; doküman ve kod aynı sözlüğü referans alır",
     ],
     security: [
@@ -240,12 +240,12 @@ const CONTENT = {
       "Görev detay rotalarına derin-bağ verir",
     ],
     moduleUsage: [
-      "WBS örneği bir taş (stone) seviyesidir; granülerlik module'ünün öğretici alt-parçasıdır",
+      "WBS örneği bir taş (feature) seviyesidir; granülerlik module'ünün öğretici alt-parçasıdır",
       "Diğer sayfalar WBS desenini kendi kırılımları için referans alır",
     ],
   },
 
-  "app-kernel-x-molecule": {
+  "app-kernel-x-kum": {
     featureDefs: [
       "Kernel kırılımının Molekül seviyesi örneği: bir kernel yeteneğinin bileşen düzeyinde tarifi",
       "Molekül, birkaç alanı/kuralı bir araya getiren çalışabilir en küçük kernel bileşenidir",
@@ -307,7 +307,7 @@ const CONTENT = {
       "Bileşen hataları audit'e bağlanır",
     ],
     integration: [
-      "Molekül, üst element/stone seviyesine tipli arayüzle bağlanır",
+      "Molekül, üst work_unit/feature/taş seviyesine tipli arayüzle bağlanır",
       "Kernel capability sözleşmesini tüketir; doğrudan DB'ye erişmez",
       "Çıktısı üst kernel akışında kullanılır",
     ],
@@ -316,51 +316,51 @@ const CONTENT = {
     ],
   },
 
-  "app-kernel-x-element": {
+  "app-kernel-x-molekul": {
     featureDefs: [
-      "Kernel kırılımının Element (alan/kural) seviyesi: tek bir alan veya doğrulama kuralının tarifi",
-      "Element, kernel sözleşmesindeki en küçük anlamlı alan/kural birimidir",
+      "Kernel kırılımının Work_unit (alan/kural) seviyesi: tek bir alan veya doğrulama kuralının tarifi",
+      "Work_unit, kernel sözleşmesindeki en küçük anlamlı alan/kural birimidir",
       "Örnek dal; alan-seviyesi kuralın 7-seviye içindeki yerini gösterir",
     ],
     security: [
-      "Element alan doğrulaması sunucu tarafında zorunlu; istemci doğrulaması yeterli sayılmaz",
+      "Work_unit alan doğrulaması sunucu tarafında zorunlu; istemci doğrulaması yeterli sayılmaz",
       "Hassas alan ise PII bayrağı taşır ve maskeleme/şifreleme kuralına tabidir",
       "Alan yazımı tenant bağlamı ve rol yetkisiyle sınırlıdır",
     ],
     codeOptimization: [
-      "Element kuralı saf doğrulayıcı; tek sorumluluk ilkesiyle yazılır",
+      "Work_unit kuralı saf doğrulayıcı; tek sorumluluk ilkesiyle yazılır",
       "Alan tipi Zod şemasıyla; geçersiz tip derleme/parse anında yakalanır",
       "Tekrar eden alan kuralları paylaşılan doğrulayıcıya toplanır",
     ],
     securityOptimization: [
-      "Element doğrulaması allowlist temelli (denylist değil); beklenmeyen girdi reddi",
+      "Work_unit doğrulaması allowlist temelli (denylist değil); beklenmeyen girdi reddi",
       "Alan uzunluk/biçim sınırı ile taşma ve enjeksiyon daraltılır",
       "PII alanı için en-az-ayrıcalık görünürlük (field-level yetki)",
     ],
     performance: [
-      "Element doğrulaması O(1) saf hesap; sıcak yolda maliyetsiz",
+      "Work_unit doğrulaması O(1) saf hesap; sıcak yolda maliyetsiz",
       "Alan kuralı önbelleklenebilir; aynı girdi için tekrar çalışmaz",
-      "Toplu doğrulamada element kuralları vektörel uygulanır",
+      "Toplu doğrulamada work_unit kuralları vektörel uygulanır",
     ],
     mobileApps: [
-      "Element alanı mobil formda uygun klavye tipi ve maskeyle",
+      "Work_unit alanı mobil formda uygun klavye tipi ve maskeyle",
       "iOS/Android'de alan doğrulaması çevrimdışı da çalışır",
       "Alan hata durumu dar ekranda görünür ve okunur",
     ],
     wcag: [
-      "Element alanında görünür etiket alan ile programatik ilişkili",
+      "Work_unit alanında görünür etiket alan ile programatik ilişkili",
       "Hata mesajı alanla bağlı ve ekran okuyucuya anında duyurulur",
       "Zorunluluk yalnız renkle değil metin/ikonla belirtilir; kontrast 7:1",
     ],
     deployment: [
-      "Element kuralı kernel şemasının parçası; ayrı dağıtım yok",
+      "Work_unit kuralı kernel şemasının parçası; ayrı dağıtım yok",
       "Tüm dağıtım profillerinde aynı doğrulama çalışır (istemci+sunucu)",
       "Shared hosting'de istemci doğrulaması, sunucuda yeniden doğrulama",
     ],
     eca: [
       ECA_BOUND,
-      "Olay: element alanı belirli eşiği aştı → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz; üst seviye kurala girdi sağlar",
+      "Olay: work_unit alanı belirli eşiği aştı → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
+      "Work_unit tek başına otomasyon yazmaz; üst seviye kurala girdi sağlar",
     ],
     aiAgents: [
       AI_B1,
@@ -368,7 +368,7 @@ const CONTENT = {
       "AI alan/kural önerebilir; PII bayrağı veya yetki kuralını override edemez",
     ],
     testing: [
-      "Element doğrulayıcı için sınır-değer birim testleri (geçerli/geçersiz tablo)",
+      "Work_unit doğrulayıcı için sınır-değer birim testleri (geçerli/geçersiz tablo)",
       "PII alanı için maskeleme testi; ham değer log/UI'da görünmez",
       "Form bağlamında alan-erişilebilirlik mikro-yolculuğu",
     ],
@@ -378,12 +378,12 @@ const CONTENT = {
       "Alan değişikliği audit'e yazılır",
     ],
     integration: [
-      "Element, üst molekül ve ArcheType field sözleşmesine bağlanır",
+      "Work_unit, üst molekül ve ArcheType field sözleşmesine bağlanır",
       "Kernel şema doğrulamasına dahil edilir",
       "Surface projeksiyonunda alanın görünürlüğü bu kurala göre belirlenir",
     ],
     moduleUsage: [
-      "Element bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası olarak kullanılır",
+      "Work_unit bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası olarak kullanılır",
     ],
   },
 
@@ -431,7 +431,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom seviyesi otomasyon tetiklemez; yalnız üst kurallara değer sağlar",
-      "Olay: atom değeri tanımlı aralık dışında → üst element kuralı reddeder (idempotent)",
+      "Olay: atom değeri tanımlı aralık dışında → üst work_unit kuralı reddeder (idempotent)",
     ],
     aiAgents: [
       AI_B1,
@@ -449,9 +449,9 @@ const CONTENT = {
       "Atom kabul/red kararı izlenebilir",
     ],
     integration: [
-      "Atom, element ve field tanımlarının yapı taşıdır",
+      "Atom, work_unit ve field tanımlarının yapı taşıdır",
       "Kernel tip sistemine dahil edilir",
-      "Üst seviyeler atomu birleştirerek molekül/element kurar",
+      "Üst seviyeler atomu birleştirerek molekül/work_unit kurar",
     ],
     moduleUsage: [
       "Atom bölünemez bir birimdir; bağımsız sunulmaz, üst tip tanımlarının içinde kullanılır",

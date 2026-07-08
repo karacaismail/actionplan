@@ -162,15 +162,15 @@ const CONTENT = {
     ],
   },
 
-  "app-platform-horizontal-x-stone": xdim(
+  "app-platform-horizontal-x-tas": xdim(
     "Platform Yatay Taşı",
     "bir yatay servisin alt-parça tarifi (ör. yetki kontrolü)",
   ),
-  "app-platform-horizontal-x-molecule": xdim(
+  "app-platform-horizontal-x-kum": xdim(
     "Platform Yatay Molekülü",
     "birkaç yatay kuralı birleştiren bileşen (ör. rol-izin eşlemesi)",
   ),
-  "app-platform-horizontal-x-element": xdim(
+  "app-platform-horizontal-x-molekul": xdim(
     "Platform Yatay Elementi",
     "tek bir yatay alan/kural (ör. izin kodu)",
   ),

@@ -386,7 +386,7 @@ const CONTENT = {
     ],
   },
 
-  "app-finance-x-stone": {
+  "app-finance-x-tas": {
     featureDefs: [
       "Finans kırılımının Taş (alt-yetenek) seviyesi örneği: bir muhasebe yeteneğinin alt-parça tarifi",
       "Taş, bir ArcheType'ın içindeki çalışabilir alt-yetenektir (ör. mutabakat motoru)",
@@ -457,7 +457,7 @@ const CONTENT = {
     ],
   },
 
-  "app-finance-x-molecule": {
+  "app-finance-x-kum": {
     featureDefs: [
       "Finans kırılımının Molekül seviyesi örneği: birkaç mali alanı/kuralı birleştiren bileşen",
       "Molekül, finans alt-yeteneğinin çalışabilir en küçük bileşenidir (ör. vergi satırı hesabı)",
@@ -528,10 +528,10 @@ const CONTENT = {
     ],
   },
 
-  "app-finance-x-element": {
+  "app-finance-x-molekul": {
     featureDefs: [
-      "Finans kırılımının Element (alan/kural) seviyesi: tek bir mali alan veya doğrulama kuralı",
-      "Element, finans sözleşmesindeki en küçük anlamlı alan/kural (ör. KDV oranı alanı)",
+      "Finans kırılımının Work_unit (alan/kural) seviyesi: tek bir mali alan veya doğrulama kuralı",
+      "Work_unit, finans sözleşmesindeki en küçük anlamlı alan/kural (ör. KDV oranı alanı)",
       "Örnek dal; mali alan kuralının granülerlikteki yeri",
     ],
     security: [
@@ -572,7 +572,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: mali alan eşiği aştı (ör. limit) → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz; üst kurala girdi sağlar",
+      "Work_unit tek başına otomasyon yazmaz; üst kurala girdi sağlar",
     ],
     aiAgents: [
       AI_B1,
@@ -590,12 +590,12 @@ const CONTENT = {
       "Alan değişikliği izli",
     ],
     integration: [
-      "Mali element, üst molekül ve ArcheType field sözleşmesine bağlanır",
+      "Mali work_unit, üst molekül ve ArcheType field sözleşmesine bağlanır",
       "Finans şema doğrulamasına dahil",
       "Surface projeksiyonunda alan görünürlüğü bu kurala göre",
     ],
     moduleUsage: [
-      "Mali element bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası",
+      "Mali work_unit bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası",
     ],
   },
 
@@ -643,7 +643,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom seviyesi otomasyon tetiklemez; üst kurallara mali değer sağlar",
-      "Olay: tutar tanımlı aralık dışında → üst element kuralı reddeder (idempotent)",
+      "Olay: tutar tanımlı aralık dışında → üst work_unit kuralı reddeder (idempotent)",
     ],
     aiAgents: [
       AI_B1,
@@ -661,7 +661,7 @@ const CONTENT = {
       "Kabul/red izlenebilir",
     ],
     integration: [
-      "Mali atom, element ve field tanımlarının yapı taşı",
+      "Mali atom, work_unit ve field tanımlarının yapı taşı",
       "Finans tip sistemine dahil",
       "Üst seviyeler atomu birleştirir",
     ],

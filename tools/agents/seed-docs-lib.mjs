@@ -81,7 +81,7 @@ export const D = (P, T, o = {}) => ({
   moduleUsage: [`${P} — ${g(o.mu, "bu doküman sayfası ilgili kümenin parçası olarak kullanılır")}`],
 });
 
-/** xdim — x-kırılım düğümleri için (atom/element/molecule/stone): tüm maddeler P-önekli benzersiz. */
+/** xdim — x-kırılım düğümleri için (atom/work_unit/component/feature): tüm maddeler P-önekli benzersiz. */
 export const xdim = (P, what) => ({
   featureDefs: [
     `${P}: ${what}`,

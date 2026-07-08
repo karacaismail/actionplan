@@ -26,17 +26,17 @@ Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanab
 | Skor | id | Başlık |
 | ---: | --- | --- |
 | 2.46 | `app-data-intelligence-x-atom` | Atom — Veri & Zeka (AI-first) örnek kırılımı |
-| 2.49 | `app-finance-x-molecule` | Molekül — Finans & Muhasebe örnek kırılımı |
+| 2.49 | `app-finance-x-kum` | Molekül — Finans & Muhasebe örnek kırılımı |
 | 2.54 | `app-backend` | Backend |
 | 2.56 | `app-layer1` | Layer 1 — In-tree Modüller |
 | 2.57 | `app-frontend` | Frontend |
 | 2.57 | `std-ci-gates` | 7 CI Conformance Kapisi (ST-3) |
-| 2.58 | `app-data-intelligence-x-stone` | Taş — Veri & Zeka (AI-first) örnek kırılımı |
+| 2.58 | `app-data-intelligence-x-tas` | Taş — Veri & Zeka (AI-first) örnek kırılımı |
 | 2.58 | `app-finance-x-atom` | Atom — Finans & Muhasebe örnek kırılımı |
 | 2.59 | `be-v1-kapsam-disi` | v1 Teslim Profili — Tek Varsayılan ve Kapsam Dışı |
 | 2.6 | `app-platform-horizontal` | Platform & Yatay |
 | 2.61 | `app-hr` | İnsan Kaynakları |
-| 2.62 | `app-finance-x-element` | Element — Finans & Muhasebe örnek kırılımı |
+| 2.62 | `app-finance-x-molekul` | Work_unit — Finans & Muhasebe örnek kırılımı |
 | 2.62 | `fe-cdn` | CDN Strategy — sınırın uçtaki dağıtım |
 | 2.62 | `s-esg` | ESG / Sürdürülebilirlik Raporlama |
 | 2.63 | `app-customer-revenue` | Müşteri & Gelir |

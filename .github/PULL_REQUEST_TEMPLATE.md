@@ -20,6 +20,7 @@ Lokal olarak ne calistirdin ve sonuclari neler?
 ```
 npm run typecheck
 npm run lint
+npm run qa:wbs
 npm test
 npm run test:content
 npm run test:e2e
@@ -33,6 +34,7 @@ Bu liste deploy.yml'daki gercek kapi adlariyla bire-bir eslesmektedir.
 
 - [ ] `Tip denetimi` yesil (`npm run typecheck`)
 - [ ] `Lint` yesil (`npm run lint` — Biome)
+- [ ] `WBS doga metaforu kapisi` yesil (`npm run qa:wbs`)
 - [ ] `Icerik kalite kapisi (node checker — 422 dugum)` yesil (`node tools/agents/check-content.mjs`)
 - [ ] `Icerik kalite kapisi (vitest — kanonik)` yesil (`npm run test:content`)
 - [ ] `ECA ruleset katalogu kapisi` yesil (`node tools/agents/check-ruleset.mjs`)

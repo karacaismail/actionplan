@@ -163,15 +163,15 @@ const CONTENT = {
     ],
   },
 
-  "app-vertical-x-stone": xdim(
+  "app-vertical-x-tas": xdim(
     "Dikey Taşı",
     "bir sektörel yeteneğin alt-parça tarifi (ör. randevu çakışma kontrolü)",
   ),
-  "app-vertical-x-molecule": xdim(
+  "app-vertical-x-kum": xdim(
     "Dikey Molekülü",
     "birkaç sektörel kuralı birleştiren bileşen (ör. hasta kayıt formu)",
   ),
-  "app-vertical-x-element": xdim(
+  "app-vertical-x-molekul": xdim(
     "Dikey Elementi",
     "tek bir sektörel alan/kural (ör. TC kimlik doğrulama)",
   ),

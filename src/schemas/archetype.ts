@@ -3,8 +3,8 @@ import { AgentPolicySchema, EcaRuleSchema, MigrationModeSchema } from "./task";
 
 /**
  * ArcheType sözleşme ailesi — TEK dosya/format DEĞİLDİR; çok-parçalı bir sözleşmedir.
- * Metafor+teknik: App=dağ (ürün ailesi), Module=kaya (sınırlı bağlam),
- * ArcheType=büyük taş (Frappe DocType'tan gelişmiş; bir module'ü oluşturan ana bileşen;
+ * Metafor+teknik: App=ada (ürün ailesi), Module=dağ (sınırlı bağlam),
+ * ArcheType=kaya (Frappe DocType'tan gelişmiş; bir module'ü oluşturan ana bileşen;
  * bir module'de birden çok ArcheType olabilir). Surface (projeksiyon) ve Workflow (davranış)
  * ArcheType'tan AYRI ama ilişkili ve AYRI versiyonlanır. Alan seviyesi adı = `field`.
  */

@@ -216,15 +216,15 @@ Bu örnek, platform-customer-* kümesinin sözleşmeyi nasıl uyguladığını s
 ```
 platform-factory          (app — ada)
 └── platform-db-schema    (module — dağ)
-    └── platform-customer-model  (archetype — büyük taş)
+    └── platform-customer-model  (archetype — kaya)
 
 platform-factory          (app — ada)
 └── platform-graphql-api  (module — dağ)
-    └── platform-customer-graphql  (archetype — büyük taş)
+    └── platform-customer-graphql  (archetype — kaya)
 
 platform-factory          (app — ada)
 └── platform-ui-surface   (module — dağ)
-    └── platform-customer-ui  (archetype — büyük taş)
+    └── platform-customer-ui  (archetype — kaya)
 ```
 
 ### Doğru akış (kısaltılmış)

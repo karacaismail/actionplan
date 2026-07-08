@@ -53,18 +53,16 @@ const WATERFALL_PHASES = [
   "release-maintenance",
 ];
 const GRANULARITY_TO_LEVEL = {
-  dag: "app",
-  dağ: "app",
-  kaya: "module",
-  "buyuk-tas": "archetype",
-  "büyük-taş": "archetype",
-  "orta-tas": "stone",
-  "orta-taş": "stone",
-  "kucuk-tas": "molecule",
-  "küçük-taş": "molecule",
-  toz: "element",
-  "toz-tanesi": "element",
-  atom: "atom",
+  ada: "app",
+  dag: "module",
+  dağ: "module",
+  kaya: "archetype",
+  tas: "feature",
+  taş: "feature",
+  kum: "component",
+  molekul: "work_unit",
+  molekül: "work_unit",
+  atom: "micro_step",
 };
 const CLUSTER_TITLE = {
   "core-operations": "Çekirdek Operasyon",

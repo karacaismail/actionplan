@@ -23,7 +23,7 @@ Kapsa: <BOYUTA_ÖZGÜ_KAPSAM>.
 Blok açıklaması:
 
 - **Başlık satırı** — Boyutun Türkçe başlığı (`DIMENSION_META[key].tr`) + sabit "boyutunu bu görev için üret." eki.
-- **Bağlam** — Düğümün kimliği: `id`, `title`, seviye metaforu (modül/kaya, archetype/büyük taş, …), kümesi (`source.cluster`), `summary` ve `tags`. Bu blok promptu o düğüme bağlar; jenerikleşmeyi kırar.
+- **Bağlam** — Düğümün kimliği: `id`, `title`, seviye metaforu (app/ada, module/dağ, archetype/kaya, feature/taş, component/kum, work_unit/molekül, micro_step/atom), kümesi (`source.cluster`), `summary` ve `tags`. Bu blok promptu o düğüme bağlar; jenerikleşmeyi kırar.
 - **Çıktı** — Her zaman sabit: 3-5 madde, Türkçe, somut. "Generic ifade kullanma" cümlesi zorunludur.
 - **Güvenlik sınırı** — Her zaman sabit: AI'nin yetki sınırı (app/module üretemez/güncelleyemez, ruleset override edemez). Bu blok `AgentPolicy` kilidiyle hizalıdır.
 - **Kapsa** — Boyuta özgü, ölçülebilir kapsam maddeleri. Bölüm 3'te her boyut için verilmiştir.

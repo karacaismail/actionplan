@@ -180,7 +180,7 @@ Bu tablo `k-obligation` için zorunlu test senaryolarını ve türlerini tanıml
 - `due_at - lead_time` anında hatırlatma, vadesinde uyarı alarm *kararı* üretiliyor ve `k-worker`'a taşıma için enqueue ediliyor; alarm üretimi idempotent (aynı `trigger_at` tek alarm).
 - Vade `grace_period` ile geçince taahhüt `breached` adayı oluyor ve artan-şiddet eskalasyon zinciri tetikleniyor; alarm kabul edilince (`acknowledged_by`) eskalasyon duruyor; ihlal sessiz kalmıyor.
 - Yenileme/fesih penceresi yönetiliyor: `effective` bitişine `notice_period` kala `renewal_notice` üretiliyor, `renewal_mode` karar adayı sunuluyor; ihbar vadesi kaçmak üzere ise kritik erken-uyarı üretiliyor (gelir kaçağı önleme).
-- `recurrence` (RRULE) taşıyan taahhütten sonraki örnek deterministik ve idempotent üretiliyor (aylık rapor/yıllık yenileme el ile takip edilmiyor).
+- `recurrence` (RRULE) taşıyan taahhütten sonraki örnek deterministik ve idempotent üretiliyor (aylık rapor/yıllık yenileme work_unit ile takip edilmiyor).
 - AI sözleşme metninden yükümlülük çıkarıp `draft` (`origin=ai_extracted`) öneriyor; taslak yürürlükte değil ve `approval_ref` olmadan alarm üretmiyor.
 - Taahhüdü met/breached/waive yapmak yalnız insan onayıyla (`approval_ref`); onaysız kapatma reddediliyor; `waived` gerekçe istiyor; AI hiçbirini yapamıyor (test-kanıtlı).
 - Cross-tenant taahhüt/alarm erişimi ve cross-tenant referans en az 10 negatif test case ile reddediliyor ve audit'leniyor; alarm komşu tenant'a sızmıyor.

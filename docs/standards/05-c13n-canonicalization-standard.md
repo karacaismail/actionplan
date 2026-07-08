@@ -48,7 +48,7 @@ Slug şu şekilde uygulanır: NFC normalize → küçük harfe indir (Unicode-aw
 
 Bu bölüm iki farklı yazımın aynı kaynağa işaret ettiğini tespit etmek için URL'in kanonik biçimini tanımlar.
 
-URL kanonikleştirme şu şekilde uygulanır: şemayı küçük harfe indir (`HTTPS→https`), host'u küçük harfe indir ve IDN/punycode'a çevir (`örnek.com→xn--rnek-...`), varsayılan portu kaldır (`:443` https'te, `:80` http'te), yol segmentlerinde `.`/`..` çöz, yüzde-kodlamayı büyük harfe normalize et (`%3a→%3A`), izlenmesi anlamsız takip parametrelerini (allowlist dışı `utm_*`) at, sorgu parametrelerini anahtar-sırasına diz, son `/` kuralını sabitle (kök hariç kaldır). Kanonik URL bir `check` sütununda saklanır; kullanıcı-girdili URL'ler bu fonksiyondan geçmeden karşılaştırılmaz. Açık-yönlendirme (open-redirect) riskine karşı yalnız allowlist şemalar (`https`, `mailto`, `tel`) kanonikleştirilir; `javascript:`/`data:` reddedilir.
+URL kanonikleştirme şu şekilde uygulanır: şemayı küçük harfe indir (`HTTPS→https`), host'u küçük harfe indir ve IDN/punycode'a çevir (`örnek.com→xn--rnek-...`), varsayılan portu kaldır (`:443` https'te, `:80` http'te), yol segmentlerinde `.`/`..` çöz, yüzde-kodlamayı büyük harfe normalize et (`%3a→%3A`), izlenmesi anlamsız takip parametrelerini (allowlist dışı `utm_*`) micro_step, sorgu parametrelerini anahtar-sırasına diz, son `/` kuralını sabitle (kök hariç kaldır). Kanonik URL bir `check` sütununda saklanır; kullanıcı-girdili URL'ler bu fonksiyondan geçmeden karşılaştırılmaz. Açık-yönlendirme (open-redirect) riskine karşı yalnız allowlist şemalar (`https`, `mailto`, `tel`) kanonikleştirilir; `javascript:`/`data:` reddedilir.
 
 ---
 
@@ -72,7 +72,7 @@ E-posta kanonikleştirme şu şekilde uygulanır: baş/son boşluk kırp → NFC
 
 Bu bölüm uluslararası telefon numarasının biricik depolama biçimini tanımlar.
 
-Telefon numaraları E.164 biçiminde (`+` + ülke kodu + abone numarası, boşluksuz, azami 15 hane) kanonikleştirilir ve DB'de bu biçimde saklanır. Kanonikleştirme şu şekilde uygulanır: görünüm karakterlerini (boşluk, `-`, `(`, `)`, `/`) at → baştaki `00` uluslararası önekini `+`'a çevir → ülke kodu yoksa tenant/kullanıcı varsayılan bölgesinden tamamla → E.164 doğrulaması yap. Ayrıştırma güvenilir bir kütüphane (ör. `phonenumbers`, libphonenumber) ile yapılır; elle regex ile ülke-kodu tahmini yasaktır çünkü numara planları ülkeye göre değişir. Görüntüleme biçimi (ulusal/uluslararası) locale'e göre `i18n` katmanında üretilir; depolama daima E.164'tür. React tarafında giriş maskesi ülke seçimine göre önizleme verir, gönderilen değer sunucuda E.164'e indirilir.
+Telefon numaraları E.164 biçiminde (`+` + ülke kodu + abone numarası, boşluksuz, azami 15 hane) kanonikleştirilir ve DB'de bu biçimde saklanır. Kanonikleştirme şu şekilde uygulanır: görünüm karakterlerini (boşluk, `-`, `(`, `)`, `/`) micro_step → baştaki `00` uluslararası önekini `+`'a çevir → ülke kodu yoksa tenant/kullanıcı varsayılan bölgesinden tamamla → E.164 doğrulaması yap. Ayrıştırma güvenilir bir kütüphane (ör. `phonenumbers`, libphonenumber) ile yapılır; elle regex ile ülke-kodu tahmini yasaktır çünkü numara planları ülkeye göre değişir. Görüntüleme biçimi (ulusal/uluslararası) locale'e göre `i18n` katmanında üretilir; depolama daima E.164'tür. React tarafında giriş maskesi ülke seçimine göre önizleme verir, gönderilen değer sunucuda E.164'e indirilir.
 
 ---
 

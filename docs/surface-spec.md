@@ -70,13 +70,13 @@ Her tip kısa bir **davranış sözleşmesi** taşır — yani "ne gösterir" de
 
 ## 4. Shop-Surface tip ailesi (üretim)
 
-Shop-Surface, fabrika sahasına (shop-floor) bakan üretim yüzeyi ailesidir. Kullanıcısı ofis kullanıcısından **temelden farklıdır**: eldiven, dokunmatik, parlak/tozlu ortam, barkod/QR tarayıcı, tek elle çalışma, bağlantı kesintisi, ve hata pahalıdır (yanlış lot = geri-çağırma). Bu aile MRP/MES (üretim yürütme) yüzeyini karşılar. Fabrika-bağlamı sözleşmesi Bölüm 10'da (`factoryContext`), endüstriyel erişilebilirlik Bölüm 8'de ayrıca tanımlanır.
+Shop-Surface, fabrika sahasına (shop-floor) bakan üretim yüzeyi ailesidir. Kullanıcısı ofis kullanıcısından **temelden farklıdır**: eldiven, dokunmatik, parlak/moleküllu ortam, barkod/QR tarayıcı, tek elle çalışma, bağlantı kesintisi, ve hata pahalıdır (yanlış lot = geri-çağırma). Bu aile MRP/MES (üretim yürütme) yüzeyini karşılar. Fabrika-bağlamı sözleşmesi Bölüm 10'da (`factoryContext`), endüstriyel erişilebilirlik Bölüm 8'de ayrıca tanımlanır.
 
 Bu yüzeyler yüksek oranda `renderStrategy: custom` olur (offline kuyruk, barkod-öncelikli giriş, gerçek-zaman SLA jenerik render'a sığmaz) — ama yönetişimi (izin/audit/i18n) korurlar.
 
 | Tip | Davranış sözleşmesi (özet) |
 |---|---|
-| `terminal` | Üretime başla/durdur/tamamle, malzeme tüket, fire gir; **offline-first** (kuyruk + çakışma-çözüm); **barkod öncelikli** giriş; **tek-el** ergonomi; "onaysız devam etme" kilidi |
+| `terminal` | Üretime başla/durdur/tamamle, malzeme tüket, fire gir; **offline-first** (kuyruk + çakışma-çözüm); **barkod öncelikli** giriş; **tek-work_unit** ergonomi; "onaysız devam etme" kilidi |
 | `andon` | Canlı hat durumu (yeşil/sarı/kırmızı + duruş nedeni); **2 saniye** tazeleme; renk-körü-güvenli (renk + şekil); kopukluk davranışı beyanlı |
 | `gantt-schedule` | APS (advanced planning & scheduling = ileri çizelgeleme) çıktısı: iş merkezi × zaman; sürükle-bırak yeniden-çizelge; kilit/dondurma penceresi |
 | `kanban-flow` | Üretim akış panosu; WIP (work-in-progress) kolonları; çekme (pull) sinyali; kolon kapasite sınırı |
@@ -159,7 +159,7 @@ Karar: varsayılan `wcag: "2.2-AA"` (yasal + uygulanabilir taban). AAA yüzey-ba
 
 **Endüstriyel HMI (shop-floor) — a11y'nin fabrika versiyonu.** Shop-Surface için "web a11y" yetmez; endüstriyel ergonomi gerekir:
 
-- **Kontrast AA-üstü** — parlak/tozlu ortamda okunabilirlik (AA eşiğinin ötesi).
+- **Kontrast AA-üstü** — parlak/moleküllu ortamda okunabilirlik (AA eşiğinin ötesi).
 - **Dokunma hedefi ~64px** — eldivenli parmak için (web'in ~44px hedefinin çok üstü).
 - **Renk-körü-güvenli andon** — durum yalnız renkle değil **renk + şekil** ile (kırmızı/yeşil ayrımı renk-körü operatörde çökmemeli).
 - Gürültüde **sesli-değil-görsel** geri-bildirim önceliği.

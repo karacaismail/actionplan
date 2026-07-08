@@ -12,9 +12,9 @@ push eden bir ajan (3b) değildir; amaç, ArcheType sözleşmelerinin güvenli �
 
 ## 2. Terimler (metafor + teknik karşılık aynı cümlede)
 
-- **App = dağ** = bir ürün ailesi (ör. Çekirdek Operasyon); birden çok module barındırır.
-- **Module = kaya** = sınırlı bağlam (bounded context); birden çok ArcheType barındırır.
-- **ArcheType = büyük taş** = Frappe DocType'a benzeyen ama ondan gelişmiş, bir module'ü oluşturan
+- **App = ada** = bir ürün ailesi (ör. Çekirdek Operasyon); birden çok module barındırır.
+- **Module = dağ** = sınırlı bağlam (bounded context); birden çok ArcheType barındırır.
+- **ArcheType = kaya** = Frappe DocType'a benzeyen ama ondan gelişmiş, bir module'ü oluşturan
   ana bileşen. ArcheType **tek dosya/format değildir**; çok-parçalı bir sözleşme ailesidir.
 - **Surface = projeksiyon** = ArcheType'tan AYRI ama ilişkili; UI/API/tablo izdüşümü; AYRI versiyonlanır.
 - **Workflow = davranış** = ArcheType'tan AYRI ama ilişkili; durum makinesi/süreç; AYRI versiyonlanır.

@@ -158,15 +158,15 @@ const CONTENT = {
     ],
   },
 
-  "app-content-collaboration-x-stone": xdim(
+  "app-content-collaboration-x-tas": xdim(
     "İçerik & İşbirliği Taşı",
     "bir içerik yeteneğinin alt-parça tarifi (ör. sürüm farkı)",
   ),
-  "app-content-collaboration-x-molecule": xdim(
+  "app-content-collaboration-x-kum": xdim(
     "İçerik & İşbirliği Molekülü",
     "birkaç içerik kuralını birleştiren bileşen (ör. paylaşım izni)",
   ),
-  "app-content-collaboration-x-element": xdim(
+  "app-content-collaboration-x-molekul": xdim(
     "İçerik & İşbirliği Elementi",
     "tek bir içerik alanı/kuralı (ör. erişim seviyesi)",
   ),

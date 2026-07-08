@@ -79,9 +79,9 @@ Belirsizliği önlemek için her eylemde aktör açıkça yazılır.
 
 ## 3. Terim sözlüğü (ilk geçtikleri yerde teknik karşılık)
 
-- **App = dağ:** Bir ürün ailesi (ör. Çekirdek Operasyon); birden çok module barındırır.
-- **Module = kaya:** Sınırlı bağlam (bounded context = tek bir iş alanına kapalı sınır); birden çok ArcheType barındırır.
-- **ArcheType = büyük taş:** Frappe DocType'a benzeyen ama gelişmiş, bir module'ü oluşturan ana bileşen. Tek dosya değil; çok-parçalı sözleşme ailesi.
+- **App = ada:** Bir ürün ailesi (ör. Çekirdek Operasyon); birden çok module barındırır.
+- **Module = dağ:** Sınırlı bağlam (bounded context = tek bir iş alanına kapalı sınır); birden çok ArcheType barındırır.
+- **ArcheType = kaya:** Frappe DocType'a benzeyen ama gelişmiş, bir module'ü oluşturan ana bileşen. Tek dosya değil; çok-parçalı sözleşme ailesi.
 - **Surface = projeksiyon:** ArcheType'ın UI/API/tablo izdüşümü; ArcheType'tan ayrı ve ayrı versiyonlanır.
 - **Workflow = davranış:** ArcheType'ın durum makinesi/süreç tanımı; ArcheType'tan ayrı ve ayrı versiyonlanır.
 - **field = alan:** En küçük veri birimi.
@@ -359,7 +359,7 @@ Aşağıdaki her faz, ortak şablonu (yukarıda) izler. Her fazda **Odak** satı
 ### Faz B1 — core-operations (25 sayfa, feature)
 - **Odak:** CRM/satış/operasyon ArcheType'ları. En yüksek değerli boyutlar: featureDefs (muadil kıyas), security (PII+RLS), eca (lead/görev otomasyonu), integration (kernel+finance). `s-crm` zaten altın → komşu referans.
 - **Partiler:** [ ] B1-p1 (8 düğüm) · [ ] B1-p2 (8) · [ ] B1-p3 (9).
-- **DoD:** 25 düğüm yeşil; CRM dalının (s-crm, mol-/at-/el-crm-*) tutarlılığı korunmuş.
+- **DoD:** 25 düğüm yeşil; CRM dalının (s-crm, tas-/kum-/molekul-/atom-crm-*) tutarlılığı korunmuş.
 
 ### Faz B2 — aday (36 sayfa, feature/aday ArcheType)
 - **Odak:** Aday servis ArcheType'ları (s-* muhasebe, BI, helpdesk, inventory, vb.). featureDefs (muadil + kapsam), deployment (çok profil), moduleUsage (hangi app tüketir), owasp. En büyük cluster → en çok parti.
@@ -486,8 +486,8 @@ Aşağıdaki her faz, ortak şablonu (yukarıda) izler. Her fazda **Odak** satı
 - **Partiler:** [ ] B26-p1.
 - **DoD:** 2 düğüm yeşil veya doğru cluster'a taşınmış.
 
-### Faz B27 — Kalan/yeni düğümler (x-stone/x-molecule/x-element/x-atom kırılımları)
-- **Odak:** `expand-depth.mjs` ile üretilmiş alt-seviye kırılım düğümleri (app-*-x-stone/molecule/element/atom). Bunlar üst ArcheType'ın alt-detayıdır; içerik üst düğümle tutarlı ama daha granüler olmalı (codeOptimization, testing, performance ağırlıklı).
+### Faz B27 — Kalan/yeni düğümler (x-tas/x-kum/x-molekul/x-atom kırılımları)
+- **Odak:** `expand-depth.mjs` ile üretilmiş alt-seviye kırılım düğümleri (app-*-x-tas/x-kum/x-molekul/x-atom). Bunlar üst ArcheType'ın alt-detayıdır; içerik üst düğümle tutarlı ama daha granüler olmalı (codeOptimization, testing, performance ağırlıklı).
 - **Partiler:** [ ] B27-p1..p6 (çok sayıda; cluster'a göre grupla).
 - **DoD:** Tüm kırılım düğümleri yeşil; üst-alt tutarlılık (parent ile çelişki yok).
 
@@ -843,11 +843,10 @@ Tanım: sistemin şu an fark etmediği risk sınıfı. Periyodik (çeyreklik) so
 | genel | 2 | genel | B26 |
 | (x-kırılım düğümleri) | — | alt-detay | B27 |
 
-Not: x-kırılım düğümleri (app-*-x-stone/molecule/element/atom) yukarıdaki feature cluster'larının altına dağılmıştır; B27 bunları topluca ele alır.
+Not: x-kırılım düğümleri (app-*-x-tas/x-kum/x-molekul/x-atom) yukarıdaki feature cluster'larının altına dağılmıştır; B27 bunları topluca ele alır.
 
 ---
 
 ## Kapanış
 
 Bu plan, denetimde bulunan tüm eksikleri (içerik derinliği, ECA ruleset kataloğu, Surface/Workflow sözleşmeleri, panel görünürlüğü, shadcn) küme→faz→eylem→görev seti hiyerarşisinde, test-önce ve enterprise-grade kurallarla kapsar. Uygulama sırası: **Küme A → B → C → D → (E) → F**. Her faz kendi DoD'siyle kapanır; main'e her giriş insan onaylı PR ile olur; AI ajan yalnız öneri/draft üretir.
-

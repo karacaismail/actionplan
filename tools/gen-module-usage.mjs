@@ -69,7 +69,7 @@ function hash(s) {
   return Math.abs(h);
 }
 
-const LEAF = new Set(["stone", "molecule", "element", "atom"]);
+const LEAF = new Set(["feature", "component", "work_unit", "micro_step"]);
 
 function featureItems(node) {
   const T = node.title;

@@ -17,14 +17,23 @@ const NODES = path.resolve(
   "generated",
   "nodes",
 );
-const LEVELS = ["app", "module", "archetype", "stone", "molecule", "element", "atom"];
+const LEVELS = ["app", "module", "archetype", "feature", "component", "work_unit", "micro_step"];
 const LEVEL_TR = {
-  module: "Modül",
-  archetype: "ArcheType",
-  stone: "Taş",
-  molecule: "Molekül",
-  element: "Element",
-  atom: "Atom",
+  app: "Ada",
+  module: "Dağ",
+  archetype: "Kaya",
+  feature: "Taş",
+  component: "Kum",
+  work_unit: "Molekül",
+  micro_step: "Atom",
+};
+const LEVEL_SLUG = {
+  module: "dag",
+  archetype: "kaya",
+  feature: "tas",
+  component: "kum",
+  work_unit: "molekul",
+  micro_step: "atom",
 };
 // 7-seviye kırılımın anlamlı olduğu ürün/sistem kümeleri (doc/meta hariç)
 const EXPAND = new Set([
@@ -110,7 +119,7 @@ for (const app of apps) {
   if (li >= 6) continue; // zaten atom var
   for (li += 1; li <= 6; li++) {
     const level = LEVELS[li];
-    const id = `${app.id}-x-${level}`;
+    const id = `${app.id}-x-${LEVEL_SLUG[level]}`;
     if (byId.has(id)) {
       parent = byId.get(id);
       continue;
@@ -126,7 +135,7 @@ for (const app of apps) {
       parentId: parent.id,
       order: 99,
       icon: "ph-cube",
-      tags: [app.source?.cluster, "ornek", "7-seviye", level].filter(Boolean),
+      tags: [app.source?.cluster, "ornek", "7-seviye", level, LEVEL_SLUG[level]].filter(Boolean),
       dependsOn: [],
       blocks: [],
       related: [],
@@ -161,5 +170,5 @@ for (const app of apps) {
   }
 }
 console.log(
-  `[expand-depth] ${apps.length} app işlendi, ${created} yeni düğüm (molecule/element/atom) eklendi.`,
+  `[expand-depth] ${apps.length} app işlendi, ${created} yeni düğüm (kum/molekül/atom hattı) eklendi.`,
 );

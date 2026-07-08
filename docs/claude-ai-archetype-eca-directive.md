@@ -42,7 +42,7 @@ The current worktree already has structural ECA (`src/engine/eca.ts`) and genera
 - `ai.archetype.generate.requested` + draft/staging -> create ArcheType draft, approval required.
 - `ai.archetype.update.requested` + production + `historyPreserved != true` -> deny.
 - `ai.archetype.update.requested` + production + preserved history + snapshot + rollback + compatibility + allowed migration -> propose production update, approval required.
-- Any ECA chain depth must remain capped at 6.
+- Any ECA chain depth must remain capped micro_step 6.
 
 ## Acceptance Criteria
 

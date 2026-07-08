@@ -155,7 +155,7 @@ Grafik modelinin gerekçesi somuttur: sözleşmeyi düz metin/blob olarak tutan 
 | `total_value` düz `currency` | 60.000 EUR + 60.000 TRY toplanır; yanlış sözleşme değeri/ceza | Finans — sessiz para kaybı |
 | `DateRange`/`Term` yok | Yenileme/fesih penceresi hesaplanamaz → auto-renew kaçar veya istenmeden yenilenir | Gelir kaçağı — ürünün ana vaadi |
 | `Duration` yok (düz `integer` gün) | "60 gün ihbar" iş-günü mü takvim mi belirsiz → ihbar süresi kaçar | Hukuki — sözleşme istenmeden uzar |
-| `Recurrence` (RRULE) yok | Yıllık yenileme/aylık rapor el ile → ölçekte kaçar | Operasyon — yükümlülük düşer |
+| `Recurrence` (RRULE) yok | Yıllık yenileme/aylık rapor work_unit ile → ölçekte kaçar | Operasyon — yükümlülük düşer |
 | `ClauseRef`/`PartyRef` yok | Madde/taraf kopyalanır, kütüphaneye bağlanmaz → playbook (PDP) kontrol edemez | Hukuk — risk politikası çalışmaz |
 | `AssetRef` düz `file` | Binary DB'ye gömülür veya URL sızar; imzalanan doküman referansı çözülmez | Güvenlik + maliyet |
 | `bytea-ref`/`timestamp` yok | İmza hash'i/zaman-damgası tipsiz → tamper-evidence ve LTV yok | Hukuki — delil değeri taşımaz (eIDAS kaçar) |
@@ -231,9 +231,9 @@ Aşağıdaki tablo eIDAS'ın üç hukuki imza seviyesini, teknik karşılığın
 |---|---|---|---|
 | **SES** | Simple Electronic Signature | Email/SMS-OTP doğrulama + niyet kaydı | Düşük-risk onay, iç doküman |
 | **AES** | Advanced Electronic Signature | Sertifika-tabanlı, imzalayana benzersiz bağlı, değişiklik-tespitli | Ticari sözleşme, orta-risk |
-| **QES** | Qualified Electronic Signature | Nitelikli sertifika (QTSP/ESHS) + güvenli imza aracı; el-imzası eşdeğeri | Yüksek-değer, yasal-zorunlu, kamu |
+| **QES** | Qualified Electronic Signature | Nitelikli sertifika (QTSP/ESHS) + güvenli imza aracı; e-imzası eşdeğeri | Yüksek-değer, yasal-zorunlu, kamu |
 
-**Seviye kapısı (test-zorunlu):** `level=qes` yalnız nitelikli sertifika sunan (BTK-yetkili ESHS / eIDAS QTSP) sağlayıcıyla ilerleyebilir; nitelikli-olmayan sağlayıcıya QES istemek `LevelNotSupportedError` fırlatır. QES seçimi (el-imzası eşdeğeri, hukuki sonuç) yalnız insan onayına bağlıdır; AI tek başına QES seçemez.
+**Seviye kapısı (test-zorunlu):** `level=qes` yalnız nitelikli sertifika sunan (BTK-yetkili ESHS / eIDAS QTSP) sağlayıcıyla ilerleyebilir; nitelikli-olmayan sağlayıcıya QES istemek `LevelNotSupportedError` fırlatır. QES seçimi (e-imzası eşdeğeri, hukuki sonuç) yalnız insan onayına bağlıdır; AI tek başına QES seçemez.
 
 ### **6.2 İmza formatları, zaman-damgası ve uzun-dönem doğrulama**
 

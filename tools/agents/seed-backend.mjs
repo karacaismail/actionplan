@@ -162,19 +162,19 @@ const CONTENT = {
     ],
   },
 
-  "app-backend-x-archetype": xdim(
+  "app-backend-x-kaya": xdim(
     "Backend ArcheType örneği",
     "bir backend ArcheType'ının çok-parçalı sözleşme örneği (fields/relations/policy)",
   ),
-  "app-backend-x-stone": xdim(
+  "app-backend-x-tas": xdim(
     "Backend Taşı",
     "bir backend yeteneğinin alt-parça tarifi (ör. yetki kontrolü servisi)",
   ),
-  "app-backend-x-molecule": xdim(
+  "app-backend-x-kum": xdim(
     "Backend Molekülü",
     "birkaç backend kuralını birleştiren bileşen (ör. doğrulama zinciri)",
   ),
-  "app-backend-x-element": xdim(
+  "app-backend-x-molekul": xdim(
     "Backend Elementi",
     "tek bir backend alanı/kuralı (ör. validation rule)",
   ),

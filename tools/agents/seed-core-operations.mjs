@@ -22,14 +22,14 @@ const HUMAN = [
   "app-core-operations",
   "s-crm",
   "m-crm-sales",
-  "st-crm-lead-mgmt",
-  "mol-crm-lead-scoring",
-  "mol-crm-lead-dedup",
-  "at-crm-email-regex",
-  "at-crm-domain-blocklist",
-  "at-crm-score-range-check",
-  "el-crm-score-field-validator",
-  "el-crm-score-weight-config",
+  "tas-crm-lead-mgmt",
+  "kum-crm-lead-scoring",
+  "kum-crm-lead-dedup",
+  "atom-crm-email-regex",
+  "atom-crm-domain-blocklist",
+  "atom-crm-score-range-check",
+  "molekul-crm-score-field-validator",
+  "molekul-crm-score-weight-config",
 ];
 
 const ECA_BOUND =
@@ -754,7 +754,7 @@ const CONTENT = {
       "E-commerce-models bayrağıyla etkinleşir",
     ],
     moduleUsage: [
-      "Dropshipping bir capability (orta taş); Commerce stack içinde stoksuz satışı açar",
+      "Dropshipping bir capability (taş); Commerce stack içinde stoksuz satışı açar",
       "Pazaryeri ve perakende app'leri bu yeteneği bayrakla kullanır",
     ],
   },
@@ -826,7 +826,7 @@ const CONTENT = {
       "Sağlayıcılar ipaas/adaptör katmanından",
     ],
     moduleUsage: [
-      "Payment-methods (orta taş) Çekirdek Operasyon'da bölgesel ödeme yeteneğini sağlar",
+      "Payment-methods (taş) Çekirdek Operasyon'da bölgesel ödeme yeteneğini sağlar",
       "E-ticaret, abonelik ve POS app'leri bu ödeme soyutlamasını tüketir",
     ],
   },
@@ -970,7 +970,7 @@ const CONTENT = {
       "Lead/etkileşim CRM'e yansır",
     ],
     moduleUsage: [
-      "Social-commerce (orta taş) Çekirdek Operasyon'da sosyal kanal satışını açar",
+      "Social-commerce (taş) Çekirdek Operasyon'da sosyal kanal satışını açar",
       "E-ticaret ve pazarlama app'leri bu yeteneği bayrakla kullanır",
     ],
   },
@@ -1042,7 +1042,7 @@ const CONTENT = {
       "Plan/fiyat Commerce katalogundan",
     ],
     moduleUsage: [
-      "Subscription-commerce (orta taş) Çekirdek Operasyon'da abonelik satışını açar",
+      "Subscription-commerce (taş) Çekirdek Operasyon'da abonelik satışını açar",
       "SaaS, içerik ve kutu-abonelik app'leri bu yaşam döngüsü sözleşmesini tüketir",
     ],
   },

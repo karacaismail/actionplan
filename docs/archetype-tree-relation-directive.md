@@ -84,7 +84,7 @@ Aşağıdaki gereksinimler test-önce (kırmızı→yeşil) yaşam döngüsüne 
 - **SQLAlchemy 2.0:** `Mapped[...]` modeli; `path` için `sqlalchemy-utils` `LtreeType` (veya eşdeğer). `parent` self-referential FK; `depth` kolonu. Recursive CTE gereken durumda `select().cte(recursive=True)`.
 - **Alembic:** expand-contract; `downgrade()` dolu ve `alembic downgrade -1` ile CI'da test edilir (boş downgrade yasak). `ltree` uzantısı migration'da açılır.
 - **Servis arayüzü:** `subtree(node)`, `ancestors(node)`, `move(node, new_parent)`, `reparent(node, parent)`; hepsi `cycleGuard` çalıştırır ve `AuditLogger.log()` ile `resource=relation` yazar.
-- **Temporal çözüm:** `effective_edges(at)` verilen anda geçerli (`valid_from <= at < valid_to`) kenarları döndürür; `temporalScope` (`archetype-uretim-spec §12.C`) ilişki kümesini tek bir zaman ekseninde okur.
+- **Temporal çözüm:** `effective_edges(micro_step)` verilen anda geçerli (`valid_from <= micro_step < valid_to`) kenarları döndürür; `temporalScope` (`archetype-uretim-spec §12.C`) ilişki kümesini tek bir zaman ekseninde okur.
 - **Hata formatı:** `{code, message, trace_id, details}`; `CycleDetectedError` ayrı kod; `get_logger()` kullanılır, `print()` yasak.
 
 ## 9. Frontend (ağaç gezgini)
@@ -93,7 +93,7 @@ Vite + React + TanStack yığınına ve config-driven surface ilkesine uyar.
 
 - **Ağaç gezgini bileşeni:** Genişlet/daralt (expand/collapse), lazy-load (büyük alt-ağaç talep-üzerine çekilir; tüm ağaç bir kerede yüklenmez), sanallaştırılmış satır (derin ağaçta performans). Alt-ağaç `subtree` endpoint'inden TanStack Query ile çekilir.
 - **Taşıma:** Sürükle-bırak yeniden-parent; drop hedefi geçersizse (döngü) UI reddeder ve neden metnini gösterir (yalnız renkle değil).
-- **Temporal görünürlük:** Geçmiş kenarlar (`validTo` geçmiş) salt-okunur "geçmiş" olarak ayrışır; "belirli tarihteki ağaç" görünümü (`effective_edges(at)`) seçilebilir.
+- **Temporal görünürlük:** Geçmiş kenarlar (`validTo` geçmiş) salt-okunur "geçmiş" olarak ayrışır; "belirli tarihteki ağaç" görünümü (`effective_edges(micro_step)`) seçilebilir.
 - **Erişilebilirlik:** WCAG 2.2 AA taban; ağaç `role=tree`/`treeitem`, klavye ok-tuşu gezinme, `aria-expanded`/`aria-level`; dokunma hedefi >= 44x44px.
 - **i18n:** Düğüm etiketleri `I18nText` üzerinden çok-dilli; ham string gömülmez.
 
@@ -135,7 +135,7 @@ Aşağıdaki testler `check-archetype-relation` CI kapısında zorunludur; bir i
 | 1 | Döngü yok: taşıma/yeniden-parent bir düğümü kendi atası yapamıyor | Birim + entegrasyon (negatif) |
 | 2 | Alt-ağaç performansı: derin ağaçta `subtree` sorgusu GiST indeksiyle p95 bütçesinde | Performans (yük) |
 | 3 | Ata zinciri: `ancestors` kökten yolu doğru döndürüyor | Birim |
-| 4 | Temporal: `effective_edges(at)` verilen andaki geçerli kenarları döndürüyor | Birim |
+| 4 | Temporal: `effective_edges(micro_step)` verilen andaki geçerli kenarları döndürüyor | Birim |
 | 5 | Taşıma atomik: alt-ağaç `path`/`depth` tutarlı, kısmi güncelleme yok | Entegrasyon |
 | 6 | Tenant izolasyonu: A tenant B'nin ağacına re-parent edemiyor (>= 10 negatif) | Entegrasyon (negatif) |
 | 7 | Migration downgrade: `alembic downgrade -1` veri kaybetmeden çalışıyor | CI |
@@ -143,7 +143,7 @@ Aşağıdaki testler `check-archetype-relation` CI kapısında zorunludur; bir i
 
 ## 14. Acceptance criteria
 
-Bu yönerge şu ölçütlerde "uygulanmış" sayılır: (1) `RelationKind` `tree`/`dag`/`graph`/`temporal` ile genişledi, `parent`/`path`/`depth`/`validFrom`/`validTo`/`revision`/`storage` alanları şemada tanımlı ve varsayılanlı; (2) döngü-tespiti taşıma/yeniden-parent'ta zorunlu ve >= 10 negatif case ile kanıtlı; (3) alt-ağaç sorgusu `ltree` GiST indeksiyle p95 bütçesinde; (4) `effective_edges(at)` temporal çözüm doğru; (5) §13'teki 8 test yeşil; (6) tenant izolasyonu ağaç kenarlarında zorlanıyor; (7) Category/ProductFamily/Taxonomy PIM-v2 §4 ile bağlandı (Özellik 6, 13); (8) mevcut dört düz kardinalite geriye-dönük bozulmadı.
+Bu yönerge şu ölçütlerde "uygulanmış" sayılır: (1) `RelationKind` `tree`/`dag`/`graph`/`temporal` ile genişledi, `parent`/`path`/`depth`/`validFrom`/`validTo`/`revision`/`storage` alanları şemada tanımlı ve varsayılanlı; (2) döngü-tespiti taşıma/yeniden-parent'ta zorunlu ve >= 10 negatif case ile kanıtlı; (3) alt-ağaç sorgusu `ltree` GiST indeksiyle p95 bütçesinde; (4) `effective_edges(micro_step)` temporal çözüm doğru; (5) §13'teki 8 test yeşil; (6) tenant izolasyonu ağaç kenarlarında zorlanıyor; (7) Category/ProductFamily/Taxonomy PIM-v2 §4 ile bağlandı (Özellik 6, 13); (8) mevcut dört düz kardinalite geriye-dönük bozulmadı.
 
 ## 15. Anti-patterns
 
@@ -172,7 +172,7 @@ Aşağıdaki tablo bu yönergenin gereksinimlerini izlenebilir kılar; her satı
 | ATR-04 | Döngü-tespiti (`cycleGuard`) taşıma/yeniden-parent'ta zorunlu | data/logic | P0 | integration(neg) | >= 10 döngü case reddedilir | kernel-team |
 | ATR-05 | Alt-ağaç sorgusu `ltree` GiST p95 bütçesinde | performance | P0 | perf(yük) | Derin ağaçta `subtree` p95 bütçede | perf-team |
 | ATR-06 | Ağaç işlemleri (subtree/ancestors/move/reparent) atomik+audit'li | data/logic | P0 | integration | Taşıma atomik; path tutarlı; audit düşer | kernel-team |
-| ATR-07 | `effective_edges(at)` temporal çözüm | backend | P1 | unit | Verilen anda geçerli kenarlar doğru | kernel-team |
+| ATR-07 | `effective_edges(micro_step)` temporal çözüm | backend | P1 | unit | Verilen anda geçerli kenarlar doğru | kernel-team |
 | ATR-08 | Depolama seçimi (ltree/nested-set/adjacency) beyanlı | data | P1 | unit | `storage` alanı §6 kuralına uyar | kernel-team |
 | ATR-09 | Tenant izolasyonu ağaç kenarlarında (RLS 2. bariyer) | security | P0 | integration(neg) | Cross-tenant re-parent reddedilir | security-team |
 | ATR-10 | Alembic expand-contract + dolu downgrade | backend/devops | P1 | CI | `alembic downgrade -1` veri kaybetmez | kernel-team |

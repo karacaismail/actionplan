@@ -34,19 +34,19 @@ Not: `milestone`, `acceptanceCriteria`, `deliverables`, `risks`, `agentPolicy`, 
 
 ### 2.1 Seviye (level) Bazında Owner / Refs / DependsOn Boşluğu
 
-Her seviyede owner ve refs neredeyse tamamen boş. DependsOn en kötü noktası molecule/element/atom seviyesinde: bu üç seviye derinlik gerektirdiği halde bağımlılık zinciri hiç girilmemiş.
+Her seviyede owner ve refs neredeyse tamamen boş. DependsOn en kötü noktası component/work_unit/micro_step seviyesinde: bu üç seviye derinlik gerektirdiği halde bağımlılık zinciri hiç girilmemiş.
 
 | level | Toplam | owner boş | refs boş | dependsOn boş |
 |---|---|---|---|---|
 | app | 27 | 26 | 27 | 8 |
 | module | 149 | 148 | 149 | 18 |
-| stone | 94 | 93 | 94 | 17 |
+| feature | 94 | 93 | 94 | 17 |
 | archetype | 99 | 96 | 97 | 14 |
-| molecule | 18 | 16 | 18 | 18 |
-| element | 18 | 16 | 18 | 18 |
+| component | 18 | 16 | 18 | 18 |
+| work_unit | 18 | 16 | 18 | 18 |
 | atom | 19 | 16 | 19 | 19 |
 
-App seviyesinde bile 26/27 owner boş. Üst düzey sahiplik tanımlanmamışken alt seviyelerde sorumlu ataması beklemek anlamsız. molecule/element/atom seviyesinde dependsOn %100 boş; bu seviyelerin birbirine sırası bağlı olması gerektiği düşünüldüğünde kritik eksik.
+App seviyesinde bile 26/27 owner boş. Üst düzey sahiplik tanımlanmamışken alt seviyelerde sorumlu ataması beklemek anlamsız. component/work_unit/micro_step seviyesinde dependsOn %100 boş; bu seviyelerin birbirine sırası bağlı olması gerektiği düşünüldüğünde kritik eksik.
 
 ### 2.2 Uygulama (App) Bazında Boşluk
 
@@ -64,12 +64,12 @@ Owner ve refs doluluk oranı her uygulamada sıfıra yakın. Doluluk yalnızca C
 | sus | 17 | 0 | 0 |
 | scale | 15 | 0 | 0 |
 | dist | 13 | 0 | 0 |
-| at (crm atomları) | 3 | 3 | 0 |
-| mol (crm) | 2 | 2 | 0 |
+| micro_step (crm atomları) | 3 | 3 | 0 |
+| component (crm) | 2 | 2 | 0 |
 | customer | 1 | 1 | 1 |
 | product | 1 | 1 | 1 |
 
-Sadece `at`, `mol`, `customer`, `product` ve CRM zincirinde (toplam ~13 düğüm) owner atanmış; refs ise yalnızca `customer` ve `product` düğümlerinde (2/424) dolu.
+Sadece `micro_step`, `component`, `customer`, `product` ve CRM zincirinde (toplam ~13 düğüm) owner atanmış; refs ise yalnızca `customer` ve `product` düğümlerinde (2/424) dolu.
 
 ---
 
@@ -115,7 +115,7 @@ Bu cümleler otomatik üretilmiş; her düğümün gerçek operasyonel riskini y
 
 ### 4.4 Scaffold (İskelet) Düğümler
 
-59 düğüm "örnek dal" ibaresi taşıyan summary ile üretilmiş (app-backend-x-archetype, app-backend-x-stone vb.). Bu düğümler gerçek iş tanımlaması değil; WBS hiyerarşisinin iskeletini göstermek için oluşturulmuş yer tutuculardır. Hepsi `phase: db-schema`, `status: backlog`.
+59 düğüm "örnek dal" ibaresi taşıyan summary ile üretilmiş (app-backend-x-kaya, app-backend-x-tas vb.). Bu düğümler gerçek iş tanımlaması değil; WBS hiyerarşisinin iskeletini göstermek için oluşturulmuş yer tutuculardır. Hepsi `phase: db-schema`, `status: backlog`.
 
 ### 4.5 Eğitim Uygulaması Duplikasyonu
 
@@ -125,9 +125,9 @@ Bu cümleler otomatik üretilmiş; her düğümün gerçek operasyonel riskini y
 
 ## 5. Kapsam Dengesi
 
-27 app-level düğüm var; bunların bazıları tam derinlikte (module/stone/archetype/molecule/element/atom), çoğu yalnızca module katmanına kadar girilmiş.
+27 app-level düğüm var; bunların bazıları tam derinlikte (module/archetype/feature/component/work_unit/micro_step), çoğu yalnızca module katmanına kadar girilmiş.
 
-| App | module | stone | archetype | mol | el | atom | Değerlendirme |
+| App | module | archetype | feature | component | work_unit | micro_step | Değerlendirme |
 |---|---|---|---|---|---|---|---|
 | app-core-operations | 4 | 5 | 11 | 2 | 2 | 3 | En derin; CRM zinciri burada |
 | app-finance | 1 | 1 | 12 | 1 | 1 | 1 | Archetype zengin, alt katman iskelet |
@@ -138,15 +138,15 @@ Bu cümleler otomatik üretilmiş; her düğümün gerçek operasyonel riskini y
 | app-genel | 1 | 0 | 0 | 0 | 0 | 0 | Tek module |
 | app-meta | 3 | 0 | 0 | 0 | 0 | 0 | Sadece module |
 | app-dx | 3 | 1 | 0 | 0 | 0 | 0 | Geliştiriciye özgü, zayıf derinlik |
-| app-edu | 3 | 17 | 10 | 0 | 0 | 0 | Stone + archetype var, alt boş |
+| app-edu | 3 | 17 | 10 | 0 | 0 | 0 | Feature + archetype var, alt boş |
 
-`app-scale` (15 stone, archetype yok), `app-sus` (14 stone, archetype yok), `app-crosscut` (15 stone, archetype yok) — bu üç app stone katmanı dolu ama archetype/molecule/element/atom hiç girilmemiş.
+`app-scale` (15 feature, archetype yok), `app-sus` (14 feature, archetype yok), `app-crosscut` (15 feature, archetype yok) — bu üç app feature/taş katmanı dolu ama archetype/component/work_unit/micro_step hiç girilmemiş.
 
 ---
 
 ## 6. Kritik Yol ve Zaman Çizelgesi Durumu
 
-8 düğüm `criticalPath: true` işaretli. Tamamı CRM zinciri: `app-core-operations -> m-crm-sales -> s-crm -> st-crm-lead-mgmt -> mol-crm-lead-scoring -> el-crm-score-field-validator -> at-crm-email-regex / at-crm-score-range-check`. Bu 8 düğümün 3'ü done, 1'i test-qa/in-progress, gerisinde development devam ediyor. Kritik yol gerçek iş içeriyor.
+8 düğüm `criticalPath: true` işaretli. Tamamı CRM zinciri: `app-core-operations -> m-crm-sales -> s-crm -> tas-crm-lead-mgmt -> kum-crm-lead-scoring -> molekul-crm-score-field-validator -> atom-crm-email-regex / atom-crm-score-range-check`. Bu 8 düğümün 3'ü done, 1'i test-qa/in-progress, gerisinde development devam ediyor. Kritik yol gerçek iş içeriyor.
 
 Ancak 421/424 düğümde `schedule.start` ve `schedule.end` null — hiçbir zaman hedefi yok. Kritik yolun ne zaman tamamlanacağı hesaplanamaz.
 

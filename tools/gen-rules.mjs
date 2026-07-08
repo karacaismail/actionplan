@@ -22,10 +22,10 @@ const AUTONOMY = {
   app: "none",
   module: "none",
   archetype: "draft",
-  stone: "suggest",
-  molecule: "suggest",
-  element: "suggest",
-  atom: "suggest",
+  feature: "suggest",
+  component: "suggest",
+  work_unit: "suggest",
+  micro_step: "suggest",
 };
 
 const FORBIDDEN_TARGETS = ["app", "module"];

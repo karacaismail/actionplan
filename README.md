@@ -4,7 +4,7 @@
 waterfall** geliştirme sürecini planlayan, WBS tabanlı stratejik eylem planı ve görev yönetimi çerçevesi.
 
 - **Mimari:** Frontend-only, JSON-as-DB (tüm veri `src/data/generated/**.json`), `engine` JSON'u render eder.
-- **Hiyerarşi (doğa metaforu, 7 seviye):** app(dağ) → module(kaya) → archetype(büyük taş) → stone(orta taş) → molecule(küçük taş) → element(toz) → atom.
+- **Hiyerarşi (doğa metaforu, 7 seviye):** app(ada) → module(dağ) → archetype(kaya) → feature(taş) → component(kum) → work_unit(molekül) → micro_step(atom).
 - **Her düğüm bir görevdir** ve bir WBS kırılımı + 14 üretim boyutu + 7 waterfall faz taşır.
 - **Stack (bu araç = tooling):** React 19 + Vite + TS, Tailwind + headless Radix (özel bileşenler; shadcn/ui değil), TanStack Router/Query/Table, React Hook Form, Zod, ECharts, React Flow (@xyflow) + ELK.js. **Ürün/platform stack'i AYRIDIR:** SCSS + CSS token, headless Radix, Tailwind YOK (bkz. ADR-0026).
 - **Export/Import:** Görevler JSON ve CSV olarak dışa/içe aktarılabilir.

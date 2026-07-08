@@ -116,7 +116,7 @@ const CONTENT = {
       "Saha verisi çevrimdışı + senkron",
     ],
     mobileApps: [
-      "Depo/saha el terminali mobil-öncelikli (barkod)",
+      "Depo/saha work_unit terminali mobil-öncelikli (barkod)",
       "iOS/Android offline işlem + senkron",
       "Dar ekranda sevkiyat/iş emri",
     ],
@@ -161,15 +161,15 @@ const CONTENT = {
     ],
   },
 
-  "app-supply-chain-x-stone": xdim(
+  "app-supply-chain-x-tas": xdim(
     "Tedarik Zinciri Taşı",
     "bir lojistik yeteneğinin alt-parça tarifi (ör. rota hesabı)",
   ),
-  "app-supply-chain-x-molecule": xdim(
+  "app-supply-chain-x-kum": xdim(
     "Tedarik Zinciri Molekülü",
     "birkaç lojistik kuralını birleştiren bileşen (ör. sevkiyat kalemi)",
   ),
-  "app-supply-chain-x-element": xdim(
+  "app-supply-chain-x-molekul": xdim(
     "Tedarik Zinciri Elementi",
     "tek bir lojistik alanı/kuralı (ör. lot numarası)",
   ),
@@ -215,7 +215,7 @@ const CONTENT = {
       "Engelli personel için sesli/klavye erişim",
     ],
     deployment: [
-      "WMS edge (depo) + merkez; el terminali offline dayanıklı",
+      "WMS edge (depo) + merkez; work_unit terminali offline dayanıklı",
       "Stok olayları outbox ile sipariş/finance'a",
       "Shared hosting'de tek-depo basit WMS",
     ],

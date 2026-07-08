@@ -21,7 +21,7 @@ En kritik eksikler:
 1. Gercek teslimat kaniti ve kod baglantisi buyuk olcude bos.
 2. 7 dugumde `implementationStatus` ile `status/phase` birbiriyle uyumsuz.
 3. Eski docs dosyalari guncel generated data ile celisiyor.
-4. Terminolojide `element/toz` ve `*-x-element` artigi var; guncel schema `component/kum` diyor.
+4. Terminolojide `work_unit/molekül` ve `*-x-molekul` artigi var; guncel schema `component/kum` diyor.
 5. Exact-repeat kapilari gecilse de ifade kalitesi halen mekanik: cok tekrar eden kaliplar ve 268 adet rastgele 5 harfli generator token'i var.
 
 ## Gecen kapilar
@@ -102,11 +102,11 @@ Ornekler:
 
 - `app-core-operations`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
 - `customer`: `implementationStatus=scaffolded`, fakat `status=backlog`, `phase=requirements`
-- `el-crm-score-weight-config`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
+- `molekul-crm-score-weight-config`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
 - `m-crm-sales`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
 - `product`: `implementationStatus=scaffolded`, fakat `status=backlog`, `phase=requirements`
 - `s-crm`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
-- `st-crm-lead-mgmt`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
+- `tas-crm-lead-mgmt`: `implementationStatus=in-progress`, fakat `status=backlog`, `phase=requirements`
 
 Bu teknik olarak warning; semantik olarak celiski. Ya plan state'i ilerletilmeli ya da traceability durumlari geri cekilmeli.
 
@@ -141,15 +141,15 @@ Eksik boyutlar:
 Ornek 14 boyutlu/eksik dugumler:
 
 - `app-backend-x-atom`
-- `app-backend-x-element`
+- `app-backend-x-molekul`
 - `app-build-x-atom`
-- `app-build-x-element`
+- `app-build-x-molekul`
 - `app-content-collaboration-x-atom`
-- `app-content-collaboration-x-element`
+- `app-content-collaboration-x-molekul`
 - `app-crosscut-x-atom`
-- `app-crosscut-x-element`
+- `app-crosscut-x-molekul`
 - `app-customer-revenue-x-atom`
-- `app-customer-revenue-x-element`
+- `app-customer-revenue-x-molekul`
 
 ### 5. WBS terminolojisi tutarsizligi var
 
@@ -165,19 +165,19 @@ Schema dogrusu:
 
 Bulunan drift:
 
-- `element/toz` prompt artigi: `18` node
-- `*-x-element` id/title artigi: en az `16` node
+- `work_unit/molekül` prompt artigi: `18` node
+- `*-x-molekul` id/title artigi: en az `16` node
 - `tas/kum` prompt kisa yolu: `95` node
 - `modul/kaya` prompt kisa yolu: `149` node
 
 Ornek:
 
-- `src/data/generated/nodes/app-backend-x-element.json`
-  - id: `app-backend-x-element`
-  - title: `Element - Backend ornek kirilimi`
-  - prompt: `element/toz`
+- `src/data/generated/nodes/app-backend-x-molekul.json`
+  - id: `app-backend-x-molekul`
+  - title: `Work_unit - Backend ornek kirilimi`
+  - prompt: `work_unit/molekül`
 
-Bu, bugunku WBS sozluguyle celisiyor. Eger eski "element" artik "component/kum" veya baska bir seviye ise migration karari verilmesi gerekiyor.
+Bu, bugunku WBS sozluguyle celisiyor. Eger eski "work_unit" artik "component/kum" veya baska bir seviye ise migration karari verilmesi gerekiyor.
 
 ### 6. Plain `refs[]` boslugu devam ediyor
 
@@ -285,7 +285,7 @@ Repo artik semantik WARN/FAIL ve generic/empty kalite kapilarinda temiz gorunuyo
 Bir sonraki temizlik sirasi su olmali:
 
 1. State/traceability celiskisi: 7 node icin `implementationStatus` ile `status/phase` hizalanmali.
-2. `element/toz` ve `*-x-element` migration karari verilmeli.
+2. `work_unit/molekül` ve `*-x-molekul` migration karari verilmeli.
 3. 268 generator token'i temizlenmeli.
 4. Eski docs ya archive/stale olarak isaretlenmeli ya da guncel metriklere cekilmeli.
 5. Evidence/repoPath/testCommand boslugu icin yeni bir delivery-readiness standardi acilmali.
@@ -299,7 +299,7 @@ Kapatilanlar:
 
 - 31 adet 14-boyutlu dugum 17 boyuta tamamlandi.
 - 268 rastgele generator token'i temizlendi.
-- `element/toz`, `modül/kaya`, `molekül/hücre`, `taş/kum` prompt drift'i temizlendi.
+- `work_unit/molekül`, `module/dağ`, `molekül/hücre`, `taş/kum` prompt drift'i temizlendi.
 - 7 state/traceability drift'i `implementationStatus=not-started` ile hizalandi; planli repo/test alanlari korunup sahte ilerleme yazilmadi.
 - Bos `refs[]` alani kalan 87 dugum kanonik sozlesme dokumanlarina baglandi.
 - Bos `deliverables`, `acceptanceCriteria`, `risks` alanlari tamamlandi.

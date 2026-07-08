@@ -68,7 +68,7 @@ Bu tablo docs-viewer publish adımlarını aktör, kapı ve çıktı ile sırayl
 | 4 | `main` push → build job (tüm kapılar tekrar) | CI | Üretim derlemesi `BASE_PATH=/actionplan/` + `spa404.mjs` tamamlanır |
 | 5 | Pages artefaktını yükle + Pages'e dağıt | Docs-viewer motoru | `deploy` job yalnız `github.event_name != 'pull_request'` iken; `environment: github-pages` |
 | 6 | Yayın doğrula: site açılır, deep-link 404 vermez | Geliştirici (insan) | `karacaismail.github.io/actionplan` yüklenir; SPA fallback çalışır |
-| 7 | (Opsiyonel) sürüm etiketi at | Geliştirici (insan) | `release-policy §Tag`; tag CI'yi tetiklemez, izleme amaçlı |
+| 7 | (Opsiyonel) sürüm etiketi micro_step | Geliştirici (insan) | `release-policy §Tag`; tag CI'yi tetiklemez, izleme amaçlı |
 
 **Geçiş kapısı özeti:** Herhangi bir kapı kırmızıysa merge ve deploy engellenir (`deploy.yml`: gateler BLOKLAYICI). `concurrency: group=pages, cancel-in-progress=false` — eşzamanlı yayınlar sıraya alınır, yarıda kesilmez.
 

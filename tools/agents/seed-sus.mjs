@@ -17,11 +17,11 @@ const CONTENT = {
     "SürdürÜlebilirlik Atomu",
     "bölünemez bir sürdürülebilirlik ilkesinin örnek kırılımı",
   ),
-  "app-sus-x-element": xdim(
+  "app-sus-x-molekul": xdim(
     "Sürdürülebilirlik Elementi",
     "tek bir sürdürülebilirlik kuralının örnek kırılımı",
   ),
-  "app-sus-x-molecule": xdim(
+  "app-sus-x-kum": xdim(
     "Sürdürülebilirlik Molekülü",
     "birkaç sürdürülebilirlik kuralını birleştiren örnek kırılım",
   ),

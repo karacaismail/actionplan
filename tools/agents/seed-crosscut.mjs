@@ -308,7 +308,7 @@ const CONTENT = {
       "Cultural UX ve identity-models ile tutarlı",
     ],
     moduleUsage: [
-      "i18n Teknik Standartları (orta taş) tüm app'lere yerelleştirme temeli sağlar",
+      "i18n Teknik Standartları (taş) tüm app'lere yerelleştirme temeli sağlar",
       "Çok-dilli tüm app'ler bu standartları kullanır",
     ],
   },
@@ -380,7 +380,7 @@ const CONTENT = {
       "DR altyapı (multi-region) ile",
     ],
     moduleUsage: [
-      "Observability+Performance+DR (orta taş) tüm app'lere izlenebilirlik/dayanıklılık sağlar",
+      "Observability+Performance+DR (taş) tüm app'lere izlenebilirlik/dayanıklılık sağlar",
       "Tüm servisler telemetri ve yedeklemeyi bu çerçeveden alır",
     ],
   },
@@ -452,12 +452,12 @@ const CONTENT = {
       "Jurisdiction resolver TR eksenini besler",
     ],
     moduleUsage: [
-      "Türkiye Uyum (orta taş) TR pazarı için yerel gereksinimleri sağlar",
+      "Türkiye Uyum (taş) TR pazarı için yerel gereksinimleri sağlar",
       "TR'de faaliyet gösteren tüm app'ler bu uyum modülünü kullanır",
     ],
   },
 
-  "app-crosscut-x-molecule": {
+  "app-crosscut-x-kum": {
     featureDefs: [
       "Cross-cutting kırılımının Molekül örneği: bir kesişen kaygının bileşen düzeyi tarifi",
       "Molekül, bir kesişen politikanın çalışabilir en küçük bileşeni",
@@ -514,10 +514,10 @@ const CONTENT = {
     moduleUsage: ["Kesişen molekül bir bileşendir; bağımsız sunulmaz, üst kaygı içinde kullanılır"],
   },
 
-  "app-crosscut-x-element": {
+  "app-crosscut-x-molekul": {
     featureDefs: [
-      "Cross-cutting kırılımının Element örneği: tek bir kesişen alan/kural (ör. rıza bayrağı)",
-      "Element, kesişen politika sözleşmesindeki en küçük anlamlı alan/kural",
+      "Cross-cutting kırılımının Work_unit örneği: tek bir kesişen alan/kural (ör. rıza bayrağı)",
+      "Work_unit, kesişen politika sözleşmesindeki en küçük anlamlı alan/kural",
       "Örnek dal; kesişen alan kuralının granülerlikteki yeri",
     ],
     security: [
@@ -542,7 +542,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: alan kuralı ihlal → üst molekül kuralına sinyal (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz",
+      "Work_unit tek başına otomasyon yazmaz",
     ],
     aiAgents: [
       AI_B1,
@@ -556,12 +556,12 @@ const CONTENT = {
       "Değişiklik izli",
     ],
     integration: [
-      "Element üst molekül ve kesişen sözleşmeye bağlanır",
+      "Work_unit üst molekül ve kesişen sözleşmeye bağlanır",
       "Politika şema doğrulamasına dahil",
       "Surface görünürlüğü kurala göre",
     ],
     moduleUsage: [
-      "Kesişen element bir alan/kuraldır; bağımsız sunulmaz, politika field tanımının parçası",
+      "Kesişen work_unit bir alan/kuraldır; bağımsız sunulmaz, politika field tanımının parçası",
     ],
   },
 
@@ -593,7 +593,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom otomasyon tetiklemez; üst kurallara değer sağlar",
-      "Olay: değer geçersiz → üst element reddeder (idempotent)",
+      "Olay: değer geçersiz → üst work_unit reddeder (idempotent)",
     ],
     aiAgents: [
       AI_B1,
@@ -603,7 +603,7 @@ const CONTENT = {
     testing: ["Atom biçim/sınır testi (ör. BCP 47)", "Değişmezlik testi", "Serileştirme testi"],
     owasp: ["A03 Injection: değer biçim-doğrulanır", "A08 Integrity: atom değişmez", "İzlenebilir"],
     integration: [
-      "Kesişen atom element ve field tanımlarının yapı taşı",
+      "Kesişen atom work_unit ve field tanımlarının yapı taşı",
       "Tip sistemine dahil",
       "Üst seviyeler birleştirir",
     ],
@@ -895,7 +895,7 @@ const CONTENT = {
       "Money tipi tüm para içeren ArcheType'larda",
     ],
     moduleUsage: [
-      "FX & Ledger (orta taş) çok-para muhasebe temeli sağlar",
+      "FX & Ledger (taş) çok-para muhasebe temeli sağlar",
       "Finans ve çok-ülke app'leri bu modülü kullanır",
     ],
   },
@@ -967,7 +967,7 @@ const CONTENT = {
       "i18n/cultural-ux ile tutarlı",
     ],
     moduleUsage: [
-      "Global Kimlik Modelleri (orta taş) ülke-farkında kişi verisi sağlar",
+      "Global Kimlik Modelleri (taş) ülke-farkında kişi verisi sağlar",
       "Kişi/iletişim tutan tüm app'ler bu modelleri kullanır",
     ],
   },
@@ -1039,7 +1039,7 @@ const CONTENT = {
       "Pazarlama/CRM app'leri izin durumunu kullanır",
     ],
     moduleUsage: [
-      "Bildirim & Consent (orta taş) izin-uyumlu iletişim sağlar",
+      "Bildirim & Consent (taş) izin-uyumlu iletişim sağlar",
       "Bildirim/pazarlama yapan tüm app'ler izin modülünü kullanır",
     ],
   },
@@ -1111,7 +1111,7 @@ const CONTENT = {
       "Identity models (ad sıralama) ile tutarlı",
     ],
     moduleUsage: [
-      "i18n Derinleştirme (orta taş) gelişmiş yerelleştirme sağlar",
+      "i18n Derinleştirme (taş) gelişmiş yerelleştirme sağlar",
       "Çok-dilli (özellikle RTL) app'ler bu modülü kullanır",
     ],
   },
@@ -1183,7 +1183,7 @@ const CONTENT = {
       "Form üretimi (Surface) bu metadata'yı kullanır",
     ],
     moduleUsage: [
-      "Accessibility Backend (orta taş) sunucu-tarafı erişilebilirlik desteği sağlar",
+      "Accessibility Backend (taş) sunucu-tarafı erişilebilirlik desteği sağlar",
       "API/form sunan tüm app'ler bu sözleşmeyi kullanır",
     ],
   },
@@ -1255,7 +1255,7 @@ const CONTENT = {
       "Compliance matrix ile bölge düzenlemeleri",
     ],
     moduleUsage: [
-      "İçerik & Ürün Jurisdiction (orta taş) bölgesel içerik kurallarını uygular",
+      "İçerik & Ürün Jurisdiction (taş) bölgesel içerik kurallarını uygular",
       "İçerik/ürün sunan çok-bölge app'ler bu modülü kullanır",
     ],
   },
@@ -1327,7 +1327,7 @@ const CONTENT = {
       "Tema token'ları (frontend) ile",
     ],
     moduleUsage: [
-      "Kültürel UX (orta taş) bölge/kültüre uygun deneyim sağlar",
+      "Kültürel UX (taş) bölge/kültüre uygun deneyim sağlar",
       "Çok-bölge/çok-kültür app'ler bu modülü kullanır",
     ],
   },
@@ -1399,7 +1399,7 @@ const CONTENT = {
       "Sağlık olayları uyarıya",
     ],
     moduleUsage: [
-      "Health/Probes (orta taş) tüm servislere sağlık sözleşmesi sağlar",
+      "Health/Probes (taş) tüm servislere sağlık sözleşmesi sağlar",
       "Tüm servisler liveness/readiness için bu modülü kullanır",
     ],
   },
@@ -1471,7 +1471,7 @@ const CONTENT = {
       "Politika değişikliği tüm kesişen kaygılara yansır",
     ],
     moduleUsage: [
-      "Resolver Operasyonel Sertleştirme (orta taş) politika dağıtımını güvenli kılar",
+      "Resolver Operasyonel Sertleştirme (taş) politika dağıtımını güvenli kılar",
       "Jurisdiction kullanan tüm app'ler bu operasyon katmanından yararlanır",
     ],
   },
@@ -1543,7 +1543,7 @@ const CONTENT = {
       "Resolver-ops politika yayınında kullanır",
     ],
     moduleUsage: [
-      "Feature Flag + Rollout (orta taş) güvenli kademeli yayın sağlar",
+      "Feature Flag + Rollout (taş) güvenli kademeli yayın sağlar",
       "Yeni özellik yayan tüm app'ler bu modülü kullanır",
     ],
   },

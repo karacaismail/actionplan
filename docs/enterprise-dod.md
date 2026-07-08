@@ -242,7 +242,7 @@ WCAG 2.2 AA uyumluluğu, 50+ app fabrikasında her app için taban çizgisidir. 
 
 **Ne zaman DONE sayılır:**
 - axe-core otomatik taraması: kritik ve serious ihlal = 0.
-- Klavye navigasyonu: her interaktif element Tab sırasıyla erişilebilir, focus halkası görünür.
+- Klavye navigasyonu: her interaktif work_unit Tab sırasıyla erişilebilir, focus halkası görünür.
 - ARIA etiketleri: her form alanı, ikon butonu, modal doğru aria-label/role taşır.
 - Renk kontrastı: AA seviyesi minimum (4.5:1 metin, 3:1 UI bileşen).
 - Screen reader: NVDA veya VoiceOver ile kritik akış okunabilir (manuel test notu).
@@ -393,7 +393,7 @@ Her DoD katmanını mevcut `TaskNode` şemasına eşleyen bu tablo, hangi ihtiya
 
 Tabloda "yeni alan önerisi" olarak işaretlenen alanlar, mevcut şemada eksiktir. Aşağıdaki tablo her önerilen alan için yönetim türünü belirtir.
 
-"MANUEL governance": insan el ile doldurur, otomasyon doğrulayabilir.
+"MANUEL governance": insan work_unit ile doldurur, otomasyon doğrulayabilir.
 "GENERATED": CI veya AI süreci üretir, insan onaylar.
 "Yeni şema alanı": `TaskNodeSchema`'ya eklenmesi önerilen alan.
 

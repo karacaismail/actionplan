@@ -14,9 +14,9 @@ const CONTENT = {
     },
   ),
   "app-build-x-atom": xdim("İnşa Atomu", "bölünemez bir inşa adımının örnek kırılımı"),
-  "app-build-x-element": xdim("İnşa Elementi", "tek bir inşa kuralının örnek kırılımı"),
-  "app-build-x-molecule": xdim("İnşa Molekülü", "birkaç inşa adımını birleştiren örnek kırılım"),
-  "app-build-x-stone": xdim("İnşa Taşı", "bir inşa yeteneğinin orta-granül örnek kırılımı"),
+  "app-build-x-molekul": xdim("İnşa Elementi", "tek bir inşa kuralının örnek kırılımı"),
+  "app-build-x-kum": xdim("İnşa Molekülü", "birkaç inşa adımını birleştiren örnek kırılım"),
+  "app-build-x-tas": xdim("İnşa Taşı", "bir inşa yeteneğinin orta-granül örnek kırılımı"),
 
   "build-sequence": D(
     "Build Sırası",

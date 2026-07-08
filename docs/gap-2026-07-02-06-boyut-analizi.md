@@ -47,7 +47,7 @@ Ayrıca yapısal bir örtüşme var: güvenlik üç karta yayılmış durumda (`
 *Neden boyut, referans değil:* saklama süresi ve veri envanteri düğüme göre değişir (CRM iletişim kaydı ≠ audit log). Şemadaki `ProdDataPolicy` yalnız `agentPolicy` kapsamındadır (AI'ın prod veriye dokunma sınırı); insan ekibin veri planını taşımaz. Multi-tenant bir platformda KVKK/GDPR eksikliği kurucu boşluktur → P0.
 
 **16. `observability` — Gözlemlenebilirlik & Operasyonel Hazırlık.**
-*Bu nedir?* Düğümün üretimde nasıl izleneceğinin planı. *Ne işe yarar?* Log/metrik/trace kapsamı, alarm eşikleri, SLO hedefi, dashboard ve runbook (operasyon el kitabı) ihtiyacını düğüm başına netleştirir. *Ne yapar?* "Bu özellik bozulursa bunu hangi metrikten, kaç dakikada anlarız; kim, hangi adımla müdahale eder" içeriğini taşır. *Ne yapmaz?* Loglama formatı/araç standardını tanımlamaz — o `observabilityRef`'in bağlandığı tek-kaynak sözleşmededir; izlemeyi kendisi çalıştırmaz.
+*Bu nedir?* Düğümün üretimde nasıl izleneceğinin planı. *Ne işe yarar?* Log/metrik/trace kapsamı, alarm eşikleri, SLO hedefi, dashboard ve runbook (operasyon work_unit kitabı) ihtiyacını düğüm başına netleştirir. *Ne yapar?* "Bu özellik bozulursa bunu hangi metrikten, kaç dakikada anlarız; kim, hangi adımla müdahale eder" içeriğini taşır. *Ne yapmaz?* Loglama formatı/araç standardını tanımlamaz — o `observabilityRef`'in bağlandığı tek-kaynak sözleşmededir; izlemeyi kendisi çalıştırmaz.
 *Neden boyut:* SLO ve alarm eşiği düğüme özgüdür. Mevcut `observabilityRef` yalnız "hangi standarda uyulacak"ı söyler; "bu düğüm için ne izlenecek"in kartı yoktur → P0.
 
 **17. `reliability` — Dayanıklılık & Süreklilik.**

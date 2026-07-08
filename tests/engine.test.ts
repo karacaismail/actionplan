@@ -343,6 +343,21 @@ describe("üretilmiş JSON agentPolicy/ECA kapıları", () => {
 });
 
 describe("resolve", () => {
+  it("eski node id alias'ını kanonik node'a çözer", () => {
+    const nodes = [
+      node({
+        id: "app-backend-x-tas",
+        level: "feature",
+        title: "Backend Taş",
+        slug: "app-backend-x-tas",
+        aliases: ["legacy-backend-task"],
+      }),
+    ];
+    const index = indexById(nodes);
+    expect(index.get("legacy-backend-task")).toBe(nodes[0]);
+    expect(index.get("app-backend-x-tas")).toBe(nodes[0]);
+  });
+
   it("breadcrumb zincirini kökten kurar", () => {
     const nodes = [
       node({ id: "app1", level: "app", title: "App", slug: "app1" }),

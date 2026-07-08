@@ -6,7 +6,8 @@
  * geri-alma planı (ya da "neden gerekmez" notu) olmalı. Seviyeye göre dürüst metin üretir:
  *  - app/module: dağıtım-seviyesi geri alma (önceki imaj/sürüm + reversible migration/snapshot).
  *  - archetype: özellik bayrağı + son kararlı taslağa dönüş (üretim verisi append-only korunur).
- *  - stone/molecule/element/atom: bağımsız dağıtılmaz; ebeveyn rollback'ine tabidir ("gerekmez" gerekçesi).
+ *  - feature/component/work_unit/micro_step (taş/kum/molekül/atom): bağımsız dağıtılmaz;
+ *    ebeveyn rollback'ine tabidir ("gerekmez" gerekçesi).
  * Yalnız boş rollback'leri doldurur (elle yazılmışları korur).
  */
 import fs from "node:fs";
@@ -22,13 +23,14 @@ const BY_LEVEL = {
     "Modülü özellik bayrağıyla devre dışı bırak ya da önceki sürüme revert et; şema değişikliği expand-contract ile geri-uyumlu, gerekirse downgrade migration çalıştırılır.",
   archetype:
     "Özellik bayrağını kapat ve son kararlı archetype taslağına dön; üretim verisi append-only korunduğu için kayıp olmaz.",
-  stone:
-    "Bağımsız dağıtılmayan alt birim; geri alma ebeveyn archetype/module rollback'ine tabidir (ayrı geri-alma gerekmez).",
-  molecule:
-    "Bağımsız dağıtılmayan alt birim; geri alma ebeveyn archetype/module rollback'ine tabidir (ayrı geri-alma gerekmez).",
-  element:
-    "Bağımsız dağıtılmayan alt birim; geri alma ebeveyn archetype/module rollback'ine tabidir (ayrı geri-alma gerekmez).",
-  atom: "Bağımsız dağıtılmayan atomik birim; geri alma ebeveyn element/archetype rollback'ine tabidir (ayrı geri-alma gerekmez).",
+  feature:
+    "Bağımsız dağıtılmayan taş seviyesi alt birim; geri alma ebeveyn kaya/dağ rollback'ine tabidir (ayrı geri-alma gerekmez).",
+  component:
+    "Bağımsız dağıtılmayan kum seviyesi alt birim; geri alma ebeveyn taş/kaya rollback'ine tabidir (ayrı geri-alma gerekmez).",
+  work_unit:
+    "Bağımsız dağıtılmayan molekül seviyesi alt birim; geri alma ebeveyn kum/taş rollback'ine tabidir (ayrı geri-alma gerekmez).",
+  micro_step:
+    "Bağımsız dağıtılmayan atomik birim; geri alma ebeveyn molekül/kum rollback'ine tabidir (ayrı geri-alma gerekmez).",
 };
 
 const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
@@ -37,7 +39,7 @@ for (const f of files) {
   const p = path.join(NODES, f);
   const n = JSON.parse(fs.readFileSync(p, "utf8"));
   if (n.rollback) continue; // elle yazılmışı koru
-  n.rollback = BY_LEVEL[n.level] ?? BY_LEVEL.stone;
+  n.rollback = BY_LEVEL[n.level] ?? BY_LEVEL.feature;
   fs.writeFileSync(p, `${JSON.stringify(n, null, 2)}\n`);
   count++;
 }

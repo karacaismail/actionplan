@@ -44,7 +44,7 @@ El emeği ("intentional") dosyalar şunlardır: `src/schemas/task.ts` (Zod şema
 
 Codex'in önceki raporunda ayrı bir `platform` reposunu varmış gibi varsaydığı temel hata şudur: actionplan içinde `app-platform-horizontal` zaten bir WBS kümesidir. `git log` geçmişinde `seed-platform-horizontal.mjs` üzerinden içerik tohumlaması yapılmış, düğüm `nodes.json` içinde `wbsCode: "23"` ile kayıtlı ve `app-layer1`, `app-kernel`'a `dependsOn` bağıyla bağlıdır.
 
-Çözüm kararı olarak "platform build-out'u actionplan'a WBS düğüm seti olarak entegre et" yönünde bir seçim yapılmasına gerek yoktur; bu entegrasyon fiilen tamamlanmıştır. Eksik olan, `app-platform-horizontal` kümesinin alt düğümlerini — `stone`, `molecule`, `element`, `atom` seviyesinde — ayrıntılı içerikle doldurmaktır. Mevcut durumda bu kümenin 5 düğümü vardır (`app-platform-horizontal`, ve `*-x-stone`, `*-x-molecule`, `*-x-element`, `*-x-atom`) ve bunların boyutları büyük olasılıkla iskelet durumundadır.
+Çözüm kararı olarak "platform build-out'u actionplan'a WBS düğüm seti olarak entegre et" yönünde bir seçim yapılmasına gerek yoktur; bu entegrasyon fiilen tamamlanmıştır. Eksik olan, `app-platform-horizontal` kümesinin alt düğümlerini — `feature`, `component`, `work_unit`, `atom` seviyesinde — ayrıntılı içerikle doldurmaktır. Mevcut durumda bu kümenin 5 düğümü vardır (`app-platform-horizontal`, ve `*-x-tas`, `*-x-kum`, `*-x-molekul`, `*-x-atom`) ve bunların boyutları büyük olasılıkla iskelet durumundadır.
 
 ---
 
@@ -52,9 +52,9 @@ Codex'in önceki raporunda ayrı bir `platform` reposunu varmış gibi varsaydı
 
 Bu bölüm üç eksen üzerinde örgütlenmiştir.
 
-Önce commit'lenmesi gerekenler: `src/schemas/task.ts` (tüm şema değişiklikleri burada birikmiş), engine modülleri (`src/engine/*.ts`), ECA ve Surface katalogları (`src/data/eca/ruleset-catalog.json`, `src/data/surface/*.json`), `src/schemas/ruleset.ts`, `src/schemas/surface.ts`, `tools/quality-lint.mjs`, `tools/agents/check-*.mjs`, `tests/`, `.github/workflows/deploy.yml`. Bunlar reviewable, el emeği değişikliklerdir ve `feat/enterprise-readiness` branch'inde kendi başlarına bir commit oluşturabilir.
+Önce commit'lenmesi gerekenler: `src/schemas/task.ts` (tüm şema değişiklikleri burada birikmiş), engine modülleri (`src/engine/*.ts`), ECA ve Surface katalogları (`src/data/eca/ruleset-catalog.json`, `src/data/surface/*.json`), `src/schemas/ruleset.ts`, `src/schemas/surface.ts`, `tools/quality-lint.mjs`, `tools/agents/check-*.mjs`, `tests/`, `.github/workflows/deploy.yml`. Bunlar reviewable, work_unit emeği değişikliklerdir ve `feat/enterprise-readiness` branch'inde kendi başlarına bir commit oluşturabilir.
 
-`src/data/generated/nodes/*.json` ve `public/data/nodes.json` ayrı bir commit olarak işlenmelidir — "generated: 424 düğüm içerik güncellemesi" şeklinde etiketlenerek. Bu sayede diff'e bakıldığında el emeği değişikliklerle karışmaz.
+`src/data/generated/nodes/*.json` ve `public/data/nodes.json` ayrı bir commit olarak işlenmelidir — "generated: 424 düğüm içerik güncellemesi" şeklinde etiketlenerek. Bu sayede diff'e bakıldığında work_unit emeği değişikliklerle karışmaz.
 
 Önce `.gitignore`'a eklenmesi / görmezden gelinmesi gerekenler: `dist/`, `vite.config.ts.timestamp-*`, `vitest.config.ts.timestamp-*`, `docs/.write-test-2`, `node_modules/` (zaten `.gitignore`'da olması lazım — kontrol edilmeli).
 

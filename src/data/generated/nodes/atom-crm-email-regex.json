@@ -1,0 +1,628 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "atom-crm-email-regex",
+  "wbsCode": "14.2.1.1.1.2.2",
+  "level": "micro_step",
+  "title": "E-posta Format Regex",
+  "slug": "atom-crm-email-regex",
+  "summary": "Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir.",
+  "parentId": "molekul-crm-score-field-validator",
+  "order": 2,
+  "icon": "ph-envelope-simple",
+  "tags": [
+    "core-operations",
+    "crm",
+    "atom",
+    "regex",
+    "e-posta",
+    "posta",
+    "geçersiz",
+    "girdi",
+    "redos",
+    "uzunluk",
+    "alanı",
+    "hızlı",
+    "örüntü",
+    "micro_step"
+  ],
+  "dependsOn": [],
+  "blocks": [],
+  "related": [
+    "atom-crm-domain-blocklist"
+  ],
+  "refs": [
+    "standard: RFC 5322 (alt küme)",
+    "related: atom-crm-domain-blocklist"
+  ],
+  "criticalPath": true,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "crm-ekibi",
+  "effort": {
+    "estimate": 2,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Desteklenen e-posta biçimi (RFC 5322 pratik alt kümesi) tanımlandı",
+        "Maksimum uzunluk (254 karakter) sınırı belirlendi",
+        "ReDoS güvenliği gereksinimi netleştirildi"
+      ],
+      "passed": false,
+      "notes": "E-posta doğrulama kapsamı sınırlandı; uluslararası alan adı sonraki sürüme bırakıldı."
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Geçerli e-postalar (alt+etiketli, çok seviyeli alan adı) için testler yazıldı",
+        "Geçersizler (boşluklu, çift @, eksik TLD) için negatif testler yazıldı",
+        "Aşırı uzun girdi ve ReDoS örüntü testi tanımlandı (test-önce)"
+      ],
+      "passed": false,
+      "notes": "Test seti regex yazımından önce hazırlandı."
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "Atom saf kontrol; şema değişikliği gerektirmez (kayıt üst seviyede yapılır)"
+      ],
+      "passed": false,
+      "notes": "Atom durumsuzdur; doğrudan veri saklamaz."
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "ReDoS güvenli regex yazıldı ve önceden derlendi",
+        "Uzunluk üst sınırı kontrolü eklendi",
+        "Lint ve kod gözden geçirme geçildi"
+      ],
+      "passed": false,
+      "notes": "Regex doğrusal zamanlı (linear-time) ve güvenli; gözden geçirildi."
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Tüm geçerli/geçersiz e-posta testleri yeşil",
+        "ReDoS örüntü testi makul sürede tamamlanır"
+      ],
+      "passed": false,
+      "notes": "Test döngüsü ilk turda yeşil; ReDoS testi eşik altında."
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Gerçek lead e-posta örnekleminde yanlış ret oranı eşik altında"
+      ],
+      "passed": false,
+      "notes": "Örneklemde yanlış ret oranı kabul edilebilir düzeyde."
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Regex atomu doğrulayıcı molekül ile birlikte yayınlandı"
+      ],
+      "passed": false,
+      "notes": "Üretimde aktif; örüntü düzenli gözden geçiriliyor."
+    }
+  },
+  "deliverables": [
+    "ReDoS güvenli e-posta doğrulama regex'i",
+    "Uzunluk sınırı ve hızlı-ret kontrolü",
+    "Geçerli/geçersiz e-posta test paketi"
+  ],
+  "acceptanceCriteria": [
+    "Geçerli RFC 5322 alt küme e-postaları kabul edilir, geçersizler reddedilir",
+    "254 karakteri aşan girdi doğrudan reddedilir",
+    "Regex doğrusal zamanlıdır; ReDoS'a açık değildir"
+  ],
+  "risks": [
+    {
+      "id": "r-atemail-1",
+      "desc": "Aşırı geniş regex geçersiz e-postaları kabul edebilir",
+      "severity": "low",
+      "mitigation": "Regex RFC 5322 pratik alt kümesine sabitlenir ve negatif testlerle kilitlenir."
+    },
+    {
+      "id": "r-atemail-2",
+      "desc": "Karmaşık regex ReDoS (hizmet reddi) riskine açık olabilir",
+      "severity": "medium",
+      "mitigation": "Geri izleme (backtracking) içermeyen örüntü ve uzunluk sınırı kullanılır."
+    }
+  ],
+  "rollback": "Regex önceki sürüme döndürülerek e-posta doğrulama davranışı geri alınır; gerekirse doğrulayıcı esnek moda alınır.",
+  "evidence": [
+    "AC karşılandı: geçerli RFC 5322 alt küme e-postaları kabul, geçersizler reddedilir",
+    "verification fazı: passed (kabul kriteri testlenebilir)"
+  ],
+  "metrics": [
+    {
+      "key": "regex_calisma_suresi_us",
+      "target": "< 100"
+    },
+    {
+      "key": "yanlis_ret_orani_yuzde",
+      "target": "< 1"
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "RFC 5322 pratik alt kümesine uygun e-posta biçim kontrolü",
+        "Yerel kısım, @ ve etki alanı (domain) yapısının doğrulanması",
+        "254 karakter üst sınırı ve hızlı-ret (fast-fail) kontrolü",
+        "Doğrusal zamanlı, ReDoS güvenli örüntü"
+      ],
+      "notes": "Girdi string, çıktı boolean; geçersiz biçimde hata yolu reddederek döner (girdi/çıktı sözleşmesi). Atom tek işi yapar: e-posta biçimini güvenle doğrular.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Girdi uzunluğu üst sınırla kesilerek aşırı veri reddedilir",
+        "Atom durumsuz ve tenant'tan bağımsızdır; veri sızıntısı yüzeyi yoktur",
+        "Yalnızca biçim doğrular; e-posta gönderimi/teslimi iddiası taşımaz"
+      ],
+      "notes": "Atom durumsuz ve tenant-bağımsız; en az ayrıcalıkla çalışır, ham e-posta loglanmaz (maskeleme). Biçim doğrulaması enjeksiyon ve bozuk veri için ilk filtredir.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Regex bir kez derlenir ve modül düzeyinde yeniden kullanılır",
+        "Saf fonksiyon imzası: (string) -> boolean",
+        "Hızlı-ret kontrolleri (uzunluk, @ varlığı) regex'ten önce çalışır"
+      ],
+      "notes": "Regex tipli saf fonksiyona sarılır; lint kapısı ve döngüsel karmaşıklık eşiği modülerliği korur. Atom minimal, yan etkisiz ve yüksek test edilebilir.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Geri izlemesiz örüntü ile ReDoS riski ortadan kaldırılır",
+        "Uzunluk sınırı DoS amaçlı dev girdileri engeller",
+        "Hata durumunda ham girdi loglanmaz — anahtar rotasyonu E-posta Format Regex için otomatiktir; eski anahtar imza doğrulamasında reddedilir"
+      ],
+      "notes": "ReDoS ve DoS riskleri örüntü ve sınırla giderilir.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Doğrulama < 100 mikrosaniye; doğrusal zamanlı",
+        "Önceden derlenmiş regex tekrar derleme maliyetini sıfırlar",
+        "Hızlı-ret ile çoğu geçersiz girdi regex'e ulaşmadan elenir"
+      ],
+      "notes": "Doğrulama hedefi < 100 µs, p99 gecikmeye katkısız; derlenmiş regex önbellekte tutulur, tekrar derleme sıfırdır. Skorlama gecikmesine etki etmeyecek kadar hızlıdır.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Aynı regex mobil formda istemci ön-kontrolünde kullanılır",
+        "Geçersiz e-posta mobilde anında geri bildirimle gösterilir",
+        "Atom platformdan bağımsız saf TypeScript fonksiyonudur"
+      ],
+      "notes": "Aynı regex mobilde ön-kontroldür; offline girilen e-posta senkronda yeniden doğrulanır. İstemci ve sunucu aynı atomu paylaşır.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Geçersiz e-posta mesajı açık dille ve renkten bağımsız sunulur",
+        "Hata, e-posta alanına aria-describedby ile bağlanır",
+        "Hata canlı bölgede ekran okuyucuya duyurulur"
+      ],
+      "notes": "Atom çıktısı erişilebilir hata mesajını besler.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Atom doğrulayıcı kütüphanesinin parçası olarak paketlenir",
+        "Ayrı servis/probe gerektirmez; saf koddur",
+        "Paylaşımlı barındırma dahil her ortamda çalışır"
+      ],
+      "notes": "Ayrı probe/servis gerektirmez; sürüm config'ten yüklenir, hatalı örüntüde rollback yapılır. Atom her dağıtım hedefinde taşınabilir.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "E-posta Format Regex: backend ECA ruleset AI app/module mutasyonunu ve ruleset override denemesini deny eder",
+        "Olay: e-posta alanı doğrulanıyor -> Koşul: regex eşleşmiyor -> Eylem: geçersiz işaretle ve neden döndür",
+        "Kural idempotent; aynı girdi aynı sonucu verir",
+        "Döngü kırıcı: atom tek adımdır; zincire katkısı sınırlıdır (maks 6 içinde)"
+      ],
+      "notes": "Atom, doğrulama zincirinin en küçük kararıdır.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "E-posta Format Regex: AI app/module üretemez veya güncelleyemez; yalnız ArcheType taslağı/prod-update önerisi üretebilir",
+        "AI geçersiz e-posta için olası düzeltme önerir; düzeltmeyi insan uygular",
+        "Doğrulama kararı deterministik regex'tedir; AI değiştirmez",
+        "AI önerisi e-posta içeriğini talimat olarak işlemez (untrusted)"
+      ],
+      "notes": "Doğrulama AI'dan bağımsızdır; AI yalnızca öneri verir.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Geçerli (alt+etiketli, çok seviyeli domain) ve geçersiz (boşluk, çift @, eksik TLD) birim testleri",
+        "Aşırı uzun girdi ve ReDoS örüntü süre testi",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Sınır değerleri (boş string, tek karakter, 254/255 uzunluk) kapsanır"
+      ],
+      "notes": "Atom davranışı kapsamlı sınır testleriyle kilitlenir.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 (Enjeksiyon): biçim doğrulaması girdi yüzeyini daraltır",
+        "ReDoS: geri izlemesiz örüntü ile hizmet reddi engellenir",
+        "OWASP A04 (Güvensiz Tasarım): uzunluk sınırı ve hızlı-ret varsayılanı"
+      ],
+      "notes": "Atom, OWASP girdi doğrulama önerileriyle uyumludur.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Skor alanı doğrulayıcı molekül tarafından çağrılır",
+        "Alan adı blok listesi atomuyla (atom-crm-domain-blocklist) zincirlenir",
+        "Aynı atom lead formu istemci ön-kontrolünde kullanılır"
+      ],
+      "notes": "Atom, doğrulayıcı molekül sözleşmesiyle çağrılır; core zincirinde blok listesi atomundan önce gelir ve tipli boolean API döner. Doğrulama zincirinin ilk biçim kontrolüdür.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Lead Yönetimi taşının e-posta giriş doğrulamasını besler",
+        "Tekilleştirme molekülü normalize öncesi geçerlilik kontrolü için kullanır",
+        "Tüm CRM e-posta girişleri bu atomu yeniden kullanır"
+      ],
+      "notes": "Tüketiciler doğrudan DB yerine üretilen Contract kapısı ve panel üzerinden bu atomu çağırır. E-posta doğrulama tek atomda merkezîleştirildi.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "E-posta Format Regex icin veri sahipligi ve retention siniri gereksinim fazinda kayda baglanir; PII yoksa bu karar acikca isaretlenir",
+        "E-posta Format Regex kapsaminda silme/anonimlestirme ve yedek-restore beklentisi ust dugum sozlesmesine baglanir",
+        "E-posta Format Regex degisikligi migration gerektirirse expand-contract yolu ve geri alma notu ayni PR kanitinda tutulur"
+      ],
+      "notes": "Atom seviyesinde day-2 veri yasam dongusu karti; gercek alan listesi development oncesi traceability ile netlesir.",
+      "prompt": "\"Veri Yaşam Döngüsü & Uyum\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: veri sınıfları (PII/finansal/log), retention (saklama) süresi, silme/anonimleştirme (DSAR/KVKK), yedekleme + restore tatbikatı, migration modu (append-only/expand-contract).",
+      "provenance": "human",
+      "promptVersion": "audit-gap-fix-2026-07-08"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "E-posta Format Regex için SLI/SLO tanımı RED metrikleriyle (rate/error/duration) izlenir; error-budget tüketimi ayrı alarm eşiğidir",
+        "E-posta Format Regex runbook'u belirti, teshis, mudahale ve rollback adimlarini ayri maddelerle tasir",
+        "E-posta Format Regex alarmlari p95 gecikme, hata orani ve islenmeyen kuyruk birikimi uzerinden esiklenir"
+      ],
+      "notes": "Atom seviyesinde day-2 gözlemlenebilirlik kartı; dashboard ve on-call hedefi gerçek repoPath/testCommand netleşince kanıtlanır.",
+      "prompt": "\"Gözlemlenebilirlik & Operasyon\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: SLI/SLO hedefi, metrik + yapısal log + trace kapsamı, alarm eşiği, dashboard, runbook adımları, on-call müdahale.",
+      "provenance": "human",
+      "promptVersion": "audit-gap-fix-2026-07-08"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "E-posta Format Regex failure mode listesi ust bagimlilik kesintisi, zaman asimi ve kismi yazim senaryolarini kapsar",
+        "E-posta Format Regex icin retry/backoff ve idempotency beklentisi is birimi seviyesinde tanimlanir",
+        "E-posta Format Regex geri alma plani RTO/RPO hedefi ve degrade davranisi ile birlikte kabul kapisina baglanir"
+      ],
+      "notes": "Atom seviyesinde day-2 dayaniklilik karti; gercek servis bagimliligi development oncesi netlesir.",
+      "prompt": "\"Dayanıklılık & Süreklilik\" boyutunu bu görev için üret.\nBağlam: atom-crm-email-regex — \"E-posta Format Regex\" (mikro adım/atom; küme: Çekirdek Operasyon). Özet: Lead e-posta adresini RFC 5322 alt kümesine göre, ReDoS güvenli ve uzunluk sınırlı bir düzenli ifadeyle doğrulayan atom. Skor alanı doğrulayıcının e-posta kontrolünün temelidir. Etiketler: core-operations, crm, atom, regex, e-posta, posta.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: failure mode listesi, retry/backoff + idempotency, circuit breaker, DLQ (dead-letter kuyruğu), RTO/RPO hedefi, degrade (kademeli işlev kaybı) davranışı.",
+      "provenance": "human",
+      "promptVersion": "audit-gap-fix-2026-07-08"
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "",
+    "granularity": "atom",
+    "cluster": "core-operations"
+  },
+  "state": "dogrulanmis",
+  "lastUpdated": "2026-06-17",
+  "ecaRules": [
+    {
+      "id": "eca-atom-crm-email-regex-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "E-posta Format Regex tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "E-posta Format Regex blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "atom-crm-email-regex"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "atom-crm-email-regex"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "atom-crm-email-regex"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-atom-crm-email-regex-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "E-posta Format Regex AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "suggest",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "milestone": "Çekirdek Operasyon",
+  "schedule": {
+    "start": "2026-06-05",
+    "end": "2026-06-12",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-06-05",
+    "baselineEnd": "2026-06-12"
+  },
+  "assignees": [
+    "crm-ekibi"
+  ],
+  "standardRefs": {
+    "testingStandardRef": "testing-strategy",
+    "codingStandardRef": "coding-standards",
+    "dataApiContractRef": "data-api-contract",
+    "aiGovernanceRef": "ai-governance",
+    "releasePolicyRef": "release-versioning",
+    "observabilityRef": "observability"
+  },
+  "aliases": [
+    "at-crm-email-regex"
+  ]
+}

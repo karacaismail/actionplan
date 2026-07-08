@@ -10,7 +10,7 @@
 
 Platform build-out, 50+ enterprise uygulamanın üretileceği tenant-aware bir uygulama fabrikasıdır. Tek bir monolitik geliştirme değil; her tenant'a izole veritabanı şeması, RBAC katmanı, GraphQL sözleşmesi ve ayrı dağıtım hedefi sağlayan çok-kiracılı bir altyapıdır.
 
-Bu spec'in amacı: söz konusu fabrikayı, actionplan'ın 7-seviyeli WBS hiyerarşisine (app → module → archetype → stone → molecule → element → atom) ve 7 waterfall fazına (requirements → test-plan → db-schema → development → test-qa → verification → release-maintenance) birebir uyan görev düğümleri olarak tanımlamaktır.
+Bu spec'in amacı: söz konusu fabrikayı, actionplan'ın 7-seviyeli WBS hiyerarşisine (app/ada → module/dağ → archetype/kaya → feature/taş → component/kum → work_unit/molekül → micro_step/atom) ve 7 waterfall fazına (requirements → test-plan → db-schema → development → test-qa → verification → release-maintenance) birebir uyan görev düğümleri olarak tanımlamaktır.
 
 **Neden dikey dilim önce gelir:** Platform tamamlanmadan hiçbir tenant uygulaması üretime geçemez; ancak tüm platformu tek seferde teslim etmek de pratik değildir. Dikey dilim (vertical slice), seçilen bir örnek modül (Customer) üzerinden tüm katmanları — DB şeması, migration, GraphQL, React UI, seed veri, observability — production-grade biçimde gösterir ve kalan modüller için tekrarlanabilir bir kalıp (pattern) oluşturur.
 
@@ -29,7 +29,7 @@ Bu spec'in amacı: söz konusu fabrikayı, actionplan'ın 7-seviyeli WBS hiyerar
 
 Aşağıdaki spec, `src/schemas/task.ts` (schemaVersion 1.0.0) ile birebir uyumludur. Alan adları, enum değerleri ve tip kısıtlamalar o dosyadan türetilmiştir. Uydurma alan yoktur.
 
-**Kullanılan level enum değerleri:** app, module, archetype, stone, molecule, element, atom
+**Kullanılan level enum değerleri:** app, module, archetype, feature, component, work_unit, micro_step
 
 **Kullanılan phase enum değerleri:** requirements, test-plan, db-schema, development, test-qa, verification, release-maintenance
 
@@ -1186,7 +1186,7 @@ Toplam önerilen düğüm sayısı: **16**
 
 **Not:** 16 yerine 13 düğüm — envanteri tablo üzerinden say: 1 app + 8 module + 4 archetype = 13 düğüm.
 
-Gelecek aşamalarda (Prompt 4-impl ve sonrası) stone/molecule/element/atom düğümleri her archetype altında eklenebilir. Bu spec yalnızca app → module → archetype üçlüsünü kapsar.
+Gelecek aşamalarda (Prompt 4-impl ve sonrası) feature/component/work_unit/micro_step düğümleri her archetype altında eklenebilir. Bu spec yalnızca app → module → archetype üçlüsünü kapsar.
 
 ---
 

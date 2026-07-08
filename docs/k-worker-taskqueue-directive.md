@@ -142,7 +142,7 @@ Aşağıdaki testler dayanıklılığın gerçekten çalıştığını kanıtlar
 |---|---|---|
 | İşi HTTP handler'ında `time.sleep`/blocking çalıştırmak | İsteği kilitler, timeout'ta veri yarım kalır | `worker.enqueue` ile arka plana taşı |
 | App'in kendi `threading`/`cron`'unu yazması | Retry/DLQ/adalet her app'te farklı ve hatalı | k-worker `Task` kaydı + `Schedule` |
-| Retry'ı `idempotent` olmayan göreve uygulamak | Çift-tahsilat/çift-stok; sessiz hasar | `idempotent=false` ise DLQ'ya at, retry yapma |
+| Retry'ı `idempotent` olmayan göreve uygulamak | Çift-tahsilat/çift-stok; sessiz hasar | `idempotent=false` ise DLQ'ya micro_step, retry yapma |
 | Başarısız işi `except: pass` ile yutmak | İş kaybolur, kimse fark etmez | `dead_letter=true`; DLQ görünür + alarm |
 | Kuyruğu global (tenant'sız) yapmak | Bir tenant komşusunu boğar | Rate-limit/queue default `tenant`-scope |
 | İşi outbox'tan ayrı transaction'da kuyruklamak | Yazma commit olur, iş kuyruklanmazsa dual-write | Domain kaydı + enqueue aynı `session.commit()` |

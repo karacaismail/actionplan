@@ -54,11 +54,11 @@ Consumer-Surface dış kullanıcıya bakan, yüksek-trafik, gerçek-zaman ve dö
 
 ### 4.3 Shop-Surface (6 yeni)
 
-Shop-Surface fabrika sahasına (shop-floor) bakan üretim yüzeyi ailesidir; kullanıcısı eldiven/dokunmatik/parlak-tozlu-ortam/barkod bağlamındadır, hata pahalıdır (yanlış lot = geri-çağırma). Çoğu `renderStrategy: custom` (offline kuyruk, barkod-öncelikli giriş, gerçek-zaman SLA jenerik render'a sığmaz) — ama yönetişimi (izin/audit/i18n) korur. Fabrika-bağlamı `factoryContext` bloğunda (`surface-spec §10`) beyan edilir.
+Shop-Surface fabrika sahasına (shop-floor) bakan üretim yüzeyi ailesidir; kullanıcısı eldiven/dokunmatik/parlak-moleküllu-ortam/barkod bağlamındadır, hata pahalıdır (yanlış lot = geri-çağırma). Çoğu `renderStrategy: custom` (offline kuyruk, barkod-öncelikli giriş, gerçek-zaman SLA jenerik render'a sığmaz) — ama yönetişimi (izin/audit/i18n) korur. Fabrika-bağlamı `factoryContext` bloğunda (`surface-spec §10`) beyan edilir.
 
 | Tip | Ne yapar (davranış sözleşmesi) |
 |---|---|
-| `terminal` | Üretime başla/durdur/tamamle, malzeme tüket, fire gir; offline-first (kuyruk + çakışma-çözüm); barkod-öncelikli; tek-el ergonomi; "onaysız devam etme" kilidi |
+| `terminal` | Üretime başla/durdur/tamamle, malzeme tüket, fire gir; offline-first (kuyruk + çakışma-çözüm); barkod-öncelikli; tek-work_unit ergonomi; "onaysız devam etme" kilidi |
 | `andon` | Canlı hat durumu (yeşil/sarı/kırmızı + duruş nedeni); 2 sn tazeleme; renk-körü-güvenli (renk + şekil); kopukluk davranışı beyanlı |
 | `gantt` | APS çıktısı: iş merkezi × zaman; sürükle-bırak yeniden-çizelge; kilit/dondurma penceresi |
 | `kanban` | Üretim akış panosu; WIP kolonları; çekme (pull) sinyali; kolon kapasite sınırı |

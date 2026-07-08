@@ -123,7 +123,7 @@ Bu bölüm CLM yeteneklerinin dördüncü, dikey bağını kurar: agreement graf
 | Sözleşme değeri / ceza (para) | `Money` (değer+kur+precision+rounding) | `archetype-agreement.total_value`, `k-obligation.amount`, `payment` | 60k EUR + 60k TRY toplanır; yanlış değer/ceza; sessiz para kaybı | KISMİ (düz `currency`) |
 | Yenileme/fesih penceresi | `Range<date>` / `DateRange` + `Term` | `archetype-agreement.effective_range`/`term`, `k-obligation.effective` | auto-renew kaçar veya istenmeden yenilenir; gelir kaçağı (ürünün ana vaadi) | EKSİK (Term); KISMİ (DateRange) |
 | İhbar süresi (iş-günü farkında) | `Duration` (+ iş-günü kaydırma) | `archetype-agreement.notice_period`, `k-obligation.lead_time`/`notice_period` | "60 gün ihbar" takvim mi iş-günü mü belirsiz; ihbar kaçar; sözleşme uzar | EKSİK |
-| Tekrarlı taahhüt (yıllık yenileme/aylık rapor) | `Recurrence` (RRULE) | `archetype-agreement.renewal_rule`, `k-obligation.recurrence` | tekrarlı taahhüt el ile → ölçekte kaçar; yükümlülük düşer | EKSİK |
+| Tekrarlı taahhüt (yıllık yenileme/aylık rapor) | `Recurrence` (RRULE) | `archetype-agreement.renewal_rule`, `k-obligation.recurrence` | tekrarlı taahhüt work_unit ile → ölçekte kaçar; yükümlülük düşer | EKSİK |
 | Ödeme koşulu (vade+tutar+ceza oranı) | `Duration` + `Money` + `Percentage` | `archetype-agreement.payment_term`, `payment` | net-60 vade + gecikme cezası tetiklenemez | EKSİK |
 | Risk skoru | `Percentage` (Computation'dan) | `archetype-agreement.risk_score` | politika-bazlı risk sorgulanamaz | EKSİK |
 | Madde referansı (kütüphane bağı, sürüm) | `ClauseRef[]` | `archetype-agreement.clauses`, `archetype-document-composition.clause` | madde kopyalanır, kütüphaneye bağlanmaz; playbook (PDP) kontrol edemez; risk politikası çalışmaz | EKSİK |

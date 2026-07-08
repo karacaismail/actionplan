@@ -14,9 +14,9 @@ Temel ayrımı baştan koy: standart referansı (`standardRefs`) ile üretim boy
 
 Üç kademeli işaret kullanılır:
 
-- **Z (Zorunlu):** Bu seviye/yüzefte standart veya boyut doldurulmuş/referanslanmış olmalı; eksikse kapı kırmızı. Boyut için `applies=true` ve içerik beklenir.
+- **Z (Zorunlu):** Bu seviye/yüzeyte standart veya boyut doldurulmuş/referanslanmış olmalı; eksikse kapı kırmızı. Boyut için `applies=true` ve içerik beklenir.
 - **Ö (Önerilen):** Beklenir ama bloklayıcı değildir; atlanırsa gerekçe (waiver veya applicability.reason) iyi pratiktir, zorunlu değildir.
-- **N/A (Uygulanmaz):** Bu seviye/yüzefte anlamsızdır. Boyut ekseninde `applies=false` SET edilirse gerekçe (reason) ZORUNLUdur (`check-dimension-applicability` zorlar). Standart ekseninde ilgili `standardRefs` alanı boş bırakılır (lazy; `check-standards-coverage` boş ref'i serbest sayar).
+- **N/A (Uygulanmaz):** Bu seviye/yüzeyte anlamsızdır. Boyut ekseninde `applies=false` SET edilirse gerekçe (reason) ZORUNLUdur (`check-dimension-applicability` zorlar). Standart ekseninde ilgili `standardRefs` alanı boş bırakılır (lazy; `check-standards-coverage` boş ref'i serbest sayar).
 
 ---
 
@@ -33,7 +33,7 @@ Seviye tek başına standardı belirlemez; düğümün **yüzey sınıfı** da b
 | infra-ops | Dağıtım/işletim; CI/CD, observability, container, release. | `platform-cicd`, `platform-observability` |
 | doc-governance | Yalnız belge/kapsam/sözleşme taşır; çalışan kod yok. | `app` ve `module` düğümleri, ADR düğümleri |
 
-Bir düğüm birden fazla yüzefe dokunabilir (ör. archetype hem data-schema hem api-contract). O durumda dokunduğu her yüzefin zorunlu standartları birleşik uygulanır.
+Bir düğüm birden fazla yüzeye dokunabilir (ör. archetype hem data-schema hem api-contract). O durumda dokunduğu her yüzeyin zorunlu standartları birleşik uygulanır.
 
 ---
 
@@ -41,9 +41,9 @@ Bir düğüm birden fazla yüzefe dokunabilir (ör. archetype hem data-schema he
 
 Satır: 15 standart sözleşme (dosya adı `src/data/standards/<id>.json`; düğüm bağı `standardRefs.<key>`). Sütun: 7 WBS seviyesi. Hücre: Z/Ö/N/A.
 
-Okuma kuralı: app ve module düğümleri `doc-governance` yüzefidir (task-to-code-contract §1: "kapsam ve sözleşme yöneticisidir, kod yazan değil"). Bu yüzden onlarda kod-üretim standartları Ö/N/A'ya düşer; sözleşme/mimari standartları Z kalır. archetype ve altı somut kod + test taşıdığı için kod standartları Z olur.
+Okuma kuralı: app ve module düğümleri `doc-governance` yüzeyidir (task-to-code-contract §1: "kapsam ve sözleşme yöneticisidir, kod yazan değil"). Bu yüzden onlarda kod-üretim standartları Ö/N/A'ya düşer; sözleşme/mimari standartları Z kalır. archetype ve altı somut kod + test taşıdığı için kod standartları Z olur.
 
-| Standart (dosya) | standardRefs anahtarı | app | module | archetype | stone | molecule | element | atom |
+| Standart (dosya) | standardRefs anahtarı | app | module | archetype | feature | component | work_unit | atom |
 |---|---|---|---|---|---|---|---|---|
 | architecture | architectureRef | Z | Z | Z | Ö | Ö | N/A | N/A |
 | coding-standards | codingStandardRef | N/A | Ö | Z | Z | Z | Z | Ö |
@@ -67,7 +67,7 @@ Notlar:
 - `tech-profiles` standart dosyalarında değil `src/data/tech-profiles.json` içindedir; `techProfileRef` o id havuzuna çözülür (`check-standards-coverage` bunu ayrı havuz olarak doğrular). Yine de seviye uygulanabilirliği açısından bir standart gibi davranır.
 - `dependency-policy` için düğüm üzerinde ayrı bir `standardRefs` anahtarı YOKtur; bu standart repo geneli `check-dependency-policy` kapısıyla zorlanır (allowlist/lisans/lockfile). Matriste seviye disiplinini göstermek için bırakılmıştır; düğüme ref olarak SET edilmez.
 - app/module satırlarında `architecture`, `release-versioning`, `ai-governance`, `tech-profiles` Z kalır: bunlar sözleşme/kapsam kararıdır (bounded-context sınırı, release train, AI yetki seti, headless-lock profili) ve kod yazılmadan da bağlayıcıdır.
-- `i18n-standards`, çevrilebilir metin veya locale/currency/timezone/jurisdiction taşıyan HER seviye ve yüzey sınıfına (app/module/archetype/surface) uygulanır. app/module'de Z'dir çünkü desteklenen locale seti, RTL politikası, fallback zinciri, para/tarih biçimlendirme ve tax-legal-localization + data-residency kararları kapsam düzeyinde alınır; bu politika alt seviyelere miras kalır. archetype'ta Z (çevrilebilir metin ve locale-farkında biçimlendirme somut yüzeyde doğar). stone/molecule/element'te Ö (çevrilebilir string taşıyan bir alt yüzey de aynı politikaya tabidir). Saf-backend sabit veya kullanıcıya görünmeyen/locale taşımayan atom'da N/A: gerekçe olarak "çevrilebilir metin veya locale-farkında değer yok; i18n üst frontend-ui/surface düğümünde kanıtlanır" yazılır. surface yüzeyi `techProfileRef` gibi seviye-üstü bağlanır; taşıdığı çevrilebilir metin için i18n politikasını devralır.
+- `i18n-standards`, çevrilebilir metin veya locale/currency/timezone/jurisdiction taşıyan HER seviye ve yüzey sınıfına (app/module/archetype/surface) uygulanır. app/module'de Z'dir çünkü desteklenen locale seti, RTL politikası, fallback zinciri, para/tarih biçimlendirme ve tax-legal-localization + data-residency kararları kapsam düzeyinde alınır; bu politika alt seviyelere miras kalır. archetype'ta Z (çevrilebilir metin ve locale-farkında biçimlendirme somut yüzeyde doğar). feature/component/work_unit'te Ö (çevrilebilir string taşıyan bir alt yüzey de aynı politikaya tabidir). Saf-backend sabit veya kullanıcıya görünmeyen/locale taşımayan atom'da N/A: gerekçe olarak "çevrilebilir metin veya locale-farkında değer yok; i18n üst frontend-ui/surface düğümünde kanıtlanır" yazılır. surface yüzeyi `techProfileRef` gibi seviye-üstü bağlanır; taşıdığı çevrilebilir metin için i18n politikasını devralır.
 - atom seviyesinde çoğu standart N/A'dır çünkü atom "tek satır değişiklik, tek sabit"tir (task-to-code-contract §1); kanıtı ve standardı üst düğümden devralır. Yalnız `coding-standards`/`short-code`/`testing-strategy` Ö kalır (tek satır da kodlama kuralına uymalı).
 
 ---
@@ -83,8 +83,8 @@ Bu oturumda eklenen çekirdek primitifleri (kernel + P0 domain) hangi seviyede/y
 | PDP (Policy Decision Point) | archetype / module (backend) | Yetki kararı motoru (permit/deny) | architecture, testing-strategy | AI politika değiştiremez |
 | Mode-Profile | module / archetype | Çalışma-modu/özellik profili anahtarı | architecture, tech-profiles | AI üretemez/override edemez |
 | Computation | archetype (backend) | Saf hesap/formül birimi; deterministik | coding-standards, testing-strategy | scale-invariant birimlerle çalışır |
-| field-types | archetype / stone (data-schema) | Tipli alan taksonomisi (locale/currency/unit dahil) | data-api-contract, i18n-standards | locale/currency alanları i18n'e tabi |
-| scale-invariant | archetype / stone | Ölçek/birim-bağımsız değer tipi | coding-standards, data-api-contract | birim dönüşümü kayıpsız |
+| field-types | archetype / feature (data-schema) | Tipli alan taksonomisi (locale/currency/unit dahil) | data-api-contract, i18n-standards | locale/currency alanları i18n'e tabi |
+| scale-invariant | archetype / feature | Ölçek/birim-bağımsız değer tipi | coding-standards, data-api-contract | birim dönüşümü kayıpsız |
 | sequence | archetype (backend) | Sıra/numaralandırma üreteci (jurisdiction-farkında olabilir) | data-api-contract | i18n/jurisdiction biçimini devralır |
 | calendar-capacity | module / archetype | Takvim + kapasite/vardiya modeli | data-api-contract, i18n-standards | timezone/locale takvimi i18n'e tabi |
 | genealogy | archetype (data-schema) | Soy-ağacı/izlenebilirlik (lot/batch) grafiği | data-api-contract, testing-strategy | append-only izlenebilirlik |
@@ -114,7 +114,7 @@ Aile → boyut eşlemesi (kaynak: `DIMENSION_FAMILY`):
 
 Aile × seviye:
 
-| Aile | app | module | archetype | stone | molecule | element | atom |
+| Aile | app | module | archetype | feature | component | work_unit | atom |
 |---|---|---|---|---|---|---|---|
 | functional | Z | Z | Z | Z | Ö | Ö | N/A |
 | runtime-quality | Ö | Ö | Z | Z | Ö | Ö | N/A |
@@ -125,11 +125,11 @@ Aile × seviye:
 
 Okuma kuralı:
 
-- **functional** (özellik tanımı, modül kullanımı, entegrasyon) app/module/archetype'ta Z'dir çünkü "ne inşa ediliyor" bu seviyelerde tanımlanır. element/atom'da N/A: tekil bir CSS kuralında "özellik tanımı" anlamsızdır.
-- **runtime-quality** (güvenlik, performans, mobile, WCAG, OWASP) app/module'de Ö (kapsam kararı), archetype/stone'da Z (somut yüzey burada doğar). Bu ailenin tekil boyutları yüzefe göre sık N/A olur — §4'e bakınız.
+- **functional** (özellik tanımı, modül kullanımı, entegrasyon) app/module/archetype'ta Z'dir çünkü "ne inşa ediliyor" bu seviyelerde tanımlanır. work_unit/atom'da N/A: tekil bir CSS kuralında "özellik tanımı" anlamsızdır.
+- **runtime-quality** (güvenlik, performans, mobile, WCAG, OWASP) app/module'de Ö (kapsam kararı), archetype/feature'da Z (somut yüzey burada doğar). Bu ailenin tekil boyutları yüzeye göre sık N/A olur — §4'e bakınız.
 - **engineering** (kod optimizasyonu) app'te N/A (kod yok), kod taşıyan her seviyede Z/Ö. atom'da bile Ö: tek satır da gereksiz karmaşıklık taşımamalı (short-code felsefesi).
-- **operations** (deployment) module'de Z (release train üyeliği), archetype'ta Z (en küçük deploy birimi — task-to-code-contract §4). molecule ve altı N/A: bağımsız deploy edilmezler.
-- **automation** (ECA, AI ajan) archetype'ta Z (ECA kuralları ve agentPolicy burada anlam kazanır), element/atom'da N/A.
+- **operations** (deployment) module'de Z (release train üyeliği), archetype'ta Z (en küçük deploy birimi — task-to-code-contract §4). component ve altı N/A: bağımsız deploy edilmezler.
+- **automation** (ECA, AI ajan) archetype'ta Z (ECA kuralları ve agentPolicy burada anlam kazanır), work_unit/atom'da N/A.
 - **verification** (testing) test-önce felsefe gereği neredeyse her yerde zorunlu; yalnız atom'da Ö (üst test yeterli).
 
 ---
@@ -153,7 +153,7 @@ Bu kayıt yalnızca bir değer SET ettiği için ilgili düğüm dosyasına yaz�
 
 ### 4.2 Doküman düğümü (app/module/ADR): deployment + birçok runtime boyutu N/A
 
-doc-governance yüzefindeki bir düğüm (app, module veya bir ADR düğümü) çalışan kod taşımaz; kapsam ve sözleşme taşır. deployment boyutu (Swarm/Kubernetes/shared hosting uyumu) bu düğümde doğrudan anlamsızdır — deploy birimi archetype'tır (task-to-code-contract §4). Doğru kayıt:
+doc-governance yüzeyindeki bir düğüm (app, module veya bir ADR düğümü) çalışan kod taşımaz; kapsam ve sözleşme taşır. deployment boyutu (Swarm/Kubernetes/shared hosting uyumu) bu düğümde doğrudan anlamsızdır — deploy birimi archetype'tır (task-to-code-contract §4). Doğru kayıt:
 
 ```json
 "applicability": {
@@ -165,7 +165,7 @@ doc-governance yüzefindeki bir düğüm (app, module veya bir ADR düğümü) �
 ### 4.3 N/A yazma kuralları
 
 - Gerekçe (reason) somut olmalı: "uygulanmaz" gibi boş tekrar değil; NEDEN uygulanmadığı + kanıtın NEREDE üretildiği yazılmalı.
-- N/A bir boyutu sonsuza dek kapatmaz; düğümün yüzefi değişirse (ör. backend atom'a bir CLI çıktısı eklenirse) `applies` yeniden `true` yapılır.
+- N/A bir boyutu sonsuza dek kapatmaz; düğümün yüzeyi değişirse (ör. backend atom'a bir CLI çıktısı eklenirse) `applies` yeniden `true` yapılır.
 - Standart ekseninde N/A için ayrı bir flag yoktur: ilgili `standardRefs.<key>` alanı boş bırakılır. `check-standards-coverage` boş ref'i serbest (lazy) sayar; yalnız SET edilmiş ama çözülemeyen ref kırmızı olur.
 - N/A ile waiver karıştırılmamalıdır: N/A "bu boyut burada anlamsız" demektir; waiver "uygulanması GEREKEN bir standarttan bilinçli, onaylı, süreli sapma" demektir. Bir standardı atlamak istiyorsan ama o seviyede Z ise, N/A değil waiver kullan (check-waivers zorlar).
 
@@ -173,7 +173,7 @@ doc-governance yüzefindeki bir düğüm (app, module veya bir ADR düğümü) �
 
 ## 5. Seviye + Yüzey Birleşik Karar Tablosu
 
-Bu tablo §2 ve §3'ü tek bir operasyonel görünümde birleştirir: bir düğümü açtığında seviye ve yüzefe göre zorunlu standart/boyut setini verir.
+Bu tablo §2 ve §3'ü tek bir operasyonel görünümde birleştirir: bir düğümü açtığında seviye ve yüzeye göre zorunlu standart/boyut setini verir.
 
 | Seviye | Yüzey sınıfı | Zorunlu (Z) standartlar | Zorunlu (Z) boyut aileleri | Tipik N/A boyutlar |
 |---|---|---|---|---|
@@ -182,15 +182,15 @@ Bu tablo §2 ve §3'ü tek bir operasyonel görünümde birleştirir: bir düğ�
 | archetype | backend / data-schema | architecture, coding-standards, short-code, data-api-contract, quality-gates, testing-strategy | functional, runtime-quality, engineering, automation, verification | wcag, mobileApps (saf-backend ise) |
 | archetype | frontend-ui | coding-standards, design-system, ui-components, ux-interaction, state-management, testing-strategy | runtime-quality (wcag dahil), engineering, verification | (azı) — wcag/mobileApps burada Z |
 | archetype | api-contract | data-api-contract, coding-standards, quality-gates, testing-strategy | functional, runtime-quality, verification | wcag, mobileApps |
-| stone | (üst archetype yüzefini devralır) | coding-standards, short-code, testing-strategy + üst yüzey standartları | engineering, verification + üst aileler | üst yüzefe bağlı |
-| molecule | (üst stone yüzefini devralır) | coding-standards, short-code, testing-strategy | engineering, verification | runtime-quality çoğu Ö'ye düşer |
-| element | (üst molecule yüzefini devralır) | coding-standards, testing-strategy | engineering, verification | functional, automation, operations |
-| atom | (üst element yüzefini devralır) | (Ö) coding-standards, testing-strategy | (Ö) engineering, verification | neredeyse tümü N/A; üst kanıt yeterli |
+| feature | (üst archetype yüzeyini devralır) | coding-standards, short-code, testing-strategy + üst yüzey standartları | engineering, verification + üst aileler | üst yüzeye bağlı |
+| component | (üst feature yüzeyini devralır) | coding-standards, short-code, testing-strategy | engineering, verification | runtime-quality çoğu Ö'ye düşer |
+| work_unit | (üst component yüzeyini devralır) | coding-standards, testing-strategy | engineering, verification | functional, automation, operations |
+| atom | (üst work_unit yüzeyini devralır) | (Ö) coding-standards, testing-strategy | (Ö) engineering, verification | neredeyse tümü N/A; üst kanıt yeterli |
 
 Kurallar:
 
-- **Devralma:** stone ve altı, üst archetype'ın yüzey sınıfını ve dolayısıyla zorunlu standart setini devralır. Bir frontend-ui archetype altındaki molecule de design-system + ui-components Z setine tabidir.
-- **Birleşim:** bir archetype iki yüzefe dokunuyorsa (data-schema + api-contract) her ikisinin Z seti birleşik uygulanır.
+- **Devralma:** feature ve altı, üst archetype'ın yüzey sınıfını ve dolayısıyla zorunlu standart setini devralır. Bir frontend-ui archetype altındaki component de design-system + ui-components Z setine tabidir.
+- **Birleşim:** bir archetype iki yüzeye dokunuyorsa (data-schema + api-contract) her ikisinin Z seti birleşik uygulanır.
 - **app/module istisna:** bu iki seviyede kod-üretim standartları (coding-standards, design-system, ui-components) Z DEĞİLdir; sözleşme/mimari standartları Z'dir. Doğrudan development fazına girip bu seviyelerde kod yazmak task-to-code-contract §6 Uyarı 1'e göre yanlıştır.
 
 ---

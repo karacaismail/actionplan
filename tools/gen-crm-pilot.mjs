@@ -45,40 +45,40 @@ const META = {
     schedule: { start: "2026-05-01", end: "2026-08-31" },
     traceability: trace("in-progress", { repoPath: ["src/data/archetypes/customer.json"] }),
   },
-  "st-crm-lead-mgmt": {
+  "tas-crm-lead-mgmt": {
     refs: ["parent: m-crm-sales", "archetype: s-crm"],
     schedule: { start: "2026-05-15", end: "2026-07-15" },
   },
-  "mol-crm-lead-scoring": {
-    refs: ["archetype-contract: src/data/archetypes/customer.json", "parent: st-crm-lead-mgmt"],
+  "kum-crm-lead-scoring": {
+    refs: ["archetype-contract: src/data/archetypes/customer.json", "parent: tas-crm-lead-mgmt"],
     schedule: { start: "2026-06-01", end: "2026-07-15" },
   },
-  "el-crm-score-weight-config": {
-    refs: ["parent: mol-crm-lead-scoring"],
+  "molekul-crm-score-weight-config": {
+    refs: ["parent: kum-crm-lead-scoring"],
     schedule: { start: "2026-06-10", end: "2026-06-30" },
   },
   // --- done düğümler: tamamlanma kanıtı (plan-seviyesi: AC karşılandı + verification passed) ---
-  "el-crm-score-field-validator": {
+  "molekul-crm-score-field-validator": {
     refs: [
-      "parent: mol-crm-lead-scoring",
-      "alt-atomlar: at-crm-email-regex, at-crm-score-range-check",
+      "parent: kum-crm-lead-scoring",
+      "alt-atomlar: atom-crm-email-regex, atom-crm-score-range-check",
     ],
     schedule: { start: "2026-06-01", end: "2026-06-20" },
     evidence: [
       "AC karşılandı: geçersiz alanda güvenli varsayılana düşer ve neden kaydedilir",
-      "doğrulama: alt atomlar (at-crm-email-regex, at-crm-score-range-check) done; verification fazı passed",
+      "doğrulama: alt atomlar (atom-crm-email-regex, atom-crm-score-range-check) done; verification fazı passed",
     ],
   },
-  "at-crm-email-regex": {
-    refs: ["standard: RFC 5322 (alt küme)", "related: at-crm-domain-blocklist"],
+  "atom-crm-email-regex": {
+    refs: ["standard: RFC 5322 (alt küme)", "related: atom-crm-domain-blocklist"],
     schedule: { start: "2026-06-05", end: "2026-06-12" },
     evidence: [
       "AC karşılandı: geçerli RFC 5322 alt küme e-postaları kabul, geçersizler reddedilir",
       "verification fazı: passed (kabul kriteri testlenebilir)",
     ],
   },
-  "at-crm-score-range-check": {
-    refs: ["parent: el-crm-score-field-validator"],
+  "atom-crm-score-range-check": {
+    refs: ["parent: molekul-crm-score-field-validator"],
     schedule: { start: "2026-06-05", end: "2026-06-12" },
     evidence: [
       "AC karşılandı: çıktı her zaman 0-100 kapalı aralığında",

@@ -40,7 +40,7 @@ Sonuç: bir düğümün gerekliliği sorgulandığında hangi karardan kaynaklan
 
 ### 2.3 Bağımlılık Eksik — Sıralama Belirsiz (112/424 düğüm)
 
-112 düğümde `dependsOn` boş. Bu düğümler için hangi işlerin tamamlanması gerektiği bilinmiyor. Kritik olan şu: molecule/element/atom seviyesindeki tüm 55 düğümde dependsOn tamamen boş. Bu seviyeler teorik olarak birbirine en sıkı bağlı katmanlardır.
+112 düğümde `dependsOn` boş. Bu düğümler için hangi işlerin tamamlanması gerektiği bilinmiyor. Kritik olan şu: component/work_unit/micro_step seviyesindeki tüm 55 düğümde dependsOn tamamen boş. Bu seviyeler teorik olarak birbirine en sıkı bağlı katmanlardır.
 
 dependsOn dolu olan 312 düğümde kırık referans yok (iyi haber). Ancak dolu olması, içeriğin doğru sıralamayı yansıttığını garanti etmiyor — bu ayrı bir insan doğrulaması gerektirir.
 
@@ -48,7 +48,7 @@ dependsOn dolu olan 312 düğümde kırık referans yok (iyi haber). Ancak dolu 
 
 421 düğümde `schedule.start` ve `schedule.end` null. Kritik yolun (8 düğüm) ne zaman tamamlanacağı hesaplanamıyor. Sprint planlaması, kaynak dengeleme, milestone takibi yapılamıyor.
 
-3 düğümde tarih dolu (at-crm-email-regex, el-crm-score-field-validator, at-crm-score-range-check) — bunlar zaten `done`, yani geçmişe dair tarih girilmiş.
+3 düğümde tarih dolu (atom-crm-email-regex, molekul-crm-score-field-validator, atom-crm-score-range-check) — bunlar zaten `done`, yani geçmişe dair tarih girilmiş.
 
 ### 2.5 Evidence Yok — Tamamlanma İspat Edilemiyor (424/424 düğüm)
 
@@ -95,7 +95,7 @@ Her app-level düğüme bir ekip (veya yük taşıyan) atanmalı. Atama yukarıd
 Her düğüm dayandığı ADR veya şema sözleşmesine en az bir ref içermeli. Minimum: app-level düğümler için ADR linki, module düğümler için archetype sözleşmesi yolu. 424 düğüm için tam doluluk hedeflenmeli; öncelik app + module katmanı (176 düğüm).
 
 **Seviye 3 — Bağımlılık zinciri tamamlanması**
-112 boş dependsOn düğümü, özellikle molecule/element/atom (55 düğüm), bağımlılık zinciri kurulmalı. Bu yapılmadan sprint sıralama ve paralel iş planlama mümkün değil.
+112 boş dependsOn düğümü, özellikle component/work_unit/micro_step (55 düğüm), bağımlılık zinciri kurulmalı. Bu yapılmadan sprint sıralama ve paralel iş planlama mümkün değil.
 
 **Seviye 4 — Zaman çizelgesi**
 Her düğüme en azından sprint veya çeyrek bazında `schedule.start` / `schedule.end` girilmeli. Bu yokken teslim tarihi verilemez, gecikmeler ölçülemiyor.
@@ -117,7 +117,7 @@ risks, deliverables, acceptanceCriteria alanlarında düğüme özgü içerik ya
 |---|---|---|
 | Sorumluluk | 13/424 owner dolu | 424/424 dolu (generator + insan onayı) |
 | Kaynak izlenebilirlik | 2/424 refs dolu | 424/424 dolu (önce 176 app+module) |
-| Bağımlılık zinciri | 312/424 dolu, mol/el/at boş | 424/424 dolu, tüm seviyelerde geçerli |
+| Bağımlılık zinciri | 312/424 dolu, component/work_unit/micro_step boş | 424/424 dolu, tüm seviyelerde geçerli |
 | Zaman hedefi | 3/424 tarih dolu | 424/424 dolu (sprint veya çeyrek granülerliğinde) |
 | Tamamlanma kanıtı | 0/424 evidence | CI entegrasyonu + 424/424 doluluk |
 | İçerik özgünlüğü | Boilerplate hakimiyeti | Düğüme özgü risks/deliverables/AC |

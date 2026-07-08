@@ -39,7 +39,7 @@ Bu tablo `signature_request` çekirdek imza-talebi kaydının alanlarını tanı
 | `tenant_id` | UUID (indexed, NOT NULL) | Kiracı izolasyonu; v1 §2.1 fail-closed zorunluluğu |
 | `document` | `AssetRef` (FK-scope → k-storage) | İmzalanacak doküman (hazır PDF/XML); binary `k-storage`'da, burada referans |
 | `signed_document` | `AssetRef` (nullable) | İmza/mühür gömülü çıktı (imza tamamlanınca üretilen imzalı belge referansı) |
-| `level` | `EnumType`(ses, aes, qes) | eIDAS hukuki seviye; nitelikli (qes) = QTSP sertifikası, el-imzası eşdeğeri |
+| `level` | `EnumType`(ses, aes, qes) | eIDAS hukuki seviye; nitelikli (qes) = QTSP sertifikası, e-imzası eşdeğeri |
 | `format` | `EnumType`(pades, xades, cades) | İmza formatı; PAdES→PDF, XAdES→XML, CAdES→CMS/genel |
 | `mode` | `EnumType`(sequential, parallel, group) | İmza akış modeli; sıralı / paralel / grup-eşiği |
 | `kind` | `EnumType`(signature, seal) | E-imza (gerçek kişi) mi e-mühür/e-Seal (tüzel kişi/kurumsal) mi |
@@ -104,7 +104,7 @@ Bu tablo `k-signature` düğümünün WBS yerleşimini ve bağımlılıklarını
 Aşağıdaki gereksinimler `k-provider-adapter` soyutlamasını bağlar; her biri test-önce (kırmızı→yeşil) yaşam döngüsüne tabidir.
 
 - **Sağlayıcı-agnostik orkestrasyon:** Tek `SignatureProvider` arayüzü (create-envelope / add-signer / apply-signature / timestamp / seal / status) `k-provider-adapter` üstünde; SES/AES için basit imza sağlayıcı, QES için nitelikli ESHS/QTSP aynı arayüzde farklı adaptör. Sağlayıcı seviye + jurisdiction'a göre seçilir; app kod değişmeden sağlayıcı değişir. Doğrudan sağlayıcı SDK çağrısı app'te **yasak**; erişim yalnız `k-provider-adapter` sözleşmesinden.
-- **eIDAS seviye kapısı:** `level=qes` yalnız nitelikli sertifika sunan (BTK-yetkili ESHS / eIDAS QTSP) sağlayıcıyla ilerleyebilir; nitelikli-olmayan sağlayıcıya QES istemek `LevelNotSupportedError` fırlatır. Seviye seçimi (özellikle QES) insan onayına bağlıdır (§10); el-imzası eşdeğeri hukuki sonuç doğurur.
+- **eIDAS seviye kapısı:** `level=qes` yalnız nitelikli sertifika sunan (BTK-yetkili ESHS / eIDAS QTSP) sağlayıcıyla ilerleyebilir; nitelikli-olmayan sağlayıcıya QES istemek `LevelNotSupportedError` fırlatır. Seviye seçimi (özellikle QES) insan onayına bağlıdır (§10); e-imzası eşdeğeri hukuki sonuç doğurur.
 - **Format uygulaması:** `format` alanına göre imza gömme — PAdES (PDF içine), XAdES (XML üzerine), CAdES (CMS/genel binary). Format ile doküman `content_type` uyumu doğrulanır (PDF olmayan dokümana PAdES istenemez); uyumsuzluk `FormatMismatchError`.
 - **Zaman damgası (RFC 3161):** `timestamping=rfc3161` istendiğinde nitelikli zaman-damgası otoritesinden (TSA, dış sağlayıcı) damga alınır ve imzaya gömülür; TSA `k-provider-adapter` üzerinden çağrılır, `k-signature` kendi TSA'sını işletmez.
 - **LTV / LTA:** `retention_profile=ltv` sertifika zinciri + iptal bilgisi (CRL/OCSP) imzaya gömülür (uzun-dönem doğrulama); `lta` ayrıca arşiv zaman-damgası ekler (uzun-dönem arşiv). Bu profil dokümanı ileride sertifika süresi dolsa bile doğrulanabilir kılar.
@@ -143,7 +143,7 @@ Bu tablo `k-signature` üzerindeki AI autonomy sınırlarını tanımlar.
 | Doküman özeti *önerme* | `draft` | AI imzalanacak dokümanın özetini/risk notunu önerir; karar-metni değil, yardımcı taslak |
 | İmzaya gönderme (send) | onay-zorunlu | `approval_ref` (insan) olmadan `status=sent` `ApprovalRequiredError` fırlatır; AI tek başına gönderemez |
 | İmza sırası (mode/order) kararı | onay-zorunlu | Sıra/mod (sequential/parallel/group) ve imzacı sırası insan onayıyla kesinleşir |
-| eIDAS seviye (özellikle QES) seçimi | onay-zorunlu | `level=qes` (el-imzası eşdeğeri, hukuki sonuç) yalnız insan onayıyla; AI tek başına QES seçemez |
+| eIDAS seviye (özellikle QES) seçimi | onay-zorunlu | `level=qes` (e-imzası eşdeğeri, hukuki sonuç) yalnız insan onayıyla; AI tek başına QES seçemez |
 | İmza talebini void/decline | onay-zorunlu | Tamamlanmış/yürüyen talebi iptal insan onayına bağlı |
 | Sağlayıcı/jurisdiction politikası değişimi | `none` | Sağlayıcı (ESHS/QTSP) ve hukuki çerçeve kararı çekirdek ekip PR'ı; AI değiştiremez |
 | Kanıt / audit değişimi | `none` | İmza kanıtı ve audit append-only; AI değiştiremez/silemez |
@@ -233,7 +233,7 @@ Aşağıdaki tablo, bu sözleşmenin CLM (Contract Lifecycle Management) E-Signa
 | Sözleşmeyi imzaya gönderme (envelope) | §5 `signature_request` (document=AssetRef, level, format, mode) |
 | Çok taraflı sıralı/paralel imza | §5 `signer` (order, mode sequential/parallel/group) |
 | İmza/paraf/tarih alanı yerleşimi | §5 `signature_field` (`SignatureField` page/x/y/w/h/kind) |
-| Nitelikli imza (el-imzası eşdeğeri, QES) | §5 `level=qes`; §7 eIDAS seviye kapısı + nitelikli ESHS/QTSP |
+| Nitelikli imza (e-imzası eşdeğeri, QES) | §5 `level=qes`; §7 eIDAS seviye kapısı + nitelikli ESHS/QTSP |
 | PAdES/XAdES/CAdES + zaman damgası | §5 `format` + `timestamping`; §7 format uygulaması + RFC 3161 |
 | Uzun-dönem doğrulama/arşiv (LTV/LTA) | §5 `retention_profile`; §7 LTV/LTA profili |
 | Kurumsal mühür (e-Seal, e-fatura mührü) | §5 `kind=seal`; §7 e-Seal akışı (`role=seal_holder`) |

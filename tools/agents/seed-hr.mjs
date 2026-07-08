@@ -162,15 +162,9 @@ const CONTENT = {
     ],
   },
 
-  "app-hr-x-stone": xdim(
-    "İK Taşı",
-    "bir İK yeteneğinin alt-parça tarifi (ör. izin bakiyesi hesabı)",
-  ),
-  "app-hr-x-molecule": xdim(
-    "İK Molekülü",
-    "birkaç İK kuralını birleştiren bileşen (ör. bordro kalemi)",
-  ),
-  "app-hr-x-element": xdim("İK Elementi", "tek bir İK alanı/kuralı (ör. SGK gün sayısı)"),
+  "app-hr-x-tas": xdim("İK Taşı", "bir İK yeteneğinin alt-parça tarifi (ör. izin bakiyesi hesabı)"),
+  "app-hr-x-kum": xdim("İK Molekülü", "birkaç İK kuralını birleştiren bileşen (ör. bordro kalemi)"),
+  "app-hr-x-molekul": xdim("İK Elementi", "tek bir İK alanı/kuralı (ör. SGK gün sayısı)"),
   "app-hr-x-atom": xdim("İK Atomu", "bölünemez İK ilkeli (ör. çalışan kimliği değer nesnesi)"),
 
   "s-hrms": {

@@ -426,6 +426,8 @@ export const TaskNodeSchema = z
     level: WbsLevelSchema,
     title: z.string().min(1),
     slug: z.string().min(1),
+    /** Eski task URL/ID değerleri; canonical id değişse bile eski linkler çözülür. */
+    aliases: z.array(z.string()).default([]),
     summary: z.string().default(""),
     parentId: z.string().nullable().default(null),
     order: z.number().default(0),

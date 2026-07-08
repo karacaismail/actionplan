@@ -812,8 +812,8 @@ class ActorService:
         Motor kaydeder ve k-authz ReBAC grafiğine kenar besler. Audit'lenir.
         """
 
-    async def effective_roles(self, party_id: UUID, at: datetime) -> list[str]:
-        """Verilen anda geçerli (valid_from<=at<valid_to) rolleri döndürür."""
+    async def effective_roles(self, party_id: UUID, micro_step: datetime) -> list[str]:
+        """Verilen anda geçerli (valid_from<=micro_step<valid_to) rolleri döndürür."""
 ```
 
 **Tenant / AuthZ / Audit bağı.** Her Party ve RoleBinding `tenant_id` taşır (v1 §2.1 fail-closed). RoleBinding, v1 §2.2 RBAC izin setlerine **girdi**dir: k-identity login'i "kim olduğunu" doğrular, `platform_actor` "hangi bağlamda ne yapabildiğini" ReBAC olarak k-authz'a besler. Her `bind_role` / `revoke_role` v1 §2.5 audit'e `actor`+`resource=role_binding` ile yazılır.
@@ -1213,7 +1213,7 @@ class GenealogyService:
 
 **Karar gerekçesi.** Fabrika sahasında ağ **kopar**; makine durmaz. MES buluttayken PLC yerelde çalışır. Bu köprüyü her MES app'i kendi başına yazarsa, offline davranış ve yeniden-senkron her seferinde farklı ve hatalı olur (çift işlem, kayıp telemetri). `platform_edge`, sahayla konuşmayı (OPC-UA/MQTT), offline tamponlamayı ve çakışma çözümünü tek, idempotent (§3.7) sözleşmede toplar.
 
-**Jargon.** *ISA-95*: üretim otomasyonu katman modeli (L1 sensör/aktüatör, L2 SCADA, L3 MES, L4 ERP). *OPC-UA / MQTT*: endüstriyel iletişim protokolleri. *Offline-first*: bağlantı yokken de çalışıp sonra senkronlanacak biçimde tasarım. *PLC/SCADA*: saha kontrol donanımı/yazılımı.
+**Jargon.** *ISA-95*: üretim otomasyonu katman modeli (L1 sensör/aktümicro_stepör, L2 SCADA, L3 MES, L4 ERP). *OPC-UA / MQTT*: endüstriyel iletişim protokolleri. *Offline-first*: bağlantı yokken de çalışıp sonra senkronlanacak biçimde tasarım. *PLC/SCADA*: saha kontrol donanımı/yazılımı.
 
 **İmza taslağı.**
 

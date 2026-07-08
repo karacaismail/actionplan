@@ -19,7 +19,7 @@ P1 (repo gerçeklik denetim raporu) ve P2 (Enterprise DoD + TaskNode şema-boşl
 
 ## Hafta 1 (Gün 1–7) — P3-impl: Owner/Refs/Deps Otomatik Doldurma + CI Kapısı
 
-Bu hafta çıktısı: 424 düğümün tamamında owner/assignees alanı dolu, refs alanında minimum referans var, dependsOn molecule/element/atom seviyesinde tamamlanmış, CI bu üç alanı kontrol eden bloklayıcı kapı çalışıyor.
+Bu hafta çıktısı: 424 düğümün tamamında owner/assignees alanı dolu, refs alanında minimum referans var, dependsOn component/work_unit/micro_step seviyesinde tamamlanmış, CI bu üç alanı kontrol eden bloklayıcı kapı çalışıyor.
 
 ### Gün 1 — Test Önce (KIRMIZI YAKMAK)
 
@@ -29,7 +29,7 @@ Kim: Kullanıcı/Admin.
 
 - Her düğümde `owner` boş değil (boş string veya null reddedilir).
 - Her app-level düğümde `refs` en az 1 eleman içeriyor.
-- Her molecule/element/atom düğümde `dependsOn` en az 1 eleman içeriyor.
+- Her component/work_unit/micro_step düğümde `dependsOn` en az 1 eleman içeriyor.
 - `assignees` dizisi, `owner` değerini içeriyor (owner atanmışsa assignees boş olamaz).
 
 Bu test `npm test` komutunun içine eklenir; başka testleri bozmadan ayrı dosyada yüklü çalışır. İnsan onayı: testi yazan kişi test mantığını inceler, commit eder.
@@ -55,7 +55,7 @@ Cluster-to-owner eşlemesi eklenir (statik tablo, `tools/lib/owner-map.mjs`). He
 - `app-kararlar`, `app-meta` → `mimari-ekibi`
 - Atanamamış olanlar → `platform-ekibi` (fallback)
 
-Owner atama kuralı: app-level node doğrudan map'ten alır. Module/stone/archetype/molecule/element/atom düğümleri `parentId` zinciri yukarı çekilerek en yakın app'in owner'ını miras alır. Zaten dolu (bespoke) owner'lara dokunulmaz.
+Owner atama kuralı: app-level node doğrudan map'ten alır. Module/feature/archetype/component/work_unit/micro_step düğümleri `parentId` zinciri yukarı çekilerek en yakın app'in owner'ını miras alır. Zaten dolu (bespoke) owner'lara dokunulmaz.
 
 Araç çalıştırıldığında generator log yazar: kaç düğüm güncellendi, kaçı atlandı (bespoke).
 
@@ -69,21 +69,21 @@ Kim: Sistem (generator) + Kullanıcı.
 
 - App-level düğümler: `refs` = `["docs/enterprise-dod.md", "adr/<app-id>"]` formatında en az bir referans. ADR düğümü varsa (app-kararlar altındaki app'ler için be-kararlar vb.) bağlantı eklenir.
 - Module-level düğümler: `refs` = `["src/data/generated/nodes/<id>.json"]` (kendi kaynak dosyasının yolu) + app-level ref'i miras.
-- Stone/archetype düğümleri: en az `["src/data/generated/nodes/<parentId>.json"]` eklenir.
-- Molecule/element/atom: parent zincirini referans olarak taşır.
+- Feature/archetype düğümleri: en az `["src/data/generated/nodes/<parentId>.json"]` eklenir.
+- Component/work_unit/micro_step: parent zincirini referans olarak taşır.
 - Zaten dolu refs (customer, product) korunur.
 
 Bu refs içerik olarak "gerçek ADR bağlantısı" değil; en azından düğümün kaynak dosyasını işaret eden izlenebilir bir referans verir. Gerçek ADR bağlantıları sonraki haftada insan tarafından eklenir.
 
 İnsan onayı: Backfill sonrası `customer` ve `product` düğümlerinin refs'i değişmedi mi kontrol edilir.
 
-### Gün 4 — DependsOn Tamamlama (Molecule/Element/Atom)
+### Gün 4 — DependsOn Tamamlama (Component/Work_unit/Atom)
 
 Kim: Sistem (`tools/derive-deps.mjs`) + kontrol.
 
-`derive-deps.mjs` zaten mevcut ve cluster-katman omurgasını kullanıyor. Ancak molecule/element/atom seviyesinde dependsOn hâlâ boş (18+18+19=55 düğüm). Generator'ın bu seviyeleri neden doldurmadığı incelenir.
+`derive-deps.mjs` zaten mevcut ve cluster-katman omurgasını kullanıyor. Ancak component/work_unit/micro_step seviyesinde dependsOn hâlâ boş (18+18+19=55 düğüm). Generator'ın bu seviyeleri neden doldurmadığı incelenir.
 
-Beklenen davranış: molecule, bağlı olduğu stone'a dependsOn içeriyor olmalı. Eğer derive-deps bu seviyeyi atlıyorsa, araç içine ek kural eklenir: bir molecule/element/atom düğümünün dependsOn boşsa, `parentId` zincirinden bir üst seviyenin id'si varsayılan dependsOn olarak atanır.
+Beklenen davranış: component, bağlı olduğu feature/taşa dependsOn içeriyor olmalı. Eğer derive-deps bu seviyeyi atlıyorsa, araç içine ek kural eklenir: bir component/work_unit/micro_step düğümünün dependsOn boşsa, `parentId` zincirinden bir üst seviyenin id'si varsayılan dependsOn olarak atanır.
 
 Kırık referans yoktu (önceden doğrulandı), bu yüzden mevcut 312 dolu dependsOn bozulmaz; sadece 112 boş olana ekleme yapılır.
 
@@ -101,7 +101,7 @@ Ek bir script (`tools/qa-gate.mjs` veya `tools/quality-lint.mjs` genişletilir) 
 
 - owner boş düğüm sayısı ≥ 50 → fail
 - refs boş olan app+module düğüm sayısı ≥ 100 → fail
-- molecule/element/atom dependsOn boş sayısı ≥ 10 → fail
+- component/work_unit/micro_step dependsOn boş sayısı ≥ 10 → fail
 
 Eşikler bu hafta sonundaki gerçekçi hedeflere göre ayarlanır; hafta 3'te sıkılaştırılır.
 
@@ -117,7 +117,7 @@ Beklenen son durum Hafta 1 sonunda:
 
 - owner boş: 411'den < 30'a düşmeli (bespoke + edge-case'ler hariç).
 - refs boş: 422'den < 200'e düşmeli.
-- molecule/element/atom dependsOn boş: 55'ten < 10'a düşmeli.
+- component/work_unit/micro_step dependsOn boş: 55'ten < 10'a düşmeli.
 - CI kapısı aktif ve bloklayıcı.
 
 İnsan onayı: PR açılır, diff incelenir, test çıktıları kontrol edilir. Merge: insan onayı.
@@ -202,10 +202,10 @@ Test önce: `tests/contentQuality.test.ts` (veya dataCompleteness genişletmesi)
 
 Kim: AI ajan (seed-platform-horizontal.mjs) + Kullanıcı onayı.
 
-`app-platform-horizontal` kümesinin mevcut durumu incelenir: 14 alt düğüm var (0 module, 1 stone, 9 archetype, mol/el/at iskelet). Bu hafta:
+`app-platform-horizontal` kümesinin mevcut durumu incelenir: 14 alt düğüm var (0 module, 1 feature, 9 archetype, component/work_unit/micro_step iskelet). Bu hafta:
 
-- Stone katmanı gerçek platform servisleri için doldurulur (API Gateway, Auth Service, Observability, Feature Flags vb.).
-- Her stone için en az 1 archetype girilir (iskelet değil, gerçek içerik).
+- Feature katmanı gerçek platform servisleri için doldurulur (API Gateway, Auth Service, Observability, Feature Flags vb.).
+- Her feature/taş için en az 1 archetype girilir (iskelet değil, gerçek içerik).
 - `tools/agents/seed-platform-horizontal.mjs` güncellenerek çalıştırılır.
 
 İnsan onayı: PR açılır, platform kümesinin içeriği teknik olarak doğrulanır.
@@ -222,9 +222,9 @@ Kim: Sistem (şema) + Kullanıcı.
 
 `src/schemas/task.ts` incelenir. `evidence` alanı zaten var ama 424/424 boş ve UI'da gösterilmiyor. Bu aşamada:
 
-Test önce: `tests/evidenceDisplay.spec.ts` (Playwright) yazılır — CRM zincirindeki `el-crm-score-field-validator` düğümü için evidence verisi fixture'a eklenir; UI'da `evidence` bölümü görünür ve veri doğru render ediliyor mu kontrol edilir.
+Test önce: `tests/evidenceDisplay.spec.ts` (Playwright) yazılır — CRM zincirindeki `molekul-crm-score-field-validator` düğümü için evidence verisi fixture'a eklenir; UI'da `evidence` bölümü görünür ve veri doğru render ediliyor mu kontrol edilir.
 
-3 pilot düğüm için evidence doldurulur (manuel): `el-crm-score-field-validator`, `at-crm-email-regex`, `at-crm-score-range-check`. Evidence içeriği: test sonuç linki, PR referansı, erişilebilirlik raporu tarihi.
+3 pilot düğüm için evidence doldurulur (manuel): `molekul-crm-score-field-validator`, `atom-crm-email-regex`, `atom-crm-score-range-check`. Evidence içeriği: test sonuç linki, PR referansı, erişilebilirlik raporu tarihi.
 
 ### Gün 24–25 — P5-impl: UI Evidence Yüzeyi
 
@@ -276,7 +276,7 @@ Main'e push YOK — merge insan onayıyla.
 |---|---|---|---|
 | 1 | Owner/refs/deps + CI kapısı | owner boş < 30; CI bloklayıcı aktif | owner-map onayı; dry-run incelemesi; CI YAML onayı; PR merge |
 | 2 | Lint + SPA404 + A11y | Biome sıfır hata; test:e2e yeşil | diff incelemesi; axe ihlal kararları |
-| 3 | Scaffold temizliği + Platform + Boilerplate | Scaffold işaretlenmiş; risks kalıp < %60; platform stone dolu | scaffold kararı; gen-items çıktı incelemesi; platform içerik doğrulama |
+| 3 | Scaffold temizliği + Platform + Boilerplate | Scaffold işaretlenmiş; risks kalıp < %60; platform feature/taş dolu | scaffold kararı; gen-items çıktı incelemesi; platform içerik doğrulama |
 | 4 | Evidence UI + Governance + CI required | 3 pilot evidence dolu; CODEOWNERS aktif; CI required check ayarlandı | evidence UI; ADR kararı; branch protection ayarı; PR |
 
 ---

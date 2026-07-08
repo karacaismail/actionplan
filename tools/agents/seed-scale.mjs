@@ -163,7 +163,7 @@ const CONTENT = {
       "İsabet metrikleri gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Caching (orta taş) Scale app'inde okuma hızlandırma yeteneğini sağlar",
+      "Caching (taş) Scale app'inde okuma hızlandırma yeteneğini sağlar",
       "Tüm okuma-yoğun app'ler önbellek desenini bayrakla kullanır",
     ],
   },
@@ -235,7 +235,7 @@ const CONTENT = {
       "DLQ gözlemlenebilirlikle izlenir",
     ],
     moduleUsage: [
-      "Transactional Outbox (orta taş) Scale app'inde güvenilir olay yayınını sağlar",
+      "Transactional Outbox (taş) Scale app'inde güvenilir olay yayınını sağlar",
       "Olay yayan tüm app'ler bu deseni kullanır",
     ],
   },
@@ -307,7 +307,7 @@ const CONTENT = {
       "Durum gözlemlenebilirlikle izlenir",
     ],
     moduleUsage: [
-      "Saga (orta taş) Scale app'inde dağıtık işlem tutarlılığını sağlar",
+      "Saga (taş) Scale app'inde dağıtık işlem tutarlılığını sağlar",
       "Çok-adımlı süreç içeren app'ler saga desenini kullanır",
     ],
   },
@@ -379,12 +379,12 @@ const CONTENT = {
       "Lag gözlemlenebilirlikle izlenir",
     ],
     moduleUsage: [
-      "CQRS Projeksiyonları (orta taş) Scale app'inde okuma-modeli yeteneğini sağlar",
+      "CQRS Projeksiyonları (taş) Scale app'inde okuma-modeli yeteneğini sağlar",
       "Okuma-yoğun ve raporlayan app'ler projeksiyon desenini kullanır",
     ],
   },
 
-  "app-scale-x-stone": {
+  "app-scale-x-tas": {
     featureDefs: [
       "Scale kırılımının Taş örneği: bir ölçek primitifinin alt-yetenek tarifi",
       "Taş, bir ölçek ArcheType'ı içindeki çalışabilir alt-yetenek",
@@ -451,7 +451,7 @@ const CONTENT = {
     ],
   },
 
-  "app-scale-x-molecule": {
+  "app-scale-x-kum": {
     featureDefs: [
       "Scale kırılımının Molekül örneği: birkaç ölçek kuralını birleştiren bileşen",
       "Molekül, ölçek alt-yeteneğinin çalışabilir en küçük bileşeni (ör. yeniden-deneme politikası)",
@@ -522,10 +522,10 @@ const CONTENT = {
     ],
   },
 
-  "app-scale-x-element": {
+  "app-scale-x-molekul": {
     featureDefs: [
-      "Scale kırılımının Element örneği: tek bir ölçek alanı/kuralı (ör. yeniden-deneme sayısı)",
-      "Element, ölçek sözleşmesindeki en küçük anlamlı alan/kural",
+      "Scale kırılımının Work_unit örneği: tek bir ölçek alanı/kuralı (ör. yeniden-deneme sayısı)",
+      "Work_unit, ölçek sözleşmesindeki en küçük anlamlı alan/kural",
       "Örnek dal; ölçek alan kuralının granülerlikteki yeri",
     ],
     security: [
@@ -562,7 +562,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: yapılandırma alanı sınır dışı → üst molekül kuralı reddeder (idempotent, zincir ≤6)",
-      "Element tek başına otomasyon yazmaz",
+      "Work_unit tek başına otomasyon yazmaz",
     ],
     aiAgents: [
       AI_B1,
@@ -580,7 +580,7 @@ const CONTENT = {
       "Değişiklik izli",
     ],
     integration: [
-      "Element üst molekül ve primitif sözleşmesine bağlanır",
+      "Work_unit üst molekül ve primitif sözleşmesine bağlanır",
       "Altyapı şema doğrulamasına dahil",
       "Yapılandırma kontrol düzleminden",
     ],
@@ -617,13 +617,13 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Atom otomasyon tetiklemez; üst kurallara değer sağlar",
-      "Olay: anahtar/sayaç geçersiz → üst element reddeder (idempotent)",
+      "Olay: anahtar/sayaç geçersiz → üst work_unit reddeder (idempotent)",
     ],
     aiAgents: [AI_B1, AI_B2, "AI ölçek atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz"],
     testing: ["Atom biçim/sınır testi", "Değişmezlik testi", "Serileştirme testi"],
     owasp: ["A03 Injection: değer biçim-doğrulanır", "A08 Integrity: atom değişmez", "İzlenebilir"],
     integration: [
-      "Ölçek atomu element ve field tanımlarının yapı taşı",
+      "Ölçek atomu work_unit ve field tanımlarının yapı taşı",
       "Tip sistemine dahil",
       "Üst seviyeler birleştirir",
     ],
@@ -699,7 +699,7 @@ const CONTENT = {
       "Metrikler gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Hot Counter (orta taş) Scale app'inde yüksek-yazım sayaç yeteneğini sağlar",
+      "Hot Counter (taş) Scale app'inde yüksek-yazım sayaç yeteneğini sağlar",
       "İçerik, sosyal ve analitik app'ler sayacı kullanır",
     ],
   },
@@ -771,7 +771,7 @@ const CONTENT = {
       "Geofence olayları otomasyona",
     ],
     moduleUsage: [
-      "PostGIS (orta taş) Scale app'inde coğrafi veri yeteneğini sağlar",
+      "PostGIS (taş) Scale app'inde coğrafi veri yeteneğini sağlar",
       "Lojistik, saha ve konum-temelli app'ler GIS'i kullanır",
     ],
   },
@@ -843,7 +843,7 @@ const CONTENT = {
       "Tüm yazma API'leri bu deseni kullanabilir",
     ],
     moduleUsage: [
-      "Idempotency Keys (orta taş) Scale app'inde güvenli yeniden-deneme sağlar",
+      "Idempotency Keys (taş) Scale app'inde güvenli yeniden-deneme sağlar",
       "Ödeme, sipariş ve webhook tüketen app'ler bu deseni kullanır",
     ],
   },
@@ -915,7 +915,7 @@ const CONTENT = {
       "Gözlemlenebilirlik bölge sağlığını izler",
     ],
     moduleUsage: [
-      "Multi-region/DR (orta taş) Scale app'inde coğrafi dayanıklılığı sağlar",
+      "Multi-region/DR (taş) Scale app'inde coğrafi dayanıklılığı sağlar",
       "Yüksek-erişilebilirlik gerektiren app'ler bu topolojiyi kullanır",
     ],
   },
@@ -987,7 +987,7 @@ const CONTENT = {
       "Aşım olayları gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Rate Limit + Kota (orta taş) Scale app'inde adil-paylaşım ve koruma sağlar",
+      "Rate Limit + Kota (taş) Scale app'inde adil-paylaşım ve koruma sağlar",
       "Tüm API ve AI tüketen app'ler limit desenini kullanır",
     ],
   },
@@ -1036,7 +1036,7 @@ const CONTENT = {
     eca: [
       ECA_BOUND,
       "Olay: alan verisi değişti → ilgili kanal abonelerine yayınla (yetki-farkında, idempotent, zincir ≤6)",
-      "Olay: yavaş istemci geride kaldı → mesaj birleştir/at + uyar (loop-breaker)",
+      "Olay: yavaş istemci geride kaldı → mesaj birleştir/micro_step + uyar (loop-breaker)",
     ],
     aiAgents: [
       AI_B1,
@@ -1059,7 +1059,7 @@ const CONTENT = {
       "Sunum (presence) işbirliği app'lerinde",
     ],
     moduleUsage: [
-      "Real-time Backend (orta taş) Scale app'inde canlı iletişim yeteneğini sağlar",
+      "Real-time Backend (taş) Scale app'inde canlı iletişim yeteneğini sağlar",
       "Sohbet, bildirim ve işbirliği app'leri gerçek-zaman kanalını kullanır",
     ],
   },
@@ -1131,7 +1131,7 @@ const CONTENT = {
       "Outbox akışa köprülenebilir",
     ],
     moduleUsage: [
-      "Streaming (orta taş) Scale app'inde gerçek-zaman akış işlemeyi sağlar",
+      "Streaming (taş) Scale app'inde gerçek-zaman akış işlemeyi sağlar",
       "Analitik, IoT ve tahmin app'leri akışı kullanır",
     ],
   },
@@ -1203,7 +1203,7 @@ const CONTENT = {
       "Alarm bildirimine yayılır",
     ],
     moduleUsage: [
-      "Time-Series (orta taş) Scale app'inde sensör/metrik saklama sağlar",
+      "Time-Series (taş) Scale app'inde sensör/metrik saklama sağlar",
       "IoT, izleme ve analitik app'leri zaman-serisini kullanır",
     ],
   },
@@ -1275,7 +1275,7 @@ const CONTENT = {
       "Teslim metrikleri gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Outbound Webhook (orta taş) Scale app'inde dış-sistem olay iletimini sağlar",
+      "Outbound Webhook (taş) Scale app'inde dış-sistem olay iletimini sağlar",
       "Entegrasyon ve bildirim gerektiren app'ler webhook'u kullanır",
     ],
   },
@@ -1347,7 +1347,7 @@ const CONTENT = {
       "İş metrikleri gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Workers + Scheduler (orta taş) Scale app'inde arka-plan işleme sağlar",
+      "Workers + Scheduler (taş) Scale app'inde arka-plan işleme sağlar",
       "Asenkron iş gerektiren tüm app'ler işçi havuzunu kullanır",
     ],
   },
@@ -1419,7 +1419,7 @@ const CONTENT = {
       "İş metrikleri gözlemlenebilirliğe",
     ],
     moduleUsage: [
-      "Background Jobs (orta taş) Scale app'inde gelişmiş zamanlama desenlerini sağlar",
+      "Background Jobs (taş) Scale app'inde gelişmiş zamanlama desenlerini sağlar",
       "Periyodik/zincirli iş gerektiren app'ler bu desenleri kullanır",
     ],
   },

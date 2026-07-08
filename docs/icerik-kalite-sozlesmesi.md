@@ -15,7 +15,7 @@ Bu sözleşme, "derin enterprise içerik" iddiasını ölçülebilir kritere çe
 
 Her dolu (skeleton olmayan) boyut için (eşikler B0 pilotunda altın düğümlerle kalibre edildi):
 
-- Madde sayısı: **2–5**. Altın düğümler 2 substantif maddeyle de kaliteli olabildiği için alt sınır 2'dir. `moduleUsage` app/yaprak (atom/element/molecule) seviyelerde **1** madde olabilir.
+- Madde sayısı: **2–5**. Altın düğümler 2 substantif maddeyle de kaliteli olabildiği için alt sınır 2'dir. `moduleUsage` app/yaprak (atom/work_unit/component) seviyelerde **1** madde olabilir.
 - En az **1 sınır-dışı madde**: dolu boyut yalnız zorunlu güvenlik-sınır satırından (Bölüm 5) oluşamaz; en az bir sayfaya-özel madde taşımalı.
 - Hiçbir madde yasak imza taşımaz (Bölüm 4) — istisna: zorunlu sınır satırları (Bölüm 5).
 - Aynı madde 5+ düğümde birebir tekrar etmez (sınır satırları hariç).
@@ -79,7 +79,7 @@ Kapı bu satırları `ALLOWED_BOUNDARY` allowlist'i ile tanır. Bu satırlar dı
 Bu düğümler örnek-kalite kabul edilir, `provenance=human` damgalanır ve swarm tarafından **ezilmez**. Yeni içerik bu örneklere benzer derinlikte olmalı:
 
 - Kernel: `k-surface`, `k-control-planes`, `k-agent-runtime`, `k-sozlesme`
-- CRM dalı: `s-crm`, `m-crm-sales`, `st-crm-lead-mgmt`, `mol-crm-lead-scoring`, `mol-crm-lead-dedup`, `at-crm-email-regex`, `at-crm-domain-blocklist`, `at-crm-score-range-check`, `el-crm-score-field-validator`, `el-crm-score-weight-config`
+- CRM dalı: `s-crm`, `m-crm-sales`, `tas-crm-lead-mgmt`, `kum-crm-lead-scoring`, `kum-crm-lead-dedup`, `atom-crm-email-regex`, `atom-crm-domain-blocklist`, `atom-crm-score-range-check`, `molekul-crm-score-field-validator`, `molekul-crm-score-weight-config`
 - App özeti: `app-core-operations`
 
 Not: Bir altın düğümün belirli bir boyutu zayıfsa, o boyut da iyileştirme kapsamındadır; "altın" etiketi düğümün tamamını dokunulmaz yapmaz, yalnız swarm'ın varsayılan ezme davranışından korur.

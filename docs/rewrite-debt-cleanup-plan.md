@@ -7,7 +7,7 @@ Dağılım: {"performance": 19, "securityOptimization": 4, "mobileApps": 4, "owa
 
 Bilinçli-kısa = <35 karakter AMA ölçü işareti (sayı/%/p95/≥…) VE node alan-jetonu birlikte var.
 Bu 43 madde iki sınıfta kalıyor: 40'ı "ölçü/eşik YOK" (alan bağlamı var ama kanıtsız beyan),
-3'ü "ölçü + alan-jetonu birlikte YOK" (at-crm-score-range-check.deployment, dist-travel.deployment,
+3'ü "ölçü + alan-jetonu birlikte YOK" (atom-crm-score-range-check.deployment, dist-travel.deployment,
 s-mail.performance[2]).
 
 ## Yöntem (W2-W4 protokolünün aynısı, hedefli)

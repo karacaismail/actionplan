@@ -42,7 +42,7 @@ Bu kural branch protection ile teknik olarak da zorlanır. Settings → Branches
 | Allow deletions | Kapali | main silinemez |
 | Restrict who can push to matching branches | Kapali dogrudan; sadece botlar PR acar, insan merge eder |
 
-`workflow_dispatch` ile tetiklenen el ile deploy istisna degildir; o da kapilari gercekten calistirmak
+`workflow_dispatch` ile tetiklenen work_unit ile deploy istisna degildir; o da kapilari gercekten calistirmak
 icin vardir (CI'yi atlatmaz, tekrar calistirir).
 
 ---
@@ -275,9 +275,9 @@ body:
         - "app (dag)"
         - "module (kaya)"
         - "archetype (buyuk tas)"
-        - "stone (orta tas)"
-        - "molecule (kucuk tas)"
-        - "element (toz tanesi)"
+        - "feature (orta tas)"
+        - "component (kucuk tas)"
+        - "work_unit (molekül)"
         - "atom"
     validations:
       required: true

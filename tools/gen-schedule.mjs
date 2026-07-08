@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * gen-schedule — yürütme alanlarını backfill eder:
- *  - milestone: düğümün ait olduğu APP (dağ) başlığı = release train (yapısal, mock değil).
+ *  - milestone: düğümün ait olduğu APP (ada) başlığı = release train (yapısal, mock değil).
  *  - schedule: boş iskelet ({start,end,actualStart,actualEnd}=null) — tarihleri moderatör
  *    (scrum master) uygulamada girer ve browser-storage'a kaydeder. Golden düğümlere
  *    gösterim için örnek takvim tohumlanır.

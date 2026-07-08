@@ -124,7 +124,7 @@ Bu bölüm tezin kanıtıdır: her zayıf/eksik atom, CLM'de **belirli bir işle
 | `Money` düz `currency` | 60.000 EUR + 60.000 TRY toplanır; yuvarlama tutarsız → yanlış sözleşme değeri, yanlış ceza | Finans — sessiz para kaybı |
 | `DateRange`/`Term` yok | Yenileme/fesih penceresi hesaplanamaz → auto-renew kaçar veya istenmeden yenilenir | Gelir kaçağı (revenue leakage — ürünün ana vaadi) |
 | `Duration` yok (`integer` gün) | "60 gün ihbar" iş-günü mü takvim mi belirsiz → ihbar süresi kaçar | Hukuki — sözleşme istenmeden uzar |
-| `Recurrence` (RRULE) yok | Yıllık yenileme/aylık rapor el ile → ölçekte kaçar | Operasyon — yükümlülük düşer |
+| `Recurrence` (RRULE) yok | Yıllık yenileme/aylık rapor work_unit ile → ölçekte kaçar | Operasyon — yükümlülük düşer |
 | `ClauseRef`/`PartyRef` yok | Madde/taraf kopyalanır, kütüphaneye bağlanmaz → playbook (PDP policy engine) kontrol edemez | Hukuk — risk politikası çalışmaz |
 | `AssetRef` düz `file` | Binary DB'ye gömülür veya URL sızar; imzalanan doküman referansı çözülmez | Güvenlik + maliyet |
 | `bytea-ref`/`timestamp` yok | İmza hash'i/zaman damgası tipsiz → tamper-evidence ve LTV yok | Hukuki — audit certificate delil değeri taşımaz (eIDAS kaçar) |
