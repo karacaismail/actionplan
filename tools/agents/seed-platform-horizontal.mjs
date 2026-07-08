@@ -171,7 +171,7 @@ const CONTENT = {
     "birkaç yatay kuralı birleştiren bileşen (ör. rol-izin eşlemesi)",
   ),
   "app-platform-horizontal-x-molekul": xdim(
-    "Platform Yatay Elementi",
+    "Platform Yatay Molekülü",
     "tek bir yatay alan/kural (ör. izin kodu)",
   ),
   "app-platform-horizontal-x-atom": xdim(

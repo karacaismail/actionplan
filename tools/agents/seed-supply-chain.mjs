@@ -170,7 +170,7 @@ const CONTENT = {
     "birkaç lojistik kuralını birleştiren bileşen (ör. sevkiyat kalemi)",
   ),
   "app-supply-chain-x-molekul": xdim(
-    "Tedarik Zinciri Elementi",
+    "Tedarik Zinciri Molekülü",
     "tek bir lojistik alanı/kuralı (ör. lot numarası)",
   ),
   "app-supply-chain-x-atom": xdim(

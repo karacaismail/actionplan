@@ -50,7 +50,7 @@ Prompt zincirine başlamadan önce şunu bilin: numeronym listesinin yarısı **
 Sizin prompt'unuz 11 sınıf öneriyordu. Repo zaten daha sıkı bir şemaya sahip; ona uyun:
 
 - **Aile (`family`):** `engineering | design | testing | devops | ai | data | governance` (`standard.ts`).
-- **Kapsam:** WBS seviyesi (app/module/archetype/stone/molecule/element/atom) × yüzey sınıfı (backend/frontend-ui/api-contract/data-schema/infra-ops/doc-governance) (`standards-applicability-matrix`).
+- **Kapsam:** WBS seviyesi (app/module/archetype/feature/component/work_unit/micro_step) × yüzey sınıfı (backend/frontend-ui/api-contract/data-schema/infra-ops/doc-governance) (`standards-applicability-matrix`).
 - **Zorunluluk (`severity`):** `must | should | may` + `check` alanı (CI kapısı adı).
 - **Öncelik:** P0 (sistemsiz çalışmaz) / P1 (enterprise müşteride zorunlu) / P2 (global ölçekte zorunlu) / P3 (opsiyonel).
 
@@ -291,4 +291,3 @@ TEST-ÖNCE: secrets taraması (gitleaks) yeşil, rate-limit header testi, env-va
 ## 5. Zinciri koşarken
 
 Sıra: PROMPT 1 (sınıflandır) → 2 (denetle) → 3 (sözleşmeye ekle) → 4 (backlog) → 5 (tek-tek başla) → 6-14 (uygula). 6-14 birbirinden **büyük ölçüde bağımsız** olduğu için paralel ajanla koşulabilir (bkz. `plan-04`); tek istisna: 8, 12, 13 primitiflere (PDP, Capability, Mode-Profile) bağlı olduğundan `plan-01` Dalga 1 bitmeden başlamaz. Her prompt ayrı küçük PR üretir; insan her standart sözleşmesini önceliğiyle onaylar.
-

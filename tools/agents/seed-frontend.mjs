@@ -166,7 +166,7 @@ const CONTENT = {
     "Frontend Molekülü",
     "birkaç UI kuralını birleştiren bileşen (ör. form alanı + doğrulama)",
   ),
-  "app-frontend-x-molekul": xdim("Frontend Elementi", "tek bir UI alanı/kuralı (ör. tema token'ı)"),
+  "app-frontend-x-molekul": xdim("Frontend Molekülü", "tek bir UI alanı/kuralı (ör. tema token'ı)"),
   "app-frontend-x-atom": xdim(
     "Frontend Atomu",
     "bölünemez UI ilkeli (ör. renk token değer nesnesi)",

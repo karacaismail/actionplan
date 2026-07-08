@@ -18,7 +18,7 @@ const CONTENT = {
     "bölünemez bir sürdürülebilirlik ilkesinin örnek kırılımı",
   ),
   "app-sus-x-molekul": xdim(
-    "Sürdürülebilirlik Elementi",
+    "Sürdürülebilirlik Molekülü",
     "tek bir sürdürülebilirlik kuralının örnek kırılımı",
   ),
   "app-sus-x-kum": xdim(

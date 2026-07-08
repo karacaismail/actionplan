@@ -172,7 +172,7 @@ const CONTENT = {
     "birkaç sektörel kuralı birleştiren bileşen (ör. hasta kayıt formu)",
   ),
   "app-vertical-x-molekul": xdim(
-    "Dikey Elementi",
+    "Dikey Molekülü",
     "tek bir sektörel alan/kural (ör. TC kimlik doğrulama)",
   ),
   "app-vertical-x-atom": xdim(

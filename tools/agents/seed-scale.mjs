@@ -585,7 +585,7 @@ const CONTENT = {
       "Yapılandırma kontrol düzleminden",
     ],
     moduleUsage: [
-      "Ölçek elementi bir alan/kuraldır; bağımsız sunulmaz, primitif yapılandırmasının parçası",
+      "Ölçek molekülü bir alan/kuraldır; bağımsız sunulmaz, primitif yapılandırmasının parçası",
     ],
   },
 

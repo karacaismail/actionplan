@@ -175,7 +175,7 @@ const CONTENT = {
     "birkaç backend kuralını birleştiren bileşen (ör. doğrulama zinciri)",
   ),
   "app-backend-x-molekul": xdim(
-    "Backend Elementi",
+    "Backend Molekülü",
     "tek bir backend alanı/kuralı (ör. validation rule)",
   ),
   "app-backend-x-atom": xdim(

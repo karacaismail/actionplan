@@ -6,7 +6,7 @@
 
 ## 1. ArcheType nedir / ne yapar / ne yapmaz
 
-**Bu nedir?** ArcheType, sisteminizin "büyük taş" seviyesidir: bir module'ü (kaya) oluşturan ana veri/domain sözleşmesi. Metafor sizin: App=dağ, Module=kaya, ArcheType=büyük taş. Teknik karşılığı: **Frappe DocType'ın gelişmiş hâli** — bir kayıt tipinin (ör. Fatura, Müşteri, Sipariş) alanlarını, ilişkilerini, kurallarını, yetkilerini, yaşam döngüsünü, denetimini ve göçünü tek bir çok-parçalı sözleşmede toplayan tanım. (DocType = Frappe'de bir tabloyu+formu+izinleri birlikte tanımlayan metadata nesnesi.)
+**Bu nedir?** ArcheType, sisteminizin "kaya" seviyesidir: bir module'ü (dağ) oluşturan ana veri/domain sözleşmesi. Metafor sizin: App=ada, Module=dağ, ArcheType=kaya. Teknik karşılığı: **Frappe DocType'ın gelişmiş hâli** — bir kayıt tipinin (ör. Fatura, Müşteri, Sipariş) alanlarını, ilişkilerini, kurallarını, yetkilerini, yaşam döngüsünü, denetimini ve göçünü tek bir çok-parçalı sözleşmede toplayan tanım. (DocType = Frappe'de bir tabloyu+formu+izinleri birlikte tanımlayan metadata nesnesi.)
 
 **Ne işe yarar?** Geliştirici kod yazmadan, sadece sözleşme tanımlayarak yeni bir kayıt tipi üretebilir; sistem bu tanımdan formu, sorguyu, doğrulamayı, denetim izini ve göç planını türetir. Farklılaşma noktanız da budur: "kod yazmadan module üretmek."
 

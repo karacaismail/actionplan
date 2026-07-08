@@ -591,7 +591,7 @@ const CONTENT = {
       "Surface projeksiyonunda görünürlük bu kurala göre",
     ],
     moduleUsage: [
-      "AI elementi bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası",
+      "AI molekülü bir alan/kuraldır; bağımsız sunulmaz, ArcheType field tanımının parçası",
     ],
   },
 

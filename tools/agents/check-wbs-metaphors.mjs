@@ -184,8 +184,9 @@ function checkGeneratedNodes() {
     }
     for (const alias of node.aliases ?? []) {
       aliasCount++;
-      if (!matchesAny(alias, OLD_ID_PATTERNS))
-        fail(`node-beklenmeyen-alias: ${node.id} -> ${alias}`);
+      if (matchesAny(alias, OLD_ID_PATTERNS)) {
+        fail(`node-eski-alias: ${node.id} -> ${alias}`);
+      }
     }
     scanStrings(node, (value, pathParts) => {
       if (pathParts.includes("aliases")) return;
@@ -216,6 +217,12 @@ function checkPublicNodes() {
           fail(`public-node-eski-ref-${field}: ${node.id} -> ${ref}`);
       }
     }
+    for (const alias of node.aliases ?? []) {
+      aliasCount++;
+      if (matchesAny(alias, OLD_ID_PATTERNS)) {
+        fail(`public-node-eski-alias: ${node.id} -> ${alias}`);
+      }
+    }
     scanStrings(node, (value, pathParts) => {
       if (pathParts.includes("aliases")) return;
       if (matchesAny(value, NODE_TEXT_DRIFT_PATTERNS)) {
@@ -226,8 +233,9 @@ function checkPublicNodes() {
 }
 
 function checkTrackedText() {
-  const files = trackedFiles().filter((file) =>
-    /^(README\.md|docs\/|src\/|tools\/|tests\/|public\/|reports\/|package\.json$)/.test(file),
+  const files = trackedFiles().filter(
+    (file) =>
+      /\.(md|mjs|js|ts|tsx|json|css|html|txt|yml|yaml)$/.test(file) || file === "package.json",
   );
   for (const file of files) {
     if (file === "tools/agents/check-wbs-metaphors.mjs") continue;
@@ -241,13 +249,6 @@ function checkTrackedText() {
     const lines = text.split("\n");
     lines.forEach((line, idx) => {
       if (matchesAny(line, TEXT_DRIFT_PATTERNS)) {
-        if (
-          /^\s*".*(-x-stone|-x-molecule|-x-element|-x-archetype|st-crm-|mol-crm-|el-crm-|at-crm-).*$/.test(
-            line,
-          )
-        ) {
-          return;
-        }
         fail(`tracked-text-drift: ${file}:${idx + 1}: ${line.slice(0, 180)}`);
       }
     });

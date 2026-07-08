@@ -171,7 +171,7 @@ const CONTENT = {
     "birkaç gelir kuralını birleştiren bileşen (ör. teklif satırı)",
   ),
   "app-customer-revenue-x-molekul": xdim(
-    "Müşteri & Gelir Elementi",
+    "Müşteri & Gelir Molekülü",
     "tek bir gelir alanı/kuralı (ör. indirim oranı)",
   ),
   "app-customer-revenue-x-atom": xdim(

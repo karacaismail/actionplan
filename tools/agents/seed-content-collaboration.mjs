@@ -167,7 +167,7 @@ const CONTENT = {
     "birkaç içerik kuralını birleştiren bileşen (ör. paylaşım izni)",
   ),
   "app-content-collaboration-x-molekul": xdim(
-    "İçerik & İşbirliği Elementi",
+    "İçerik & İşbirliği Molekülü",
     "tek bir içerik alanı/kuralı (ör. erişim seviyesi)",
   ),
   "app-content-collaboration-x-atom": xdim(
