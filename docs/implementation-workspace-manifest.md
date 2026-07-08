@@ -24,10 +24,10 @@ Makine-okunur kaynak: `src/data/workspace-manifest.json`
 | rol | `primary-implementation-repo` |
 | yerel yol | `/Users/karaca/DEV/mimari/platform` |
 | repo durumu | `local-checkout-no-remote-configured` |
-| varsayılan branch | `main` |
+| varsayılan branch | `master` |
 | çalışma branch deseni | `task/<task-id>-<slug>` |
 
-Bu checkout'ta uzak GitHub remote'u kanıtlanmadığı için exportlar repo URL'si uydurmaz. Bir ajan veya geliştirici bu bilgiyi değiştirmeden önce gerçek `git remote -v` çıktısıyla doğrulamalıdır.
+2026-07-08 salt-okunur doğrulamasında checkout mevcuttur, aktif branch `master` görünmüştür ve `git remote -v` boş dönmüştür. Bu checkout'ta uzak GitHub remote'u kanıtlanmadığı için exportlar repo URL'si uydurmaz. Bir ajan veya geliştirici bu bilgiyi değiştirmeden önce gerçek `git status --short --branch` ve `git remote -v` çıktısıyla doğrulamalıdır.
 
 ---
 

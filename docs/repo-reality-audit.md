@@ -5,6 +5,8 @@
 **Kapsam:** karacaismail/actionplan — tek repo  
 **Doğrulama yöntemi:** git log, cat, node -e (jq eşdeğeri), dosya okuma; kod/veri değiştirilmedi, commit yapılmadı.
 
+> Güncel kullanım notu (2026-07-08): Bu rapor tarihsel bir repo snapshot'ıdır. Güncel implementation workspace otoritesi `implementation-workspace-manifest.md` ve makine-okunur `src/data/workspace-manifest.json` dosyalarıdır. Bugünkü doğrulanmış gerçek: actionplan içinde `app-platform-horizontal` bir WBS kümesidir; ayrıca yerelde `/Users/karaca/DEV/mimari/platform` adında ayrı bir implementation checkout'u vardır, branch'i `master` ve remote'u yoktur. Bu iki gerçek çelişmez: actionplan plan/sözleşme katmanıdır, platform checkout'u ise geliştirici veya implementation ajan operatörünün kod yazacağı ayrı alandır.
+
 ---
 
 ## 1. Bu repo ne işe yarıyor?
@@ -13,7 +15,13 @@
 
 Mimari olarak frontend-only, JSON-as-DB bir SPA'dır. Veri kaynağı `public/data/nodes.json` (467 düğüm; build sonrası `dist/data` kopyası da oluşur) ve `src/data/generated/nodes/*.json` (her düğüm ayrı dosya). Şema tek kaynak `src/schemas/task.ts` — Zod ile tanımlı, TS tipleri buradan türetiliyor.
 
-Codex'in varsaydığı gibi ayrı bir `platform` reposu yoktur ve GitHub hesabında bulunmamaktadır. `platform` terimi bu repoda bir uygulama kategorisine işaret eder: WBS hiyerarşisinde `app-platform-horizontal` kimliğiyle (`wbsCode: "23"`, `level: "app"`) kayıtlı bir küme. Ayrıca `tools/agents/seed-platform-horizontal.mjs` dosyası bu kümenin içerik tohumlamasını yapar. Dolayısıyla "platform build-out" meselesi ayrı bir repoya gerek duymadan actionplan içinde WBS düğüm seti olarak ele alınabilir — bu karar zaten örtük olarak hayata geçirilmiş durumdadır.
+2026-06-28 denetiminde GitHub remote'u olan ayrı bir `platform` reposu kanıtlanamamıştı. 2026-07-08 itibarıyla bu ifade implementation workspace kararı olarak okunmamalıdır. Güncel ayrım şudur:
+
+- `app-platform-horizontal` actionplan içindeki WBS kümesidir; platform kapsamını, sırasını ve görev sözleşmelerini tarif eder.
+- `/Users/karaca/DEV/mimari/platform` yerel implementation checkout'udur; gerçek kod gerekiyorsa geliştirici veya implementation ajan operatörü burada çalışır.
+- Bu checkout'un remote'u yoktur ve branch'i `master` olarak doğrulanmıştır; actionplan exportları repo URL'si uydurmaz.
+
+Dolayısıyla "platform build-out" actionplan içinde yalnız WBS/dokümantasyon ve handoff sözleşmesi olarak ele alınır. Kernel, SDK, app-core, module veya app kodu actionplan'da yazılmaz; code-start için `implementation-workspace-manifest.md`, `task-to-code-contract.md` ve `kernel-sdk-app-delivery-sequence.md` birlikte okunur.
 
 ---
 
@@ -42,9 +50,13 @@ El emeği ("intentional") dosyalar şunlardır: `src/schemas/task.ts` (Zod şema
 
 ## 4. "platform" kopukluğunun çözümü
 
-Codex'in önceki raporunda ayrı bir `platform` reposunu varmış gibi varsaydığı temel hata şudur: actionplan içinde `app-platform-horizontal` zaten bir WBS kümesidir. `git log` geçmişinde `seed-platform-horizontal.mjs` üzerinden içerik tohumlaması yapılmış, düğüm `nodes.json` içinde `wbsCode: "23"` ile kayıtlı ve `app-layer1`, `app-kernel`'a `dependsOn` bağıyla bağlıdır.
+Güncel çözüm iki ayrı kavramı ayırmaktır: actionplan'daki platform WBS kümesi ve yerel platform implementation checkout'u.
 
-Çözüm kararı olarak "platform build-out'u actionplan'a WBS düğüm seti olarak entegre et" yönünde bir seçim yapılmasına gerek yoktur; bu entegrasyon fiilen tamamlanmıştır. Eksik olan, `app-platform-horizontal` kümesinin alt düğümlerini — `feature`, `component`, `work_unit`, `atom` seviyesinde — ayrıntılı içerikle doldurmaktır. Mevcut durumda bu kümenin 5 düğümü vardır (`app-platform-horizontal`, ve `*-x-tas`, `*-x-kum`, `*-x-molekul`, `*-x-atom`) ve bunların boyutları büyük olasılıkla iskelet durumundadır.
+actionplan içinde `app-platform-horizontal` zaten bir WBS kümesidir. `git log` geçmişinde `seed-platform-horizontal.mjs` üzerinden içerik tohumlaması yapılmış, düğüm `nodes.json` içinde `wbsCode: "23"` ile kayıtlı ve `app-layer1`, `app-kernel`'a `dependsOn` bağıyla bağlıdır. Bu, platform kapsamının plan katmanında temsil edildiğini gösterir.
+
+Yerel `/Users/karaca/DEV/mimari/platform` checkout'u ise ayrı implementation alanıdır. 2026-07-08 doğrulamasında branch `master`, remote boş olarak görülmüştür. Bu nedenle actionplan exportları remote URL'si uydurmaz; yalnız workspace path, branch paterni, kök dizinler ve test komutlarını verir.
+
+Eksik olan şey "platform kodunu actionplan içinde yazmak" değildir. Eksik kalırsa tamamlanacak şey, `app-platform-horizontal` ve alt düğümlerinin geliştiriciye yeterli `repoPath`, `testCommand`, acceptance criteria, evidence ve waterfall faz bilgisi taşımasıdır. Gerçek kernel/SDK/app-core/module/app kodu, code-start koşulları sağlandıktan sonra implementation checkout'unda geliştirilir.
 
 ---
 
