@@ -175,7 +175,7 @@ const CONTENT = {
 
   "k-wbs": {
     featureDefs: [
-      "Granülerlik zincirini canlı ağaçta gösterir: Dağ → Kaya → ArcheType → Fragment → Alan → Toz → Atom",
+      "Granülerlik zincirini canlı ağaçta gösterir: app/ada → module/dağ → archetype/kaya → feature/taş → component/kum → work_unit/molekül → micro_step/atom",
       "HRMS ve CRM gibi örneklerle WBS kırılımını görsel (ECharts ağaç) olarak sunar",
       "WBS düğümü hem öğretici örnek hem story-point/backlog dilinin somut karşılığıdır",
     ],
@@ -307,7 +307,7 @@ const CONTENT = {
       "Bileşen hataları audit'e bağlanır",
     ],
     integration: [
-      "Molekül, üst work_unit/feature/taş seviyesine tipli arayüzle bağlanır",
+      "Work_unit/molekül, üst component/kum ve feature/taş seviyelerine tipli arayüzle bağlanır",
       "Kernel capability sözleşmesini tüketir; doğrudan DB'ye erişmez",
       "Çıktısı üst kernel akışında kullanılır",
     ],
@@ -748,8 +748,8 @@ const CONTENT = {
 
   "k-granulerlik": {
     featureDefs: [
-      "Sekiz seviyeli doğa-metaforu WBS: iş tarifi, otomatik story point ve AI-backlog dili tek sözleşmede",
-      "Granülerlik zinciri Dağ→Kaya→ArcheType→Fragment→Alan→Toz→Atom kırılımını standartlaştırır",
+      "Yedi seviyeli doğa-metaforu WBS: app/ada → module/dağ → archetype/kaya → feature/taş → component/kum → work_unit/molekül → micro_step/atom",
+      "Granülerlik zinciri bu yedi kanonik seviyeyi standartlaştırır; ek seviye veya alternatif metafor üretmez",
       "Aynı zincir hem insan planlaması hem AI görev üretimi için ortak dil",
     ],
     security: [

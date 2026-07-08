@@ -162,8 +162,8 @@ Bu bölümdeki id'ler öneridir. Bunlar bugünkü WBS'de yoktur veya yalnız üs
 | `wu-wbs-work-unit-traceability-ratchet` | Work_unit için repoPath/testCommand uyarı/fail kapısı | 17/18 eksik |
 | `wu-wbs-work-unit-test-map` | AC -> test fonksiyonu eşleme standardı | Claude test-first çalışmalı |
 | `wu-wbs-work-unit-child-atom-rollup` | Child micro_step evidence roll-up standardı | Atom kanıtı work_unit'te toplanmalı |
-| `wu-wbs-example-work-unit-quarantine` | Örnek "Element" kayıtlarını kodlanamaz işaretle | Örnekler üretim işi sanılmasın |
-| `wu-wbs-old-element-title-normalize` | "Element" başlıklarını kanonikleştir | `work_unit = molekül`; eski element terimi kalkmalı |
+| `wu-wbs-example-work-unit-quarantine` | Kanonik olmayan örnek work_unit kayıtlarını kodlanamaz işaretle | Örnekler üretim işi sanılmasın |
+| `wu-wbs-old-element-title-normalize` | Eski work_unit başlıklarını kanonikleştir | `work_unit = molekül`; eski seviye adı kalkmalı |
 | `wu-wbs-component-child-coverage` | Her real component için en az bir work_unit child denetimi | `kum-crm-lead-dedup` gibi boşlukları yakalar |
 | `wu-wbs-standardrefs-ratchet-work-unit` | Work_unit standardRefs minimum seti | 18/18 boş |
 
@@ -383,7 +383,7 @@ Work_unit seviyesinde asıl evidence unit testtir. Mevcut AC'ler genellikle test
 | Migration helper sessiz data loss | Unit küçük görünür, prod data kaybı üretir | downgrade + rollback test pack |
 | PDP/ECA sınırı belirsiz | ECA yetki kararı gibi davranabilir | PDP/ECA separation work_unit |
 | Secret scan kapsamı düşük | Work_unit test fixture'ında gerçek secret kalır | gitleaks/secret_ref work_unit |
-| Terminoloji drift devam eder | Claude "molecule/component" karıştırır | level-based normalization kapısı |
+| Terminoloji drift devam eder | Claude `work_unit/component` sınırını karıştırır | level-based normalization kapısı |
 | Work_unit'lerin sayısı yönetilemez | Her helper node olur, plan okunmaz | Sadece reusable/high-risk/shared work_unit node, sıradan helper parent içinde |
 | İnsan onayı yorgunluğu | Her küçük work_unit onayı rubber-stamp olur | risk-tier approval policy |
 
@@ -593,7 +593,7 @@ Bu raporun sonucunda Claude/ajan şu çıktıları üretmeden iş tamam sayılma
 5. Her work_unit için child micro_step önerileri.
 6. `traceability.repoPath` ve `traceability.testCommand` doldurma planı.
 7. Negative test vektörü olmayan high-risk work_unit kalmaması.
-8. Terminoloji drift düzeltme planı: `work_unit = molekül`, eski `element` başlıkları production işlerde kullanılmaz.
+8. Terminoloji drift düzeltme planı: `work_unit = molekül`; eski seviye başlıkları production işlerde kullanılmaz.
 9. Unknown unknown probes listesi.
 
 Son cümle: Bugünkü work_unit seviyesi kernel vibecoding yürütmesi için zayıf halka. Eksik olan şey daha fazla genel açıklama değil; her work_unit'in tek function/class/test pack sınırıyla, child atomlarıyla, test-first komutuyla ve parent component evidence bağıyla gerçek koda bağlanmasıdır.

@@ -105,7 +105,7 @@ Her `micro_step / atom` görev tanımı aşağıdaki alanları taşımalı. Bug�
 | Negatif test vektörü | Yok | Cross-tenant, missing tenant, duplicate idempotency, unauthorized actor, invalid signature vb. |
 | Rollback ilişkisi | Jenerik | Atom ayrı rollback yapmazsa parent rollback yolu açıkça gösterilmeli |
 | Human review | 16 atomda yok | Swarm çıktısı insan onayıyla kilitlenmeli veya `lastReviewed` yazılmalı |
-| Terminoloji drift | Parent node başlıklarında eski "Molekül/Element/Stone" izleri var | Teknik level adı `component/work_unit/micro_step`; metafor tooltip/metin olarak kalmalı |
+| Terminoloji drift | Parent node başlıklarında eski seviye/metafor izleri var | Teknik level adı `component/work_unit/micro_step`; metafor kanonik Türkçe adlarla tooltip/metin olarak kalmalı |
 
 Atom Definition of Ready:
 
@@ -146,7 +146,7 @@ Bu bölümdeki id'ler öneridir. Bunlar bugünkü WBS'de yoktur veya yalnız üs
 | `at-wbs-micro-step-traceability-required` | `micro_step` için repoPath/testCommand uyarı kapısı | Bugün 19/19 eksik |
 | `at-wbs-micro-step-ac-test-map` | AC maddesini test adıyla eşleştiren alan/konvansiyon | Claude promptu test-first çalışmalı |
 | `at-wbs-example-atom-quarantine` | "örnek kırılımı" atomlarını kodlanamaz işaretle | Örnek atom yanlışlıkla geliştirme işi sanılmasın |
-| `at-wbs-old-term-title-normalize` | "Molekül/Element/Stone" başlık drift'ini temizle | Kanonik teknik ad ile metafor ayrılmalı |
+| `at-wbs-old-term-title-normalize` | Eski seviye/metafor başlık drift'ini temizle | Kanonik teknik ad ile metafor ayrılmalı |
 | `at-wbs-standardrefs-ratchet-micro` | Atomlarda minimum standardRef setini kademeli zorla | 19/19 standardRefs boş |
 | `at-wbs-parent-evidence-rollup` | Atom evidence üst work_unit/component'a nasıl yazılır tanımla | micro_step evidence opsiyonel olsa da parent kanıt zorunlu |
 
@@ -344,7 +344,7 @@ Atomların çoğu şunu söylüyor: "bu seviye atom seviyesidir." Bu bir iş tan
 
 ### 4.4 Semantik eksikliği
 
-Teknik seviye adları kanonik: `component`, `work_unit`, `micro_step`. Veri başlıklarında hâlâ "Molekül", "Element", "Stone" izleri var. Bu, Claude promptlarında seviye/metafor karışıklığı yaratır.
+Teknik seviye adları kanonik: `component`, `work_unit`, `micro_step`. Veri başlıklarında hâlâ kanonik olmayan eski seviye/metafor izleri var. Bu, Claude promptlarında seviye/metafor karışıklığı yaratır.
 
 ### 4.5 Güvenlik eksikliği
 

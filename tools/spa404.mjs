@@ -11,12 +11,21 @@ if (fs.existsSync(src)) {
   fs.copyFileSync(src, dst);
   console.log("[spa404] dist/404.html oluşturuldu.");
 
-  for (const route of ["docs"]) {
+  const docsDir = path.resolve(process.cwd(), "docs");
+  const docRoutes = fs.existsSync(docsDir)
+    ? fs
+        .readdirSync(docsDir)
+        .filter((name) => name.endsWith(".md"))
+        .map((name) => `docs/${path.basename(name, ".md")}`)
+    : [];
+  const staticRoutes = Array.from(new Set(["docs", ...docRoutes]));
+
+  for (const route of staticRoutes) {
     const routeDir = path.join(dist, route);
     fs.mkdirSync(routeDir, { recursive: true });
     fs.copyFileSync(src, path.join(routeDir, "index.html"));
-    console.log(`[spa404] dist/${route}/index.html oluşturuldu.`);
   }
+  console.log(`[spa404] ${staticRoutes.length} statik rota index'i oluşturuldu.`);
 } else {
   console.warn("[spa404] dist/index.html yok, atlandı.");
 }

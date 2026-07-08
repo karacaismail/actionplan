@@ -12,9 +12,9 @@ Bu dosya bir öğretici değildir; bir sözleşmedir. Aşağıdaki maddeler "ön
 
 `actionplan` bir **WBS planlama + sözleşme katmanıdır**; çalışan ürün kodu burada **değildir**.
 
-- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (445 düğüm). Engine bu JSON'ları okur, React UI render eder.
+- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (467 düğüm). Engine bu JSON'ları okur, React UI render eder.
 - Gerçek ürün/uygulama kodu `platform` monoreposundadır. `actionplan` o kodu **planlar ve sözleşmeye bağlar**, onu yazmaz.
-- 7 seviye (doğa metaforu): `app` → `module` → `archetype` → `stone` (taş) → `molecule` → `element` → `atom`.
+- 7 seviye (doğa metaforu): `app` (ada) → `module` (dağ) → `archetype` (kaya) → `feature` (taş) → `component` (kum) → `work_unit` (molekül) → `micro_step` (atom).
 - 7 waterfall faz: `requirements` → `test-plan` → `db-schema` → `development` → `test-qa` → `verification` → `release-maintenance`.
 
 Bunun pratik sonucu: **bir `.json` düğümünü düzenlemek "veri güncellemesi"dir, "kod yazmak" değildir.** Bir düğümde "migration var" yazıyorsa, kasıt o migration'ın `platform` monoreposunda yazılacağıdır; `actionplan`'da değil.

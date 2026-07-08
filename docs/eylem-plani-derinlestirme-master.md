@@ -39,12 +39,12 @@ Bu planın asıl konusu **plan içeriğinin derinliği** ve **sözleşme katmanl
 
 ## 1. Nasıl kullanılır
 
-Doküman dört seviyeli bir hiyerarşi kullanır:
+Doküman dört seviyeli bir eylem-planı hiyerarşisi kullanır. Bu yerel iş kırılımı, `task-to-code-contract` içindeki WBS doğa metaforlarını yeniden tanımlamaz.
 
-- **Küme (A–F):** Büyük çalışma alanı. Doğa metaforuyla "dağ silsilesi" — birbirine yakın fazların ailesi.
-- **Faz (ör. B7):** Bir kümenin içindeki, başı-sonu belli iş bloğu. Metafor: "dağ".
-- **Eylem (ör. E-B7.2):** Bir fazın içindeki somut çalışma adımı. Metafor: "kaya".
-- **Görev seti (ör. T-B7.2.3):** Bir eylemin içindeki, tek oturuşta yapılabilir, onay kutulu işler. Metafor: "taş".
+- **Küme (A-F):** Büyük çalışma alanı; birbirine yakın fazların ailesi.
+- **Faz (ör. B7):** Bir kümenin içindeki, başı-sonu belli iş bloğu.
+- **Eylem (ör. E-B7.2):** Bir fazın içindeki somut çalışma adımı.
+- **Görev seti (ör. T-B7.2.3):** Bir eylemin içindeki, tek oturuşta yapılabilir, onay kutulu işler.
 
 Her faz aynı şablonu izler ve **test-önce sıralamayı** uygular:
 

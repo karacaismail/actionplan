@@ -87,7 +87,7 @@ Aşağıdaki üç yapı, arka-plan işinin sözleşmesini sabitler. Tablolar ala
 
 ## 6. WBS / kernel yerleşimi (k-worker)
 
-`k-worker`, `app-layer0` (Layer 0 — Atomik Tipler) kümesinde bir **module/kaya** düğümüdür; `k-sequence`, `k-calendar-capacity`, `k-edge-gateway` ile aynı hizada bir kernel primitifidir. `dependsOn=[k-tenancy]`: her iş tenant bağlamı olmadan kuyruğa alınamaz. Tüketiciler (AI enrichment, sync, medya, export, analitik ArcheType'ları) k-worker'ı doğrudan thread/cron açmadan, `enqueue` sözleşmesi üzerinden kullanır. WBS düğümü: `src/data/generated/nodes/k-worker.json`.
+`k-worker`, `app-layer0` (Layer 0 — Atomik Tipler) kümesinde bir **module/dağ** düğümüdür; `k-sequence`, `k-calendar-capacity`, `k-edge-gateway` ile aynı hizada bir kernel primitifidir. `dependsOn=[k-tenancy]`: her iş tenant bağlamı olmadan kuyruğa alınamaz. Tüketiciler (AI enrichment, sync, medya, export, analitik ArcheType'ları) k-worker'ı doğrudan thread/cron açmadan, `enqueue` sözleşmesi üzerinden kullanır. WBS düğümü: `src/data/generated/nodes/k-worker.json`.
 
 ## 7. Backend deseni
 
