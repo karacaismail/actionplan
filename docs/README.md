@@ -70,6 +70,13 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [execution-readiness-gap.md](execution-readiness-gap.md) — Execution readiness boşluk analizi.
 - [enterprise-dod.md](enterprise-dod.md) — Enterprise-ready uygulama "Definition of Done".
 - [core-enterprise-maturity-ladder.md](core-enterprise-maturity-ladder.md) — Çekirdek kurumsal olgunluk merdiveni: enterprise-hazırlık seviyeleri ve geçiş kapıları.
+- [gap-2026-07-02-00-index.md](gap-2026-07-02-00-index.md) — 2026-07-02 çok-ajan gap denetimi ana indeksi ve P0/P1 bulgu özeti.
+- [gap-2026-07-02-01-kernel.md](gap-2026-07-02-01-kernel.md) — Kernel katmanı boşluk raporu: KMS, tenant lifecycle, metering, provider ve kod-köprüsü eksikleri.
+- [gap-2026-07-02-02-archetype.md](gap-2026-07-02-02-archetype.md) — ArcheType katmanı boşluk raporu: workflow, ledger, order, inventory, messaging ve fixture eksikleri.
+- [gap-2026-07-02-03-surface.md](gap-2026-07-02-03-surface.md) — Surface katmanı boşluk raporu: panel tier, archetypeRef çapraz-kontrolü ve eksik yüzey tipleri.
+- [gap-2026-07-02-05-uygulama-raporu.md](gap-2026-07-02-05-uygulama-raporu.md) — 2026-07-02 uygulama raporu: eklenen yönergeler, kapılar, fixture ve kalan insan-kararı işleri.
+- [work-unit-molecule-gap-claude-vibecoding-2026-07-02.md](work-unit-molecule-gap-claude-vibecoding-2026-07-02.md) — Work unit / molekül seviyesi yürütülebilirlik ve Claude vibecoding gap raporu.
+- [micro-step-atom-gap-claude-vibecoding-2026-07-02.md](micro-step-atom-gap-claude-vibecoding-2026-07-02.md) — Micro step / atom seviyesi yürütülebilirlik ve Claude vibecoding gap raporu.
 
 ## 7. AI Yönergeleri
 
@@ -123,6 +130,18 @@ Portföy güvenliği ve 60+ yaş, 3 kişilik ekip için AI-üretim operasyonu.
 
 - [marketplace-module-security-directive.md](marketplace-module-security-directive.md) — dış modül güvenlik yaşam döngüsü: module signing, SBOM/provenance, permission-diff, malicious-update karantina, sandbox (ağ/dosya/process default-deny), modül-tablo RLS, exfiltration testleri.
 - [vibecoding-prompt-playbook.md](vibecoding-prompt-playbook.md) — her görevde kopyalanabilir prompt → beklenen dosyalar → test yeşil → negatif test kırmızı→yeşil → manuel kontrol → **reddetme kriteri**; örnek domain (Customer→Order) adım adım büyür.
+
+## 13. 2026-07-02 Gap Kapatma Yönergeleri
+
+Araştırma turunda eksik bulunan kernel / archetype / surface sözleşmelerini tamamlayan üst seviye yönergeler.
+
+- [workflow-directive.md](workflow-directive.md) — Workflow motoru: durum, geçiş, onay, SLA, fork/join, tenant izolasyonu ve AI sınırları.
+- [k-kms-directive.md](k-kms-directive.md) — Kernel KMS primitifi: `secret_ref`, envelope encryption, rotasyon, tenant kapsamı ve sır sızıntısı kapıları.
+- [panel-tier-contract.md](panel-tier-contract.md) — Surface panel katmanları, roleGroups ve navigasyon sözleşmesi.
+- [archetype-ledger-directive.md](archetype-ledger-directive.md) — Çift-taraflı muhasebe ledger metamodeli.
+- [archetype-order-line-item-directive.md](archetype-order-line-item-directive.md) — Sipariş / satır kalemi / vergi / indirim / ödeme durumu metamodeli.
+- [archetype-inventory-stock-directive.md](archetype-inventory-stock-directive.md) — Envanter, depo, lot, seri no, rezervasyon ve stok hareketi metamodeli.
+- [archetype-messaging-thread-directive.md](archetype-messaging-thread-directive.md) — Mesajlaşma, thread, feed, participant, delivery state ve moderation metamodeli.
 
 ---
 
