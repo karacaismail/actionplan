@@ -20,7 +20,8 @@
     "test",
     "alınır",
     "girdi",
-    "kernel"
+    "kernel",
+    "module"
   ],
   "dependsOn": [
     "atomic-types",
@@ -157,12 +158,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Build Sırası: Build Sırası — Faz 0-7: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof",
-        "Build Sırası kapsamı: inşa fazlarının zorunlu sırasını ve her fazın önkoşulunu tanımlar",
-        "Build Sırası bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam sınırı: build-sequence fazların (Faz 0-7: kernel → scale primitives → L1 → L2/DX → scale proof) zorunlu sırasını, önkoşul kanıtını ve kapı sonucunu planlar; faz tamamlama, release ilerletme veya deploy YAPMAZ — yalnız insan onayına giden karar kaydı üretir",
+        "Girdi sözleşmesi: phase id, prerequisite evidence (önceki faz kanıtı), gate result (test/tip/a11y kapı çıktısı), owner approval. Çıktı: phase transition record (planned→ready→…), blocked/rework karar kaydı, önkoşul-eksiği risk listesi",
+        "Durum akışı: planned → ready → in-progress → gate-review → accepted | blocked; her geçiş insan onayına bağlı, AI yalnız öneri + kanıt sunar",
+        "Hata yolları: skipped phase (kernel'den önce üst faz), missing prerequisite (kanıtsız faz), stale gate result (bayat kapı çıktısı), unauthorized phase transition → geçiş reddedilir ve neden kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -175,7 +177,7 @@
         "Build Sırası ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -183,12 +185,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Build Sırası yapısı: faz bağımlılığı yukarı-doğru; atlama yok (kernel önce)",
-        "Build Sırası tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Build Sırası okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: phase/gate anahtarları typed (typed phase & gate keys) tutulur; lint + typecheck + contract gate PR'da yeşil değilse merge kapalı — faz sırası şeması sözleşme testinden geçmeden yayınlanmaz",
+        "Ayrıştırma: phase parser (faz/önkoşul okuma), sequence evaluator (kapı/önkoşul değerlendirme) ve report/render katmanı ayrı modüller; iş mantığı UI'dan bağımsız, saf ve birim test edilebilir",
+        "Dependency graph bütçesi: faz bağımlılık grafı yukarı-doğru (kernel önce), cyclic dependency reddedilir; graf düğüm/kenar sayısı ve döngüsel karmaşıklık için eşik konur, aşılırsa CI uyarır",
+        "Tekrar eden faz/kapı mantığı tek paylaşılan yardımcıya alınır; ölü kod elenir, modüller küçük ve okunur kalır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -196,12 +199,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Build Sırası en-az-ayrıcalık ilkesine uyar",
-        "Build Sırası değişikliği sürümlü ve izlenir",
-        "Build Sırası girdi sınırda doğrulanır"
+        "Bağımlılık/SBOM: her fazın bağımlılıkları için SBOM üretilir, SCA taraması CI kapısına bağlanır; kritik CVE'li paket faz kapısını bloklar",
+        "Allowlist/imza: phase policy (izinli faz geçiş ve aktör kümesi) imzalı ve allowlist tabanlı; imzasız/allowlist dışı faz tanımı reddedilir, geçiş yalnız yetkili aktörle yapılır",
+        "Egress/yüzey: sequence değerlendirici dış ağ erişimi gerektirmez; egress allowlist ile sınırlanır, saldırı yüzeyi (serbest JS/SQL/shell yok) daraltılır",
+        "Secret rotasyonu ve tamper koruması: kapı sonuç kanıtları append-only imzayla saklanır, tahrifat tespitinde rollback; en-az-ayrıcalık ile faz kaydını yalnız owner değiştirebilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -209,12 +213,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Build Sırası performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Build Sırası sık erişim indeksli/önbellekli tasarlanır",
-        "Build Sırası büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: p95 phase lookup ≤ 50 ms, tüm faz bağımlılık grafı traversal p95 ≤ 150 ms (7 faz + kapı düğümleri); hedef aşılırsa performans kapısı uyarır",
+        "Bağımlılık grafı bir kez topolojik sıralanıp önbelleğe alınır; her kapı değerlendirmesinde yeniden hesaplanmaz, invalidasyon yalnız faz/kanıt değişiminde",
+        "Faz ve kapı kayıtları için bileşik indeks (phase id + gate result); kanıt listesi imleç (cursor) sayfalamayla döner, büyük evidence setinde tam tarama yapılmaz",
+        "N+1 önleme: bir fazın önkoşul kanıtları tek batch sorguyla çekilir; ağır rapor üretimi asenkron kuyruğa alınır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -222,12 +227,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Build Sırası mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Build Sırası mobil istemci aynı sözleşmeyi tüketir",
-        "Build Sırası bildirim/onay gerektiğinde push ile iletilir"
+        "Offline read-only phase pack: son senkron faz sırası + kapı durumları yerelde önbelleğe alınır, sahada ağ yokken salt-okunur incelenir; çevrimdışıyken faz geçişi/onay YAPILAMAZ",
+        "Accepted/blocked durumu mobilde renk + metin/simge ile birlikte gösterilir; onay bekleyen kararlar push ile iletilir, karar yalnız bağlantı gelince ve yetkiyle verilir",
+        "Deep link/köprü: bir faz veya karar kaydına doğrudan derin bağlantı; PWA/Capacitor sarmalıyla native paylaşım köprüsü kullanılır",
+        "Dokunmatik hedefler en az 44 px temas alanı; dar ekranda tek sütun, faz zinciri kaydırılabilir ve okunur kalır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -240,7 +246,7 @@
         "Build Sırası klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -253,7 +259,7 @@
         "Build Sırası shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -266,7 +272,7 @@
         "Build Sırası bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -279,7 +285,7 @@
         "Build Sırası — AI faz önkoşul eksiği önerir; faz başlatma kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -287,12 +293,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Build Sırası doğrulama: her faz çıkışında ilgili kapılar (test/tip/a11y) yeşil olmalı",
-        "Build Sırası ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Test türleri: unit (phase parser/sequence evaluator saf mantık), contract (faz/kapı şeması + geçiş sözleşmesi), integration (önkoşul→kapı→karar zinciri) ve e2e-CI (inceleme akışı Playwright + a11y AAA)",
+        "Negatif fixture'lar: skipped phase (kernel'den önce üst faz), missing prerequisite (kanıtsız faz), stale gate result (bayat kapı çıktısı), unauthorized phase transition ve cyclic dependency → hepsi reddedilmeli ve neden kaydı üretmeli",
+        "Kabul kanıtı testi: AI'nin faz tamamlama/deploy iddiası yazamadığı, yalnız öneri + insan onayına giden karar kaydı ürettiği doğrulanır (agentPolicy deny senaryoları)",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır; autonomous QA ajanı regresyonu izler"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -305,7 +312,7 @@
         "Build Sırası girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -318,7 +325,7 @@
         "Build Sırası sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -332,7 +339,7 @@
         "Build Sırası — Faz 0-7 kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Build Sırası — Faz 0-7 bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (modül/kaya; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-sequence — \"Build Sırası — Faz 0-7\" (module/dağ; küme: Build & Dağıtım). Özet: Kernel → Scale primitives → Layer 1 → Layer 2 + DX → Scale proof. Etiketler: build, roadmap, stages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

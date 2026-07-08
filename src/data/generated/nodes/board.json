@@ -19,7 +19,8 @@
     "sütun",
     "test",
     "yeniden",
-    "alınır"
+    "alınır",
+    "module"
   ],
   "dependsOn": [
     "atomic-types",
@@ -155,12 +156,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Tahta: Tahta — yeniden yapılandırılmış 5 küme iskeletinin tam doldurulması; her küme ve neyin neden eklendiği",
-        "Tahta kapsamı: WBS tahtasının küme/sütun yapısını ve her kümenin gerekçesini belgeler",
-        "Tahta bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam/işlev sınırı (hedef): board yalnız WBS tahta yapısını render ve valide eder — mevcut WBS düğüm verisini okuyup sütun/kart olarak dizer ve tutarlılığını denetler; app/modül üretmez, altta yatan WBS semantiğini (düğüm alanları, ilişkiler, küme tanımı) değiştirmez ve durum geçiş kurallarını bypass etmez",
+        "Girdi/çıktı sözleşmesi (hedef): girdi WBS düğüm verisi + 5 küme tanımı; çıktı sütun/kart yapılı kanban-waterfall tahtası; kart şeması {id, başlık, küme, sütun, durum} olarak beyan edilir",
+        "Durum/akış kuralı: kart durum geçişleri backlog→başladı→incelemede→bitti sırasıyla ilerler; her sütun bir kümeye bağlanır ve geçişler yalnız izinli komşu duruma yapılır; board bu izin matrisini yalnız uygular, üzerine yazmaz",
+        "Hata yolu kuralı: bilinmeyen küme/sütuna düşen kart ya da izinsiz durum geçişi reddedilir, kart 'hatalı' işaretlenir ve sebep kayda alınır",
+        "Kabul kuralı: her kümenin beklenen kart/sütun sayısı ve neyin neden eklendiği belgelenmeden tahta 'tam' kabul edilmez"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -173,7 +176,7 @@
         "Tahta ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -181,12 +184,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tahta yapısı: tahta düğüm verisinden türetilir; kanban/waterfall görünümü aynı veriyi kullanır",
-        "Tahta tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Tahta okunabilir ve test edilebilir kalır"
+        "Kod-sağlığı ekseni (kural): tahta türetme mantığı saf/yan-etkisiz fonksiyonlara ayrıştırılır; sütun-kart eşlemesi tek bir yardımcıda toplanır, döngüsel karmaşıklık eşiği fonksiyon başına ≤10 tutulur",
+        "Lint/kapı kuralı: tahta modülü tip kontrolü ve lint kapısından sıfır hatayla geçmeden birleştirilmez; ölü kod ve kullanılmayan sütun tanımları elenir",
+        "Ayrıştırma/decomposition kuralı: kanban ve waterfall görünümleri ortak kart modelini paylaşan ayrı bileşenlere bölünür; tekrar eden durum-geçiş mantığı paylaşılan modüle taşınır",
+        "Bütçe/eşik kuralı: tahta bundle boyutu belirlenen bütçe eşiğini aşarsa kod bölme (lazy görünüm) uygulanır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -199,7 +203,7 @@
         "Tahta girdi sınırda doğrulanır — tedarik zinciri: Tahta — yeniden yapılandırılmış bağımlılık güncellemeleri imzalı PR + kapı koşusuyla alınır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -207,12 +211,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tahta performans açısı: çok kartlı tahta sanal-kaydırma ile akıcı kalır",
-        "Tahta sık erişim indeksli/önbellekli tasarlanır",
-        "Tahta büyük veride sayfalı işlenir — üretici/tüketici dengesi Tahta — yeniden yapılandırılmış akışında lag metriğiyle korunur; birikim alarmı kuruludur"
+        "Ölçülebilir hedef (kural): 500 kartlı tahtanın ilk boyanması ≤1.5 sn; sütunlar arası kart taşıma p95 etkileşim gecikmesi ≤100 ms tutulur",
+        "Ölçülebilir hedef: kart listesi sanal-kaydırma ile render edilir; tek karede en çok 60 kart DOM'a basılır, kaydırmada 60 fps hedeflenir",
+        "Ölçülebilir hedef: tahta verisi imleç sayfalama ile 100 kart/sayfa çekilir; sunucu tarafı sorgu p95 gecikmesi ≤400 ms, N+1 sorgu sıfır tutulur",
+        "Ölçülebilir hedef: sık okunan küme/sütun sayıları önbellekten servis edilir, önbellek isabet oranı ≥%90 hedeflenir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -220,12 +225,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Tahta mobil açısı: tahta mobilde tek sütun/yığılmış kart olarak görüntülenir",
-        "Tahta mobil istemci aynı sözleşmeyi tüketir",
-        "Tahta bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil düzen kuralı: tahta mobilde tek sütun/yığılmış kart olarak akar; kart ve durum-geçiş butonları en az 44 px temas alanı ile hedeflenir",
+        "Offline kuralı: mobil istemci son çekilen tahta anlık görüntüsünü çevrimdışı okuyabilir; bağlantı yokken yapılan kart taşımaları kuyruğa alınır ve çevrimiçi olunca senkronlanır",
+        "Paketleme kuralı: mobil dağıtım PWA (servis çalışanı ile offline önbellek) veya Capacitor kabuğu üzerinden yapılır; masaüstü yardımcı yüzey için Chrome extension köprüsü (bridge) aynı tahta sözleşmesini tüketir",
+        "Sözleşme kuralı: mobil istemci masaüstüyle aynı kart/sütun sözleşmesini kullanır, sunucu ayrı bir mobil şema tutmaz"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -238,7 +244,7 @@
         "Tahta klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -251,7 +257,7 @@
         "Tahta shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -264,7 +270,7 @@
         "Tahta bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -277,7 +283,7 @@
         "Tahta — AI küme dengesizliği/eksik sütun önerir; tahta yapısı kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -285,12 +291,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Tahta doğrulama: her kümenin beklenen düğüm sayısı gerçekle tutarlı mı doğrulanır",
-        "Tahta ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim testi kuralı: sütun-kart eşlemesi ve durum-geçiş yardımcısı birim testiyle doğrulanır; her kümenin beklenen kart sayısı sabit fixture verisiyle karşılaştırılır",
+        "Negatif test kuralı: izinsiz durum geçişi, bilinmeyen küme/sütun ve boş tahta gibi hata yolları negatif senaryolarla test edilir ve reddedilmeleri beklenir",
+        "Uçtan uca (e2e) test kuralı: Playwright ile kart oluşturma → sütunlar arası taşıma → bitti akışı gerçek kullanıcı yolculuğu olarak koşulur; ekran görüntüsü ve trace kanıt (evidence) olarak saklanır",
+        "Erişilebilirlik testi kuralı: axe ile klavye ve ekran okuyucu senaryoları koşulur, ihlaller kanıtla raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -303,7 +310,7 @@
         "Tahta girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -316,7 +323,7 @@
         "Tahta sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -330,7 +337,7 @@
         "Tahta — yeniden yapılandırılmış kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Tahta — yeniden yapılandırılmış bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (modül/kaya; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: board — \"Tahta — yeniden yapılandırılmış\" (module/dağ; küme: Meta). Özet: Senin 5 küme iskeletini tam haliyle doldurma. Her küme + neyin neden eklendiği. Etiketler: board, structure.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

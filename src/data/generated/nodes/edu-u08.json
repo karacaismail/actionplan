@@ -22,7 +22,8 @@
     "asenkron",
     "girdi",
     "idempotency",
-    "olay"
+    "olay",
+    "archetype"
   ],
   "dependsOn": [
     "k-bus",
@@ -146,12 +147,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 08: Event Bus & Outbox: senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ",
-        "Ünite 08 kapsamı: olay-güdümlü mimari, transactional outbox ve idempotency'i öğretir",
-        "Ünite 08 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam: senkron çağrı yerine sürümlü event sözleşmesiyle (ad, sürüm, payload şeması) yayınlanan olaylar; işlev sınırı olarak yalnız domain durum değişimi olay üretir, okuma/sorgu tarafı olay üretmez",
+        "Transactional outbox: iş verisi ve olay kaydı tek DB transaction'ında yazılır; ayrı relay süreci outbox satırlarını sıraya göre okuyup bus'a iter (dual-write yok)",
+        "Girdi/çıktı sözleşmesi: her olay eventId + correlationId + partition/order key taşır; tüketici idempotenttir, aynı eventId yeniden gelirse yan etkisiz döner",
+        "Durum makinesi ve hata yolları: outbox satırı pending → published → acked; kalıcı hata DLQ'ya taşınır ve replay kuyruğundan yeniden yayınlanabilir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -164,7 +166,7 @@
         "Ünite 08 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -172,12 +174,12 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 08 yapısı: transactional outbox tutarlılık; idempotent tüketici tekrar-güvenli",
-        "Ünite 08 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 08 okunabilir ve test edilebilir kalır"
+        "Ayrıştırma: transaction yazımı, outbox relay/polling ve consumer handler ayrı modüllere bölünür; olay serileştirme (serialization) tek paylaşılan yardımcıda toplanır",
+        "Tekrar-güvenli tüketici tekilleştirmesi: processed_events tablosuyla dedup tek katmanda tutulur, handler'lar saf iş kuralı olarak kalır ve okunabilir olur",
+        "Kalite kapısı: consumer handler döngüsel karmaşıklık eşiği ≤10; relay batch boyutu yapılandırılabilir eşikle (ör. 100 satır) sınırlıdır; olay şeması Zod ile tip güvenliği sağlanacak biçimde derleme (build) zamanında doğrulanır, ölü kod elenir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +187,12 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 08 en-az-ayrıcalık ilkesine uyar",
-        "Ünite 08 değişikliği sürümlü ve izlenir",
-        "Ünite 08 girdi sınırda doğrulanır — Event Bus & Outbox loglarında gizli değer maskesi build-time lint ile taranır"
+        "En-az-ayrıcalık: relay servisi outbox tablosuna yalnız SELECT + UPDATE(published_at) yetkisiyle bağlanır; consumer bağlantısı yalnız ilgili topic/partition'a kısıtlanır",
+        "Payload PII maskeleme: outbox'a yazılmadan önce hassas alanlar sınıflandırılır; log ve trace'e ham olay gövdesi düşmez, gizli değerler build-time lint ile taranır",
+        "Sahte/replay sertleştirme: olaylar HMAC ile imzalı ve tenant damgalıdır; consumer başına rate-limit ve tekrar penceresiyle flood daraltılır, bus istemci gizli anahtarı rotasyonludur ve bağımlılıklar CI'da taranır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +200,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 08 performans açısı: asenkron işleme sırt basıncı; DLQ ile başarısız mesaj izolasyonu",
-        "Ünite 08 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 08 büyük veride sayfalı işlenir"
+        "Outbox relay imleç (cursor) tabanlı okur: (published_at, id) bileşik indeksiyle yayınlanmamış satırlar taranır; tam tablo taraması ve N+1 relay sorgusu önlenir",
+        "Toplu yayın: relay batch + pipelined ack ile bus round-trip azaltılır; hedef relay p95 gecikmesi ≤200 ms, olay üretim→tüketim uçtan uca p95 ≤2 s",
+        "Sırt basıncı ve DLQ: consumer lag metriği eşiği aşınca partition başına prefetch kısılır; başarısız mesaj DLQ'ya izole edilir, sağlıklı akış yavaşlamaz"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -211,12 +213,12 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 08 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 08 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 08 bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil offline kuyruğu: bağlantı yokken kullanıcı aksiyonları yerel outbox'a yazılır, çevrimiçi olununca idempotency anahtarıyla sıralı gönderilir; tekrar denemede çift gönderim yan etkisizdir",
+        "Mobil istemci (PWA veya Capacitor) aynı olay sözleşmesini tüketir; olay durumu (gönderildi/beklemede/başarısız) dar ekranda tek sütunda ve metinle gösterilir",
+        "Olay ve onay eylem düğmeleri en az 44 px temas alanı sağlar; kritik olay teslimi push bildirimiyle iletilir"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +231,7 @@
         "Ünite 08 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,7 +244,7 @@
         "Ünite 08 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +257,7 @@
         "Ünite 08 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +270,7 @@
         "Ünite 08 — AI akış darboğazı önerir; topoloji kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +278,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 08 doğrulama: idempotent tüketim ve DLQ davranışı sınanır",
-        "Ünite 08 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Contract testi: yayınlanan olay şeması (ad/sürüm/alanlar) tüketici beklentisiyle sabit fixture'lar üzerinden doğrulanır; geriye uyumsuz sözleşme değişikliği testi kırar",
+        "Idempotency ve DLQ entegrasyon testi: aynı eventId iki kez teslim edilir ve tek yan etki beklenir; zehirli (poison) mesaj DLQ'ya düşürülür, ardından replay ile geri alınır",
+        "Negatif senaryolar: şema-dışı payload, tekrar/sıra-dışı (out-of-order) teslim ve tüketici çökmesi sonrası relay kurtarımı sınanır",
+        "QA döngüsü: kararsız (flaky) test izole tekrarla teyit edilir; başarısız senaryo kök neden bulunana dek sınırlı yeniden koşumla incelenir ve düzelmezse kanıtıyla raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +297,7 @@
         "Ünite 08 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +310,7 @@
         "Ünite 08 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +324,7 @@
         "Event Bus & Outbox kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Event Bus & Outbox bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (ArcheType/taş; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u08 — \"Event Bus & Outbox\" (archetype/kaya; küme: Eğitim). Özet: Senkron vs asenkron, event-driven, transactional outbox, idempotency, DLQ. Etiketler: education, u08, event, outbox, saga.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

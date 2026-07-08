@@ -24,7 +24,8 @@
     "locale",
     "uyum",
     "girdi",
-    "izlenir"
+    "izlenir",
+    "feature"
   ],
   "dependsOn": [
     "cc-i18n-standards",
@@ -152,12 +153,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 24: Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar: locale değil 6 ayrı eksen; TR'de KVKK, AB'de GDPR",
-        "Ünite 24 kapsamı: i18n'in 6 eksenini (dil/biçim/zaman/para/hukuk/kültür) öğretir",
-        "Ünite 24 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam: Ünite 24, i18n'i 6 ayrı eksen (dil, biçim, zaman/timezone, para/currency, hukuk/legal basis, kültür) olarak öğretir; kapsam sınırı → sadece bu eğitim ünitesi metnini ve örnek config'i açıklar, üretim uyum kuralı üretmez",
+        "Girdi/çıktı sözleşmesi: girdi = { locale, jurisdiction, currency, timezone, legalBasisConfig } tipli config; çıktı = eksene göre beklenen davranış açıklaması (ör. TR jurisdiction → KVKK legal basis metni, AB → GDPR) — kod tabanı değil config değişir",
+        "Durum akışı: ünite taslak → paydaş onayı → yayımlanmış eğitim kaydı; okuyucu 6 ekseni sırayla gezer, her eksende girdi config'i ile beklenen çıktı eşleşir",
+        "Hata yolu: eksik/geçersiz jurisdiction veya tanımsız legal basis config → ünite örneği 'çözümlenemedi' durumu gösterir ve fallback locale ile güvenli açıklamaya döner; sessiz yanlış eşleşme yok",
+        "Kabul sözleşmesi: 6 eksenin her biri için girdi config + beklenen davranış örneği bulunur; ünite hiçbir yerde prod compliance kararı vermez, yalnız 'codebase değişmez, config değişir' ilkesini kanıtla gösterir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -165,12 +168,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Ünite 24 güvenlik açısı: bölgesel uyum (KVKK/GDPR) veri işlemeyi belirler",
-        "Ünite 24 hassas bilgi gerektiğinde maskelenir",
-        "Ünite 24 ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki: ünite içeriğini ve locale/jurisdiction config'ini yalnız yetkili eğitim rolü düzenler; okuyucu salt-okunur — rol bazlı least-privilege ile config değiştirme yetkisi yayıncıya kilitlenir",
+        "Tenant/jurisdiction izolasyonu: her tenant'ın jurisdiction config'i (TR-KVKK, AB-GDPR) ayrık tutulur; bir tenant'ın legal basis config'i başka jurisdiction'a sızmaz, sorgular tenant + jurisdiction anahtarıyla filtrelenir",
+        "PII/KVKK/GDPR sınıflandırma: ünite örneklerinde geçen kullanıcı verisi alanları PII olarak etiketlenir; jurisdiction'a göre KVKK/GDPR sınıfı işaretlenir ve ekranda/loglarda maskelenerek gösterilir",
+        "Immutable audit: hangi jurisdiction config'inin ne zaman/kim tarafından değiştirildiği değişmez (append-only) audit izine yazılır; ünite metni bunu 'uyum kararı izlenebilir olmalı' örneğiyle öğretir, ama prod uyum kuralı üretmez"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -178,12 +182,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 24 yapısı: metin dış kaynakta; biçim/zaman/para locale'e göre türetilir",
-        "Ünite 24 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 24 okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: tip güvenli locale/jurisdiction config (Zod/TypeScript ile locale, currency, timezone, legalBasis alanları şemalı); geçersiz eksen kombinasyonu derleme/doğrulama aşamasında yakalanır, çalışma zamanına kaçmaz",
+        "Modülerlik: 6 eksen tek dev switch yerine eksen başına ayrık resolver (dil/biçim/zaman/para/hukuk/kültür) olarak ayrıştırılır; yeni jurisdiction eklemek yeni config kaydı olur, kod dallanması değil",
+        "Lint/kapı: locale anahtarı formatı, eksik çeviri ve tanımsız jurisdiction referansı için lint kuralları CI kapısında yeşil zorunlu; hardcoded biçim/para string'i lint ile reddedilir",
+        "Config karmaşıklık bütçesi/eşik: jurisdiction resolver'da döngüsel karmaşıklık ve iç içe koşul sayısı için üst eşik konur; eşik aşılırsa eksen tablo/config'e taşınır",
+        "Ölü locale temizliği/ayrıştırma: kullanılmayan locale paketleri ve artık jurisdiction config'leri periyodik taranıp ayıklanır; ünite bunu 'ölü locale = bakım borcu' örneğiyle öğretir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -191,12 +197,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 24 en-az-ayrıcalık ilkesine uyar",
-        "Ünite 24 değişikliği sürümlü ve izlenir",
-        "Ünite 24 girdi sınırda doğrulanır — çalışma-zamanı sertleştirme Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar sürecinde en-az-yetenek (capability drop) ile uygulanır"
+        "Bağımlılık/SBOM: CLDR/ICU locale verisi ve legal-source (jurisdiction kuralı besleyen) bağımlılıkları SBOM'a girer; sürüm sabitlenir, CVE taraması CI'da koşar, güncel olmayan CLDR paketi kapıda uyarı verir",
+        "Allowlist/imza: locale paketleri ve jurisdiction config'i yalnız imzalı/allowlist'teki kaynaktan yüklenir; imza doğrulanmadan CLDR/ICU verisi veya legal-source güncellemesi kabul edilmez",
+        "Egress/yüzey daraltma: ünite hiçbir kullanıcı PII'sini dış çeviri/locale servisine yollamaz; egress yalnız allowlist'teki güncelleme kaynağına açık, saldırı yüzeyi imzalı config okumaya indirgenir",
+        "Secret rotation/KMS: dış legal-source/çeviri API anahtarları KMS'te tutulur ve periyodik rotasyona tabidir; anahtar koda/config'e gömülmez",
+        "CSP/hardening: RTL/pseudo-locale dahil içerik render'ında sıkı CSP ve çıktı kaçışı uygulanır; locale metni HTML'e enjeksiyon vektörü olamaz"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -204,12 +212,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 24 performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Ünite 24 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 24 büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: locale resolver p95 < 20 ms; jurisdiction config lookup p95 < 15 ms — eksen çözümleme kullanıcı isteğini bloklamaz",
+        "Cache/indeks: çözümlenmiş locale + jurisdiction config'i tenant başına önbelleğe alınır; config kaydı jurisdiction + locale anahtarıyla indekslenir, her istekte yeniden derlenmez",
+        "N+1 önleme: bir sayfada 6 eksen için ayrı ayrı config sorgusu yerine tek toplu (batch) yükleme yapılır; eksen başına tekrar sorgu (N+1) engellenir",
+        "Ölçüm/bütçe: locale ve jurisdiction lookup p95 metrik olarak izlenir; eşiği aşan çözümleme yavaşlığı performans bütçesi ihlali sayılır ve alarm üretir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -217,12 +226,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 24 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 24 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 24 bildirim/onay gerektiğinde push ile iletilir"
+        "Offline locale pack: en çok kullanılan locale/jurisdiction config'i mobil istemcide önbelleğe alınır; ağ yokken ünite ve eksen örnekleri offline locale pack ile okunabilir, bağlantı gelince config senkronlanır",
+        "PWA/Capacitor: ünite iOS/Android'de PWA veya Capacitor kabuğuyla sunulur; aynı locale/jurisdiction sözleşmesi mobil ve web'de paylaşılır, ayrı kod yolu tutulmaz",
+        "Dokunma hedefi: mobil locale seçim düğmelerinde (dil/jurisdiction değiştirici) en az 44 px temas alanı sağlanır; RTL locale'de de düğme yerleşimi taşmaz",
+        "Push/deep link: yeni jurisdiction eksen örneği yayımlanınca ilgili okuyucuya push bildirim gider; bildirim, üniteyi doğru eksen sekmesinde açan deep link taşır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -235,7 +245,7 @@
         "Ünite 24 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -248,7 +258,7 @@
         "Ünite 24 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -261,7 +271,7 @@
         "Ünite 24 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -274,7 +284,7 @@
         "Ünite 24 — AI çeviri/biçim önerir; hukuki uyum kararını sorumlu insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -282,12 +292,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 24 doğrulama: farklı locale'de biçim/zaman/para ve uyum kuralları sınanır",
-        "Ünite 24 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: her eksen resolver'ı için birim testi — biçim/zaman/para/legal-basis çıktısı verilen locale+jurisdiction config'ine göre doğru mu",
+        "Contract + integration: girdi config sözleşmesi (locale/jurisdiction/currency/timezone/legalBasis) contract testiyle sabitlenir; 6 eksenin birlikte çözümlenmesi integration testiyle sınanır",
+        "E2E: kullanıcı yolculuğu — TR jurisdiction seçince KVKK metni, AB seçince GDPR metni ve doğru biçim/para gösterildiği uçtan uca doğrulanır",
+        "Negative: yanlış jurisdiction eşleşmesi (TR verisine AB kuralı) ve PII leakage senaryoları negatif testle reddedilir; sızıntı olursa test kırmızı",
+        "Pseudo-locale/RTL fixture + QA loop: pseudo-locale ve RTL fixture ile taşma/kırılma yakalanır; başarısız test testing-loop'ta en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -300,7 +312,7 @@
         "Ünite 24 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -313,7 +325,7 @@
         "Ünite 24 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -327,7 +339,7 @@
         "Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (taş/kum; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u24 — \"Uluslararasılaştırma — 6 Eksen ve Görünmez Kurallar\" (feature/taş; küme: Eğitim). Özet: Kıtalararası SaaS = locale değil, 6 ayrı eksen. Amazon Türkiye'de KVKK, AB'de GDPR'a göre 'codebase değiştirmez' — config değiştirir. Etiketler: education, i18n, jurisdiction, compliance, kvkk, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -20,7 +20,8 @@
     "archetype",
     "müvekkil",
     "süre",
-    "dosya"
+    "dosya",
+    "module"
   ],
   "dependsOn": [
     "s-clm",
@@ -140,12 +141,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Hukuk Bürosu Dağıtımı: dava, müvekkil, süre takibi ve belge yönetimini bir dikeyde paketler",
-        "Dosya, duruşma takvimi ve sözleşme yönetimi için hazır bundle",
-        "Hukuka özel ArcheType'ları (dava, müvekkil, belge) bir araya getirir"
+        "Kapsam sınırı: Hukuk Bürosu Dağıtımı yalnız dava dosyası, müvekkil, süre/duruşma takvimi ve belge deposu yönetimini kapsar; muhasebe defteri ve CRM pazarlama işlevi kapsam dışıdır (finance/party modüllerine devredilir)",
+        "İşlev sınırı + girdi/çıktı sözleşmesi: her dava dosyası tek tenant sınırına (büro) bağlıdır; girdi {müvekkilId, davaTürü, sorumluAvukat}, çıktı {dosyaId, durum, sonrakiDuruşmaTarihi} olarak sabittir",
+        "Durum makinesi kuralı: dava dosyası açık → derdest → karar → kapalı geçişleri tanımlıdır; geçersiz geçiş (ör. kapalıdan derdeste) reddedilir ve hata yolu denetim kaydına yazılır",
+        "Guardrail: süre/duruşma takvimi girdisi zorunlu son-tarih alanı taşır; eksik veya geçmiş tarihli girdi doğrulamada reddedilir, avukat sorumluluğu dışına taşınmaz"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -158,7 +160,7 @@
         "Belge/işlem değişmez audit'li — PII alanları Hukuk Bürosu Distribution kapsamında maskeli; rol matrisi en az ayrıcalıkla tanımlıdır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -166,12 +168,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Hukuk Bürosu Dağıtımı: kapsadığı ArcheType'ları bildirimsel birleştirir (kod kopyası yok)",
-        "Hukuk Bürosu Dağıtımı bayrakla açılır/kapanır; kullanılmayan yetenek yük getirmez",
-        "Hukuk Bürosu Dağıtımı sürüm uyumu paket manifestinde sabitlenir"
+        "Lint/tip kapısı guardrail: dava dosyası, müvekkil ve belge modelleri Zod sözleşmesinden türetilir; CI lint + tsc kapısı yeşil olmadan birleştirme (merge) engellenir",
+        "Karmaşıklık eşiği: süre/duruşma takvimi hesaplama fonksiyonlarında döngüsel karmaşıklık ≤10 bütçesi uygulanır; eşik aşılırsa ayrıştırma (decomposition) zorunludur",
+        "Belge deposu ayrıştırması: yükleme, önizleme ve full-text indeksleme ayrı parçalara bölünür (kod bölme); kullanılmayan yetenek tree-shaking ile elenir",
+        "Bundle bütçesi: Hukuk Bürosu Dağıtımı istemci paketi için ≤250KB gzip eşiği tanımlıdır; eşiği aşan PR CI kapısında uyarır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,7 +187,7 @@
         "Hukuk Bürosu Dağıtımı kapsadığı ArcheType güvenlik sınırlarını korur (bypass yok)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -192,12 +195,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Dosya araması full-text; süre takvimi indeksli",
-        "Belge önizleme önbellekli — ön-hesaplama/projeksiyon Hukuk Bürosu Distribution okuma yolunu sabit maliyete indirir",
-        "Mobil duruşma takvimi erişimi — Hukuk Bürosu Distribution büyük yük (payload) sıkıştırma ve alan-seçimi ile sınırlandırılır"
+        "Ölçülebilir hedef: dava dosyası liste sorgusu p95 ≤300ms, full-text belge araması p95 ≤500ms (10K dosyalık tenant yükünde)",
+        "Süre/duruşma takvimi görünümü bileşik indeks (tenant_id, son_tarih) ile sunulur; imleç (cursor) sayfalama sayfa başına ≤50 kayıt hedefler, N+1 sorgu yasaktır",
+        "Belge önizleme önbelleği hit oranı hedefi ≥%90; önbellek ıskası okuma yolu p95 ≤800ms ile sınırlıdır",
+        "Mobil duruşma takvimi payload'u alan-seçimi + sıkıştırma ile ≤100KB hedeflenir; ilk anlamlı içerik (TTFB) p95 ≤600ms"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -210,7 +214,7 @@
         "Hukuk Bürosu Dağıtımı dar ekranda öncelikli aksiyonları öne alır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -223,7 +227,7 @@
         "Hukuk Bürosu Dağıtımı klavye ve ekran okuyucu erişimini paket genelinde sağlar"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -231,12 +235,13 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Belge deposu şifreli + DR; gizlilik kritik",
-        "Standart yatay ölçek: kuyruk derinliğine göre worker",
-        "Shared hosting'de küçük büro (belge kısıtlı)"
+        "Sağlık kontrolü kuralı: belge deposu bağlantısı ve tenant DB erişimi readiness kontrolünden geçmeden pod trafik almaz; liveness kontrolü takılan işlemi yeniden başlatır",
+        "Geri-alma (rollback) guardrail: hatalı sürüm özellik bayrağıyla anında kapatılır; şema değişikliği expand-contract olduğundan önceki sürüme geri-alma geri-uyumludur",
+        "Config/secret kuralı: belge şifreleme anahtarı ve tenant DB kimlik bilgileri secret yöneticisinde tutulur, imaja gömülmez ve ortam (dev/stage/prod) başına ayrışır",
+        "Yatay ölçek: süre/duruşma bildirimi worker'ları kuyruk derinliğine göre ölçeklenir; her servis için CPU/bellek kaynak limiti tanımlıdır. Shared hosting'de küçük büro belge kotasıyla sınırlı çalışır"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -249,7 +254,7 @@
         "Olay: belge eklendi → sınıflandır + ilgili dosyaya bağla (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -262,7 +267,7 @@
         "AI içtihat/belge özeti ve süre önerir; hukuki kararı avukat verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -275,7 +280,7 @@
         "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -283,12 +288,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "Hukuk Bürosu Dağıtımı: A01 erişim kontrolü rol/tenant bazlı yetkili",
-        "Hukuk Bürosu Dağıtımı: A05 gereksiz yetenek kapalı güvenli varsayılan",
-        "Hukuk Bürosu Dağıtımı: A09 etkinleştirme/yapılandırma kararları forensic iz"
+        "A01 Broken Access Control: dava dosyası ve belge deposu erişimi rol + tenant sınırına göre yetkilendirilir; çıkar çatışması kontrolü ve satır düzeyi güvenlik (RLS) zorunludur",
+        "A05 Injection: müvekkil arama ve belge metadata girdileri girdi doğrulama (input validation) ve parametreli sorgudan geçer; ASVS L2 doğrulama kuralları uygulanır",
+        "A02 Security Misconfiguration: gereksiz yetenek kapalı güvenli varsayılan; SBOM üretilir ve bağımlılıklar NIST zafiyet akışına karşı taranır",
+        "A09 Security Logging and Alerting Failures: dava dosyası erişimi, belge indirme ve yetki değişikliği değişmez denetim izine (audit trail) yazılır; anomali alarm eşiği tanımlıdır",
+        "A04 Cryptographic Failures: avukat-müvekkil imtiyazlı veri ve belge deposu beklemede/aktarımda şifrelenir; anahtar rotasyonu kuralı geçerlidir"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -300,7 +307,7 @@
         "Müvekkil party'ye, faturalama finance'a bağlanır"
       ],
       "notes": "Kabul: Hukuk Bürosu Distribution entegrasyonu olay/üretilen API üzerinden; bağımlılık yönü net, doğrudan tablo erişimi yok.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -314,7 +321,7 @@
         "Hukuk Bürosu Distribution bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Hukuk Bürosu Distribution, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (modül/kaya; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dist-legal — \"Hukuk Bürosu Distribution\" (module/dağ; küme: Aday). Özet: Clio muadili. Dosya, müvekkil, duruşma Etiketler: vertical, legaltech, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

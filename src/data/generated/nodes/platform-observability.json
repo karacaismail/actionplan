@@ -22,7 +22,8 @@
     "otomatik",
     "grafana",
     "opentelemetry",
-    "span"
+    "span",
+    "module"
   ],
   "dependsOn": [
     "platform-graphql-api"
@@ -304,7 +305,7 @@
         "Prometheus metrik uç noktası (/metrics) ile FastAPI middleware üzerinden istek sayısı, gecikme histogramı (p50/p95/p99) ve hata oranı otomatik ölçümü.",
         "Güvenlik denetim izi (audit log): kimlik doğrulama, yetki değişikliği ve kritik veri erişimi olaylarını ayrı audit tablosuna ve ayrı log akışına yazar; 90 gün saklama."
       ],
-      "notes": "Her özellik, tenant bağlamını korelasyon kimliğiyle birlikte taşır; bu sayede çok kiracılı ortamda olay kaynağı izole edilebilir.",
+      "notes": "Kapsam sınırı: featureDef seti yalnızca log/metrik/trace ingest, OpenTelemetry span üretimi ve audit izi yazımını tanımlar; alert kuralı değerlendirme, dashboard tasarımı ve retention silme işi ayrı boyutlara (observability/dataLifecycle) devredilir. Her özellik tenant bağlamını korelasyon kimliğiyle taşır; böylece span correlation ile çok kiracılı ortamda olay kaynağı izole edilir.",
       "prompt": "Platform gözlemlenebilirlik modülünün özellik tanımlarını kapsayan teknik bir belge hazırla; OpenTelemetry trace-id yayılımı, yapılandırılmış log şeması, Prometheus metrik tipleri ve audit log saklama politikasını ele al. çıktı: her özellik için uygulama adımları ve konfigürasyon örneği.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -334,7 +335,7 @@
         "OpenTelemetry BatchSpanExporter konfigürasyonu: max_export_batch_size=512, schedule_delay_millis=5000 ile ağ çağrısı sayısı %80 azaltılır.",
         "Tenant başına metrik etiket kardinalitesi sınırlandırılır: tenant_id etiketi maksimum 500 farklı değere izin verir; aşımda 'overflow' bucket'a düşer, Prometheus bellek şişmesi engellenir."
       ],
-      "notes": "Asenkron işlem zinciri ve düşük kardinalite politikası, yüksek kiracı sayısında gözlemlenebilirlik altyapısının kaynak tüketimini sabit tutar.",
+      "notes": "Kod sağlığı ekseni: log/metrik/trace enstrümantasyon kodu tip denetimi ve lint kapısından geçer, span processor ile BatchSpanExporter zincirinde döngü-içi allocation profil ile izlenir ve metrik nesneleri modül açılışında bir kez örneklenir. Asenkron işlem zinciri ve düşük etiket kardinalitesi, yüksek kiracı sayısında ingest yolunun kaynak tüketimini sabit tutar.",
       "prompt": "Gözlemlenebilirlik modülü için kod optimizasyon stratejilerini kapsayan bir teknik rehber yaz; asenkron log işleme, BatchSpanExporter ayarları, metrik kardinalite yönetimi ve hot-path tespitini ele al. çıktı: her optimizasyon için ölçülebilir performans hedefi ve kod düzeyinde uygulama notu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -349,7 +350,7 @@
         "Prometheus alerting kurallarında hassas tenant bilgisi etiket olarak taşınmaz; alert mesajları yalnızca tenant_hash içerir, düz tenant_id içermez.",
         "Güvenlik olaylarını (401/403/500) izleyen özel bir Prometheus sayacı, dakikada ≥50 güvenlik hatası eşiğini aşınca PagerDuty/webhook alert tetikler."
       ],
-      "notes": "Kriptografik korelasyon kimliği ve token rotasyonu, gözlemlenebilirlik altyapısını bir saldırı vektörüne dönüştürmez.",
+      "notes": "Bağımlılık yüzeyi denetlenir: OpenTelemetry SDK ve exporter kütüphaneleri SBOM'a işlenir, CVE taraması ve imza doğrulamasından geçer; OTLP egress yalnızca sabit Collector hedefine allowlist ile açıktır, aggregator token'ı rotasyona tabidir. Kriptografik korelasyon kimliği ve daraltılmış egress yüzeyi, gözlemlenebilirlik ingest yolunu bir saldırı vektörüne dönüştürmez.",
       "prompt": "Gözlemlenebilirlik modülündeki güvenlik optimizasyonlarını kapsa; correlation-id entropi gereksinimleri, log aggregator token yaşam döngüsü, etiket bazlı PII sızıntı önleme ve güvenlik olayı eşik alerting mekanizmasını detaylandır. güvenlik sınırı: hangi etiketin alert mesajına yazılamayacağını somut örnekle belirt. çıktı: güvenlik optimizasyon matrisi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -379,7 +380,7 @@
         "Mobil seans metriği (crash rate, ANR) Prometheus'a custom exporter aracılığıyla beslenir; tenant başına mobil hata oranı panodan izlenir.",
         "Mobil client log hacmi günlük ≤500 KB/tenant ile sınırlandırılır; aşımda log akışı kesilebilir, tenant uyarı alır."
       ],
-      "notes": "Mobil gözlemlenebilirlik, backend trace zincirinin bir uzantısı olarak tasarlanmıştır; ayrı bir altyapı gerektirmez.",
+      "notes": "Offline dayanıklılık: mobil OTel SDK, cihaz çevrimdışıyken span ve log kayıtlarını yerel kuyrukta tamponlar ve bağlantı dönünce OTLP/HTTP köprüsüyle backend trace-id'sine iliştirerek gönderir. React Native SDK paketlemesi backend trace zincirinin uzantısı olarak taşınır; mobil crash/ANR span'ları aynı span correlation altında birleşir, ayrı ingest altyapısı gerektirmez.",
       "prompt": "Gözlemlenebilirlik modülünün mobil uygulama izleme kapsamını ele al; React Native OpenTelemetry entegrasyonu, trace korelasyonu, mobil hata metriği ve veri hacmi politikasını kapsayan teknik bir değerlendirme yaz. çıktı: mobil SDK konfigürasyonu ve tenant log kota tablosu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -409,7 +410,7 @@
         "Gözlemlenebilirlik stack güncellemesi sıfır kesinti ile yapılır: yeni container image pull → eski container durdur → yeni container başlat; toplam kesinti <30 saniye.",
         "Hetzner Firewall kuralları ile Prometheus :9090, Grafana :3000 ve Loki :3100 portları yalnızca VPN/iç ağ IP bloğundan erişilebilir; dış trafiğe kapalı."
       ],
-      "notes": "Tüm gözlemlenebilirlik bileşenleri Hetzner üzerindeki tek Docker Compose dosyasıyla yönetilir; harici bulut servisi bağımlılığı yoktur.",
+      "notes": "Sağlık ve geri alma: OTel Collector, Prometheus ve Grafana container'ları liveness/readiness probe ile izlenir; bozuk image pull'da önceki etikete rollback yapılır, ingest kesintisi <30 sn kalır. Grafana admin parolası ve aggregator/OTLP token'ları Compose ortamına düz metin değil sır dosyası/ortam sırrı olarak enjekte edilir; tüm bileşenler tek Compose dosyasıyla yönetilir, harici bulut bağımlılığı yoktur.",
       "prompt": "Gözlemlenebilirlik modülünün Hetzner Debian Docker dağıtım mimarisini kapsa; Compose konfigürasyonu, kalıcı volume yönetimi, güncelleme prosedürü ve Hetzner Firewall kural seti tasarımını ele al. çıktı: docker-compose.yml şablonu ve dağıtım kontrol listesi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -439,7 +440,7 @@
         "Kök neden analizi asistanı: hata log'ları ve ilgili trace'ler ajan tarafından birleştirilir; olası kök neden listesi operatöre öneri olarak sunulur, operatör onaylamadan işlem yapılmaz.",
         "Log tabanlı kullanım analizi: AI ajanı tenant başına özellik kullanım yoğunluğunu log verilerinden çıkarır, ürün ekibine haftalık kullanım özeti üretir."
       ],
-      "notes": "AI ajanları gözlemlenebilirlik verilerini tüketir ancak hiçbiri log veya metrik silme yetkisine sahip değildir; yalnızca okuma + bildirim rolündedir.",
+      "notes": "İzin/yasak sınırı: AI ajanları yalnızca log/metrik/trace okuma ve incident bildirim/öneri yetkisine sahiptir; log-metrik silme, retention değiştirme, sampling oranı düşürme, redaction kuralını gevşetme ve audit izi düzenleme kesin yasaktır. Span/incident drilldown çıktısı üzerinden verilen kök neden önerileri operatör onayı olmadan uygulanamaz; ajan app/module üretemez veya güncelleyemez.",
       "prompt": "Gözlemlenebilirlik modülü AI ajan entegrasyonunu kapsa; log sınıflandırma, trace anomali tespiti, LLM destekli kök neden analizi ve kullanım analitik ajanlarının mimarisini ele al. güvenlik sınırı: ajanların hangi işlemleri operatör onayı olmadan yapamayacağını belirt. çıktı: ajan rol matrisi ve veri akış diyagramı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -469,7 +470,7 @@
         "OWASP A04 (Güvensiz Tasarım): log verilerine erişim 'need-to-know' ilkesine göre RBAC ile kısıtlanır; geliştirici ortamı log'larında üretim verisi bulunmaz.",
         "OWASP A10 (Sunucu Tarafı İstek Sahteciliği): OTel exporter hedefi sabit konfigürasyonla tanımlanır, çalışma zamanında değiştirilemez; SSRF vektörü kapatılır."
       ],
-      "notes": "OWASP A09 uyumluluğu, gözlemlenebilirlik modülünün temel varoluş gerekçesiyle örtüşür; kör nokta bırakmama prensibi tüm tasarımı yönlendirir.",
+      "notes": "Standart çapası: log alanları OWASP ASVS V7 (denetim ve hata günlüğü) ile NIST SP 800-92 log yönetimi kriterlerine göre doğrulanır; her string alan kontrol karakteri temizliğinden (log enjeksiyon girdi doğrulaması) geçer ve güvenlik olayları değiştirilemez denetim izine yazılır. A09 kör-nokta-bırakmama prensibi tüm log/metrik/trace tasarımını yönlendirir.",
       "prompt": "Gözlemlenebilirlik modülünün OWASP Top 10 uyum durumunu kapsa; A09 log eksikliği, A01 erişim kontrolü ihlali izleme, A04 RBAC politikası ve A10 SSRF önleme mekanizmalarını somut teknik önlemlerle ele al. güvenlik sınırı: hangi olayın loglanmamasının kabul edilemez olduğunu örnekle belirt. çıktı: OWASP uyum matrisi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -484,7 +485,7 @@
         "Grafana ↔ Prometheus ↔ Loki veri kaynağı entegrasyonu: Grafana datasource konfigürasyonu kod olarak (provisioning YAML) yönetilir, el ile UI tıklaması gerekmez.",
         "Slack/PagerDuty webhook entegrasyonu: Grafana alert kanalı veya Alertmanager üzerinden kritik alertler 5 saniye içinde ilgili on-call kişiye iletilir; SLA ihlali bildirimi ≤1 dakika."
       ],
-      "notes": "Tüm entegrasyonlar otomatik enstrümantasyon tercihiyle uygulanır; uygulama koduna gözlemlenebilirlik mantığı manuel olarak enjekte edilmez.",
+      "notes": "Sözleşmeli bağ: FastAPI/SQLAlchemy enstrümantasyonu OTLP protokol sözleşmesine, Prometheus scrape'i OpenMetrics formatına ve Grafana veri kaynağı provisioning YAML şemasına göre bağlanır; alert webhook payload alanları sürümlenmiş sözleşmedir. Tüm entegrasyonlar otomatik enstrümantasyon tercihiyle uygulanır, uygulama koduna gözlemlenebilirlik mantığı manuel enjekte edilmez.",
       "prompt": "Gözlemlenebilirlik modülü entegrasyon mimarisini kapsa; FastAPI ve SQLAlchemy otomatik enstrümantasyon, Grafana provisionig-as-code, Loki log entegrasyonu ve alert kanalı konfigürasyonunu teknik detaylarla ele al. çıktı: entegrasyon diyagramı ve bağımlılık listesi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -499,7 +500,7 @@
         "CI/CD modülü, deploy öncesi /metrics ve /health uç noktalarını smoke test ile doğrular; gözlemlenebilirlik altyapısının çalışır olması deployment kabul kriterlerinden biridir.",
         "Yetkilendirme modülü, RBAC değişikliklerini (rol atama/kaldırma) audit log'a yazar; gözlemlenebilirlik modülü bu olayları standart log arayüzünden sorgulaya sunarak uyumluluk raporunu destekler."
       ],
-      "notes": "Gözlemlenebilirlik modülü platform altyapısının çapraz kesici kaygısıdır; diğer modüller doğrudan bağımlıdır ve ayrı entegrasyon adımı gerektirmez.",
+      "notes": "Contract kapısı: diğer modüller audit tablosuna veya log/trace deposuna doğrudan-DB yazımı yapamaz; olaylar yalnızca standart log/audit API sözleşmesi (Contract kapısı) üzerinden geçer, böylece append-only değişmezlik ve redaction garanti altına alınır. Modüller metrik ve span'ı otomatik enstrümantasyonla besler, Grafana panelinden ve alert entegrasyonundan tüketir; gözlemlenebilirlik çapraz kesici bağımlılıktır, ayrı entegrasyon adımı gerektirmez.",
       "prompt": "Platform içindeki diğer modüllerin gözlemlenebilirlik modülünü nasıl kullandığını kapsa; bağımlılık yönü, audit log yazım noktaları, CI/CD kabul kriteri ve RBAC değişiklik izleme senaryolarını somut örneklerle açıkla. çıktı: modül bağımlılık matrisi ve kullanım rehberi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"

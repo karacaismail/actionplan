@@ -17,7 +17,8 @@
     "opensearch",
     "index",
     "kernel",
-    "layer0"
+    "layer0",
+    "module"
   ],
   "dependsOn": [
     "k-schema",
@@ -419,7 +420,7 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-search-ai-app-module-deny, ruleset-override-deny)",
+        "Backend ECA olayı AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-search-ai-app-module-deny, ruleset-override-deny)",
         "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
         "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
         "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile SearchIndex/SearchQuery şeması güvenli göç eder"
@@ -450,7 +451,7 @@
         "p95 bütçesi: 100k+ ürünlük tenant'ta full-text + 2 filtre + 3 facet sorgusu p95 < 300ms; EXPLAIN'de GIN kullanımı doğrulanır, seq-scan yoksa geçer",
         "Tenant sızıntı yok: A index'ine B verisi yazılıp A adına arama → B'nin hiçbir hit'i/facet sayımı görünmez; tenant_id'siz SearchQuery fail-closed (≥10 çapraz-tenant senaryo)",
         "N+1 yok: faceted sonuç + hit projeksiyonu tek indeksli sorguyla döner; facet başına ek sorgu üretilmez, sorgu sayacı ile doğrulanır",
-        "pg-fts → opensearch geçişi SearchQuery sözleşmesini bozmadan çalışır; aynı test seti iki backend'de yeşil (check-search-contract deploy'da bloklayıcı)"
+        "pg-fts → opensearch geçişi SearchQuery sözleşmesini bozmadan çalışır; aynı test seti iki backend'de yeşil (check-search-contract deploy'da bloklayıcı); test planı Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) (k-search) için unit, entegrasyon ve e2e Playwright journey; negatif senaryo, golden fixture kanıtı ve QA loop içerir"
       ],
       "notes": "Test stratejisi p95 bütçesini ve izolasyonu kanıtlar (§11'in 3 senaryosu): p95<300ms, sıfır tenant-sızıntı (10+ senaryo), N+1 yok; iki backend'de aynı set yeşil.",
       "prompt": "k-search test kapsamını kapsa: p95<300ms/100k ürün (EXPLAIN GIN), ≥10 cross-tenant sızıntı senaryosu, N+1-siz tek sorgu ve iki-backend paritesi. kısıt: seq-scan yasak. çıktı: 3 senaryo yeşil + contract kapısı.",
@@ -464,7 +465,7 @@
         "OWASP Top 10:2025 A03 Injection: q metni to_tsquery ile parametreli, JSONB path bind'li; string birleştirme ve ham DSL enjeksiyonu yasak",
         "A01 Broken Access Control: per-tenant-index + zorunlu tenant_id bind ile cross-tenant okuma imkânsız; tenant_id'siz SearchQuery fail-closed reddedilir",
         "A04 Insecure Design: sort/filter allowlist keyfi-alan enumeration'ını keser; cursor sayfalama (offset yasak) derinlik cezasını ve kaynak tüketimini önler",
-        "A09 Logging/Monitoring: took_ms + p95 o11y'ye yansır; yavaş/seq-scan sorgu izlenir, hata {code, message, trace_id, details} formatında"
+        "A09 Logging/Monitoring: took_ms + p95 o11y'ye yansır; yavaş/seq-scan sorgu izlenir, hata {code, message, trace_id, details} formatında; OWASP tehdidi Search — Arama Kernel Primitifi (FTS + Faceted, Tenant-Scoped Index) (k-search) için injection, access control, SSRF veya prompt injection sınıfları; ASVS/NIST/SBOM, doğrulama ve denetim iziyle ele alınır"
       ],
       "notes": "OWASP haritalaması aramaya özgü riskleri hedefler: injection (A03 parametreli FTS), erişim kontrolü (A01 per-tenant-index), güvenli tasarım (A04 allowlist/cursor).",
       "prompt": "k-search OWASP yüzeyini kapsa: A03 parametreli to_tsquery, A01 per-tenant-index fail-closed, A04 allowlist/cursor ve A09 p95 izleme. güvenlik sınırı: ham DSL + keyfi alan yasak. çıktı: standart-uyumlu arama.",

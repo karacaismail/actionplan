@@ -19,7 +19,8 @@
     "polimorfizm",
     "kernel",
     "layer0",
-    "rebac"
+    "rebac",
+    "module"
   ],
   "dependsOn": [
     "k-identity"
@@ -120,7 +121,10 @@
     "baselineStart": null,
     "baselineEnd": null
   },
-  "deliverables": [],
+  "deliverables": [
+    "Actor / Party — Aktör Kimliği ve Rol-Bağlam kapsam sozlesmesi",
+    "Actor / Party — Aktör Kimliği ve Rol-Bağlam icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
   "acceptanceCriteria": [
     "Actor / Party — Aktör Kimliği ve Rol-Bağlam için değer nesnesi işlevsel kabulü karşılandı",
     "tip güvenliği + AAA erişilebilirlik kapıları geçti"
@@ -311,11 +315,11 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "aktör aynı kişi/kurumun bağlama göre buyer/seller/employee olması; kayıt tipi değil aktör, party polimorfizmi taban özelliktir",
-        "RoleBinding rol-bağlam-kapsamlı yetki bağını (rol + tenant/channel/app kapsamı + zaman aralığı) veri olarak tutar",
-        "k-identity login kimliği ile iş-aktörü (party) arasında köprü kurar; kimlik doğrulama ayrı, aktör rolü buraya aittir",
-        "party_relation ReBAC kenarı (represents/employs) 'X, Y'nin temsilcisidir' ilişkisini grafik olarak çözer",
-        "aktör rolü koda gömülmez; buyer/seller/employee dallanması RoleBinding sorgusudur, statik tek-role kilitlenmez"
+        "aktör party polimorfizmi taban özelliktir: girdi kimlik + tenant/channel/app bağlamı, çıktı o bağlamda geçerli buyer/seller/employee rol kümesi; kayıt tipi değil aktör çözülür",
+        "RoleBinding girdisi (rol + tenant/channel/app kapsamı + valid_from/valid_to), çıktısı yetki bağı verisidir; durum akışı draft→bound→revoked, geçersiz/eksik kapsamda ScopeRequiredError ile hata yoluna düşer",
+        "k-identity login kimliği ile iş-aktörü (party) arasında köprü sözleşmesidir: girdi identity_user_id, çıktı party referansı; eşleme bulunamazsa ActorNotFoundError döner, kimlik doğrulama ayrık kalır",
+        "party_relation ReBAC kenarı (represents/employs) 'X, Y'nin temsilcisidir' ilişkisini graf olarak çözer; kenar yoksa temsil yetkisi verilmez (fail-closed hata yolu)",
+        "kabul: buyer/seller/employee dallanması RoleBinding sorgusuyla türetilir, statik tek-role kilitlenmez; sözleşme testi tek aktörde eşzamanlı çok-rol ve bağlam-bazlı çözümü doğrular"
       ],
       "notes": "aktör 'kim ve hangi rolde' sorusunu yanıtlar; l1-party'nin kernel-primitifine terfisidir, k-identity ile iş-aktörü arasında köprüdür.",
       "prompt": "\"Özellik Tanımları\" boyutunu k-actor için üret. Bağlam: aktör kimliği ve rol-bağlam (RoleBinding) — buyer/seller/employee polimorfizmi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: aktör polimorfizmi (buyer/seller/employee), RoleBinding rol-bağlam kapsamı, k-identity köprüsü, ReBAC represents kenarı, statik tek-rol yasağı. Güvenlik sınırı: AI app/module üretemez/güncelleyemez, ruleset override edemez.",
@@ -423,11 +427,11 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "aktör backend ECA ruleset'i: approval_ref'siz RoleBinding bind denemesini ApprovalRequiredError ile deny eder, rol aktifleşmez",
-        "AI yeni rol anahtarı icat edemez (autonomy none); yeni rol tipi yalnız k-authz PR'ıyla eklenir, ruleset override denemesi deny",
-        "aktör rol-bağlama zincirinde döngü kırıcı (maks 6) + idempotency; tekrarlı bind aynı RoleBinding'i çoğaltmaz",
-        "RoleBinding prod update append-only/expand-contract; geçmiş rol (valid_to) korunur, step-up + rollback ile revoke iz bırakır",
-        "AI org şemasından rol önerir (draft) ama doğrudan aktif edemez; PDP kararını AI override edemez, tenant izolasyonu ruleset'te sabit"
+        "olay-eylem kuralı: olay rolebinding.bind.requested, koşul approval_ref yok, eylem deny (ApprovalRequiredError) → rol aktifleşmez; guardrail olarak insan onayı zorunlu",
+        "olay ai.role.key.proposed, koşul actor=ai ve rol anahtarı mevcut değil, eylem deny → AI yeni rol anahtarı icat edemez; yeni tip yalnız k-authz PR'ıyla eklenir, ruleset override denemesi de deny (backend guardrail)",
+        "her rol-bağlama eylemi idempotency anahtarı taşır: tekrarlı bind aynı RoleBinding'i çoğaltmaz (aynı olay tek etki); zincir uzunluğu maxChainDepth 6 ile sınırlıdır, döngü kırılır",
+        "olay rolebinding.update.requested (prod), eylem append-only/expand-contract yazımdır: geçmiş rol (valid_to) korunur, revoke iz bırakır; step-up + rollback koşulu sağlanmazsa eylem reddedilir",
+        "olay ai.pdp.override.requested, koşul actor=ai, eylem deny → PDP aktör kararı override edilemez; tenant izolasyonu ruleset'te sabit denial guardrail'idir"
       ],
       "notes": "aktör ECA ruleset'i approval_ref'siz rol aktivasyonunu ve AI rol-anahtarı icadını deny eder; rol geçmişi append-only korunur.",
       "prompt": "\"ECA Kuralları\" boyutunu k-actor için üret. Bağlam: aktör kimliği ve rol-bağlam (RoleBinding) — buyer/seller/employee polimorfizmi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: approval_ref'siz bind deny (ApprovalRequiredError), AI rol-anahtarı icat yasağı, döngü kırıcı maks 6 + idempotency, append-only/expand-contract + step-up + rollback, PDP override yasağı. Güvenlik sınırı: backend ruleset, AI ruleset override edemez.",
@@ -483,11 +487,11 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "aktör dependsOn k-identity; login kimliği hazır olmadan iş-aktörü köprülenemez, kimlik→aktör eşlemesi kritik yoldur",
-        "RoleBinding PDP'nin (k-policy-pdp) subject girdisidir; PDP geçerli aktör rollerini okuyup kaynakta eylem yetkisini çözer",
-        "k-authz izin setiyle rol anahtarı eşlenir; k-capability aktör yetenek girdisini tamamlar, ikisi birlikte kararı besler",
-        "ReBAC kenarı (party_relation.kind → represents) PDP'ye akar; ArcheType kendi aktör tablosunu yazmaz, aktöre referans verir",
-        "Strawberry aktör resolver'ları Depends(require_tenant) + RequirePermission ile korunur; yan modüllerle gevşek bağ"
+        "bağımlılık yönü aktör → k-identity (dependsOn): login kimliği hazır olmadan iş-aktörü köprülenemez; k-identity aktörü değil, aktör kimliği çağırır (tek yön)",
+        "RoleBinding, PDP'nin (k-policy-pdp) subject girdisidir; PDP geçerli aktör rollerini tipli API/arayüz üzerinden okuyup kaynakta eylem yetkisini çözer, aktör PDP'ye bağlanmaz",
+        "k-authz izin setiyle rol anahtarı tipli sözleşme üzerinden eşlenir; k-capability aktör yetenek girdisini tamamlar, ikisi birlikte PDP kararını besler",
+        "ReBAC kenarı (party_relation.kind → represents) olay veriyolu / okuma-arayüzü üzerinden PDP'ye akar; ArcheType kendi aktör tablosunu yazmaz, aktöre tipli referansla bağlanır",
+        "Strawberry aktör resolver'ları tipli GraphQL arayüzü sunar ve Depends(require_tenant) + RequirePermission ile korunur; yan modüllerle bağımlılık tek yönde, gevşek bağdır"
       ],
       "notes": "aktör kernel entegrasyonu k-identity'ye bağlıdır ve PDP'nin subject girdisidir; k-authz izin setine eşlenir, ReBAC kenarı PDP'ye akar.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu k-actor için üret. Bağlam: aktör kimliği ve rol-bağlam (RoleBinding) — buyer/seller/employee polimorfizmi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: dependsOn k-identity köprüsü, RoleBinding PDP subject girdisi, k-authz izin eşlemesi, ReBAC kenarının PDP'ye akması, Strawberry resolver koruması. Güvenlik sınırı: AI app/module üretemez.",
@@ -498,10 +502,10 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "aktör, üst app-layer0 içinde kimlik→iş-aktörü köprüsü + rol-bağlam çözüm işlevini sağlar (kernel module sınırı)",
-        "diğer app'ler ve ArcheType'lar buyer/seller/employee rolünü üretilen GraphQL API üzerinden tüketir; doğrudan RoleBinding tablosuna erişmez",
-        "app'ler kendi Customer/Supplier/Employee tablosunu yazmaz; hepsi aktör + RoleBinding referansına bağlanır, aktör tek kayıt defteridir",
-        "PDP ve Surface aktör rol verisini rol-bağlam çözüm servis arayüzünden okur; rol dallanması modül dışına kod olarak sızmaz"
+        "aktör, üst app-layer0 içinde kimlik→iş-aktörü köprüsü + rol-bağlam çözüm işlevini kernel module sınırında sağlar; tüketim yalnız üretilen (generated) API üzerinden yapılır",
+        "diğer app'ler ve ArcheType'lar buyer/seller/employee rolünü üretilen GraphQL API'sinden tüketir; RoleBinding tablosuna doğrudan-DB erişimi yasaktır (doğrudan-DB yasağı)",
+        "app'ler kendi Customer/Supplier/Employee tablosunu yazmaz; her yazım aktör + RoleBinding'in Contract kapısından (Contract gate) geçer, aktör tek kayıt defteridir",
+        "PDP ve Surface aktör rol verisini rol-bağlam çözüm servis arayüzünden okur; panel/entegrasyon yüzeyi bu arayüzü tüketir, rol dallanması modül dışına kod olarak sızmaz"
       ],
       "notes": "aktör modülü kimlik/iş-aktörü köprüsüdür; app'ler kendi aktör tablosunu yazmaz, RoleBinding'i API üzerinden tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu k-actor için üret. Bağlam: aktör kimliği ve rol-bağlam (RoleBinding) — buyer/seller/employee polimorfizmi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: kernel module sınırı (kimlik→aktör köprüsü), buyer/seller/employee rolünün GraphQL API'den tüketimi, app'lerin kendi aktör tablosu yazmaması, PDP/Surface rol-bağlam okuması. Güvenlik sınırı: AI app/module üretemez, doğrudan DB erişimi yok.",

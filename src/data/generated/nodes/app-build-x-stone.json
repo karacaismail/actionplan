@@ -13,7 +13,7 @@
     "build",
     "ornek",
     "7-seviye",
-    "stone",
+    "feature",
     "derleme",
     "artefakt",
     "dağıtım",
@@ -26,7 +26,11 @@
   "dependsOn": [],
   "blocks": [],
   "related": [],
-  "refs": [],
+  "refs": [
+    "docs/task-to-code-contract.md",
+    "docs/dimension-contract-17.md",
+    "docs/engineering-standards-index.md"
+  ],
   "criticalPath": false,
   "status": "backlog",
   "priority": "medium",
@@ -297,10 +301,11 @@
         "Build artefaktı üretimi: kaynak ağacından imzalı derleme çıktısı ve sürüm etiketi üretir",
         "Derleme durum makinesi: kuyruğa-alındı → derleniyor → başarılı/başarısız geçişlerini yönetir",
         "Girdi sözleşmesi commit SHA + ortam matrisi alır, çıktı olarak artefakt manifesti döner",
+        "Kapsam sınırı: yalnız imzalı artefakt + manifest üretir; promote/deploy etmez, app/module mutasyonu yapmaz, ruleset override etmez",
         "Hata yolu: derleme başarısızsa kısmi artefakt temizlenir, üst dağıtım dalı bilgilendirilir"
       ],
-      "notes": "Build taşı tek sorumluluk taşır: derleme artefaktı üretip üst dağıtım akışına teslim eder.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Build taşı tek sorumluluk taşır: commit SHA'dan imzalı artefakt + manifest üretip üst dağıtım akışına teslim eder; işlev sınırı derleme üretimiyle biter — dağıtım/promote üst dalın işidir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -314,7 +319,7 @@
         "Her başarılı derleme kaydı değişmez audit kanıtı olarak SHA + zaman damgasıyla saklanır"
       ],
       "notes": "Build taşı tedarik zinciri (SLSA) güvenliğine uyacak şekilde imza ve izolasyon zorunlu tutar.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -323,12 +328,13 @@
       "status": "filled",
       "items": [
         "Derleme adımı saf fonksiyon gibi davranır: aynı commit SHA aynı artefaktı üretir (yeniden üretilebilir build)",
-        "Derleme mantığı adım-eklentilerine bölünür, döngüsel karmaşıklık adım başına düşük tutulur",
-        "Build manifesti üst dağıtım dalıyla Zod ile tipli sözleşme üzerinden alışverilir",
-        "Tekrarlayan derleme yardımcıları (cache çözücü, etiketleyici) paylaşılan modülde toplanır"
+        "CI lint/tip kapısı (ESLint + tsc) yeşil olmadan artefakt üretilmez; kapı ihlali derlemeyi başarısız kırar",
+        "Yeniden üretilebilirlik bütçesi: artefakt SHA-256 özeti iki koşuda birebir eşleşmeli, sapma bütçe ihlali sayılır",
+        "Derleme mantığı adım-eklentilerine bölünür, adım başına döngüsel karmaşıklık ≤10 eşiğiyle sınırlanır",
+        "Ölü kod ve kullanılmayan derleme yardımcıları tree-shake/eleme ile temizlenir; cache çözücü ve etiketleyici paylaşılan modülde toplanır"
       ],
-      "notes": "Yeniden üretilebilirlik için derleme adımları yan etkisiz ve modüler tutulur.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Yeniden üretilebilirlik için derleme adımları yan etkisiz, modüler ve lint/karmaşıklık kapılarıyla ölçülür tutulur.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -342,7 +348,7 @@
         "Derleme adımı en az ayrıcalıkla koşar: sadece okuma + artefakt yazma izniyle sandbox içinde"
       ],
       "notes": "Tedarik zinciri saldırı yüzeyini daraltmak için sır rotasyonu ve SBOM taraması zorunludur.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -356,7 +362,7 @@
         "Eşzamanlı derleme sayısı sınırlandırılır, derleyici CPU/bellek baskısı ölçülerek p95 izlenir"
       ],
       "notes": "Derleme p95 süresi katman önbelleği ve artımlı çözümle ölçülebilir hedefe bağlanır.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -370,7 +376,7 @@
         "Capacitor kabuğunda derleme başarısızlığı push bildirimiyle anında iletilir"
       ],
       "notes": "Mobil yüzey salt-izleme odaklıdır; derleme tetikleme yetkili kullanıcıya açıktır.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -384,7 +390,7 @@
         "Derleme hatası mesajı ilgili tetik düğmesiyle programatik olarak ilişkilendirilir"
       ],
       "notes": "Derleme durumu renk körü kullanıcılar için metin alternatifiyle de aktarılır.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -398,7 +404,7 @@
         "Shared hosting'de ağır derleme yapılamaz; yalnız önceden üretilmiş artefakt yayınlanır (kısıt)"
       ],
       "notes": "Derleme yükü değişken olduğundan kuyruk-tabanlı HPA ölçeklemesi tercih edilir.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -412,7 +418,7 @@
         "Kritik dağıtım tetiği step-up onay gerektirir; tenant yalnız güvenli derleme parametresini değiştirebilir"
       ],
       "notes": "Derleme kuralları idempotenttir; aynı commit için yinelenen artefakt üretilmez.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -426,7 +432,7 @@
         "Ruleset override/disable denemesi anında deny edilir; risk yükselirse kill-switch ve step-up devreye girer"
       ],
       "notes": "AI öneri üretir; derleme tetikleme ve dağıtım kararı insan onayındadır.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -440,7 +446,7 @@
         "Testing-loop: başarısız derleme testi en fazla 6 kez yeniden çalışır, düzelmezse raporlanır"
       ],
       "notes": "Derleme yeniden-üretilebilirliği regresyon testiyle sürekli doğrulanır.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -454,7 +460,7 @@
         "OWASP A09: derleme kabul/red kararları ve artefakt yayını denetim günlüğüne yazılır"
       ],
       "notes": "Derleme tedarik zinciri tehdit yüzeyi A08 bütünlük doğrulamasıyla daraltılır.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -468,7 +474,7 @@
         "Derleme metrikleri ve süreleri gözlemlenebilirlik yüzeyine olay olarak yayılır"
       ],
       "notes": "Derleme taşı kernel'e olay üzerinden bağlanır; çıktısını üst dağıtım akışı tüketir.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -477,11 +483,13 @@
       "status": "filled",
       "items": [
         "Derleme taşı bağımsız sunulmaz; Build & Dağıtım dalı içinde alt-adım olarak tüketilir",
-        "Dağıtım yapan app'ler artefakt-manifesti API'si üzerinden derleme çıktısını okur, DB'ye dokunmaz",
-        "CI orkestrasyonu derleme taşını olay-tetikli çağırır, ardından test ve yayın adımına geçer"
+        "Doğrudan DB erişimi yasak: dağıtım yapan app'ler artefakt tablosunu okumaz, yalnız tipli artefakt-manifesti API'si üzerinden çıktıya erişir",
+        "Manifest sözleşme kapısı: tüketiciler Zod ile doğrulanmış artefakt-manifesti şemasından okur, şema dışı alan reddedilir",
+        "CI orkestrasyonu derleme taşını commit-pushed olay veriyoluyla olay-tetikli çağırır, ardından test ve yayın adımına geçer",
+        "Dağıtım paneli/entegrasyon yüzeyi derleme durumunu ve artefakt bağlantısını üretilen API'den okur; tetikleme yetkisi step-up onaya bağlıdır"
       ],
-      "notes": "Derleme taşı yalnız üst dağıtım akışının ürettiği API/olay üzerinden tüketilir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (taş/kum; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, stone.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "notes": "Derleme taşı yalnız üst dağıtım akışının ürettiği tipli manifest API'si / olay veriyolu üzerinden tüketilir; doğrudan DB'ye dokunulmaz.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-build-x-stone — \"Taş — Build & Dağıtım örnek kırılımı\" (feature/taş; küme: Build & Dağıtım). Özet: Build & Dağıtım için 7-seviye WBS kırılımının Taş seviyesi (örnek dal). Etiketler: build, ornek, 7-seviye, feature.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

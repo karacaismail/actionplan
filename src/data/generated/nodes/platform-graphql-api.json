@@ -21,7 +21,8 @@
     "şema",
     "platform",
     "dataloader",
-    "schema"
+    "schema",
+    "module"
   ],
   "dependsOn": [
     "platform-db-schema",
@@ -308,7 +309,7 @@
         "FastAPI üzerinde Strawberry kütüphanesi ile schema-first GraphQL sunucusu kurulur; tüm Query ve Mutation tipleri önce .graphql şema dosyasında tanımlanır, resolver'lar bu sözleşmeye bağlı olarak implement edilir.",
         "Customer için Query sözleşmesi: customer(id: ID!, tenantId: ID!): Customer ve customers(tenantId: ID!, first: Int, after: String): CustomerConnection (cursor-tabanlı sayfalama) olarak tanımlanır.",
         "Customer için Mutation sözleşmesi: createCustomer(input: CreateCustomerInput!): CustomerPayload, updateCustomer(id: ID!, input: UpdateCustomerInput!): CustomerPayload ve softDeleteCustomer(id: ID!): DeletePayload olarak tanımlanır.",
-        "GraphQL hata yolları Union tip ile modellenir: CustomerPayload = Customer | ValidationError | AuthorizationError | NotFoundError; istemci her durumu tip güvenli şekilde ayırt eder."
+        "GraphQL hata yolları Union tip ile modellenir: CustomerPayload = Customer | ValidationError | AuthorizationError | NotFoundError; istemci her durumu tip güvenli şekilde ayırt eder.; kapsam sınırı FastAPI GraphQL API Sözleşmesi (platform-graphql-api) için girdi/çıktı sözleşmesi, durum akışı ve hata yolu kabul ölçütüne bağlanır"
       ],
       "notes": "Şema-ilk yaklaşım, API sözleşmesini uygulamadan önce kilitler; resolver implementasyonu sözleşmeye uyumu zorlar.",
       "prompt": "platform-graphql-api featureDefs boyutunu kapsa: Strawberry schema-first kurulum, Customer query/mutation sözleşmesi (imzalar, tipler, sayfalama), Union tip hata modeli ve FastAPI entegrasyon örüntüsünü somut tip tanımlarıyla açıkla. çıktı: API sözleşme referans kartı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -443,7 +444,7 @@
         "AI ajanları GraphQL şema ve resolver dosyalarına yalnızca read + suggest-changeset yetkisiyle erişebilir; şema dosyasına doğrudan yazma agentPolicy.forbiddenActions listesindedir.",
         "Ajan destekli N+1 tespit aracı: resolver günlüklerini (DataLoader miss sayacı) okuyarak yüksek miss oranına sahip resolver'ları tespit eder ve DataLoader batch yükleme önerisi üretir; çıktı: önerilen DataLoader implementasyon taslağı.",
         "Ajan GraphQL şema evolüsyon analizi yapar: mevcut şema ile önerilen değişiklik arasındaki kırılıcı farkı (field removal, type change) raporlar; bu rapor breaking change CI kapısına girdi sağlar.",
-        "Ajan risk skoru ≥80 olan şema değişikliği önerilerinde ECA karantina kuralı devreye girer: öneri dondurulur, kritik inceleme görevi oluşturulur ve ajan erişimi oturumla kısıtlanır."
+        "Ajan risk skoru ≥80 olan şema değişikliği önerilerinde ECA karantina kuralı devreye girer: öneri dondurulur, kritik inceleme görevi oluşturulur ve ajan erişimi oturumla kısıtlanır.; AI sınırı FastAPI GraphQL API Sözleşmesi (platform-graphql-api) için izinli/yasak mutasyonlar, insan onayı/step-up, kill-switch ve sub_prompt güvenilmezliği açıkça tanımlanır"
       ],
       "notes": "Ajan GraphQL API hakkında analitik öneri üretebilir; şema veya resolver dosyasına doğrudan yazma yetkisi yoktur.",
       "prompt": "platform-graphql-api AI ajan boyutunu kapsa: ajan yetki sınırları (read/suggest), DataLoader miss tespit ve öneri iş akışı, şema evolüsyon kırılıcı değişiklik raporu üretimi ve yüksek risk ECA karantina mekanizmasını açıkla. güvenlik sınırı: ajan şema dosyasına yazamaz. çıktı: ajan görev senaryoları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -458,7 +459,7 @@
         "GraphQL şema snapshot testi: Strawberry schema.as_str() çıktısı git-tracked snapshot dosyasıyla karşılaştırılır; her CI çalıştırmasında fark varsa test kırmızı olur, kırılıcı API değişikliği anında tespit edilir.",
         "Resolver birim testi: her resolver için mock SQLAlchemy session + mock DataLoader kullanılarak bağımsız test yazılır; yetki guard, tenant izolasyon ve hata yolu (ValidationError, AuthorizationError) her biri ayrı test vakasıdır.",
         "N+1 regresyon testi: pytest-dataloader-assertions ile CustomerConnection resolver'ının SQL sorgu sayısı kayıt sayısından bağımsız sabitte kaldığı doğrulanır; DataLoader devre dışı kalmışsa test kırmızı olur.",
-        "Uçtan uca API testi: FastAPI TestClient ile 5 kritik senaryo (yetkili oluşturma, yetkisiz erişim, çapraz-tenant, karmaşıklık sınırı, soft-delete) her CI çalıştırmasında çalışır; %100 senaryo geçişi kapı koşuludur."
+        "Uçtan uca API testi: FastAPI TestClient ile 5 kritik senaryo (yetkili oluşturma, yetkisiz erişim, çapraz-tenant, karmaşıklık sınırı, soft-delete) her CI çalıştırmasında çalışır; %100 senaryo geçişi kapı koşuludur.; test planı FastAPI GraphQL API Sözleşmesi (platform-graphql-api) için unit, entegrasyon ve e2e Playwright journey; negatif senaryo, golden fixture kanıtı ve QA loop içerir"
       ],
       "notes": "Şema snapshot + N+1 regresyon + uçtan uca senaryo testleri API kalite kapısının üç temel boyutunu oluşturur.",
       "prompt": "platform-graphql-api test boyutunu kapsa: Strawberry şema snapshot testi mekanizması, mock-tabanlı resolver birim testleri, pytest-dataloader N+1 regresyon testi ve 5 kritik uçtan uca senaryo test yapısını somut test isimleri ve assert örnekleriyle açıkla. çıktı: test planı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",

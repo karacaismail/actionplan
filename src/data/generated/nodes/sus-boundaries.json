@@ -21,7 +21,8 @@
     "girdi",
     "ihlali",
     "ruleset",
-    "test"
+    "test",
+    "feature"
   ],
   "dependsOn": [
     "anti-patterns"
@@ -146,12 +147,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı: Makine-zorlamalı modül sınırı (CI kapısı) — Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlar",
-        "Modül Sınırı Kapısı kapsamı: modüller arası izinsiz bağımlılığı CI'da PR reddederek engeller",
-        "Modül Sınırı Kapısı bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi/çıktı sözleşmesi: Girdi = her modülün manifest'i (public API yüzeyi + izinli bağımlılık grafiği/allowed dependency graph); çıktı = deterministik ihlal raporu (violation report: kaynak modül, hedef modül, yasak import satırı, kural kimliği). CI kapısı bu raporu PR yorumu ve exit-code olarak döndürür",
+        "Durum akışı: PR taranır (scanned) → sınır ihlali yoksa geçerli (valid, merge açık) / ihlal varsa (violation, merge kilitli) → geliştirici waiver talep eder (waiver-requested) → mimari ekip reddeder (denied, kilit sürer) veya onaylar (approved, süreli istisna kaydı). Her geçiş append-only kayda yazılır",
+        "Hata yolu/kabul kriteri: manifest parse edilemezse kapı fail-closed (PR kırmızı, bilinmeyen sınır = geçirilmez); zamanaşımı/tarayıcı çökmesinde retry sonrası hâlâ hata → 'boundary-check-error' ile PR bloklanır. Kabul: 0 ihlalli PR'da kapı yeşil, ≥1 ihlalde raporlu red",
+        "Bu WBS görevi yalnız CI kapısını tanımlar; AI app/module üretemez, mevcut modül/manifest'i güncelleyemez, ruleset'i override edemez — yalnız olası ihlal önerisi sunar, sınır kararını mimari ekip verir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -159,12 +161,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı güvenlik açısı: sınır ihlali = mimari sızıntı; CI kapısı bloklar",
-        "Modül Sınırı Kapısı hassas bilgi gerektiğinde maskelenir",
-        "Modül Sınırı Kapısı ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Least-privilege CI token: sınır tarayıcısı yalnız repo'yu read-only okuyabilen, merge/write yetkisi olmayan bir CI token ile koşar; token yalnız violation report yazma ve PR status set etme kapsamına sahiptir",
+        "Tenant/app modül izolasyonu: kapı, bir tenant/app modülünün başka tenant/app'ın private paketine (izin verilmeyen bağımlılık) sızmasını sınır ihlali olarak yakalar; cross-app import allowed dependency graph'ta yoksa reddedilir",
+        "PII/secret path deny: tarayıcı sadece manifest ve import grafiğini analiz eder; secret/.env/PII taşıyan yolları okumaz, rapora ham içerik değil yalnız modül-yol referansı yazar (secret sızıntısı engellenir)",
+        "Unauthorized boundary bypass audit/deny: waiver olmadan sınırı aşan veya ruleset'i devre dışı bırakma denemesi (ör. kapıyı skip eden config değişikliği) deny edilir ve denetim kaydına aktör+PR+zaman ile yazılır",
+        "Immutable audit evidence: taranan→ihlal→waiver-requested→denied/approved geçişleri append-only, değiştirilemez kanıt olarak saklanır; AI aktörü bu kaydı silemez/düzenleyemez, ruleset override edemez"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -172,12 +176,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı yapısı: modül sınırı bildirimsel tanımlı; ihlal makineyle yakalanır",
-        "Modül Sınırı Kapısı tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Modül Sınırı Kapısı okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: kapı, lint + typecheck + boundary contract gate'i tek CI aşamasında zincirler; sınır sözleşmesi (public API/allowed dependency) ihlali derleme/tip hatası gibi bloklayıcı sayılır",
+        "Kod sağlığı ekseni: allowed dependency graph için bütçe/eşik tanımlıdır (ör. modül başına maksimum dışa bağımlılık sayısı); eşiği aşan grafik büyümesi PR'da uyarı→red ile sınırlanır",
+        "Parser / rule-engine / reporter ayrıştırması: manifest okuma (parser), kural değerlendirme (rule-engine) ve rapor üretimi (reporter) ayrı modüllerdir; her biri bağımsız test edilir, tekrar eden import-çözümleme mantığı paylaşılan yardımcıya alınır",
+        "Pure graph analysis: sınır kontrolü yan etkisiz saf grafik analizidir (dosya sistemine/DB'ye yazmaz); girdi grafiği aynıysa çıktı raporu deterministiktir, bu da önbelleklemeyi mümkün kılar",
+        "Complexity sınırı: rule-engine'de kural değerlendirme fonksiyonları için döngüsel karmaşıklık üst sınırı konur; ölü kural/kullanılmayan kural elenir, böylece kapı bakımı sürdürülebilir kalır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +191,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı en-az-ayrıcalık ilkesine uyar",
-        "Modül Sınırı Kapısı değişikliği sürümlü ve izlenir",
-        "Modül Sınırı Kapısı girdi sınırda doğrulanır"
+        "Signed module manifests: her modül manifest'i (public API + allowed dependency graph) imzalanır; kapı imzayı doğrular, imzasız/değiştirilmiş manifest ile açılan PR reddedilir (manifest tampering engellenir)",
+        "Dependency allowlist: modüller arası bağımlılıklar açık allowlist ile yönetilir; allowlist'te olmayan her import sınır ihlalidir — deny-by-default, yeni bağımlılık ancak imzalı manifest güncellemesi + mimari onayla eklenir",
+        "Egress/yüzey kapalı CI checker: sınır tarayıcısı ağ egress'i kapalı, minimum yüzeyli bir CI job içinde koşar; dış servise çağrı yapmaz, yalnız repo grafiğini analiz eder (tedarik zinciri/exfil yüzeyi daraltılır)",
+        "Secret rotation for CI token: kapının kullandığı CI token/imzalama anahtarı periyodik rotasyona tabidir; sızıntı şüphesinde anahtar iptal edilip yenilenir, eski token ile atılan status'lar geçersiz sayılır",
+        "Tamper hardening: ruleset ve kapı config'i korunmuş yolda tutulur; kapıyı skip/disable eden veya eşiği gizlice gevşeten değişiklik ayrı bir zorunlu onay gerektirir, AI aktörü bu ayarı override edemez"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +206,14 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Modül Sınırı Kapısı sık erişim indeksli/önbellekli tasarlanır",
-        "Modül Sınırı Kapısı büyük veride sayfalı işlenir"
+        "p95 boundary scan time hedefi: 2.8M satır ölçeğinde tam sınır taraması p95 ≤ 90 sn, ortalama PR taraması ≤ 20 sn; bu eşiği aşan koşular performans regresyonu olarak alarmlanır",
+        "Changed-file incremental scan: her PR'da yalnız değişen dosyalar ve etkilenen bağımlılık alt-grafiği taranır (tam grafik değil); tipik PR için taranan düğüm sayısı toplam grafiğin <%5'i kalır",
+        "Graph index/cache: allowed dependency graph önceden indekslenip önbelleğe alınır; değişmeyen modüller için import çözümlemesi cache'ten okunur, tekrar parse edilmez",
+        "Pagination for violation report: çok ihlalli PR'larda rapor sayfalı üretilir/döndürülür (ör. 200 ihlal/sayfa); tüm ihlaller belleğe tek seferde yüklenmez",
+        "N+1 traversal önleme: bağımlılık grafiği tek seferde toplu yüklenir; her modül için ayrı ayrı import sorgusu yapılmaz — grafik gezinme O(V+E) tek geçişte tamamlanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -211,12 +221,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Modül Sınırı Kapısı mobil istemci aynı sözleşmeyi tüketir",
-        "Modül Sınırı Kapısı bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil yalnız read-only CI status: kapı bir geliştirici/CI aracı olduğundan mobilde PWA/Capacitor paketleme veya iOS/Android köprü gerekmez; mobil yüzey yalnız PR sınır kapısı durumunu (yeşil/kırmızı, ihlal sayısı) okur, waiver onayı/merge yapmaz",
+        "Offline cached violation report: son taramanın violation report'u mobilde önbeklenir; bağlantı yokken geliştirici en güncel ihlal listesini salt-okunur görebilir, çevrimiçi olunca durum tazelenir",
+        "Mobil sınır ihlali kartlarında en az 44 px temas alanı: her ihlal kartındaki 'detayı gör' / 'PR'ı aç' dokunma hedefleri en az 44 px temas alanı sağlar, dar ekranda tek sütun ve okunur kalır",
+        "Push/deep-link PR violation: PR sınır ihlaliyle kapı kırmızıya döndüğünde ilgili geliştiriciye push bildirimi gider; bildirime dokunmak doğrudan ilgili PR'ın ihlal detayına deep-link ile açar"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +240,7 @@
         "Modül Sınırı Kapısı klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,7 +253,7 @@
         "Modül Sınırı Kapısı shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +266,7 @@
         "Modül Sınırı Kapısı bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +279,7 @@
         "Modül Sınırı Kapısı — AI olası sınır ihlali önerir; sınır tanımı değişikliğini mimari ekip onaylar"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +287,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Modül Sınırı Kapısı doğrulama: sınır kapısı yeşil değilse PR merge edilemez",
-        "Modül Sınırı Kapısı ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit + contract testleri: parser (manifest okuma), rule-engine (kural değerlendirme) ve reporter için birim testleri; allowed dependency graph sözleşmesi için contract testleri — bilinen manifest → beklenen ihlal seti eşleşmeli",
+        "Integration + e2e/CI testleri: gerçek bir örnek monorepo üstünde uçtan uca; temiz PR'da kapı yeşil (merge açık), ihlalli PR'da kapı kırmızı (merge kilitli) ve violation report PR yorumuna basılıyor doğrulanır",
+        "Negatif senaryolar: (a) unauthorized import — allowlist dışı doğrudan import reddedilmeli; (b) hidden transitive dependency — A→B→C zinciriyle gizlenen yasak bağımlılık yakalanmalı; (c) expired waiver — süresi dolmuş istisna ile açılan PR yeniden bloklanmalı",
+        "Fixture/evidence: her test senaryosu sabit manifest+grafik fixture'ı kullanır; kapı çıktısı (rapor + status) kanıt olarak arşivlenir, regresyonda karşılaştırılır",
+        "Testing-loop QA sınırı: başarısız test en fazla 6 kez yeniden çalıştırılır; düzelmezse otonom QA ajanı tanı raporu üretip durur (app/module üretmez, ruleset override etmez)"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +307,7 @@
         "Modül Sınırı Kapısı girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +320,7 @@
         "Modül Sınırı Kapısı sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +334,7 @@
         "Makine-zorlamalı modül sınırı (CI kapısı) kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Makine-zorlamalı modül sınırı (CI kapısı) bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (taş/kum; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-boundaries — \"Makine-zorlamalı modül sınırı (CI kapısı)\" (feature/taş; küme: Platform Yetenekleri). Özet: Shopify Packwerk: 2.8M satırlık monolit modüler kalmasını CI'da PR reddiyle sağlıyor. Etiketler: sustainability, ci, shopify, boundaries.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

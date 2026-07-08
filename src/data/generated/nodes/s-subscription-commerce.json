@@ -23,7 +23,8 @@
     "ödeme",
     "plan",
     "deneme",
-    "döngüsü"
+    "döngüsü",
+    "feature"
   ],
   "dependsOn": [
     "s-billing",
@@ -154,7 +155,7 @@
         "hata yolu envanteri Subscription Commerce — abonelik tabanlı e-ticaret işlev sınırında ayrık senaryolarla tutulur"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -162,12 +163,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Abonelik ve ödeme yetkilendirmesi token'la; veri tenant_id RLS",
-        "Plan/fiyat değişikliği mevcut aboneleri korur (grandfathering)",
-        "İptal/iade yetki+iz; istem dışı yenileme engellenir"
+        "Subscription/Plan/Entitlement kayıtları tenant_id ile PostgreSQL RLS altında izole; her sorgu tenant sınırında koşar, cross-tenant abonelik okuma denemesi deny edilir",
+        "Ödeme intent'i ve tokenları kasada tutulur; kart/PII alanları en az ayrıcalık ilkesiyle maskeli okunur ve loglara redakte edilerek düşer",
+        "renewal/cancel/pause/resume lifecycle geçişleri rol bazlı yetki + step-up ile korunur; her durum değişimi değişmez (append-only) audit izine kim/ne/ne zaman olarak yazılır",
+        "İstem dışı yenileme veya yetkisiz iade denemesi allowlist dışı sayılıp deny edilir; abonelik secret'ları şifreli saklanır ve rotasyona girer"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -175,12 +177,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yenileme döngüsü zamanlanmış iş; proration saf hesap",
-        "Abonelik durumu (deneme/aktif/duraklı/iptal) durum makinesi",
-        "Fatura üretimi idempotent; çift fatura önlenir"
+        "Subscription/Plan/Entitlement sözleşmeleri tipli (Zod + TypeScript); lifecycle durum makinesi (deneme/aktif/duraklı/iptal) tek modülde, geçişler exhaustive tip kontrolüyle ayrıştırılır",
+        "Proration ve yenileme hesabı saf fonksiyon olarak izole edilir; ödeme çağrısı ve olay yayınlama yan etkileri ayrı katmana bölünür",
+        "Döngüsel karmaşıklık eşiği ve ölü kod taraması CI kapısında; eşik aşımı veya erişilemez renewal dalı build'i kırar",
+        "Ortak faturalama/entitlement yardımcıları paylaşılan modüle ayrıştırılır; kopya kod bütçe kapısıyla sınırlanır, refactor sınırı korunur"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -195,7 +198,7 @@
         "rate-limit 60 istek/dk Subscription Commerce — abonelik tabanlı e-ticaret uçlarında; SBOM farkı sürüm notunda raporlanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -210,7 +213,7 @@
         "Subscription Commerce — abonelik tabanlı e-ticaret istek birleştirme (batching/debounce) stratejisi tanımlıdır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -223,7 +226,7 @@
         "App store abonelik köprüsü (gerekirse)"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -238,7 +241,7 @@
         "Subscription Commerce — abonelik tabanlı e-ticaret canlı duyuruları (aria-live) ekran okuyucu senaryosuyla ayrıca doğrulanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -246,12 +249,13 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Yenileme/dunning ayrı worker/CronJob; çevrimiçi yolu etkilemez",
-        "Fatura olayları outbox ile Finance'a",
-        "Shared hosting'de temel abonelik + zamanlanmış yenileme"
+        "renewal/dunning worker'ı ayrı container/K8s Deployment olarak koşar; liveness ve readiness probe ile sağlık izlenir, çevrimiçi checkout yolundan ayrık tutulur",
+        "Yeni sürüm başarısız yenileme oranını yükseltirse otomatik rollback; blue-green ile geri alma tek adımda yapılır",
+        "Plan/entitlement ayarları env/secret olarak enjekte edilir, imaja gömülmez; Docker Swarm ve WordPress sınıfı shared hosting için ayrı profil tanımlıdır",
+        "CronJob tabanlı yenileme zamanlaması HPA ile ölçeklenir; pod readiness gate geçmeden fatura trafiği almaz"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -264,7 +268,7 @@
         "Olay: deneme bitti → ücretli plana geçir veya pasifleştir (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -277,7 +281,7 @@
         "AI churn riski tahmin eder ve elde tutma önerir; aboneliği kendisi iptal/yenileyemez"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -285,12 +289,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Proration ve yenileme hesabı sınır-değer testleri",
-        "Dunning (başarısız ödeme yeniden deneme) akış testi",
-        "Abonelik yaşam döngüsü kullanıcı yolculuğu; en çok 6 tur"
+        "Proration, renewal ve pause/resume için sınır-değer birim (unit) testleri; negatif senaryolar: başarısız ödeme, süresi geçmiş entitlement, çift yenileme reddedilir",
+        "Playwright e2e: plan seç → abone ol → yükselt → iptal kullanıcı yolculuğu; tenant izolasyonu entegrasyon testiyle ayrıca doğrulanır",
+        "Deterministik fixture'lar (sahte payment intent, saat ilerletme) ile yenileme takvimi ve dunning zinciri tekrarlanabilir koşulur",
+        "QA döngüsünde kırmızı senaryo yeniden çalıştırılır; sınırlı deneme sonrası hâlâ düzelmiyorsa koşum durur ve teşhis raporu üretilir"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -298,12 +303,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A04 Insecure Design: istem dışı yenileme/karanlık desen engellenir",
-        "A02 Cryptographic Failures: ödeme yetkisi token'la",
-        "A09 Logging: plan/iptal/yenileme kararları iz"
+        "A01 Broken Access Control: başka tenant'ın aboneliğine/entitlement'ına erişim engellenir; her uçta yetki doğrulaması yapılır ve denetim izine (loglama) düşer",
+        "A06 Insecure Design: iptal akışı karanlık desen içermez, istem dışı yenileme tasarımca engellenir; ASVS abonelik iş kuralı kontrolleri uygulanır",
+        "A05 Injection: plan/kupon/miktar girdileri şema ile doğrulanır (input validation), tipli sınırda reddedilir",
+        "A03 Software Supply Chain Failures: abonelik/faturalama bağımlılıkları için SBOM tutulur, sürümler pin'lidir ve NIST temelli bilinen-zafiyet taraması CI kapısında koşar",
+        "A09 Security Logging and Alerting Failures: plan/iptal/yenileme kararları değişmez denetim izine kim/ne/ne zaman olarak yazılır; anormal yenileme/iade sinyalleri alarmlanır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -311,12 +318,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Subscription-commerce, Payment (yinelenen tahsilat) ve Finance (gelir tanıma) ile entegre",
-        "Abone CRM müşteri kaydıyla ilişkili",
-        "Plan/fiyat Commerce katalogundan — kısmi hata Subscription Commerce — abonelik tabanlı e-ticaret entegrasyonunda ayrık sonuç kodlarıyla raporlanır; sessiz yutma yasaktır"
+        "Subscription çekirdeği; Payment (yinelenen tahsilat) ve Finance (gelir tanıma) ile doğrudan tabloya değil, tipli API sözleşmesi (contract) üzerinden konuşur",
+        "Entitlement ve lifecycle durum değişiklikleri event bus'a olay (event) olarak yayınlanır; bildirim, denetim ve analitik aboneleri bu olayları dinler",
+        "Bağımlılık yönü tek yönlüdür: Commerce katalogu ve CRM müşteri kaydı yukarı-akış çekirdeklerdir, kernel çekirdeğe geri bağımlılık kurulmaz",
+        "Plan/fiyat kernel Commerce kontratından okunur; kısmi hata ayrık sonuç kodlarıyla raporlanır, sessiz yutma yasaktır"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -330,7 +338,7 @@
         "Üst modül Subscription Commerce — abonelik tabanlı e-ticaret birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Subscription Commerce — abonelik tabanlı e-ticaret, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (taş/kum; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-subscription-commerce — \"Subscription Commerce — abonelik tabanlı e-ticaret\" (feature/taş; küme: Çekirdek Operasyon). Özet: Müşteri tek seferlik değil, periyodik (aylık/yıllık) ürün alır. Abonelik kutusu, recurring billing, churn yönetimi. Etiketler: core-operations, ecommerce, subscription, recurring, capability, mrr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

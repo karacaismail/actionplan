@@ -19,7 +19,8 @@
     "pre-signed",
     "cdn",
     "kernel",
-    "layer0"
+    "layer0",
+    "module"
   ],
   "dependsOn": [
     "k-tenancy"
@@ -321,7 +322,8 @@
         "digital_asset çekirdek kaydı bir binary/medya varlığını (image/video/document/model3d) tek kez tanımlar; provider/bucket/object_key/checksum alanlarını taşır",
         "asset_rendition aynı orijinalden çoklu türevi (thumbnail, webp_hero, mp4_720p, kanal-özel varyant) veri olarak bağlar; spec_ref üreten kanal spesifikasyonunu işaret eder",
         "Erişim süreli pre-signed URL (PUT/GET) veya cdn_enabled ile CloudFront/Fastly origin üzerinden verilir; visibility private/signed/public durum makinesiyle yönetilir",
-        "Varlık yaşam döngüsü status enum'u ile uploading→ready→archived→quarantined akar; fiziksel silme yok, soft-delete + onaylı retention işi kullanılır"
+        "Varlık yaşam döngüsü status enum'u ile uploading→ready→archived→quarantined akar; fiziksel silme yok, soft-delete + onaylı retention işi kullanılır",
+        "Kapsam sınırı (kural): DAM kernel'i yalnız binary saklama + asset_rendition referansı + süreli erişim (pre-signed URL/CDN) verir; görsel işleme/transcode/resize kapsam dışıdır (image_variants worker'a aittir) — storage üretmez, yalnız saklar ve servis eder"
       ],
       "notes": "digital_asset ve asset_rendition sözleşmesi PIM Faz 8 DAM/medya kernel karşılığıdır; binary object storage'da, DB'de yalnız referans + metadata tutulur.",
       "prompt": "k-storage digital_asset/asset_rendition özellik sınırını kapsa: varlık kaydı, çoklu türev, pre-signed URL, CDN ve görünürlük durum makinesini yönergedeki alan adlarıyla tanımla. çıktı: net işlevsel sınır + hata yolları.",
@@ -377,7 +379,8 @@
         "Tarayıcı pre-signed PUT URL ile binary'yi doğrudan object storage'a yükler; backend proxy'lemez, büyük dosya backend'i tıkamaz",
         "Büyük binary boto3 senkron çağrıları run_in_executor/aioboto3 ile async offload edilir; event loop büyük dosya isteğinde bloklanmaz (KS-13)",
         "size_bytes eşiği üstündeki dosyalar multipart oturumuyla parçalı yüklenir/birleşir; checksum (SHA-256/ETag) ile dedup ve bütünlük doğrulama",
-        "cdn_enabled varlıklarda origin object storage, dağıtım CloudFront/Fastly; içerik değişiminde path-bazlı invalidation ile tekrar-indirme azaltılır"
+        "cdn_enabled varlıklarda origin object storage, dağıtım CloudFront/Fastly; içerik değişiminde path-bazlı invalidation ile tekrar-indirme azaltılır",
+        "Performans hedefi (SLO, kural): pre-signed URL üretimi p95 ≤ 150 ms, metadata okuma p95 ≤ 300 ms, kullanılabilirlik hedefi %99.9; eşik aşımı error-budget'e yazılır — gerçekleşme iddiası değil, ölçülecek guardrail"
       ],
       "notes": "Performans stratejisi I/O-yoğun: doğrudan-yükleme, async offload, multipart ve CDN. Ağır CPU işi (transcode/resize) k-storage dışında image_variants worker'ında kalır.",
       "prompt": "k-storage performans yüzeyini kapsa: doğrudan pre-signed yükleme, async I/O offload, multipart eşiği ve CDN invalidation. kısıt: ağır iş worker'da, istek yolu bloklanmaz. çıktı: büyük dosya isteğini bloklamayan yol.",
@@ -420,10 +423,10 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-storage-ai-app-module-deny, ruleset-override-deny)",
-        "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
-        "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
-        "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile digital_asset/asset_rendition şeması güvenli göç eder"
+        "ai.generation.requested / ai.update.requested olayı app/module hedefinde tetiklendiğinde ve ruleset override olayında action=deny çalışır (eca-k-storage-ai-app-module-deny, ruleset-override-deny)",
+        "task.progress.changed olayı ≥100 olduğunda action=set-field ile status=done tetiklenir; task.status.changed=done olayında owner'a notify, blocked olayında yüksek-öncelik blokaj-çözme görevi create-task edilir",
+        "ai.risk.scored olayı ≥80 tetiklendiğinde kritik-öncelik AI risk incelemesi görevi (create-task) açılır (requiresApproval:true); her kural idempotent, zincir döngü kırıcı maxChainDepth=6",
+        "ArcheType prod update olayında geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile digital_asset/asset_rendition şeması idempotent ve güvenli göç eder"
       ],
       "notes": "ECA kuralları AI-güvenlik invariantını backend'de sabitler: app/module üretim ve ruleset override deny, yüksek-risk karantina, zincir döngü-kırıcı (maks 6).",
       "prompt": "k-storage ECA kurallarını kapsa: AI app/module deny, ruleset-override deny, risk≥80 karantina ve maxChainDepth=6 döngü kırıcı. güvenlik sınırı: ruleset backend-only, override yok. çıktı: deterministik, idempotent kural zinciri.",
@@ -462,10 +465,11 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "OWASP Top 10:2025 A01 Broken Access Control: cross-tenant object_key imzalama reddi + PDP erişim kararı + tenant-prefix izolasyonu ile kapatılır",
-        "A08 Software/Data Integrity: checksum (SHA-256/ETag) ile binary bütünlüğü doğrulanır; audit append-only, kurcalanamaz karar-logu tutulur",
-        "A02 Cryptographic Failures: pre-signed URL kısa-TTL imzalı, secret rotasyonu; A05 Misconfiguration: varsayılan private/signed, public opt-in + audit",
-        "Hata formatı {code, message, trace_id, details}; get_logger() kullanılır, print() yasak; sağlayıcı-özel API sözleşmeye sızdırılmaz (S3-uyumlu alt küme)"
+        "OWASP Top 10:2025 A01 Broken Access Control: cross-tenant object_key imzalama reddi + k-policy-pdp PDP erişim kararı + tenant-prefix izolasyonu ile kapatılır",
+        "OWASP Top 10:2025 A02 Security Misconfiguration: varsayılan private/signed, public opt-in + denetim izi; hardcoded provider/bucket ve açık-bucket yanlış-yapılandırması elenir",
+        "OWASP Top 10:2025 A04 Cryptographic Failures: pre-signed URL kısa-TTL imzalı + secret rotasyonu; uzun-ömürlü veya public varsayılan URL üretilmez",
+        "OWASP Top 10:2025 A08 Software or Data Integrity Failures: checksum (SHA-256/ETag) ile binary bütünlüğü doğrulanır; append-only kurcalanamaz audit trail tutulur; SBOM ile boto3/aioboto3 bağımlılıkları izlenir",
+        "OWASP Top 10:2025 A09 Security Logging and Alerting Failures: her upload/delete/visibility-değişimi append-only audit'lenir; girdi doğrulama (input validation) object_key/content-type/size_bytes Zod ile sınırlanır (OWASP ASVS + NIST referans); hata {code, message, trace_id, details}, get_logger() ile loglanır, print() yasak"
       ],
       "notes": "OWASP haritalaması storage'a özgü riskleri hedefler: erişim kontrolü (A01), bütünlük (A08), kripto/imzalı URL (A02), yanlış-yapılandırma (A05, public varsayılan yasağı).",
       "prompt": "k-storage OWASP yüzeyini kapsa: A01 cross-tenant imzalama reddi, A08 checksum bütünlüğü, A02 kısa-TTL imzalı URL ve A05 private-varsayılan. güvenlik sınırı: public opt-in + audit. çıktı: standart-uyumlu erişim.",
@@ -476,10 +480,11 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "k-storage dependsOn=k-tenancy: tenant-kapsamlı bucket/prefix ve RLS hazır olmadan varlık yazılamaz (bir varlık kiracısız var olamaz)",
-        "image_variants işi (30+ pazaryeri spec, resize/crop/WebP) görsel işlemeyi yapar ve sonucu k-storage'a asset_rendition olarak yazar; storage üretmez, saklar/servis eder",
-        "ArcheType'lar kendi medya tablosunu açmaz; bir görsele digital_asset.id + rendition_kind ile referans verir (gömülü URL değil); PIM Faz 8 s3_storage portunu bağlar",
-        "Erişim kararı PDP'nindir (k-policy-pdp); pre-signed URL PDP kararından sonra üretilir; scale-invariant medya işleri idempotent (aynı asset+spec aynı anahtar) + retry"
+        "Bağımlılık yönü tek yönlü: k-storage kernel/core primitifi dependsOn=k-tenancy'ye bağımlıdır (tersi değil); tenant-kapsamlı bucket/prefix ve RLS hazır olmadan varlık yazılamaz (bir varlık kiracısız var olamaz)",
+        "image_variants worker'ı (30+ pazaryeri spec, resize/crop/WebP) görsel işlemeyi yapar ve sonucu olay veriyolu (event bus) üzerinden typed sözleşmeyle k-storage'a asset_rendition olarak yazar; storage üretmez, saklar/servis eder",
+        "ArcheType'lar/app'ler kendi medya tablosunu açmaz; typed StorageClient (generated API, Strawberry typed interface) üzerinden bir görsele digital_asset.id + rendition_kind referansı verir (gömülü URL değil); PIM Faz 8 s3_storage portunu bağlar",
+        "Varlık yaşam döngüsü tipli olay veriyoluna yayılır: yükleme tamamlanınca asset.ready, türev bağlanınca rendition.created olayı üretilir; image_variants worker ve arama-indeksleme gibi tüketiciler bu olayları dinler; medya işleri idempotent (aynı asset+spec aynı anahtar) + retry",
+        "Erişim kararı PDP'nindir (k-policy-pdp): pre-signed URL yalnız PDP kararından sonra üretilir; core entegrasyon typed StorageClient / Strawberry interface üzerinden, doğrudan DB/boto3 yok"
       ],
       "notes": "k-storage kernel primitifi olarak k-tenancy'ye bağımlıdır, PDP'den erişim kararı alır ve image_variants/ArcheType'lardan rendition yazımını tüketir; app'ler doğrudan boto3 açmaz.",
       "prompt": "k-storage kernel entegrasyonunu kapsa: k-tenancy bağımlılığı, image_variants→rendition yazımı, ArcheType digital_asset.id referansı ve PDP erişim kararı. kısıt: doğrudan DB/boto3 yok. çıktı: sözleşmeli, gevşek bağlı entegrasyon.",

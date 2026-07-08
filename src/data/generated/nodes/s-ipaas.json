@@ -20,7 +20,8 @@
     "webhook",
     "yeniden",
     "hata",
-    "ssrf"
+    "ssrf",
+    "archetype"
   ],
   "dependsOn": [
     "k-bus",
@@ -149,12 +150,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Entegrasyon Hub'ı (iPaaS): konnektör, akış (flow), eşleme (mapping) ve API orkestrasyonu",
-        "Hazır konnektörler, dönüşüm ve hata yönetimi; webhook ve zamanlama",
-        "Entegrasyon izleme ve yeniden-deneme"
+        "Kapsam sınırı: iPaaS yalnız konnektör, akış (flow), eşleme (mapping), webhook receiver, scheduler ve API orkestrasyonunu yönetir; app/module iş mantığı üretmez, dış sistemlerin veri sahipliğini üstlenmez.",
+        "Girdi/çıktı sözleşmesi: girdi = tetikleyici olay + typed payload + connector id; çıktı = eşlenmiş hedef isteği + sonuç/hata olayı; her akış giriş şeması ve çıkış şemasıyla sürümlenir.",
+        "Durum akışı: akış draft → enabled → running → retrying/DLQ → disabled geçişlerini izler; her geçiş append-only olay olarak yazılır, disabled dışına manuel yeniden etkinleştirme insan onayı ister.",
+        "Hata yolu: bağlanamayan/timeout/şema-uyumsuz istek üstel backoff ile yeniden denenir; deneme bütçesi tükenince kayıt DLQ'ya düşer ve korelasyon id ile uyarı üretilir.",
+        "Kabul kriteri: idempotent teslim (aynı olay iki kez işlenmez), webhook imza doğrulaması zorunlu, DLQ replay ile kayıpsız kurtarma; scheduler işleri kaçırılan pencereyi telafi kuralına bağlar."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -167,7 +170,7 @@
         "Veri akışı hassas alan maskeli — Integration Hub (iPaaS) denetim olayları eksiksizdir: kim-ne-nezaman-nereden alanları zorunludur"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -175,12 +178,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Konnektör ortak arayüz; akış bildirimsel (low-code)",
-        "Eşleme (mapping) yapılandırılmış; dönüşüm saf",
-        "Hata kuyruğu (DLQ) + yeniden-deneme"
+        "Kod sağlığı ekseni: her PR lint + typecheck + connector contract gate'inden geçmeden birleşmez; eşleme ifadeleri ve payload şemaları tip düzeyinde doğrulanır.",
+        "Katman ayrıştırma: connector interface, flow engine, mapper ve retry policy ayrı modüllerde tutulur; bir konnektörün değişimi motoru veya diğer konnektörleri etkilemez.",
+        "Pure transformations: mapping/dönüşüm fonksiyonları yan etkisiz (I/O yok) tutulur; ağ çağrısı yalnız connector adapter katmanında olur, bu da testi deterministik yapar.",
+        "Connector budget/eşik: konnektör başına bellek/eşzamanlılık bütçesi ve döngüsel karmaşıklık eşiği tanımlıdır; eşiği aşan konnektör CI'da uyarı üretir.",
+        "Batch/complexity sınırı: toplu işlem parça boyutu üst sınırla bağlanır, akış zinciri derinliği ≤6 tutulur; ölü konnektör/kullanılmayan eşleme dalları elenir."
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -193,7 +198,7 @@
         "Kimlik bilgisi rotasyonu — Integration Hub (iPaaS) hata mesajları iç detay sızdırmaz; jenerik yanıt + korelasyon id"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -206,7 +211,7 @@
         "Eşleme önbellekli — yavaş uç raporu Integration Hub (iPaaS) için haftalıktır; p95 500ms üstü uçlar indeks/önbellek incelemesine girer"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -214,12 +219,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "iPaaS backend; akış izleme mobilde salt-okuma",
-        "iOS/Android push ile akış hatası uyarısı",
-        "Dar ekranda entegrasyon sağlık özeti"
+        "Mobil yüzey PWA veya Capacitor ile paketlenir (iOS/Android köprüsü); akış tasarımı masaüstünde kalır, mobilde yalnız akış izleme ve durum görüntüleme sunulur.",
+        "Offline read-only flow status cache: son bilinen akış durumları (enabled/running/DLQ) yerel önbelleğe alınır; bağlantı yokken salt-okuma gösterilir, yazma/etkinleştirme çevrimdışı engellenir.",
+        "Mobil akış kartlarında en az 44 px temas alanı; durum rozetleri ve DLQ replay onay butonları parmak dokunuşuna uygun boyutlanır.",
+        "Push/deep-link hata uyarıları: akış DLQ'ya düştüğünde push bildirimi gider, deep-link ilgili akış detayına açar; teslim edilemeyen bildirim/deep-link hatası kullanıcıya görünür işaretlenir.",
+        "Chrome extension yüzeyi kullanılıyorsa yalnız salt-okuma durum bağlantısı verir; konnektör kimlik bilgisi veya akış yapılandırması extension üzerinden değiştirilemez."
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -227,12 +234,14 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Akış tasarımcısına klavye alternatifi; izleme erişilebilir",
-        "Akış durumu renk dışında metinle; kontrast 7:1",
-        "Hata bilgisi yapılandırılmış olarak tutulur"
+        "Akış grafiği ekran okuyucuya erişilebilir: düğüm/kenar yapısı ARIA ile ağaç veya sıralı liste olarak sunulur; sürükle-bırak flow designer'a tam klavye alternatifi (adım ekle/bağla/sil) sağlanır.",
+        "Akış ve konnektör durumu renk dışında metin/ikon ile de işaretlenir (enabled/running/retrying/DLQ etiketleri); metin kontrastı 7:1 (AAA) tutulur.",
+        "Klavye ile gezinilen tüm öğelerde görünür odak halkası bulunur; odak sırası akış adımlarının mantıksal sırasını izler, odak tuzağı yoktur.",
+        "DLQ/hata kayıtları yapılandırılmış ve programatik okunabilir sunulur; hata nedeni yalnız renkle değil metinle bildirilir.",
+        "Erişilebilirlik kanıtı axe ile AAA taramasında 0 ihlalle üretilir; dokunmatik hedefler en az 44 px temas alanı sağlar."
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -240,12 +249,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "iPaaS worker'ları ayrı ölçek; konnektör başına oran-sınırı",
-        "Webhook alıcısı + DLQ — dağıtım penceresi Integration Hub (iPaaS) için trafik-düşük saatlere planlanır; takvim kayıtlıdır",
-        "Shared hosting'de temel entegrasyon (kısıtlı)"
+        "iPaaS worker ve webhook receiver ayrı servis olarak ölçeklenir; her biri liveness/readiness probe ve health ucu sunar, hazır olmadan trafik almaz.",
+        "Per-connector HPA/resource/rate limit: konnektör başına kaynak isteği/limiti ve oran-sınırı tanımlıdır; yoğun bir konnektör diğerlerini veya aşağı sistemi boğmaz.",
+        "Rollback/DLQ replay stratejisi: sürüm geri-alma için önceki worker imajına dönülür, biriken DLQ kayıtları kontrollü replay ile yeniden işlenir; bozuk sürüm veri kaybı yaratmaz.",
+        "Config/secret ayrımı: konnektör uçları ve eşleme yapılandırması config'te, kimlik bilgileri kasada tutulur; secret imaja gömülmez, ortam değişkeniyle enjekte edilir.",
+        "Shared hosting sınırı: worker/webhook mimarisi WordPress sınıfı shared hosting'de tam çalışmaz; bu ortamda yalnız kısıtlı senkron entegrasyon sunulur, ölçekli akış Swarm/K8s gerektirir."
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -258,7 +269,7 @@
         "Olay: entegrasyon hatası → yeniden-dene; tükenince DLQ + uyar (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -271,7 +282,7 @@
         "AI eşleme/konnektör önerir; akış yapılandırmasını/kimlik bilgisini insan onaylar"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -284,7 +295,7 @@
         "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -292,12 +303,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A10 SSRF: dış çağrı allowlist/iç-IP reddi",
-        "A08 Integrity: webhook imza + idempotency",
-        "A09 Logging: akış/hata kararları iz"
+        "A10 SSRF: dış çağrı hedefleri allowlist ile sınırlanır, iç-IP/link-local aralıklar reddedilir; connector uç URL'si ve yönlendirmeler doğrulanır.",
+        "A04 Insecure Design + input validation: webhook payload şeması, header, connector id ve mapping expression tip/aralık düzeyinde doğrulanır; ifade değerlendirmesi sandbox'ta, serbest kod yürütmesi yasak.",
+        "A08 Integrity: webhook imza doğrulaması + idempotency anahtarı; imzasız/tekrarlı istekler reddedilir, konnektör paketleri SBOM ile izlenir ve bağımlılık zafiyeti taranır.",
+        "A09 Logging + append-only audit trail: akış/eşleme/hata kararları kim-ne-nezaman-nereden alanlarıyla değiştirilemez denetim izine yazılır; A01 kapsamında rol bazlı erişim least-privilege uygulanır.",
+        "Standart hizalama ASVS/NIST'e göre yapılır; AI eşleme/konnektör önerisi üretiyorsa LLM prompt injection için sub_prompt güvenilmez sayılır ve öneri motordan izole yürütülür, doğrudan prod write yapamaz."
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -305,12 +318,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "iPaaS, tüm app'leri dış sistemlere bağlar (channel-hub/webhook ile)",
-        "Konnektörler MCP/registry'den olabilir",
-        "Akışlar workflow/BPM ile tetiklenebilir"
+        "Sözleşmeli bağ: app modülleri iPaaS'ı yalnız typed connector API / event bus / webhook contract üzerinden tüketir; iPaaS iç tablolarına (akış, eşleme, DLQ) doğrudan erişemez.",
+        "Bağımlılık yönü tek yönlüdür: app event → iPaaS contract → external adapter; app'ler dış sistemi tanımaz, iPaaS'ın yayınladığı sonuç/hata olayına abone olur.",
+        "Konnektörler MCP/registry üzerinden kayıtlıdır; her konnektör sürümlü bir adapter sözleşmesi sunar, kırıcı değişiklik migration (expand-contract) ile yönetilir.",
+        "Akışlar k-bus olayları veya workflow/BPM (s-bpm) tetikleyicileriyle başlatılır; oran-sınırı (scale-ratelimit) ve webhook giriş (l1-webhook-in) sözleşmeleri sınır olarak uygulanır.",
+        "iPaaS aşağı sistemlere yalnız kendi contract yüzeyini açar; app modülü bir konnektörün iç durumunu değil, yayınlanan olay/sonuç sözleşmesini okur."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -324,7 +339,7 @@
         "Integration Hub (iPaaS) bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Integration Hub (iPaaS), tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (ArcheType/taş; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-ipaas — \"Integration Hub (iPaaS)\" (archetype/kaya; küme: Platform & Yatay). Özet: Zapier, n8n, OpenClaw muadili. API gateway + otomasyon Etiketler: platform-horizontal, ipaas, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

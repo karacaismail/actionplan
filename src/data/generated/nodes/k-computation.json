@@ -17,7 +17,8 @@
     "dag",
     "bom",
     "kernel",
-    "layer0"
+    "layer0",
+    "module"
   ],
   "dependsOn": [
     "k-schema"
@@ -315,10 +316,10 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "computation tablosu bir türetilmiş alanın hesabını output_field, inputs, expr_kind (formula|lookup|graph), profile (pricing|tax|bom|payroll) ve deterministic beyanıyla tanımlar",
+        "İşlevsel sınır (kapsam): computation yalnız türetilmiş değer üretir — output_field, inputs, expr_kind (formula|lookup|graph), profile (pricing|tax|bom|payroll) ve deterministic beyanıyla; validation (değeri kabul/ret) ve ECA (event→action) bu fonksiyon sınırının dışındadır",
         "derivation_edge kenarları hesap hattını depends_on_field_or_computation + edge_kind (field|computation) ile modeller; bütün graf DAG (döngüsüz) olmak zorunda",
-        "graph kind BOM çok-seviyeli patlama (explosion) için her seviyeye alt-computation kenarı verir; motor grafiği topolojik sırada çözer",
-        "ComputationEngine.evaluate(key, inputs, tenant_id) sonucu + kullanılan girdiler + graph.version ile izlenebilir döner; yan etki ve dış çağrı yok"
+        "graph kind BOM çok-seviyeli patlama (explosion) için her seviyeye alt-computation kenarı verir; motor grafiği topolojik sırada deterministik çözer",
+        "ComputationEngine.evaluate(key, inputs, tenant_id) tipli API sonucu + kullanılan girdiler + graph.version ile izlenebilir döner; yan etki, serbest JS/SQL/Python ve dış çağrı bu sınırın dışında kalır"
       ],
       "notes": "Kaynak: docs/computation-derivation-contract.md §5 (computation/derivation_edge alan tabloları), §7 (evaluate imzası). Üç ifade türü: formula (tek-ifade whitelist), lookup (arama tablosu), graph (çok-seviyeli patlama).",
       "prompt": "Computation'ın işlevsel sınırını kapsa: computation + derivation_edge alan yapısı, formula|lookup|graph ifade türleri ve BOM çok-seviyeli patlama semantiği. Kısıt: yalnız whitelist operatör düğümleri, serbest kod yok. Çıktı: izlenebilir, yeniden-hesaplanabilir, DAG-güvenli derivation grafiği.",
@@ -329,10 +330,10 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Serbest JS/SQL/Python evaluate YASAK; yalnız whitelist operatör düğümleri çalışır, bu injection ve keyfi-kod yürütme yüzeyini tümden kapatır",
-        "Platform profilleri (tenant_id = NULL) ortak taban; tenant override yalnız izin verilen düğümlerle daraltır, üst katmanı genişletemez",
-        "Her tenant override'ı tenant_id ile v1 §2.1 fail-closed izole: A tenant B'nin fiyat/BOM grafiğini göremez ve değiştiremez",
-        "Sistem-katman resmî formüller (yasal KDV tablosu) yalnız işletmeci/uyum ekibince güncellenir; tenant bunları override edemez"
+        "Serbest JS/SQL/Python evaluate deny edilir; yalnız whitelist operatör düğümleri çalışır, bu injection ve keyfi-kod yürütme yüzeyini tümden kapatır",
+        "Platform profilleri (tenant_id = NULL) ortak taban; tenant override least-privilege (en-az-ayrıcalık) ile yalnız izin verilen düğümleri daraltır, üst katmanı genişletemez",
+        "Her tenant override'ı tenant_id ile fail-closed izolasyon (isolation) altındadır: A tenant B'nin fiyat/BOM grafiğini göremez ve değiştiremez",
+        "Tanım/versiyon değişiklikleri audit izine yazılır; sistem-katman resmî formüller (yasal KDV tablosu) yalnız işletmeci/uyum ekibince güncellenir, tenant bunları override edemez"
       ],
       "notes": "Kaynak: docs/computation-derivation-contract.md §9 (multi-tenant katman), §3 non-goal (serbest kod yok). deterministic=false ise motor reddeder; dış duruma dokunma ve dış çağrı yasaktır.",
       "prompt": "Computation güvenlik sınırını kapsa: serbest kod yasağı (yalnız whitelist operatör), platform/tenant katman (NULL taban) ve fail-closed cross-tenant izolasyon. Kısıt: tenant tabanı genişletemez, yalnız daraltır. Çıktı: injection yüzeyi kapalı, katmanlı-izole hesap grafiği.",
@@ -343,10 +344,10 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "ComputationDef grafiği veri olarak yorumlanır; hesap koda gömülmez, 16 uygulamada tekrarlanan pricing/tax/bom mantığı tek motora iner",
+        "Kod-sağlığı ekseni: ComputationDef grafiği veri olarak yorumlanır; hesap koda gömülmez, 16 uygulamada tekrarlanan pricing/tax/bom mantığı tek motora iner (tekrar/karmaşıklık azaltma)",
         "Grafik topolojik sırada bir kez çözülür; ortak alt-computation'lar (ör. birim maliyet) memoization ile yeniden-hesaplanmaz",
-        "computation ve derivation_edge tipleri katı şemayla (Zod/SQLModel) tiplenir; whitelist operatör dışı ifade tanım anında elenit",
-        "Türetilmiş alan ön yüzde salt-okunur render edilir; alan-alan if dalı yerine form şeması config'ten okunur"
+        "computation ve derivation_edge tipleri katı şemayla (Zod/SQLModel) tiplenir; whitelist-dışı ifade lint/tip kapısında (lint/gate) tanım anında elenir, CI eşiği (threshold) yeşil olmadan yayım açılmaz",
+        "İfade metni whitelist operatör AST'sine ayrıştırılır (parsing/decomposition); serbest metin yerine yapısal düğümlere ayrıştırıldığından ölü if-dalı ve gömülü şube büyümesi oluşmaz"
       ],
       "notes": "Kaynak: docs/computation-derivation-contract.md §1 (16 kez tekrar sorunu), §8 (config-driven computed field). graph kind için topolojik çözüm; whitelist dışı ifade reddedilir, ölü dal oluşmaz.",
       "prompt": "Computation kod optimizasyonunu kapsa: grafiğin veri-olarak tek motorda yorumlanması, ortak alt-computation memoization ve whitelist-dışı ifadenin tanım-anında elenmesi. Kısıt: hesap koda gömülmez, config-driven. Çıktı: 16 uygulamada tekrarsız, tek kaynaklı türetme motoru.",
@@ -358,9 +359,9 @@
       "status": "filled",
       "items": [
         "computation tanım değişiklikleri ve versiyon geçişleri AuditLogger.log() ile yazılır: 'fiyat kuralı ne zaman, kim tarafından değişti' izlenir",
-        "Hesap sonucu (hacim nedeniyle) audit'lenmez ama deterministik + versiyonludur; yeniden-hesap her zaman aynı çıktıyı doğrular",
-        "Grafik yayımı insan approval_ref ister; onaysız apply ApprovalRequiredError fırlatır ve denetim izine trace_id ile yazılır",
-        "Tenant override en az ayrıcalıkla sınırlanır; izin-dışı düğüm ekleme denemesi (taban genişletme) fail-closed reddedilir"
+        "Yalnız allowlist (whitelist) operatör düğümleri yüklenir; grafik yayımı approval_ref/imza (signature) ister, imzasız/onaysız tanım ApprovalRequiredError ile reddedilir",
+        "Motor egress-sıfırdır: dış ağ çağrısı ve dış duruma yazma yoktur; saldırı yüzeyi (surface) yalnız tipli girdi/çıktıya indirgenir, sonuç deterministik + versiyonludur",
+        "Operatör allowlist'i ve platform lookup bağımlılıkları sürümlenip bağımlılık envanteri/SBOM ile izlenir; tenant override least-privilege ile tabanı genişletemez, izin-dışı düğüm ekleme fail-closed reddedilir"
       ],
       "notes": "Kaynak: docs/computation-derivation-contract.md §7 (tanım audit'i), §10 (approval_ref). Anti-pattern §14: tenant'ın platform tabanını genişletmesi yasak; katman yalnız daraltır.",
       "prompt": "Computation güvenlik optimizasyonunu kapsa: tanım/versiyon değişiklik audit'i, grafik yayımı için insan approval_ref ve tenant override least-privilege. Kısıt: sonuç audit'lenmez (hacim) ama determinist+versiyonlu. Çıktı: 'kim/ne zaman değiştirdi' izlenebilir, onay-kapılı hesap yönetimi.",
@@ -477,10 +478,11 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "ArcheType 'computed field'ları bu primitife referans verir; k-computation yalnız k-schema'ya bağımlıdır (paralel kilitlenebilir)",
+        "Bağımlılık yönü tek yönlüdür (dependency direction): k-computation yalnız k-schema'ya bağımlıdır, üst app/module'e bağımlı değildir; ArcheType 'computed field'ları bu primitife referans verir, paralel kilitlenebilir",
+        "Tüketiciler yalnız tipli ComputationEngine.evaluate API'si (typed interface/API) üzerinden okur; computation tablosuna doğrudan erişim yoktur",
+        "Girdi alan değişimi olay veriyolu (event bus) üzerinden on_write/on_query yeniden-hesabını tetikler; mode_profile fiyat/vergi profilini pricing_policy_ref ve tax_policy_ref ile bağlar (B2B/B2C ayrı profil)",
         "k-fieldtypes money/measure girdiyi tip-güvenli sağlar; hatalı boyut/kur karışımı hesap anında değil tanım anında reddedilir",
-        "mode_profile fiyat/vergi profilini pricing_policy_ref ve tax_policy_ref üzerinden bağlar; B2B/B2C farklı computation profiline bağlanabilir",
-        "Tüketiciler: Commerce (pricing net-total/indirim/kampanya), MRP (BOM-patlama + routing maliyeti), Accounting (defter türetme), HRMS (bordro)"
+        "Tüketiciler bu tipli API'yi okur: Commerce (pricing net-total/indirim/kampanya), MRP (BOM-patlama + routing maliyeti), Accounting (defter türetme), HRMS (bordro)"
       ],
       "notes": "Kaynak: docs/computation-derivation-contract.md §11 (bağlama) + §6 (dependsOn: k-schema). Computation yalnız şemaya bağımlı olduğu için erken/paralel kilitlenebilir; diğer primitiflere bağlı değildir.",
       "prompt": "Computation entegrasyonunu kapsa: ArcheType computed field referansı, k-schema bağımlılığı, k-fieldtypes money/measure girdi ve mode_profile pricing/tax_policy_ref bağı. Kısıt: yalnız k-schema'ya bağımlı, paralel kilitlenir. Çıktı: Commerce/MRP/Accounting/HRMS'i besleyen türetme motoru.",

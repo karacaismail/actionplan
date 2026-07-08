@@ -22,7 +22,8 @@
     "bölgeye",
     "brain",
     "ikamet",
-    "replikasyonu"
+    "replikasyonu",
+    "feature"
   ],
   "dependsOn": [
     "k-tenancy",
@@ -150,12 +151,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Çok-bölge + Felaket Kurtarma (DR): coğrafi yedeklilik, yük dağıtımı ve failover",
-        "Aktif-aktif/aktif-pasif topoloji; veri replikasyonu",
-        "RPO/RTO hedefleri ve düzenli failover tatbikatı"
+        "Kapsam sınırı: birim yalnız bölge sağlığını izler, trafiği yönlendirir, replikasyonu ve failover'ı koordine eder; app/module üretmez veya güncellemez, ruleset override etmez, gerçek deploy/infra komutu tetiklemez (yalnız onaylı kontrol çağrısı).",
+        "Topoloji: aktif-pasif (primary bölge + hazır ikincil) ile aktif-aktif seçenekleri; senkron/asenkron replikasyon ve traffic routing (en yakın sağlıklı bölge) tanımlı; residency politikası hangi verinin hangi bölgede kalacağını sınırlar.",
+        "Girdi/çıktı sözleşmesi: girdi = bölge sağlık sinyali, failover talebi (region id, tenant id, reason), residency policy, replication cursor; çıktı = routing kararı, failover durumu, RPO/RTO ölçüm kanıtı — hepsi tipli şema ile doğrulanır.",
+        "Durum akışı: healthy → degraded → failover-pending → active-secondary → recovered; her geçiş idempotent ve append-only iz bırakır, geri-alınabilir.",
+        "Hata yolu/kabul kriteri: split-brain, stale replica ve yetkisiz failover reddedilir; kabul metriği RPO ≤ 5 dk, RTO ≤ 60 dk (yazılım/konfig hedefi olarak ölçülür, hukuki iddia değil), periyodik DR drill kanıtıyla doğrulanır."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,12 +166,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Bölgeler-arası trafik şifreli; veri ikamet (residency) kuralına uyar",
-        "Replikasyon kimlik bilgileri kasada",
-        "Failover yetkili ve izli işlem — veri erişim genişliği Multi-region + Disaster Recovery sorgularında satır-düzeyi filtreyle sınırlanır"
+        "Bölge/tenant izolasyonu: her failover ve routing kararı tenant id ile daraltılır (PostgreSQL RLS); bir bölgenin trafiği/verisi başka tenant'a sızamaz, cross-region sorgular satır-düzeyi filtreden geçer.",
+        "Least-privilege failover rolü: failover'ı tetikleyen kimlik yalnız routing/failover kontrolüne yetkili; genel prod-write, ruleset override ve app/module mutasyonu deny edilir.",
+        "Şifreli replikasyon: bölgeler-arası trafik ve replikasyon secret'ları KMS ile yönetilir/rotasyona tabidir, düz metin secret repoda tutulmaz; replikasyon kanalı TLS ile şifrelidir.",
+        "Residency deny policy: izinli bölge dışına veri yazma/replikasyon talebi konfigürasyon ve sözleşme kontrolüyle reddedilir (yazılım kısıtı olarak; hukuki KVKK/GDPR yorumu yapılmaz).",
+        "Append-only audit kanıtı: her failover, routing değişimi ve residency reddi değişmez (append-only) audit trail'e yazılır; kim, hangi bölge, hangi gerekçeyle sorusu izlenebilir."
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -176,12 +181,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Uygulama bölge-bilgisiz (stateless); durum replike depoda",
-        "Çakışma çözümü (CRDT/son-yazan) açık",
-        "Yönlendirme en yakın sağlıklı bölgeye"
+        "Kod sağlığı ekseni: lint + typecheck + infra-contract gate CI'da zorunlu; region health API, traffic router ve replication cursor sözleşmeleri tipli, sözleşme ihlali derlemede/PR'da kırar.",
+        "Sorumluluk ayrıştırma: router (routing kararı), replicator (durum kopyalama) ve drill-runner (DR tatbikatı) ayrı modüller; her biri tek sorumluluk taşır, döngüsel karmaşıklık ve batch boyutu sınırlıdır.",
+        "İdempotent state machine: healthy → degraded → failover-pending → active-secondary → recovered geçişleri saf/idempotent fonksiyonlarla modellenir; aynı failover talebi iki kez gelse tek etki üretir.",
+        "Failover budget/eşik: failover tetikleme sıklığı ve eşiği kodda parametrelenir (flapping'i önler); ölü/erişilemez bölge kodu ve kullanılmayan replikasyon dalları elenir.",
+        "Bölge-bilgisiz servisler: uygulama katmanı stateless kalır, durum replike depoda tutulur; böylece routing/failover kod yolu servis kodundan ayrık ve test edilebilir olur."
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -189,12 +196,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Veri ikamet: belirli veri yalnız izinli bölgede",
-        "Failover idempotent ve geri-alınabilir",
-        "Replikasyon gecikmesi (lag) izlenir (split-brain önleme)"
+        "Sertleştirme ekseni: SBOM üretimi + SCA bağımlılık taraması CI'da zorunlu; router/replicator/drill-runner bağımlılıkları için bilinen zafiyetler build'i kırar.",
+        "İmzalı/allowlist infra manifest: failover ve topoloji değişiklikleri yalnız imzalı, allowlist'teki manifest'lerle uygulanır; imzasız/kapsam-dışı değişiklik reddedilir.",
+        "Egress/yüzey daraltma: bölgeler-arası yalnız gereken portlar/servisler açık; residency dışı hedeflere egress kapalı, saldırı yüzeyi minimuma indirilir.",
+        "Secret rotation/KMS: replikasyon ve failover kimlik bilgileri KMS'te tutulur ve periyodik rotasyona tabidir; sızıntıda anında revoke edilebilir.",
+        "Split-brain guard + rollback sertleştirme: aynı anda iki primary'yi engelleyen fencing/quorum kontrolü; her failover geri-alınabilir ve rollback yolu güvenli (kısmi durum bırakmaz)."
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -207,7 +216,7 @@
         "Failover RTO hedefiyle ölçülür — Multi-region + Disaster Recovery toplu okumaları N+1 taramasından geçer; yük testi eşiği p95 500ms CI'dadır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -220,7 +229,7 @@
         "Bölge durumu gerekirse gösterilir — Multi-region + Disaster Recovery PWA kurulumu cihaz matrisinde doğrulanır; offline kuyruk senkronu senaryo testlidir"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -233,7 +242,7 @@
         "Failover onayı açık uyarılı — Multi-region + Disaster Recovery canlı duyuruları (aria-live) ekran okuyucu senaryosuyla ayrıca doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -246,7 +255,7 @@
         "Shared hosting çok-bölge sağlamaz (degrade, tek-bölge)"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -259,7 +268,7 @@
         "Olay: replikasyon lag eşiği aştı → senkron moda geç/uyar (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -272,7 +281,7 @@
         "AI kapasite/failover senaryosu önerir; failover'ı kendisi tetikleyemez (insan onaylı)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -280,12 +289,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Failover tatbikatı (RTO/RPO) testi — Multi-region + Disaster Recovery sınır-değer ve hata-yolu senaryoları ayrı fixture setiyle koşulur",
-        "Split-brain/çakışma çözümü testi — mutasyon testi örneklemi Multi-region + Disaster Recovery kritik fonksiyonlarında periyodik koşulur",
-        "Veri ikamet uyum testi; en çok 6 tur"
+        "Unit: state machine geçişleri (healthy→degraded→failover-pending→active-secondary→recovered) ve idempotency saf fonksiyon testleriyle doğrulanır.",
+        "Contract: region health API, traffic router ve replication cursor sözleşmeleri şema testiyle kilitlenir; sözleşme kırılırsa test kırar.",
+        "Integration: replicator + router + service health birlikte koşulur; failover talebinden active-secondary'ye geçiş uçtan-uca gözlemlenir.",
+        "E2e/chaos DR drill: bölge kaybı simüle edilir, RPO ≤ 5 dk / RTO ≤ 60 dk hedefi ölçülür; drill kanıtı (evidence) saklanır.",
+        "Negatif senaryolar: split-brain (çift primary), stale replica (geride kalan kopyaya yönlendirme) ve unauthorized failover reddedilmeli — her biri ayrı fixture/evidence setiyle; testing-loop QA sınırı maks 6 tur, düzelmezse raporlanır."
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,12 +304,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A02 Cryptographic Failures: bölgeler-arası trafik şifreli",
-        "A04 Insecure Design: split-brain önleme",
-        "A09 Logging: failover kararları iz — Multi-region + Disaster Recovery oturum/kimlik akışı A07 kontrol listesiyle gözden geçirilir"
+        "Standart hizalama: ASVS doğrulama gereksinimleri, NIST (DR/kurtarma) ve SBOM tedarik-zinciri kanıtı bu birimin çıktı setine bağlanır.",
+        "A01 Broken Access Control / A08 Integrity: yetkisiz failover ve imzasız infra manifest deny edilir; least-privilege failover rolü uygulanır.",
+        "A02 Cryptographic Failures: bölgeler-arası trafik ve replikasyon secret'ları KMS/TLS ile şifrelidir.",
+        "A04 Insecure Design: split-brain guard (quorum/fencing) ve stale-replica reddi tasarım seviyesinde ele alınır.",
+        "Girdi doğrulama + A09 Logging: region id, tenant id, failover request, residency policy ve replication cursor tipli şema ile valide edilir; her failover/routing/residency kararı append-only audit trail'e (denetim izi) yazılır."
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -306,12 +319,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Multi-region, tüm durum-bilgili servislerin dağıtım topolojisini etkiler",
-        "Veri katmanı replikasyonu ile — Multi-region + Disaster Recovery geri-basınç sinyali tüketiciden üreticiye sözleşmeyle taşınır",
-        "Gözlemlenebilirlik bölge sağlığını izler"
+        "Sözleşmeli bağ: entegrasyon tipli region health API, event bus ve traffic router contract üzerinden yapılır; serbest sorgu/tabloya erişim değil, sözleşmeli yüzey kullanılır.",
+        "Bağımlılık yönü: service health → failover controller → router/replicator; sağlık sinyali kaynağı, kontrolör kararı verir, router/replicator uygular — ters yönlü bağımlılık yoktur.",
+        "İç tablo izolasyonu: uygulama servisleri replikasyon iç tablolarına/cursor'una doğrudan erişmez; yalnız yayınlanan olay ve API üzerinden okur.",
+        "Olay yayını: bölge durum değişiklikleri (degraded/failover-pending/active-secondary) event bus'a yayınlanır; gözlemlenebilirlik, bildirim ve denetim aboneleri bunu dinler.",
+        "Geri-basınç: replikasyon/routing yük sinyali tüketiciden üreticiye sözleşmeyle taşınır, iç mekanizma sızdırılmaz."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -325,7 +340,7 @@
         "Üst modül Multi-region + Disaster Recovery birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Multi-region + Disaster Recovery, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (taş/kum; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-multiregion — \"Multi-region + Disaster Recovery\" (feature/taş; küme: Scale Primitifleri). Özet: Tek veri merkezi = tek nokta arıza. İki bölge = iş sürekliliği. KVKK + GDPR veri-yerelleştirme zorunluluğu da var. Etiketler: scale, multi-region, disaster-recovery, replication, gdpr.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

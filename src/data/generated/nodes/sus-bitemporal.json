@@ -5,7 +5,7 @@
   "level": "feature",
   "title": "Bitemporal immutable kayıt — tek doğruluk",
   "slug": "sus-bitemporal",
-  "summary": "XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu.",
+  "summary": "XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu.",
   "parentId": "app-sus",
   "order": 4,
   "icon": "ph-clock-counter-clockwise",
@@ -22,7 +22,8 @@
     "girdi",
     "kvkk",
     "ruleset",
-    "sürüm"
+    "sürüm",
+    "feature"
   ],
   "dependsOn": [],
   "blocks": [
@@ -145,12 +146,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt: Bitemporal immutable kayıt — tek doğruluk (XTDB): valid_time + system_time otomatik; audit/time-travel/KVKK bedava",
-        "Bitemporal Kayıt kapsamı: her kaydı geçerlilik-zamanı ve sistem-zamanı ile saklar; geçmiş değişmez",
-        "Bitemporal Kayıt bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi/çıktı sözleşmesi: append writer girdisi { tenantId, entityRef, payload, validFrom, validTo?, correlationId }; çıktı { versionId, systemTime, validTime, state }. system_time platform tarafından atanır, istemci override edemez; valid_time iş olayının gerçek zamanıdır.",
+        "Immutable append: her yazma yeni bir bitemporal sürüm satırı ekler; hiçbir satır UPDATE/DELETE almaz. Düzeltme, eski gerçeği silmez — yeni bir correction event olarak eklenir ve önceki sürümü superseded işaretler.",
+        "Time-travel query sözleşmesi: point-in-time okuma { tenantId, entityRef, asOfValidTime, asOfSystemTime } alır; verilen iki zaman ekseninde o an geçerli olan tek sürümü döner. asOf verilmezse now/now varsayılır.",
+        "Durum akışı: proposed -> committed -> superseded -> queried. proposed doğrulama beklerken taslaktır; committed kalıcı sürümdür; sonraki düzeltme geldiğinde önceki committed sürüm superseded olur; queried zaman-yolculuğu okumasında dönen tarihsel görünümdür.",
+        "Hata yolu ve kabul kriteri: validTo < validFrom, geleceğe tarihli system_time veya çakışan valid aralığı geldiğinde yazma reddedilir ve mevcut sürüm korunur (kabul: reddedilen istekten sonra en son committed sürüm bozulmadan okunabilir); her başarılı append idempotency anahtarıyla tekrar oynatıldığında aynı versionId'yi döndürür."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -158,12 +161,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt güvenlik açısı: değişmez kayıt audit ve KVKK kanıtını yapısal sağlar",
-        "Bitemporal Kayıt hassas bilgi gerektiğinde maskelenir",
-        "Bitemporal Kayıt ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Tenant isolation: her bitemporal sürüm satırı tenantId taşır; okuma/yazma yolları PostgreSQL RLS ile filtrelenir, time-travel sorgusu da tenant sınırının dışına çıkamaz — cross-tenant asOf sorgusu boş döner.",
+        "Least-privilege erişim: append writer yalnız INSERT, query reader yalnız SELECT yetkisi alır; UPDATE/DELETE hiçbir uygulama rolüne verilmez, böylece immutable garanti veritabanı seviyesinde de zorlanır.",
+        "PII masking/encryption: kişisel veri alanları sürüm payload'ında sınıflandırılır; hassas alanlar at-rest şifrelenir ve düşük yetkili rollere maskeli döner — geçmiş sürümdeki PII de aynı maske politikasına tabidir.",
+        "Immutable audit evidence: her sürüm satırı actor, correlationId, system_time ve correction gerekçesini içerir; bu kayıt yalnız denetim kanıtı ve zaman-yolculuğu altyapısı sağlar — kendi başına bir hukuki uygunluk iddiası oluşturmaz.",
+        "Audit/deny: yetkisiz mutasyon denemesi (UPDATE/DELETE, geçmişi yeniden yazma, cross-tenant düzeltme) reddedilir ve reddin kendisi de değişmez audit'e yazılır."
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -171,12 +176,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt yapısı: güncelleme yeni sürüm ekler; eski sürüm silinmez",
-        "Bitemporal Kayıt tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Bitemporal Kayıt okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: append/query/correction yolları lint + typecheck + contract gate'inden geçmeden birleşmez; Zod sözleşmesi valid_time/system_time alanlarını tip düzeyinde zorlar.",
+        "Sorumluluk ayrıştırma: append writer, query reader ve correction validator ayrı modüllerdir; yazma yolu okuma yoluna, doğrulama yolu yazma yoluna bağımlı olmaz — böylece immutable garanti tek noktada test edilir.",
+        "Pure state transitions: proposed -> committed -> superseded geçişleri yan etkisiz saf fonksiyonlarla modellenir; girdi sürüm + olay, çıktı yeni sürüm — I/O bu saf çekirdeğin dışında kalır.",
+        "Bitemporal query budget: point-in-time çözümleme için karmaşıklık sınırı konur (tek asOf çözümü ≤1 indeks taraması); eşiği aşan sorgu kod incelemesinde reddedilir.",
+        "Complexity sınırı: correction validator'ın döngüsel karmaşıklığı sınırlandırılır ve tekrar eden zaman-aralığı çakışma kontrolü tek paylaşılan yardımcıya alınır; ölü/erişilemez sürüm mantığı elenir."
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,12 +191,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt en-az-ayrıcalık ilkesine uyar",
-        "Bitemporal Kayıt değişikliği sürümlü ve izlenir",
-        "Bitemporal Kayıt girdi sınırda doğrulanır"
+        "Signed correction events: her düzeltme olayı imzalanır; imzası doğrulanmayan correction reddedilir, böylece geçmişi sessizce değiştiren sahte sürüm ekleme yüzeyi kapanır.",
+        "Schema allowlist: append payload yalnız izinli alan şemasına (allowlist) göre kabul edilir; şema dışı alan veya tip reddedilir — serbest biçimli/gizli alan enjeksiyonu engellenir.",
+        "Egress/yüzey daraltma: query reader yalnız salt-okuma sorgu yüzeyini dışa açar; yazma ve düzeltme uçları iç ağla sınırlanır, gereksiz endpoint kaldırılarak saldırı yüzeyi daraltılır.",
+        "Secret rotation/KMS: at-rest şifreleme ve imza anahtarları KMS'te tutulur ve düzenli döndürülür; anahtar sızıntısında eski sürümlerin imza doğrulaması yeniden yapılabilir.",
+        "Tamper rollback hardening: bir sürümü UPDATE/DELETE ile bozma girişimi RLS + rol kısıtıyla engellenir; anomali tespitinde etkilenen aralık son doğrulanmış snapshot'a geri alınır ve olay değişmez audit'e yazılır."
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -197,12 +206,14 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt performans açısı: zaman-sorgusu indeksli; geçmiş sorgu ayrı yoldan",
-        "Bitemporal Kayıt sık erişim indeksli/önbellekli tasarlanır",
-        "Bitemporal Kayıt büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: point-in-time (asOf) sorgusu p95 ≤ 150 ms; correction append p95 ≤ 200 ms; tarihsel liste (bir entity'nin tüm sürümleri) p95 ≤ 400 ms.",
+        "Composite index: (tenant, entity, valid_time, system_time) bileşik indeksi kurulur; asOf çözümü bu indeks üzerinden tek taramayla en güncel geçerli sürümü bulur, tam tablo taraması yapılmaz.",
+        "Cursor pagination: tarihsel sürüm listesi (system_time, versionId) imleç anahtarıyla sayfalanır; OFFSET kullanılmaz, böylece derin geçmişte sayfa gecikmesi sabit kalır.",
+        "N+1 önleme: birden çok entity için toplu asOf sorgusu tek sorguda batch çözülür; her entity için ayrı zaman-yolculuğu çağrısı yapılmaz.",
+        "Cache: değişmez tarihsel sürümler (superseded/queried) uzun TTL ile önbelleklenir — geçmiş asla değişmediği için invalidasyon yalnız o entity'ye yeni committed sürüm eklendiğinde tetiklenir."
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -210,12 +221,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Bitemporal Kayıt mobil istemci aynı sözleşmeyi tüketir",
-        "Bitemporal Kayıt bildirim/onay gerektiğinde push ile iletilir"
+        "PWA/Capacitor paketleme: zaman çizelgesi görünümü PWA olarak sunulur, iOS/Android için Capacitor köprüsüyle paketlenir; salt-okuma sorgu yüzeyi aynı sözleşmeyi tüketir, mobilden yazma/düzeltme yapılmaz.",
+        "Offline read-only history snapshot: son çözülmüş asOf sonuçları ve entity zaman çizelgesi yerel cache'e alınır; ağ yokken kullanıcı geçmiş sürümleri salt-okuma görüntüler, çevrimdışı düzenleme kabul edilmez.",
+        "Dokunmatik erişim: mobil zaman çizelgesi kartlarında en az 44 px temas alanı sağlanır; sürüm kartları, asOf tarih seçici ve 'düzeltmeyi gör' aksiyonu tek elle rahat kullanılır.",
+        "Deep-link to historical version: her tarihsel sürüm { entityRef, asOfValidTime, asOfSystemTime } içeren derin bağlantıyla açılır; bağlantı doğrudan o point-in-time görünümüne gider ve paylaşıldığında aynı tarihsel durumu gösterir.",
+        "Dar ekran düzeni: sürüm zaman çizelgesi dikey tek sütuna iner; valid_time/system_time ve durum (committed/superseded) metinle okunur kalır."
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,7 +241,7 @@
         "Bitemporal Kayıt klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,7 +254,7 @@
         "Bitemporal Kayıt shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -254,7 +267,7 @@
         "Bitemporal Kayıt bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -267,7 +280,7 @@
         "Bitemporal Kayıt — AI zaman-içi anomali önerir; veri düzeltme kararını insan verir (geçmiş yine korunur)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -275,12 +288,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Bitemporal Kayıt doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "Bitemporal Kayıt ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: append writer, correction validator ve durum geçişlerini (proposed -> committed -> superseded) saf fonksiyon testleriyle doğrular; zaman-aralığı çakışma kontrolü kenar değerleriyle sınanır.",
+        "Contract: Zod/şema sözleşmesi valid_time/system_time alanları ve asOf sorgu girdi/çıktısı için kontrat testi; şema dışı alan reddedilir.",
+        "Integration: PostgreSQL RLS + composite index üzerinde asOf sorgusunun doğru tarihsel sürümü döndürdüğü ve immutable kısıtın (UPDATE/DELETE yetkisiz) DB seviyesinde tuttuğu doğrulanır.",
+        "E2e: kullanıcı bir kaydı düzeltir, zaman çizelgesinde eski sürümün superseded ama okunabilir kaldığını ve deep-link ile tarihsel görünüme gidildiğini uçtan uca sınar.",
+        "Negatif senaryolar: backdated invalid correction (validTo < validFrom), cross-tenant time query ve doğrudan mutation attempt (UPDATE/DELETE) reddedilmeli; fixture ve reddedilen-istek audit kaydı evidence olarak saklanır. Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır."
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,7 +308,7 @@
         "Bitemporal Kayıt girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -306,7 +321,7 @@
         "Bitemporal Kayıt sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -320,7 +335,7 @@
         "Bitemporal immutable kayıt — tek doğruluk kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Bitemporal immutable kayıt — tek doğruluk bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (taş/kum; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel/KVKK bedava. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-bitemporal — \"Bitemporal immutable kayıt — tek doğruluk\" (feature/taş; küme: Platform Yetenekleri). Özet: XTDB: \"valid_time + system_time\" otomatik; audit/time-travel kanıtı; hukuki uygunluk iddiası değil. Postgres-wire uyumlu. Etiketler: sustainability, bitemporal, xtdb, audit, time-travel.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

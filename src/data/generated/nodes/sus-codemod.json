@@ -22,7 +22,8 @@
     "kuralı",
     "test",
     "alınır",
-    "girdi"
+    "girdi",
+    "feature"
   ],
   "dependsOn": [
     "edu-u12"
@@ -145,12 +146,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade: Otomatik upgrade — kendini-yükselten döngü (Drupal Rector + AI): her deprecation bir codemod kuralı olur, AI eski kodu yeniden yazar",
-        "Otomatik Upgrade kapsamı: deprecation'ları codemod kurallarına çevirip kod tabanını otomatik günceller",
-        "Otomatik Upgrade bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi sözleşmesi: her codemod kuralı (deprecation rule + AST match deseni + target version) girdi alır; tek deprecation → tek idempotent kural eşlemesi zorunludur",
+        "Çıktı sözleşmesi & işlev sınırı: codemod motoru yalnız deprecation kuralından dry-run patch (unified diff), migration report (etkilenen dosya/satır sayısı, risk notu) ve test plan üretir; app/module üretmez, ruleset override etmez, doğrudan prod write veya otomatik merge yapmaz",
+        "Durum akışı: detected → planned → dry-run → reviewed → applied | rolled-back; applied'a yalnız insan onayı + yeşil test planıyla geçilir",
+        "Hata yolu: AST match hedef sürümle uyuşmazsa veya patch derlenmezse kural 'planned'da bırakılır, hata gerekçesi migration report'a yazılır, uygulanmaz",
+        "Kabul kriteri: bir kural ancak dry-run patch üretmiş, test planı geçmiş ve reviewed işaretlenmişse 'applied' sayılır; aksi halde rolled-back'e döner"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Girdi = deprecation rule + AST match + target version; çıktı = dry-run patch + migration report + test plan. İşlev sınırı: codemod motoru yalnız deprecation kuralından bu üç çıktıyı üretir; app/module üretmez, ruleset override etmez, doğrudan prod write veya otomatik merge yapmaz. AI yalnız kural önerir; uygulama/merge kararı insan onayına bağlıdır.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -158,12 +161,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade güvenlik açısı: codemod değişikliği review+test'ten geçer; kör uygulanmaz",
-        "Otomatik Upgrade hassas bilgi gerektiğinde maskelenir",
-        "Otomatik Upgrade ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Least-privilege repo token: codemod botu yalnız branch-scoped write yetkisiyle çalışır; main/prod branch'e doğrudan yazamaz, sadece PR açar",
+        "PII/secret redaction: dry-run patch ve migration report içindeki .env, token, gizli anahtar ve kişisel veri değerleri log ve patch çıktısına yazılmadan maskelenir",
+        "Doğrudan prod write audit/deny: codemod'un prod'a doğrudan yazma denemesi ruleset tarafından reddedilir ve değişmez (append-only) audit kanıtına yazılır",
+        "İnsan onayı zorunlu: 'applied' geçişi için ekip onayı (human approval) şarttır; AI ruleset override edemez, tenant sınırını aşan kural uygulayamaz",
+        "Tenant izolasyonu: bir tenant'ın kod tabanı için üretilen kural yalnız o tenant scope'unda geçerlidir; PostgreSQL RLS ile kayıt erişimi ayrılır"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Erişim least-privilege + branch-scoped; PII/secret redaksiyonu patch ve log'ta; doğrudan prod write deny+audit; applied için human approval.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -171,12 +176,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade yapısı: her deprecation → tekrar-uygulanabilir codemod kuralı",
-        "Otomatik Upgrade tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Otomatik Upgrade okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: her üretilen patch merge öncesi lint + typecheck + codemod contract gate'inden geçer; kırmızı olan kural 'applied' olamaz",
+        "Patch size budget: bir kuralın dry-run patch'i eşik (ör. ≤400 değişen satır / PR) aşarsa otomatik parçalanır veya insan bölmesine düşer; dev PR üretilmez",
+        "Sorumluluk ayrımı: rule parser, AST transformer ve report writer ayrı modüllerdir; her biri bağımsız test edilir, biri diğerinin state'ini paylaşmaz",
+        "Idempotent transforms: aynı kural aynı kod üzerinde ikinci kez çalışınca sıfır fark üretir; tekrar uygulama yeni patch doğurmaz",
+        "Karmaşıklık sınırı: AST transformer fonksiyonları döngüsel karmaşıklık eşiğinin (ör. ≤10) altında tutulur; aşan dönüşüm alt kurallara bölünür"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni: lint/typecheck/codemod contract gate + patch size budget + parser/transformer/report writer ayrımı + idempotent dönüşüm + complexity sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,12 +191,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade en-az-ayrıcalık ilkesine uyar",
-        "Otomatik Upgrade değişikliği sürümlü ve izlenir",
-        "Otomatik Upgrade girdi sınırda doğrulanır"
+        "Signed codemod rules: her codemod kuralı imzalı yayınlanır; imzası doğrulanmayan veya değiştirilmiş kural çalıştırılmaz (tamper reddi)",
+        "Dependency allowlist + SBOM: codemod motorunun ve ürettiği bağımlılık güncellemelerinin izinli listesi ve SBOM'u tutulur; allowlist dışı paket getiren kural reddedilir",
+        "Egress/yüzey daraltma: codemod runner yalnız repo + paket kayıt defterine giden ağ trafiğine izinli; keyfi dış egress kapalı, saldırı yüzeyi minimal tutulur",
+        "Secret rotation: PR açan bot token'ı düzenli rotasyona tabidir; sızıntı şüphesinde token anında iptal edilir",
+        "Tamper rollback hardening: uygulanmış bir patch'te sonradan bütünlük ihlali saptanırsa doğrulanmış snapshot'tan geri alma (rollback) tetiklenir"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Signed codemod rules + dependency allowlist/SBOM + egress/yüzey daraltma + bot token secret rotation + tamper rollback sertleştirme.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -197,12 +206,14 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Otomatik Upgrade sık erişim indeksli/önbellekli tasarlanır",
-        "Otomatik Upgrade büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: tek kural için p95 dry-run süresi ≤ 30 sn, orta boy repo tam tarama p95 ≤ 5 dk; eşik aşımında kural profillenir",
+        "Changed-file incremental transform: yalnız son commit'te değişen dosyalar üzerinde AST dönüşümü çalışır; değişmemiş ağaç tekrar taranmaz",
+        "AST cache: ayrıştırılmış sözdizim ağaçları içerik hash'iyle önbelleğe alınır; aynı dosya için tekrar parse maliyeti ≥%70 azaltılır",
+        "Cursor/pagination for patch report: migration report imleç tabanlı sayfalanır; binlerce değişiklikte tümü belleğe alınmaz",
+        "N+1 traversal önleme: kural eşleme tek AST gezintisinde toplu yapılır; her deprecation için ağacı baştan gezme (N+1) engellenir"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedefler: p95 dry-run ≤30 sn; changed-file incremental transform; AST cache; patch report imleç sayfalama; N+1 traversal önleme.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -210,12 +221,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Otomatik Upgrade mobil istemci aynı sözleşmeyi tüketir",
-        "Otomatik Upgrade bildirim/onay gerektiğinde push ile iletilir"
+        "Mobilde read-only upgrade status: mobil yüzey codemod çalıştırmaz; yalnız kural durumunu (detected/dry-run/reviewed/applied) ve migration report özetini gösterir",
+        "PWA/Capacitor review surface: iOS/Android için PWA veya Capacitor kabuğu üzerinden dry-run patch ve diff önizleme salt-okunur incelenir",
+        "Offline cached migration report: son çekilen migration report çevrimdışı önbellekten okunabilir; bağlantı gelince tazelenir, çevrimdışı onay verilemez",
+        "Mobil upgrade onay kartlarında en az 44 px temas alanı bırakılır; onayla/reddet düğmeleri parmakla rahatça hedeflenir",
+        "Push/deep-link PR review: yeni dry-run PR'ı push bildirimiyle iletilir; deep-link doğrudan ilgili PR inceleme ekranını açar (uygulama insan onayına yönlendirir)"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Mobil UI kritik değil: read-only upgrade status. PWA/Capacitor inceleme yüzeyi, offline cached migration report, onay kartlarında en az 44 px temas alanı, push/deep-link ile PR review.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,7 +241,7 @@
         "Otomatik Upgrade klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,7 +254,7 @@
         "Otomatik Upgrade shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -254,7 +267,7 @@
         "Otomatik Upgrade bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -267,7 +280,7 @@
         "Otomatik Upgrade — AI codemod kuralı ve dönüşüm önerir; uygulama ve merge kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -275,12 +288,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Otomatik Upgrade doğrulama: codemod sonrası tüm testler yeşil olmalı; değilse geri alınır",
-        "Otomatik Upgrade ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit + contract test: rule parser, AST transformer ve report writer için birim testleri; codemod girdi/çıktı sözleşmesi (deprecation rule → dry-run patch + report) contract testiyle sabitlenir",
+        "Integration + e2e/CI: kural→dry-run→review→apply/rollback akışı entegrasyon testiyle, PR açma yolu CI e2e senaryosuyla doğrulanır",
+        "Negatif senaryolar: non-idempotent transform (ikinci koşuda fark üretme), patch/log'ta secret leak, apply sonrası failing tests ve yetkisiz kural (unauthorized rule) denemesi ayrı test edilir ve bloklanır",
+        "Fixture/evidence: her kural için önce/sonra kod fixture'ı ve beklenen diff saklanır; test koşusu geçiş kanıtı (evidence) üretir",
+        "Testing-loop QA sınırı: başarısız test en çok 6 kez yeniden koşulur; düzelmezse kural rolled-back işaretlenip raporlanır, otonom QA ajanı bu sınırı aşamaz"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test türleri: unit, contract, integration, e2e/CI. Negatif senaryolar (non-idempotent transform, patch'te secret leak, failing tests, unauthorized rule), fixture/evidence ve testing-loop QA sınırı (maks 6) tanımlı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,7 +308,7 @@
         "Otomatik Upgrade girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -306,7 +321,7 @@
         "Otomatik Upgrade sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -320,7 +335,7 @@
         "Otomatik upgrade — kendini-yükselten döngü kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Otomatik upgrade — kendini-yükselten döngü bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (taş/kum; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-codemod — \"Otomatik upgrade — kendini-yükselten döngü\" (feature/taş; küme: Platform Yetenekleri). Özet: Drupal Rector + AI: her deprecation bir codemod kuralı olur; AI eski kodu yeniden yazar. \"Migration aracı = AI\". Etiketler: sustainability, codemod, drupal, rector, ai.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

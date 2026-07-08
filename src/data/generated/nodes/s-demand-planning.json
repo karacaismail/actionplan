@@ -20,7 +20,8 @@
     "tedarik",
     "dengeleme",
     "override",
-    "tahmini"
+    "tahmini",
+    "archetype"
   ],
   "dependsOn": [
     "scale-timeseries",
@@ -150,12 +151,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Talep Planlama / S&OP: talep tahmini, satış-operasyon dengeleme ve stok hedefi",
-        "İstatistiksel + AI tahmin, senaryo planlama ve tahmin doğruluğu (forecast accuracy)",
-        "Tedarik-talep dengeleme ve güvenlik stoğu"
+        "Kapsam/işlev sınırı: birim SKU×dönem talep tahmini (demand forecast), senaryo planlama ve güvenlik stoğu (safety stock) hedefi üretir; satınalma siparişi açmaz ve stok hareketi yazmaz — bu eylemler tedarik/WMS modüllerine bırakılır (net sınır)",
+        "Girdi/çıktı sözleşmesi: girdi = geçmiş satış (historical sales) + açık siparişler + stok seviyesi; çıktı = sürümlü SKU×dönem tahmin serisi + doğruluk metriği (forecast accuracy, MAPE/bias) + onaylı S&OP planı (model/version)",
+        "Durum/akış makinesi: taslak tahmin → senaryo karşılaştırma → S&OP mutabakatı → onaylı plan; her geçiş sürümlenir ve önceki sürüm geri çağrılabilir kalır",
+        "Kabul sözleşmesi (override): planlamacı manuel override yalnız gerekçe + onay ile plana yansıtabilir; onaysız override reddedilir ve iz bırakır",
+        "Hata yolu hedefi: eksik/bozuk geçmiş satış veya negatif stok girdisinde tahmin reddedilir, hata kodu ve neden döndürülür; son onaylı plan korunur (fail-closed)"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -168,7 +171,7 @@
         "Hassas satış verisi maskeli — Demand Planning / S&OP yetki denetimi negatif senaryolarla her sürümde koşulur (deny kanıtı)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -183,7 +186,7 @@
         "Demand Planning / S&OP kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -198,7 +201,7 @@
         "Demand Planning / S&OP yönetici eylemleri ikinci kanal onayına bağlıdır; oturum yükseltme kayıtlıdır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -211,7 +214,7 @@
         "Talep küpü önbellekli — dış API zaman aşımı Demand Planning / S&OP çağrılarında 3 sn; yeniden-deneme bütçesi toplam gecikmeyi sınırlar"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -226,7 +229,7 @@
         "Demand Planning / S&OP kamera/dosya erişimi izin-öncesi açıklama ekranıyla test edilir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -241,7 +244,7 @@
         "erişilebilirlik regresyonu Demand Planning / S&OP için PR kapısında axe ile taranır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -249,12 +252,13 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Tahmin motoru ayrı worker (ML); S&OP servisi standart",
-        "Tahmin stok/satınalma planına besler",
-        "Shared hosting'de temel tahmin (ML kısıtlı)"
+        "Sağlık/probe kuralı: tahmin motoru ayrı ML worker olarak dağıtılır; her serviste liveness/readiness probe uçları tanımlı olmalı, model hazır (warm) değilken trafik almamalı (guardrail)",
+        "Rollback hedefi: yeni model/version canary ile aşamalı açılır, tahmin doğruluğu (forecast accuracy) eşiği düşerse önceki modele otomatik geri-alma (rollback) planı hazır olmalı",
+        "Config/sır kuralı: veri kaynağı bağlantı dizeleri ve model anahtarları config/secret deposundan enjekte edilir, rotasyona açıktır; imaja gömülü sır yasak",
+        "Shared hosting profilinde temel tahmin çalışır (ML kısıtlı); ML worker devre dışıysa servis düşürülmüş (degraded) modda sürmeli, çökmemeli"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -267,7 +271,7 @@
         "Olay: talep-tedarik dengesizliği → S&OP uyarısı + öneri (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -280,7 +284,7 @@
         "AI talep tahmini/senaryo önerir; planı (S&OP) insan onaylar"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -288,12 +292,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Tahmin doğruluk (backtesting) testi",
-        "Talep-tedarik dengeleme + güvenlik stoğu testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim (unit) test hedefi: güvenlik stoğu (safety stock) ve doğruluk (forecast accuracy) hesapları golden-fixture ile doğrulanır; sınır ve negatif girdiler kapsanır",
+        "Backtesting: geçmiş satış (historical sales) üzerinde model/version tahmini gerçekleşenle kıyaslanır; doğruluk eşiği altında sürüm yayınlanamaz (guardrail)",
+        "Entegrasyon (integration) testi: geçmiş satış → tahmin → stok/senaryo besleme zinciri fixture ile uçtan uca çalıştırılır; sözleşme drift'i yakalanır",
+        "E2E QA kanıtı: planlamacının override → gerekçe → onay yolculuğu senaryosu koşulur; onaysız override'ın plana yansımadığı negatif senaryoyla kanıtlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -301,12 +306,13 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A08 Integrity: tahmin modeli/varsayım sürümlü",
-        "A01 Access Control: tahmin/satış verisi erişimi",
-        "A09 Logging: tahmin override/karar iz"
+        "A01 Broken Access Control: tahmin/satış verisine ve override yetkisine rol bazlı erişim; tenant kapsamı dışına okuma/yazma reddedilir",
+        "A08 Software or Data Integrity Failures: model/version ve senaryo varsayımları sürümlü ve imzalı; geçmiş satış girdisinde şema/girdi doğrulaması (girdi doğrulama) zorunlu",
+        "A09 Security Logging and Alerting Failures: tahmin override ve S&OP onay kararları değişmez denetim izine (audit trail) yazılır; anomali override yoğunluğunda uyarı üretilir",
+        "Standart hattı: bağımlılıklar için SBOM üretilir ve girdi doğrulama kuralları ASVS referansına hizalanır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -319,7 +325,7 @@
         "Üretim mrp'ye besler — olay sırası garantisi Demand Planning / S&OP için anahtar-bazlı bölümleme ile sağlanır"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -333,7 +339,7 @@
         "Demand Planning / S&OP bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Demand Planning / S&OP, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/taş; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (archetype/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

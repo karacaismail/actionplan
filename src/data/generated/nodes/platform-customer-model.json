@@ -21,7 +21,8 @@
     "email",
     "status",
     "alembic",
-    "graphql"
+    "graphql",
+    "archetype"
   ],
   "dependsOn": [
     "platform-tenancy"
@@ -423,7 +424,7 @@
         "Customer SQLModel sınıfı hem Pydantic doğrulama modeli hem SQLAlchemy 2.0 mapped tablosu olarak çalışır; tenant_id: UUID = Field(foreign_key='tenant.id', nullable=False, index=True) zorunlu alan olarak tanımlanır.",
         "Customer varlığı id (UUID, varsayılan gen_random_uuid()), tenant_id, name (str, ≤255), email (EmailStr, benzersiz per-tenant), phone (opsiyonel), status (Enum: active/suspended/archived), preferred_locale (str, BCP-47), created_at, updated_at, deleted_at sütunlarını içerir.",
         "Benzersizlik kısıtı (tenant_id, email) birleşik UniqueConstraint ile tanımlanır; global benzersizlik değil tenant kapsamlı benzersizlik sağlanır, farklı tenant'lar aynı e-postaya sahip olabilir.",
-        "Alembic migration dosyası yalnızca Customer tablosunu kapsar ve hem upgrade() (tablo oluşturma + indeksler) hem downgrade() (tablo ve bağımlı nesnelerin silinmesi) metodunu içerir."
+        "Alembic migration dosyası yalnızca Customer tablosunu kapsar ve hem upgrade() (tablo oluşturma + indeksler) hem downgrade() (tablo ve bağımlı nesnelerin silinmesi) metodunu içerir.; kapsam sınırı Customer Modeli (SQLAlchemy/SQLModel) (platform-customer-model) için girdi/çıktı sözleşmesi, durum akışı ve hata yolu kabul ölçütüne bağlanır"
       ],
       "notes": "Customer modeli, SQLModel çift-görev tasarımıyla ayrı Pydantic ve ORM sınıfı yazmayı ortadan kaldırır.",
       "prompt": "platform-customer-model featureDefs boyutunu kapsa: SQLModel sınıf tanımı (tüm sütunlar, tipler, kısıtlar), tenant kapsamlı e-posta benzersizliği ve Alembic migration upgrade/downgrade adımlarını somut Python kod örüntüsü düzeyinde açıkla. çıktı: uygulayıcı başvuru kartı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -468,7 +469,7 @@
         "Customer tablosu için RLS politikası FORCE ROW LEVEL SECURITY ile superuser'ı da kapsar; veritabanı yöneticisi bile tenant_id filtresi olmadan sorgu çalıştıramaz.",
         "E-posta indeksi düz metin yerine pg_trgm + GIN indeksi üzerinden arama desteği sağlar; ham e-posta değeri indeks yapısına yansımaz, LIKE %@example.com sorguları indeks üzerinden çalışır.",
         "Uygulama katmanı Customer oluştururken e-postayı normalleştirir (küçük harf + trim) ve idempotent bir UPSERT (INSERT ... ON CONFLICT DO UPDATE) yürütür; çift kayıt oluşturma saldırısı engellenir.",
-        "Audit log: Customer kaydında her UPDATE/DELETE işlemi audit_event tablosuna (tenant_id, table_name, row_id, actor_id, operation, old_values, new_ts) yazılır; OWASP A09 gereği değiştirilemez iz oluşturulur."
+        "Audit log: Customer kaydında her UPDATE/DELETE işlemi audit_event tablosuna (tenant_id, table_name, row_id, actor_id, operation, old_values, new_ts) yazılır; OWASP A09 gereği değiştirilemez iz oluşturulur.; sertleştirme Customer Modeli (SQLAlchemy/SQLModel) (platform-customer-model) için secret rotasyonu, en az ayrıcalık, CSP/rate-limit yüzeyi, bağımlılık SBOM taraması ve allowlist kuralıyla uygulanır"
       ],
       "notes": "FORCE RLS + audit log birleşimi, hem ayrıcalıklı kullanıcı sızmasını hem iz manipülasyonunu engeller.",
       "prompt": "platform-customer-model güvenlik optimizasyonu boyutunu kapsa: FORCE RLS superuser kısıtı, pg_trgm GIN e-posta indeksi güvenlik gerekçesi, idempotent UPSERT ile çift kayıt saldırısı önleme ve OWASP A09 uyumlu audit log şemasını açıkla. güvenlik sınırı: superuser bile tenant filtresiz okuyamaz. çıktı: güvenlik mühendisliği notları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -617,7 +618,7 @@
       "items": [
         "platform-customer-graphql, platform-customer-ui ve platform-customer-seed archetype'ları platform-customer-model üzerine inşalanır; her biri Customer SQLModel modelini import ederek kendi katman mantığını ekler.",
         "Yeni bir varlık ArcheType eklenirken (ör. Supplier) platform-customer-model şablon olarak kullanılır: tenant_id mixin, RLS politika şablonu ve UniqueConstraint(tenant_id, email) örüntüsü kopyalanır.",
-        "platform-seed-data modülü Customer golden fixture oluştururken SQLModel modeli doğrulama ile geçerli kayıt yapısı sağlar; fixture şema kırıksa test kırmızı olur ve seed çalışmaz."
+        "platform-seed-data modülü Customer golden fixture oluştururken SQLModel modeli doğrulama ile geçerli kayıt yapısı sağlar; fixture şema kırıksa test kırmızı olur ve seed çalışmaz.; kullanım yolu Customer Modeli (SQLAlchemy/SQLModel) (platform-customer-model) için capability/API tüketimi contract kapısından geçer; panel entegrasyonu doğrudan DB/tablo erişimini yasaklar"
       ],
       "notes": "Customer modeli platform'da varlık tasarımı için referans implementasyon; tüm yeni archetype'lar bu örüntüyü miras alır.",
       "prompt": "platform-customer-model modül kullanımı boyutunu kapsa: üç archetype'ın (graphql/ui/seed) tüketim örüntüsü, yeni Supplier benzeri varlık oluşturma için şablon kopyalama adımları ve seed doğrulama bağımlılığını açıkla. çıktı: kullanım senaryoları ve bağımlılık haritası.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",

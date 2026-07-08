@@ -21,7 +21,8 @@
     "indeks",
     "model",
     "schema",
-    "yalnızca"
+    "yalnızca",
+    "module"
   ],
   "dependsOn": [
     "k-schema",
@@ -302,7 +303,7 @@
         "SQLAlchemy 2.0 mapped_column + DeclarativeBase ile tüm tenant-aware tablolar tanımlanır; her tablo zorunlu tenant_id UUID sütunu içerir.",
         "Alembic migration zinciri expand-contract deseniyle ilerler: önce yeni sütun/indeks eklenir (expand), eski kaldırılmaz; uyumluluk penceresi kapandıktan sonra contract adımı çalışır.",
         "Her migration dosyası hem upgrade() hem downgrade() metodunu eksiksiz içerir; CI'da pytest-alembic ile round-trip testi zorunludur.",
-        "PostgreSQL Row Level Security (RLS) politikaları migration içinde SET SESSION AUTHORIZATION + ENABLE ROW LEVEL SECURITY ile tabloya bağlanır; tenant yalıtımı şema katmanında güvence altına alınır."
+        "PostgreSQL Row Level Security (RLS) politikaları migration içinde SET SESSION AUTHORIZATION + ENABLE ROW LEVEL SECURITY ile tabloya bağlanır; tenant yalıtımı şema katmanında güvence altına alınır.; kapsam sınırı PostgreSQL Şema & Migration (platform-db-schema) için girdi/çıktı sözleşmesi, durum akışı ve hata yolu kabul ölçütüne bağlanır"
       ],
       "notes": "Şema katmanı, tenant yalıtımını ORM üstünde değil veritabanı katmanında (RLS + indeks) tesis eder.",
       "prompt": "platform-db-schema için featureDefs boyutunu kapsa: SQLAlchemy 2.0 tablo tanımları, Alembic expand-contract zinciri, reversible migration zorunluluğu ve PostgreSQL RLS politika bağlama adımlarını somut kod örüntüleriyle açıkla. çıktı: uygulayıcı başvuru listesi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -347,7 +348,7 @@
         "RLS politikası current_setting('app.tenant_id') ile bağlam okur; uygulama katmanı her bağlantı başında SET LOCAL app.tenant_id = <uuid> çalıştırır, aksi hâlde sorgu sıfır satır döndürür (fail-closed).",
         "Veritabanı bağlantıları PgBouncer havuzundan geçirilir; bağlantı başına yalnızca SET LOCAL (işlem-kapsamlı) parametreler kullanılır, SESSION-kapsamlı durum havuzlama bağlamını kirletmez.",
         "Alembic migration'larında SQL ifadeleri parametre bağlama (bindparams) ile yazılır; doğrudan f-string format kullanımı yasaktır ve OWASP A03 SQL Injection koruması lint kuralıyla zorlanır.",
-        "Migration geçmişi (versions/) dalından silinmez; git history rewrite hook'la engellenir, denetim izi bütünlüğü ≥12 ay korunur."
+        "Migration geçmişi (versions/) dalından silinmez; git history rewrite hook'la engellenir, denetim izi bütünlüğü ≥12 ay korunur.; sertleştirme PostgreSQL Şema & Migration (platform-db-schema) için secret rotasyonu, en az ayrıcalık, CSP/rate-limit yüzeyi, bağımlılık SBOM taraması ve allowlist kuralıyla uygulanır"
       ],
       "notes": "RLS fail-closed semantiği ve PgBouncer SET LOCAL uyumu güvenlik optimizasyonunun temel eksenini oluşturur.",
       "prompt": "platform-db-schema güvenlik optimizasyonu boyutunu kapsa: RLS fail-closed akışı, PgBouncer havuzlama uyumluluğu, migration SQL injection engeli (OWASP A03) ve migration geçmiş koruma mekanizmalarını PostgreSQL/Alembic bağlamında açıkla. güvenlik sınırı: tenant bağlamı olmayan hiçbir sorgu veri döndürmez. çıktı: güvenlik-odaklı yapılandırma listesi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",

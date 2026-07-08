@@ -39,7 +39,11 @@
     "app-sus"
   ],
   "related": [],
-  "refs": [],
+  "refs": [
+    "docs/task-to-code-contract.md",
+    "docs/dimension-contract-17.md",
+    "docs/engineering-standards-index.md"
+  ],
   "criticalPath": false,
   "status": "backlog",
   "priority": "medium",
@@ -146,12 +150,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Kernel ürün ailesi: ArcheType metadata çözümleme, tenant context, capability/yetki ve dört kontrol düzlemini barındırır",
-        "Tüm app'lerin paylaştığı sözleşme katmanı (schema pinning, surface/workflow ayrımı) kernel'de tanımlanır",
-        "Kernel dikey bir ürün değildir; diğer app'lere çekirdek hizmet veren altyapıdır"
+        "İşlevsel kapsam/sınır: Kernel yalnız ArcheType metadata çözümleme, tenant context ve capability/yetki çözümlemesini sağlar; dikey ürün mantığı kapsam dışıdır (non-goal)",
+        "Girdi/çıktı sözleşmesi: girdi {tenant_id, archetype_key, capability} → çıktı pinlenmiş şema sürümüyle çözümlenmiş metadata + yetki kararı (allow/deny)",
+        "Durum akışı: istek → tenant context bağla → şema pin doğrula → capability çöz → sonuç; her adım idempotent ve yan etkisizdir",
+        "Hata yolu: bilinmeyen archetype/capability veya bağlamsız istek → tanımlı hata kodu + deny; kısmi çözümleme sonucu döndürülmez",
+        "surface/workflow sınırı kernel sözleşmesinde (schema pinning) tanımlanır; app'ler bu sınırı runtime'da genişletemez"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -159,12 +165,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Kernel tenant context'i (SET LOCAL tenant_id) tüm alt isteklere zorunlu taşınır; bağlamsız istek reddedilir",
-        "Capability/yetki çözümlemesi merkezîdir; app'ler kendi yetki kararını kernel sözleşmesi dışına taşıyamaz",
-        "Kernel metadata deposu yalnız developer/PR ile değişir; runtime yazımı locked system ruleset ile kapalı"
+        "Tenant izolasyonu: her istek SET LOCAL tenant_id ile bağlanır ve PostgreSQL RLS ile satır düzeyinde ayrılır; bağlamsız istek deny edilir",
+        "En az ayrıcalık (least privilege): capability/yetki çözümleyici deny-by-default; app yalnız kendi tenant'ına ve tanımlı capability'lerine erişir",
+        "Değişmez audit kanıtı: her yetki kararı ve metadata değişikliği actor/agent + öncesi-sonrası hash ile append-only denetim kaydına yazılır",
+        "Tenant sırları kernel kasasında şifreli tutulur; app kodu ham secret görmez, yalnız kapsamlı token alır (maskeleme)",
+        "Kernel metadata deposu yalnız developer/PR ile değişir; runtime yazımı locked system ruleset ile deny edilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -177,7 +185,7 @@
         "Kernel API yüzeyi dar ve kararlı; app'ler yalnız yayınlanmış sözleşmeyi çağırır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -190,7 +198,7 @@
         "Kernel bağımlılıkları imzalı; tedarik-zinciri için SBOM ve sürüm sabitleme"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +206,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "ArcheType çözümleme sıcak yolu önbellekli; soğuk çözümleme bütçesi izlenir",
-        "Kernel çağrıları toplu (batch) çözümlemeye uygun; tek istekte çoklu ArcheType metadata'sı döner",
-        "Kontrol düzlemi sorguları okuma-replikasından beslenir, yazma yolundan ayrık"
+        "Sıcak yol hedefi: ArcheType metadata çözümleme p95 ≤ 50ms (warm cache); soğuk çözümleme bütçesi p95 ≤ 300ms",
+        "Önbellek isabet hedefi: şema-sürüm anahtarlı çözümleme cache hit oranı ≥ %90; şema değişince ilgili anahtar geçersiz kılınır",
+        "Toplu (batch) çözümleme sınırı: tek istekte en çok 100 ArcheType metadata'sı döner; N+1 çağrı önlenir",
+        "Kontrol düzlemi sorguları bileşik indeks + okuma-replikasından beslenir; capability çözümleme p95 ≤ 20ms hedefi izlenir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -216,7 +225,7 @@
         "Chrome eklentisi kernel'in salt-okuma metadata uçlarını tüketebilir (yazma yok)"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +238,7 @@
         "Uzun metadata listelerinde landmark + başlık hiyerarşisi ile ekran okuyucu gezinmesi"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,7 +251,7 @@
         "Shared hosting profilinde kernel salt-okuma metadata'yı statik JSON olarak servis eder"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +264,7 @@
         "Olay: capability tanımı kaldırıldı → o capability'ye bağlı surface'leri deprecated işaretle"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +277,7 @@
         "Kernel düzeyinde AI yalnız metadata okur; tenant context ve capability deposuna yazamaz, insana changeset önerir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +285,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Kernel çözümleyici için sözleşme testleri: her ArcheType metadata'sı pinlenmiş şemaya uyar",
-        "Tenant izolasyonu için çapraz-tenant erişim denemesi e2e senaryosu (deny beklenir)",
-        "Kontrol düzlemi panelleri için kullanıcı yolculuğu + axe AAA; düzelene dek en çok 6 tur, sonra raporla"
+        "Unit testler: ArcheType çözümleyici ve capability karar fonksiyonu pinlenmiş şemaya karşı doğrulanır",
+        "Entegrasyon + e2e: tenant context bağlama, şema pin ve yetki çözümleme uçtan uca senaryolarla sınanır",
+        "Negatif senaryo: yetkisiz/bilinmeyen capability ve çapraz-tenant erişim denemesi deny beklenir (unauthorized/unknown capability deny)",
+        "Golden fixture: bilinen ArcheType girdileri için çözümlenmiş metadata çıktısı golden fixture ile regresyona karşı kilitlenir",
+        "QA döngüsü (loop): kontrol düzlemi panelleri için axe AAA + kullanıcı yolculuğu; bulgular düzelene dek yinelenir, çözülmezse kanıtla rapor edilir"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -289,12 +300,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Broken Access Control: kernel capability çözümlemesi merkezî deny-by-default",
-        "A08 Software/Data Integrity: ArcheType metadata imzalı + şema pinleme ile tedarik bütünlüğü",
-        "A09 Logging: kernel yetki kararları değişmez audit'e yazılır (actor/agent/öncesi-sonrası hash)"
+        "A01 Broken Access Control: kernel capability çözümlemesi merkezî deny-by-default; tenant context + RLS ile çapraz-tenant erişim engellenir (ASVS erişim kontrolü doğrulaması)",
+        "A08 Software or Data Integrity Failures: ArcheType metadata imzalı + şema pinleme ile bütünlük; bağımlılıklar için SBOM ve NIST SSDF sürüm sabitleme",
+        "A09 Security Logging and Alerting Failures: kernel yetki kararları değişmez denetim izine (audit trail) actor/agent + öncesi-sonrası hash ile yazılır",
+        "A05 Injection: capability/metadata çözümleme girdileri (tenant_id, archetype_key) allowlist + şema doğrulaması (input validation) ile sınanır",
+        "A03 Software Supply Chain Failures: kernel bağımlılıkları SBOM envanteri + imzalı sürümlerle izlenir; pin dışı sürüm reddedilir"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +320,7 @@
         "Olay veriyolu üzerinden 'şema değişti'/'capability değişti' yayınları kernel'den çıkar"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +334,7 @@
         "Küme alt modülleri Kernel ortak sözleşmesini paylaşır; sürüm uyumu append-only/expand-contract ile korunur."
       ],
       "notes": "Kernel, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (uygulama/dağ; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-kernel — \"Kernel\" (app/ada; küme: Kernel). Özet: Kernel kümesinin geliştirme eylem planı. Etiketler: kernel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

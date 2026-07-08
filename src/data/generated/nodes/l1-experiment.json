@@ -23,7 +23,8 @@
     "anlamlılık",
     "flag",
     "kill",
-    "switch"
+    "switch",
+    "module"
   ],
   "dependsOn": [
     "l1-pseo",
@@ -149,12 +150,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Experiment & CRO: A/B, çok-değişkenli (MVT) test ve özellik bayrağı (feature-flag)",
-        "Hedefleme, kademeli yayın (rollout) ve istatistiksel anlamlılık",
-        "Bayrak yaşam döngüsü ve temizleme (flag debt)"
+        "Kapsam sınırı: modül yalnız variant assignment + exposure event üretir; dönüşüm/anlamlılık ölçümü l1-analytics'e devredilir — deney tasarımı burada, sonuç yorumu dışında kalır",
+        "ExperimentSpec sözleşmesi girdi olarak variant seti, ağırlıklar, bucketing anahtarı ve guardrail metriğini alır; çıktı olarak deterministik atama + exposure event yayınlar",
+        "Deney durum makinesi: draft → running → ramping → concluded → archived; her geçiş yetki ve guardrail kapısından geçer",
+        "Hata yolu: geçersiz variant / ağırlık toplamı ya da eksik bucketing anahtarında atama control'e düşer; kill switch deneyi anında control'e sabitler ve flag-debt temizliğini tetikler"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -167,7 +169,7 @@
         "Bayrak değişimi izli — Experiment & CRO — A/B, MVT, Feature-Flag Deney yetki matrisi rol×eylem tablosuyla sürümlenir; sapma testi koşar"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -175,12 +177,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bayrak değerlendirmesi düşük gecikme (yerel önbellek)",
-        "Deney atama deterministik (hash); tutarlı",
-        "Bayrak temizleme (eski deney) süreci"
+        "ExperimentSpec ve variant tipleri şemadan (Zod/TypeScript) türetilir; `any` yasak, bucketing çıktısı ayrımlı union tip (assigned/excluded) ile modellenir",
+        "Atama çekirdeği (hash/bucketing) saf fonksiyon olarak yönetim UI'ından ayrıştırılır; döngüsel karmaşıklık eşiği ≤10, aşımda CI kapısı kırmızı verir",
+        "Concluded deneyin bayrak dallanması ölü kod taramasıyla işaretlenir; flag-debt PR bütçesi aşılırsa merge bloke edilir",
+        "Bundle bölme: deney yönetim arayüzü ve istemci SDK'sı ayrı chunk olarak lazy-load edilir; ana yola yalnız hafif değerlendirme çekirdeği girer"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -193,7 +196,7 @@
         "Anlamlılık eşiği manipülasyona kapalı"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -201,12 +204,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bayrak değerlendirme O(1); akış güncellemesi",
-        "Deney metrikleri projeksiyondan — çalışma-zamanı bellek tavanı Experiment & CRO — A/B, MVT, Feature-Flag Deney sürecinde izlenir; sızıntı eğilimi haftalık raporlanır",
-        "Yüksek-trafik yayın kademeli — Experiment & CRO — A/B, MVT, Feature-Flag Deney eşzamanlı istek tavanı yük profiliyle belirlenir; aşımda kuyruk derinliği alarmı"
+        "Variant değerlendirme p95 < 5 ms hedefi; atama sonucu istek-yerel önbellekte tutulur, aynı istekte yeniden hash'lenmez",
+        "Exposure event yazımı toplu (batch) + arka plan kuyruğuyla yapılır; sıcak yolda senkron DB yazımı ve N+1 exposure sorgusu engellenir",
+        "Deney sonuç sorgusu (experimentId, variant, ts) bileşik indeksi üzerinden çalışır; büyük sonuç setleri imleç (cursor) sayfalamayla döndürülür",
+        "Aktif deney tanımları SDK'da bellek-içi snapshot ile servis edilir; SLO p95 300 ms / %99.9 kullanılabilirlik, eşzamanlı ramp yük testinde doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -219,7 +223,7 @@
         "Dar ekranda deney sonuç özeti — Experiment & CRO — A/B, MVT, Feature-Flag Deney sürüm güncellemesi (OTA/store) eski önbelleği güvenli geçersiz kılar"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -227,12 +231,13 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Deney yönetim ekranı klavye+okuyucu erişimli",
-        "Varyant/sonuç renk dışında metinle; kontrast 7:1",
-        "Anlamlılık göstergesi açık — Experiment & CRO — A/B, MVT, Feature-Flag Deney form hataları metinle duyurulur; durum göstergesi renkten bağımsızdır"
+        "Deney/bayrak yönetim ekranı tam klavye erişilebilir; odak sırası mantıksal, görünür focus halkası korunur",
+        "Variant ve guardrail durumları yalnız renkle değil metin + ARIA rolüyle duyurulur; kontrast en az 7:1 (AAA)",
+        "Anlamlılık ve kill-switch bildirimleri `aria-live` bölgesiyle ekran okuyucuya iletilir; form hataları programatik olarak ilgili alanla ilişkilendirilir",
+        "Etkileşimli kontroller (ramp kaydırıcı, kill switch düğmesi) en az 44 px temas alanı sağlar; axe taraması AAA 0 ihlalle geçer"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -245,7 +250,7 @@
         "Shared hosting'de temel bayrak (kısıtlı)"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -258,7 +263,7 @@
         "Olay: kademeli yayında metrik bozuldu → kill-switch + geri-al (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -271,7 +276,7 @@
         "AI deney hipotezi/segment önerir; bayrağı/yayını kendisi açamaz (insan onaylı)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -279,12 +284,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Deterministik atama tutarlılık testi",
-        "Kill-switch/geri-alma testi — yetkisiz erişim denemesi Experiment & CRO — A/B, MVT, Feature-Flag Deney testinde 0 kayıt döner (negatif kanıt)",
-        "İstatistiksel anlamlılık hesabı testi; en çok 6 tur"
+        "Bucketing/atama saf fonksiyonu için birim testi: aynı anahtar hep aynı varyantı verir, ağırlık dağılımı tolerans içinde kalır",
+        "Negatif fixture'lar — geçersiz variant, ağırlık toplamı ≠ 1, eksik bucketing anahtarı — her biri control fallback + hata kaydı üretmelidir",
+        "Kill-switch ve ramp geri-alma akışı Playwright e2e ile sürülür; deney başlat → ramp → öldür yolculuğu uçtan uca doğrulanır",
+        "QA döngüsünde kırılan senaryo birkaç kez otomatik yeniden denenir; eşiğe kadar düzelmezse koşu bir teşhis raporuyla durur, sessiz geçiş olmaz"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -292,12 +298,13 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: bayrak/deney yetkisi",
-        "A04 Insecure Design: kill-switch ile güvenli yayın",
-        "A09 Logging: bayrak değişiklikleri iz"
+        "A01 Broken Access Control: bayrak/deney oluşturma-düzenleme-kill yetkisi rol×eylem matrisiyle sınırlanır, tenant izolasyonu RLS ile zorlanır",
+        "A05 Injection: ExperimentSpec girdileri (variant adı, hedef segment ifadesi) sunucuda şema doğrulaması + allowlist ile temizlenir; serbest SQL/ifade değerlendirmesi yoktur",
+        "A09 Security Logging and Alerting Failures: bayrak/ramp/kill değişiklikleri değişmez denetim izine (kim, ne, ne zaman) yazılır; anormal ramp alarm tetikler",
+        "Standart hizalama: input validation ve erişim kontrolleri OWASP ASVS L2 gereklerine eşlenir; bağımlılıklar SBOM ile izlenir (A03 Software Supply Chain Failures)"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -310,7 +317,7 @@
         "Kademeli yayın deploy ile — Experiment & CRO — A/B, MVT, Feature-Flag Deney modül sınırında tipli API sözleşmesi vardır; kırılma contract testinde yakalanır"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -324,7 +331,7 @@
         "Experiment & CRO — A/B, MVT, Feature-Flag Deney bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Experiment & CRO — A/B, MVT, Feature-Flag Deney, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (modül/kaya; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-experiment — \"Experiment & CRO — A/B, MVT, Feature-Flag Deney\" (module/dağ; küme: Layer 1 modülleri). Özet: Layer 1 in-tree modül: Surface varyantı + Experiment ArcheType ile A/B, MVT ve feature-flag deneyleri; dönüşüm ölçümü l1-analytics'e bağlı. Enterprise CRO yeteneği (P2). Etiketler: experiment, cro, ab-test, mvt, feature-flag, frontpages.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

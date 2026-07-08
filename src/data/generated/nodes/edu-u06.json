@@ -21,7 +21,8 @@
     "girdi",
     "müşteri",
     "ruleset",
-    "schema"
+    "schema",
+    "archetype"
   ],
   "dependsOn": [
     "k-tenancy"
@@ -141,12 +142,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 06: Multi-tenancy — bir kod, çok müşteri: tenant izolasyonu, row-level (RLS) vs schema-per-tenant",
-        "Ünite 06 kapsamı: çok-kiracılık modellerini (RLS vs schema) ve izolasyonu öğretir",
-        "Ünite 06 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Öğrenme sayfası sözleşmesi: girdi tenant_id + öğrenme görevi filtresi; çıktı yalnız o tenant'a ait kayıt listesi; kabul kriteri: RLS vs schema-per-tenant ayrımını doğru anlatan ünite",
+        "Durum akışı: taslak → yayınlanmış öğrenme görevi → tamamlandı; her geçişte tenant bağlamı korunur ve akış tenant sınırını aşamaz",
+        "Hata yolu: eksik/uyumsuz tenant_id gelen istek reddedilir (deny), çapraz-tenant erişim denemesi loglanır; kural, gerçek veri sızıntısını engelleyen guardrail olarak yazılır",
+        "İşlevsel kapsam: RLS ile schema-per-tenant izolasyon modellerini karşılaştıran, tenant_id kolonunun her sorguda zorunlu olduğunu gösteren öğrenme birimi"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -159,7 +161,7 @@
         "Ünite 06 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -167,12 +169,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 06 yapısı: tenant_id her sorguda kapsamlı; bağlam örtük taşınır",
-        "Ünite 06 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 06 okunabilir ve test edilebilir kalır"
+        "Kod-sağlık ekseni: tenant kapsamı tek noktadan (query helper) uygulanır; tip güvenliği ve ölü kod elemesi kod incelemesinde denetlenir",
+        "Lint/tip kapıları yeşil olmadan öğrenme sayfası birleştirilmez; döngüsel karmaşıklık eşiği aşan izolasyon mantığı yardımcılara ayrıştırılır (decomposition)",
+        "Bütçe/eşik: RLS policy ve tenant_id kapsam kontrolünü test eden birim başına kapsam eşiği tanımlanır; eşik altındaki değişiklik kapıdan geçemez",
+        "Ayrıştırma: tenant_id filtresi, RLS politikası ve sayfa render'ı ayrı modüllere bölünür; tekrar eden çapraz-tenant koruma mantığı paylaşılan katmanda toplanır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,7 +188,7 @@
         "Ünite 06 girdi sınırda doğrulanır — Multi-tenancy — bir kod, çok müşteri sır kapsamı servis-başına ayrıktır; çapraz erişim allowlist dışıdır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -193,12 +196,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 06 performans açısı: tenant_id bileşik indeksin ilk kolonu; büyük tenant sharding",
-        "Ünite 06 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 06 büyük veride sayfalı işlenir"
+        "Öğrenme hedefi: tenant_id bileşik indeksin öncü kolonu olur; tenant-kapsamlı öğrenme görevi listesinde p95 sorgu gecikmesi ≤ 200 ms hedefiyle ölçülür",
+        "Öğrenme hedefi: imleç (cursor) tabanlı sayfalama zorunlu; sayfa başına en çok 50 kayıt döner ve N+1 sorgu sıfırlanır",
+        "Öğrenme hedefi: sık okunan tenant meta verisi önbelleğe alınır; tenant kaydı değişince cache invalidation tetiklenir ve önbellek isabet oranı ≥ %90 ölçülür",
+        "Öğrenme hedefi: büyük tenant için sharding eşiği yük testiyle belirlenir; RLS politikası aktifken sorgu planı seq-scan'e düşmemeli, ölçüm CI'da doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -206,12 +210,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 06 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 06 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 06 bildirim/onay gerektiğinde push ile iletilir"
+        "Dar ekran öğrenme kartı tek sütuna iner; tenant seçimi ve görev butonları en az 44 px temas alanı ile hedeflenir",
+        "Offline tenant snapshot: son görüntülenen tenant-kapsamlı öğrenme görevleri yerelde önbelleklenir, bağlantı kesikken salt-okunur gösterilir ve çevrimiçi olunca senkron edilir",
+        "İstemci köprüsü: PWA veya Capacitor paketiyle iOS/Android yüzeyi aynı tenant sözleşmesini tüketir; masaüstünde Chrome extension köprüsü aynı API'yi kullanır",
+        "Mobil istemci de tenant_id bağlamını taşır; çapraz-tenant veri önbellekte karışmaz"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -224,7 +229,7 @@
         "Ünite 06 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -237,7 +242,7 @@
         "Ünite 06 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -250,7 +255,7 @@
         "Ünite 06 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -263,7 +268,7 @@
         "Ünite 06 — AI izolasyon deseni önerir; tenancy modeli kararını mimari ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -271,12 +276,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 06 doğrulama: çapraz-tenant erişim negatif testle sınanır",
-        "Ünite 06 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim (unit) ve entegrasyon (integration) testleri: tenant_id kapsam yardımcısı ve RLS politikası izole biçimde doğrulanır",
+        "Sözleşme (contract) testi: öğrenme görevi API'sinin her yanıtı yalnız istek tenant'ına ait kayıt döndürür",
+        "Çapraz-tenant negatif fixture: A tenant oturumuyla B tenant kaydına e2e erişim denemesi reddedilmeli (deny beklenir)",
+        "RLS bypass denemesi: policy devre dışıyken sızıntı olur mu diye kırmızı-test yazılır; tenant_id eksik istekte hata yolu (deny/400) doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -289,7 +295,7 @@
         "Ünite 06 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -302,7 +308,7 @@
         "Ünite 06 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -316,7 +322,7 @@
         "Multi-tenancy — bir kod, çok müşteri kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Multi-tenancy — bir kod, çok müşteri bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (ArcheType/taş; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u06 — \"Multi-tenancy — bir kod, çok müşteri\" (archetype/kaya; küme: Eğitim). Özet: Tek kod tabanı üstünde birden fazla müşteri (tenant) izole hizmet alır. Row-level vs schema vs cluster. Etiketler: education, u06, tenancy, saas.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

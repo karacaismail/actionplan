@@ -21,7 +21,8 @@
     "sahip",
     "sinyal",
     "alınır",
-    "etki"
+    "etki",
+    "module"
   ],
   "dependsOn": [
     "build-enterprise-readiness",
@@ -147,10 +148,12 @@
       "items": [
         "Risk Defteri: Risk Defteri — Erken Sinyalden Kapanış Kanıtına: olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı",
         "Risk Defteri kapsamı: riskleri olasılık/etki/erken-sinyal/azaltma/sahip alanlarıyla yaşayan kayıt yapar",
-        "Risk Defteri bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi sözleşmesi: risk sinyali + sahip + azaltma planı + kanıt (evidence) alanları zorunlu; çıktı: risk durumu, kapanış/kabul kararı ve risk raporu",
+        "Durum makinesi (akış): new → triaged → mitigating → evidence → closed/accepted ya da rejected; her geçiş sahip ve tarih damgasıyla loglanır",
+        "Hata yolu: sahibi olmayan, kanıtsız kapatılmaya çalışılan ya da azaltması bayatlamış (review tarihi geçmiş) risk reddedilir ve triyaja geri düşer"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kabul: her açık riskin sahibi, güncel azaltması ve kapanışta kanıtı olmadan closed durumuna geçemez.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -159,11 +162,12 @@
       "status": "filled",
       "items": [
         "Risk Defteri güvenlik açısı: güvenlik riskleri de defterde; azaltma ve sahip atanır",
-        "Risk Defteri hassas bilgi gerektiğinde maskelenir",
-        "Risk Defteri ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Risk kaydına erişim rol-bazlı (least-privilege) authz ile sınırlanır; tenant izolasyonu (PostgreSQL RLS) ile bir tenant başka tenantın riskini göremez",
+        "Risk açıklaması/kanıtı PII ya da sır (secret/token) içerdiğinde sınıflandırılıp maskelenir/redaksiyonlanır; erişim en-az-ayrıcalık ilkesine göre verilir",
+        "Kabul/kapatma (accept/close) kararları değişmez (immutable) audit kaydına yazılır: kim, ne zaman, hangi kanıtla"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -172,11 +176,12 @@
       "status": "filled",
       "items": [
         "Risk Defteri yapısı: her risk yapılandırılmış kayıt; review tarihiyle güncellenir",
-        "Risk Defteri tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Risk Defteri okunabilir ve test edilebilir kalır"
+        "Risk kaydı tipli parser/şema (Zod) ile ayrıştırılır; lint + tip + test kapısı (gate) yeşil olmadan merge edilmez",
+        "Kod sağlığı eşikleri: bayat risk (review tarihi geçen) sayısı ve döngüsel karmaşıklık için eşik tanımlı, aşılınca CI kapısı kırar",
+        "Başıboş (orphan) risk script'i tutulmaz; ölü kod elenir, tekrar eden mantık paylaşılan yardımcıya alınır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,12 +189,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Risk Defteri en-az-ayrıcalık ilkesine uyar",
-        "Risk Defteri değişikliği sürümlü ve izlenir",
-        "Risk Defteri girdi sınırda doğrulanır"
+        "Risk Defteri en-az-ayrıcalık ilkesine uyar; girdi sınırda doğrulanır",
+        "Risk aracının bağımlılıkları SBOM üretir ve her build'de bağımlılık taraması (dependency scan) çalışır; kritik CVE kapıyı kırar",
+        "Risk otomasyonu yalnız allowlist'teki aksiyonları çağırır; kapanış kanıtı (evidence) imzalıdır (signature) ve imza doğrulanmadan kabul edilmez",
+        "Dış çağrı (egress) kısıtlı: risk tooling yalnız izinli uçlara çıkar, saldırı yüzeyi daraltılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,11 +204,12 @@
       "status": "filled",
       "items": [
         "Risk Defteri performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Risk Defteri sık erişim indeksli/önbellekli tasarlanır",
-        "Risk Defteri büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: risk listesi/filtre p95 < 300ms, risk raporu üretimi p95 < 1.5s",
+        "sahip ve durum alanlarına bileşik indeks konur, tam tablo taraması (full scan) önlenir; kanıt (evidence) araması önbeklenir",
+        "Risk Defteri büyük veride imleçle sayfalı işlenir, N+1 sorgu önlenir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -210,12 +217,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Risk Defteri mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Risk Defteri mobil istemci aynı sözleşmeyi tüketir",
+        "Risk Defteri mobil açısı: dar ekranda tek sütun ve okunur kalır; dokunma hedefleri en az 44 px temas alanı sağlar",
+        "Çevrimdışı (offline) salt-okunur risk anlık görüntüsü (snapshot) taşınır; bağlantı gelince senkron olur, yazma çevrimiçi doğrulamayla yapılır",
+        "Risk Defteri PWA olarak paketlenir (service worker + manifest); mobil istemci aynı sözleşmeyi tüketir",
         "Risk Defteri bildirim/onay gerektiğinde push ile iletilir"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,7 +236,7 @@
         "Risk Defteri klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,7 +249,7 @@
         "Risk Defteri shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -254,7 +262,7 @@
         "Risk Defteri bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -267,7 +275,7 @@
         "Risk Defteri — AI yeni risk/erken sinyal önerir; azaltma ve kabul kararını sahip/insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,11 +284,12 @@
       "status": "filled",
       "items": [
         "Risk Defteri doğrulama: her açık riskin bir azaltma planı ve sahibi var mı denetlenir",
-        "Risk Defteri ilgili senaryolar gözden geçirilir",
+        "Unit + sözleşme (contract) + e2e testleri: durum makinesi geçişleri (new→triaged→...→closed) ve girdi şeması doğrulanır",
+        "Negatif fixture testleri: sahipsiz risk, bayat azaltma, kanıtsız kapatma ve yetkisiz kabul (unauthorized accept) reddedilmeli",
         "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,7 +302,7 @@
         "Risk Defteri girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -306,7 +315,7 @@
         "Risk Defteri sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -320,7 +329,7 @@
         "Risk Defteri — Erken Sinyalden Kapanış Kanıtına kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Risk Defteri — Erken Sinyalden Kapanış Kanıtına bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (modül/kaya; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-risk-defteri — \"Risk Defteri — Erken Sinyalden Kapanış Kanıtına\" (module/dağ; küme: Build & Dağıtım). Özet: Olasılık, etki, erken sinyal, azaltma, sahip ve review tarihiyle yaşayan risk kaydı. Etiketler: risk, register, governance, unknowns.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

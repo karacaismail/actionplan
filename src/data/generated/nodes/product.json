@@ -164,13 +164,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ürün kaydı: sku (benzersiz), ad, açıklama, fiyat + para birimi, stok, durum (draft/active/discontinued)",
-        "Varyant modeli: parent/child SKU ile renk/beden gibi özniteliklerde türetme",
-        "Append-only fiyat geçmişi; her fiyat değişimi geçmişi kaybetmeden kaydedilir",
-        "İlişkiler: ürün→sipariş kalemi (one-to-many), ürün→tedarikçi (many-to-one)"
+        "Kapsam sınırı: Product ArcheType yalnız katalog çekirdeğini (SKU/varyant/fiyat/stok/durum sözleşmesi) sahiplenir; sipariş yaşam döngüsü, ödeme akışı ve müşteri PII kapsam dışıdır ve satış/billing modüllerine bırakılır",
+        "İşlev sınırı: bu taş fiyat/stok gerçeğini üretir ve okutur; vergi hesabı, kur dönüşümü ve kampanya mantığı billing tarafına delege edilir, burada tekrarlanmaz",
+        "Ürün kaydı sözleşmesi: sku (benzersiz), ad, açıklama, fiyat + para birimi, stok, durum (draft/active/discontinued); girdi doğrulaması fiyat ≥ 0 ve stok ≥ 0 kısıtını zorlar",
+        "Varyant modeli: parent/child SKU ile renk/beden gibi özniteliklerde türetme; durum makinesi draft→active→discontinued yönünde ilerler, geri geçişler engellenir",
+        "İlişkiler ve olay çıktısı: ürün→sipariş kalemi (one-to-many), ürün→tedarikçi (many-to-one); price.changed/stock.low olayları dış modüllere sözleşmeyle yayınlanır"
       ],
       "notes": "Ürün, satış/billing/tedarik modüllerinin paylaştığı katalog çekirdeğidir.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon). Özet: sku, varyant, fiyat ve stok taşıyan ürün/katalog ArcheType'ı.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon). Özet: sku, varyant, fiyat ve stok taşıyan ürün/katalog ArcheType'ı.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "human"
     },
     "security": {
@@ -184,7 +185,7 @@
         "Toplu ürün içe aktarımı şema doğrulamasından geçer; geçersiz satır reddedilir"
       ],
       "notes": "Fiyat manipülasyonu denetim ve rol kontrolüyle engellenir.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), veri sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), veri sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "human"
     },
     "codeOptimization": {
@@ -192,12 +193,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Fiyat/stok doğrulayıcıları (fiyat ≥ 0, stok ≥ 0) saf fonksiyonlara ayrıştırılır",
-        "Varyant türetme tek bir kompozisyon fonksiyonunda toplanır; kopya kod elenir",
-        "Katalog erişimi repository deseniyle soyutlanır; RLS sorgu katmanında merkezîdir"
+        "Kod sağlığı ekseni — lint/tip kapısı: katalog modülünde ESLint + strict TypeScript CI kapısı zorunlu; `any` ve tip hatası birleştirmeyi bloklar",
+        "Kod sağlığı ekseni — karmaşıklık eşiği: fiyat/varyant fonksiyonlarında döngüsel karmaşıklık ≤ 10 tutulur, aşan fonksiyon refactor kapısına düşer",
+        "Kod sağlığı ekseni — ölü kod elemesi: kullanılmayan varyant/fiyat yardımcıları tree-shaking ve dead-code taramasıyla bundle'dan çıkarılır",
+        "Fiyat/stok doğrulayıcıları (fiyat ≥ 0, stok ≥ 0) saf fonksiyonlara ayrıştırılır; varyant türetme tek kompozisyon fonksiyonunda toplanır, kopya kod elenir",
+        "Modülerlik: katalog erişimi repository deseniyle soyutlanır, RLS sorgu katmanında merkezîdir; kod bölme ile fiyat-geçmişi okuma yolu ana paketten ayrılır"
       ],
       "notes": "İş mantığı yan etkisiz tutularak fiyat/stok testleri deterministik kalır.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "human"
     },
     "securityOptimization": {
@@ -205,12 +208,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Fiyat geçmişi append-only; geçmiş kaydın değiştirilmesi/silinmesi reddedilir",
-        "Toplu fiyat güncellemesinde oran sınırlama (rate-limit) ve onay eşiği uygulanır",
+        "Bağımlılık/SBOM: katalog servisi bağımlılıkları CI'da güvenlik açığı taramasından geçer, her sürüm için SBOM (CycloneDX) üretilir ve kritik CVE birleştirmeyi bloklar",
+        "Allowlist/imza: toplu ürün içe aktarımı yalnız izin listesindeki (allowlist) kaynaklardan kabul edilir; içe aktarım paketi imza/checksum doğrulamasından geçmeden işlenmez",
+        "Egress/yüzey: katalog servisinin dış ağ çıkışı (egress) yalnız tedarikçi/fiyat API allowlist'ine kısıtlanır; saldırı yüzeyini daraltmak için kullanılmayan uçlar kapatılır",
+        "Fiyat geçmişi append-only; geçmiş kaydın değiştirilmesi/silinmesi reddedilir, toplu fiyat güncellemesinde oran sınırlama (rate-limit) ve onay eşiği uygulanır",
         "Stok düşürme idempotent olay anahtarıyla yapılır; çift işleme engellenir"
       ],
       "notes": "Fiyat/stok bütünlüğü değişmezlik ve idempotency ile korunur.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "human"
     },
     "performance": {
@@ -223,7 +228,7 @@
         "Sık erişilen aktif ürün ve fiyat verisi önbelleğe alınır, fiyat değişiminde geçersizleştirilir"
       ],
       "notes": "Varyant patlaması sayfalama ve indeksle sınırlanır.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "human"
     },
     "mobileApps": {
@@ -236,7 +241,7 @@
         "Chrome eklentisinden rakip ürün sayfasından fiyat/öznitelik içe aktarma (yetkiliyse)"
       ],
       "notes": "Saha/depo senaryosu için barkod ve çevrimdışı destek önceliklidir.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "human"
     },
     "wcag": {
@@ -249,7 +254,7 @@
         "Katalog filtre ve varyant seçimi klavye ile tam gezilebilir, odak sırası görünür"
       ],
       "notes": "Stok tükendi durumu renkten bağımsız olarak metinle bildirilir.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "human"
     },
     "deployment": {
@@ -262,7 +267,7 @@
         "Paylaşımlı barındırmada salt-okunur katalog görünümü + harici fiyat API'si"
       ],
       "notes": "Fiyat/stok yazımı tek yetkili servise toplanır; okuma yatay ölçeklenir.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "human"
     },
     "eca": {
@@ -276,7 +281,7 @@
         "Döngü kırıcı: tetik zinciri maks 6 adım; stok düşürme idempotent"
       ],
       "notes": "ECA kuralları stok eşiği ve fiyat değişim büyüklüğüne bağlı; system katmanı kilitli.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok); döngü kırıcı maks 6, idempotency, tenant isolation, step-up; ruleset yetki katmanları (system kilitli / platform / tenant güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok); döngü kırıcı maks 6, idempotency, tenant isolation, step-up; ruleset yetki katmanları (system kilitli / platform / tenant güvenli parametre).",
       "provenance": "human"
     },
     "aiAgents": {
@@ -290,7 +295,7 @@
         "Prod ArcheType update önerisi geçmiş-koru (fiyat geçmişi) + snapshot + rollback koşullarına bağlıdır"
       ],
       "notes": "Öneri-uygulama ayrımı korunur; fiyat yazımı asla doğrudan AI ile yapılmaz.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi; admin akışı prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply; doğrulama döngüsü 1-3 oto, 3/6 admin'e soru, 9 tanı+dur; kill-switch.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi; admin akışı prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply; doğrulama döngüsü 1-3 oto, 3/6 admin'e soru, 9 tanı+dur; kill-switch.",
       "provenance": "human"
     },
     "testing": {
@@ -300,11 +305,11 @@
       "items": [
         "SKU benzersizlik, fiyat ≥ 0 ve stok ≥ 0 için birim testleri (sınır değerleri dahil)",
         "Yayın yaşam döngüsü (draft→active→discontinued) için Playwright e2e",
-        "Test döngüsü: en fazla 6 yeniden deneme, düzelmezse rapor (testing-loop)",
+        "Negatif senaryo entegrasyon testi: negatif fiyat/stok ve mükerrer SKU girişini reddettiğini fixture veri setiyle doğrular",
         "Otonom QA ajanı fiyat/stok yarış koşulu regresyonunu yürütür"
       ],
       "notes": "Fiyat/stok tutarlılığı sürekli doğrulanır.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "human"
     },
     "owasp": {
@@ -312,12 +317,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "OWASP A01: fiyat/stok yazımı rol bazlı erişim + tenant RLS ile sınırlanır",
-        "OWASP A03: katalog arama/filtre parametreli sorgularla, enjeksiyona kapalı",
-        "OWASP A08: toplu içe aktarımda veri/yazılım bütünlüğü doğrulanır (imza/şema)"
+        "A01 Broken Access Control: SKU/varyant/fiyat/stok yazımı ve fiyat geçmişi (price history) rol bazlı erişim + tenant RLS ile sınırlanır; satış rolü katalog üzerinde salt-okunurdur",
+        "A05 Injection: katalog arama/filtre ve toplu içe aktarım (catalog import) girdi doğrulamasından (fiyat ≥ 0, stok ≥ 0, şema) geçer ve parametreli sorgu kullanır; şema dışı alan reddedilir",
+        "A03 Software Supply Chain Failures: içe aktarım paketleri ve bağımlılıklar imza/checksum + SBOM (CycloneDX) ile doğrulanır; allowlist dışı kaynak ve kritik CVE bloklanır",
+        "A09 Security Logging and Alerting Failures: fiyat değişimi ve stok olayları değişmez denetim izine (actor + SKU + eski/yeni değer + zaman) yazılır; anormal toplu fiyat güncellemesi alarm tetikler",
+        "A08 Software or Data Integrity Failures hedefi: fiyat geçmişi append-only tutulur, geçmiş kayıt değiştirilemez; kontroller OWASP ASVS maddeleri ve NIST SSDF pratiğine göre gözden geçirilir"
       ],
       "notes": "Fiyat bütünlüğü güvenlik standardının merkezindedir.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ LLM Top 10 gerekiyorsa), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ LLM Top 10 gerekiyorsa), bu görevin tehdit yüzeyi.",
       "provenance": "human"
     },
     "integration": {
@@ -330,7 +337,7 @@
         "Sipariş kalemi ürün referansını SKU+fiyat anlık görüntüsüyle (snapshot) bağlar"
       ],
       "notes": "Sipariş, fiyatı kendi anına dondurur; ürün fiyat değişimi geçmiş siparişi bozmaz.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "human"
     },
     "moduleUsage": {
@@ -343,7 +350,7 @@
         "Tedarik/satınalma stok eşiği olaylarını tüketerek yeniden sipariş tetikler"
       ],
       "notes": "Diğer app'ler doğrudan DB'ye değil, üretilen katalog API/olaylarına erişir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (ArcheType/taş; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: product — \"Product (Ürün ArcheType)\" (archetype/kaya; küme: Çekirdek Operasyon).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "human"
     },
     "dataLifecycle": {
@@ -805,7 +812,7 @@
       "npm test"
     ],
     "deployTarget": "github-pages (/actionplan/)",
-    "implementationStatus": "scaffolded",
+    "implementationStatus": "not-started",
     "tenantStrategy": null,
     "auditLogRef": null
   },

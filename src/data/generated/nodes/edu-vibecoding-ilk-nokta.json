@@ -20,7 +20,8 @@
     "alınır",
     "claude",
     "girdi",
-    "ruleset"
+    "ruleset",
+    "module"
   ],
   "dependsOn": [],
   "blocks": [],
@@ -139,12 +140,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta: Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar: Claude/Cursor/Antigravity açıldığında ilk yazılacak bağlam komutları",
-        "Vibecoding İlk Nokta kapsamı: AI aracını doğru bağlamla başlatan ilk komutları verir",
-        "Vibecoding İlk Nokta bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "İşlev sınırı: sayfa yalnızca Claude/Cursor/Antigravity için hazır ilk bağlam komutlarını (kopyalanabilir prompt kartları) sunar; kod yazmaz, projeyi çalıştırmaz — kullanıcı prompt'u seçer, kopyalar, hedef araca yapıştırır",
+        "Girdi/çıktı sözleşmesi: her kart bağlam olarak proje yolu (repo/klasör), stack (ör. Next.js+FastAPI), kural dosyası (AGENTS.md/CLAUDE.md/.cursorrules), hedef araç ve istenen ilk yanıt tipini (plan/dosya haritası/ilk dikey dilim) alır; çıktı olarak yapıştırmaya hazır tek blok Markdown prompt üretir; beklenen ilk yanıt = AI'ın stack + kural dosyasını özetleyip sonraki adım planını sunması (kod üretmeden önce bağlam teyidi)",
+        "Durum akışı: kart-listele → kart-seç → bağlam alanlarını doldur → önizle → kopyala → (kullanıcı hedef araca yapıştırır) → geri-bildirim; her durum idempotent, kopyalama işlemi yan etkisiz",
+        "Hata yolu: eksik bağlam alanı (ör. kural dosyası seçilmemiş) kopyalamayı bloklar ve hangi alanın eksik olduğunu metinle bildirir; desteklenmeyen araç seçilirse jenerik prompt'a düşülür ve uyarı gösterilir",
+        "Kabul sözleşmesi: bir kart, tüm zorunlu bağlam alanları dolu olduğunda 'hazır' sayılır; kopyalanan metin sır/secret içermez ve AI sınırı (üretemez/güncelleyemez) prompt'un ilk cümlesinde kurulur"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -152,12 +155,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta güvenlik açısı: bağlam komutları sır içermez; AI sınırı baştan kurulur",
-        "Vibecoding İlk Nokta hassas bilgi gerektiğinde maskelenir",
-        "Vibecoding İlk Nokta ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki: prompt kartlarını okuma herkese açık; kart ekleme/düzenleme yalnız içerik-ekibi rolüne (least-privilege) verilir, kopyala düğmesi salt-okunur yetkiyle çalışır ve hiçbir arayüz serbest SQL/shell açmaz",
+        "Tenant/proje izolasyonu: kullanıcının doldurduğu bağlam alanları (repo yolu, stack, kural dosyası) yalnız o oturuma/projeye bağlanır; bir projenin girdileri başka tenant'ın önizlemesine veya paylaşımlı önbelleğe sızmaz",
+        "PII/secret redaksiyonu: bağlam alanlarına yapıştırılan .env değeri, API anahtarı veya token pattern taramasıyla yakalanıp önizlemeden ve kopyalanan bloktan maskelenir; üretilen prompt asla gerçek sır taşımaz, yer tutucu (ör. <API_KEY>) kullanır",
+        "Audit + AI sınırı: kart ekleme/düzenleme ve 'jenerik prompt'a düşme' olayları değişmez denetim izine (kim/ne zaman/hangi kart) yazılır; her üretilen prompt'un ilk cümlesi AI'ın app/module üretemez-güncelleyemez ve ruleset override edemez sınırını kurar"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -165,12 +169,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta yapısı: bağlam paketi (proje/stack/kural) ilk mesajda verilir",
-        "Vibecoding İlk Nokta tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Vibecoding İlk Nokta okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: prompt kartları tip güvenli metadata sözleşmesiyle (id, stack, hedef araç, zorunlu bağlam alanları, ilk-yanıt tipi) modellenir; kart oluşturma/önizleme mantığı düşük döngüsel karmaşıklıkta, saf ve test edilebilir fonksiyonlara bölünür",
+        "Modüler context blokları: her prompt, yeniden kullanılabilir bloklardan (stack özeti, kural dosyası referansı, AI-sınırı önsözü, istenen-çıktı talimatı) birleştirilir; tekrar eden metin tek kaynakta tutulur, kart bazında kopyala-yapıştır çoğaltma yapılmaz",
+        "Prompt lint/kapı: her kart CI'da lint edilir — AI-sınırı önsözünün varlığı, sır/secret pattern taraması, yasak jenerik kalıplar ve zorunlu alan bütünlüğü kontrol edilir; kapı kırmızıysa kart yayınlanmaz",
+        "Tekrar bütçesi/eşik + ayrıştırma: kartlar arası metin tekrarına duplikasyon eşiği konur; ölü/kullanılmayan prompt bloğu envanterden ayrıştırılıp temizlenir, böylece bağlam paketi şişmeden bakımı sürer"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -178,12 +183,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta en-az-ayrıcalık ilkesine uyar",
-        "Vibecoding İlk Nokta değişikliği sürümlü ve izlenir",
-        "Vibecoding İlk Nokta girdi sınırda doğrulanır"
+        "Prompt/dependency envanteri + SBOM: sayfanın kullandığı JS bağımlılıkları ve yayınlanan her prompt kartı için kaynak envanteri (SBOM) tutulur; hangi kartın hangi stack/kural dosyası sürümüne dayandığı listelenir, sürüm değişince yeniden gözden geçirilir",
+        "Allowlist/imza/provenance: yalnız allowlist'teki hedef araçlar (Claude/Cursor/Antigravity) ve onaylı kart şablonları yayınlanır; her kartın provenance'ı (kaynak-korpus + üreten tur) imzalı biçimde saklanır, imzasız/harici içerik render edilmez",
+        "Egress/yüzey daraltma: sayfa dış servise çağrı yapmaz — prompt üretimi tamamen istemci/statik tarafta kalır, gerçek LLM çağrısını kullanıcı kendi aracında yapar; böylece egress yüzeyi ve veri sızma yolu asgariye iner, CSP dışa bağlantıyı kısar",
+        "Secret scanning + sertleştirme: kart içerikleri ve kullanıcı bağlam girdileri secret-scanning'den geçer (.env/token/anahtar deseni), kopyalama rate-limit'lidir; bağımlılık taraması (SCA) ve düzenli secret rotasyonu ile en-az-ayrıcalık korunur"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -191,12 +197,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Vibecoding İlk Nokta sık erişim indeksli/önbellekli tasarlanır",
-        "Vibecoding İlk Nokta büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef — prompt bulma/kopyalama: kart listesinde arama/filtre sonucu p95 ≤ 150 ms, 'kopyala' düğmesine basıştan panoya yazımına kadar p95 ≤ 100 ms; bu eşikler ölçülür ve regresyonda alarm verir",
+        "Context paket render p95: seçilen kartın bağlam alanlarıyla birleşip önizleme Markdown'ı üretmesi p95 ≤ 200 ms hedeflenir; büyük kural dosyası özetlerinde bile bloklama olmaması için render memoize edilir",
+        "Cache/indeks: kart metadata'sı (başlık, stack, etiket) üzerinde arama indeksi kurulur; sık kullanılan kartların derlenmiş prompt bloğu istemci tarafında önbelleğe alınır, tekrar üretim maliyeti düşürülür",
+        "Sayfalama: kart kataloğu büyüdükçe liste sayfalı/sonsuz-kaydırmalı yüklenir, tek seferde tüm korpus DOM'a basılmaz; ilk anlamlı içerik hedefi p95 ≤ 1 s"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -204,12 +211,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Vibecoding İlk Nokta mobil istemci aynı sözleşmeyi tüketir",
-        "Vibecoding İlk Nokta bildirim/onay gerektiğinde push ile iletilir"
+        "Offline prompt paketi: kart kataloğu ve derlenmiş prompt blokları service worker ile önbelleğe alınır; kullanıcı çevrimdışıyken de kartları listeleyip kopyalayabilir, ağ döndüğünde katalog artımlı senkronlanır",
+        "PWA/Capacitor/Chrome extension: sayfa yüklenebilir PWA olarak sunulur, Capacitor ile iOS/Android kabuğuna paketlenebilir; ayrıca Chrome extension yüzeyiyle prompt, aktif editör sekmesinden tek tıkla kopyalanır — hepsi aynı kart sözleşmesini tüketir",
+        "Dokunma hedefi: mobil prompt kopyala düğmelerinde en az 44 px temas alanı sağlanır, kartlar dar ekranda tek sütun ve okunur kalır, yanlış dokunmayı önlemek için düğmeler arası boşluk korunur",
+        "Push/deep link: kart kataloğuna yeni prompt eklendiğinde opsiyonel push bildirimi gönderilir; deep link ile belirli bir prompt kartı doğrudan mobil uygulamada açılıp kopyalanabilir"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -222,7 +230,7 @@
         "Vibecoding İlk Nokta klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -235,7 +243,7 @@
         "Vibecoding İlk Nokta shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -248,7 +256,7 @@
         "Vibecoding İlk Nokta bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -261,7 +269,7 @@
         "Vibecoding İlk Nokta — AI bu bağlamla çalışır; üreten-onaylayamaz ilkesi baştan kurulur"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -269,12 +277,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Vibecoding İlk Nokta doğrulama: ilk bağlam doğru kurulduğunda AI doğru stack'e uyar",
-        "Vibecoding İlk Nokta ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit + contract: prompt birleştirme yardımcıları (blok montajı, zorunlu alan doğrulama, AI-sınırı önsözü) unit test edilir; her kartın metadata'sı ve üretilen Markdown çıktısı, kart şeması sözleşmesine (contract test) uyduğu için doğrulanır",
+        "e2e kullanıcı yolculuğu: kart-listele → seç → bağlam doldur → önizle → kopyala akışı Playwright ile uçtan uca test edilir; eksik alanda kopyalamanın bloklanması ve desteklenmeyen araçta jenerik prompt'a düşme de kapsanır",
+        "Negatif — prompt-injection/secret leak: bağlam alanına enjeksiyon denemesi (ör. 'önceki talimatları yok say') ve .env/token yapıştırma senaryoları negatif testlerle sınanır; üretilen prompt'un sırrı maskelediği ve AI sınırını kaldırmadığı doğrulanır",
+        "Snapshot/fixture + QA loop: temsili kartlar için önizleme çıktısı snapshot fixture'larıyla kilitlenir; testing-loop başarısız testi en fazla 6 kez yeniden çalıştırır, düzelmezse autonomous QA ajanı raporlar"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -287,7 +296,7 @@
         "Vibecoding İlk Nokta girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -300,7 +309,7 @@
         "Vibecoding İlk Nokta sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -314,7 +323,7 @@
         "Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar) kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar) bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-vibecoding-ilk-nokta — \"Vibecoding'e Başlarken İlk Nokta — Hazır Komutlar (Promptlar)\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor veya Antigravity'i açtığında ilk yazman gereken bağlam (context) komutları. Etiketler: vibecoding, prompt, baslangic.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -22,7 +22,8 @@
     "doğrulama",
     "girdi",
     "kiracılık",
-    "ruleset"
+    "ruleset",
+    "module"
   ],
   "dependsOn": [],
   "blocks": [],
@@ -136,12 +137,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "LandX L1: LandX L1 — Kimlik & Kiracılık: I01–I05 — multi-tenant izolasyon, user + agent identity, MFA, permission framework",
-        "LandX L1 kapsamı: kullanıcı ve agent kimliği, çok-kiracılık izolasyonu ve yetki çerçevesini tanımlar",
-        "LandX L1 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Tenant identity sözleşmesi: girdi (e-posta + tenant slug + kimlik sağlayıcı) → çıktı (tenant-scoped user id + rol claim'li imzalı oturum jetonu); tenant sınırı dışı kimlik çözümlemesi işlev kapsamının dışındadır",
+        "Oturum/jeton durum makinesi: anonim → challenge (MFA/biometrik) → active → refresh → revoked/expired; her geçiş audit'e yazılır, geçersiz geçiş 401 döner",
+        "Üyelik davet akışı: invited → accepted → active → suspended → removed; davet jetonu tek kullanımlık ve süreli, süresi dolan davet reddedilir",
+        "Rol/izin matrisi kapsamı: owner/admin/member/agent rolleri × kaynak eylemleri; karar saf fonksiyon, tanımsız izin varsayılan olarak deny",
+        "Hata sözleşmesi: tenant-leak, süresi geçmiş jeton ve MFA başarısızlığı ayrı hata kodlarıyla döner ama gövdede iç detay taşımaz"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -154,7 +157,7 @@
         "LandX L1 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -162,12 +165,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "LandX L1 yapısı: yetki değerlendirme saf; tenant bağlamı örtük taşınır",
-        "LandX L1 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "LandX L1 okunabilir ve test edilebilir kalır"
+        "İzin karar motoru (rol/permission matrisi) saf ve tip-güvenli tutulur; tenant bağlamı ve claim'ler `TenantContext` tipiyle taşınır, `any` kaçağı tip kapısında bloke edilir",
+        "Kimlik/oturum/davet katmanları ayrı modüllere bölünür (token lifecycle, RLS boundary, invitation state) — tenant çözümleme mantığı tek yardımcıda toplanır, kopya kod refactor ile elenir",
+        "Yetki değerlendirme fonksiyonlarına döngüsel karmaşıklık eşiği (≤10) uygulanır; eşiği aşan izin dalı ayrıştırılır, kullanılmayan eski rol kodu ölü kod taramasında silinir",
+        "Kimlik doğrulama akışının kritik yolu için paket boyutu bütçesi tanımlanır; nadir kullanılan davet/yönetim yüzeyi kod bölme (lazy) ile ana yükten ayrılır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -175,12 +179,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "LandX L1 en-az-ayrıcalık ilkesine uyar",
-        "LandX L1 değişikliği sürümlü ve izlenir",
-        "LandX L1 girdi sınırda doğrulanır — LandX L1 — Kimlik & Kiracılık (Identity) hata mesajları iç detay sızdırmaz; jenerik yanıt + korelasyon id"
+        "Oturum imzalama sırrı ve refresh token imza anahtarı düzenli rotasyona tabidir; eski anahtar overlap penceresiyle geçersizleştirilir, sır depoda değil secret manager'da tutulur",
+        "Refresh token rotasyonu: her yenilemede tek kullanımlık token; yeniden kullanım tespitinde tüm tenant oturum ailesi iptal edilir (token reuse detection)",
+        "Login/MFA/davet uçlarına IP + hesap bazlı rate-limit ve step-up uygulanır; ayrıcalık yükseltme (owner/admin) istekleri en-az-ayrıcalık kapısından geçer",
+        "Kimlik bağımlılıkları (auth SDK, JWT/kripto kitaplıkları) SBOM'da izlenir ve CVE taramasına bağlanır; izin verilen kimlik sağlayıcı callback origin'leri allowlist ile sınırlanır",
+        "Kimlik servisinin dış çağrı yüzeyi (IdP, e-posta) egress allowlist ile daraltılır; callback yanıtları imza/nonce doğrulaması olmadan kabul edilmez"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -188,12 +194,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "LandX L1 performans açısı: kimlik/yetki kararı önbellekli; MFA hassas işlemde",
-        "LandX L1 sık erişim indeksli/önbellekli tasarlanır",
-        "LandX L1 büyük veride sayfalı işlenir"
+        "Login uçtan uca p95 hedefi ≤300 ms, jeton doğrulama p95 ≤15 ms; MFA challenge dışındaki yolda ek round-trip eklenmez",
+        "İzin kararı ve tenant→rol eşlemesi kısa TTL'li önbellekte tutulur; rol/üyelik değişiminde ilgili tenant anahtarı invalidasyonla düşürülür",
+        "(tenant_id, user_id) ve (tenant_id, email) üzerine bileşik indeks; RLS filtreli üyelik sorgularında N+1 önlenir, üye listeleri imleç tabanlı sayfalanır",
+        "Refresh ve oturum tablosu yük altında (eşzamanlı login/refresh yükü) ölçülür; hedefi aşan p95 için indeks/önbellek ayarı yapılır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -201,12 +208,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "LandX L1 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "LandX L1 mobil istemci aynı sözleşmeyi tüketir",
-        "LandX L1 bildirim/onay gerektiğinde push ile iletilir"
+        "iOS/Android (PWA veya Capacitor köprüsü) istemci aynı kimlik sözleşmesini tüketir; login, MFA ve tenant seçimi ekranları dar ekranda tek sütun kalır",
+        "Biometrik/cihaz oturum: platform biometrik köprüsü ile step-up yapılır, refresh token cihazın güvenli deposunda (Keychain/Keystore) saklanır",
+        "Offline durumda son geçerli oturum bağlamı okunabilir tutulur; ağ dönünce jeton sessiz yenilenir, süresi geçmişse tekrar kimlik doğrulama istenir",
+        "Login/MFA/tenant değiştir kontrolleri en az 44 px temas alanı sağlar; kimlik alanları mobil klavye ve otomatik doldurma ile uyumludur"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -219,7 +227,7 @@
         "LandX L1 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -232,7 +240,7 @@
         "LandX L1 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -245,7 +253,7 @@
         "LandX L1 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -258,7 +266,7 @@
         "LandX L1 — AI anormal erişim deseni önerir; kimlik/yetki politikası kararını güvenlik ekibi verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -266,12 +274,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "LandX L1 doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "LandX L1 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim testler izin karar matrisini ve oturum/jeton durum makinesini kapsar; her rol × eylem kombinasyonu ve süresi geçmiş/iptal edilmiş jeton geçişleri doğrulanır",
+        "Negatif senaryo fixture'ları: tenant A jetonu ile tenant B kaynağına erişim (tenant-leak) mutlaka reddedilmeli, RLS bypass ve token reuse denemeleri kırmızı testle yakalanır",
+        "Playwright e2e kullanıcı yolculuğu: kayıt → davet kabul → MFA → tenant değiştir → refresh → çıkış akışı uçtan uca sürülür",
+        "Kimlik sağlayıcı callback ve rate-limit için entegrasyon testleri; QA döngüsü kararlı sonuç verene dek tekrar eder, ısrarcı başarısızlık tenant-leak riski olarak raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -284,7 +293,7 @@
         "LandX L1 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -297,7 +306,7 @@
         "LandX L1 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -311,7 +320,7 @@
         "LandX L1 — Kimlik & Kiracılık (Identity) kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "LandX L1 — Kimlik & Kiracılık (Identity) bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (modül/kaya; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: landx-l1 — \"LandX L1 — Kimlik & Kiracılık (Identity)\" (module/dağ; küme: Landing). Özet: I01–I05. Multi-tenant izolasyon, user + agent identity, MFA, permission framework. Etiketler: landx, identity, tenancy, rbac, agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -30,7 +30,7 @@ Alanlar, TaskNode şemasındaki karşılıklarıyla listelenmektedir.
 | Rollback | `risks` veya `notes` | Neyin nasıl geri alınacağı açıklanmış olmalı |
 | Üst deliverable bağı | `phase` hiyerarşisi | Bu görevin hangi epic/feature deliverable'ına katkı sağladığı belirli olmalı |
 | Branch adı önerisi | `traceability` veya `notes` | `feature/[task.id]-[slug]` formatında önerilmiş olmalı |
-| Evidence checklist | `evidence` alanı | Done kapısı için beklenen evidence türleri listelenmiş olmalı |
+| Beklenen kanıt listesi | `acceptanceCriteria` veya ilgili `phases[*].criteria` | Done kapısında üretilecek kanıt türleri önceden tanımlı olmalı; `evidence[]` yalnız gerçek çalıştırma çıktısı/URL/yol için kullanılır |
 
 ### Bağımlılık waiver kuralı
 
@@ -53,7 +53,7 @@ Alanlar, TaskNode şemasındaki karşılıklarıyla listelenmektedir.
 | 7 | `risks` veya `notes` rollback | Rollback içeren kayıt var | Hiç rollback bilgisi yok |
 | 8 | Üst deliverable bağı | Parent epic/feature done ya da active | Orphan görev (parent yok) |
 | 9 | Branch adı önerisi | `traceability` veya `notes`'ta mevcut | Hiç belirtilmemiş |
-| 10 | `evidence` checklist | En az 1 beklenen evidence türü listelenmiş | Boş |
+| 10 | Beklenen kanıt listesi | `acceptanceCriteria` veya ilgili faz kriterlerinde en az 1 kanıt beklentisi var | Kanıt beklentisi hiç belirtilmemiş |
 
 `readyForDev` alanı araç tarafından türetilir; doğrudan veritabanına yazılmaz. Her kapı çalıştırmasında hesaplanır.
 

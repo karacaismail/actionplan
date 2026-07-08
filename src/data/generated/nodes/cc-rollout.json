@@ -22,7 +22,8 @@
     "switch",
     "alma",
     "yayın",
-    "metrik"
+    "metrik",
+    "feature"
   ],
   "dependsOn": [
     "scale-saga",
@@ -146,12 +147,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Feature Flag + Kademeli Rollout: özelliği yüzde/segment bazlı kademeli açma ve geri-alma",
-        "Canary, yüzde-bazlı ve segment-hedefli yayın",
-        "Otomatik geri-alma (metrik bozulunca) ve kill-switch"
+        "Kapsam/işlev sınırı (kapsam): bu birim yalnız bayrak değerlendirme ile yüzde/segment bazlı kademeli açma-kapamayı yönetir; özelliğin iş mantığını üretmez veya değiştirmez (sınır dışı).",
+        "Girdi/çıktı sözleşmesi: girdi = bayrak anahtarı + tenant/kullanıcı segment bağlamı; çıktı = deterministik açık/kapalı kararı + değerlendirme gerekçesi (audit için).",
+        "Durum makinesi/akış: taslak → %5 canary → kademeli artış (%25/%50/%100) → tam yayın; metrik guardrail ihlalinde herhangi bir durumdan kill-switch ile kapalıya düşülür.",
+        "Hata yolu: bayrak servisi erişilemezse güvenli varsayılan (kapalı / son bilinen değer) döner ve loglanır; segment çözümlenemezse istisna fırlatılmaz, kapalı sonuç üretilir.",
+        "Kabul kriteri (hedef/guardrail): yüzde-hedef ±%1 sapmayla uygulanır, kill-switch p95 < 5 sn'de etkinleşir, her yayın kararı denetim izine yazılır."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -164,7 +167,7 @@
         "Rollout değişimi izli — komşu-tenant negatif testi Feature Flag + Kademeli Rollout için 0 satır döner (izolasyon kanıtı)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -177,7 +180,7 @@
         "Geri-alma anında (kill-switch) — engine/görünüm ayrımı Feature Flag + Kademeli Rollout modüler sınırıyla korunur; strict tip modu açık"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +188,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Metrik bozulunca otomatik geri-alma (guardrail)",
-        "Rollout yetkili ve denetlenebilir — Feature Flag + Kademeli Rollout yüzeyinde kullanılmayan uç kapatılır; izin envanteri çeyreklik daraltılır",
-        "Bayrak borcu (flag debt) temizlenir"
+        "Sertleştirme (hardening) + en az ayrıcalık: bayrak yönetim ve değerlendirme uçları asgari izinle açılır, kullanılmayan/eski uçlar kapatılır; yalnız yetkili rol yüzde/segment değiştirebilir, kill-switch tetikleme yetkisi ayrı rolde tutulur ve step-up doğrulaması ister (kural).",
+        "Yetkilendirme + denetlenebilirlik: yetkisiz aktörün yüzde/segment/kill-switch değiştirme denemesi deny edilir; her rollout, yüzde değişimi ve kill-switch aksiyonu aktör + zaman + önceki-yeni değerle değişmez denetim izine düşer, metrik guardrail ihlalinde kill-switch otomatik tetiklenir (guardrail).",
+        "İmzalı yapılandırma + segment allowlist'i: bayrak konfigürasyonu tek manifest kaynağından türetilir, imza (signature) doğrulanmadan yüklenmez; hedefleme yalnız allowlist'teki tanımlı segmentlere izin verir, allowlist dışı segment reddedilir (kural).",
+        "Bağımlılık/SBOM sertleştirme: bayrak değerlendirme SDK'sı ve servis bağımlılıkları lock ile pin'lenir, her yayın için SBOM üretilip imzalanır ve CI zafiyet taramasından geçer; kritik CVE'de yayın durur, imzasız/pin dışı bağımlılık reddedilir (guardrail).",
+        "Kapalı egress + yüzey daraltma + bayrak-borcu temizliği: değerlendirme uçları yalnız beyan edilen dahili config kaynağına çıkışa izin verir (egress allowlist), harici egress varsayılan kapalıdır; kullanılmayan yüzey ve tam yayına ulaşan bayraklar kaldırma kuyruğuna alınır, ölü/eski bayraklar çeyreklik envanterle temizlenir (hedef: kalıcı geçici bayrak sıfır)."
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -203,7 +208,7 @@
         "Yüksek-trafik kademeli yayın — Feature Flag + Kademeli Rollout sorgu planı EXPLAIN ile gözden geçirilir; regresyon eşiği p99 400ms"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -216,7 +221,7 @@
         "Dar ekranda rollout durumu — Feature Flag + Kademeli Rollout derin-bağlantı (deep link) girişleri durum kaybı olmadan açılır; senaryo testi vardır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +234,7 @@
         "Geri-alma aksiyonu açık — Feature Flag + Kademeli Rollout ekran yolunda klavye sırası + görünür odakla; axe AAA 0 ihlal kanıtı CI'dadır"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -237,12 +242,13 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Bayrak servisi düşük-gecikme; SDK istemcilerde",
-        "Rollout metrik izleme worker — ortam farkları Feature Flag + Kademeli Rollout için tek manifest kaynağından türetilir; drift alarmı kurulur",
-        "Shared hosting'de temel bayrak (kısıtlı)"
+        "Bayrak servisi düşük-gecikmeli dağıtılır; istemci SDK'sı yerel önbellekle değerlendirir, servis düşse son bilinen konfigürasyonla çalışır.",
+        "Rollout metriklerini izleyen worker ayrı dağıtılır; guardrail ihlalinde otomatik geri-alma (rollback) tetikler.",
+        "Config/secret/sır politikası: bayrak konfigürasyonu ve servis anahtarları sır kasasında tutulur, ortamlar tek manifest kaynağından türetilir, sızıntıya karşı rotasyon zorunludur (kural).",
+        "Geri-alma (rollback): yeni yayın hedefe ulaşmazsa önceki bayrak durumu ve dağıtım sürümüne dönülür; shared hosting'de yalnız temel bayrak desteklenir (kısıt)."
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +261,7 @@
         "Olay: metrik bozuldu → otomatik geri-al (kill-switch) + uyar (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +274,7 @@
         "AI rollout hızı/segment önerir; yayını veya geri-almayı insan onaylar (kritik)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +282,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Deterministik bayrak atama testi — yetkisiz erişim denemesi Feature Flag + Kademeli Rollout testinde 0 kayıt döner (negatif kanıt)",
-        "Otomatik geri-alma (kill-switch) testi",
-        "Kademeli yayın segment testi; en çok 6 tur"
+        "Birim (unit) testi: deterministik bayrak atama ve yüzde hesabı aynı segment için aynı sonucu döner; sınır yüzdeleri (%0/%5/%100) fixture'larla doğrulanır.",
+        "Entegrasyon (integration) testi: SDK + bayrak servisi + metrik worker uçtan uca koşulur; guardrail ihlalinde otomatik geri-alma tetiklendiği senaryoyla kanıtlanır.",
+        "E2E + kullanıcı yolculuğu (journey): Playwright ile yönetim ekranında yüzde artırma, segment hedefleme ve kill-switch akışı sürülür; QA kanıtı ekran/iz olarak saklanır.",
+        "Negatif test: yetkisiz aktörün rollout/kill-switch değiştirme denemesi reddedilir ve 0 kayıt döner (negatif kanıt); servis erişilemez fixture'ında güvenli varsayılan doğrulanır."
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +301,7 @@
         "A09 Logging: rollout kararları iz — Feature Flag + Kademeli Rollout dosya/URL girdileri SSRF filtresinden geçer; doğrulama ihlali denetim izine düşer"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +314,7 @@
         "Resolver-ops politika yayınında kullanır"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +328,7 @@
         "Üst modül Feature Flag + Kademeli Rollout birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Feature Flag + Kademeli Rollout, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (taş/kum; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-rollout — \"Feature Flag + Kademeli Rollout\" (feature/taş; küme: Cross-cutting). Özet: Yeni özelliği %5 kullanıcıya aç, izle, sorun yoksa %100'e çık. Sorun varsa anında kapat (kill switch). Etiketler: crosscut, feature-flag, rollout, ab-test, kill-switch.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -21,7 +21,8 @@
     "saatler",
     "sağlayıcı",
     "tercih",
-    "gönderim"
+    "gönderim",
+    "module"
   ],
   "dependsOn": [],
   "blocks": [
@@ -152,12 +153,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Notification ArcheType'ı: çok-kanallı bildirim (e-posta/SMS/push/in-app), şablon ve tercih yönetimi",
-        "Bildirim toplama (digest), sessiz saatler ve teslim takibi",
-        "Olay→bildirim eşlemesi ve kullanıcı abonelik tercihleri"
+        "İşlev sınırı: Notification yalnız bildirim üretimini ve kanal-bağımsız teslim sözleşmesini sahiplenir; gerçek e-posta/SMS/push sağlayıcı çağrısını kendisi yapmaz, sözleşmeyi tanımlar ve provider adapter'a devreder — iş mantığı üreten app değildir",
+        "Girdi/çıktı sözleşmesi: girdi = {event, recipient, channel, template, preference}; çıktı = delivery receipt (queued/sent/failed) + correlation-id; her alan tipli (Zod) doğrulanır, tanımsız kanal/şablon reddedilir",
+        "Durum akışı: received → resolved (tercih+izin çözümü) → queued → dispatched → delivered/failed; sessiz saatler aktifse deferred→digest dalı, opt-out ise suppressed uç durumu",
+        "Hata yolu: geçersiz recipient/template doğrulama hatası; sağlayıcı 5xx yeniden-deneme (maks 6) + DLQ; kalıcı hata failed makbuzu üretir, sessizce kaybolmaz",
+        "Kabul sözleşmesi: izinsiz/opt-out alıcıya gönderim yok, her bildirim idempotent (aynı event+recipient tek teslim), her teslim makbuzla denetlenebilir"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "İşlevsel kapsam bildirim sözleşmesiyle sınırlıdır: girdi/çıktı, durum makinesi, hata yolu ve kabul kriterleri tanımlıdır; gerçek sağlayıcı çağrısı adaptör sınırının ötesindedir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -172,7 +175,7 @@
         "yetki kararları Notification için merkezi politika noktasından (PDP) alınır; yerel bypass yasaktır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -187,7 +190,7 @@
         "Notification kritik yolu için algoritmik karmaşıklık beyanı (Big-O) belgelidir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -195,12 +198,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Sessiz saatler + frekans sınırı (bildirim yorgunluğu)",
-        "Opt-out/izin kontrolü gönderim öncesi zorunlu",
-        "Sağlayıcı hatası yeniden-deneme (maks 6) + DLQ"
+        "Provider allowlist: yalnız onaylı e-posta/SMS/push/webhook sağlayıcı uç noktalarına gönderim yapılır; giden webhook payload'ları imzalanır (HMAC) ve alıcı imza doğrular",
+        "Bağımlılık sertleştirme: kanal adaptör paketleri için SBOM üretilir ve SCA taraması CI'da bloklayıcıdır; kritik CVE'de bildirim gönderici dağıtımı durdurulur",
+        "Egress/yüzey daraltma: gönderici worker yalnız allowlist'teki sağlayıcı domain/portlarına dışa çıkabilir; kullanılmayan kanal adaptörleri devre dışı bırakılarak saldırı yüzeyi küçültülür",
+        "Sağlayıcı anahtarları KMS/kasada tutulur ve düzenli rotasyona (ör. 90 gün) tabidir; sızıntı şüphesinde anahtar iptal + acil rotasyon runbook'u işletilir",
+        "Rate-limit sertleştirme: alıcı+kanal+event başına gönderim tavanı ve frekans sınırı zorlanır (bildirim yorgunluğu/suistimal); aşımda opt-out/izin kontrolüyle birlikte gönderim engellenir, sağlayıcı 5xx için yeniden-deneme (maks 6) + DLQ uygulanır"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Sertleştirme ekseni: provider allowlist/imza, SBOM/SCA, egress daraltma, KMS'te secret rotation ve rate-limit hardening bildirim gönderim sınırına özgü olarak tanımlıdır.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -215,7 +220,7 @@
         "Notification büyük yük (payload) sıkıştırma ve alan-seçimi ile sınırlandırılır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -223,12 +228,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Push bildirimi iOS/Android (APNs/FCM); in-app bildirim merkezi",
-        "Mobilde bildirim tercihleri self-servis",
-        "Sessiz saatler cihaz saat dilimine göre"
+        "Push teslimi APNs (iOS) ve FCM (Android) üzerinden; PWA web-push ve Capacitor köprüsü ile aynı bildirim sözleşmesi native kabuğa taşınır — kanal adaptörü değişse de payload sözleşmesi sabit kalır",
+        "Offline in-app bildirim önbelleği: cihaz çevrimdışıyken bildirimler yerelde tutulur, bağlantı gelince delivery makbuzuyla senkronlanır; çevrimdışında tekrarlı gösterim idempotency anahtarıyla engellenir",
+        "Push bildirimi dokunulduğunda deep link ile ilgili uygulama ekranına yönlendirir; correlation-id taşınarak açılış olayı bildirim teslimiyle eşleştirilir",
+        "Mobil bildirim tercih düğmelerinde en az 44 px temas alanı sağlanır; opt-out/izin ve kanal seçimi self-servis ve tek dokunuşla erişilebilir",
+        "Sessiz saatler cihaz saat dilimine göre uygulanır; sessiz aralıkta gelen bildirimler ertelenip digest olarak sunulur, kritik olmayan push cihazda bastırılır"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Mobil eksen: APNs/FCM/PWA/Capacitor köprüsü, offline in-app bildirim önbelleği, push/deep link ve tercih düğmelerinde en az 44 px temas alanı bildirim modülünün gerçek mobil yüzeyine bağlanmıştır.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -243,7 +250,7 @@
         "sayfa başlığı Notification görünüm değişiminde güncellenir (ekran okuyucu bağlamı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -251,12 +258,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Bildirim gönderici ayrı worker; kanal başına oran-sınırı",
-        "Sağlayıcı entegrasyonu (e-posta/SMS/push) adaptör",
-        "Shared hosting'de e-posta + in-app (push kısıtlı)"
+        "Bildirim gönderici ayrı worker olarak dağıtılır; liveness/readiness probe kuyruk bağlantısı ve sağlayıcı erişilebilirliğini yoklar, hazır değilken trafiğe alınmaz ve kanal başına oran-sınırı korunur",
+        "Kanal adaptörleri (e-posta/SMS/push/webhook) bağımsız dağıtılabilir bileşenlerdir; bir adaptörün yeni sürümü diğer kanalları kesmeden devreye alınır (canary/rolling)",
+        "Rollback stratejisi: hatalı sürümde worker önceki imaja geri alınır ve DLQ'daki bekleyen bildirimler kontrollü şekilde yeniden oynatılır (replay); replay idempotency anahtarıyla çift teslimi önler",
+        "Config/secret ayrımı: kanal endpoint/oran-sınırı gibi ayarlar config'te, sağlayıcı anahtarları KMS/kasada tutulur; ortam değişkeni imajın içine gömülmez",
+        "Shared hosting sınırı: WordPress sınıfı ortamda yalnız e-posta + in-app kanalı çalışır, kalıcı worker/push kısıtlıdır; bu ortamda gönderim senkron/cron tetiklemeli degrade moda düşer"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "Dağıtım ekseni: worker health/readiness probe, kanal adaptörü bağımsız dağıtımı, rollback + DLQ replay, config/secret ayrımı ve shared hosting kısıtı bildirim gönderim mimarisine özgü tanımlıdır.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -269,7 +278,7 @@
         "Olay: sessiz saatler aktif → bildirimi ertele/digest'e ekle (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -282,7 +291,7 @@
         "AI bildirim içeriği/zamanlama önerir; kullanıcı izin/tercihini kendisi değiştiremez"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -290,12 +299,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "İzin/opt-out kontrolü testi (izinsiz gönderim yok)",
-        "Sessiz saatler + frekans sınırı testi",
-        "Çok-kanal teslim + DLQ testi; en çok 6 tur"
+        "Unit testler: tercih+izin çözümleme, template render ve idempotency anahtarı üretimi saf fonksiyonlar olarak doğrulanır (izinsiz/opt-out alıcı elenir)",
+        "Contract testler: Notification tiplenmiş girdi/çıktı sözleşmesi (event/recipient/channel/template → delivery receipt) tüketici app'ler ve provider adapter'a karşı Zod şemasıyla doğrulanır; sözleşme kırılırsa test kırmızıya döner",
+        "Integration testler: event bus'tan gelen olayın kuyruğa alınıp adaptöre teslim edilmesi sahte (mock) sağlayıcıyla uçtan test edilir; DLQ'ya düşme ve replay yolu fixture'larla senaryolandırılır",
+        "E2E + negatif senaryolar: opt-out sonrası gönderim yok, sessiz saatlerde erteleme/digest, rate-limit aşımında bastırma ayrı negatif testlerle kanıtlanır",
+        "AI-destekli Playwright + testing-loop (maks 6 tur): in-app bildirim merkezi kullanıcı yolculuğu koşulur, düzelmezse autonomous QA ajanı raporlar; test fixture'ları çok-kanal sağlayıcı yanıtlarını (queued/sent/failed) sabitler"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test ekseni: unit, contract, integration, e2e ve negatif (opt-out/quiet-hours/rate-limit) testler, fixture ve QA loop bildirim modülünün gerçek sınırlarına göre tanımlıdır.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -303,12 +314,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: izin/abonelik bazlı gönderim",
-        "A04 Insecure Design: frekans/sessiz-saat ile suistimal önleme",
-        "A09 Logging: gönderim kararları iz (PII maskeli)"
+        "A01 Access Control: bildirim yalnız izinli/abone alıcıya gider; tenant_id RLS ve merkezi politika (PDP) kararı zorunlu, yerel bypass yasak",
+        "A04 Insecure Design: frekans/sessiz-saat sınırı ve rate-limit ile bildirim suistimali (spam/flooding) tasarımdan engellenir; idempotency ile tekrar teslim önlenir",
+        "A09 Security Logging: gönderim kararları (queued/sent/failed, opt-out suppress) değişmez denetim izine yazılır, içerik PII maskeli tutulur; kim-ne-nezaman-nereden alanları zorunlu",
+        "Girdi doğrulama: recipient (e-posta/telefon formatı), channel (allowlist) ve template (tanımlı şablon) sunucu tarafında Zod ile doğrulanır; tanımsız kanal/şablon veya enjeksiyon içeren alan reddedilir",
+        "Standart hizalama: ASVS doğrulama gereksinimleri, NIST günlükleme/izleme kılavuzu ve kanal adaptör bağımlılıkları için SBOM üretimi denetim kanıtına eklenir"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "OWASP ekseni: A01/A04/A09 bağlamı bildirim gönderim sınırına, girdi doğrulama (recipient/channel/template) ve ASVS/NIST/SBOM standart hizalaması denetim iziyle birlikte tanımlıdır.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -316,12 +329,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Notification, tüm app'lerin olaylarını bildirime çevirir",
-        "Kanal sağlayıcıları ipaas/adaptörden",
-        "Tercih/izin gizlilik (KVKK) süreçleriyle uyumlu"
+        "Tüketici app'ler yalnız tiplenmiş Notification API sözleşmesi üzerinden bildirim ister (event/recipient/channel/template → delivery receipt); doğrudan bildirim tablosuna veya kuyruğa erişmez",
+        "Uygulama olayları event bus / olay veriyolu üzerinden akar; Notification bu olayları tüketip bildirime çevirir, kendi durum değişikliklerini de olay olarak yayımlar (denetim/analitik aboneleri dinler)",
+        "Bağımlılık yönü tek yönlüdür: app events → notification contract → provider adapter; Notification, tükettiği app modüllerine geri (ters) bağımlılık kurmaz, böylece döngüsel bağımlılık oluşmaz",
+        "Kanal sağlayıcıları iPaaS/adaptör katmanının arkasındadır; sağlayıcı değişimi yalnız provider adapter'ı etkiler, sözleşme ve tüketici app'ler etkilenmez",
+        "Tercih/izin ve retention kernel gizlilik (KVKK) süreçleriyle sözleşmeli entegre olur; bildirim gönderimi merkezi izin durumunu kaynak-doğru okur, kopyalamaz"
       ],
-      "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "notes": "Entegrasyon ekseni: tiplenmiş Notification API + event bus üzerinden bağ, tek yönlü bağımlılık (app events → notification contract → provider adapter) ve app modüllerine ters bağımlılık kurmama kuralı açıkça tanımlıdır.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -335,7 +350,7 @@
         "Notification bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Notification, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (modül/kaya; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-notification — \"Notification\" (module/dağ; küme: Layer 1 modülleri). Özet: Channel-agnostic. Email, SMS, push, in-app, Slack, webhook. Etiketler: notification, email, sms, push.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

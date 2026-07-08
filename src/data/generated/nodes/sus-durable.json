@@ -22,7 +22,8 @@
     "workflow",
     "girdi",
     "lenir",
-    "orkestratör"
+    "orkestratör",
+    "feature"
   ],
   "dependsOn": [
     "scale-saga",
@@ -154,7 +155,7 @@
         "Durable Execution bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -162,12 +163,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Durable Execution güvenlik açısı: workflow durumu kalıcı; çökme sonrası kaldığı yerden güvenli devam",
-        "Durable Execution hassas bilgi gerektiğinde maskelenir",
-        "Durable Execution ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Workflow checkpoint tabloları tenant_id kolonuyla PostgreSQL RLS politikası altında tutulur; her sorgu tenant izolasyonuyla filtrelenir, çapraz-tenant checkpoint okuması deny edilir",
+        "Checkpoint payload'ındaki PII taşıyan alanlar veri sınıflandırmasıyla işaretlenir, dinlenirken şifrelenir/maskelenir; yalnız yetkili rol çözerek görebilir",
+        "Durable execution worker'ı least-privilege DB rolüyle bağlanır (checkpoint tablolarına yalnız INSERT/UPDATE, DDL yok); adım tetikleme rol bazlı yetki (authz) ile sınırlanır",
+        "Her checkpoint yaz/oku işlemi append-only audit izine correlation-id ile kaydedilir; kim, hangi adım, hangi tenant denetlenebilir kalır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -175,12 +177,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Durable Execution yapısı: ayrı orkestratör altyapısı yok; mevcut PostgreSQL kullanılır",
-        "Durable Execution tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Durable Execution okunabilir ve test edilebilir kalır"
+        "Checkpoint API'si tam tipli (TypeScript/Zod) arayüzle sarılır; workflow state tip güvenliğiyle serialize edilir, gevşek `any` kaçakları lint kapısında reddedilir",
+        "Checkpoint/retry engine mantığı ile UI/yönetim yüzeyi modüler sınırla ayrılır (SoC); iş kuralı engine katmanında, sunum ayrı modülde kalır",
+        "Ölü kod elemesi uygulanır; tekrar eden retry/serialize mantığı paylaşılan yardımcıya toplanır, kullanılmayan export'lar tree-shaking + lint ile budanır",
+        "Fonksiyon başına döngüsel karmaşıklık eşiği ≤10 CI kapısında zorlanır; aşan modüller bölünür (split), bütçe aşımı derlemeyi kırar"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -188,12 +191,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Durable Execution en-az-ayrıcalık ilkesine uyar",
-        "Durable Execution değişikliği sürümlü ve izlenir",
-        "Durable Execution girdi sınırda doğrulanır"
+        "Bağımlılıklar SBOM ile envanterlenir; DBOS/pg sürücüsü ve transitif paketler pin'lenir, CI'de güvenlik açığı taraması (dependency scan) çalışır",
+        "Worker→dış hedef egress varsayılan kapalı; yalnız allowlist'teki PostgreSQL uç ve zorunlu servisler açık, saldırı yüzeyi daraltılır",
+        "Migration ve worker imajları imzalanır (signed); imzasız artefakt dağıtım kapısında reddedilir",
+        "DB kimlik bilgileri secret yöneticisinde tutulur ve düzenli rotasyona tabidir; checkpoint yazma uçları rate-limit ile kötüye kullanıma karşı sertleştirilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -201,12 +205,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Durable Execution performans açısı: checkpoint maliyeti düşük; gereksiz altyapı yok",
-        "Durable Execution sık erişim indeksli/önbellekli tasarlanır",
-        "Durable Execution büyük veride sayfalı işlenir"
+        "Checkpoint yazma p95 gecikme hedefi ≤20 ms; adım başına ek yük error-budget ile izlenir",
+        "Kurtarma taraması keyset (cursor) sayfalama ile yapılır; her worker tur başına en fazla 500 bekleyen workflow satırı tarar, tam tablo taraması yasak",
+        "Bekleyen workflow sorguları (status, tenant_id, next_run_at) bileşik indeksle desteklenir; adım-durum join'lerinde N+1 önlenir",
+        "Worker throughput bütçesi ≥200 checkpoint/sn/worker yük testiyle doğrulanır; sık okunan workflow metadata önbelleklenir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -214,12 +219,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Durable Execution mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Durable Execution mobil istemci aynı sözleşmeyi tüketir",
-        "Durable Execution bildirim/onay gerektiğinde push ile iletilir"
+        "Workflow durum izleme paneli mobil/responsive; dar ekranda tek sütun, uzun checkpoint listesi dikey kaydırılır",
+        "Mobil istemci (PWA veya Capacitor) aynı tipli API sözleşmesini tüketir; iOS/Android'de ayrı uç gerekmez",
+        "Adım aksiyon butonları (tekrar dene/iptal) en az 44 px temas alanı ile dokunmaya uygun boyutlanır",
+        "Offline'da son bilinen checkpoint durumu önbellekten gösterilir; bağlantı gelince senkron edilir, yazma işlemleri yalnız çevrimiçi doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -232,7 +238,7 @@
         "Durable Execution klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -245,7 +251,7 @@
         "Durable Execution shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -258,7 +264,7 @@
         "Durable Execution bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -271,7 +277,7 @@
         "Durable Execution — AI akış darboğazı önerir; workflow tasarımı kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -279,12 +285,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Durable Execution doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "Durable Execution ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit testler: checkpoint serialize/deserialize ve idempotency anahtarı üretimi; aynı adım iki kez işlense tek etki oluştuğu doğrulanır",
+        "Integration testleri gerçek PostgreSQL'e karşı RLS + checkpoint yaz/oku yolunu; e2e ise uçtan uca kurtarma senaryosunu kapsar",
+        "Crash/retry testi: worker adım ortasında öldürülür, kaldığı checkpoint'ten devam ettiği ve tamamlanmış adımı tekrar yürütmediği negatif senaryo dahil doğrulanır",
+        "Conformance testi Zod sözleşmesine karşı; yönetim paneli için Playwright + axe ile erişilebilirlik kanıtı (golden/fixture) toplanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -297,7 +304,7 @@
         "Durable Execution girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -310,7 +317,7 @@
         "Durable Execution sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -324,7 +331,7 @@
         "Postgres-native durable execution kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Postgres-native durable execution bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (taş/kum; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-durable — \"Postgres-native durable execution\" (feature/taş; küme: Platform Yetenekleri). Özet: DBOS: ayrı orkestratör altyapısı yok; workflow durumu mevcut Postgres'inde checkpoint'lenir. AI ajan güvenilirliği için. Etiketler: sustainability, dbos, postgres, durable, ai-agent.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

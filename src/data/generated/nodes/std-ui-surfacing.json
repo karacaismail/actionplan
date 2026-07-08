@@ -20,7 +20,8 @@
     "standart",
     "taskdetailview",
     "boyut",
-    "standardrefs"
+    "standardrefs",
+    "feature"
   ],
   "dependsOn": [
     "std-schema-foundation"
@@ -95,7 +96,14 @@
     "N/A boyut gerekceyle gosterilir",
     "Standards dashboard rotasi + axe yesil"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-std-ui-surfacing-scope-drift",
+      "desc": "UI: Boyut Aileleri + Standards Dashboard (ST-6) kapsami ust seviye sozlesmeden koparsa teslimat kaniti yorumlanamaz hale gelir",
+      "severity": "medium",
+      "mitigation": "Kapsam, acceptanceCriteria, rollback ve traceability alanlari ayni PR'da guncellenir"
+    }
+  ],
   "rollback": "UI geri alımı: boyut-aile gruplaması ve Standards dashboard salt-görünüm katmanıdır (engine'e yazmaz); sorunlu görünüm önceki commit'e revert edilir, GitHub Pages önceki deploy artefaktıyla yeniden yayınlanır (deploy.yml rollback: bir önceki yeşil run'ın artefaktı). Veri geri alımı gerekmez.",
   "evidence": [],
   "metrics": [],
@@ -111,7 +119,7 @@
         "StandardsView her standart için onu referans veren düğüm listesine ve sahibine (CODEOWNERS) tıklanır bağ verir"
       ],
       "notes": "Aile gruplama + dashboard + gerekçeli N/A; girdi standardRefs/applicability düğüm verisi",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: TaskDetailView aile gruplama, StandardsView dashboard kapsamı, N/A boyutun gerekçeli görünümü, bileşen girdi/çıktısı.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: TaskDetailView aile gruplama, StandardsView dashboard kapsamı, N/A boyutun gerekçeli görünümü, bileşen girdi/çıktısı.",
       "provenance": "swarm"
     },
     "security": {
@@ -119,13 +127,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "StandardsView salt-okunur bir görünümdür; standart/feragat verisini değiştirmez, mutasyon yalnız yetkili backend akışından geçer",
-        "boyut notları ve gerekçe metinleri React'in varsayılan kaçışıyla render edilir, dangerouslySetInnerHTML kullanılmaz; düğüm verisine gömülü işaretleme çalıştırılmaz",
-        "dashboard kanıt (evidence) linklerini gösterirken gizli sınıflı kanıtı doğrudan içeriğiyle değil, yetki arkasındaki referansla gösterir",
-        "N/A gerekçesi ve waiver gösterimi yalnız düğüm verisindeki onaylı alanlardan beslenir; serbest kullanıcı metni dashboard'a enjekte edilemez"
+        "StandardsView (ST-6) least-privilege salt-okunur bir görünümdür; standardRefs/waiver/applicability verisini yalnız okur, mutasyon yalnız yetkili backend akışından geçer ve UI'dan gelen yetkisiz değiştirme çağrısı ECA deny (ai-cannot-override-rulesets) ile reddedilir",
+        "boyut notları ve N/A gerekçe metinleri React'in varsayılan kaçışıyla (safe render) gösterilir, dangerouslySetInnerHTML kullanılmaz; 467 düğümün verisine gömülü işaretleme/script çalıştırılmaz",
+        "dashboard, tenant/PII/secret içeren kanıt (evidence) bağlarını doğrudan içerikle değil maskeli referansla ve yetki arkasındaki link olarak gösterir; sınıflı kanıt gövdesi StandardsView DOM'una girmez",
+        "N/A gerekçesi ve waiver gösterimi yalnız düğüm verisindeki onaylı alanlardan beslenir; serbest kullanıcı metni dashboard'a enjekte edilemez, her yetkisiz mutasyon denemesi audit evidence (append-only iz) olarak kaydedilir"
       ],
-      "notes": "Salt-okunur dashboard + güvenli render (escape) + gizli kanıt referansla",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın yalnız okuma yüzeyi olması, dashboard'da gizli kanıt linklerinin sızdırılmaması, kullanıcı girdisinin render güvenliği.",
+      "notes": "Least-privilege salt-okunur dashboard + yetkisiz mutasyon deny + safe render (escape) + maskeli kanıt referansı + audit evidence",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın yalnız okuma yüzeyi olması, dashboard'da gizli kanıt linklerinin sızdırılmaması, kullanıcı girdisinin render güvenliği.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -133,13 +141,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "14 boyutun aile eşlemesi tek bir sabit harita (DIMENSION_FAMILIES) olarak tanımlanır; TaskDetailView ve StandardsView aynı haritayı tüketir, gruplama kuralı çoğullanmaz",
-        "düğüm × standart matrisi standardRefs'ten saf bir seçici (selector) ile türetilir, bileşen içinde her render'da yeniden hesaplanmaz (memoize edilir)",
-        "boyut kartları masonry yerleşimiyle dizilir; aile başlıkları korunurken kartlar boşluk bırakmadan akar, sabit yükseklik varsayımı kaldırılır",
-        "N/A ve filled durumları tek bir görünüm-modeli tipiyle ifade edilir, render dalları tip üzerinden ayrılır; kopyala-yapıştır kart şablonu engellenir"
+        "14 boyutun aile eşlemesi tek bir paylaşılan sabit harita (shared DIMENSION_FAMILIES) olarak tanımlanır; TaskDetailView ve StandardsView aynı haritayı tüketir, gruplama kuralı çoğullanmaz",
+        "düğüm × standart matrisi standardRefs'ten saf bir seçici/view-model (selector) ile türetilir, bileşenden ayrıştırılır ve her render'da yeniden hesaplanmaz (useMemo ile memoize edilir)",
+        "kod sağlığı en az lint + typecheck + standardRef contract gate'inden geçmeden birleştirilmez; view-model/layout ayrıştırması sayesinde bileşen fonksiyonu düşük siklomatik karmaşıklıkta (ör. ≤10) tutulur",
+        "her aile bölümü render'ı için sabit bir render budget/eşik gözetilir (ör. bölüm başına ≤50 kart tek geçişte); N/A ve filled durumları tek görünüm-modeli tipiyle ifade edilir, render dalları tip üzerinden ayrılır ve kopyala-yapıştır kart şablonu engellenir"
       ],
-      "notes": "Tek aile-haritası + memoize selector + masonry; render dalları tip-güdümlü",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama mantığının tek yerde tanımı, masonry yerleşiminin sade kalması, dashboard türetiminin saf fonksiyon olması.",
+      "notes": "Shared DIMENSION_FAMILIES + selector/view-model ayrıştırma + memoize + lint/typecheck/contract gate + render budget + complexity sınırı",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama mantığının tek yerde tanımı, masonry yerleşiminin sade kalması, dashboard türetiminin saf fonksiyon olması.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -147,13 +155,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "StandardsView'daki dış/iç linkler güvenli yönlendirmeyle açılır (rel=noopener); CODEOWNERS ve doküman bağları yeni sekmede yetki sızdırmadan açılır",
-        "dashboard hiçbir mutasyon butonu (feragat ver/standart düzenle) sunmaz; tüm değiştirici eylemler yetkili ekrana yönlendirir, UI'da gizli yetki yükseltme yoktur",
-        "boyut gerekçe/not alanları sıkı içerik politikasıyla render edilir; satır içi script ve stil enjeksiyonu engellenir",
-        "N/A gerekçesi ve waiver son-kullanma tarihi yalnız doğrulanmış düğüm alanından okunur, istemci tarafında üretilmez ya da düzenlenmez"
+        "StandardsView'daki dış/iç linkler güvenli yönlendirmeyle açılır (rel=\"noopener noreferrer\"); CODEOWNERS ve doküman bağları yeni sekmede yetki/referrer sızdırmadan açılır ve link hedefleri yalnız izinli standardRef/route allowlist'inden gelir",
+        "dashboard hiçbir mutasyon butonu (feragat ver/standart düzenle) sunmaz; egress yüzeyi daraltılır — tüm değiştirici eylemler yetkili ekrana yönlendirir, UI'da gizli yetki yükseltme yoktur",
+        "boyut gerekçe/not alanları sıkı CSP + escape politikasıyla render edilir; satır içi script/stil enjeksiyonu ve inline-eval yüzeyi kapatılır (hardening)",
+        "bağımlılık zinciri SBOM/SCA taramasından geçirilerek dashboard'a giren üçüncü-parti paketler denetlenir; N/A gerekçesi ve waiver son-kullanma tarihi yalnız doğrulanmış düğüm alanından okunur, istemcide üretilmez ya da düzenlenmez"
       ],
-      "notes": "Güvenli link açma + mutasyonsuz dashboard + sıkı render politikası",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dashboard'ın hassas alan göstermede sıkı CSP/escape uyumu, link hedeflerinin güvenli açılması, yetkisiz aksiyon yokluğu.",
+      "notes": "rel=noopener noreferrer + route/standardRef allowlist + egress daraltma + CSP/escape hardening + SBOM/SCA dependency taraması + mutasyonsuz dashboard",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dashboard'ın hassas alan göstermede sıkı CSP/escape uyumu, link hedeflerinin güvenli açılması, yetkisiz aksiyon yokluğu.",
       "provenance": "swarm"
     },
     "performance": {
@@ -161,13 +169,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "StandardsView 438 düğümün standardRefs özetini bir kez türetip önbelleğe alır; filtre değişiminde tüm veriyi değil yalnız görünür dilimi yeniden hesaplar",
-        "düğüm × standart matrisi büyük olduğunda satırlar sanallaştırılır/sayfalanır, DOM'a aynı anda yüzlerce satır basılmaz",
-        "TaskDetailView aile gruplaması yalnız boyut verisi değiştiğinde yeniden hesaplanır (useMemo), her ebeveyn render'ında tekrar gruplanmaz",
-        "masonry yerleşimi yükseklikleri ölçüp tek geçişte konumlandırır; kart sayısı arttıkça düzen titremeden (layout thrash olmadan) oturur"
+        "StandardsView 467 düğümün standardRefs özetini bir kez türetip index/cache'e alır; filtre değişiminde tüm veriyi değil yalnız görünür dilimi yeniden hesaplar, dashboard filtre yanıtı p95 < 100ms hedeflenir",
+        "467 düğüm × standart matrisi ilk render p95 < 300ms hedefiyle sanallaştırılır/sayfalanır (ör. sayfa başına ≤50 satır), DOM'a aynı anda yüzlerce satır basılmaz",
+        "TaskDetailView aile gruplaması yalnız boyut verisi değiştiğinde yeniden hesaplanır (useMemo), her ebeveyn render'ında tekrar gruplanmaz; standardRef eşleme tek türetimle yapılıp düğüm başına N+1 tarama önlenir",
+        "masonry yerleşimi yükseklikleri ölçüp tek geçişte konumlandırır; kart sayısı arttıkça düzen titremeden (layout thrash olmadan) oturur ve yeniden-yerleşim maliyeti 60fps (kare bütçesi ≤16ms) altında kalır"
       ],
-      "notes": "Tek-geçiş türetim + sanallaştırma + memoize gruplama; masonry titremesiz",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 438 düğümlük dashboard'ın akıcı render'ı, aile gruplamasının yeniden hesaplanmaması, büyük listede sanallaştırma/sayfalama.",
+      "notes": "467 düğüm dashboard p95<300ms render / <100ms filter + index/cache + sanallaştırma/pagination + N+1 önleme + memoize gruplama + masonry ≤16ms kare",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 467 düğümlük dashboard'ın akıcı render'ı, aile gruplamasının yeniden hesaplanmaması, büyük listede sanallaştırma/sayfalama.",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -181,7 +189,7 @@
         "dashboard Chrome extension dar panelinde de çalışacak şekilde akışkan genişlik kullanır, sabit geniş tablo varsayımı yoktur"
       ],
       "notes": "Dar ekran tek sütun + kaydırılabilir/kart matris + dokunmatik aç/kapa",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama ve dashboard'ın dar ekran/PWA ve Chrome extension panelinde kullanılabilirliği; dokunmatik etkileşim.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama ve dashboard'ın dar ekran/PWA ve Chrome extension panelinde kullanılabilirliği; dokunmatik etkileşim.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -195,7 +203,7 @@
         "tüm metin ve rozetler AAA kontrast oranını (normal metin ≥7:1, büyük metin ≥4.5:1) karşılar; aile başlığı ve gerekçe metni düşük kontrasta düşmez"
       ],
       "notes": "Anlamsal aileler + renk-dışı N/A + tam klavye/odak + AAA kontrast (≥7:1)",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile başlıkları ve dashboard'ın tam klavye + ekran okuyucu erişimi; AAA kontrast; rozet/durum bilgisinin renk-dışı iletimi.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile başlıkları ve dashboard'ın tam klavye + ekran okuyucu erişimi; AAA kontrast; rozet/durum bilgisinin renk-dışı iletimi.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -209,7 +217,7 @@
         "rota eklemesi geri alınabilir tutulur: router değişikliği izole commit'tir, sorun çıkarsa dashboard'ı kaldırmak diğer rotaları etkilemez"
       ],
       "notes": "Statik build'e dahil /standards + axe kapısı + SPA derin link + izole geri alma",
-      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: StandardsView rotasının statik site build'ine girmesi, axe erişilebilirlik kapısının dağıtım hattındaki yeri, geri alma.",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: StandardsView rotasının statik site build'ine girmesi, axe erişilebilirlik kapısının dağıtım hattındaki yeri, geri alma.",
       "provenance": "swarm"
     },
     "eca": {
@@ -223,7 +231,7 @@
         "ajanın UI üzerinden ruleset override denemesi yetki sınırı gereği reddedilir; dashboard yalnız 'oku' yüzeyidir, step-up eylem sunmaz"
       ],
       "notes": "Salt-görüntü ruleset durumu + serbest kod yok + gerekçeli N/A + override reddi",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın yalnız güvenli yönetim yüzeyi olması (serbest JS/SQL yok), dashboard'ın ruleset durumunu göstermesi ama değiştirmemesi.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın yalnız güvenli yönetim yüzeyi olması (serbest JS/SQL yok), dashboard'ın ruleset durumunu göstermesi ama değiştirmemesi.",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -237,7 +245,7 @@
         "AI önerisi sunulduğunda kaynağı (provenance: swarm/ai) görünür kalır; kullanıcı insan ile ajan üretimini ayırt edebilir, kill-switch ile öneri durdurulabilir"
       ],
       "notes": "AI yalnız changeset önerir + onaylı veri gösterimi + güvenilmez alt-prompt + provenance görünür",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI'ın UI bileşenini üretemeyeceği sınırı, ajanın yalnız changeset önerebilmesi, dashboard'ın AI önerilerini değil insan-onaylı veriyi göstermesi.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI'ın UI bileşenini üretemeyeceği sınırı, ajanın yalnız changeset önerebilmesi, dashboard'ın AI önerilerini değil insan-onaylı veriyi göstermesi.",
       "provenance": "swarm"
     },
     "testing": {
@@ -245,13 +253,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "bir birim test 14 boyutun 6 aileye doğru dağıldığını ve hiçbir boyutun ailesiz kalmadığını doğrular; aile haritası bozulursa test kırılır",
-        "N/A render testi: applicability'de N/A işaretli boyutun gizlenmediğini, 'Uygulanabilir değil' rozeti + gerekçesiyle göründüğünü doğrular",
-        "StandardsView testi standardRefs'ten üretilen düğüm × standart eşlemesinin doğru olduğunu ve var olmayan standarda link verilmediğini kontrol eder",
-        "axe tabanlı erişilebilirlik testi dashboard ve aile görünümünde sıfır ihlal (kontrast/rol/odak) bekler, AAA gereksinimleri otomatik kapıdan geçer"
+        "unit test: 14 boyutun 6 aileye doğru dağıldığını ve hiçbir boyutun ailesiz kalmadığını doğrular; shared DIMENSION_FAMILIES haritası bozulursa test kırılır",
+        "contract + integration test: StandardsView'ın standardRefs'ten ürettiği 467 düğüm × standart eşlemesinin katalogla uyumlu olduğunu ve router/strings sözleşmesine bağlandığını doğrular; N/A render testi 'Uygulanabilir değil' rozeti + gerekçesinin göründüğünü kontrol eder",
+        "negatif senaryolar: tanımsız standardRef'in 'tanımsız standart' işaretlendiğini, N/A gerekçesi/waiver id eksik girdinin reddedildiğini, unsafe link (rel'siz/allowlist dışı hedef) render edilmediğini fixture/evidence ile kanıtlar",
+        "e2e + axe testi dashboard ve aile görünümünde sıfır ihlal (kontrast/rol/odak) bekler; testing-loop QA kapısında AAA gereksinimleri ve tüm negatif senaryolar geçmeden sürüm ilerleyemez"
       ],
-      "notes": "Aile dağılımı + N/A render + çapraz-referans + axe ihlal-sıfır testleri",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama ve N/A render'ın birim testi, dashboard'ın çapraz-referans doğruluğu, axe erişilebilirlik kontrolü.",
+      "notes": "unit (aile dağılımı) + contract/integration (çapraz-referans, router/strings) + e2e/axe + negatif senaryo (tanımsız standardRef / eksik waiver gerekçesi / unsafe link) + fixture/evidence + testing-loop QA kapısı",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: aile gruplama ve N/A render'ın birim testi, dashboard'ın çapraz-referans doğruluğu, axe erişilebilirlik kontrolü.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -259,13 +267,13 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "düğüm verisindeki not/gerekçe metni güvenli biçimde (escape) render edilerek stored XSS engellenir; A03:2025 Injection yüzeyi dashboard girişlerinde kapatılır",
-        "StandardsView yalnız okuma yüzeyi olduğundan A01:2025 Broken Access Control riskine karşı hiçbir mutasyon/yetki yükseltme aksiyonu sunmaz",
-        "dashboard kanıt/feragat linklerini gösterirken gizli sınıflı veriyi içeriğiyle ifşa etmez (A04 Insecure Design'a karşı veri minimizasyonu)",
-        "düğüm metnine gömülü talimatlar prompt injection vektörü sayılır; UI bunları yürütülebilir komut değil düz metin olarak gösterir (LLM Top 10 hizası)"
+        "input validation: dashboard'a giren her standardRef, applicability değeri, waiver id ve evidence URL şema/allowlist ile doğrulanır; not/gerekçe metni escape edilerek render edilir, böylece stored XSS ve A03:2025 Injection yüzeyi kapatılır (ASVS V5 giriş doğrulama hizası)",
+        "StandardsView yalnız okuma yüzeyi olduğundan A01:2025 Broken Access Control'a karşı hiçbir mutasyon/yetki yükseltme aksiyonu sunmaz; yetkisiz değiştirme denemeleri append-only audit trail / denetim izine yazılır",
+        "dashboard kanıt/feragat linklerini gösterirken gizli sınıflı veriyi içeriğiyle ifşa etmez (A04:2025 Insecure Design — veri minimizasyonu, maskeli referans); üçüncü-parti bağımlılıklar SBOM/SCA ile denetlenir ve güvenlik kayıtları A09:2025 (yetersiz loglama) gereği tutulur (NIST SSDF hizası)",
+        "düğüm metnine gömülü talimatlar prompt injection vektörü sayılır; UI bunları yürütülebilir komut değil düz metin olarak gösterir, alt-prompt güvenilmez kabul edilir (OWASP LLM Top 10 — LLM01 hizası)"
       ],
-      "notes": "Stored XSS escape + okuma-yüzeyi erişim kontrolü + veri minimizasyonu + prompt injection düz-metin",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dashboard'ın istemci tarafı tehdit yüzeyi: XSS/enjeksiyon, güvensiz çıktı, hatalı yetki gösterimi (OWASP Top 10:2025 ilgili maddeleri).",
+      "notes": "input validation (standardRef/applicability/waiver id/evidence URL) + ASVS/NIST/SBOM + A01/A03/A04/A09 + append-only audit trail + LLM prompt injection düz-metin",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dashboard'ın istemci tarafı tehdit yüzeyi: XSS/enjeksiyon, güvensiz çıktı, hatalı yetki gösterimi (OWASP Top 10:2025 ilgili maddeleri).",
       "provenance": "swarm"
     },
     "integration": {
@@ -273,13 +281,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "StandardsView standart kataloğunu (design-system/ui-components/observability gibi kimlikler) düğümlerin standardRefs alanıyla eşleştirir; eşleşmeyen referans dashboard'da 'tanımsız standart' olarak işaretlenir",
-        "TaskDetailView N/A render'ı applicability-matrix doküman kuralıyla aynı kaynaktan beslenir; UI mantığı matrisle çelişmez, tek doğruluk korunur",
-        "rota src/app/router.tsx'e, kullanıcı-görünür metinler src/lib/strings.ts'e eklenir; dashboard inline string bırakmaz, dize sözleşmesine uyar",
-        "aile haritası TaskDetailView ve StandardsView arasında paylaşılır; her iki yüzey aynı gruplama çekirdeğini tüketir, ikisi ayrışmaz"
+        "StandardsView standart kataloğunu (design-system/ui-components/observability gibi kimlikler) düğümlerin typed standardRefs/applicability API'siyle eşleştirir; bağımlılık yönü node data -> selector/view-model -> UI'dır, eşleşmeyen referans dashboard'da 'tanımsız standart' olarak işaretlenir",
+        "TaskDetailView N/A render'ı applicability-matrix doküman kuralıyla aynı kaynaktan beslenir; UI düğüm verisini çoğaltmaz, yalnız view-model üzerinden okur ve matrisle çelişmez (tek doğruluk korunur)",
+        "rota src/app/router.tsx'e, kullanıcı-görünür metinler src/lib/strings.ts'e route/strings contract olarak eklenir; dashboard inline string bırakmaz, sözleşme testiyle bağlanır ve düğüm verisi güncellendiğinde dashboard refresh event'i ile 467 düğümlük görünüm tazelenir",
+        "aile haritası (shared DIMENSION_FAMILIES) TaskDetailView ve StandardsView arasında sözleşmeli olarak paylaşılır; her iki yüzey aynı gruplama çekirdeğini tüketir, ikisi ayrışmaz"
       ],
-      "notes": "standardRefs eşleme + matrisle tutarlı N/A + router/strings sözleşmesi + paylaşılan aile haritası",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın düğüm verisi (standardRefs/applicability), aile haritası ve standart kataloğuyla bağı; router ve strings entegrasyonu.",
+      "notes": "typed standardRefs/applicability API + node data -> selector/view-model -> UI bağımlılık yönü + route/strings contract + dashboard refresh event + paylaşılan aile haritası; UI veriyi çoğaltmaz",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: UI'ın düğüm verisi (standardRefs/applicability), aile haritası ve standart kataloğuyla bağı; router ve strings entegrasyonu.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -293,7 +301,7 @@
         "aile haritası ve N/A render mantığı ortak modül olarak paketlenir; başka bir standart görünümü eklenirse aynı modülü tekrar tüketir"
       ],
       "notes": "Platform ekibi + her detay ekranı tüketir; üretilmiş JSON kaynak; ortak modül",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (kum; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu UI yüzeyini hangi rollerin/ekranların tükettiği; dashboard'ın paylaşılan bileşenleri ve veri kaynağını nasıl kullandığı.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-ui-surfacing — \"UI: Boyut Aileleri + Standards Dashboard (ST-6)\" (feature/taş; küme: frontend). Özet: TaskDetailView boyutları ailelere gruplar + applicability N/A gösterir; StandardsView dashboard (hangi düğüm hangi standardı referans veriyor). Etiketler: standards, ui, st-6.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu UI yüzeyini hangi rollerin/ekranların tükettiği; dashboard'ın paylaşılan bileşenleri ve veri kaynağını nasıl kullandığı.",
       "provenance": "swarm"
     },
     "dataLifecycle": {

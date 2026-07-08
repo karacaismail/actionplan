@@ -21,7 +21,8 @@
     "graphql",
     "tasarım",
     "cache",
-    "route"
+    "route",
+    "module"
   ],
   "dependsOn": [
     "platform-graphql-api"
@@ -303,7 +304,7 @@
         "TanStack Query v5: GraphQL istekleri useQuery/useMutation hook'larıyla yönetilir; staleTime 60 saniye, gcTime 5 dakika varsayılan, invalidate ile anlık yenileme.",
         "Tasarım token sistemi: renk, tipografi, aralık ve gölge değerleri CSS custom property (--token-*) olarak tanımlanır; tüm bileşenler token referans eder, hard-coded değer yasaktır."
       ],
-      "notes": "Vite plugin-react-swc kullanır; TypeScript strict modda derlenir, any tipi CI'da hata üretir.",
+      "notes": "Vite plugin-react-swc kullanır; TypeScript strict modda derlenir, any tipi CI'da hata üretir. Kapsam sınırı: bu düğüm yalnız React Router shell/layout iskeleti, Vite build konfigürasyonu, TanStack Router/Query veri bağlama ve tasarım token sistemini sahiplenir; GraphQL resolver iş kuralı, veritabanı şeması ve backend yetkilendirme kapsam dışıdır ve platform-graphql-api'ye devredilir, işlev sınırı module düzeyinde sabittir.",
       "prompt": "React 18 + Vite 5 + TanStack Router/Query ile platform UI yüzeyinin temel mimarisini kapsa: route splitting, loader stratejisi, GraphQL veri bağlama ve tasarım token sistemi; çıktı: vite.config.ts, router tanımı, QueryClient yapılandırması ve token CSS dosyası.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -318,7 +319,7 @@
         "TanStack Query önbelleğinde hassas veri (SSN, IBAN) tutulmaz; query key tasarımında bu alanlar ayrı sorgu ile getirilir, gcTime=0 ile hemen temizlenir.",
         "Kullanıcı oturumu kapattığında QueryClient.clear() çağrılır; tüm önbellek verisi bellekten silinir, sonraki kullanıcıya veri sızmaz."
       ],
-      "notes": "Token saklama stratejisi OWASP SPA Security Cheat Sheet önerisiyle uyumludur.",
+      "notes": "Token saklama stratejisi OWASP SPA Security Cheat Sheet önerisiyle uyumludur. En-az-ayrıcalık: TanStack Router route guard yalnız kullanıcının yetkili olduğu rotaları mount eder, yetkisiz rota deny ile login'e yönlendirilir ve tarayıcı geçmişine yazılmaz; IBAN/SSN gibi alanlar design system component'inde maskelenerek (son 4 hane) render edilir, VITE_ öneksiz secret'lar Vite build çıktısına asla gömülmez, gizli anahtar ve şifreleme yalnız backend'de tutulur, güvenlik-duyarlı UI aksiyonu correlation-id ile audit izine iletilir.",
       "prompt": "React SPA'da JWT yaşam döngüsü güvenliğini kapsa: memory-only access token, httpOnly refresh cookie, CSP nonce uygulaması ve oturum kapatmada QueryClient temizleme; güvenlik sınırı: hassas alan asla localStorage veya query cache'te kalmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -408,7 +409,7 @@
         "Preview deployment: her PR için Vercel-benzeri izole önizleme URL'i oluşturulur; QA ekibi merge öncesi inteaktif test yapar.",
         "Cache-Control başlığı: index.html no-cache, statik varlıklar (chunk-*.js) immutable + max-age=31536000 ile yapılandırılır; yeni deploy'da yalnızca index.html indirilir."
       ],
-      "notes": "Immutable cache stratejisi ile Vite content hash dosya adları birlikte çalışır; eski chunk'lar otomatik geçersiz olur.",
+      "notes": "Immutable cache stratejisi ile Vite content hash dosya adları birlikte çalışır; eski chunk'lar otomatik geçersiz olur. Çalışma hedefi: Vite dist/ çıktısı yalnız statik varlık (HTML/JS/CSS) olarak Pages/CDN katmanında servis edilir, sunucuda Node runtime çalıştırmaz; container imajı yalnız statik dosyaları taşıyan nginx tabanlıdır ve hetzner-debian-docker hedefine geri-uyumlu (expand-contract) tek yönlü deploy edilir, rollback önceki content-hash sürümüne CloudFront invalidation ile döner.",
       "prompt": "React + Vite uygulamasının S3 + CloudFront dağıtım sürecini kapsa: build pipeline, Vault tabanlı ortam değişkeni enjeksiyonu, preview deployment ve Cache-Control stratejisi; çıktı: CI workflow YAML, S3 upload scripti ve CloudFront invalidation komutu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -423,7 +424,7 @@
         "ECA durum takibi: arka plan görevi tamamlandığında WebSocket mesajı veya polling sorgusu ile UI güncellenir; kullanıcı eyleminin tüm sonuçlarını görebilir.",
         "Hata durumu görselleştirme: ECA görevi başarısız olursa (dead-letter kuyruğu) UI'da sarı uyarı rozeti gösterilir; kullanıcı yeniden deneme butonuna basabilir."
       ],
-      "notes": "UI, ECA sonuçlarını GraphQL subscription veya periyodik polling ile alır; WebSocket tercih edilir, fallback polling 10 saniyedir.",
+      "notes": "UI, ECA sonuçlarını GraphQL subscription veya periyodik polling ile alır; WebSocket tercih edilir, fallback polling 10 saniyedir. Zincir/döngü sınırı: mutation kaynaklı her ECA maxChainDepth=6 ile sınırlıdır, UI form kaydet butonu idempotency-key üretip TanStack Query retry'de aynı mutation'ın tekrar-tetiklenmesini ve onSuccess invalidation döngüsünü engeller; requiresApproval=true olan ECA (ör. AI risk incelemesi) için UI onay diyaloğu açar, onaylanmayan aksiyon deny ile hata toast'ında reddedilir.",
       "prompt": "Platform UI yüzeyinin ECA otomasyon geri bildirimini kapsa: mutation onSuccess invalidation, WebSocket/polling ile arka plan görev takibi ve hata rozeti görselleştirmesi; çıktı: useMutation yapılandırması, WebSocket hook ve ECA durum bileşeni.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -438,7 +439,7 @@
         "Tasarım token güncelleme ajanı: Figma token dışa aktarımı CI pipeline'ında otomatik olarak CSS custom property dosyasına çevrilir; geliştirici manuel düzenleme yapmaz.",
         "Storybook stories AI ile üretilir: bileşen prop tiplerine bakılarak temel kullanım senaryoları otomatik oluşturulur; geliştirici hikayeyi gözden geçirip onaylar."
       ],
-      "notes": "AI araçları UI geliştirme hızını artırır ancak erişilebilirlik ve güvenlik doğrulamaları insan onayı olmadan otomatikleştirilmez.",
+      "notes": "AI araçları UI geliştirme hızını artırır ancak erişilebilirlik ve güvenlik doğrulamaları insan onayı olmadan otomatikleştirilmez. İzin/yasak sınırı: AI ajanları yalnız read + suggest-changeset yapabilir (Storybook story, JSDoc, Figma token dönüşümü önerir); app/module üretmesi/güncellemesi ve ruleset override etmesi ai-cannot-generate/update deny kuralıyla backend'de yasaktır (canOverride=false), üretilen her değişiklik design system component review'inden ve geliştirici onayından geçmeden route/shell'e merge edilmez.",
       "prompt": "Platform UI geliştirme sürecinde AI araç entegrasyonunu kapsa: JSDoc belgeleme standardı, axe-core + LLM otomatik düzeltme, Figma token pipeline ve AI story üretimi; çıktı: JSDoc şablonu, axe+LLM script örneği ve token dönüşüm pipeline adımı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -453,7 +454,7 @@
         "Storybook interaction tests: bileşen hikayelerinde @storybook/test ile kullanıcı etkileşimi test edilir; tasarım uyumu visual regression ile doğrulanır.",
         "axe-core otomatik erişilebilirlik testi: her Playwright test sonunda çalışır; WCAG 2.2 critical ihlali testi başarısız yapar."
       ],
-      "notes": "Test katmanları izole çalışır: birim testler tarayıcı gerektirmez, E2E Playwright chromium ile çalışır.",
+      "notes": "Test katmanları izole çalışır: birim testler tarayıcı gerektirmez, E2E Playwright chromium ile çalışır. Negatif senaryo ve kanıt: 401/403 route guard reddi, GraphQL hata boundary'si ve boş/loading durumları için başarısızlık testleri MSW fixture'larıyla sürülür; Playwright trace + axe raporu QA kanıtı olarak CI artefaktına yüklenir, TanStack Table/Query için visual regression baseline snapshot'ları fixture olarak versiyonlanır, kapsama eşiği tutmazsa CI loop merge'i bloklar.",
       "prompt": "React + Vite + TanStack platform UI'ının test stratejisini kapsa: Vitest birim, Playwright E2E, Storybook interaction ve axe-core erişilebilirlik testleri; çıktı: vitest.config.ts, playwright.config.ts ve örnek test dosyaları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -468,7 +469,7 @@
         "A07 Identification Failures: oturum süresi dolduğunda TanStack Query 401 interceptor'ı çalışır, QueryClient.clear() ardından login sayfasına yönlendirir.",
         "A08 Software Integrity: npm lockfile (package-lock.json) commit edilir ve CI'da npm ci ile kurulum yapılır; bağımlılık ağacı beklenmeyen değişikliğe kapalıdır."
       ],
-      "notes": "İstemci OWASP önlemleri sunucu tarafı kontrollerini tamamlar; tek başına güvenlik sağlayamaz.",
+      "notes": "İstemci OWASP önlemleri sunucu tarafı kontrollerini tamamlar; tek başına güvenlik sağlayamaz. OWASP ASVS L2'ye referansla TanStack form girdileri istemcide zod şemasıyla doğrulanır (yine de sunucuda tekrar doğrulanır), üretim bağımlılıkları için CycloneDX SBOM her Vite build'inde üretilir ve npm audit ile NIST NVD'ye karşı taranır; güvenlik-duyarlı UI aksiyonları (login, yetki değişimi, route guard reddi) correlation-id'li denetim izine yazılmak üzere GraphQL üzerinden backend'e iletilir.",
       "prompt": "React SPA'da OWASP Top 10 2021 istemci tarafı önlemlerini kapsa: A01 sunucu delegasyonu, A03 XSS escape ve dangerouslySetInnerHTML yasağı, A07 401 interceptor ve A08 lockfile politikası; güvenlik sınırı: yetki kararı asla yalnızca istemcide alınmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -497,7 +498,7 @@
         "platform-auth-ui modülü: login formu, token yenileme hook'u ve korumalı route sarmalayıcısı bu modülden alınır; her feature takımı ayrı auth kodu yazmaz.",
         "platform-graphql-client modülü: yapılandırılmış Apollo/urql istemcisi ve TanStack Query entegrasyon hook'ları merkezi olarak sağlanır; feature modülleri sadece domain sorgularını tanımlar."
       ],
-      "notes": "UI yüzey modülü tasarım token, auth ve GraphQL istemci modüllerine zorunlu bağımlıdır; feature takımları bu modülleri doğrudan tüketir.",
+      "notes": "UI yüzey modülü tasarım token, auth ve GraphQL istemci modüllerine zorunlu bağımlıdır; feature takımları bu modülleri doğrudan tüketir. Doğrudan-DB yasağı: hiçbir React bileşeni veritabanına veya ham REST'e erişemez, tüm veri platform-graphql-client üzerinden data-api-contract kapısından (şema/tip sözleşmesi) geçer; feature modülleri UI'a yalnız tanımlı panel/route slot entegrasyon noktalarından bağlanır, shared shell/layout dışında global stil veya router state enjekte edemez.",
       "prompt": "platform-ui-surface düğümünün platform-design-tokens, platform-auth-ui ve platform-graphql-client modülleriyle bağımlılık ilişkisini kapsa; her modülden hangi arayüzlerin tüketildiğini göster; çıktı: modül bağımlılık grafiği ve örnek feature bileşen yapısı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"

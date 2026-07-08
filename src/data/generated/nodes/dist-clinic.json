@@ -20,7 +20,8 @@
     "archetype",
     "randevu",
     "kontrolü",
-    "paket"
+    "paket",
+    "module"
   ],
   "dependsOn": [
     "s-scheduling",
@@ -145,12 +146,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Klinik/Sağlık Dağıtımı: hasta, randevu, muayene ve reçete yönetimini bir dikeyde paketler",
-        "Hasta dosyası, randevu takvimi ve klinik iş akışı için hazır bundle",
-        "Sağlığa özel ArcheType'ları (hasta, vizit, reçete) bir araya getirir"
+        "Kapsam/işlev sınırı: bu bundle hasta, randevu, muayene (vizit), reçete, onam (e-imza) ve faturalama akışlarını tek klinik dikeyinde paketler; ilaç etkileşim veritabanı, ödeme sağlayıcı ve tıbbi cihaz entegrasyonu kapsam dışıdır ve ayrı sözleşmeyle bağlanır",
+        "Girdi/çıktı: girdi olarak hasta kaydı, randevu talebi, muayene notu, reçete taslağı ve onam imzasını alır; çıktı olarak takvimlenmiş randevu, kilitli muayene kaydı, onaylı reçete ve fatura kalemi üretir — her girdi tenant klinik kimliğiyle etiketli olmalıdır",
+        "Durum/akış: randevu talep→onay→check-in→muayene→reçete/fatura→kapanış durum makinesini izler; muayene kilitlendikten sonra yalnız addendum ile değiştirilebilir, geri adım kuralı geçersiz geçiş denemesini reddeder",
+        "Hata yolu: onam eksikse muayene başlatılamaz, randevu çakışırsa talep reddedilir, reçete girdisi doğrulamadan geçmezse kaydedilmez; her reddedilen akış nedeni loglanır ve çağıran katmana dönülür",
+        "Kabul kriteri (hedef): hasta→randevu→muayene→reçete/fatura uçtan uca yolculuğu onam ve tenant sınırı korunarak tamamlanabilir olmalı; PHI/PII alanları sınıflandırılmış, geçersiz durum geçişi ve onamsız işlem engellenmiş olmalıdır"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,7 +166,7 @@
         "Tıbbi kayıt değişmez audit'li — oturum yaşam döngüsü Sağlık / Klinik Distribution için süre + uzaktan iptal kurallarıyla tanımlıdır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -171,12 +174,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Klinik/Sağlık Dağıtımı: kapsadığı ArcheType'ları bildirimsel birleştirir (kod kopyası yok)",
-        "Klinik/Sağlık Dağıtımı bayrakla açılır/kapanır; kullanılmayan yetenek yük getirmez",
-        "Klinik/Sağlık Dağıtımı sürüm uyumu paket manifestinde sabitlenir"
+        "Tipli modül/API sınırı (kural): hasta, randevu, muayene, reçete, onam ve fatura veri sözleşmeleri Zod ile tiplenir; alt modüller birbirine yalnız bu tipli sınırdan bağlanır, alanlara doğrudan erişim yerine sürümlü tip referansı kullanılır",
+        "Katman ayrımı ve bölme (kural): klinik durum makinesi (engine) UI yüzeyinden ayrı modülde tutulur; randevu-çakışma ve faturalama mantığı büyüdükçe küçük saf fonksiyonlara bölünür (split), her akış tek sorumluluk sınırında kalır",
+        "Karmaşıklık ve ölü-kod guard'ı (guardrail): fonksiyon başına döngüsel karmaşıklık eşiği ile kullanılmayan ArcheType alanı ve ölü kod taraması zorunludur; eşiği aşan mantık daha küçük parçalara bölünmeden birleştirilemez",
+        "Lint/tip kapısı ve bütçe eşiği (hedef): lint ile tip kontrolü yeşil olmadan paket yayımlanamaz; bundle boyutu ve bağımlılık sayısı bütçe eşiğini aşarsa kapı kırmızıya döner, kapalı bayraklı klinik yetenekleri tembel yüklenir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -189,7 +193,7 @@
         "Klinik/Sağlık Dağıtımı kapsadığı ArcheType güvenlik sınırlarını korur (bypass yok)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -202,7 +206,7 @@
         "Mobil hekim erişimi düşük gecikme — dış API zaman aşımı Sağlık / Klinik Distribution çağrılarında 10 sn; yeniden-deneme bütçesi toplam gecikmeyi sınırlar"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -215,7 +219,7 @@
         "Klinik/Sağlık Dağıtımı dar ekranda öncelikli aksiyonları öne alır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,7 +232,7 @@
         "Klinik/Sağlık Dağıtımı klavye ve ekran okuyucu erişimini paket genelinde sağlar"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,7 +245,7 @@
         "Shared hosting sağlık için önerilmez (degrade)"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -254,7 +258,7 @@
         "Olay: reçete oluştu → etkileşim kontrolü + audit (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -267,7 +271,7 @@
         "AI triyaj/özet önerir; tanı ve reçeteyi hekim onaylar (AI tıbbi karar vermez)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -275,12 +279,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Klinik/Sağlık Dağıtımı için paket-entegrasyon + kapsadığı ArcheType sözleşme testi",
-        "Klinik/Sağlık Dağıtımı etkinleştirme/yetki + uçtan uca kullanıcı yolculuğu (Playwright)",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Sözleşme + negatif testler: randevu (scheduling), HRMS ve faturalama (billing) sözleşmeleri şemaya göre doğrulanır; onamsız muayene, çakışan randevu ve doğrulamadan geçmeyen reçete/fatura girdisi reddediliyor mu diye negatif senaryolar kanıtlanır",
+        "E2e kullanıcı yolculuğu: hasta→randevu→check-in→muayene→reçete/fatura uçtan uca akışı (Playwright) onam ve tenant klinik sınırı korunarak koşturulur; muayene kilitlendikten sonra yalnız addendum davranışı test kanıtına bağlanır",
+        "Erişim-kontrolü + audit kanıtı: rol (hekim/sekreter) ve tenant izolasyonu testi başka kliniğin PHI/PII kaydına yatay erişimi (IDOR) reddettiğini; hasta kaydı görüntüleme, onam imzası ve reçete oluşturmanın değişmez denetim izine yazıldığını doğrular",
+        "Kanıt kapısı: yukarıdaki sözleşme/e2e/negatif/erişim-kontrolü/audit kanıtları toplanıp geçmeden paketin yayımı (publication) bloklanır; eksik veya kırmızı kanıt yayım kapısını kapalı tutar"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -288,12 +293,13 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "Klinik/Sağlık Dağıtımı: A01 erişim kontrolü rol/tenant bazlı yetkili",
-        "Klinik/Sağlık Dağıtımı: A05 gereksiz yetenek kapalı güvenli varsayılan",
-        "Klinik/Sağlık Dağıtımı: A09 etkinleştirme/yapılandırma kararları forensic iz"
+        "A01 Broken Access Control (kural): hasta, muayene ve reçete kaydına erişim rol (hekim/sekreter) ve tenant klinik sınırıyla yetkilendirilir; başka kliniğin PHI/PII kaydına yatay erişim (IDOR) denemesi reddedilir",
+        "A05 Injection + girdi doğrulama (hedef): randevu, muayene notu, reçete ve fatura girdileri sunucu tarafında şemaya göre girdi doğrulamadan (parametreli sorgu, tip/format kontrolü) geçmeden işlenmez; doğrulanmamış girdi kaydedilmez",
+        "A02 Security Misconfiguration (guardrail): kullanılmayan yetenek ve uçlar güvenli varsayılan olarak kapalıdır; PHI/PII taşıyan uçlarda ayrıntılı hata/stack sızıntısı kapatılır, onam ve tenant izolasyon ayarları varsayılan açık gelir",
+        "A09 Security Logging and Alerting Failures + denetim izi (kural): hasta kaydı görüntüleme, onam imzası, reçete oluşturma ve erişim reddi olayları değişmez denetim izine (audit trail) yazılır; anormal erişim ve tekrarlı yetki reddi için alarm eşiği tanımlıdır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -301,11 +307,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Klinik dağıtımı scheduling, party (hasta) ve esign (onam) ArcheType'larını birleştirir",
-        "Muayene finance (faturalama) ile bağlanır"
+        "Sözleşmeli bağ (kural): klinik dağıtımı scheduling, party (hasta) ve esign (onam) çekirdek birimlerine yalnız sözleşmeli entegrasyonla bağlanır; doğrudan tablo erişimi yerine üretilen API/olay sözleşmesi üzerinden konuşur",
+        "API/event sözleşmesi (hedef): muayene→faturalama akışı finance birimine tanımlı olay sözleşmesiyle (ör. visit.completed, invoice.requested) bağlanır; alan şeması ve zorunlu tenant klinik kimliği sözleşmede sabittir",
+        "Idempotency (guardrail): reçete oluşturma, onam imzası ve fatura kalemi gibi yazma çağrıları idempotency anahtarı taşır; aynı randevu/olayın tekrarı çift kayıt ya da çift faturaya yol açmaz",
+        "Versiyonlama (kural): entegrasyon sözleşmesi sürümlüdür; kırıcı değişiklik expand-contract ile yönetilir, tüketiciler eski sürümü desteklenen pencere boyunca çağırabilir",
+        "Upstream/downstream sınırı (kural): bağımlılık yönü nettir — hasta/onam upstream, faturalama downstream olarak bağlanır; downstream birim upstream PHI/PII verisine yalnız sözleşme kapsamında ve tenant sınırı içinde erişir"
       ],
       "notes": "Kabul: Sağlık / Klinik Distribution entegrasyonu olay/üretilen API üzerinden; bağımlılık yönü net, doğrudan tablo erişimi yok.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -319,7 +328,7 @@
         "Sağlık / Klinik Distribution bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Sağlık / Klinik Distribution, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (modül/kaya; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dist-clinic — \"Sağlık / Klinik Distribution\" (module/dağ; küme: Aday). Özet: Appointment + HRMS + Billing Etiketler: vertical, clinic, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

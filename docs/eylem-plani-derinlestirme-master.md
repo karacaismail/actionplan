@@ -1,5 +1,8 @@
 # Eylem Planı — actionplan İçerik Derinleştirme ve Sözleşme Tamamlama (Master Plan)
 
+> Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
+
+
 Sürüm: 1.0 · Tarih: 2026-06-18 · Hedef repo/klasör: `actionplan/` · Temel commit: `e461e9b`
 
 Bu doküman, `actionplan` projesinin denetiminde tespit edilen eksiklerin kapatılması için hazırlanmış, uçtan uca uygulanabilir bir eylem planıdır. Doküman bir **planlama yönergesidir**; doğrudan implementasyon kodu içermez. Her faz; ne yapılacağını, kimin yapacağını, hangi testin önce yazılacağını, hangi dosyaların sorumlu olacağını, kabul kriterlerini ve riskleri tanımlar.

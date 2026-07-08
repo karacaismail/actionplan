@@ -148,12 +148,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Module CLI + Scaffolding: komut satırından modül/ArcheType iskeleti üretme ve yerel geliştirme",
-        "Şablondan dosya/klasör yapısı, test iskeleti ve manifest üretimi",
-        "Yerel çalıştırma, doğrulama ve yayın-öncesi kontrol komutları"
+        "Kapsam/işlev sınırı: dx-cli yalnız modül/ArcheType iskeleti üretir, manifest doğrular ve test iskeleti kurar; app/module yaratmaz, üretilen kodu prod'a yazmaz — çıktı insan onayına sunulan öneri/plan kaydıdır",
+        "Girdi/çıktı sözleşmesi: girdi = command name, template id, module/archetype manifest, target path, dry-run flag; çıktı = scaffold plan, file diff preview, validation report, accept/rework kararı",
+        "Durum/akış makinesi: draft → dry-run → validated → generated-plan; doğrulama düşerse rejected, insan onayı olmadan generate adımı yok",
+        "Hata yolları: invalid template, path traversal (target path yetki dışı), manifest mismatch (k-schema uyumsuz), stale schema → komut deny + gerekçeli rapor",
+        "Şablondan dosya/klasör yapısı, test iskeleti ve manifest üretimi; yerel çalıştırma, doğrulama ve yayın-öncesi kontrol komutları"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kapsam/işlev sınırı net: CLI/scaffold sözleşmesi ve kanıt kapısı; girdi/çıktı, durum makinesi ve hata yolları açık.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -166,7 +168,7 @@
         "Yayın komutu imza + inceleme akışına bağlanır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -174,12 +176,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Scaffolding şablonları tek kaynaktan; üretilen kod tipli",
-        "CLI komutları bileşik/öngörülebilir; çıktı deterministik",
+        "Kod sağlığı kapıları: lint + typecheck + contract gate yeşil olmadan komut çıktısı 'validated' sayılmaz; aynı kapılar CI'da tekrar koşar",
+        "Sorumluluk ayrışması: command parser / template renderer / manifest validator / report writer ayrı modüller; her biri bağımsız test edilir, döngüsel karmaşıklık sınırlı",
+        "Typed command/template key'leri: komut adları ve şablon id'leri tiplenmiş union; geçersiz anahtar parse/derleme anında yakalanır, ölü şablon elenir",
+        "Scaffolding şablonları tek kaynaktan; üretilen kod tipli, CLI çıktısı deterministik",
         "create-module ile üretilen Vitest iskeleti ilk koşuda yeşil geçer, örnek hook testi içerir"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni: lint/typecheck/contract gate + parser/renderer/validator ayrışması + typed key'ler.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -192,7 +196,7 @@
         "CLI binary'si imzalı dağıtılır (npm provenance/sigstore); kurulumda imza doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -200,12 +204,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "create-module komutu çoğunlukla ağ-bağımsız çalışır; soğuk başlatma p95 hedefi <800 ms ölçülür",
-        "Şablon dosya/klasör üretimi tek geçişte yazılır; küçük modül iskeleti <300 ms içinde tamamlanır",
-        "Doğrulama artımlıdır: yalnız değişen manifest/dosya yeniden denetlenir, tam tarama tekrarlanmaz"
+        "Şablon indeksi önbelleğe alınır (template index cache); her komutta disk taranmaz, yalnız değişimde invalidasyon",
+        "Büyük şablon listesi sayfalanır (large template list pagination / imleç); `create-module --list` N+1 disk okuması yerine tek toplu okuma yapar",
+        "Doğrulama artımlıdır (incremental manifest validation): yalnız değişen manifest/dosya yeniden denetlenir, tam tarama tekrarlanmaz; yük altında p95 ölçülür",
+        "create-module komutu çoğunlukla ağ-bağımsız çalışır; soğuk başlatma p95 hedefi <800 ms, küçük modül iskeleti <300 ms içinde tamamlanır"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Performans ekseni: template index cache + pagination + incremental validation ile N+1/yük önlenir.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -218,7 +223,7 @@
         "Mobil ön-izleme CLI'da değil, üst geliştirme araçlarında (PWA/Capacitor önizleme) sağlanır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma alanları en az 44 piksel, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma alanları en az 44 piksel, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -231,7 +236,7 @@
         "Üretilen UI iskeleti WCAG 2.2 AAA varsayılanı taşır"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -239,12 +244,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "CLI npm paketi/binary olarak SemVer ile sürümlenir; her yayın imzalı ve changelog'lu dağıtılır",
-        "CLI'nin yayın komutu CI hattına bağlanır; doğrulama geçmeden artefakt yayımlanmaz",
+        "Config/sır ayrımı: CLI release parametreleri config dosyasında, yayın token'ı/imza anahtarı secret store'da; sır repo'ya veya log'a sızmaz",
+        "İmzalı paket rollback'i: hatalı sürüm `npm deprecate` + önceki imzalı sürüme dönüşle geri alınır; SemVer downgrade yolu belgeli",
+        "Smoke/health komutu: `dx-cli doctor` kurulum sonrası imza + şema + şablon indeksini prob eder, sağlıksızsa non-zero exit döner",
+        "CLI npm paketi/binary olarak SemVer ile sürümlenir; her yayın changelog'lu, yayın komutu CI hattına bağlı, doğrulama geçmeden artefakt yayımlanmaz",
         "CLI geliştirici makinesinde çalışır; Swarm/K8s/shared hosting altyapısından bağımsızdır"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "Dağıtım ekseni: config/sır ayrımı + imzalı paket rollback + smoke/health (doctor) probu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -257,7 +264,7 @@
         "Olay: yayın-öncesi doğrulama başarısız → yayını engelle + rapor (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -270,7 +277,7 @@
         "AI komut/scaffold şablonu önerir; üretilen kodun yayınını ve sözleşmesini geliştirici onaylar"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -278,12 +285,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Scaffolding çıktı doğruluğu + manifest geçerliliği testleri",
-        "Üretilen iskeletin testlerinin çalışması + güvenli-varsayılan kontrolü",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Test türleri: unit (parser/validator), contract (manifest ↔ k-schema), integration (scaffold → dosya çıktısı), e2e-CI (create-module akışı CI'da uçtan uca)",
+        "Negatif fixture'lar: invalid template, path traversal, manifest mismatch, unauthorized output path, stale schema — her biri komutu deny etmeli ve gerekçe raporlamalı",
+        "Scaffolding çıktı doğruluğu + manifest geçerliliği + üretilen iskeletin güvenli-varsayılan kontrolü test edilir; iskeletin Vitest testleri ilk koşuda yeşil geçer",
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test türleri açık: unit/contract/integration/e2e-CI + negatif fixture'lar (path traversal, manifest mismatch, stale schema).",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -296,7 +304,7 @@
         "A09 Logging/Monitoring: yayın ve scaffold komutları denetim izi bırakır, kim-ne-zaman kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -304,12 +312,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "CLI, k-mod-l (manifest), k-schema (şema), CI/CD ile entegre",
-        "Üretilen ArcheType iskeleti platform sözleşmelerine (k-schema/manifest) uyar, doğrulamadan geçer",
-        "create-module, dx-workflow geliştirici akışının ilk adımıdır; çıktısı sonraki adımlara girdi olur"
+        "Sözleşmeli bağ: dx-cli, k-mod-l (manifest) ve k-schema (şema) sözleşmelerini tüketir, CI/CD kapılarına ve dx-workflow akışına bağlanır",
+        "Bağımlılık yönü: dx-cli üst-akışta k-schema/k-mod-l'e bağımlıdır (onları değiştirmez); çıktısı dx-workflow'un ilk adımına girdi olur — tek yön",
+        "Tipli arayüz/olay çıktısı: komut sonucu typed API (scaffold plan / validation report) ve `scaffold.validated` olayı olarak yayınlanır; olay veriyoluna abone denetim/CI dinler",
+        "Üretilen ArcheType iskeleti platform sözleşmelerine (k-schema/manifest) uyar, doğrulamadan geçer"
       ],
-      "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "notes": "Entegrasyon ekseni: k-mod-l/k-schema/CI/dx-workflow sözleşmeli bağ + tek-yön bağımlılık + typed API/event çıktısı.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -323,7 +332,7 @@
         "Module CLI + Scaffolding bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Module CLI + Scaffolding, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (modül/kaya; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: dx-cli — \"Module CLI + Scaffolding\" (module/dağ; küme: Geliştirici Deneyimi). Özet: create-module CLI, hook contract, test harness. Etiketler: dx, cli, scaffolding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -25,7 +25,11 @@
   "dependsOn": [],
   "blocks": [],
   "related": [],
-  "refs": [],
+  "refs": [
+    "docs/task-to-code-contract.md",
+    "docs/dimension-contract-17.md",
+    "docs/engineering-standards-index.md"
+  ],
   "criticalPath": false,
   "status": "backlog",
   "priority": "medium",
@@ -132,12 +136,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Genel: Genel — kümeye girmeyen yatay/denetim sayfalarının toplandığı genel başlık",
-        "Genel kapsamı: app→modül matrisi gibi tüm platformu kesen denetim görünümlerini barındırır",
-        "Genel bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Genel kapsam sınırı: kümeye girmeyen yatay/denetim sayfaları (app→modül matrisi, platform-geneli işlem görünümleri) burada toplanır; küme-özel iş mantığı non-goal",
+        "Girdi/çıktı sözleşmesi: girdi = tenant-kapsamlı filtre + sayfa/işlem parametresi; çıktı = tipli, salt-okunur denetim satırları (Zod ile doğrulanır)",
+        "Durum/akış: sayfa yükleniyor → veri geldi → filtrelenmiş görünüm; işlem akışı yalnız okuma/inceleme kapsar, yazma yolu yoktur",
+        "Hata yolu: yetkisiz kapsam veya boş sonuçta erişilebilir hata/boş durumu metinle bildirilir; kısmi veri yükünde uyarı gösterilir",
+        "Kabul sözleşmesi: denetim görünümü yalnız yetkili kapsamı gösterir ve WBS görevi (sayfa) olarak izlenir; KVKK gereği PII maskeli döner"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -150,7 +156,7 @@
         "Genel ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -158,12 +164,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Genel yapısı: tipli ve sürümlü sözleşmeyle ifade edilir",
-        "Genel tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Genel okunabilir ve test edilebilir kalır"
+        "Genel kod sağlığı: denetim görünümleri tipli (type-safe) sözleşmeyle ifade edilir; any yasak, tip güvenliği CI kapısında zorunlu",
+        "Lint/tip kapıları yeşil olmadan merge yok; döngüsel karmaşıklık tavanı ≤10, dosya başına satır bütçesi eşik olarak izlenir",
+        "Modüler sınır: veri erişimi/engine ile UI görünümü ayrıştırılır (SoC); app→modül matris mantığı paylaşılan yardımcıya alınır",
+        "Ölü kod elemesi: kullanılmayan denetim bileşenleri ve import'lar tree-shaking + linter ile temizlenir; bundle bütçesi eşiği aşılırsa gate kırmızı"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -171,12 +178,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Genel en-az-ayrıcalık ilkesine uyar",
-        "Genel değişikliği sürümlü ve izlenir",
-        "Genel girdi sınırda doğrulanır — çalışma-zamanı bütünlüğü Genel imaj özeti (digest) sabitlemesiyle korunur"
+        "Genel en-az-ayrıcalık: yatay denetim görünümleri yalnız okuma yetkisiyle çalışır, yazma yüzeyi kapatılır (least-privilege)",
+        "Bağımlılık taraması + SBOM: denetim sayfalarının paketleri sürüm pin'li, SBOM üretilir ve bilinen açıklar için taranır",
+        "Egress/yüzey kontrolü: dış çağrı allowlist ile sınırlı, gereksiz uçlar kapalı; katı CSP ve rate-limit uygulanır",
+        "Secret rotasyonu + imza: erişim anahtarları düzenli döndürülür, dağıtım imzalı (signed) artefaktla doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -189,7 +197,7 @@
         "Genel büyük veride sayfalı işlenir — Genel sorgu planı EXPLAIN ile gözden geçirilir; regresyon eşiği p99 350ms"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -197,12 +205,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Genel mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Genel mobil istemci aynı sözleşmeyi tüketir",
-        "Genel bildirim/onay gerektiğinde push ile iletilir"
+        "Genel mobil açısı: yatay denetim sayfaları dar ekranda tek sütuna iner, app→modül matris görünümü yatay kaydırmayla okunur kalır (responsive)",
+        "PWA/Capacitor paketleme: aynı denetim sözleşmesi mobil istemcide tüketilir; Chrome extension köprüsü hızlı denetim yüzeyi sağlar",
+        "Offline davranışı: son çekilen denetim görünümü önbellekten salt-okunur gösterilir, bağlantı gelince senkron edilir",
+        "Dokunma erişilebilirliği: filtre/işlem kontrolleri için en az 44 px temas alanı sağlanır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -215,7 +224,7 @@
         "Genel klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -228,7 +237,7 @@
         "Genel shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -241,7 +250,7 @@
         "Genel bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -254,7 +263,7 @@
         "Genel — AI matris/tutarlılık raporu önerir; kapsam ve yayın kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -262,12 +271,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Genel doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "Genel ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim (unit) testleri: filtre/kapsam mantığı ve app→modül matris dönüşümleri izole doğrulanır",
+        "Entegrasyon (integration) + e2e testleri: denetim sayfası veri→görünüm yolu ve işlem akışı uçtan uca Playwright ile sürülür, axe ile AAA ihlali 0 doğrulanır",
+        "Regresyon testleri: golden/fixture kanıtıyla denetim çıktısı sabitlenir, her sürümde snapshot karşılaştırılır",
+        "Negatif senaryo: yetkisiz kapsam, boş veri ve KVKK-maskeli alan durumları için beklenen hata/boş davranışı test edilir",
+        "QA döngüsü: başarısız senaryolar QA ajanıyla incelenir, kanıt (evidence) ekiyle raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -280,7 +291,7 @@
         "Genel girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -293,7 +304,7 @@
         "Genel sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -307,7 +318,7 @@
         "Genel kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Genel bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (uygulama/dağ; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-genel — \"Genel\" (app/ada; küme: Genel). Özet: Genel kümesinin geliştirme eylem planı. Etiketler: genel, app, küme.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

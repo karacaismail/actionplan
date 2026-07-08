@@ -22,7 +22,8 @@
     "denetlenebilir",
     "girdi",
     "ruleset",
-    "test"
+    "test",
+    "module"
   ],
   "dependsOn": [
     "l1-party",
@@ -150,10 +151,11 @@
       "items": [
         "App-Modül Matrisi: App → Modül Matrisi — hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel kullanır (tek denetlenebilir yüzey)",
         "App-Modül Matrisi kapsamı: her app satırı × her modül sütunu; hücre Core/Opsiyonel/yok değerini taşır",
-        "App-Modül Matrisi bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "App-Modül Matrisi bu eylem planında bir WBS görevi (sayfa) olarak izlenir",
+        "Sözleşme: girdi = { appId, modulId, sürüm, applicability payload }; çıktı = tipli matris satırı + compatibility durumu (Core/Opsiyonel/uyumsuz)"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Girdi/çıktı sözleşmesi: app id + modül id + sürüm + applicability payload → tipli matris satırı (compatibility: enabled/disabled/rejected). Durum akışı: draft → validated → enabled | disabled | rejected. Hata yolları: uyumsuz modül sürümü, kayıp/kayıtsız modül, yasak bağımlılık (Contract dışı tüketim) → reddedilir ve gerekçe kanıtla loglanır. Kabul: her Core hücresi bağımlılık DAG'ıyla tutarlı olmalı.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,10 +165,11 @@
       "items": [
         "App-Modül Matrisi güvenlik açısı: matris yalnız yapı bilgisini gösterir, müşteri verisi içermez",
         "App-Modül Matrisi hassas bilgi gerektiğinde maskelenir",
-        "App-Modül Matrisi ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "App-Modül Matrisi ilgili kararlar denetlenebilir biçimde kaydedilir",
+        "Modül enable/disable yalnız tenant/app sahibi + platform owner yetkisiyle; en-az-ayrıcalık, değişmez (immutable) audit izi"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Erişim: tenant izolasyonu (PostgreSQL RLS) + rol bazlı authz; matris satırını yalnız ilgili app sahibi ve platform owner görebilir/düzenler. Modül enablement kararları least-privilege ile sınırlanır. PII/secret redaksiyonu: matris kanıtında (evidence) müşteri verisi ya da gizli anahtar sızmaz, hassas alan maskelenir. Modül enable/disable için değişmez audit kaydı (kim/ne zaman/neden).",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -176,10 +179,11 @@
       "items": [
         "App-Modül Matrisi yapısı: matris generated katmandan türetilir; elle tutulmaz (tek doğruluk kaynağı)",
         "App-Modül Matrisi tekrar eden mantık paylaşılan yardımcıya alınır",
-        "App-Modül Matrisi okunabilir ve test edilebilir kalır"
+        "App-Modül Matrisi okunabilir ve test edilebilir kalır",
+        "Kod sağlığı: tipli şema/parser + lint/tip kapısı yeşil şartı; matris çözümleyici deterministik, döngüsel karmaşıklık eşiği aşılmaz, mükerrer matris mantığı yasak"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni: matris satırları tipli Zod şeması ve tek parser'dan geçer; lint + tip kapısı CI'da yeşil olmadan birleştirilemez. app→modül çözümleyici deterministik (aynı girdi → aynı çıktı), döngüsel karmaşıklık eşikli ve mükerrer matris/uyumluluk mantığı tek paylaşılan yardımcıda toplanır (ölü kod elenir).",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -189,10 +193,11 @@
       "items": [
         "App-Modül Matrisi en-az-ayrıcalık ilkesine uyar",
         "App-Modül Matrisi değişikliği sürümlü ve izlenir",
-        "App-Modül Matrisi girdi sınırda doğrulanır"
+        "App-Modül Matrisi girdi sınırda doğrulanır",
+        "Modül manifestleri için SBOM + bağımlılık taraması; yalnız imzalı/allowlist'te olan modül matrise girer; kontrolsüz egress ve modül yüzeyi genişlemesi engellenir"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Bağımlılık/SBOM: her modül manifesti SBOM üretir ve bağımlılık taramasından (CVE) geçer. Allowlist/imza: matrise yalnız imzalı manifest ve allowlist'teki modül eklenebilir; imzasız/liste dışı modül reddedilir. Egress/yüzey: matris çözümleyici dış ağa kontrolsüz çıkış yapmaz, modül enablement yeni saldırı yüzeyi açmadan en-az-ayrıcalıkla sınırlanır.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -202,10 +207,11 @@
       "items": [
         "App-Modül Matrisi performans açısı: büyük matris sayfalı/sanal-kaydırmalı gösterilir",
         "App-Modül Matrisi sık erişim indeksli/önbellekli tasarlanır",
-        "App-Modül Matrisi büyük veride sayfalı işlenir"
+        "App-Modül Matrisi büyük veride sayfalı işlenir",
+        "Ölçülebilir hedef: tek app→modül çözümlemesi p95 < 50 ms, tam matris yüklemesi p95 < 300 ms; app→modül haritası indeksli/önbellekli, N+1 modül okuması yasak"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedef: tekil matris lookup/çözümleme p95 < 50 ms, tam matris görünümü p95 < 300 ms. app→modül eşlemesi bileşik indeksli ve önbellekli tutulur; bağımlılık DAG'ı çözülürken her modül için ayrı sorgu (N+1) yerine toplu okuma yapılır. Yük testi ile hedefler doğrulanır.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -215,10 +221,11 @@
       "items": [
         "App-Modül Matrisi mobil açısı: dar ekranda tek sütun ve okunur kalır",
         "App-Modül Matrisi mobil istemci aynı sözleşmeyi tüketir",
-        "App-Modül Matrisi bildirim/onay gerektiğinde push ile iletilir"
+        "App-Modül Matrisi bildirim/onay gerektiğinde push ile iletilir",
+        "Mobil: çevrimdışı salt-okunur matris anlık görüntüsü (snapshot); dokunulabilir hücre/aksiyon en az 44 px temas alanı; PWA/Capacitor paketlemesiyle iOS/Android"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Çevrimdışı: mobil istemci son doğrulanmış matrisin salt-okunur snapshot'ını önbelleğe alır; ağ yokken görüntüler, yazma (enable/disable) yalnız çevrimiçi. Temas: hücre ve aksiyon hedefleri en az 44 px temas alanı. Paketleme: PWA veya Capacitor köprüsüyle iOS/Android; aynı tipli sözleşme tüketilir.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -231,7 +238,7 @@
         "App-Modül Matrisi klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -244,7 +251,7 @@
         "App-Modül Matrisi shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -257,7 +264,7 @@
         "App-Modül Matrisi bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -270,7 +277,7 @@
         "App-Modül Matrisi — AI eksik/çelişkili Core-Opsiyonel ilişkisi tespiti önerir; matris kararını mimari ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -280,10 +287,11 @@
       "items": [
         "App-Modül Matrisi doğrulama: matristeki her Core ilişki gerçek bağımlılık grafiğiyle tutarlı mı doğrulanır",
         "App-Modül Matrisi ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır",
+        "Test türleri: unit (çözümleyici), contract (matris satırı şeması), e2e (kullanıcı yolculuğu) + negatif fixture'lar: kayıp modül, uyumsuz sürüm, yetkisiz enable, süresi geçmiş eşleme"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Açık test türleri: unit (deterministik app→modül çözümleyici), contract (tipli matris satırı/compatibility sözleşmesi), e2e/Playwright (matris görüntüleme + enable/disable yolculuğu). Negatif fixture testleri: kayıp/kayıtsız modül, uyumsuz modül sürümü, yetkisiz enable denemesi, süresi geçmiş (expired) eşleme — hepsi reddedilmeli ve gerekçe loglanmalı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -296,7 +304,7 @@
         "App-Modül Matrisi girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -309,7 +317,7 @@
         "App-Modül Matrisi sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -323,7 +331,7 @@
         "App → Modül Matrisi kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "App → Modül Matrisi bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (modül/kaya; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-modul-matrisi — \"App → Modül Matrisi\" (module/dağ; küme: Genel). Özet: Tek denetlenebilir yüzeyde: hangi app hangi modülü/ArcheType'ı Core veya Opsiyonel olarak içerir. Dört app — CRM, E-ticaret, Helpdesk, İlan — ortak modülleri kopyalamaz, projekte e Etiketler: matris, app, modul, archetype, harita.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -22,7 +22,8 @@
     "girdi",
     "katmanlı",
     "ruleset",
-    "test"
+    "test",
+    "module"
   ],
   "dependsOn": [
     "k-terminoloji",
@@ -149,12 +150,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi: Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA: bulut-devi ve parazit-pazaryeri senaryolarına karşı open-core katmanlı strateji",
-        "Lisans Mimarisi kapsamı: çekirdek AGPL, SDK MIT, katkı için CLA ile katmanlı lisans stratejisi tanımlar",
-        "Lisans Mimarisi bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi sözleşmesi: her değerlendirme paket/modül adı + katman (kernel=AGPL, SDK=MIT, plugin), bağımlılık listesi ve katkı durumu (contribution status: internal/external, CLA imzalı mı) alır; çıktı sözleşmesi lisans matrisi, notice/attribution kontrol listesi, CLA durumu ve karar-kaydı (review decision) üretir",
+        "Durum akışı: bir paketin lisans kaydı draft → legal-review → approved → published → re-review çizgisinde ilerler; kernel'in AGPL, SDK'nın MIT olması geri-alınamaz sabit olduğundan katman değişimi yalnız re-review üzerinden yeni karar-kaydı açar",
+        "Kabul kriteri: her paket için SPDX kimliği + katman eşleşmesi + (dış katkıysa) CLA kaydı dolu olmadan kayıt approved'a geçemez; bu bir karar/bilgi kaydıdır, resmi lisans metni ve hukuk onayı bağlayıcı kaynaktır",
+        "Hata yolu: kernel bileşenine MIT/plugin muamelesi, approved CLA olmadan dış katkı, veya SPDX tanımlayıcı boş/hatalı ise kayıt legal-review'a geri düşer ve gerekçe karar-kaydına yazılır",
+        "Kapsam/işlev sınırı: Lisans Mimarisi yalnız katman-lisans matrisi, CLA durumu, notice/attribution checklist ve review decision üretir; hukuki tavsiye vermez ve uygulanabilirlik (enforceability) garantisi sunmaz — resmi lisans metni ve hukuk onayı bağlayıcı kaynaktır, bu düğüm yalnızca karar/bilgi kaydıdır"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -162,12 +165,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi güvenlik açısı: lisans seçimi kötüye kullanım (bulut-devi) riskini azaltır",
-        "Lisans Mimarisi hassas bilgi gerektiğinde maskelenir",
-        "Lisans Mimarisi ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "En-az-ayrıcalık: lisans matrisi ve karar-kaydı yapılandırmasına yazma erişimi yalnız platform-owner + hukuk rolündedir (PostgreSQL RLS ile tenant/rol bazlı); geliştirici ve AI rolü read-only kalır, kernel'in AGPL / SDK'nın MIT sabitini kimse config'ten override edemez",
+        "Katkıda bulunan (contributor) PII maskeleme: CLA kayıtlarındaki isim/e-posta/kimlik gibi kişisel alanlar PII sınıflandırılır, listelemede maskelenir; ham değere yalnız hukuk rolü step-up doğrulamasıyla erişir",
+        "CLA kaydı ve imza tokenı at-rest şifrelenir; imza doğrulama secretleri kod/JSON içine gömülmez, secret store'da tutulur",
+        "Onaysız lisans override denemesi (kernel'i MIT'e çekme, approved CLA olmadan published'a atlama) ruleset tarafından deny edilir ve aktörle birlikte audit'e yazılır",
+        "Değişmez karar-kaydı: her legal-review/approved/re-review kararı append-only, imzalı denetim izine geçer; geçmiş karar silinemez/değiştirilemez, yalnız yeni karar üstüne eklenir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -175,12 +180,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi yapısı: katman bazında lisans; çekirdek ile SDK ayrı",
-        "Lisans Mimarisi tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Lisans Mimarisi okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: lint + typecheck + license-contract gate CI'da zorunlu; SPDX kimlikleri typed union (ör. 'AGPL-3.0-only' | 'MIT' | ...) olarak tanımlanır, serbest string'e izin verilmez",
+        "Kod sağlığı ekseni: lisans matrisi için bütçe/eşik konur (ör. approved-dışı bağımlılık = 0, missingRef = 0); eşik aşılırsa build kırmızıya döner",
+        "Ayrıştırma: scanner (bağımlılık okuma) / parser (SPDX çözümleme) / policy evaluator (kernel-AGPL, SDK-MIT, CLA kuralları) / report writer birbirinden bağımsız modüllere bölünür, tek dev fonksiyon yerine test edilebilir birimler kalır",
+        "Karmaşıklık sınırı: policy evaluator fonksiyonları için döngüsel karmaşıklık tavanı (ör. ≤10) uygulanır; tekrar eden lisans-eşleme mantığı paylaşılan typed yardımcıya alınır, ölü/kullanılmayan lisans kuralları elenir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -188,12 +194,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi en-az-ayrıcalık ilkesine uyar",
-        "Lisans Mimarisi değişikliği sürümlü ve izlenir",
-        "Lisans Mimarisi girdi sınırda doğrulanır"
+        "SBOM/SCA taraması: her bağımlılığın lisansı SBOM'dan (ör. CycloneDX/SPDX) okunur; approved lisans allowlist'i (kernel katmanı için AGPL uyumlu, SDK katmanı için MIT/permissive) dışına çıkan bağımlılık build'i durdurur",
+        "İmzalı politika dosyaları: lisans allowlist'i ve policy dosyaları imzalanır (signed policy); imza doğrulanmadan policy evaluator çalışmaz, böylece kernel-AGPL/SDK-MIT kuralı sessizce gevşetilemez",
+        "Yüzey daraltma: scanner egress'i yalnız gerekli paket-registry/SBOM kaynaklarına kısıtlanır; tarayıcı en-az-ayrıcalıkla, gereksiz ağ/dosya erişimi olmadan çalışır",
+        "Secret rotasyonu: CLA imza/doğrulama tokenları periyodik döndürülür; sızıntı şüphesinde iptal + yeniden üretim yapılır",
+        "Kurcalama sertleştirme: karar-kaydı/allowlist dosyalarında yetkisiz değişiklik tespit edilirse (hash/imza uyuşmazlığı) otomatik rollback ile son approved sürüme dönülür"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -201,12 +209,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Lisans Mimarisi sık erişim indeksli/önbellekli tasarlanır",
-        "Lisans Mimarisi büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: tam depo lisans taraması p95 ≤ 90 sn; policy evaluator tekil paket değerlendirmesi p95 ≤ 50 ms",
+        "Bağımlılık grafiği önbelleği: çözümlenmiş dependency + SPDX sonuçları hash anahtarıyla cache'lenir, değişmeyen paketler yeniden taranmaz (cache isabet hedefi ≥ %90)",
+        "Artımlı tarama: yalnız değişen paketler (changed-package) taranır; PR başına tam tarama yerine diff-bazlı değerlendirme ile CI süresi hedefi ≤ 20 sn",
+        "Sayfalı rapor: lisans matrisi ve karar-kaydı listesi imleç (cursor) tabanlı sayfalama ile döner (sayfa ≤ 100 kayıt); bağımlılık grafiği gezilirken N+1 sorgu önlenir, katman→lisans eşlemesi tek toplu sorguda çekilir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -214,12 +223,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Lisans Mimarisi mobil istemci aynı sözleşmeyi tüketir",
-        "Lisans Mimarisi bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil yüzey read-only'dir: PWA/Capacitor (iOS/Android) üzerinden yalnız lisans karar durumu (draft/legal-review/approved/published/re-review) ve matris görüntülenir; approve/override mobilden yapılamaz",
+        "Çevrimdışı: son senkron edilen lisans matrisi ve karar-kaydı yerelde cache'lenir, ağ yokken salt-okunur gösterilir; bağlanınca yeniden senkron olur",
+        "Dar ekranda lisans karar kartları tek sütun ve okunur kalır; mobil lisans karar kartlarında en az 44 px temas alanı sağlanır",
+        "Push/deep-link: bir paket legal-review'a düştüğünde veya re-review gerektiğinde hukuk/owner rolüne push bildirimi gider; bildirim ilgili karar kartına deep-link ile açılır (yalnız inceleme yüzeyi)"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -232,7 +242,7 @@
         "Lisans Mimarisi klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -245,7 +255,7 @@
         "Lisans Mimarisi shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -258,7 +268,7 @@
         "Lisans Mimarisi bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -271,7 +281,7 @@
         "Lisans Mimarisi — AI lisans uyum boşluğu önerir; lisans kararını insan/hukuk verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -279,12 +289,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Lisans Mimarisi doğrulama: her paketin lisans başlığı/uyumu CI'da denetlenir",
-        "Lisans Mimarisi ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: SPDX parser ve policy evaluator birim testleri — kernel katmanı AGPL, SDK katmanı MIT eşlemesi ve allowlist kararları doğrulanır",
+        "Contract: girdi/çıktı sözleşmesi testi — package/layer/dependency/contribution-status girdisinin lisans matrisi + CLA status + review decision çıktısına doğru bağlandığı sabitlenir",
+        "Integration + e2e/CI: SBOM tarama → policy evaluator → report writer zinciri gerçek bağımlılık fixture'larıyla uçtan uca koşar; CI gate approved-dışı bağımlılıkta kırmızıya döner",
+        "Negatif senaryolar: onaysız/allowlist-dışı bağımlılık, dış katkıda eksik CLA, SPDX yazım hatası (typo) ve ruleset override denemesi ayrı testlerle deny/legal-review sonucunu kanıtlar; her senaryoya fixture + evidence eklenir",
+        "Testing-loop QA sınırı: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse otonom QA ajanı raporlar (kendiliğinden lisans kararı vermez, insana/hukuğa yükseltir)"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -297,7 +309,7 @@
         "Lisans Mimarisi girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -310,7 +322,7 @@
         "Lisans Mimarisi sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -324,7 +336,7 @@
         "Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (modül/kaya; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-lisans — \"Lisans Mimarisi — AGPL Kernel + MIT SDK + CLA\" (module/dağ; küme: Platform Yetenekleri). Özet: Open-core katmanlı lisans stratejisi: bulut-devi ve parazit-pazaryeri senaryolarına karşı, repo halka açılmadan kurulan geri-alınamaz temel. Etiketler: lisans, agpl, open-core, cla, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

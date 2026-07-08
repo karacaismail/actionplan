@@ -17,7 +17,8 @@
     "iş-merkezi",
     "takvim",
     "teslim-tarihi",
-    "kernel"
+    "kernel",
+    "module"
   ],
   "dependsOn": [
     "k-archetype-computation"
@@ -118,7 +119,10 @@
     "baselineStart": null,
     "baselineEnd": null
   },
-  "deliverables": [],
+  "deliverables": [
+    "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time kapsam sozlesmesi",
+    "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
   "acceptanceCriteria": [
     "Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time için capability işlevsel kabulü karşılandı",
     "tenant izolasyonu + AAA erişilebilirlik kapıları geçti"
@@ -400,7 +404,7 @@
       "items": [
         "k-calendar-capacity business-time motoru stateless container replikası olarak dağıtılır; takvim/kapasite verisi tenant başına izole, 'X iş günü sonra' hesabı istek yolunda çalışır ve replika sayısıyla ölçeklenir",
         "kapasite dilimi ve iş-günü indeksi önbelleği stateless replikalar arası Redis'te paylaşılır; toplu vardiya import ve ağır yeniden-hesap ayrı worker/job'a düşer, kuyruk gecikmesi izlenir",
-        "Shared hosting: statik SPA + JSON tüketir; ağır business-time hesabı merkezî servise düşer, istemcide takvim aritmetiği yapılmaz"
+        "Shared hosting: statik SPA + JSON tüketir; ağır business-time hesabı merkezî servise düşer, istemcide takvim aritmetiği yapılmaz; dağıtım Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time (k-calendar-capacity) için Docker/Swarm/K8s veya shared hosting hedefinde health/readiness, env config ve rollback yolu belgelenir"
       ],
       "notes": "Kapasite önbelleği stateless replikalarda Redis'te paylaşılır; motor yatay ölçeklenir.",
       "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu düğüm için üret.\nBağlam: k-calendar-capacity — üretim takvimi + iş-merkezi kapasitesi + business-time; vardiya/tatil/planlı duruş, 'X iş günü sonra' hesabı, APS ve teslim-tarihi girdisi (kernel primitifi).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir; her maddeyi bu düğümün gerçek işleviyle ilişkilendir, generic ifade kullanma.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), shared hosting kısıtı",
@@ -480,7 +484,7 @@
       "items": [
         "k-calendar-capacity, üst app içinde takvim+kapasite+business-time işlevini sağlar (modül sınırı); 'X iş günü sonra' hesabının tek yetkili kaynağıdır",
         "Diğer app'ler business-time'ı üretilen hesap API'si üzerinden tüketir (doğrudan takvim tablosu okuma yok); tenant izolasyonu merkezî korunur",
-        "scale-aps ve teslim-tarihi ArcheType'ı kapasite dilimlerini k-calendar-capacity.slots() ile alır; vardiya değişikliği tek yerde yönetilir"
+        "scale-aps ve teslim-tarihi ArcheType'ı kapasite dilimlerini k-calendar-capacity.slots() ile alır; vardiya değişikliği tek yerde yönetilir; kullanım yolu Üretim Takvimi + İş-Merkezi Kapasitesi + Business-Time (k-calendar-capacity) için capability/API tüketimi contract kapısından geçer; panel entegrasyonu doğrudan DB/tablo erişimini yasaklar"
       ],
       "notes": "'X iş günü sonra' tek yetkili kaynak; vardiya değişikliği tek yerde yönetilir.",
       "prompt": "\"Modül Kullanımı\" boyutunu bu düğüm için üret.\nBağlam: k-calendar-capacity — üretim takvimi + iş-merkezi kapasitesi + business-time; vardiya/tatil/planlı duruş, 'X iş günü sonra' hesabı, APS ve teslim-tarihi girdisi (kernel primitifi).\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir; her maddeyi bu düğümün gerçek işleviyle ilişkilendir, generic ifade kullanma.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: modül/solver sınırı, üretilen API üzerinden tüketim (doğrudan DB yok), tenant izolasyonu",

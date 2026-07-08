@@ -20,7 +20,8 @@
     "gerçekleşen",
     "tahmin",
     "hesabı",
-    "rolling"
+    "rolling",
+    "archetype"
   ],
   "dependsOn": [
     "scale-timeseries",
@@ -143,12 +144,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Bütçe & Tahmin (FP&A) ArcheType'ı: bütçe hazırlama, tahmin (forecast), senaryo ve varyans analizi",
-        "Sürücü-temelli (driver-based) planlama ve gerçekleşen-bütçe karşılaştırma",
-        "Versiyonlu bütçe ve rolling forecast"
+        "Kapsam sınırı: FP&A yalnız bütçe/tahmin/senaryo/varyans planlama katmanı — driver-based budget, senaryo (what-if), rolling forecast ve actual-vs-budget variance üretir; gerçek ledger yevmiyesi, banka hareketi veya ERP kaydı oluşturmaz (gerçekleşen veri salt-okuma olarak Accounting'den gelir)",
+        "Girdi/çıktı sözleşmesi: girdi = { tenantId, period (YYYY-MM), scenarioId, department, currency, driverValues[] }; çıktı = { budgetLines[], forecastLines[], variance[] (actual−budget, % ve tutar) } — tüm alanlar Zod ile doğrulanır, para birimi ve dönem zorunlu",
+        "Durum akışı (state machine): draft → review → approved/locked → forecast-revision; locked bütçe append-only'dir, revizyon yeni sürüm açar, eski sürüm değişmez korunur",
+        "Sürücü-temelli planlama: driver değeri × oran → bütçe satırı saf (pure) fonksiyonla türetilir; senaryo bir driver override kümesidir, ana bütçeyi bozmadan yeni türetim üretir",
+        "Hata yolları ve kabul kriterleri: geçersiz dönem/negatif olması gereken driver → 400 + alan hatası; kilitli bütçeye yazma → deny + audit; onaysız approve denemesi → reddedilir. Kabul: variance tutarı actual−budget ile birebir eşleşir, locked sürüm değiştirilemez, her durum geçişi izlenir"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "kapsam/işlev sınırı, girdi-çıktı sözleşmesi, durum makinesi ve hata yolları netleştirildi.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -156,12 +159,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Bütçe verisi rol bazlı görünürlük (tenant_id RLS); gizli senaryo kısıtlı",
-        "Bütçe onayı eşik+iz; kilitli bütçe değişmez",
-        "Tahmin varsayımları sürümlü ve izlenir"
+        "Tenant izolasyonu: her bütçe/forecast/senaryo satırı tenant_id taşır ve PostgreSQL RLS ile filtrelenir; çapraz-tenant sorgu policy düzeyinde imkânsız, uygulama katmanı tenant'ı ezemez",
+        "Least-privilege rol matrisi: hazırlayan (draft yazar), gözden geçiren (review), onaylayan (approve/lock) ve salt-okur ayrı roller; onay yetkisi olmayan approve/lock çağrısı deny edilir",
+        "Gizli senaryo koruması: hassas M&A/işten çıkarma senaryoları alan-düzeyi erişim + at-rest şifreleme ile maskelenir; secret/anahtarlar KMS'te, koda gömülmez",
+        "Onay/deny izi: her approve, lock ve senaryo revizyonu actor + timestamp + before/after ile audit'e yazılır; yetkisiz revizyon denemesi deny + kayıt",
+        "Locked budget append-only audit evidence: kilitli bütçe fiziksel olarak değişmez, revizyon yeni sürüm satırı ekler; audit kaydı append-only saklanır ve DoD kanıtı (evidence) olarak sunulur"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "RLS tenant izolasyonu, least-privilege, gizli senaryo maskeleme/secret, onay-deny ve append-only audit evidence eklendi.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -169,12 +174,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bütçe hesabı sürücü-temelli saf model; senaryo türetimi artımlı",
-        "Varyans (gerçekleşen-bütçe) anlık hesap",
-        "Çok-boyutlu bütçe küpü için verimli toplama"
+        "Kod sağlığı ekseni: lint + typecheck + Zod sözleşme (contract) kapıları CI'de yeşil olmadan merge yok; bütçe/varyans hesap fonksiyonları %100 tipli, any yasak",
+        "Katman ayrıştırma: driver model, scenario engine ve variance adapter ayrı modüller — engine UI'dan, adapter engine'den bağımsız; bütçe hesabı saf (pure) fonksiyonlarla, yan-etkisiz",
+        "Calculation budget/eşik: senaryo türetimi ve variance hesabı için hesap süresi/karmaşıklık eşiği tanımlı; eşik aşan hesap batch'e alınır, döngüsel karmaşıklık (cyclomatic) fonksiyon başına sınırlanır",
+        "Artımlı hesap: senaryo bir driver override kümesidir; değişmeyen satırlar yeniden hesaplanmaz, yalnız etkilenen sürücü zinciri türetilir (memoization)",
+        "Batch/toplu sınırı: çok-boyutlu bütçe küpü toplaması sayfa/parça (chunk) sınırıyla işlenir; ölü kod ve kullanılmayan senaryo dalları ağaç sarsımıyla (tree-shaking) elenir"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "kod sağlığı ekseni, lint/typecheck/contract gate, katman ayrıştırma, pure functions ve calculation budget/karmaşıklık sınırı eklendi.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -182,12 +189,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Bütçe sürümü kilitlenir; geçmiş plan korunur",
-        "Senaryo değişimi izli; yetkisiz revizyon reddi",
-        "Gerçekleşen veri salt-okuma kaynaktan (ledger)"
+        "Sertleştirme ekseni: bağımlılık zinciri SBOM ile envanterlenir, SCA taraması (dependency scan) CI'de zorunlu; bilinen açık taşıyan paket merge'i bloke eder",
+        "İmzalı varsayımlar: senaryo varsayımları (assumptions) ve driver rule sürümü imzalanır (signed); imza doğrulanmadan hesap motoru varsayımı kabul etmez, kural sürümü audit'e bağlanır",
+        "Yüzey/egress daraltma: FP&A servisinin dış çıkış (egress) uçları allowlist ile sınırlı; gereksiz endpoint kapatılır, hesap worker'ı yalnız gerekli iç servislere erişir",
+        "Rate-limit + secret yönetimi: bütçe/senaryo yazma uçlarına kiracı-başı rate-limit; secret'lar KMS'te tutulur, düzenli rotasyon (rotation) uygulanır, koda gömülü sır yasak",
+        "Rollback sertleştirme: kilitli bütçe append-only olduğundan geri-alma yeni sürüm/feature-flag ile yapılır, geçmiş plan bozulmaz; gerçekleşen veri salt-okuma kaynaktan gelir, FP&A onu değiştiremez"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "sertleştirme ekseni, SBOM/SCA, imzalı varsayım/kural sürümü, egress daraltma, rate-limit, secret rotation/KMS ve rollback sertleştirme eklendi.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -202,7 +211,7 @@
         "sayfalama penceresi Budgeting & Forecast (FP&A) listelerinde sabit maliyetlidir; ofset büyümesi imleçle engellenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -217,7 +226,7 @@
         "Budgeting & Forecast (FP&A) responsive kırılımları cihazda testlidir; offline taslak kaybolmaz (senkron kanıtı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -232,7 +241,7 @@
         "sayfa başlığı Budgeting & Forecast (FP&A) görünüm değişiminde güncellenir (ekran okuyucu bağlamı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -240,12 +249,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "FP&A hesap motoru ölçeklenir; senaryo koşusu ayrı worker",
-        "Bütçe/forecast olayları okuma-modeli besler",
-        "Shared hosting'de temel bütçe + tek senaryo"
+        "Hesap worker sağlığı: senaryo/variance hesap worker'ı liveness (canlılık), readiness (hazır olma) ve startup probe taşır; readiness geçmeden trafiğe girmez, uzun senaryo koşusu deploy'da drenajla (graceful drain) korunur",
+        "Rollback/replay stratejisi: bütçe/forecast olayları event olarak saklandığından deploy hatası sonrası okuma-modeli event replay ile yeniden kurulur; kilitli bütçe append-only olduğundan geri-alma veri kaybı yaratmaz",
+        "Config/secret ayrımı: DB bağlantısı, KMS anahtar referansı ve driver oranları ortam config'inden okunur; secret'lar imaja gömülmez, secret store'dan enjekte edilir",
+        "HPA + kaynak limiti: hesap worker'ı CPU/kuyruk derinliğine göre yatay ölçeklenir (HPA); CPU/bellek request/limit tanımlı, ağır senaryo koşusu ayrı worker havuzunda izole",
+        "Shared hosting sınırı: WordPress sınıfı shared hosting'de yalnız temel bütçe + tek senaryo çalışır (arka plan worker/HPA yok); tam FP&A yükü K8s/Swarm gerektirir, bu sınır dağıtım notunda açıkça belirtilir"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "worker liveness/readiness probe, rollback/replay, config-secret ayrımı, HPA/kaynak limiti ve shared hosting sınırı eklendi.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -258,7 +269,7 @@
         "Olay: forecast dönemi geldi → rolling forecast taslağı üret (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -271,7 +282,7 @@
         "AI tahmin/senaryo ve varyans açıklaması önerir; bütçeyi kendisi kilitleyemez/onaylayamaz"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -279,12 +290,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Sürücü-temelli bütçe hesabı doğruluk testi",
-        "Varyans hesabı (gerçekleşen-bütçe) testi",
-        "Bütçe→onay→varyans kullanıcı yolculuğu; en çok 6 tur"
+        "Unit: sürücü-temelli bütçe türetimi ve variance (actual−budget, %) saf fonksiyonları için birim testleri; sınır değerler (sıfır driver, negatif variance, çoklu para birimi) kapsanır",
+        "Contract: girdi/çıktı Zod sözleşmesi (period, scenarioId, driverValue, department, currency) ve yayılan olaylar için sözleşme testleri; şema kırıcı değişiklik testte yakalanır",
+        "Integration: scenario engine + variance adapter + salt-okuma gerçekleşen veri kaynağının birlikte doğru variance ürettiği entegrasyon testi",
+        "E2E + negatif senaryolar: bütçe→review→approve/lock→forecast-revision uçtan uca akışı; negatifler = yetkisiz onay denemesi (deny), kilitli bütçeyi değiştirme denemesi (reddedilir), hatalı/eksik driver (400) ayrı test edilir",
+        "Fixture/evidence + testing-loop sınırı: tekrarlanabilir fixture ve variance beklenen-değer setleriyle koşum; testing-loop QA en çok 6 tur, düzelmezse otomatik düzeltilmeyip rapor edilir (evidence eklenir)"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "unit/contract/integration/e2e ayrımı, yetkisiz onay-kilitli bütçe-hatalı driver negatif senaryoları, fixture/evidence ve testing-loop 6-tur sınırı eklendi.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -292,12 +305,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: bütçe görünürlüğü ve onay yetkisi",
-        "A08 Integrity: bütçe sürümleme ve kilit",
-        "A09 Logging: bütçe/senaryo kararları iz"
+        "A01 Access Control: bütçe görünürlüğü RLS + rol matrisiyle sınırlı; approve/lock yalnız yetkili rolde, çapraz-tenant erişim policy düzeyinde engelli (ASVS erişim kontrolü)",
+        "A04 Insecure Design: durum makinesi (draft→review→approved/locked→forecast-revision) tasarımla zorunlu; kilitli bütçe append-only, iş kuralı bypass edilemez",
+        "A08 Integrity: bütçe sürümleme, kilit ve imzalı senaryo varsayımları/kural sürümü ile bütünlük; append-only audit trail (denetim izi) her değişikliği zincirler",
+        "A09 Logging: bütçe/senaryo/onay kararları correlation-id ile yapısal loglanır; yetkisiz onay ve kilitli bütçe değişim denemeleri güvenlik olayı olarak izlenir (NIST/SBOM envanteri ile)",
+        "Input validation: period (YYYY-MM), scenarioId, driverValue (aralık/işaret), department ve currency sunucu tarafında doğrulanır; AI forecast açıklaması varsa sub_prompt güvenilmez sayılır ve prompt injection izolasyonu uygulanır (LLM Top 10)"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "A01/A04/A08/A09 bağlamı, ASVS/NIST/SBOM, alan doğrulama (period/scenario/driver/department/currency), append-only denetim izi ve AI forecast prompt injection izolasyonu eklendi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -312,7 +327,7 @@
         "Budgeting & Forecast (FP&A) idempotency anahtarı üretici tarafında sözleşmeyle belirlenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -326,7 +341,7 @@
         "Budgeting & Forecast (FP&A) bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Budgeting & Forecast (FP&A), tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

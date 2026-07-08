@@ -19,7 +19,8 @@
     "attribute-set",
     "variant",
     "pim",
-    "kernel"
+    "kernel",
+    "module"
   ],
   "dependsOn": [
     "k-schema"
@@ -121,7 +122,10 @@
     "baselineStart": null,
     "baselineEnd": null
   },
-  "deliverables": [],
+  "deliverables": [
+    "Alan Tipi Genişletme — money / measure / i18n-text / geo / attribute-set (EAV) kapsam sozlesmesi",
+    "Alan Tipi Genişletme — money / measure / i18n-text / geo / attribute-set (EAV) icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
   "acceptanceCriteria": [
     "Alan Tipi Genişletme — money / measure / i18n-text / geo / attribute-set (EAV) için surface işlevsel kabulü karşılandı",
     "tenant izolasyonu + AAA erişilebilirlik kapıları geçti"
@@ -317,7 +321,7 @@
         "Akeneo-sınıfı PIM grafiği: ProductFamily + AttributeTemplate + variant-axis (renk×beden, max 3 eksen) + family→product→variant öznitelik miras zinciri (nearest-wins)",
         "value_measure JSONB (value+unit+canonical) boyut-güvenli; money asla value_number ile tutulmaz — Money (value+currency+precision+rounding) zorunlu (float para yasağı)"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §1/§5 + variant-attribute-family §4/§5. EAV yalnız dinamik öznitelik; EAV-01, VAF-05.",
+      "notes": "Kaynak: archetype-eav-directive.md §1/§5 + variant-attribute-family §4/§5. İşlev sınırı: k-fieldtypes yalnız tip kümesini (Money/Measure/I18nText/Geo/AttributeSet) ve alan doğrulama sözleşmesini tanımlar, iş kuralı değil; EAV yalnız dinamik öznitelik, sabit-şema kolon değil. Girdi: {value, value_type, unit/currency/locale, attribute_code}; çıktı: tipli+normalize value_* + variant kartezyen SKU. Hata yolu: DimensionMismatch / float-para / 4.-eksen tanım anında reddedilir. Kabul: tipli EAV değeri + varyant üretimi EAV-01, VAF-05 ile izlenebilir.",
       "prompt": "Alan tipi genişletme özellik sınırını kapsa: money/measure/i18n-text/geo/attribute-set(EAV) tipleri, product_attribute_value şeması, ProductFamily/variant/miras zinciri (max 3 eksen). Güvenlik sınırı: EAV yalnız dinamik öznitelik, sabit-şema kolon değil; money float yasak. Çıktı: tipli EAV değeri + varyant kartezyen üretimi + EAV-01..13 / VAF-01..15 izlenebilirliği.",
       "provenance": "human"
     },
@@ -344,7 +348,7 @@
         "miras çözümü AttributeResolver.resolve(product_id, variant_id, attr_code, locale, scope) deterministik sıra tablosudur — serbest Python evaluate yasak; nearest-wins (variant>product>family)",
         "measure birimi serbest string değil UCUM + k-fieldtypes.Measure dönüşümü; hatalı boyut/kur/locale karışımı tanım anında DimensionMismatchError ile elenir (kg vs lb toplanmaz)"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §4/§9 + variant-attribute-family §8. Anti-pattern 'öznitelik anahtarını koda gömme'; VAF-06.",
+      "notes": "Kaynak: archetype-eav-directive.md §4/§9 + variant-attribute-family §8. Anti-pattern 'öznitelik anahtarını koda gömme' (if attribute==color) statik ayrıştırma/lint kuralında yakalanır; AttributeResolver nearest-wins sıra tablosu deterministik, serbest evaluate ayrıştırma kapısında reddedilir. Kapı: value_type dolu değilken tipli value_* yazımı ve tipsiz value_string sıkıştırma CI lint/tip kapısında kırmızı. Bütçe/eşik: miras çözümü tek sorgu (N+1 yasak), UCUM dönüşüm tablosu sabit-maliyet, resolver siklomatik eşiği aşılmaz. VAF-06.",
       "prompt": "Alan tipi genişletme kod optimizasyonunu kapsa: öznitelik veridir (if-else yasak), tipli value_* kolon, deterministik miras resolver, UCUM measure dönüşümü. Güvenlik sınırı: serbest kod yok, string birim yasak. Çıktı: AttributeResolver nearest-wins + DimensionMismatchError tanım-anı reddi + lint/tip kapısı yeşil.",
       "provenance": "template"
     },
@@ -357,7 +361,7 @@
         "AI yeni öznitelik anahtarı/eksen icat edemez (katalog PR'ı gerekir), 3'ten derin varyant ekseni öneremez (VariantAxisDepthError testinde engellenir), main branch'e push edemez",
         "değer motorun tip kurallarıyla yazılır; para tam-sayı/Money (N6N-06), birim tipli; depolama öncesi normalize edilir (trim+NFC+case-fold, enum kanonikleşir)"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §11 + variant-attribute-family §11. AI draft + approval_ref; EAV-12, VAF-15.",
+      "notes": "Kaynak: archetype-eav-directive.md §11 + variant-attribute-family §11. Sertleştirme ekseni: tip kümesi genişletme yüzeyi kapalı — allowlist=[Money/Measure/I18nText/Geo/AttributeSet], yeni tip/anahtar icadı reddedilir, AI draft önerisi approval_ref'siz apply edilemez. Bağımlılık/SBOM: UCUM birim tablosu ve para/kur kütüphanesi pinlenir, SBOM'da imzalı sürümle izlenir; imzasız bağımlılık reddedilir. Egress/yüzey: AI önerisi salt-taslak, prod'a doğrudan değer yazımı yok, değer NFC/case-fold/c13n normalize edilir. EAV-12, VAF-15.",
       "prompt": "Alan tipi genişletme güvenlik sertleştirmesini kapsa: AI draft öznitelik/tip önerisi + approval_ref, anahtar/eksen icat yasağı, 3-eksen sınırı, değer normalizasyonu. Güvenlik sınırı: AI tanım/tip değiştiremez, katman genişletemez. Çıktı: ApprovalRequiredError + VariantAxisDepthError + c13n/n6n değer normalizasyonu.",
       "provenance": "template"
     },
@@ -405,7 +409,7 @@
         "money/measure/i18n-text/EAV değer sorguları okuma-ağırlıklı olduğundan servis stateless replikayla ölçeklenir; DataLoader ile N+1'siz batch okuma yapılır, EAV attribute lookup cache'i replikalar arası paylaşılır",
         "Shared hosting: statik SPA (metadata-driven form) + JSON; Strawberry GraphQL resolver Depends(require_tenant)+RequirePermission, DataLoader ile N+1'siz batch; get_logger(), print() yasak"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §9 + variant-attribute-family §8. Expand-contract + dolu downgrade; EAV-11, VAF DoD.",
+      "notes": "Kaynak: archetype-eav-directive.md §9 + variant-attribute-family §8. Health/probe: attribute-set servisi readiness'te k-schema+k-tenancy bağını ve UCUM/kur tablosu yüklemesini doğrular, liveness EAV attribute-lookup cache'ini yoklar. Rollback: Alembic expand-contract + dolu downgrade(), CI'da alembic downgrade -1 yeşil (PAV veri kaybı yok); yeni alan tipi append-only, geri-alma yalnız yeni tip kaydını devre-dışı bırakır. Config/sır: tenant bağlamı app.current_tenant setting'ten, DB kimliği secret store'dan çekilir; print() yasak, get_logger() zorunlu. EAV-11, VAF DoD.",
       "prompt": "Alan tipi genişletme dağıtımını kapsa: Swarm/K8s/Shared, product_attribute_value + tanım tabloları, Alembic expand-contract + dolu downgrade, DataLoader N+1'siz. Güvenlik sınırı: boş downgrade yasak, print() yasak. Çıktı: sağlık kontrolü + probe + alembic downgrade -1 yeşil (veri kaybı yok).",
       "provenance": "template"
     },
@@ -419,7 +423,7 @@
         "öznitelik/aile değişim zincirinde döngü kırıcı (maks 6) + idempotency; family ağacı (extends/parent_id) özyinelemeli ama miras okuma-zamanı çözümdür, kopyalama değil (döngü yasak)",
         "ArcheType prod update: yeni alan tipleri append-only eklenir, eski tipler dokunulmaz; override üst değeri silmez (append-only), version + expand-contract + rollback"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §3 + variant-attribute-family §6/§15. Miras kopyalama değil çözüm; VAF-07.",
+      "notes": "Kaynak: archetype-eav-directive.md §3 + variant-attribute-family §6/§15. Olay→eylem eşlemesi: task.status.changed(done) → owner'a notify; status(blocked) → create-task(high); task.progress.changed(≥100) → set-field(status=done); ai.generation/update.requested(app|module) → deny; ai.ruleset.override.requested → deny; ai.risk.scored(≥80) → create-task(critical, approval). EAV değer katmanı otomasyon değil; family miras okuma-anı çözüm (kopyalama yok), maks 6 zincir + idempotency, append-only tip/override korunumu. VAF-07.",
       "prompt": "Alan tipi genişletme ECA sınırını kapsa: EAV değer katmanı ≠ otomasyon, family extends özyineleme, maks 6 zincir + idempotency, append-only tip ekleme. Güvenlik sınırı: miras okuma-anı çözüm (kopyalama yok), override silme değil. Çıktı: ECA↔EAV ayrımı + döngü kırıcı + append-only tip/override korunumu.",
       "provenance": "human"
     },
@@ -446,7 +450,7 @@
         "miras çözümü variant>product>family (nearest-wins) + override üst değeri silmez + axis doğrulama (3 seviye kabul, 4. eksen VariantAxisDepthError) + varyant kartezyen üretimi (3×4=12 SKU)",
         "measure/money boyut/kur uyumsuzluğu tanım anında reddedilir (float para yasağı) + performans 100k+ ürün filtreli liste p95 < 300ms (GIN) + cross-tenant izolasyon (≥10 negatif) + migration downgrade"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §13 + variant-attribute-family §13. 9+10 test: tip/runtime/locale/miras/axis/kartezyen/GIN/tenant.",
+      "notes": "Kaynak: archetype-eav-directive.md §13 + variant-attribute-family §13. Test türleri: unit (tipli value_type doğrulama, UCUM/Money boyut-kur reddi, nearest-wins miras çözümü); contract (k-schema/k-tenancy Zod + /meta tip sözleşmesi, 'öznitelik tanımı değişti' event kontratı); entegrasyon (runtime öznitelik ekleme migration'sız, RLS cross-tenant ≥10 negatif case, downgrade); e2e (varyant kartezyen 3×4=12 SKU üretimi + filtreli liste akışı); performans (GIN p95<300ms, 100k+ ürün). Önce kırmızı sonra yeşil, golden fixture.",
       "prompt": "Alan tipi genişletme test stratejisini kapsa: tipli değer doğrulama, runtime öznitelik ekleme, locale çözüm, miras nearest-wins, axis max 3, kartezyen SKU, GIN p95<300ms, cross-tenant. Güvenlik sınırı: float para reddi + 4. eksen reddi test-kanıtlı. Çıktı: test senaryoları yeşil (önce kırmızı sonra yeşil) + varyant üretimi + golden fixture.",
       "provenance": "template"
     },
@@ -472,7 +476,7 @@
         "related: k-search (GIN + faset indeksi EAV değerini fasetli/tam-metin aramaya bağlar), k-archetype-computation (measure/money girdi, türetilmiş öznitelik), PIM product/variant ArcheType",
         "measure/money değeri k-fieldtypes tipleriyle tanım anında doğrulanır; i18n-text köprüsü locale çözümü; olay veriyolu 'öznitelik tanımı değişti' yayını, üst düğümle tipli arayüz"
       ],
-      "notes": "Kaynak: archetype-eav-directive.md §8/§12 + variant-attribute-family §12. k-search/k-computation köprüsü; EAV-05, VAF-03.",
+      "notes": "Kaynak: archetype-eav-directive.md §8/§12 + variant-attribute-family §12. Sözleşmeli bağ: dependsOn k-schema (şema temeli) + k-tenancy (tenant bağlamı) tipli arayüz kontratıyla — bağlam yoksa PAV yazılamaz; related k-search GIN/faset contract'ıyla EAV değerini fasetli aramaya, k-computation measure/money girdi sözleşmesiyle türetilmiş özniteliğe bağlanır. measure/money k-fieldtypes tipleriyle tanım-anı doğrulanır, i18n-text locale çözüm köprüsü; olay veriyolu 'öznitelik tanımı değişti' tipli event kontratı yayınlar. EAV-05, VAF-03.",
       "prompt": "Alan tipi genişletme entegrasyonunu kapsa: dependsOn k-schema+k-tenancy, k-search GIN/faset köprüsü, k-computation measure/money girdi, PIM product/variant tüketimi. Güvenlik sınırı: tip tanım-anı doğrulama, i18n-text locale köprüsü. Çıktı: tipli attribute-set arayüzü + fasetli arama bağı + 'öznitelik tanımı değişti' yayını.",
       "provenance": "human"
     },
@@ -485,7 +489,7 @@
         "diğer app'ler (Commerce varyant, PIM/Akeneo muadili) öznitelik değerini üretilen API/AttributeResolver üzerinden alır — doğrudan product_attribute_value DB erişimi yok",
         "attribute-set şeması tenant katmanında; industry template (PIM Faz 2) sektöre uygun aile/öznitelik idempotent üretir ama tenant kapsamında yazılır, platform tip kümesi genişletilmez"
       ],
-      "notes": "Kaynak: variant-attribute-family §7/§10 + archetype-eav-directive §8. Modül sınırı: tip burada, kod archetype'ta; VAF-01/PIM Faz 1.",
+      "notes": "Kaynak: variant-attribute-family §7/§10 + archetype-eav-directive §8. Modül sınırı: tip burada (k-fieldtypes), kod alt archetype'ta (pim-attribute-graph). Doğrudan-DB yasağı: Commerce/PIM tüketicileri product_attribute_value tablosuna doğrudan erişemez, yalnız üretilen API/AttributeResolver'ı Contract kapısından (require_tenant + RequirePermission) okur. Panel/entegrasyon: metadata-driven form ve varyant matrisi /meta API'sini tüketir; industry template tenant kapsamında idempotent yazar, platform tip kümesini genişletemez. VAF-01/PIM Faz 1.",
       "prompt": "Alan tipi genişletme modül kullanımını kapsa: k-fieldtypes tip sağlar, pim-attribute-graph archetype kod, PIM product/variant tüketir, industry template tenant-kapsamlı. Güvenlik sınırı: doğrudan DB yok, tip kümesi genişletilmez. Çıktı: üretilen attribute-set API + AttributeResolver tüketimi + tenant-katman öznitelik grafiği.",
       "provenance": "template"
     },

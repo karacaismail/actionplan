@@ -24,7 +24,8 @@
     "bildirim",
     "doğrulama",
     "girdi",
-    "izlenir"
+    "izlenir",
+    "feature"
   ],
   "dependsOn": [
     "l1-notification",
@@ -146,12 +147,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 22: Email + SMS — bildirim güvenirliği: email gönderdin diye gelmez; SPF/DKIM/DMARC yoksa spam'a düşer",
-        "Ünite 22 kapsamı: e-posta teslim edilebilirliği (SPF/DKIM/DMARC) ve SMS güvenirliğini öğretir",
-        "Ünite 22 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "İşlev kapsamı: bir NotificationJob'ı email ve SMS kanalları üzerinden güvenilir teslim etmek; kapsam dışı: şablon içeriğinin kendisini üretmek ve kampanya segmentasyonu",
+        "Girdi/çıktı sözleşmesi: girdi {tenantId, userId, channel, templateId, templateVersion, payload, idempotencyKey}; çıktı {jobId, status, providerMessageId, attemptCount}",
+        "Durum makinesi: queued → sending → sent → delivered, ayrıca failed/bounced/complaint terminal durumları; her geçiş provider webhook'u veya zaman aşımıyla tetiklenir",
+        "Hata yolları: geçersiz alıcı → doğrulama reddi; email bounce → SMS'e fallback; sağlayıcı 5xx → retry kuyruğu; kalıcı hata → DLQ ve owner bildirimi",
+        "Kanal fallback sözleşmesi: birincil kanal hard-bounce/rejected döndürünce aynı idempotencyKey ile ikincil kanala düşülür; çift teslim idempotency anahtarıyla engellenir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -164,7 +167,7 @@
         "Ünite 22 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -172,12 +175,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 22 yapısı: sağlayıcı adaptörü + yeniden-deneme; teslim durumu izlenir",
-        "Ünite 22 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 22 okunabilir ve test edilebilir kalır"
+        "Sağlayıcı adaptörleri (SES, Twilio) tek bir NotificationChannel arayüzünün ardında; ortak retry/backoff ve webhook eşleme kodu paylaşılan yardımcıya toplanır, kanal başına kopya mantık ayıklanır",
+        "Tip güvenliği: NotificationJob, kanal enum'u ve provider webhook payload'ları Zod şemasıyla parse edilir; `any` sızıntısı ve şablon versiyonu string olmayan alanlar tip kapısında reddedilir",
+        "Kalite kapıları: send-yolu fonksiyonlarında döngüsel karmaşıklık ≤10, kanal adaptörü + kuyruk tüketici + webhook işleyici ayrı modüllere bölünür, kullanılmayan eski provider dalları ölü kod olarak silinir",
+        "Idempotency ve fallback mantığı saf (yan etkisiz) bir çözümleyiciye ayrıştırılır; böylece birim testi provider çağrısı olmadan koşar ve refactor bütçesi düşük kalır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +189,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 22 en-az-ayrıcalık ilkesine uyar",
-        "Ünite 22 değişikliği sürümlü ve izlenir",
-        "Ünite 22 girdi sınırda doğrulanır — yetki belirteci ömrü Email + SMS — bildirim güvenirliği için kısadır; yenileme dönüşümlüdür (rotation)"
+        "Sağlayıcı API anahtarları (SES/Twilio secret) secret manager'da tutulur, kodda/logda tutulmaz; 90 günde bir ve sızıntı şüphesinde rotasyona sokulur, webhook imzalama sırrı ayrı saklanır",
+        "Provider webhook'ları imza doğrulamasından geçer (Twilio X-Twilio-Signature / SES SNS imzası); imzasız veya geçersiz bounce/complaint çağrısı reddedilir",
+        "Rate-limit iki katmanlı: per-tenant ve per-user gönderim kotası + sağlayıcı egress'ine token-bucket; kota aşımı 429 ile geri iter, kötüye kullanım yüzeyini daraltır",
+        "Egress allowlist: giden bağlantı yalnız tanımlı SES/SMS endpoint host'larına açıktır; bağımlılıklar SBOM ile envanterlenir ve provider SDK'sı CVE taramasından geçer"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +203,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 22 performans açısı: toplu gönderim kuyruklu; hız sınırı sağlayıcıya uyumlu",
-        "Ünite 22 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 22 büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: enqueue işlemi p95 < 50 ms, gönderimden delivered webhook'una kadar p95 < 30 s; kuyruk lag (queue depth × yaş) SLO panosunda izlenir",
+        "Teslim durumu sorguları (tenantId, status, createdAt) bileşik indeksle desteklenir; provider webhook'u jobId + providerMessageId indeksinden O(log n) çözülür",
+        "Şablon ve per-tenant rate-limit sayaçları önbelleğe alınır; her gönderimde şablon versiyonunu DB'den çekmek yerine sürüm anahtarlı cache kullanılır",
+        "N+1 önleme: toplu gönderimde alıcı+tercih verisi tek sorguda batch çekilir; kuyruk tüketicisi imleç sayfalamayla parti parti ilerler, tek seferde tüm job'ları belleğe almaz"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -211,12 +217,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 22 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 22 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 22 bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil istemci (PWA/Capacitor) NotificationJob durumunu aynı sözleşmeyle tüketir; teslim edildi/başarısız rozetleri iOS ve Android'de tutarlı gösterilir",
+        "Offline davranışı: cihaz çevrimdışıyken bildirim onay/tercih değişiklikleri yerel kuyruğa yazılır, bağlantı gelince idempotencyKey ile sunucuya senkron edilir; çift gönderim olmaz",
+        "Bildirim tercihleri ekranındaki kanal açma/kapama kontrolleri en az 44 px temas alanı sağlar; hata/başarı durumu dokunmatik hedefte metinle de bildirilir",
+        "Native push köprüsü (FCM/APNs) yalnız durum bildirimi taşır; asıl email/SMS teslimi sunucu tarafında kalır, mobil paketleme sırasında provider secret'ı istemciye gömülmez"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +236,7 @@
         "Ünite 22 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,7 +249,7 @@
         "Ünite 22 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +262,7 @@
         "Ünite 22 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +275,7 @@
         "Ünite 22 — AI teslim sorunu/şablon önerir; gönderim politikası kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +283,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 22 doğrulama: SPF/DKIM/DMARC ve teslim/başarısızlık senaryosu sınanır",
-        "Ünite 22 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Birim testleri: idempotency anahtarı çözümü, kanal fallback kararı ve retry/backoff hesabı sahte (mock) sağlayıcıyla sınanır; provider webhook payload parse'ı Zod şemasına karşı doğrulanır",
+        "Negatif fixture'lar: hard-bounce, soft-bounce, complaint (spam şikâyeti), geçersiz numara ve sağlayıcı 5xx yanıtları için kayıtlı fixture'lar durum makinesinin doğru terminal duruma gittiğini kanıtlar",
+        "Entegrasyon + e2e: webhook imza doğrulaması, DLQ'ya düşme ve email→SMS fallback yolu uçtan uca Playwright senaryosuyla koşulur; imzasız webhook'un reddi ayrı test eder",
+        "QA döngüsü: kararsız (flaky) provider entegrasyon testi sınırlı sayıda yeniden denenir, düzelmezse hata detaylarıyla raporlanıp otomatik onaydan çıkarılır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +302,7 @@
         "Ünite 22 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +315,7 @@
         "Ünite 22 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +329,7 @@
         "Email + SMS — bildirim güvenirliği kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Email + SMS — bildirim güvenirliği bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (taş/kum; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u22 — \"Email + SMS — bildirim güvenirliği\" (feature/taş; küme: Eğitim). Özet: Email gönderdin diye geldi sanma. SPF/DKIM/DMARC yoksa spam'a düşer. SMS: cep operatörü engelleyebilir. Etiketler: education, email, sms, deliverability, spf, dkim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

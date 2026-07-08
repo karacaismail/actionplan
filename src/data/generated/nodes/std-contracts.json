@@ -20,7 +20,8 @@
     "alanı",
     "coding",
     "json",
-    "kurallarını"
+    "kurallarını",
+    "feature"
   ],
   "dependsOn": [
     "std-schema-foundation"
@@ -94,7 +95,14 @@
     "id=dosya adi, >=3 kural",
     "id benzersiz"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-std-contracts-scope-drift",
+      "desc": "14 Standart Sozlesmesi (ST-2) kapsami ust seviye sozlesmeden koparsa teslimat kaniti yorumlanamaz hale gelir",
+      "severity": "medium",
+      "mitigation": "Kapsam, acceptanceCriteria, rollback ve traceability alanlari ayni PR'da guncellenir"
+    }
+  ],
   "rollback": "Standart katalog geri alımı: bozulan katalog JSON'u (src/data/standards/<id>.json) git'ten önceki sürüme döndürülür; StandardContractSchema değişiklikleri geriye uyumlu default'larla gittiğinden eski katalog parse olmaya devam eder. Düğüm ref'leri id ile bağlandığından katalog revert'i ref bütünlüğünü bozmaz (check-standards-coverage doğrular).",
   "evidence": [],
   "metrics": [],
@@ -104,13 +112,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "StandardContractSchema tek kaynak: her katalog JSON dosyası id/version/rules[] alanlarıyla bu şemaya uyar, ayrı şema türetilmez",
-        "14 katalog tek tek tanımlı: architecture, coding, short-code, design, ui, ux, data-api, state, testing, quality-gates, observability, release, ai-gov, dependency",
-        "Dosya adı = katalog id eşlemesi zorunlu (coding.json -> id:\"coding-standards\"); kuralların her biri benzersiz rule-id taşır",
-        "Her kuralda severity (error/warn) ve makineye okunur matcher alanı bulunur, böylece CI kapıları metni değil kuralı tüketir"
+        "StandardContractSchema neyi sahiplenir: her katalog JSON id/version/rules[] alanlarıyla bu şemaya uyar; şema yalnızca kural yapısını doğrular ve id->kural sözleşmesini üretir — kuralın iş mantığını yürütmez, yürütme tüketici CI kapılarındadır (ne yapmaz sınırı)",
+        "Kapsam sınırı 14 katalog id ile kilitli: architecture, coding, short-code, design, ui, ux, data-api, state, testing, quality-gates, observability, release, ai-gov, dependency; 15. katalog eklemek şema değil governance kararıdır, bu düğüm üretemez",
+        "Girdi/çıktı sözleşmesi: girdi = ham katalog JSON dosyaları; çıktı = doğrulanmış id-anahtarlı kural haritası; kabul kriteri dosya-adı=id eşlemesi (coding.json -> id:\"coding-standards\") ve tüm kataloglar arası rule-id benzersizliğidir",
+        "Katalog durum akışı draft -> review -> active -> deprecated; yalnız active kataloglar CI kapılarınca tüketilir, deprecated salt-okunur arşive geçer ve yeni ref alamaz",
+        "Hata yolu/fail-fast: severity (error/warn) veya makine-okunur matcher eksik ya da çift rule-id içeren dosya başlatmada reddedilir; kısmi/geçersiz katalogla çalışmaya devam edilmez"
       ],
-      "notes": "Tek şema + 14 ayrık katalog; serbest metin değil yapısal kural seti.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: StandardContractSchema alan sözleşmesi, 14 katalog id listesi, dosya-adı/id eşlemesi ve kural-id benzersizliği.",
+      "notes": "Tek şema + 14 kilitli katalog; girdi=JSON, çıktı=id->kural haritası, durum akışı active/deprecated, hatada fail-fast.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: StandardContractSchema alan sözleşmesi, 14 katalog id listesi, dosya-adı/id eşlemesi ve kural-id benzersizliği.",
       "provenance": "swarm"
     },
     "security": {
@@ -118,13 +127,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "ai-gov katalogu rulesetBoundary kuralını sözleşme olarak taşır: AI app/module üretemez, güncelleyemez, ruleset override edemez (backendOnly:true)",
-        "Katalog JSON dosyaları salt-okunur kaynak kabul edilir; değişiklik sadece insan onaylı changeset ile, doğrudan prod yazımı yasak",
-        "dependency katalogu lisans/yasak-paket kurallarını içerir, böylece tedarik zinciri kararları metinde değil zorlanabilir veride durur",
-        "Her kuralın provenance ve owner alanı vardır; kuralın kim tarafından, hangi ADR ile eklendiği izlenebilir"
+        "ai-gov katalogu rulesetBoundary sözleşmesini taşır: AI app/module üretemez, güncelleyemez, ruleset override edemez (backendOnly:true, canOverride:false); ihlal denemesi ECA deny ile reddedilir ve audit'e append edilir",
+        "Least-privilege erişim: kataloglar tüketicilere yalnız read olarak açılır; yazma insan onaylı changeset'e bağlıdır, doğrudan prod yazımı forbiddenActions içinde (direct-prod-write) reddedilir",
+        "Kataloglar tenant'a bağlı değildir ve PII/secret içermez: yalnız kural metası tutar; token/credential/kişisel-veri alanı şema whitelist'inde yer almadığından bu yüzey kapalıdır (\"PII/secret içermez\" sınırı)",
+        "provenance/owner append-only: her kuralın kim tarafından ve hangi ADR ile eklendiği izlenir; geçmiş üzerine yazılmaz (preserveHistory:true), audit izi bozulmaz",
+        "dependency katalogu lisans/yasak-paket kurallarını global (tenant-bağımsız) zorlanabilir veride tutar; tedarik zinciri kararı serbest metinde değil kuralda durur"
       ],
-      "notes": "Güvenlik kararları katalog kuralı; AI sınırı şema seviyesinde sabit.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ai-gov ruleset sınırı kuralları, katalog salt-okunurluğu, dependency lisans kuralları ve kural kökeni izlenebilirliği.",
+      "notes": "Least-privilege read + salt-okunur katalog + PII/secret yok + append-only provenance/audit; AI rulesetBoundary şema seviyesinde deny.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ai-gov ruleset sınırı kuralları, katalog salt-okunurluğu, dependency lisans kuralları ve kural kökeni izlenebilirliği.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -132,13 +142,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ortak alanlar (id, version, severity) tek StandardContractSchema türünden gelir; 14 katalog için tekrar tip yazımı önlenir",
-        "Katalog yükleyici tüm dosyaları tek seferde tarar ve id->kural haritası kurar; her tüketici dosyayı yeniden parse etmez",
-        "coding ve short-code katalogları örtüşen kuralları paylaşılan rule-id ile referanslar, kopyalanmaz",
-        "Şema doğrulaması derleme zamanı tipleriyle hizalanır (TS tipi = Zod/şema), çift kaynak bakımı ortadan kalkar"
+        "Ortak alanlar (id, version, severity) tek StandardContractSchema türünden gelir; TS tipi = Zod/şema tek kaynak, 14 katalog için tekrar tip yazımı ve çift kaynak bakımı ortadan kalkar",
+        "Her PR'da zorunlu kapı üçlüsü: lint + typecheck + contract-gate (standards.test.ts); şema-dışı katalog, çift rule-id veya kırık ref CI'yı düşürür",
+        "Sorumluluk ayrıştırması net: schema doğrular, loader tüm dosyaları tek geçişte tarar ve id->kural indeksini kurar, matcher değerlendirir; katmanlar birbirine sızmaz ve tüketici dosyayı yeniden parse etmez",
+        "coding ve short-code katalogları örtüşen kuralları paylaşılan rule-id ile referanslar (kopyalamaz); tek tanım noktası sapma riskini keser",
+        "Katalog loader bütçesi/eşiği CI'da izlenir: 14 dosya tek geçiş, katalog başına kural sayısı ve loader döngü complexity'si eşik altında tutulur, aşım review'a düşer"
       ],
-      "notes": "Tek tip + tek yükleyici; katalog başına kopya yapı yok.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: paylaşılan tip türetimi, tek-geçiş katalog yükleyici, rule-id ile referans paylaşımı ve şema-tip hizası.",
+      "notes": "Tek tip (TS=Zod) + lint/typecheck/contract gate + schema/loader/matcher ayrıştırması + rule-id paylaşımı + loader complexity eşiği.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: paylaşılan tip türetimi, tek-geçiş katalog yükleyici, rule-id ile referans paylaşımı ve şema-tip hizası.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -146,13 +157,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "rulesetBoundary kuralı tek yerde tanımlı (ai-gov) ve diğer kataloglar ona referans verir; güvenlik kuralı çoğaltılıp sapmaz",
-        "Katalog dosyaları için içerik-hash kontrolü ile yetkisiz düzenleme erken yakalanır",
-        "severity:error kurallar derleme/CI içinde önbelleğe alınmaz, her koşuda taze değerlendirilir; bypass riski kapatılır",
-        "Sözleşme alanları whitelist ile kısıtlı (bilinmeyen alan reddedilir), enjekte edilen sahte kural alanları sızamaz"
+        "dependency katalogu SBOM/SCA taramasını besler: bilinen-zafiyetli paket ve izinsiz-lisans kuralı signed/hash allowlist dışını reddeder, çözümlenen bağımlılıklar allowlist'e sabitlenir",
+        "Katalog dosyaları için içerik-hash/imza allowlist tutulur; yetkisiz düzenleme (tamper) başlatmada yakalanır ve bozulan katalog önceki geriye-uyumlu sürüme otomatik rollback edilir (hardening)",
+        "severity:error kurallar derleme/CI içinde önbelleğe alınmaz (cache bypass), her koşuda taze değerlendirilir; kural devre dışı bırakma denemesi bypass edilemez",
+        "Sözleşme alanları field-whitelist ile kısıtlı; bilinmeyen/sahte kural alanı reddedilir, enjekte edilen alanlar sızamaz",
+        "Kapalı yüzey: katalog yükleyici ağ/egress yapmaz, yalnız yerel sürümlenmiş dosyayı okur; dış kaynaktan kural çekilmez, saldırı yüzeyi yerelle sınırlıdır"
       ],
-      "notes": "Tek güvenlik kuralı kaynağı + hash bütünlüğü + sıkı alan whitelist.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tek-kaynak ruleset referansı, katalog hash bütünlüğü, error kuralların önbelleksiz değerlendirmesi ve alan whitelist.",
+      "notes": "SBOM/SCA + signed/hash allowlist + tamper rollback + field-whitelist + cache bypass + egress-kapalı yüzey.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tek-kaynak ruleset referansı, katalog hash bütünlüğü, error kuralların önbelleksiz değerlendirmesi ve alan whitelist.",
       "provenance": "swarm"
     },
     "performance": {
@@ -160,13 +172,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "14 katalog JSON lazy değil, başlatmada bir kez yüklenip bellekte tutulur; kural sayısı sınırlı olduğu için tam tarama O(kural) kalır",
-        "Kural eşleştirme matcher'ları derlenmiş biçimde saklanır (önceden parse edilmiş), her dosya başına yeniden derleme yapılmaz",
-        "Katalog->kural indeksi id anahtarlı sözlüktür; tüketici sözleşme aramasını dizi taraması yerine sabit-zaman erişimle yapar",
-        "Şema doğrulaması yalnızca değişen katalogda tekrarlanır (dosya mtime/hash farkı), değişmeyen 14 kataloğun tümü yeniden doğrulanmaz"
+        "14 katalog JSON başlatmada bir kez yüklenip bellekte tutulur; toplam yükleme+parse hedefi p95 < 150 ms, kural sayısı sınırlı olduğu için tam tarama O(kural) kalır",
+        "Kural eşleştirme matcher'ları derlenmiş biçimde önbellekte saklanır (önceden parse); matcher lookup hedefi p95 < 1 ms, dosya başına yeniden derleme yapılmaz",
+        "Katalog->kural indeksi id-anahtarlı sözlüktür; sözleşme araması dizi taraması yerine O(1) sabit-zaman, cache hit oranı hedefi > %99 (kurallar değişmedikçe)",
+        "Şema doğrulaması yalnız değişen katalogda tekrarlanır (dosya mtime/hash farkı); değişmeyen 14 kataloğun tümü yeniden doğrulanmaz, incremental doğrulama hedefi < 10 ms"
       ],
-      "notes": "Sabit-zaman kural erişimi + sadece değişen katalogun yeniden doğrulanması.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: başlatmada tek yükleme, derlenmiş matcher önbelleği, id-anahtarlı kural indeksi ve değişiklik-tabanlı yeniden doğrulama.",
+      "notes": "Sayısal hedefler: yükleme p95<150ms, matcher lookup p95<1ms, id-index O(1)/cache hit >%99, değişiklik-tabanlı doğrulama <10ms.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: başlatmada tek yükleme, derlenmiş matcher önbelleği, id-anahtarlı kural indeksi ve değişiklik-tabanlı yeniden doğrulama.",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -180,7 +192,7 @@
         "Bu düğüm yalnızca kuralları tanımlar; gerçek mobil ekran üretimi kapsam dışı, katalog sadece uyulacak kuralı sağlar"
       ],
       "notes": "Mobil kurallar ui/ux/design/state kataloglarında sözleşme olarak yaşar.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ui/ux dokunma-alanı kuralları, design breakpoint token referansı, state offline kuralı ve katalog-sadece kapsam sınırı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ui/ux dokunma-alanı kuralları, design breakpoint token referansı, state offline kuralı ve katalog-sadece kapsam sınırı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -194,7 +206,7 @@
         "Katalog yalnızca uyulacak AAA kuralını tanımlar; denetim/render bu düğümün değil tüketen yüzeyin işidir"
       ],
       "notes": "AAA ölçütleri ux/ui/design kataloglarında kural olarak kodlanır.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ux AAA ölçüt eşlemesi, ui ARIA/rol kuralları, design kontrast-token kuralı ve tanım-vs-denetim kapsam ayrımı.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ux AAA ölçüt eşlemesi, ui ARIA/rol kuralları, design kontrast-token kuralı ve tanım-vs-denetim kapsam ayrımı.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -202,13 +214,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "14 katalog JSON src/data/standards/ altında sürümlenir ve uygulama paketiyle birlikte dağıtılır; ayrı dağıtım kanalı yok",
-        "release katalogu sürüm/etiketleme kurallarını taşır; katalog schemaVersion artışı geriye uyumlu olmalı kuralı zorlanır",
-        "Katalog yükleme başarısızlığı (eksik/bozuk JSON) başlatmada fail-fast verir, kısmi sözleşmeyle ayağa kalkılmaz",
-        "observability katalogu hangi sözleşme sürümünün yüklü olduğunu yayımlama kuralını içerir, ortamlar arası sapma görünür olur"
+        "14 katalog JSON src/data/standards/ altında sürümlenir ve uygulama paketiyle tek bundle olarak dağıtılır; ayrı dağıtım kanalı yok, shared hosting'te de aynı bundle geçerlidir",
+        "Health/probe: yüklü standards bundle version bir readiness endpoint/probe ile yayımlanır (observability kuralı); ortamlar arası sözleşme sürüm sapması dashboard'da görünür olur",
+        "Katalog yükleme başarısızlığı (eksik/bozuk JSON, çift rule-id) başlatmada fail-fast verir; kısmi sözleşmeyle ayağa kalkılmaz, probe unready döner ve trafik almaz",
+        "Rollback: bozulan katalog veya schemaVersion, release katalogunun geriye-uyum kuralı gereği git'ten önceki sürüme döndürülür; StandardContractSchema geriye uyumlu default'larla gittiğinden eski katalog parse olmaya devam eder",
+        "Config/secret ayrımı: kataloglar yalnız config-flag türü kural taşır, secret/credential/token içermez; secret enjeksiyonu ayrı gizli kanalda yapılır, katalog bundle'ına girmez"
       ],
-      "notes": "Kataloglar uygulamayla birlikte sürümlenir; eksik sözleşmede fail-fast.",
-      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standards/ dizini sürümleme, release schemaVersion uyum kuralı, başlatmada fail-fast ve yüklü sözleşme sürümünün yayımı.",
+      "notes": "Tek bundle (shared hosting dahil) + bundle-version health probe + fail-fast/unready + schemaVersion rollback + config/secret ayrımı (katalogta secret yok).",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standards/ dizini sürümleme, release schemaVersion uyum kuralı, başlatmada fail-fast ve yüklü sözleşme sürümünün yayımı.",
       "provenance": "swarm"
     },
     "eca": {
@@ -222,7 +235,7 @@
         "Her katalog kuralı maxChainDepth sınırını miras alır, zincirleme tetiklemenin üst sınırı sözleşmede sabittir"
       ],
       "notes": "ECA ruleset kuralları ai-gov/state kataloglarında sürüm-bağlı tanımlı.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ai-gov ECA deny kuralları, ruleset sürüm eşleşmesi, state geçiş whitelist ve maxChainDepth sözleşme mirası.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ai-gov ECA deny kuralları, ruleset sürüm eşleşmesi, state geçiş whitelist ve maxChainDepth sözleşme mirası.",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -236,7 +249,7 @@
         "AI risk skoru >=80 olduğunda katalog değişiklik önerisi insan onayına (requiresApproval) düşer, otomatik birleşme yok"
       ],
       "notes": "AI yalnızca öneri üretir; katalog yazımı insan onaylı changeset'e bağlı.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: agentPolicy suggest yetkisi, AI doğrudan-yazma yasağı, güvenilmez alt-prompt işareti ve yüksek-risk onay eşiği.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: agentPolicy suggest yetkisi, AI doğrudan-yazma yasağı, güvenilmez alt-prompt işareti ve yüksek-risk onay eşiği.",
       "provenance": "swarm"
     },
     "testing": {
@@ -244,13 +257,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "tests/standards.test.ts her 14 katalogu StandardContractSchema'ya karşı doğrular; şema dışı dosya testi düşürür",
-        "Test, dosya-adı=id eşlemesini ve rule-id benzersizliğini tüm kataloglar arasında çapraz kontrol eder",
-        "En az 3 kural koşulu (acceptanceCriteria) testle zorlanır: kuralı boş katalog kabul edilmez",
-        "Geçersiz severity, eksik matcher veya bilinmeyen alan içeren fixture'larla negatif testler şemanın reddini doğrular"
+        "Contract test — tests/standards.test.ts her 14 katalogu StandardContractSchema'ya karşı doğrular; şema dışı dosya testi düşürür",
+        "Unit — test, dosya-adı=id eşlemesini ve rule-id benzersizliğini tüm kataloglar arasında çapraz kontrol eder",
+        "Min-kural kapısı — en az 3 kural koşulu (acceptanceCriteria) testle zorlanır: kuralı boş katalog kabul edilmez",
+        "Negatif fixture — geçersiz severity, eksik matcher veya bilinmeyen alan içeren fixture'larla negatif testler şemanın reddini doğrular",
+        "Integration/e2e-CI — loader -> id-index -> matcher zinciri gerçek 14 katalogla uçtan uca denenir ve her koşu evidence (test raporu/coverage) üretir; testing-loop QA yalnız kuralı doğrular, kuralı yazamaz/uygulayamaz (kapsam sınırı)"
       ],
-      "notes": "standards.test.ts şema uyumu + id benzersizliği + min-kural kapısı.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standards.test.ts şema doğrulaması, dosya-adı/id çapraz kontrolü, min-3-kural zorlaması ve negatif fixture testleri.",
+      "notes": "standards.test.ts contract/unit + min-3-kural + negatif fixture + loader->matcher integration/e2e-CI + evidence; QA kuralı doğrular, üretmez.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: standards.test.ts şema doğrulaması, dosya-adı/id çapraz kontrolü, min-3-kural zorlaması ve negatif fixture testleri.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -264,7 +278,7 @@
         "coding katalogu güvenli-kodlama kurallarını rule-id ile sabitler, OWASP ASVS maddeleriyle eşlenebilir"
       ],
       "notes": "OWASP maddeleri dependency/ai-gov/coding kataloglarına kural olarak gömülü.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency tedarik-zinciri kuralları, ai-gov erişim-kontrol kuralı, alan-whitelist enjeksiyon savunması ve coding/ASVS eşlemesi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency tedarik-zinciri kuralları, ai-gov erişim-kontrol kuralı, alan-whitelist enjeksiyon savunması ve coding/ASVS eşlemesi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -278,7 +292,7 @@
         "Katalog yükleyici çekirdek başlatma sırasına girer; sözleşmeler hazır olmadan bağımlı modüller ayağa kalkmaz"
       ],
       "notes": "Şema çekirdekte; standardRefs ile çekirdek modüllere bağlanır.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: çekirdek StandardContractSchema paylaşımı, data-api kernel kuralları, standardRefs çapraz bağ ve başlatma sıra bağımlılığı.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: çekirdek StandardContractSchema paylaşımı, data-api kernel kuralları, standardRefs çapraz bağ ve başlatma sıra bağımlılığı.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -292,7 +306,7 @@
         "Katalog id'leri kararlı API yüzeyidir; tüketici modüller dosya yoluna değil id'ye bağımlı olur"
       ],
       "notes": "Şema foundation'dan tüketilir; kataloglar id ile paylaşılır.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (kum; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: std-schema-foundation şema tüketimi, standardRefs ile katalog expose, short-code paylaşımı ve id-tabanlı kararlı yüzey.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-contracts — \"14 Standart Sozlesmesi (ST-2)\" (feature/taş; küme: frontend). Özet: Tek paylasilan StandardContractSchema + 14 katalog JSON (architecture/coding/short-code/design/ui/ux/data-api/state/testing/quality-gates/observability/release/ai-gov/dependency). Paralel ajan. Etiketler: standards, contracts, st-2.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: std-schema-foundation şema tüketimi, standardRefs ile katalog expose, short-code paylaşımı ve id-tabanlı kararlı yüzey.",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -21,7 +21,8 @@
     "girdi",
     "governance",
     "ruleset",
-    "tablo"
+    "tablo",
+    "feature"
   ],
   "dependsOn": [
     "k-schema",
@@ -143,12 +144,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata: Her-şey-metadata (introspectable kayıt) — ServiceNow: tablo, rol, workflow, API her şey introspectable kayıt; governance + audit",
-        "Her-Şey-Metadata kapsamı: tablo/rol/workflow/API'yi sorgulanabilir metadata kaydı olarak tutar",
-        "Her-Şey-Metadata bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam sınırı: tablo, rol, workflow, API, alan, ilişki ve kuralları introspectable metadata kaydı olarak tutar; app/module/ruleset'in kendisini yürütmez, yalnız governance/audit için sorgulanabilir kılar",
+        "Girdi/çıktı sözleşmesi: girdi = table/role/workflow/API schema metadata; çıktı = sürümlenmiş metadata kaydı, iki versiyon arası diff, approval state ve audit event",
+        "Durum akışı: metadata kaydı draft → reviewed → active → deprecated durumları arasında ilerler; geçişler insan onayına bağlıdır ve geri (active→deprecated) idempotenttir",
+        "Hata yolları: geçersiz schema (parse hatası), izinsiz introspection isteği, tenant dışı sorgu ve geçersiz durum geçişi reddedilir; her ret gerekçesiyle audit'e yazılır",
+        "AI sınırı: AI hiçbir kaydı yaratamaz/değiştiremez/silemez; yalnız metadata kaydı önerisi + risk/evidence/checklist üretir, insan onayı bekleyen değişiklik kaydı olarak kuyruğa alınır"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -156,12 +159,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata güvenlik açısı: introspectable yapı governance ve audit'i kolaylaştırır",
-        "Her-Şey-Metadata hassas bilgi gerektiğinde maskelenir",
-        "Her-Şey-Metadata ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim: introspection ve metadata sorguları deny-by-default; okuma/öneri yetkisi rol bazlı (least-privilege) verilir, active kaydı deprecated'a taşımak gibi geçişler ayrı yetki ister",
+        "Tenant: her metadata sorgusu PostgreSQL RLS ile tenant'a hapsedilir; cross-tenant introspection isteği reddedilir, tenant escape denemesi audit'e alarm olarak düşer",
+        "PII: schema alanları PII sınıflandırmasıyla etiketlenir; hassas alan adları/örnek değerler field-level masking ile maskelenir, maskesiz görünüm yalnız step-up yetkili role açılır",
+        "Yetki: AI aktörü yalnız suggest-changeset yapabilir; app/module üretme, ruleset override ve doğrudan prod write deny edilir",
+        "Audit: her introspection, öneri ve durum geçişi actor/tenant/zaman/gerekçe ile append-only (değişmez) audit log'a yazılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -169,12 +174,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata yapısı: yapı verisi de veri; runtime'da sorgulanır",
-        "Her-Şey-Metadata tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Her-Şey-Metadata okunabilir ve test edilebilir kalır"
+        "Kod sağlığı kapısı: lint + typecheck + metadata schema contract gate CI'da zorunlu; kırmızıysa merge bloklanır, introspection sözleşmesi bozan diff geçmez",
+        "Ayrıştırma: schema parser, kural evaluator, metadata query ve report/diff üreteci ayrı modüllere bölünür; her biri bağımsız test edilir, döngüsel karmaşıklık sınırı uygulanır",
+        "Metadata bütçesi/eşiği: kayıt başına alan sayısı ve introspection cevap boyutu için eşik konur, aşım build uyarısı üretir; ölü kod ve kullanılmayan metadata alanları elenir",
+        "Tip güvenliği: tablo/rol/workflow/API anahtarları typed entity key'lerle temsil edilir, serbest string yerine union tipler kullanılır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -182,12 +188,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata en-az-ayrıcalık ilkesine uyar",
-        "Her-Şey-Metadata değişikliği sürümlü ve izlenir",
-        "Her-Şey-Metadata girdi sınırda doğrulanır"
+        "Bağımlılık/SBOM: schema parser ve query katmanının bağımlılıkları SBOM ile envanterlenir, SCA taraması CI'da çalışır; kritik CVE bulunca yayın durur",
+        "Allowlist/imza: introspection endpoint'leri ve izinli metadata sorgu şablonları allowlist ile sınırlanır; policy/ruleset paketleri imzalıdır, imza doğrulanamayan paket reddedilir",
+        "Egress/yüzey: metadata servisi yalnız gerekli tenant API'lerine egress yapar, dışarı serbest çağrı kapalıdır; introspection yüzeyi (alan/örnek değer) minimize edilir",
+        "Secret/tamper: DB ve imza anahtarları rotasyona tabidir; audit log tamper tespitinde son güvenli metadata snapshot'ına rollback yapılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -195,12 +202,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata performans açısı: metadata önbellekli; introspection hızlı",
-        "Her-Şey-Metadata sık erişim indeksli/önbellekli tasarlanır",
-        "Her-Şey-Metadata büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: tekil metadata lookup p95 ≤ 150 ms, introspection listeleme p95 ≤ 400 ms; hedef aşımı SLO alarmı üretir",
+        "Incremental index/cache: entity+tenant üzerinde bileşik indeks ve metadata için incremental cache; kayıt değişince yalnız ilgili anahtar invalidate edilir",
+        "Cursor pagination: büyük tablo/alan listeleri offset yerine cursor tabanlı sayfalanır, tek cevap boyutu sınırlanır",
+        "N+1 önleme: ilişki/alan metadata'sı toplu (batch) çekilir; introspection sırasında satır başına ayrı sorgu yapılmaz"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -208,12 +216,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Her-Şey-Metadata mobil istemci aynı sözleşmeyi tüketir",
-        "Her-Şey-Metadata bildirim/onay gerektiğinde push ile iletilir"
+        "Offline: mobil istemci active metadata'nın read-only snapshot'ını yerelde tutar; çevrimdışıyken sorgu snapshot'tan yanıtlanır, değişiklik önerisi yalnız çevrimiçi kuyruğa alınır",
+        "Köprü/paketleme: PWA veya Capacitor köprüsüyle paketlenir; onay bekleyen metadata değişikliğine deep link ile doğrudan ilgili kaydın onay ekranı açılır",
+        "Sync conflict: çevrimdışı okunan snapshot sunucudakinden eskiyse sync sırasında stale-schema çakışması işaretlenir ve kullanıcıya çözüm sunulur",
+        "Dokunma: onay/ret ve durum geçişi kontrolleri için en az 44 px temas alanı; dar ekranda tek sütun ve okunur kalır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -226,7 +235,7 @@
         "Her-Şey-Metadata klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -239,7 +248,7 @@
         "Her-Şey-Metadata shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -252,7 +261,7 @@
         "Her-Şey-Metadata bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -265,7 +274,7 @@
         "Her-Şey-Metadata — AI metadata tutarsızlığı önerir; metadata değişikliği kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -273,12 +282,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Her-Şey-Metadata doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "Her-Şey-Metadata ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: schema parser ve durum geçişi doğrulayıcısı (draft→reviewed→active→deprecated) birim testlerle kanıtlanır; geçersiz geçiş reddi doğrulanır",
+        "Contract: introspection API sözleşmesi (girdi schema / çıktı diff+approval state) contract testleriyle kilitlenir, kırıcı değişiklik CI'da yakalanır",
+        "Integration + e2e-CI: RLS/tenant izolasyonu ve field-level masking uçtan uca, CI pipeline'ında test edilir",
+        "Negatif fixture'lar: unauthorized metadata read, tenant escape, PII leak (maskesiz alan sızması), stale schema snapshot ve invalid state transition senaryoları başarısız olmalı (deny beklenir)",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -291,7 +302,7 @@
         "Her-Şey-Metadata girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -304,7 +315,7 @@
         "Her-Şey-Metadata sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -318,7 +329,7 @@
         "Her-şey-metadata (introspectable kayıt) kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Her-şey-metadata (introspectable kayıt) bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (taş/kum; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-metadata — \"Her-şey-metadata (introspectable kayıt)\" (feature/taş; küme: Platform Yetenekleri). Özet: ServiceNow: \"tablo, rol, workflow, API — her şey introspectable kayıt\". Governance + audit + AI içkin. Etiketler: sustainability, servicenow, metadata, introspection.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

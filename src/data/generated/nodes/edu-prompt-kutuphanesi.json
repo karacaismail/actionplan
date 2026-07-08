@@ -22,7 +22,8 @@
     "alınır",
     "bağımsız",
     "girdi",
-    "ruleset"
+    "ruleset",
+    "module"
   ],
   "dependsOn": [
     "sus-ai-uretim-sozlesmesi"
@@ -151,12 +152,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi: Kopyala–Çalıştır Prompt Kütüphanesi: Claude/Cursor/Antigravity için başlangıç, test-önce üretim, bağımsız review ve CI düzeltme prompt'ları",
-        "Prompt Kütüphanesi kapsamı: yeniden kullanılabilir prompt şablonlarını kategorilere ayırır",
-        "Prompt Kütüphanesi bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam/işlev sınırı: bu düğüm YALNIZCA prompt şablonlarını sınıflandırır (kategori/hedef araç/beklenen çıktı türü), güvenli kopyalama–uyarlama sözleşmesini ve beklenen çıktı tiplerini tanımlar; app/module ÜRETMEZ ve GÜNCELLEMEZ, ruleset OVERRIDE ETMEZ, promptları otomatik çalıştırıp prod'a YAZMAZ — kopyalanan çıktı doğrudan prod'a değil kullanıcının editörüne gider",
+        "Girdi/çıktı sözleşmesi: her prompt kartı {kategori (başlangıç/test-önce/review/CI-fix/teslim), hedef araç (Claude|Cursor|Antigravity), beklenen çıktı türü (test|diff|review notu|CI düzeltme)} alanlarıyla tanımlanır; kart bu sözleşme dolmadan yayına çıkamaz",
+        "Durum akışı: prompt kartı taslak → incelendi → yayınlandı → arşiv geçişleriyle ilerler; kopyalama yalnız 'yayınlandı' durumundaki karttan yapılır, arşiv kartı salt-okunur işaretlenir",
+        "Kopyala–Çalıştır akışı + hata yolu: kullanıcı kategori/araç filtreler, kartı açar, 'Kopyala' ile prompt panoya alınır ve seçilen araca (Claude/Cursor/Antigravity) yapıştırılmak üzere hazırlanır (ham metin Markdown/JSON dışa aktarımı); pano erişimi reddedilirse seç-kopyala fallback'i, eksik alanlı kart 'taslak' rozeti, bilinmeyen filtrede 'sonuç yok' + öneri döner",
+        "Kabul sözleşmesi: kart ancak kategori + hedef araç + beklenen çıktı türü + en az bir kabul kriteri (ör. 'testler yeşil', 'diff review'dan geçti') dolduğunda 'yayınlandı' sayılır"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kapsam sınırı nettir: düğüm bir prompt sınıflandırma + güvenli kopyalama sözleşmesi kaydıdır; kod/app/module üretmez veya güncellemez, ruleset override etmez, promptu otomatik çalıştırıp prod'a yazmaz.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -164,12 +167,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi güvenlik açısı: prompt'lar sır/anahtar içermez; bağlam güvenli verilir",
-        "Prompt Kütüphanesi hassas bilgi gerektiğinde maskelenir",
-        "Prompt Kütüphanesi ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki: prompt kartı okuma herkese açık eğitim içeriği; kart oluşturma/düzenleme/yayınlama yalnız içerik-ekibi rolüne (least-privilege) verilir, kopyalama serbest ama düzenleme yetkisiz kullanıcıya kapalıdır",
+        "Tenant/kurs izolasyonu: kurumsal örneklerde prompt koleksiyonları tenant/kurs anahtarıyla ayrılır; bir kursun özel prompt setine başka kursun kullanıcısı erişemez, paylaşım açıkça 'public' işaretlenene kadar özel kalır",
+        "PII/secret redaksiyonu: prompt metinleri hiçbir sır/API anahtarı/token/kişisel veri içermez; kaydetmeden önce anahtar-benzeri desenler (regex) taranır, yakalanan sır blokla + kartı 'taslak'a düşürür",
+        "Sır girişi engeli: kullanıcı örnek bağlamı yapıştırırken gerçek kimlik/erişim bilgisi yerine yer-tutucu (ör. <API_KEY>) kullanması UI'de hatırlatılır; kopyalanan çıktı doğrudan prod'a değil, kullanıcının editörüne gider",
+        "Audit: prompt kartı oluşturma/düzenleme/yayınlama/arşivleme olayları değişmez (append-only) audit kaydına {aktör, zaman, kart-id, alan-diff} olarak yazılır, silme yerine arşiv tutulur"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -177,12 +182,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi yapısı: prompt'lar test-önce ve review-ayrı ilkesini kalıplaştırır",
-        "Prompt Kütüphanesi tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Prompt Kütüphanesi okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni — tip güvenliği: prompt kartı modeli (kategori/hedef araç/çıktı türü/kabul kriteri) tipli sözleşmeyle (ör. TS union + Zod şeması) tanımlanır; hedef araç 'Claude|Cursor|Antigravity' ve çıktı türü 'test|diff|review|CI-fix' literal union olarak tiplenir, `any`/tipsiz erişim lint ile yasaklanır, kart yükleme sınırında tip doğrulaması zorunludur",
+        "Modüler şablon parçalarına bölme (split): prompt şablonları tekil metin bloğu yerine modüler parçalara (rol/sistem başlığı, bağlam bölümü, görev talimatı, kabul kriteri, çıktı formatı) bölünür; ortak başlık/uyarı blokları paylaşılan parça olarak bir kez tanımlanıp kartlara referansla eklenir, 'test-önce üretim' ve 'CI düzeltme' ailelerindeki yinelenen talimatlar tek parçaya toplanır (DRY)",
+        "Ölü kod ve ölü şablon temizliği: hangi karta da bağlanmayan yetim şablon parçaları, kullanılmayan kategori/araç filtre dalları ve erişilemez yardımcılar ölü kod taramasıyla (ör. ts-prune/knip + kullanım grafiği) bulunup silinir; arşive düşen kartların artık referanslanmayan parçaları kütüphaneden ayıklanır",
+        "Döngüsel karmaşıklık sınırı + refactor: kart filtreleme/arama/kopyalama/dışa aktarım fonksiyonlarına döngüsel karmaşıklık üst sınırı (ör. ≤10) lint kuralıyla dayatılır; sınırı aşan seçim/render mantığı küçük saf yardımcılara refactor edilir, aşım CI kalite kapısında kırmızıya döner",
+        "CI kalite kapısı + saflık: şema-lint, format kapısı, tip kontrolü, ölü kod taraması ve karmaşıklık sınırı tek CI kalite kapısında toplanır; kart render/kopyalama mantığı saf (yan etkisiz) yardımcılara taşınır, UI yalnız sunum yapar, kapı yeşile dönmeden kart yayına/merge'e çıkamaz"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni somut kapılara bağlanır: tipli kart sözleşmesi (tip güvenliği), modüler şablon parçalarına bölme/split, ölü kod ve yetim şablon temizliği, döngüsel karmaşıklık sınırı + refactor ve tek CI kalite kapısı; hiçbiri app/module üretmez, yalnızca şablon kütüphanesinin kod ve içerik kalitesini kilitler.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -190,12 +197,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi en-az-ayrıcalık ilkesine uyar",
-        "Prompt Kütüphanesi değişikliği sürümlü ve izlenir",
-        "Prompt Kütüphanesi girdi sınırda doğrulanır"
+        "Prompt allowlist: kütüphanede yalnız incelenip onaylanmış prompt kartları yayınlanır; serbest kullanıcı içeriği/harici URL enjeksiyonu allowlist dışıdır, onaysız kart kopyalanabilir yüzeye çıkmaz",
+        "İmzalı/provenance sürüm: her yayınlanan kartın promptVersion + içerik hash'i ve provenance (kim, hangi turda üretti/onayladı) kaydı tutulur; değişiklik yeni sürüm doğurur, kopyalanan metin hangi sürümden geldiği izlenebilir kalır",
+        "Bağımlılık/SBOM: kütüphane UI ve dışa aktarım araç zincirinin bağımlılıkları SBOM'a bağlanır; CI'da bağımlılık ve gizli-sır (secret) taraması çalışır, kritik açık bulunursa yayın kapısı kırmızıya döner",
+        "Egress/yüzey daraltma: statik prompt kütüphanesi dış ağ çağrısı yapmaz; kopyalama tamamen istemci-tarafı panoyla sınırlıdır, dışa aktarım yalnız yerel dosya (Markdown/JSON) üretir — telemetriye prompt gövdesi gönderilmez",
+        "En-az-ayrıcalık sertleştirme: yayınlama/silme gibi yazma uçları rol + gerekirse step-up doğrulaması ister; salt-okuma yüzeyi yazma yetkisi olmadan çalışır ve sıkı CSP ile inline script engellenir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -203,12 +212,14 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Prompt Kütüphanesi sık erişim indeksli/önbellekli tasarlanır",
-        "Prompt Kütüphanesi büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef — kopyalama: 'Kopyala' düğmesine basıştan panoya yazılana kadar geçen süre p95 < 100 ms; kart açılışı (render) p95 < 200 ms hedeflenir ve regresyon CI'da ölçülür",
+        "Ölçülebilir hedef — arama/filtre: kütüphane içi metin araması ve kategori/araç filtresi p95 < 150 ms; artımlı (debounce'lu) arama ile her tuşta tam liste taranmaz",
+        "İndeks/önbellek: prompt kartları kategori ve hedef araç alanlarına göre önceden indekslenir (ör. istemci tarafı Map/ön hesaplı gruplar); filtre sonuçları memoize edilir, aynı filtre tekrar hesaplanmaz",
+        "Sayfalama/tembel yükleme: kart sayısı büyüdükçe liste sayfalı veya sanal-liste (virtualization) ile işlenir, yalnız görünen kartların gövdesi render edilir; ilk boyama hafif tutulur",
+        "Statik dağıtım: kütüphane içeriği build-time üretilip cache'lenebilir statik JSON olarak sunulur, tekrar ziyarette sunucuya gitmeden CDN/tarayıcı önbelleğinden gelir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -216,12 +227,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Prompt Kütüphanesi mobil istemci aynı sözleşmeyi tüketir",
-        "Prompt Kütüphanesi bildirim/onay gerektiğinde push ile iletilir"
+        "Offline prompt paketi: kütüphane statik JSON'u service worker ile önbelleğe alınır; kullanıcı çevrimdışıyken de kartları görüntüleyip kopyalayabilir, son senkron zamanı ve 'çevrimdışı' rozeti gösterilir",
+        "PWA/Capacitor/Chrome extension yüzeyi: mobilde PWA veya Capacitor kabuğu aynı statik içeriği tüketir; ayrıca Chrome extension yüzeyi promptu doğrudan Claude/Cursor/Antigravity sekmesine yapıştırmayı kolaylaştırır, hepsi tek prompt sözleşmesini paylaşır",
+        "Dokunma ergonomisi: mobil kopyala düğmelerinde en az 44 px temas alanı sağlanır, kartlar dar ekranda tek sütun ve okunur kalır, kopyalama sonrası dokunsal/görsel geri bildirim (ör. 'kopyalandı') verilir",
+        "Deep link/push: her prompt kartı kalıcı deep link taşır (kategori/araç ön-filtreli açılır); güncellenen kategoriye abone kullanıcıya isteğe bağlı push bildirimiyle 'yeni prompt eklendi' duyurusu yapılır",
+        "Mobil kopyalama fallback'i: Web Share/Clipboard API'si olmayan cihazda uzun-bas-seç veya paylaş sayfası fallback'i sunulur, kopyalama hiçbir mobil tarayıcıda çıkmaz duruma düşmez"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -234,7 +247,7 @@
         "Prompt Kütüphanesi klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -247,7 +260,7 @@
         "Prompt Kütüphanesi shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -260,7 +273,7 @@
         "Prompt Kütüphanesi bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -273,7 +286,7 @@
         "Prompt Kütüphanesi — AI bu prompt'larla çalışır; üreten-onaylayamaz ilkesi gereği review ayrı prompt'la insanca yapılır"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -281,12 +294,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Prompt Kütüphanesi doğrulama: her prompt beklenen çıktı türüyle (test/diff/review) etiketlenir",
-        "Prompt Kütüphanesi ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit test: kart parçalama, filtreleme, arama ve kopyalama yardımcıları birim testiyle örtülür; her kartın zorunlu alan (kategori/hedef araç/çıktı türü/kabul kriteri) doluluğu ve kart-id benzersizliği doğrulanır",
+        "Contract/schema test: prompt kartı JSON şemasına uygunluğu ve Markdown/JSON dışa aktarımının geri-okunabilirliği (round-trip) sözleşme testiyle kilitlenir; şema değişimi geriye uyum testinden geçmeden birleşmez",
+        "E2E/kullanıcı yolculuğu: kategori filtrele → kart aç → 'Kopyala' → panoda doğru metin, ve çevrimdışı görüntüleme + deep link ile açılış senaryoları uçtan uca (AI-destekli Playwright dahil) test edilir",
+        "Negatif/prompt-injection testi: karta 'önceki talimatları yok say' türü kötücül metin veya sır-benzeri desen enjekte edildiğinde redaksiyon/taslağa düşürme tetiklenir; yayınlanan hiçbir kartta gerçek anahtar/token sızmadığı asserte edilir",
+        "Snapshot/fixture + QA loop: temsili kart seti fixture'larından render snapshot'ı alınır (beklenmedik metin/biçim kayması yakalanır); testing-loop başarısız testi en fazla 6 kez yeniden çalıştırır, düzelmezse otonom QA ajanı bulguyu raporlar"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -299,7 +314,7 @@
         "Prompt Kütüphanesi girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -312,7 +327,7 @@
         "Prompt Kütüphanesi sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -326,7 +341,7 @@
         "Kopyala–Çalıştır Prompt Kütüphanesi kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Kopyala–Çalıştır Prompt Kütüphanesi bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (modül/kaya; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-prompt-kutuphanesi — \"Kopyala–Çalıştır Prompt Kütüphanesi\" (module/dağ; küme: Eğitim). Özet: Claude, Cursor ve Antigravity için başlangıç, test-önce üretim, bağımsız review, CI düzeltme ve teslim promptları. Etiketler: prompt, claude, cursor, antigravity, vibecoding.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

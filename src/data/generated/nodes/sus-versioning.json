@@ -20,7 +20,8 @@
     "sürüm",
     "açısı",
     "çekirdek",
-    "katmanı"
+    "katmanı",
+    "feature"
   ],
   "dependsOn": [
     "k-sozlesme"
@@ -151,12 +152,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama: Tarih-tabanlı versiyonlama + dönüşüm katmanı (Stripe, 2011'den beri 14 yıl uyumlu): çekirdek tek-sürüm yazar, dönüşüm eski sürüme uyarlar",
-        "Tarih-Tabanlı Versiyonlama kapsamı: API'yi tarih-tabanlı sürümler; çekirdek tek sürüm, dönüşüm katmanı eskiye uyarlar",
-        "Tarih-Tabanlı Versiyonlama bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam sınırı: çekirdek model tek güncel (canonical) sürümde kalır; dış istemciye eski tarihli API davranışı yalnızca dönüşüm katmanı (transformer) üzerinden uyarlanır — çekirdeğe eski sürüm sızmaz. Stripe'ın tarih-tabanlı sürüm yaklaşımı analoji olarak alınır",
+        "Girdi/çıktı sözleşmesi: girdi = request API date + current canonical payload + transformer version + client contract; çıktı = legacy-compatible response + compatibility report + accept/reject migration decision (insan onayı bekleyen karar kaydı)",
+        "Durum akışı: sürüm kaydı proposed -> active -> deprecated -> blocked geçişini izler; compatibility window içindeki sürümler dönüştürülür, dışındakiler deprecation policy ile reddedilir",
+        "Hata yolları: unsupported API date -> 400/uyarı; missing transformer -> reddet + evidence; kapsam dışı sürüm -> blocked; her ret nedeni ile birlikte checklist'e yazılır",
+        "AI sınırı: AI hiçbir app/module/ruleset yaratmaz/değiştirmez/override etmez; yalnız sürüm/dönüşüm değişiklik önerisi + risk/evidence/checklist + insan onayı bekleyen karar kaydı üretir"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kapsam net: çekirdek tek canonical sürüm, dönüşüm dışta; girdi/çıktı sözleşmesi ve proposed→active→deprecated→blocked durum akışı açık.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -164,12 +167,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama güvenlik açısı: eski istemci kırılmaz; sürüm geçişi denetimli",
-        "Tarih-Tabanlı Versiyonlama hassas bilgi gerektiğinde maskelenir",
-        "Tarih-Tabanlı Versiyonlama ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki: API date / version header istemcinin yetkilendirmesine tabidir; tanımsız veya izinsiz sürüm başlığı deny-by-default ile reddedilir, ayrıcalık yükseltmeye kapalıdır",
+        "Tenant izolasyonu: dönüşüm katmanı tenant-safe çalışır; bir tenant'ın payload'ı başka tenant'ın transformer/sürüm bağlamına sızamaz (PostgreSQL RLS ile sınır)",
+        "PII: legacy-compatible response üretilirken PII masking uygulanır; eski sürüm alanları PII taşıyorsa sınıflandırmaya göre maskelenir/gizlenir",
+        "Audit: her sürüm/dönüşüm önerisi ve accept/reject kararı değişmez (append-only) audit log'a aktör + API date + transformer version ile yazılır",
+        "AI sınırı: AI sürüm/dönüşüm önerisi üretse de erişim/yetki kararını ve prod write'ı yapamaz; karar insana bırakılır"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Erişim, tenant, PII ve yetki açık: version header authorization + deny-by-default + tenant-safe transformation + PII masking + append-only audit.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -177,12 +182,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama yapısı: çekirdek tek-sürüm yazar (sadelik); dönüşüm dışarıda",
-        "Tarih-Tabanlı Versiyonlama tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Tarih-Tabanlı Versiyonlama okunabilir ve test edilebilir kalır"
+        "Kod sağlığı kapısı: lint + typecheck + contract gate CI'da zorunlu; dönüşüm kuralı bu kapılardan geçmeden birleşmez",
+        "Ayrıştırma: transformer registry / parser / evaluator / report bileşenleri ayrık tutulur; çekirdek tek-sürüm yazımı dönüşüm mantığından izole kalır (döngüsel karmaşıklık sınırlı)",
+        "Tip güvenliği: API date ve version anahtarları typed (branded) tiplerle tutulur; serbest string yerine sözleşmeli tipler kullanılır, ölü/kullanılmayan transformer elenir",
+        "Bütçe/eşik: transformer başına conversion budget (adım/süre eşiği) tanımlıdır; eşiği aşan zincir uyarı üretir ve gözden geçirmeye düşer"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni açık: lint/typecheck/contract gate + registry/parser/evaluator/report ayrıştırması + typed API date/version + conversion budget eşiği.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -190,12 +196,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama en-az-ayrıcalık ilkesine uyar",
-        "Tarih-Tabanlı Versiyonlama değişikliği sürümlü ve izlenir",
-        "Tarih-Tabanlı Versiyonlama girdi sınırda doğrulanır"
+        "Bağımlılık/SBOM: transformer katmanı bağımlılıkları SBOM'a işlenir, SCA (dependency scan) CI'da çalışır; bilinen açıklı sürüm birleşmeyi bloklar",
+        "Allowlist/imza: yalnız imzalı ve allowlist'teki transformer'lar yüklenir; imzasız veya listede olmayan dönüşüm kuralı reddedilir (signed transformer policy)",
+        "Egress/yüzey: dönüşüm katmanının dış çağrı yüzeyi daraltılır; egress allowlist ile beklenmeyen dışarı bağlantı engellenir, saldırı yüzeyi minimumda tutulur",
+        "Sertleştirme: transformer imza anahtarları için secret rotation; kurcalama (tamper) tespitinde otomatik rollback ve sürümün blocked'a alınması"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Somut güvenlik optimizasyonu: SBOM/SCA + imzalı allowlist transformer + egress/yüzey kontrolü + secret rotation/tamper rollback.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -203,12 +210,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama performans açısı: dönüşüm katmanı ince; çekirdek karmaşıklığı artmaz",
-        "Tarih-Tabanlı Versiyonlama sık erişim indeksli/önbellekli tasarlanır",
-        "Tarih-Tabanlı Versiyonlama büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: dönüşüm katmanı p95 transform latency ≤ 50 ms (çekirdek yanıtına ek olarak); dönüşümsüz güncel sürüm yolu ek gecikme almaz",
+        "Compatibility lookup: API date -> transformer eşlemesi indeksli ve önbellekli (cache) çözülür; sıcak sürümler için lookup p95 ≤ 5 ms",
+        "N+1 önleme: bir istekte gereken tüm dönüşüm kuralları tek geçişte yüklenir; sürüm başına ayrı sorgu (N+1) yapılmaz",
+        "Ölçek: compatibility report ve sürüm listeleri imleç tabanlı sayfalama (pagination) ile döner; büyük veri tek yanıta yığılmaz"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedef net: p95 transform latency ≤ 50 ms, compatibility lookup ≤ 5 ms, cache + pagination + N+1 önleme.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -216,12 +224,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Tarih-Tabanlı Versiyonlama mobil istemci aynı sözleşmeyi tüketir",
-        "Tarih-Tabanlı Versiyonlama bildirim/onay gerektiğinde push ile iletilir"
+        "Offline: mobil istemci, kullandığı API date -> güncel sürüm eşlemesini offline read-only version matrix olarak önbelleğe alır; ağ yokken hangi sürümde çalıştığını gösterir",
+        "API date mismatch state: istemcinin gönderdiği API date compatibility window dışına düşerse mobilde açık bir 'sürüm uyumsuz / güncelle' durumu ve deprecation uyarısı gösterilir",
+        "Köprü/paketleme: PWA/Capacitor köprüsü üzerinden sürüm başlığı native katmandan iletilir; deep link ile ilgili sürüm/dönüşüm karar kaydına gidilir",
+        "Dokunma: sürüm seçimi ve onay/ret aksiyonları için en az 44 px temas alanı; dar ekranda tek sütun ve okunur düzen"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Mobil ayrıntı somut: offline read-only version matrix + API date mismatch state + Capacitor köprü/deep link + en az 44 px temas alanı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -234,7 +243,7 @@
         "Tarih-Tabanlı Versiyonlama klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -247,7 +256,7 @@
         "Tarih-Tabanlı Versiyonlama shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -260,7 +269,7 @@
         "Tarih-Tabanlı Versiyonlama bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -273,7 +282,7 @@
         "Tarih-Tabanlı Versiyonlama — AI sürüm farkı/dönüşüm kuralı önerir; sürüm politikası kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -281,12 +290,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Tarih-Tabanlı Versiyonlama doğrulama: kabul kriterleri ve kenar durumları kontrol edilir",
-        "Tarih-Tabanlı Versiyonlama ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: transformer parser/evaluator ve API date -> sürüm çözümleme birim testleriyle doğrulanır; sürüm karşılaştırma sınır değerleri kapsanır",
+        "Contract: legacy-compatible response, client contract'a karşı sözleşme (contract) testleriyle sabitlenir; dönüşüm çıktısı beklenen eski sürüm şemasını bozamaz",
+        "Integration + e2e-CI: proposed -> active -> deprecated -> blocked akışı ve compatibility report entegrasyon + CI'da uçtan uca koşar",
+        "Negatif fixture'lar: unsupported API date, missing transformer, tenant escape, PII leak, deprecated version blocked senaryoları için başarısızlık beklenen fixture'lar; testing-loop maks 6 tekrar, düzelmezse raporla"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test türleri açık: unit + contract + integration + e2e-CI; negatif fixture'lar (unsupported API date, missing transformer, tenant escape, PII leak, deprecated blocked) tanımlı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -299,7 +309,7 @@
         "Tarih-Tabanlı Versiyonlama girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -312,7 +322,7 @@
         "Tarih-Tabanlı Versiyonlama sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -326,7 +336,7 @@
         "Tarih-tabanlı versiyonlama + dönüşüm katmanı kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Tarih-tabanlı versiyonlama + dönüşüm katmanı bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (taş/kum; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-versioning — \"Tarih-tabanlı versiyonlama + dönüşüm katmanı\" (feature/taş; küme: Platform Yetenekleri). Özet: Stripe 2011'den beri her API sürümüyle uyumlu (14 yıl). Çekirdek tek-sürüm yazar, dönüşüm katmanı eskileri yaşatır. Etiketler: sustainability, stripe, api-versioning.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

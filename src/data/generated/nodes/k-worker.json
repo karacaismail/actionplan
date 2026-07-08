@@ -19,7 +19,8 @@
     "circuit-breaker",
     "scheduled",
     "kernel",
-    "layer0"
+    "layer0",
+    "module"
   ],
   "dependsOn": [
     "k-tenancy"
@@ -419,7 +420,7 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Backend ECA ruleset AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-worker-ai-app-module-deny, ruleset-override-deny)",
+        "Backend ECA olayı AI'ın app/module mutasyonunu ve ruleset override denemesini deny eder (eca-k-worker-ai-app-module-deny, ruleset-override-deny)",
         "task.progress ≥100 olduğunda status=done set edilir; done'da owner'a bildirim, blocked'da yüksek-öncelik blokaj-çözme görevi açılır",
         "ai.risk.scored ≥80 ise kritik-öncelik AI risk incelemesi görevi açılır (requiresApproval:true); zincirde döngü kırıcı maxChainDepth=6 + idempotency",
         "ArcheType prod update: geçmiş veri korunur; append-only/expand-contract + step-up + rollback ile Job/Task/Schedule şeması güvenli göç eder"
@@ -450,7 +451,7 @@
         "Retry tek-etki: idempotent görev N kez retry edilir (worker-replay) → N kez çalışır ama yan-etki (stok/para) bir kez oluşur; idempotency_key aynı result_ref'e düşürür",
         "Dead-letter: max_attempts tükenen görev status=dead, DLQ'ya taşınır, silinmez, alarm üretir; replay elle tetiklenince kaldığı yerden tek-etkiyle koşar",
         "Circuit breaker: hedefe art arda hata → devre açılır, sonraki işler hızlı-başarısızlık; open_secs sonrası half-open probe başarılıysa devre kapanır",
-        "Tenant izolasyon/adalet: Tenant-A büyük kuyruğu Tenant-B işini geciktirmez; AI-guardrail: enqueue'suz thread/cron CI'da reddedilir, onaysız prod-write ApprovalRequiredError"
+        "Tenant izolasyon/adalet: Tenant-A büyük kuyruğu Tenant-B işini geciktirmez; AI-guardrail: enqueue'suz thread/cron CI'da reddedilir, onaysız prod-write ApprovalRequiredError; test planı Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi (k-worker) için unit, entegrasyon ve e2e Playwright journey; negatif senaryo, golden fixture kanıtı ve QA loop içerir"
       ],
       "notes": "Test stratejisi dayanıklılığı kanıtlar (§11'in 5 senaryosu): retry tek-etki, DLQ, breaker, tenant-adalet, AI-guardrail; check-worker-contract deploy'da bloklayıcıdır.",
       "prompt": "k-worker test kapsamını kapsa: retry tek-etki (idempotency), DLQ+replay, circuit breaker half-open, tenant-adalet ve AI-guardrail. kısıt: enqueue'suz görev CI'da red. çıktı: 5 senaryo yeşil + contract kapısı.",
@@ -464,7 +465,7 @@
         "OWASP Top 10:2025 A01 Broken Access Control: her Job/Schedule tenant_id fail-closed; komşu-tenant iş/verisi görünmez, kota aşımı reddedilir",
         "A04 Insecure Design: idempotency_key + dead-letter + circuit breaker ile çift-etki/veri-kaybı/boğulma tasarımca engellenir (sessiz except:pass yasak)",
         "A09 Logging/Monitoring Failures: her iş durum geçişi structlog + Prometheus + OpenTelemetry'ye trace_id ile yansır; DLQ ve breaker durumu görünür",
-        "A08 Data Integrity: idempotent görevde retry tek etkiye iner; payload veri olarak doğrulanır, serbest kod yürütülmez, hata {code, message, trace_id, details}"
+        "A08 Data Integrity: idempotent görevde retry tek etkiye iner; payload veri olarak doğrulanır, serbest kod yürütülmez, hata {code, message, trace_id, details}; OWASP tehdidi Worker / Task-Queue — Arka-Plan İş Yürütme Primitifi (k-worker) için injection, access control, SSRF veya prompt injection sınıfları; ASVS/NIST/SBOM, doğrulama ve denetim iziyle ele alınır"
       ],
       "notes": "OWASP haritalaması worker'a özgü riskleri hedefler: erişim kontrolü (A01 tenant), güvenli tasarım (A04 idempotency/DLQ/breaker), gözlemlenebilirlik (A09 o11y).",
       "prompt": "k-worker OWASP yüzeyini kapsa: A01 tenant fail-closed, A04 idempotency/DLQ/breaker tasarımı, A09 trace'li o11y ve A08 tek-etki bütünlüğü. güvenlik sınırı: sessiz hata yutma yasak. çıktı: standart-uyumlu dayanıklılık.",

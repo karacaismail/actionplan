@@ -21,7 +21,8 @@
     "waiver",
     "conformant",
     "zorunlu",
-    "security"
+    "security",
+    "module"
   ],
   "dependsOn": [
     "fe-locked"
@@ -97,7 +98,14 @@
     "standardRefs referans butunlugu CI'da yesil",
     "headless + kisa-kod + UI kapilari bloklayici"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-fe-eng-standards-scope-drift",
+      "desc": "Muhendislik Standardi Isletim Katmani (ADR-0027) kapsami ust seviye sozlesmeden koparsa teslimat kaniti yorumlanamaz hale gelir",
+      "severity": "medium",
+      "mitigation": "Kapsam, acceptanceCriteria, rollback ve traceability alanlari ayni PR'da guncellenir"
+    }
+  ],
   "rollback": "Standart işletim katmanı geri alımı: sorunlu standart sözleşmesi src/data/standards/<id>.json önceki git sürümüne döndürülür (lazy migration sayesinde düğüm dosyaları değişmez); ilgili check-* kapısı önceki commit'ten geri alınır ve deploy.yml'de adım eski haline döner. Ref'ler default '' olduğundan veri kaybı olmaz.",
   "evidence": [],
   "metrics": [],
@@ -110,10 +118,11 @@
         "coding / design / test / devops / ai / data altı ailesinde 14 tek-kaynak standart sözleşmesi tanımla; her sözleşme StandardContractSchema ile doğrulansın.",
         "Her sözleşmeye stableId + semver alanı koy; sözleşme değişikliği yalnız minor/major bump ile yayınlanabilsin, drift sürüm farkından yakalansın.",
         "Sözleşmeleri src/data/standards/*.json altında saklayıp düğümlerden standardRefs ile referansla; içerik kopyalamayı (gömülü kural) yasakla.",
-        "engineering-standards-index.md kataloğunu sözleşme listesinden türet; manuel index düzenlemesini CI ile reddet."
+        "engineering-standards-index.md kataloğunu sözleşme listesinden türet; manuel index düzenlemesini CI ile reddet.",
+        "Kapsam sınırı: bu katman yalnız standart sözleşmelerinin işletimi ve conformance kontrolüdür; girdi = sözleşme JSON + standardRefs + waiver, çıktı = doğrulanmış sözleşme kataloğu + türetilmiş index + kapı kanıtı, hata yolu = drift/geçersiz ref → düğüm non-conformant. App/module üretimi kapsam dışıdır."
       ],
-      "notes": "14 sözleşme = tek kaynak; düğümler yalnız referans tutar, içerik gömmez.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 14 sözleşme ailesi, StandardContractSchema, stableId+semver, türetilmiş index.",
+      "notes": "Kapsam/işlev sınırı = yalnız standart işletimi + conformance (girdi: sözleşme JSON+standardRefs+waiver, çıktı: katalog+index+kapı kanıtı, hata: drift/geçersiz ref). 14 sözleşme tek kaynak; düğümler yalnız referans tutar, içerik gömmez.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 14 sözleşme ailesi, StandardContractSchema, stableId+semver, türetilmiş index.",
       "provenance": "swarm"
     },
     "security": {
@@ -124,10 +133,11 @@
         "coding-standards ve aiGovernance sözleşmelerindeki güvenlik kurallarını (secret yasakları, input doğrulama zorunluluğu) CI'da check-security.mjs ile zorla; ihlalde merge bloklanır.",
         "Sözleşme dosyalarına yazımı CODEOWNERS + branch protection ile platform-ekibine kilitle; standart override eden PR step-up onayı ister.",
         "Her standart sözleşmesine threatModelRef alanı ekle; bu alan boşsa security kapısı sözleşmeyi 'incomplete' sayıp düğüm yayınını durdurur.",
-        "Waiver verilen güvenlik kuralları için zorunlu son-kullanma (expiresAt) iste; süresi dolan waiver CI taramasında düğümü tekrar non-conformant yapar."
+        "Waiver verilen güvenlik kuralları için zorunlu son-kullanma (expiresAt) iste; süresi dolan waiver CI taramasında düğümü tekrar non-conformant yapar.",
+        "Sözleşme yazma erişimini tenant/app/module owner authz + CODEOWNERS least-privilege (en az yetki) ile sınırla; standart kanıtındaki (evidence) PII ve secret alanlarını redaksiyonla; her sözleşme/waiver değişikliği değiştirilemez (immutable) denetim izine (audit trail) yazılır."
       ],
-      "notes": "Güvenlik = sözleşme kurallarının CI zorlaması + waiver son-kullanma denetimi.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: check-security.mjs, CODEOWNERS kilidi, threatModelRef zorunluluğu, waiver expiresAt.",
+      "notes": "Güvenlik = owner authz + tenant/app erişim sınırı + PII/secret redaksiyonu + değiştirilemez denetim izi; sözleşme kurallarının CI zorlaması + waiver son-kullanma denetimi.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: check-security.mjs, CODEOWNERS kilidi, threatModelRef zorunluluğu, waiver expiresAt.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -137,10 +147,11 @@
       "items": [
         "StandardContractSchema doğrulayıcısını tek modülde topla; 14 sözleşme + 438 düğüm referansını tek geçişte (one-pass) tarayıp O(n) tut.",
         "Sözleşme okuma sonuçlarını CI içinde içerik-hash (content-hash) ile önbelleğe al; değişmeyen sözleşme için doğrulamayı atla, kapı süresini düşür.",
-        "standardRefs referans grafiğini önceden indeksleyip (id→sözleşme map) tekrarlı dosya okumalarını ele; ölü/karşılığı olmayan ref derleme zamanı yakalanır."
+        "standardRefs referans grafiğini önceden indeksleyip (id→sözleşme map) tekrarlı dosya okumalarını ele; ölü/karşılığı olmayan ref derleme zamanı yakalanır.",
+        "Kod sağlığı ekseni: şema parser + lint kapısı + karmaşıklık (complexity) ve coverage eşiği ile doğrulayıcıyı ölç; deterministik tek-geçiş doğrulama, eşik altı kod veya ölü-referans (dead-ref) kapıda reddedilir."
       ],
-      "notes": "Optimizasyon = tek-geçiş doğrulayıcı + sözleşme hash önbelleği; CI hızlı kalsın.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tek-geçiş doğrulama, content-hash önbellek, ön-indekslenmiş ref grafiği.",
+      "notes": "Optimizasyon = tek-geçiş doğrulayıcı + sözleşme hash önbelleği + kod sağlığı ekseni (lint + karmaşıklık/coverage eşiği + dead-ref eleme); CI hızlı kalsın.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tek-geçiş doğrulama, content-hash önbellek, ön-indekslenmiş ref grafiği.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -150,10 +161,11 @@
       "items": [
         "Güvenlik kapısını (check-security) salt-okunur sözleşme + düğüm anlık görüntüsü üstünde çalıştır; CI içinde yazma yetkisi olmasın, supply-chain yüzeyi daralsın.",
         "Sözleşme bütünlüğünü her koşuda manifest checksum ile doğrula; kurcalanmış standart dosyası kapıyı kırmızıya çevirip pipeline’ı durdurur.",
-        "Waiver ve override denetimini tek raporda topla (consolidated security report); aktif istisnaların envanterini her PR’da görünür kıl, sessiz birikimi engelle."
+        "Waiver ve override denetimini tek raporda topla (consolidated security report); aktif istisnaların envanterini her PR’da görünür kıl, sessiz birikimi engelle.",
+        "Sertleştirme (hardening) ekseni: kapıları salt-okunur çalıştır, sözleşme paketini imzalı manifest/checksum ile mühürle ve kapı araçları için SBOM + bağımlılık (dependency) taraması koş; runtime override yolu yoktur."
       ],
-      "notes": "Salt-okunur kapı + manifest checksum + tek istisna envanteri; gürültüsüz, sızıntısız.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: salt-okunur kapı, manifest checksum, tek konsolide istisna raporu.",
+      "notes": "Salt-okunur kapı + manifest checksum + tek istisna envanteri + hardening ekseni (imzalı manifest + SBOM/bağımlılık taraması, runtime override yok); gürültüsüz, sızıntısız.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: salt-okunur kapı, manifest checksum, tek konsolide istisna raporu.",
       "provenance": "swarm"
     },
     "performance": {
@@ -163,10 +175,11 @@
       "items": [
         "7 CI conformance kapısının toplam koşum bütçesini hedefle (örn. < 90 sn) ve her kapının süresini ölç; bütçe aşımı pipeline uyarısı üretir.",
         "Sözleşme doğrulamasını yalnız değişen düğüm + bağımlı sözleşmelere uygula (incremental / etkilenen-küme); 438 düğümün tamamını her PR’da tarama.",
-        "Kapı sonuçlarını paralelleştir (14 sözleşme bağımsız doğrulanır) ve sonuçları birleştir; seri çalışan tek kapı darboğazını kaldır."
+        "Kapı sonuçlarını paralelleştir (14 sözleşme bağımsız doğrulanır) ve sonuçları birleştir; seri çalışan tek kapı darboğazını kaldır.",
+        "İndeksli ref grafiği + içerik-hash önbellek (cache) ile tekrarlı dosya okumalarını (N+1 read) ele; yalnız etkilenen-küme doğrulanır ve kapıların p95 koşum süresi bütçeye karşı ölçülür."
       ],
-      "notes": "Performans = kapı bütçesi + artımlı (etkilenen-küme) doğrulama + paralel kapı.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapı koşum bütçesi, artımlı doğrulama, paralel sözleşme kontrolü.",
+      "notes": "Performans = kapı bütçesi (p95) + artımlı (etkilenen-küme) doğrulama + indeksli ref/cache ile N+1 okuma giderme + paralel kapı.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapı koşum bütçesi, artımlı doğrulama, paralel sözleşme kontrolü.",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -179,7 +192,7 @@
         "Mobil sözleşme ihlalleri için waiver verilemez kuralı koy (dokunma/erişim kritik); platform politikası bu istisna türünü baştan reddeder."
       ],
       "notes": "Mobil = sözleşmelerin mobil kural bloğu + profil-bazlı applicability zorlaması.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: mobil kural bloğu zorunluluğu, applicability profil eşlemesi, waiver yasağı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: mobil kural bloğu zorunluluğu, applicability profil eşlemesi, waiver yasağı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -192,7 +205,7 @@
         "applicability ile a11y sözleşmesini yalnız kullanıcı-arayüzü içeren düğümlere bağla; backend-only düğüm gereksiz AAA kapısına takılmaz."
       ],
       "notes": "WCAG = ui/ux sözleşmelerinin AAA kriterlerini uxStandardRef üzerinden bağlaması.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AAA kriter listesi gömme, check-a11y eşlemesi, uxStandardRef zorunluluğu.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AAA kriter listesi gömme, check-a11y eşlemesi, uxStandardRef zorunluluğu.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -202,10 +215,11 @@
       "items": [
         "releasePolicy sözleşmesini 7. CI kapısı yap; non-conformant düğüm (eksik standardRef veya aktif kritik waiver) dağıtım pipeline’ında promote edilemez.",
         "Standart sözleşmelerini sürümlenmiş artefakt olarak paketle; deploy edilen ortam, build’in dayandığı sözleşme sürümünü kayda alır (provenance).",
-        "Conformance raporunu deploy gate koşulu yap; tüm 7 kapı yeşil değilse Swarm/shared ortamına yayın reddedilir."
+        "Conformance raporunu deploy gate koşulu yap; tüm 7 kapı yeşil değilse Swarm/shared ortamına yayın reddedilir.",
+        "Conformance readiness/health probe deploy gate'i besler; sorunda önceki imzalı sözleşme paketine rollback yapılır ve config/secret ayrımı korunarak (secret'lar artefakta gömülmez) ortama alınır."
       ],
-      "notes": "Dağıtım = releasePolicy kapısı + sürümlü sözleşme artefaktı; non-conformant promote edilmez.",
-      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: releasePolicy kapısı, sözleşme sürüm provenance, conformance deploy gate.",
+      "notes": "Dağıtım = releasePolicy kapısı + sürümlü sözleşme artefaktı + readiness/health probe + önceki imzalı pakete rollback + config/secret ayrımı; non-conformant promote edilmez.",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: releasePolicy kapısı, sözleşme sürüm provenance, conformance deploy gate.",
       "provenance": "swarm"
     },
     "eca": {
@@ -218,7 +232,7 @@
         "waiver.expired olayında düğümü tekrar non-conformant işaretle ve release’i bloklayan kural devreye girsin; maxChainDepth ile zincir patlamasını sınırla."
       ],
       "notes": "ECA = conformance-failed / contract-changed / waiver-expired olaylarının otomasyonu.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: conformance.failed→create-task, contract.changed→re-validate, waiver.expired→block.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: conformance.failed→create-task, contract.changed→re-validate, waiver.expired→block.",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -231,7 +245,7 @@
         "AI risk skoru ≥ 80 olduğunda öneri karantinaya alınır ve kritik inceleme görevi açılır; killSwitch ile tüm AI önerileri anında durdurulabilir."
       ],
       "notes": "AI ajan = salt öneri; sözleşme/kapı/ruleset’e doğrudan dokunamaz, yüksek risk karantina.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: suggest-changeset sınırı, insan+CI onayı, risk≥80 karantina, killSwitch.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: suggest-changeset sınırı, insan+CI onayı, risk≥80 karantina, killSwitch.",
       "provenance": "swarm"
     },
     "testing": {
@@ -241,10 +255,11 @@
       "items": [
         "Her standart sözleşmesinin kendi conformance fixture’ı olsun (uyumlu + ihlalli örnek düğüm); kapı, ihlalli fixture’da kesin kırmızı vermezse test başarısız sayılır.",
         "Standartların test-önce kapısını meta-test ile doğrula: testingStandard sözleşmesi 'önce test' kuralını zorluyorsa, testsiz düğüm CI’da reddedilmeli.",
-        "standardRefs referans bütünlüğü için negatif test ekle (var olmayan ref → derleme hatası); 438 düğümün hiçbiri kırık referansla parse edilemesin."
+        "standardRefs referans bütünlüğü için negatif test ekle (var olmayan ref → derleme hatası); 438 düğümün hiçbiri kırık referansla parse edilemesin.",
+        "Test tipleri açıkça ayrıştırılır: birim (unit) test = StandardContractSchema doğrulayıcı, sözleşme (contract) testi = 14 sözleşme fixture'ı, meta-test = test-önce kuralı, e2e = 7 kapının pipeline koşumu ve negatif testler = kırık ref / süresi dolmuş waiver / drift senaryoları."
       ],
-      "notes": "Testler = sözleşme fixture’ları + test-önce kuralının meta-testi + kırık-ref negatif testi.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: conformance fixture (uyumlu/ihlalli), test-önce meta-test, kırık-ref negatif test.",
+      "notes": "Testler = birim + sözleşme (contract) + e2e + meta-test + negatif fixture (şema, kırık ref, süresi dolmuş waiver, drift); test-önce kuralı meta-testle zorlanır.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: conformance fixture (uyumlu/ihlalli), test-önce meta-test, kırık-ref negatif test.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -254,10 +269,11 @@
       "items": [
         "aiGovernance + coding-standards sözleşmelerine OWASP Top 10 (2025) ve LLM Top 10 kriter id’lerini gömüp dataApiContract düğümlerinde bu kapıyı zorunlu kıl.",
         "Injection / erişim-kontrolü kategorilerini check-security içinde sözleşme kriterine bağla; karşılanmayan OWASP id’si düğümü non-conformant yapar.",
-        "OWASP kriterleri için waiver verilirse zorunlu gerekçe + son-kullanma iste; istisna envanteri her release raporunda denetlenir."
+        "OWASP kriterleri için waiver verilirse zorunlu gerekçe + son-kullanma iste; istisna envanteri her release raporunda denetlenir.",
+        "OWASP kriterlerini ASVS + NIST SSDF kontrolleriyle ve SBOM envanteriyle eşle; sözleşme JSON'u için input doğrulama (schema validation) zorunlu kıl ve tüm kapı kararlarını değiştirilemez denetim izine (audit trail) yaz."
       ],
-      "notes": "OWASP = Top10/LLM-Top10 kriterlerinin sözleşmelere gömülüp kapıda zorlanması.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top10 + LLM Top10 id gömme, kategori→kapı eşlemesi, waiver gerekçe denetimi.",
+      "notes": "OWASP = Top10/LLM-Top10 + ASVS/NIST SSDF + SBOM eşlemesi; sözleşme JSON'u için input doğrulama + değiştirilemez denetim izi kapıda zorlanır.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top10 + LLM Top10 id gömme, kategori→kapı eşlemesi, waiver gerekçe denetimi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -270,7 +286,7 @@
         "Conformance kapı sonuçlarını core raporlama katmanına evidence olarak yaz; düğümün evidence/metrics alanları çekirdekle aynı sözlüğü kullanır."
       ],
       "notes": "Entegrasyon = çekirdek TaskNode şeması + olay magistralı + ortak evidence sözlüğü.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel TaskNode standardRefs, merkezî event bus, core evidence yazımı.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel TaskNode standardRefs, merkezî event bus, core evidence yazımı.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -283,7 +299,7 @@
         "applicability haritası hangi modülün hangi sözleşme ailesine tabi olduğunu belirler; kapsam dışı modül o standardın kapısına takılmaz."
       ],
       "notes": "Modül kullanımı = kaya modülü, alt taşlar tek kaynağı paylaşır, tüketim referansla.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (metafor: kaya; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kaya modül konumu, import-by-ref tüketimi, applicability kapsam haritası.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: fe-eng-standards — \"Muhendislik Standardi Isletim Katmani (ADR-0027)\" (module/dağ; küme: frontend). Özet: 14 tek-kaynak standart sözleşmesi + standardRefs/applicability/waivers şema bağı + 7 CI conformance kapısı; standart drift'ini imkânsızlaştıran işletim katmanı. Etiketler: standards, governance, adr-0027, ci.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kaya modül konumu, import-by-ref tüketimi, applicability kapsam haritası.",
       "provenance": "swarm"
     },
     "dataLifecycle": {

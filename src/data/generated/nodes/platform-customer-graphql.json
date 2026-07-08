@@ -20,7 +20,8 @@
     "mutation",
     "müşteri",
     "query",
-    "test"
+    "test",
+    "archetype"
   ],
   "dependsOn": [
     "platform-customer-model",
@@ -425,7 +426,7 @@
         "createCustomer mutasyonu: zorunlu alan validasyonu (email regex, phone E.164 formatı) ve idempotency-key desteği ile çift kayıt önlenir.",
         "updateCustomer mutasyonu: kısmi güncelleme (PATCH semantiği), yalnızca değişen alanları veritabanına yazar; güncelleme anında updatedAt damgası basılır."
       ],
-      "notes": "Tüm customer operasyonları tenant izolasyonunu GraphQL resolver katmanında uygular, SQL'e inmeden önce bağlam kontrolü yapılır.",
+      "notes": "İşlev sınırı: CustomerList/CustomerDetail query ile createCustomer/updateCustomer mutation kapsamdadır; deleteCustomer ve toplu import bu resolver'ın dışındadır. Girdi sözleşmesi CustomerInput tipiyle, çıktı Customer + pageInfo tipiyle sabitlenir; kabul kriteri, yetkisiz/tenant-dışı sorgunun boş sonuç değil FORBIDDEN hata yolu üretmesidir. Tüm customer operasyonları tenant izolasyonunu resolver katmanında, SQL'e inmeden önceki bağlam kontrolüyle uygular.",
       "prompt": "FastAPI + Strawberry GraphQL kullanarak Customer tipi için liste/detay sorguları ve oluştur/güncelle mutasyonları kapsa; resolver'da JWT'den çekilen tenant_id ile satır düzeyi izolasyon sağla, idempotency-key mekanizmasını açıkla; çıktı: tam resolver ve type tanımları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -440,7 +441,7 @@
         "createCustomer mutasyonunda role kontrolü: yalnızca 'customer:write' iznine sahip roller çağırabilir, aksi hâlde 403 benzeri GraphQL hatası üretilir.",
         "Hassas alanlar (taxNumber, bankIBAN) GraphQL şemasında @sensitive direktifiyle işaretlenir; loglara asla ham değer yazılmaz."
       ],
-      "notes": "Yetki kararları resolver middleware katmanında merkezi olarak verilir, her query/mutation ayrı ayrı guard almaz.",
+      "notes": "Resolver middleware her query/mutation'ı en-az-ayrıcalık ilkesiyle merkezi değerlendirir: 'customer:write' izni olmayan createCustomer/updateCustomer çağrısı deny edilir ve karar (actor, tenant_id, deny nedeni, trace_id) denetim/audit loguna yazılır. Tenant izolasyonu context.tenant_id ile satır düzeyinde zorlanır; taxNumber/bankIBAN alanları @sensitive direktifiyle maskelenir; JWT imzalama secret'ı yalnızca ortam değişkeninden okunur, GraphQL şemasında ve loglarda ham değer olarak asla yer almaz.",
       "prompt": "Strawberry GraphQL resolver'larında JWT tabanlı kimlik doğrulama ve çok-kiracılı tenant guard mekanizmasını kapsa; role-based erişim kontrolü, hassas alan maskeleme ve FORBIDDEN hata üretimini göster; güvenlik sınırı: tenant_id uyuşmazlığında hiçbir veri sızmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -455,7 +456,7 @@
         "SQLAlchemy selectinload stratejisi: ilişkili orders koleksiyonu ayrı SELECT ile getirilir, JOIN'e bağlı Kartezyen çarpım önlenir.",
         "Resolver sonuçları Pydantic modeline dönüştürülmeden önce ortak bir adapt() yardımcısından geçer; dönüşüm kodu tek yerden yönetilir."
       ],
-      "notes": "DataLoader BatchFunction, aynı istek döngüsünde biriken tüm müşteri ID'lerini tek sorguda çözer.",
+      "notes": "DataLoader BatchFunction, aynı istek döngüsünde biriken tüm müşteri ID'lerini tek sorguda çözer; resolver başına SQL sorgu bütçesi eşiği (istek başına ≤3 sorgu) CI performans kapısında SQLAlchemy event listener ile ölçülür, eşik aşımında build kırılır. Schema + resolver modülleri ruff/mypy lint kapısından geçmeden merge edilemez ve tip tanımı, DataLoader ile query çözüm katmanı ayrı modüllere ayrıştırılarak tek sorumluluk korunur.",
       "prompt": "FastAPI + Strawberry GraphQL için DataLoader tabanlı toplu veri çekimini ve SQLAlchemy selectinload kullanımını kapsa; N+1 sorgusunu nasıl ortadan kaldırdığını somut SQL ve DataLoader kodu ile açıkla; çıktı: çalışan DataLoader sınıfı ve resolver entegrasyonu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -545,7 +546,7 @@
         "Tenant bazlı kural motoru: her tenant için özelleştirilebilir ECA politikaları JSON kural deposunda saklanır ve GraphQL üzerinden yönetilir.",
         "ECA işlem günlüğü: her tetiklenme event_log tablosuna yazılır (event_type, payload_hash, status, duration_ms); gözlemlenebilirlik için OpenTelemetry trace ile ilişkilendirilir."
       ],
-      "notes": "ECA tetikleyiciler GraphQL mutation sonrası arka plan görevi olarak çalışır; ana isteğin yanıt süresini etkilemez.",
+      "notes": "ECA tetikleyiciler GraphQL mutation sonrası arka plan görevi olarak çalışır; ana isteğin yanıt süresini etkilemez. Her zincir maxChainDepth=6 ile sınırlıdır ve döngüsel tetikleme event_log'daki payload_hash ile tespit edilip kesilir; CRM POST ve customer.updated event işleme görevleri idempotency-key taşır, aynı mutasyon tekrar oynatıldığında yinelenmez. AI kaynaklı app/module üretim/güncelleme ve ruleset override istekleri deny kuralıyla reddedilir; üretim archetype güncellemesi requiresApproval onayına bağlanır.",
       "prompt": "Customer GraphQL mutasyonlarına bağlı ECA otomasyon kurallarını kapsa: CRM entegrasyonu, dead-letter kuyruk, e-posta doğrulama görevi ve tenant bazlı kural motoru; çıktı: Celery task tanımı, kural şeması ve event_log tablosu migration.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -560,7 +561,7 @@
         "Agent eylemlerinin kayıt altı alınması: GraphQL mutation çağrıları agent_id, session_id ve prompt_hash ile birlikte denetim loguna yazılır.",
         "Güvenlik sınırı: agent, tenant_id'yi kendi üretemez; JWT bağlamından alınan değer her zaman önceliklidir, agent isteğindeki tenant alanı yoksayılır."
       ],
-      "notes": "Agent operasyonları normal kullanıcı izin modeliyle aynı resolver guard'larından geçer, özel bypass yoktur.",
+      "notes": "Agent operasyonları normal kullanıcı izin modeliyle aynı resolver guard'larından geçer, özel bypass yoktur; agentPolicy.killSwitch tetiklendiğinde agent'ın tüm GraphQL mutation yetkisi anında iptal edilir. Riski ≥80 skorlanan createCustomer/updateCustomer çağrısı karantinaya alınıp insan step-up onayına düşer; subPromptUntrusted=true olduğundan agent alt-prompt'undan gelen tenant_id veya izin talebi güvensiz sayılır, JWT bağlamından çözülen değer her zaman önceliklidir.",
       "prompt": "LangChain tabanlı AI agent'ın FastAPI GraphQL Customer operasyonlarıyla güvenli entegrasyonunu kapsa: operasyon allowlist, tenant_id bağlam zorunluluğu, denetim logu ve introspection kısıtlama; güvenlik sınırı: agent asla kendi tenant_id üretemez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -575,7 +576,7 @@
         "GraphQL contract testleri: şema SDL sürüm karşılaştırması yapılır, breaking change (alan silme, tip değişimi) CI'da otomatik engellenir.",
         "DataLoader toplu işlemi doğrulayan test: tek istek içinde kaçı SQL sorgusu üretildiği SQLAlchemy event listener ile sayılır, N+1 regresyonu engellenir."
       ],
-      "notes": "CI pipeline'da şema lint, resolver testleri ve contract doğrulaması sıralı olarak çalışır.",
+      "notes": "CI pipeline'da şema lint, resolver testleri ve contract doğrulaması sıralı çalışır. Negatif senaryolar zorunlu QA döngüsündedir: tenant-dışı customer(id) sorgusu FORBIDDEN, 'customer:write' izinsiz createCustomer reddi ve derinlik>7 sorgunun 400 üretmesi ayrı testlerle doğrulanır. Kanıt olarak pytest fixture'ları (mock JWT/tenant bağlamı, izole PostgreSQL schema) ve DataLoader SQL sayım event listener çıktısı QA kaydına eklenir; N+1 regresyonu bu kanıtla engellenir.",
       "prompt": "FastAPI + Strawberry GraphQL Customer resolver'larının test stratejisini kapsa: pytest birim testi, gerçek DB integration testi, SDL breaking change kontrolü ve DataLoader SQL sayım testi; çıktı: örnek test dosyası, conftest fixture'ları ve CI adımı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -590,7 +591,7 @@
         "A05 Security Misconfiguration: üretim ortamında GraphQL introspection devre dışı bırakılır; sadece geliştirme ortamında aktiftir.",
         "A09 Logging Failures: her FORBIDDEN ve UNAUTHENTICATED hatası structured JSON log olarak yazılır; hassas payload loglanmaz, yalnızca hata kodu ve trace_id kaydedilir."
       ],
-      "notes": "OWASP API Security Top 10 2023'e göre A01, A03, A05 ve A09 önlemleri GraphQL katmanında doğrudan uygulanır.",
+      "notes": "OWASP API Security Top 10 2023'e göre A01, A03, A05 ve A09 önlemleri GraphQL katmanında doğrudan uygulanır; kontroller OWASP ASVS L2 ve NIST SSDF pratikleriyle eşlenir, container imajı için SBOM üretilip CVE taramasından geçirilir. Tüm CustomerInput alanları Strawberry validator ile girdi doğrulamasından geçer (ham string birleştirme yasak), FORBIDDEN/UNAUTHENTICATED kararları trace_id'li denetim izi olarak saklanır.",
       "prompt": "GraphQL Customer API'sinde OWASP API Security Top 10 2023 önlemlerini kapsa: tenant guard (A01), ORM parametreli sorgu (A03), introspection kapatma (A05) ve structured hata loglama (A09); güvenlik sınırı: introspection üretimde asla açık bırakılmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -619,7 +620,7 @@
         "platform-db modülü: SQLAlchemy AsyncSession ve bağlantı havuzu yönetimi için kullanılır; DataLoader ve resolver'lar bu modülün session factory'sinden session alır.",
         "platform-events modülü: ECA tetikleyiciler ve Kafka yayıncısı bu modül aracılığıyla erişilir; mutation sonrası event gönderimi standart arayüzle yapılır."
       ],
-      "notes": "Bu düğüm platform-auth, platform-db ve platform-events modüllerine sıkı bağımlıdır; diğer modüller opsiyoneldir.",
+      "notes": "Bu düğüm platform-auth, platform-db ve platform-events modüllerine sıkı bağımlıdır; diğer modüller opsiyoneldir. Resolver'lar doğrudan-DB erişimi kuramaz, yalnızca platform-db'nin AsyncSession factory'si üzerinden gider; modüller arası her çağrı data-api-contract kapısından (şema sürüm/uyum kontrolü) geçer. Customer paneli bu GraphQL API'sini tek entegrasyon noktası olarak tüketir, kendi SQL sorgusunu veya doğrudan tablo erişimini kurmaz.",
       "prompt": "platform-customer-graphql düğümünün platform-auth, platform-db ve platform-events modülleriyle bağımlılık ilişkisini kapsa; her modülden hangi arayüzün kullanıldığını göster; çıktı: bağımlılık diyagramı ve örnek bağımlılık enjeksiyon kodu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"

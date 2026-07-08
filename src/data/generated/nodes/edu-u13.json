@@ -22,7 +22,8 @@
     "test",
     "bağlanır",
     "bağlı",
-    "çökmüş"
+    "çökmüş",
+    "feature"
   ],
   "dependsOn": [
     "cc-obs",
@@ -143,12 +144,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 13: Log Disiplini — yazılımın günlüğü: çökmüş üretimi log olmadan çözmek karanlıkta iğne aramaktır",
-        "Ünite 13 kapsamı: yapılandırılmış log, seviye ve korelasyon disiplinini öğretir",
-        "Ünite 13 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Ünite 13 girdi/çıktı sözleşmesi: girdi = ham olay + bağlam (correlation id, kullanıcı, seviye); çıktı = tek satır JSON yapılandırılmış log kaydı; kural olarak her log alanı şemaya uymalıdır",
+        "Durum/akış kuralı: olay → seviye seçimi (debug/info/warn/error) → PII maskeleme → örnekleme kararı → yazma; her adım tanımlı olmalı",
+        "Hata yolu hedefi: log yazımı başarısız olursa uygulama akışı kesilmez; kayıp/örneklenen log sayacı ayrı bir metrikte tutulur",
+        "Kabul kriteri: her üretim olayının correlation id taşıması ve hassas alanların maskeli görünmesi guardrail olarak beklenir",
+        "Kapsam: üretim olay öğrenme sayfası (production incident learning page) için log alan sözleşmesi bu ünitede tanımlanır"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -161,7 +164,7 @@
         "Ünite 13 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -169,12 +172,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 13 yapısı: yapılandırılmış (JSON) log + korelasyon kimliği; seviyeli",
-        "Ünite 13 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 13 okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni: log çağrıları tek bir logger yardımcısında toplanır; serbest console/print kullanımı lint kapısıyla (no-console) engellenir",
+        "Bütçe/eşik: log satırı üretimi tek sorumlu fonksiyona ayrıştırılır (parsing/decomposition); döngüsel karmaşıklık eşiği ve alan sayısı sınırı gate'te denetlenir",
+        "Seviye ve maskeleme mantığı tip güvenli tek yardımcıya alınır; tekrar eden format kodu elenerek ölü kod bırakılmaz",
+        "PII maskeleme ve örnekleme kuralları saf, test edilebilir küçük fonksiyonlara bölünür; her biri CI lint/tip kapısından geçmelidir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -187,7 +191,7 @@
         "Ünite 13 girdi sınırda doğrulanır — Log Disiplini — yazılımın günlüğü yüzeyinde kullanılmayan uç kapatılır; izin envanteri çeyreklik daraltılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -195,12 +199,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 13 performans açısı: aşırı log maliyeti; örnekleme (sampling) dengesi",
-        "Ünite 13 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 13 büyük veride sayfalı işlenir"
+        "Hedef: log yazımının istek yolu gecikmesine katkısı p95 ≤ 5 ms olmalı; ağır serileştirme senkron istek yolundan çıkarılır",
+        "Örnekleme (sampling) hedefi: yüksek hacimli info/debug logları için örnekleme oranı ≤ %10; error seviyesi her zaman %100 tutulur",
+        "Bütçe: log çıktısının olay başına boyutu ≤ 4 KB; correlation id ile arama sorgusu p95 ≤ 200 ms hedeflenir",
+        "Üretim olay öğrenme sayfası sorguları için zaman aralığı indeksi kullanılır; N+1 log okuma çağrısı yasaklanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -208,12 +213,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 13 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 13 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 13 bildirim/onay gerektiğinde push ile iletilir"
+        "Offline kuralı: mobil istemci log kayıtlarını çevrimdışıyken yerel kuyruğa yazar; bağlantı gelince correlation id korunarak sıralı gönderilir",
+        "Üretim olay öğrenme sayfası mobilde dar ekranda tek sütun kalır; dokunulabilir öğeler en az 44 px temas alanı sağlar",
+        "Paketleme hedefi: mobil yüzey PWA veya Capacitor ile paketlenir; masaüstü için Chrome extension bridge aynı yapılandırılmış log sözleşmesini tüketir",
+        "Çevrimdışı biriken log kuyruğu için üst sınır tanımlanır; sınır aşılırsa en eski info kayıtları düşürülür, error kayıtları korunur"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -226,7 +232,7 @@
         "Ünite 13 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -239,7 +245,7 @@
         "Ünite 13 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -252,7 +258,7 @@
         "Ünite 13 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -265,7 +271,7 @@
         "Ünite 13 — AI log deseninden anomali önerir; müdahale kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -273,12 +279,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 13 doğrulama: kritik olayların loglandığı ve PII'nin maskelendiği sınanır",
-        "Ünite 13 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit test hedefi: seviye seçimi, PII maskeleme ve örnekleme yardımcıları birim testlerle doğrulanır; maskelenmemiş PII içeren log negatif test ile reddedilmelidir",
+        "Sözleşme/şema testi: her log kaydının JSON şemasına ve correlation id zorunluluğuna uyduğu fixture kayıtlarla sınanır",
+        "E2e/entegrasyon testi: bir üretim olayının uçtan uca loglandığı, üretim olay öğrenme sayfasında correlation id ile bulunabildiği senaryo koşulur",
+        "Negatif senaryo: logger yazma hatası enjekte edilir; uygulama akışının kesilmediği ve kayıp sayacının arttığı kanıt (evidence) olarak toplanır",
+        "Guardrail: başarısız testler sınırlı sayıda yeniden denenir, düzelmezse kanıtla birlikte raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -291,7 +299,7 @@
         "Ünite 13 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -304,7 +312,7 @@
         "Ünite 13 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -318,7 +326,7 @@
         "Log Disiplini — yazılımın günlüğü kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Log Disiplini — yazılımın günlüğü bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (taş/kum; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u13 — \"Log Disiplini — yazılımın günlüğü\" (feature/taş; küme: Eğitim). Özet: Çökmüş üretimi log olmadan çözmek = karanlık odada iğne aramak. Doğru log = aydınlık. Etiketler: education, logging, structured-logging, correlation-id, observability.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

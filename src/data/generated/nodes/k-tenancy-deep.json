@@ -22,7 +22,8 @@
     "sorgu",
     "yönlendirme",
     "taşıma",
-    "başına"
+    "başına",
+    "feature"
   ],
   "dependsOn": [
     "scale-multiregion",
@@ -143,12 +144,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Sharding (Yatay Bölme): çok büyük ölçekte veriyi parçalara (shard) bölerek dağıtma; tek tenant tek DB'ye sığmadığında",
-        "Shard anahtarı (tenant/bölge) ile yönlendirme ve shard-arası sorgu stratejisi",
-        "Yeniden dengeleme (rebalancing) ve shard taşıma"
+        "Kapsam/işlev sınırı: bu birim yalnızca shard yönlendirme sözleşmesini (routing table + rebalance planı) tanımlar; gerçek DB'yi bölmez, veri taşımayı çekirdek ekip yürütür",
+        "Girdi/çıktı sözleşmesi: girdi { tenantId, shardKey, routingTable(sürüm), rebalancePlan }, çıktı { expectedRoute (shard adı + DB uç noktası), scatterGather?: bool, planId }; sözleşme Zod ile doğrulanır",
+        "Durum akışı: routing-hazır → tenant eşiği aşıldı → rebalance-planlandı → taşıma-onayı → uygulanıyor → doğrulandı → routing-güncellendi (idempotent, zincir ≤6)",
+        "Hata yolu: bilinmeyen shardKey → deny + hata metni, routingTable sürüm uyuşmazlığı → planı reddet, cross-tenant erişim isteği → engelle ve denetim izine yaz",
+        "Kabul sözleşmesi: her tenant tek shard'a çözülür, expectedRoute deterministiktir, taşıma sırasında erişim sürekliliği bozulmaz; sözleşme testleri yeşil olmadan yayınlanmaz"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Sharding — büyük ölçek için yatay bölme birimi yönlendirme sözleşmesini tanımlar; fiziksel bölme/taşıma operasyonu çekirdek ekip yetkisindedir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -161,7 +164,7 @@
         "Shard taşıma sırasında veri bütünlüğü + erişim sürekliliği"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -174,7 +177,7 @@
         "Yönlendirme tablosu önbellekli — ortak yardımcılar Sharding — büyük ölçek için yatay bölme için tek pakette toplanır; kopya-blok taraması CI hattındadır"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -182,12 +185,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Shard yönlendirme sahteleştirilemez (sunucu-tarafı)",
-        "Yeniden dengeleme kademeli + geri-alınabilir",
-        "Shard başına kota/izolasyon — güvenlik başlıkları Sharding — büyük ölçek için yatay bölme yanıtlarında zorunludur; eksik başlık testte yakalanır"
+        "Sertleştirme ekseni: shard routing tablosu allowlist + imza (sürüm başına imzalı manifest) ile korunur; imzasız/allowlist dışı yönlendirme reddedilir, karar sunucu-tarafında kalır",
+        "Bağımlılık/SBOM: sharding yönlendirici bağımlılıkları SBOM'a işlenir, CVE taraması CI kapısıdır; PostgreSQL sürücüsü ve rebalance kütüphaneleri kilitli (pinned)",
+        "Egress/yüzey daraltma: shard DB uç noktalarına erişim yalnız yönlendirici servisinden (private ağ + allowlist); yönetim yüzeyi en az ayrıcalıkla, cross-shard sorgu yüzeyi kapalı varsayılan",
+        "KMS/secret rotasyonu: shard DB kimlik bilgileri ve routing imza anahtarı KMS'te tutulur, periyodik rotasyon + rotasyon kanıtı; sır koda/log'a düşmez",
+        "En az kapasite (least capability): rebalance işçisi yalnız taşıma aksiyonlarına, yönlendirici yalnız okuma/route çözümüne yetkilidir; DDL/serbest SQL yetkisi verilmez"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Sharding — büyük ölçek için yatay bölme sertleştirmesi: imzalı allowlist routing + SBOM/CVE kapısı + egress daraltma + KMS rotasyonu.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -200,7 +205,7 @@
         "Yeniden dengeleme arka planda, sıcak yolu engellemez"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -208,12 +213,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Sharding UI içermez; mobil için şeffaf (yönlendirme sunucuda)",
-        "Mobil sorgu doğru shard'a otomatik yönlenir",
-        "Shard taşıma mobil kullanıcıya kesintisiz"
+        "Offline shard durumu: mobil yönetim yüzeyi son shard status snapshot'ını (shard sağlığı, rebalance ilerlemesi) çevrimdışı önbellekten okur; yeniden bağlanınca senkron olur, yönlendirme kararı sunucuda kalır",
+        "Köprü/paketleme: yönetim yüzeyi PWA olarak sunulur, iOS/Android için Capacitor köprüsü ve Chrome extension yüzeyiyle paketlenir; native tarafta doğrudan DB erişimi yoktur",
+        "Mobil shard yönetim düğmelerinde (taşımayı onayla, rebalance duraklat) en az 44 px temas alanı ve yeterli aralık bırakılır",
+        "Push/deep link: kritik shard olayında (taşıma tamamlandı/başarısız) push bildirimi + ilgili shard detayına deep link; oturum ve yetki sunucuda doğrulanır",
+        "Shard taşıma mobil kullanıcı akışını kesmez; snapshot bayat ise 'güncel değil' etiketiyle uyarılır, yazma işlemleri sunucu route'una tabidir"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Mobil yüzey yalnız şeffaf yönetim/gözlem içindir; shard yönlendirme ve taşıma kararı her koşulda sunucuda kalır.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -221,12 +228,14 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Doğrudan UI yok; yönetim panelinde shard durumu erişilebilir (üst katman)",
-        "Shard sağlığı renk dışında metinle — Sharding — büyük ölçek için yatay bölme form hataları metinle duyurulur; durum göstergesi renkten bağımsızdır",
-        "Yeniden dengeleme ilerleme göstergesi erişilebilir"
+        "Ekran okuyucu: shard sağlığı ve rebalance ilerlemesi aria-live bölgesiyle duyurulur; taşıma başladı/tamamlandı/başarısız olayları sesli okunur, sadece renkle iletilmez",
+        "axe AAA kanıtı: shard yönetim panelinde axe-core taraması 0 ihlalle CI'da kanıtlanır; kontrast oranı ≥7:1 (AAA) hedeflenir",
+        "Hedef boyutu: shard yönetim düğmelerinde en az 44 px hedef boyutu ve yeterli aralık; küçük ikon-buton yerine geniş dokunma alanı",
+        "Klavye/focus: tüm shard listesi, taşımayı onayla/duraklat aksiyonları klavyeyle erişilir; görünür ve mantıklı odak sırası, tuzaksız focus yönetimi",
+        "Hata metni: yanlış shardKey veya sürüm uyuşmazlığı hataları programatik olarak alanla ilişkilendirilir, açık metinle açıklanır ve ekran okuyucuya duyurulur"
       ],
-      "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "notes": "Doğrudan uçtan uca UI üst katmandadır; bu birim shard durum/hata bilgisini erişilebilir sözleşmeyle (metin + aria) sunar.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -234,12 +243,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Çok shard'lı PostgreSQL topolojisi; yönlendirici katman",
-        "Yeniden dengeleme kontrollü; izlemeli",
-        "Shared hosting'de sharding gereksiz (tek DB yeterli) → kapalı"
+        "Health/readiness probe: shard yönlendirici servisi liveness/readiness probe sunar; her shard DB uç noktası için sağlık kontrolü, hazır olmayan shard route'tan çıkarılır (K8s HPA + kaynak limiti)",
+        "Rollback/rebalance geri-alma: routing tablosu sürümlü dağıtılır, hatalı sürüm önceki imzalı sürüme anında geri alınır; rebalance planı append-only/geri-alınabilir adımlarla ilerler, yarıda kalan taşıma güvenle geri sarılır",
+        "Config/secret ayrımı: shard topolojisi ve DB uç noktaları config'te, kimlik bilgileri + routing imza anahtarı ayrı secret store'da (KMS); imaj içine sır gömülmez",
+        "Canary shard move: yeni rebalance planı önce tek düşük-riskli shard üzerinde kanarya olarak uygulanır, metrikler yeşilse yaygınlaştırılır",
+        "Shared hosting sınırı: WordPress sınıfı tek-DB shared hosting'de sharding gereksizdir → devre dışı; topoloji Docker Swarm/Kubernetes çok-shard ortamında etkinleşir"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "Dağıtım: probe + sürümlü/geri-alınabilir routing + canary shard move + config/secret ayrımı; shared hosting'de kapalı.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -252,7 +263,7 @@
         "Olay: shard dengesiz → kademeli yeniden dengeleme tetikle (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -265,7 +276,7 @@
         "AI shard dağılımı/yeniden dengeleme zamanı önerisi üretir; sharding topoloji kararını çekirdek ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -273,12 +284,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Shard yönlendirme + tek-shard sorgu + saçıl-topla testleri",
-        "Yeniden dengeleme sırasında izolasyon + veri bütünlüğü + süreklilik testi",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: shardKey→shard çözümleme, routing tablosu sürüm doğrulama ve Zod sözleşme sınırları birim testlerle kapsanır",
+        "Contract: girdi/çıktı sözleşmesi (tenantId/shardKey → expectedRoute) tüketici-sağlayıcı contract testleriyle sabitlenir; sürüm uyuşmazlığı sözleşme testinde yakalanır",
+        "Integration + e2e: yönlendirici + çok-shard PostgreSQL topolojisi entegrasyonu, tek-shard sorgu ve saçıl-topla (scatter-gather) uçtan uca doğrulanır (AI-destekli Playwright)",
+        "Negative wrong-shard/cross-tenant: yanlış shard'a yönlenme ve tenant sınırını aşan erişim denemeleri reddedilmeli; bu negatif testler regresyon paketinde zorunlu",
+        "Chaos/rebalance + security regression: rebalance sırasında shard düşürme (chaos) altında izolasyon/veri bütünlüğü/süreklilik testi + güvenlik regresyon testi; testing-loop maks 6 tekrar, düzelmezse raporla + autonomous QA ajanı"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test türleri: unit, contract, integration, e2e, negative (wrong-shard/cross-tenant), chaos/rebalance ve güvenlik regresyonu.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -286,12 +299,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: shard'lar arası tenant izolasyonu korunur",
-        "A04 Insecure Design: kademeli/geri-alınabilir yeniden dengeleme",
-        "A09 Logging: shard taşıma/dengeleme olayları iz"
+        "A01 Access Control: shard'lar arası tenant izolasyonu korunur; her istek tenant kapsamına çözülür, cross-tenant/wrong-shard erişim sunucu-tarafında reddedilir",
+        "A04 Insecure Design: kademeli, canary'li ve geri-alınabilir yeniden dengeleme; routing tablosu imzalı ve sürümlü tasarlanır (güvenli-varsayılan)",
+        "A09 Logging & Monitoring: shard taşıma/dengeleme ve reddedilen yönlendirme denemeleri değişmez denetim izine (audit trail) yazılır, correlation-id ile izlenir",
+        "Input validation: tenantId ve shardKey allowlist + tip/format doğrulamasından geçer (Zod); enjeksiyon/sahte shardKey girişimi girişte engellenir",
+        "ASVS/NIST/SBOM uyumu: OWASP ASVS erişim-kontrol ve loglama gereksinimleri karşılanır, NIST kılavuzlarına referansla sertleştirilir, bağımlılıklar SBOM ile izlenir ve CVE taramasından geçer"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "OWASP: A01/A04/A09 bağlamı + tenant/shard key girdi doğrulama + değişmez denetim izi; ASVS/NIST/SBOM referansları.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -304,7 +319,7 @@
         "İzleme/uyarı altyapısı ile — Sharding — büyük ölçek için yatay bölme kernel API çağrıları zaman-aşımı sözleşmesine tabidir (contract)"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -318,7 +333,7 @@
         "Üst modül Sharding — büyük ölçek için yatay bölme birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Sharding — büyük ölçek için yatay bölme, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (taş/kum; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: k-tenancy-deep — \"Sharding — büyük ölçek için yatay bölme\" (feature/taş; küme: Layer 0 Atomik Tipler). Özet: 100M satırlık tek tablo yavaşladığında, tenant başına ayrı schema/DB. Shard key seçimi + cross-shard query problemi. Etiketler: layer0, sharding, scaling, multi-tenant, postgres.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

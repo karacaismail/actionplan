@@ -20,7 +20,8 @@
     "kayıt",
     "zaman",
     "forensic",
-    "olay"
+    "olay",
+    "archetype"
   ],
   "dependsOn": [
     "k-schema",
@@ -163,12 +164,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Audit + Activity ArcheType'ı: değişmez denetim izi, aktivite akışı ve forensic kayıt",
-        "Kim/ne/ne zaman/öncesi-sonrası; aktör (insan/AI/sistem) ayrımı",
-        "Sorgulanabilir aktivite zaman çizelgesi ve dışa aktarım"
+        "Kapsam sınırı: append-only AuditEvent sözleşmesini (actor/action/resource/tenantId/correlationId + öncesi-sonrası) yazar ve okur; iş kuralı yürütmez, kaynak kaydı mutasyona uğratmaz",
+        "Girdi: çekirdek olay veriyolundan gelen domain olayı; çıktı: değişmez AuditEvent kaydı + ondan türetilen activity feed projeksiyonu",
+        "Durum akışı: ingest → sözleşme doğrula → hash-zincir ekle → append → feed state'ine yansıt; her geçiş idempotent",
+        "Hata yolu: şema/sözleşme ihlali reddedilir ve DLQ'ya düşer; kısmi yazım geri sarılmaz, append-only garantisiyle tekrar denenir",
+        "İki ayrı concept: Audit (compliance, immutable log) ve Activity (UX feed durumu) ortak olay kaynağını paylaşır ama ayrı okuma modeli tutar"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -181,7 +184,7 @@
         "Forensic alanlar: actor/agent/model/promptVersion/öncesi-sonrası hash"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -189,12 +192,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Audit yazımı asenkron (outbox); ana işlemi yavaşlatmaz",
-        "Olay şeması sürümlü; kayıt yapılandırılmış",
-        "Aktivite akışı projeksiyondan türetilir"
+        "AuditEvent tipli sözleşme (action üzerinden discriminated union); tip kapısı derlemede any/unsafe cast'i reddeder",
+        "Audit yazımı, hash-zinciri ve activity feed projeksiyonu ayrı modüllere ayrıştırılır; her modül tek sorumluluk, döngüsel karmaşıklık eşiği ≤10",
+        "Kullanılmayan action tipleri ve ölü redaction yolları lint + tree-shaking kapısıyla elenir; redaksiyon yardımcıları paylaşılan çekirdekte toplanır",
+        "Feed sorgu katmanı ayrı bundle olarak kod bölünür; append yazma yolu senkron bağımlılık bütçesinden muaf tutulur, refactor'da sözleşme testi kapı olur"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -209,7 +213,7 @@
         "kripto anahtar yönetimi Audit + Activity için KMS-tabanlıdır; anahtar dışa çıkmaz"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -224,7 +228,7 @@
         "çalışma-zamanı bellek tavanı Audit + Activity sürecinde izlenir; sızıntı eğilimi haftalık raporlanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -232,12 +236,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde aktivite akışı görüntüleme (salt-okuma)",
-        "iOS/Android push ile kritik aktivite uyarısı",
-        "Dar ekranda aktivite zaman çizelgesi"
+        "Mobil yüzey (PWA/Capacitor köprüsü) activity feed'i salt-okuma sunar; AuditEvent yazımı yalnız çekirdek üzerinden olur, cihazda üretilmez",
+        "Offline modda son senkronlanmış feed önbellekten okunur; bağlantı dönünce correlationId ile artımlı senkron yapılır, çift kayıt oluşmaz",
+        "Feed filtre ve aksiyon kontrolleri en az 44 px temas alanı taşır; dar ekranda zaman çizelgesi tek sütuna iner",
+        "iOS/Android paketlemesinde kritik audit uyarısı push ile iletilir; köprü yalnız tipli okuma API'sine erişir, yerel audit deposu tutmaz"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -252,7 +257,7 @@
         "sayfa başlığı Audit + Activity görünüm değişiminde güncellenir (ekran okuyucu bağlamı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -267,7 +272,7 @@
         "Audit + Activity yapılandırma değişikliği sürümlenir; acil geri alma tek komuttur"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam layer1 kümesi swarm turunda.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -280,7 +285,7 @@
         "Olay: şüpheli aktivite deseni → güvenlik ekibine uyar (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -293,7 +298,7 @@
         "AI aktivite özeti/anomali tespiti üretir; audit kaydını kendisi yazamaz/değiştiremez (değişmez)"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -301,12 +306,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Audit değişmezlik testi (geçmiş kayıt değiştirilemez)",
-        "Hash zinciri kurcalama tespit testi",
-        "Aktivite akışı sorgu/erişim kullanıcı yolculuğu; en çok 6 tur"
+        "Birim testi: hash-zinciri ekleme ve idempotent append; negatif senaryo — geçmiş AuditEvent'i değiştirme denemesi reddedilmeli",
+        "Entegrasyon testi: olay veriyolundan ingest → append → feed projeksiyonu; fixture olarak çok-kiracılı AuditEvent örnek kümesi",
+        "Playwright e2e: denetçi rolüyle audit trail sorgulama, redaksiyonlu alan görünürlüğü ve dışa aktarım; negatif kontrol — başka tenant kaydı sızmamalı",
+        "QA döngüsü: başarısız senaryo tanı raporuyla geri beslenir; sınırlı sayıda yeniden koşumdan sonra düzelmezse kanıtla eskalasyon açılır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -314,12 +320,13 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A09 Security Logging: değişmez forensic iz çekirdek",
-        "A01 Access Control: audit erişimi denetçi rolüyle",
-        "A08 Integrity: hash zinciri ile bütünlük"
+        "A09 Security Logging and Alerting Failures: değişmez AuditEvent izi ve şüpheli aktivite alarmı çekirdek yetenek; NIST SP 800-92 log yönetimiyle hizalı",
+        "A01 Broken Access Control: audit okuma denetçi rolü + tenant RLS ardında; ASVS erişim ve loglama (V7) kontrolleriyle denetim izi doğrulanır",
+        "A05 Injection: olay veriyolundan gelen alanlar şema doğrulamasıyla (input validation) temizlenir, feed'de serbest metin escape edilir",
+        "A03 Software Supply Chain Failures: audit/loglama bağımlılıkları SBOM ile envanterlenir; log kütüphaneleri imzalı sürümle sabitlenir"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -327,12 +334,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Audit, tüm ArcheType'ların değişikliklerini olay veriyolundan toplar",
-        "AI aksiyonları audit forensic alanlarına yazılır",
-        "Uyumluluk/raporlama audit'i kaynak alır"
+        "Audit, çekirdek olay veriyolunu (event bus) dinleyerek tüm ArcheType değişikliklerini toplar; bağımlılık yönü tek yönlü — modüller audit'e olay yayınlar, audit modüllere yazmaz",
+        "Tüketiciler (uyumluluk, raporlama, activity feed) audit'i tipli okuma API'si/sözleşmesi üzerinden alır; doğrudan tabloya erişmez (RLS sınırı)",
+        "Kernel/core ile sözleşme (contract) sürümlüdür; yeni AuditEvent action tipi expand-contract ile eklenir, mevcut aboneler kırılmaz",
+        "AI aksiyonları çekirdek üzerinden forensic alanlara (actor=ai/model/promptVersion) yazılır; audit kendisi hiçbir modülü mutasyona uğratmaz"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -346,7 +354,7 @@
         "Audit + Activity bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Audit + Activity, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (ArcheType/taş; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: l1-audit — \"Audit + Activity\" (archetype/kaya; küme: Layer 1 modülleri). Özet: Compliance + UX. İki ayrı concept, ayrı tut. Etiketler: audit, activity, compliance.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -1,5 +1,8 @@
 # Bekleyen İnsan-Düzeltmeleri — 2026-07-01
 
+> Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
+
+
 Durum: **ÇÖZÜLDÜ (2026-07-02)** — aşağıdaki maddelerin tümü uygulandı: **C1** `AGENTS.md:82` artık `FastAPI + SQLAlchemy 2.0` (Prisma kaldırıldı); **C2** altı ADR (A1/A2/A3/A4/K1/P1) **Kilitli** (insan onayı: ismail); üç "hayalet kapı" (`check-i18n`, `check-core-contract`, `check-scale-invariant`) yazıldı ve `deploy.yml`'de koşuyor. **Ek:** ADR-A5 (ArcheType storage canonical = shared-tablo+JSONB+promotion) 2026-07-02'de Kilitlendi. Bu dosya tarihsel kayıt olarak korunur; yeni bir insan-fix kalmadı.
 Kapsam: Bu dosya **yalnız insanın yapması gereken canon düzeltmelerini** listeler. Aşağıdaki maddeler `AGENTS.md` §7 gereği **kanonik sözleşme** dosyalarına dokunur; AI ajan bunları doğrudan yeniden yazamaz, yalnız değişiklik önerir (changeset). Her madde tam diff ile verilmiştir; insan gözden geçirip elle uygular.
 

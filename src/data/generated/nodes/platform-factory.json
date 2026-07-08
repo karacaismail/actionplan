@@ -23,7 +23,8 @@
     "test",
     "endpoint",
     "hata",
-    "migration"
+    "migration",
+    "app"
   ],
   "dependsOn": [
     "k-tenancy",
@@ -334,12 +335,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "AppFactory modül yüklemesi tembel (lazy import) çalışır: her dikey dilim modülü yalnızca ilk GraphQL isteği sırasında içe aktarılır; 50 uygulama bulunsa bile boşta duran bir tenant'ın bellek kullanımı 40 MB altında kalır.",
-        "Paylaşılan SQLModel BaseModel: tüm uygulama modelleri AppBase(SQLModel) sınıfından türer; id (UUID), tenant_id, created_at, updated_at alanları otomatik eklenir — her modelde tekrarlayan 4 sütun tanımı ortadan kalkar.",
-        "GraphQL şema birleştirme: AppFactory, uygulama alt-şemalarını strawberry.Schema(merge=True) ile tek şemada toplar; her dikey dilim kendi Mutation/Query tip kümesini ayrı dosyada tutar, dosya boyutu 300 satırı geçmez.",
-        "Alembic migration otomasyonu: AppFactory.migrate() fonksiyonu env.py içinde tenant şemasını dinamik olarak seçer; 50 kiracı için paralel migration işlemi ThreadPoolExecutor(max_workers=10) ile yapılır ve toplam süre tek kiracı süresinin 6 katını geçmez."
+        "Tipli fabrika sözleşmesi: AppFactory ve türev App sınıfları mypy --strict altında tip denetlenir; bootstrap/migrate/shutdown metot imzaları Protocol tipiyle sabitlenir ve tip ihlali CI kapısında pipeline'ı durdurur — tipli iskelet kopyalanan dikey dilimlere taşınır.",
+        "Karmaşıklık bütçesi: her resolver ve fabrika fonksiyonu için radon cyclomatic complexity eşiği 10 olarak tanımlanır; eşiği aşan fonksiyon refactor için işaretlenir ve kod-inceleme kapısından geçemez.",
+        "Ölü kod ayıklama: vulture + ruff F401/F841 kuralları kullanılmayan import ile erişilemez dalları derleme öncesi tespit eder; yeni dikey dilim üretilirken taşınan artık kod build bütçesine dahil edilmeden temizlenir.",
+        "Modüler şema bölme: strawberry.Schema(merge=True) ile GraphQL tip kümesi dikey dilim bazında ayrıştırılır; her dilim kendi Query/Mutation dosyasını 300 satır eşiğinde tutar, aşım dosya bölme (split) tetikler.",
+        "Paylaşılan AppBase(SQLModel) tipi: id (UUID), tenant_id, created_at, updated_at sütunları tek tipli taban modelde toplanır — 50 dikey dilimde tekrarlayan 4 sütunluk kod bütçesi ortadan kalkar."
       ],
-      "notes": "Lazy import + paylaşılan BaseModel + şema birleştirme + paralel migration kombinasyonu fabrika kod tabanını düşük bellek ve yüksek geliştirici hızıyla ölçeklendirir.",
+      "notes": "Tipli sözleşme + karmaşıklık eşiği + ölü kod ayıklama + modüler şema bölme + paylaşılan taban tipi, fabrika kod tabanını düşük teknik borç ve yüksek geliştirici hızıyla ölçeklendirir.",
       "prompt": "platform-factory için codeOptimization boyutunu kapsa: lazy import 40 MB bellek sınırı, AppBase(SQLModel) 4 ortak sütun otomatik ekleme, strawberry.Schema(merge=True) 300-satır dosya sınırı, ThreadPoolExecutor(max_workers=10) paralel Alembic migration. Çıktı: AppBase tanım kodu, şema birleştirme örneği ve paralel migration env.py parçası. güvenlik sınırı: migration_role DDL yetkisi uygulama rolünden ayrıdır.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -424,12 +426,13 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Event-Driven uygulama fabrikası: AppFactory, EventBus adaptörü (Redis Streams veya RabbitMQ) tanımlar; her dikey dilim domain olaylarını (CustomerCreated, InvoicePaid) EventBus üzerinden yayar — consumer'lar tenant_id bazlı filtreleme yapar.",
-        "Kompensasyon (saga) yönetimi: çok adımlı fabrika işlemleri (yeni uygulama bootstrap + ilk tenant seed) Saga pattern ile sarmalanır; herhangi bir adım başarısız olursa önceki adımların kompensasyon aksiyonları (rollback migration, delete tenant record) çalışır.",
-        "Outbox pattern uygulaması: fabrika uygulamalarında domain event'ları önce outbox_events tablosuna yazılır, ardından bir CDC worker (Debezium veya custom poller) bunları EventBus'a iletir — at-least-once delivery garantisi verilir ve event kaybı sıfıra indirilir.",
-        "Tenant bazlı event akış izolasyonu: EventBus stream adları {tenant_id}.{domain}.{event_type} formatını izler; bir tenant'ın event consumer'ı başka tenant stream'ine abone olamaz — yanlış abone girişimi WARN logu ve bağlantı reddiyle sonuçlanır."
+        "Olay güdümlü fabrika akışı: her dikey dilim domain olaylarını (CustomerCreated, InvoicePaid) EventBus (Redis Streams/RabbitMQ) üzerinden yayar ve consumer'lar tenant_id ile filtreler; başka tenant stream'ine abone olma girişimi deny ile reddedilir.",
+        "Olay zinciri derinlik sınırı: bir olayın tetiklediği ECA aksiyon zinciri maxChainDepth=6 ile sınırlanır — 6. derinlikte zincir kesilir, böylece kendini besleyen sonsuz olay döngüsü yapısal olarak engellenir.",
+        "Idempotency garantisi: domain event'ları Outbox pattern ile önce outbox_events tablosuna yazılır, CDC worker (Debezium/custom poller) idempotency anahtarıyla EventBus'a iletir; at-least-once teslimde aynı olayın yeniden işlenmesi yinelenen yan etki üretmez.",
+        "Yüksek riskli aksiyon onay kapısı: AI risk skoru ≥80 olan üretim etkili ECA kuralı requiresApproval=true ile insan onayına düşer — onay (approval) verilmeden set-field/create-task aksiyonu tetiklenmez.",
+        "Saga kompensasyonu: çok adımlı bootstrap+seed işlemleri başarısız olursa önceki adımların kompensasyon olayları (rollback migration, delete tenant record) tetiklenir; kısmi durum kalmaz."
       ],
-      "notes": "Fabrika ECA katmanı, EventBus adaptörü + Saga kompensasyon + Outbox at-least-once + tenant stream izolasyonu ile güvenilir ve izole olay güdümlü akış sağlar.",
+      "notes": "Fabrika ECA katmanı, tenant-izole olay yayını + maxChainDepth=6 zincir sınırı + Outbox idempotency + risk-tabanlı onay kapısı + Saga kompensasyonu ile güvenilir ve döngüsüz olay güdümlü akış sağlar.",
       "prompt": "platform-factory için eca boyutunu kapsa: EventBus Redis Streams/RabbitMQ tenant_id filtreli consumer, Saga pattern bootstrap+seed kompensasyon rollback, Outbox outbox_events + Debezium CDC at-least-once delivery, {tenant_id}.{domain}.{event_type} stream izolasyonu WARN+red. Çıktı: EventBus adaptör arayüzü, Saga koordinatör sınıf imzası ve Outbox tablo şeması. güvenlik sınırı: çapraz-tenant stream aboneliği reddedilir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -439,12 +442,12 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI agent entegrasyon noktası: AppFactory, LLM destekli agent'lar için GraphQL tool-use endpoint'i (/graphql/agent) tanımlar; bu endpoint yalnızca agent_token kapsamlı JWT kabul eder, normal kullanıcı token'ı geçersizdir.",
-        "Yapay zeka destekli uygulama iskelet üretimi: AppFactory CLI komutu (app-factory generate --describe 'fatura yönetimi') bir LLM çağrısı yaparak dikey dilim şemasını, GraphQL tipi ve ilk Alembic migration'ı taslak olarak üretir — geliştirici sadece iş kurallarını ekler.",
-        "Otonom kalite döngüsü: agent, yeni üretilen uygulama iskeletine karşı smoke test seti çalıştırır ve başarısız testleri raporla birlikte PR yorumu olarak ekler; insan onayı olmadan merge yapılmaz.",
-        "Bağlam penceresi yönetimi: AppFactory agent araçları GraphQL introspection sonucunu şema özetine (tip sayısı, toplam alan sayısı, en büyük 10 tip) indirger; LLM bağlam penceresine tam şema yerine özet gönderilir — token maliyeti %60 azalır."
+        "AI mutasyon sınırı: fabrika AI ajanı app veya module üretemez, mevcut app/module'ü güncelleyemez ve ruleset override edemez — ai.generation.requested olayı app/module hedefinde deny ile sonuçlanır; üretim etkili her mutasyon insan onayı ya da step-up doğrulaması gerektirir.",
+        "Öneri-yalnız yetki: agentPolicy.autonomy=none; ajan yalnızca read ve suggest-changeset yapabilir. app-factory generate çıktısı yürütülebilir bir değişiklik değil, insan onayı olmadan merge edilemeyen bir taslak öneri olarak PR'a düşer.",
+        "Kill-switch ve araç kesme: agentPolicy.killSwitch=true — anormal davranış ya da politika ihlalinde ajanın araç erişimi anında kesilir ve /graphql/agent endpoint'i (yalnızca agent_token JWT kabul eden) devre dışı bırakılır.",
+        "Güvenilmez alt-prompt ve redaksiyon: subPromptUntrusted=true olduğundan araç/kullanıcı kaynaklı sub_prompt içerikleri güvenilmez kabul edilir, komut olarak yorumlanmaz ve PII redaksiyonundan geçirildikten sonra LLM bağlamına girer."
       ],
-      "notes": "Fabrika AI entegrasyonu, agent_token JWT kapısı + LLM iskelet üretimi + otonom smoke test + şema özeti bağlam yönetimiyle üretkenliği artırır.",
+      "notes": "Fabrika AI davranışı, app/module üretememe ve ruleset override edememe yasağı + insan onayı/step-up + kill-switch + güvenilmez alt-prompt redaksiyonu ile sınırlandırılır; AI maliyeti değil güvenlik önceliklidir.",
       "prompt": "platform-factory için aiAgents boyutunu kapsa: /graphql/agent endpoint agent_token JWT kapısı, app-factory generate LLM dikey dilim taslak üretimi, otonom smoke test PR yorum + insan onayı zorunluluğu, şema özeti bağlam sıkıştırma %60 token azaltma. Çıktı: agent endpoint FastAPI route, generate CLI komut akışı ve şema özetleme fonksiyonu. güvenlik sınırı: normal kullanıcı token'ı agent endpoint'ine erişemez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -469,12 +472,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "OWASP A01 (Erişim Kontrolü): AppFactory, her GraphQL resolver'ı @require_permission dekoratörüyle sarmalar; eksik dekoratör statik analiz aşamasında yakalanır — yetkisiz resolver'ın üretime geçmesi yapısal olarak engellenir.",
-        "OWASP A03 (Enjeksiyon): fabrikadan türeyen tüm DB sorguları SQLAlchemy ORM veya parametre bağlamalı text() kullanır; ham f-string SQL yasaktır ve bandit B608 kuralı CI'da bu ihlali hata olarak işaretler.",
-        "OWASP A05 (Yanlış Güvenlik Yapılandırması): AppFactory güvenlik tarama aracı (safety check + pip-audit) her build'de çalışır; yüksek önem dereceli bağımlılık açığı bulunursa imaj oluşturma durdurulur ve hata raporu PR'a eklenir.",
-        "OWASP A09 (Güvenlik Günlüğü ve İzleme): AppFactory StructuredLogger her isteğe request_id, tenant_id, user_id, action, status_code alanlarını ekler; günlükler JSON formatında OpenSearch'e iletilir ve 90 gün süreyle denetim amacıyla saklanır."
+        "OWASP A01:2025 Bozuk Erişim Kontrolü (Broken Access Control): her GraphQL resolver @require_permission dekoratörüyle sarmalanır ve eksik dekoratör statik analizde yakalanır — OWASP ASVS erişim kontrolü doğrulaması CI kapısında zorunludur, yetkisiz resolver üretime geçemez.",
+        "OWASP A05:2025 Enjeksiyon (Injection): tüm sorgular SQLAlchemy ORM ya da parametre bağlamalı text() kullanır, ham f-string SQL yasaktır; girdi doğrulaması (input validation) Pydantic şemalarıyla yapılır ve bandit B608 ihlali build'i durdurur.",
+        "OWASP A03:2025 Yazılım Tedarik Zinciri Hataları (Software Supply Chain Failures): her build CycloneDX SBOM üretir; pip-audit + Trivy ile bağımlılık açıkları taranır, yüksek önem dereceli CVE içeren imaj yayımlanamaz ve NIST SSDF uyumu hedeflenir.",
+        "OWASP A09:2025 Günlük ve Uyarı Hataları (Logging & Alerting Failures): StructuredLogger her isteğe request_id/tenant_id/user_id/action/status_code ekler; denetim izi JSON olarak OpenSearch'e iletilir, 90 gün saklanır ve şüpheli erişim kalıbı uyarı tetikler."
       ],
-      "notes": "Fabrika OWASP kapsamı A01 dekoratör zorunluluğu + A03 ORM parametre bağlama + A05 dependency tarama + A09 yapılandırılmış denetim günlüğü üzerine kuruludur.",
+      "notes": "Fabrika OWASP Top 10:2025 kapsamı A01 erişim kontrolü (ASVS) + A05 enjeksiyon/girdi doğrulama + A03 tedarik zinciri (SBOM/NIST) + A09 denetim izi ve uyarı üzerine kuruludur.",
       "prompt": "platform-factory için owasp boyutunu kapsa: A01 @require_permission statik analiz zorunluluğu, A03 SQLAlchemy ORM bandit B608 f-string yasağı, A05 safety+pip-audit yüksek açık build durdurma, A09 StructuredLogger request_id/tenant_id/user_id JSON 90 gün OpenSearch. Çıktı: @require_permission dekoratör kodu, bandit kural yapılandırması ve StructuredLogger alan tanımları. güvenlik sınırı: eksik dekoratör veya ham SQL üretime geçemez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -484,12 +487,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Dış servis adaptör katmanı: AppFactory ServiceRegistry, her dış entegrasyonu (ödeme kapısı, e-posta, SMS) bir Adapter arayüzüne sarar; üretim ve test ortamları aynı arayüzü kullanır, sadece arka plan implementasyonu değişir — bağımlılık tersine çevirme prensibi uygulanır.",
-        "Webhook alım standartlaştırması: fabrika uygulamaları gelen webhook'ları /webhooks/{provider} endpoint'inde alır; HMAC-SHA256 imza doğrulaması AppFactory tarafından middleware seviyesinde yapılır, her endpoint ayrıca doğrulama yazmak zorunda kalmaz.",
-        "Üçüncü taraf API istemci havuzu: AppFactory httpx.AsyncClient örneklerini uygulama başlangıcında oluşturur ve lifespan context'inde kapatır; bağlantı havuzu limits=Limits(max_connections=20, max_keepalive_connections=10) ile yapılandırılır.",
-        "Entegrasyon sağlık kontrolü: AppFactory /health/integrations endpoint'i her kayıtlı adaptörün ping() metodunu çağırır ve yanıt süresi, durum kodu ile son başarılı çağrı zamanını döner; Kubernetes liveness probe bu endpoint'i 30 saniyede bir yoklar."
+        "Kernel sözleşmesi ve bağımlılık yönü: AppFactory yalnızca kernel'in tipli arayüzleri (k-tenancy, k-authz, k-schema) üzerinden çalışır; bağımlılık tek yönlüdür — app kernel'e bağımlıdır, kernel app'e asla bağımlı olamaz.",
+        "Tipli capability arayüzü: her kernel yeteneği (TenantContext, AuthZ policy, Schema registry) Protocol tipli bir arayüz sözleşmesiyle (contract) bağlanır; implementasyon değişse de tüketen dikey dilim arayüz kontratına göre derlenir.",
+        "Olay veri yolu (event bus) ile gevşek bağ: fabrika ile kernel/çapraz-modül arası asenkron etkileşim EventBus üzerinden domain olaylarıyla yapılır; doğrudan çapraz-modül fonksiyon çağrısı yerine olay yayını tercih edilir.",
+        "Sözleşme testi kapısı: her dikey dilim, kernel arayüz sözleşmesine (bootstrap/migrate/shutdown) uyumunu pytest-interface-checker ile doğrular — sözleşme ihlali CI kapısında hata verir.",
+        "Dış servis adaptörü: ödeme/e-posta/SMS entegrasyonları ServiceRegistry Adapter arayüzüne sarılır (bağımlılık tersine çevirme); gelen webhook'lar /webhooks/{provider} yolunda HMAC-SHA256 ile middleware seviyesinde doğrulanır."
       ],
-      "notes": "Fabrika entegrasyon katmanı ServiceRegistry adaptör sarmalama + HMAC webhook doğrulama + httpx havuz yaşam döngüsü + sağlık kontrolü endpoint'iyle tutarlı dış servis yönetimi sağlar.",
+      "notes": "Fabrika entegrasyon katmanı, tek yönlü kernel bağımlılığı + tipli capability sözleşmesi + olay veri yolu + sözleşme testi kapısı + adaptör-sarmalı dış servislerle tutarlı ve gevşek bağlı entegrasyon sağlar.",
       "prompt": "platform-factory için integration boyutunu kapsa: ServiceRegistry Adapter arayüzü bağımlılık tersine çevirme, /webhooks/{provider} HMAC-SHA256 middleware doğrulama, httpx.AsyncClient Limits(max_connections=20) lifespan yönetimi, /health/integrations ping() 30 s Kubernetes liveness probe. Çıktı: ServiceRegistry sınıf yapısı, HMAC doğrulama middleware kodu ve sağlık endpoint yanıt şeması. güvenlik sınırı: imza doğrulaması başarısız webhook işlenmez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -499,12 +503,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "AppFactory modülünü kullanmak için önce app = AppFactory(tenant_id=uuid, app_slug='myapp', stack_preset='fastapi-graphql-pg') ile örnek oluşturulur, ardından await app.bootstrap() ile auth/DB/API/CI katmanları bağlanır; yeni dikey dilim eklemek için CustomerApp(AppFactory) şablonu 5 dosya değişikliğiyle genişletilir.",
-        "Geliştirici hızlı başlangıç: app-factory generate --slug invoice --describe 'fatura yönetimi' komutu LLM destekli iskelet üretir; çıktı olarak models.py, schema.py, router.py, tests/test_invoice.py ve ilk Alembic migration dosyası hazır şekilde gelir.",
-        "Fabrika hata ayıklama: AppFactory.bootstrap() raise ettiğinde her adımın durumu app.status_report() çağrısıyla incelenebilir; başarısız adım, tenant doğrulama hatası veya Vault bağlantı sorunu log mesajında açıkça belirtilir.",
-        "Üretim ortamı ölçeklendirmesi: aynı AppFactory örneği birden fazla Kubernetes pod'unda çalışabilir; paylaşılan durum yalnızca PostgreSQL ve Redis üzerinde tutulur, pod'lar arası ek koordinasyon gerekmez — yatay ölçekleme KEDA ile HTTP istek sayısına göre otomatik yapılır."
+        "Fabrika yeteneğini tüketme: türev app'ler kernel yeteneklerini yalnızca AppFactory'nin tipli API'si üzerinden tüketir — app = AppFactory(tenant_id, app_slug, stack_preset) örneği oluşturulur, await app.bootstrap() auth/DB/API/CI katmanlarını bağlar; doğrudan iç modül import'u yerine yayınlanan capability kullanılır.",
+        "Doğrudan DB yasağı: bir dikey dilim başka tenant'ın ya da kernel'in tablolarına doğrudan SQL ile erişemez; her veri erişimi tenant_id kapsamlı repository API'sinden geçer ve çapraz-tenant doğrudan DB sorgusu statik analizde reddedilir.",
+        "Sözleşme kapısı: yeni bir dikey dilim ancak AppFactory arayüz sözleşmesine (bootstrap/migrate/shutdown) uyduğunu pytest-interface-checker kapısında kanıtlarsa capability kataloğunda yayınlanır ve diğer app'lerce tüketilebilir hale gelir.",
+        "Olay tüketimi ve entegrasyon paneli: uygulamalar diğer dilimlerin domain olaylarını EventBus üzerinden tüketir, ortak desenleri PatternRegistry kataloğundan seçer; entegrasyon paneli hangi app'in hangi olayı yaydığını ve hangi capability'yi tükettiğini görünür kılar."
       ],
-      "notes": "AppFactory kullanımı bootstrap() tek giriş noktası, LLM iskelet üretici CLI, status_report() hata ayıklama ve KEDA yatay ölçekleme ile üretim hazır bir geliştirici deneyimi sunar.",
+      "notes": "AppFactory kullanımı, capability'nin tipli API üzerinden tüketimi + doğrudan DB yasağı + sözleşme testi kapısı + olay tüketimi ve entegrasyon paneli ile denetlenebilir bir geliştirici deneyimi sunar.",
       "prompt": "platform-factory için moduleUsage boyutunu kapsa: AppFactory(tenant_id, app_slug, stack_preset) + bootstrap() bağlantı, app-factory generate LLM 5-dosya çıktısı, status_report() hata ayıklama adım raporu, KEDA HTTP bazlı yatay ölçekleme. Çıktı: kullanım kodu örneği, generate komut çıktı listesi ve KEDA ScaledObject tanımı. güvenlik sınırı: bootstrap tenant doğrulaması geçilmeden ölçekleme başlamaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"

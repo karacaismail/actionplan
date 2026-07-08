@@ -22,7 +22,8 @@
     "girdi",
     "doğrulama",
     "ruleset",
-    "status"
+    "status",
+    "archetype"
   ],
   "dependsOn": [
     "k-schema",
@@ -145,12 +146,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 05: API: REST ve GraphQL — pratik anlatım: HTTP istek-cevap, method, status, JSON, REST kuralları, GraphQL farkı, idempotent, versioning",
-        "Ünite 05 kapsamı: REST ve GraphQL temellerini ve idempotent/versioning kavramını öğretir",
-        "Ünite 05 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Endpoint sözleşmesi: REST kaynağı (path + method + status kümesi 200/201/400/404/409) ve GraphQL şeması (type/query/mutation) yan yana örneklenir",
+        "Idempotency: PUT/DELETE ile Idempotency-Key başlıklı POST'un tekrar-güvenli davranışı; aynı anahtarla ikinci çağrı yan etki üretmez",
+        "Versioning: URL sürümü (/v1) ile GraphQL şema evrimi (@deprecated alan) karşılaştırılır; kırıcı vs eklemeli değişiklik ayrımı tanımlanır",
+        "Hata sözleşmesi: REST için RFC 9457 problem+json gövdesi, GraphQL için errors[] + partial data davranışı örnekle netleştirilir",
+        "Kapsam sınırı: sözleşme yalnız senkron istek-yanıt uçlarını (REST kaynak + GraphQL query/mutation) kapsar; subscription/webhook akışı, dosya yükleme ve gerçek zamanlı kanal kapsam dışıdır ve ayrı sözleşmeyle ele alınır"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,7 +166,7 @@
         "Ünite 05 ilgili kararlar denetlenebilir biçimde kaydedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -171,12 +174,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 05 yapısı: idempotent metot tekrar-güvenli; versioning geriye uyum sağlar",
-        "Ünite 05 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 05 okunabilir ve test edilebilir kalır"
+        "Resolver'lar N+1'i önlemek için DataLoader ile batch/dedupe eder; alan başına tekil DB çağrısı yerine tek toplu sorgu",
+        "REST istemci kodu tek fetch sarmalayıcısında toplanır; timeout, retry ve status→hata eşlemesi tek yerde yaşar",
+        "Tip güvenliği: GraphQL şemasından ve OpenAPI'dan tip üretimi (codegen); el ile any yerine üretilen tipler kullanılır",
+        "Ölü alan elemesi: @deprecated GraphQL alanları ve tüketilmeyen REST endpoint'leri sürüm geçişinde kaldırılır",
+        "CI kod kapısı: GraphQL sorgu derinlik/karmaşıklık bütçesi ve üretilen istemci tipleri için tip-hatası=0 eşiği derlemede zorunlu tutulur; bütçe aşan resolver ya da elle any kullanımı kapıyı kırar"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,12 +189,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 05 en-az-ayrıcalık ilkesine uyar",
-        "Ünite 05 değişikliği sürümlü ve izlenir",
-        "Ünite 05 girdi sınırda doğrulanır — API: REST ve GraphQL — pratik anlatım rate-limit aşımı istemciye gecikme-başlığıyla bildirilir"
+        "Auth boundary: her endpoint ve resolver girişinde token doğrulanır; GraphQL'de alan-düzeyi yetki (field-level authz) ile kaynak bazlı erişim uygulanır",
+        "Rate limit: istemci başına istek bütçesi + GraphQL sorgu derinliği/karmaşıklık sınırı (depth/complexity limit); aşım 429 ve Retry-After başlığıyla bildirilir",
+        "Girdi sınırda doğrulanır: REST gövdesi ve GraphQL değişkenleri şema (Zod/scalar) ile denetlenir, enjeksiyon yüzeyi daraltılır",
+        "Prod'da introspection kapalı; hata gövdesi yığın izi/iç alan adı sızdırmaz"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -197,12 +203,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 05 performans açısı: GraphQL aşırı-çekim/N+1 riski; REST sayfalama",
-        "Ünite 05 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 05 büyük veride sayfalı işlenir"
+        "İmleç (cursor/keyset) tabanlı sayfalama; offset yerine keyset ile büyük listede sabit gecikme, hedef p95 < 300 ms",
+        "N+1 önleme: DataLoader batch ile bir istekte resolver başına sorgu sayısı O(1)'e iner",
+        "Önbellek: REST GET'te ETag + Cache-Control ile 304, GraphQL'de persisted query + alan-düzeyi cache",
+        "Bileşik indeks: sık filtre/sıralama alanlarına indeks; yük testinde p95 gecikme hedefe göre doğrulanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -210,12 +217,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 05 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 05 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 05 bildirim/onay gerektiğinde push ile iletilir"
+        "Mobil payload küçültme: GraphQL ile yalnız gereken alanlar seçilir, REST'te sparse fieldset/kısmi yanıt ile hücresel veri tasarrufu sağlanır",
+        "Aynı sözleşme mobil istemcide tüketilir; zayıf bağlantıda offline kuyruk + Idempotency-Key ile tekrar gönderim çift yazma üretmez",
+        "Zayıf bağlantı: yanıt sıkıştırması (gzip/br) ve küçük sayfa boyutu; timeout + üstel backoff ile retry",
+        "Dokunma etkileşimleri en az 44 px temas alanı ile tek sütun okunur düzende sunulur"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,7 +236,7 @@
         "Ünite 05 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,7 +249,7 @@
         "Ünite 05 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -254,7 +262,7 @@
         "Ünite 05 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -267,7 +275,7 @@
         "Ünite 05 — AI API sözleşmesi taslağı önerir; sözleşme kararını ekip verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -275,12 +283,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 05 doğrulama: idempotency ve status kodu davranışı örnekle sınanır",
-        "Ünite 05 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Sözleşme testi: OpenAPI ve GraphQL şemasına karşı istek-yanıt doğrulanır; kırıcı şema değişikliği CI'da yakalanır",
+        "Entegrasyon testi: endpoint başına status kodu (200/201/400/404/409) ve aynı Idempotency-Key ile tekrar çağrının yan etkisizliği sınanır",
+        "N+1 regresyon testi: bir sorguda resolver DB çağrı sayısı eşiği aşarsa test kırmızıya döner",
+        "Kararsız (flaky) test sınırlı sayıda yeniden denenir; belirlenen eşikten sonra düzelmezse ayrıntılı çıktı toplanıp koşu durdurulur",
+        "Negatif senaryo testleri: geçersiz gövde (400), yetkisiz erişim (401/403), bulunamayan kaynak (404) ve çakışma (409) sabit fixture'larıyla REST/GraphQL hata sözleşmesi doğrulanır; GraphQL'de kısmi data + errors[] durumu da fixture'la sınanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,7 +303,7 @@
         "Ünite 05 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -306,7 +316,7 @@
         "Ünite 05 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -320,7 +330,7 @@
         "API: REST ve GraphQL — pratik anlatım kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "API: REST ve GraphQL — pratik anlatım bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (ArcheType/taş; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u05 — \"API: REST ve GraphQL — pratik anlatım\" (archetype/kaya; küme: Eğitim). Özet: HTTP istek-cevap, method, status code, JSON, REST kuralları, GraphQL fark, idempotent, versioning. Etiketler: education, u05, api, rest, graphql.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

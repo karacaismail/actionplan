@@ -20,7 +20,8 @@
     "tech",
     "deploy",
     "script",
-    "check"
+    "check",
+    "feature"
   ],
   "dependsOn": [
     "std-contracts"
@@ -94,7 +95,14 @@
     "deploy.yml bloklayici adimlar",
     "referans butunlugu zorlanir"
   ],
-  "risks": [],
+  "risks": [
+    {
+      "id": "r-std-ci-gates-scope-drift",
+      "desc": "7 CI Conformance Kapisi (ST-3) kapsami ust seviye sozlesmeden koparsa teslimat kaniti yorumlanamaz hale gelir",
+      "severity": "medium",
+      "mitigation": "Kapsam, acceptanceCriteria, rollback ve traceability alanlari ayni PR'da guncellenir"
+    }
+  ],
   "rollback": "CI kapısı geri alımı: sorunlu check-*.mjs kapısı deploy.yml'den adım olarak çıkarılmaz, önceki git sürümüne revert edilir (kapı silme yasak — sahte güven üretir); kapı yanlış-pozitifse önce WARN moduna alınır, düzeltme PR'ı ile FAIL'e döner. Her kapı bağımsız script olduğundan tekil revert güvenlidir.",
   "evidence": [],
   "metrics": [],
@@ -109,8 +117,8 @@
         "dimension-applicability boyutun applies:false ise iskelet, applies:true ise filled olmasını doğrular (yarı-dolu boyut reddedilir)",
         "waivers kapısı her muafiyetin gerekçe+son-kullanma taşıdığını, süresi geçmiş muafiyetin build düşürdüğünü zorlar"
       ],
-      "notes": "Tavsiye değil kapı: 6 script + tech-profile, her biri zorlayıcı kontrol.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 6 kapının tek tek ne kontrol ettiği, applicability-filled tutarlılığı ve waiver gerekçe/süre zorlaması.",
+      "notes": "Kapsam: 6 zorlayıcı kapı + tech-profile; işlev sınırı yalnız conformance denetimidir, kapı veriyi düzeltmez. Girdi değişen düğüm JSON seti + katalog id'leri, çıktı conformance report artifact + exit-code; hata yolunda ihlal PR check'ini kırmızıya çekip release gate'i bloklar. Kabul sözleşmesi: mevcut korpus tüm kapılarda yeşil geçer.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: 6 kapının tek tek ne kontrol ettiği, applicability-filled tutarlılığı ve waiver gerekçe/süre zorlaması.",
       "provenance": "swarm"
     },
     "security": {
@@ -123,8 +131,8 @@
         "waivers kapısı yalnızca onaylı ve süreli muafiyete izin verir; süresiz/gerekçesiz güvenlik istisnası reddedilir",
         "Kapı script'leri salt-okunur denetleyicidir; veriyi düzeltmez, yalnızca ihlali raporlayıp exit-code 1 verir"
       ],
-      "notes": "Kapılar bloklayıcı + salt-denetim; güvenlik istisnası süreli muafiyetle sınırlı.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency-policy bloklaması, deploy.yml required-step zorunluluğu, süreli-waiver sınırı ve salt-okunur denetleyici doğası.",
+      "notes": "Erişim/yetki sınırı: kapı yetkisi salt-okunur en-az-ayrıcalık denetleyicisiyle sabittir, PR check'ini veya policy bundle'ı yazamaz; AI'nın ruleset override isteği ECA'da deny edilir ve conformance report PR check'ine audit artifact olarak bırakılıp denetim izi üretir. dependency-policy güvensiz tedarik zincirini deploy.yml required-step'inde bloklar; kapı log ve raporunda token/secret değerleri maskelenir, sızıntı yüzeyi kapatılır. Repo verisi PII taşımaz ve kapı tenant-arası veriye erişmez; süresiz/gerekçesiz güvenlik istisnası reddedilir, yalnız düğüm+boyut+kapı'ya sabitli süreli waiver geçer.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency-policy bloklaması, deploy.yml required-step zorunluluğu, süreli-waiver sınırı ve salt-okunur denetleyici doğası.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -137,8 +145,8 @@
         "Kapılar değişen dosya setini (git diff) hedefler, tüm korpus yerine etkilenen düğümleri denetleyerek CI süresini kısar",
         "Kontrol mantığı tek matchAll geçişiyle çalışır; while-exec döngüsü ve çıktı kırpması (| tail) yerine exit-code'a dayanır"
       ],
-      "notes": "Paylaşılan yükleyici + diff-hedefli denetim; exit-code temelli, tail kırpması yok.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: short-code tekrar denetimi, paylaşılan node-yükleyici, diff-kapsamlı kontrol ve exit-code temelli güvenilir sinyal.",
+      "notes": "Kod sağlığı ekseni: altı kapı ortak node-yükleyici + rapor biçimleyiciyi (paylaşılan parser/raporlayıcı) paylaşarak kopya-yükleme borcunu düşürür; kapı kodunun kendisi lint/tip kapısından ve düşük karmaşıklık bütçesinden geçer, diff-hedefli tarama CI koşum süresini etkilenen düğümlere daraltır, kontrol tek matchAll geçişiyle çalışıp exit-code'a dayanır (while-exec/tail kırpması yok). short-code kapısı kısa-kod tekrar borcunu PR check'inde merge öncesi kapatır.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: short-code tekrar denetimi, paylaşılan node-yükleyici, diff-kapsamlı kontrol ve exit-code temelli güvenilir sinyal.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -151,8 +159,8 @@
         "waivers kapısı muafiyeti düğüm+boyut+kapı üçlüsüne sabitler; geniş kapsamlı blanket istisna kabul edilmez",
         "tech-profile kapısı profil-dışı teknoloji seçimini engeller, onaysız stack genişlemesi CI'da durdurulur"
       ],
-      "notes": "Önbeleksiz koşum + lockfile-temelli + dar kapsamlı waiver + profil sınırı.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: önbeleksiz kapı koşumu, lockfile-temelli sürüm denetimi, düğüm-boyut-kapı dar muafiyeti ve tech-profile stack sınırı.",
+      "notes": "Sertleştirme ekseni: kapı sonuçları önbelleğe alınmaz, her PR'da taze koşarak eski-yeşil baseline'ın yeni ihlali maskelemesini keser; dependency-policy lockfile'dan çözülmüş gerçek sürümleri denetleyerek bağımlılık/SBOM yüzeyini kapatır, tech-profile allowlist'i onaysız stack imzasını dışlar. Kapı script'i dış-egress yapmaz; dar kapsamlı (düğüm+boyut+kapı) waiver blanket istisna yüzeyini sıfırlar.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: önbeleksiz kapı koşumu, lockfile-temelli sürüm denetimi, düğüm-boyut-kapı dar muafiyeti ve tech-profile stack sınırı.",
       "provenance": "swarm"
     },
     "performance": {
@@ -165,8 +173,8 @@
         "check-standards-coverage referans bütünlüğünü id-anahtarlı sözlükle çözer; her ref için lineer arama yapmaz",
         "Kapılar erken-çıkış yapar: ilk severity:error ihlalinde raporu toplayıp non-zero döner, gereksiz tam tarama uzatılmaz"
       ],
-      "notes": "Paralel job + tek-geçiş tarama + sözlük-tabanlı referans çözümü.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapıların paralel koşumu, tek-geçiş düğüm taraması, id-sözlük referans çözümü ve erken-çıkış davranışı.",
+      "notes": "Ölçülebilir hedef: kapı gate-stage toplam süresi paralel job ile en yavaş kapıya iner (ardışık beklemez), düğüm taraması tek-geçiş stream ile O(düğüm) kalır. check-standards-coverage referansları id-anahtarlı sözlük indeksiyle çözerek her ref için N+1 lineer aramayı önler; erken-çıkış ilk severity:error'da raporlayıp gereksiz tam-tarama yükünü keser.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapıların paralel koşumu, tek-geçiş düğüm taraması, id-sözlük referans çözümü ve erken-çıkış davranışı.",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -197,8 +205,8 @@
         "tech-profile kapısı dağıtım hedefiyle (statik Vite çıktısı) uyumsuz teknoloji girişini engeller",
         "Kapı script'leri tools/agents/ altında sürümlenir; deploy.yml referansları sabit yola bağlanır, kapı eksilirse pipeline kırılır"
       ],
-      "notes": "Kapılar deploy.yml'de bloklayıcı gate stage; yeşilsiz yayım yok.",
-      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: deploy.yml required-step entegrasyonu, gate-stage sıralaması, tech-profile dağıtım uyumu ve kapı script yol bağı.",
+      "notes": "Kapılar deploy.yml gate-stage'inde bloklayıcı required-step; build artefaktı ancak tüm kapılar yeşilse GitHub Pages'e geçer, yeşilsiz yayım probu tetiklenmez. Rollback: sorunlu kapı deploy.yml'den silinmez (sahte güven), git revert'le önceki sürüme dönülür, yanlış-pozitif önce WARN moduna alınır. Kapı script yolları tools/agents/ altında sabit config referansına bağlıdır; yol/kapı eksilirse pipeline fail-fast kırılır.",
+      "prompt": "\"Dağıtım (Swarm/K8s/Shared)\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: deploy.yml required-step entegrasyonu, gate-stage sıralaması, tech-profile dağıtım uyumu ve kapı script yol bağı.",
       "provenance": "swarm"
     },
     "eca": {
@@ -212,7 +220,7 @@
         "requiresApproval:true olan AI-risk kapısı tetiklendiğinde otomatik birleşme durur, insan onayı beklenir"
       ],
       "notes": "Kapı sonuçları ECA olaylarına bağlı; blokaj görev üretir, zincir sınırlı.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapı-kırmızı blocked tetikleme, applicability-ECA tutarlılığı, maxChainDepth zincir sınırı ve onay-bekleyen risk kapısı.",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kapı-kırmızı blocked tetikleme, applicability-ECA tutarlılığı, maxChainDepth zincir sınırı ve onay-bekleyen risk kapısı.",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -226,7 +234,7 @@
         "AI yalnızca kapı ihlallerini düzeltme önerisi sunar (suggest-changeset); yeşile çevirme insan merge'iyle olur"
       ],
       "notes": "Kapılar deterministik insan-yazımı; AI atlayamaz, yalnızca düzeltme önerir.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ui-standards AI changeset denetimi, kapı-devre-dışı yasağı, kapıların AI-üretimsiz tutulması ve suggest-only düzeltme.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: ui-standards AI changeset denetimi, kapı-devre-dışı yasağı, kapıların AI-üretimsiz tutulması ve suggest-only düzeltme.",
       "provenance": "swarm"
     },
     "testing": {
@@ -239,8 +247,8 @@
         "deploy.yml'de kapıların required ve bloklayıcı olduğu workflow lint'i ile doğrulanır, opsiyonel step'e düşmez",
         "Referans bütünlüğü testi: var olmayan katalog id'sine işaret eden standardRef'in kapıyı düşürdüğü doğrulanır"
       ],
-      "notes": "Kapı başına yeşil-korpus + negatif fixture + referans-bütünlüğü testi.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: mevcut-veride yeşil kabul testi, ihlal negatif fixture'ları, deploy.yml bloklayıcılık lint'i ve referans-bütünlüğü testi.",
+      "notes": "Test türleri ayrı ayrı: kapı başına yeşil-korpus kabul testi, ihlal senaryoları (eksik standardRef, süresi geçmiş waiver, yarı-dolu boyut) için non-zero dönüşü doğrulayan negatif birim fixture'ları, deploy.yml required+bloklayıcılığını denetleyen statik workflow lint, ve var olmayan katalog id'sinde kapının düştüğünü kanıtlayan referans-bütünlüğü entegrasyon testi; hepsi ratchet baseline'ına bağlanır.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: mevcut-veride yeşil kabul testi, ihlal negatif fixture'ları, deploy.yml bloklayıcılık lint'i ve referans-bütünlüğü testi.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -253,8 +261,8 @@
         "tech-profile kapısı onaysız/desteklenmeyen teknoloji girişini engelleyerek güvenlik yamasız stack genişlemesini önler",
         "Kapı script'leri yalnızca repo verisini okur, dış ağ çağrısı yapmaz; SSRF/enjeksiyon yüzeyi CI adımında sıfırlanır"
       ],
-      "notes": "Kapılar A06/A01'i CI'da zorlar; dış-ağsız, enjeksiyon yüzeyi yok.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency-policy A06 bloklaması, erişim-kontrol A01 zorlaması, tech-profile stack güvenliği ve dış-ağsız kapı koşumu.",
+      "notes": "dependency-policy A06 (savunmasız bileşen) ihlalini SBOM/lockfile yüzeyinde bloklar, erişim-kontrol sözleşmesi (AI override yasağı) A01'i zorlar; standardRefs girdi doğrulaması ASVS/NIST türü uyum referanslarını her düğümde şart koşar. Kapılar dış-ağ çağrısı yapmaz (SSRF/enjeksiyon yüzeyi sıfır) ve conformance report'u PR artefaktı olarak bırakarak denetim izi üretir.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: dependency-policy A06 bloklaması, erişim-kontrol A01 zorlaması, tech-profile stack güvenliği ve dış-ağsız kapı koşumu.",
       "provenance": "swarm"
     },
     "integration": {
@@ -267,8 +275,8 @@
         "dependsOn:std-contracts gereği kapılar katalog seti hazır olmadan çalışmaz; eksik katalogda kapı kendini fail-fast eder",
         "tech-profile kapısı çekirdek tech-profile kaydını kaynak alır; düğüm seçimleri çekirdek profille çapraz doğrulanır"
       ],
-      "notes": "Kapılar çekirdek şema+tech-profile'a bağlı; referans bütünlüğünü zorlar.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: coverage kapısı standardRefs bütünlüğü, çekirdek şema tip bağı, std-contracts bağımlılığı ve tech-profile çapraz doğrulama.",
+      "notes": "Bağımlılık yönü: kapılar dependsOn:std-contracts ile katalog seti hazır olmadan koşmaz, eksik katalogda fail-fast eder. Tipli arayüz: çekirdek StandardContractSchema import edilir, sözleşme şeması değişince kapılar tipçe kırılıp güncellemeye zorlar. Kapı-kırmızı olayı ECA veriyoluna blocked durumu yayıp create-task tetikler; tech-profile kapısı düğüm seçimlerini çekirdek profil kaydıyla çapraz doğrular.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: coverage kapısı standardRefs bütünlüğü, çekirdek şema tip bağı, std-contracts bağımlılığı ve tech-profile çapraz doğrulama.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -282,7 +290,7 @@
         "deploy.yml kapı script'lerini sabit komutla çağırır; kapı modülü arayüzü (girdi seti, exit-code) sözleşmeli kalır"
       ],
       "notes": "Kapılar paylaşılan yardımcıları + katalog modüllerini id ile tüketir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (kum; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: paylaşılan denetim yardımcıları, katalog id girdi yüzeyi, kapı-katalog modül bağı ve deploy.yml çağrı sözleşmesi.",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: std-ci-gates — \"7 CI Conformance Kapisi (ST-3)\" (feature/taş; küme: frontend). Özet: check-standards-coverage/dimension-applicability/waivers/short-code/dependency-policy/ui-standards + tech-profile; hepsi deploy.yml'de bloklayici. Standart tavsiye degil, kapi. Etiketler: standards, ci, st-3.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: paylaşılan denetim yardımcıları, katalog id girdi yüzeyi, kapı-katalog modül bağı ve deploy.yml çağrı sözleşmesi.",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -20,7 +20,8 @@
     "koşusu",
     "hesabı",
     "kaydı",
-    "yöntem"
+    "yöntem",
+    "archetype"
   ],
   "dependsOn": [
     "l1-workflow",
@@ -150,7 +151,7 @@
         "Fixed Assets / Amortization işlev kapsamı sürüm-notlarında kullanıcı-görünür dille özetlenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -158,12 +159,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Varlık/değer verisi tenant_id RLS; elden çıkarma yetki+iz",
-        "Amortisman yöntemi değişikliği onaylı ve sürümlü",
-        "Değer düşüklüğü kaydı çift onay gerektirir"
+        "Varlık/amortisman/elden çıkarma verisi PostgreSQL RLS ile tenant_id bazında izole; her sorgu kiracı kapsamıyla sınırlı, çapraz-tenant okuma engelli",
+        "Rol bazlı least-privilege: amortisman koşusunu tetikleme, yöntem değişimi ve elden çıkarma ayrı yetkilerdir; tanımsız rol için varsayılan deny (role-based deny)",
+        "Varlık defter değeri, birikmiş amortisman ve elden çıkarma tutarı gibi değer verisi hassas sınıflandırmalı; sızıntı yüzeyinde maskelenir, yedek/aktarımda şifrelenir, KMS anahtarları secret olarak tutulur",
+        "Elden çıkarma ve değer düşüklüğü kaydı çift onay (maker-checker) ile geçer; onaysız kalıcı kayıt oluşmaz",
+        "Amortisman yöntemi/oranı değişikliği ve elden çıkarma kararları append-only audit evidence'a yazılır (kim, ne zaman, önceki→sonraki değer); iz silinemez/güncellenemez, yalnız eklenir"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "W10: audit/deny, tenant RLS izolasyonu, least-privilege ve append-only kanıt maddeleri netleştirildi.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -171,12 +174,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Amortisman hesabı saf fonksiyon (yöntem bazlı); dönem-bazlı çalışır",
-        "Varlık durumu (aktif/atıl/elden çıkarılmış) durum makinesi",
-        "Vergi ve defter amortismanı ayrı izlenir"
+        "Kod sağlığı ekseni: her PR lint + typecheck + amortisman sözleşme (contract) testi kapısından geçer; kapı kırmızıysa merge yok",
+        "Katman ayrımı: depreciation calculator (saf/pure fonksiyon), varlık state machine (aktif/atıl/elden çıkarılmış) ve ledger adapter birbirinden ayrık modüllerde; hesap mantığı I/O'dan izole",
+        "Amortisman hesabı yöntem bazlı (doğrusal/azalan) saf fonksiyondur; yan etkisiz, dönem+asset girdisiyle deterministik, aynı girdi aynı sonucu üretir",
+        "Vergi ve defter amortismanı ayrı state olarak izlenir; ortak kod paylaşılır ama iki hesap birbirine sızmaz",
+        "Amortization budget/eşik: fonksiyon başına döngüsel karmaşıklık ve dosya boyutu eşiği CI'da denetlenir; batch koşusu sabit chunk sınırıyla işler, sınırsız döngü/bellek büyümesi yok"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "W10: kod sağlığı ekseni (lint/typecheck/contract gate), calculator/state-machine/ledger ayrımı ve karmaşıklık/batch eşiği eklendi.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -184,12 +189,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Amortisman koşusu idempotent; tekrar koşuda çift kayıt yok",
-        "Yöntem değişimi geçmiş dönemleri korur (ileriye dönük)",
-        "Elden çıkarma kâr/zarar hesabı denetlenir"
+        "Sertleştirme ekseni: bağımlılıklar için SBOM üretilir ve SCA taraması CI'da zorunlu; amortisman/ledger kütüphaneleri bilinen açık taraması geçmeden dağıtılmaz",
+        "Amortisman yöntem değişimi ve ECA kural sürümü imzalıdır (signed method changes / rule version); imza doğrulanmadan üretimde uygulanmaz",
+        "Egress/yüzey daraltma: amortisman worker'ı yalnız ledger ve tax-compliance contract uçlarına çıkabilir; keyfi dış ağ erişimi kapalı, elden çıkarma/koşu uçlarında rate-limit var",
+        "Değer verisi şifreleme anahtarları KMS'te; secret rotation planlı, sızıntı halinde rotasyon ve erişim iptali runbook'ta",
+        "Amortisman koşusu idempotent (tekrar koşuda çift kayıt yok) ve hatalı koşu için rollback hardening: snapshot + append-only ters kayıtla güvenli geri alma, geçmiş dönem korunur"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "W10: sertleştirme ekseni — SBOM/SCA, imzalı yöntem/kural sürümü, egress/rate-limit, secret rotation/KMS ve rollback hardening eklendi.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -204,7 +211,7 @@
         "gece toplu koşusu Fixed Assets / Amortization penceresi dışına taşarsa bölümleme (chunking) devreye girer"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -219,7 +226,7 @@
         "Fixed Assets / Amortization çevrimdışı kuyruk çakışması son-yazan-kazanır kuralıyla çözülür; senaryo testlidir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -234,7 +241,7 @@
         "erişilebilirlik regresyonu Fixed Assets / Amortization için PR kapısında axe ile taranır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,12 +249,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Amortisman koşusu ayrı worker/CronJob",
-        "Varlık olayları outbox ile muhasebeye",
-        "Shared hosting'de temel varlık + manuel amortisman"
+        "Amortisman koşusu ayrı worker/CronJob olarak dağıtılır; liveness/readiness/health probe ile izlenir, hazır değilse dönem koşusu tetiklenmez",
+        "Kubernetes'te CPU/bellek resource limit + HPA ile ölçek; dönem-sonu yük artışında yatay ölçek, batch chunk sınırıyla birlikte",
+        "Rollback/replay stratejisi: hatalı amortisman koşusu snapshot'tan geri alınır, outbox olayları idempotent şekilde yeniden oynatılır (replay); çift ledger kaydı oluşmaz",
+        "Config ve secret ayrımı: DB/KMS bağlantısı ve amortisman parametreleri config; anahtarlar secret store'da, imajda gömülü değil",
+        "Shared hosting sınırı: cron/worker yoksa temel varlık kaydı + manuel amortisman tetikleme; otomatik dönem koşusu ve HPA yalnız Swarm/K8s profilinde çalışır"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "W10: worker/CronJob probe, rollback/replay, config/secret ayrımı, HPA/resource limit ve shared hosting sınırı netleştirildi.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -260,7 +269,7 @@
         "Olay: varlık elden çıkarıldı → kâr/zarar hesapla + kaydı kapat (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -273,7 +282,7 @@
         "AI varlık sınıflandırma ve amortisman yöntemi önerir; amortisman koşusunu kendisi çalıştıramaz"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -281,12 +290,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Amortisman hesabı (yöntem bazlı) doğruluk testi",
-        "Amortisman koşusu idempotency testi",
-        "Varlık yaşam döngüsü kullanıcı yolculuğu; en çok 6 tur"
+        "Unit: amortisman hesabı yöntem bazlı (doğrusal/azalan) doğruluk, dönem sınırları, kalıntı değer ve sıfıra yakın uç değerler",
+        "Contract: fixed-asset contract'ının purchasing/inventory event girdisi ve accounting ledger çıktısıyla uyumu; şema kırılırsa test kırılır",
+        "Integration: amortisman koşusu → outbox → ledger yazımı zinciri; idempotency (tekrar koşuda çift kayıt yok) doğrulanır",
+        "E2E: varlık kaydı → amortisman → değer düşüklüğü → elden çıkarma kullanıcı yolculuğu; testing-loop maks 6 tur, düzelmezse raporla",
+        "Negatif senaryolar: yetkisiz elden çıkarma denemesi deny, çift amortisman koşusu engellenir, kapanmış geçmiş dönem değişimi reddedilir; her koşum fixture + append-only evidence üretir"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "W10: test türleri (unit/contract/integration/e2e) ve negatif senaryolar (yetkisiz elden çıkarma, çift amortisman, geçmiş dönem) + fixture/evidence eklendi; QA testing-loop maks 6.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,12 +305,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A01 Access Control: elden çıkarma/yöntem değişimi yetkisi",
-        "A08 Integrity: amortisman koşusu sürümlü ve izli",
-        "A09 Logging: varlık/değer kararları iz"
+        "A01 Broken Access Control: elden çıkarma, yöntem değişimi ve amortisman koşusu tetikleme ayrı yetkilerle korunur; tenant RLS ile çapraz erişim engelli",
+        "A04 Insecure Design: çift onaylı elden çıkarma, idempotent koşu ve kapanmış dönem koruması tasarımda gömülü; iş kuralı istemciye bırakılmaz",
+        "Input validation (ASVS): asset id, dönem (period), amortisman method, tutar (amount) ve elden çıkarma nedeni (disposal reason) sunucuda tip/aralık/enum doğrulamasından geçer; geçersiz girdi reddedilir",
+        "A08 Integrity: amortisman koşusu ve kural sürümü imzalı/izli; append-only audit trail (denetim izi) — NIST/SBOM referansıyla bütünlük kanıtı korunur",
+        "A09 Logging & Monitoring: varlık/değer düşüklüğü/elden çıkarma kararları yapısal ve değişmez logla iz altına alınır; yetkisiz deneme ve anomali alarma bağlanır"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "W10: ASVS/NIST/SBOM, girdi doğrulama (asset id/period/method/amount/disposal reason), append-only denetim izi ve A01/A04/A08/A09 bağlamı eklendi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,12 +320,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Fixed-assets, Accounting (amortisman kaydı) ve Inventory (envanter eşleştirme) ile entegre",
-        "Vergi amortismanı tax-compliance ile",
-        "Satınalma mal kabulünden varlık oluşturma"
+        "Sözleşmeli bağ: entegrasyon typed API + event bus + outbox üzerinden yürür; modüller doğrudan fixed-asset tablosuna yazmaz, yalnız contract'ı çağırır",
+        "Bağımlılık yönü: purchasing/inventory mal-kabul olayı → fixed asset contract (varlık oluşturma) → accounting ledger (amortisman/elden çıkarma kaydı); tek yön, geri bağımlılık yok",
+        "Amortisman ve elden çıkarma kayıtları outbox ile accounting ledger'a idempotent iletilir; doğrudan ledger DB yazımı yapılmaz",
+        "Vergi amortismanı için tax-compliance yalnız fixed-asset contract üzerinden okur (read-only); hesaplama fixed-assets'te kalır, tax modülü tabloya erişmez",
+        "Envanter eşleştirme inventory event'i üzerinden yapılır; varlık↔envanter bağı sürümlü sözleşmeyle tutulur, kırıcı değişiklik migration ile yönetilir"
       ],
-      "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "notes": "W10: sözleşmeli bağ (typed API/event bus/outbox), bağımlılık yönü purchasing/inventory → fixed asset contract → accounting ledger ve tax-compliance'ın yalnız contract üzerinden okuması netleştirildi; doğrudan DB yazımı yok.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -326,7 +341,7 @@
         "Fixed Assets / Amortization bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Fixed Assets / Amortization, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-fixed-assets — \"Fixed Assets / Amortization\" (archetype/kaya; küme: Finans & Muhasebe). Özet: Odoo Assets muadili. Sabit kıymet defteri Etiketler: finance, fixed-assets, stack.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -25,17 +25,17 @@ Tablo okunuşu: "Kod yazılır mı?" sütunu platform monoreposuna gerçek kod c
 
 | Seviye | Metafor | Yazılım karşılığı | Kod yazılır mı? | Branch açılır mı? | PR/merge? | Deploy? | Evidence zorunlu mu? |
 |---|---|---|---|---|---|---|---|
-| app | dağ | Ürün ailesi / portföy. Bir release train'in tepe düğümü. Altındaki tüm modülleri kapsayan tek bir deployment birimi tanımlar. | Hayır | Hayır | Hayır | Release train tamamlandığında | Yalnızca kapsam, ADR ve ilk dikey dilim çıktısı |
-| module | kaya | Bounded context / paket. Tek bir iş alanına kapalı sınır; ayrı paket kökü, kendi contract'ı ve bağımlılık listesi. PR/merge burada anlam kazanır. | Yalnızca sözleşme dosyaları (şema, ADR, test stratejisi) | Opsiyonel (contract-module/...) | Evet; contract değişikliği PR gerektirir | Modül kendi başına deploy edilemez; app'in release train'inde gider | Contract, bağımlılık matrisi, test strateji belgesi |
-| archetype | büyük taş | Domain model + sözleşme projeksiyonu. Entity tanımı, API yüzeyi (GraphQL tipi), UI bileşen haritası ve migration şeması bir arada. | Evet; skeleton model, şema taslağı, Alembic migration | Evet (archetype/...) | Evet; en az 1 reviewer | Staging'e deploy edilebilir birim başlar | DB migration, GraphQL şema dosyası, Playwright smoke testi |
-| stone | orta taş | Somut özellik. Tek bir kullanıcı hikayesini ya da servis metodunu karşılayan, bağımsız test edilebilir kod parçası. | Evet | Evet (stone/...) | Evet | Staging | Birim + entegrasyon test raporu |
-| molecule | küçük taş | Alt özellik / bileşen. Bir stone'un ayrıştırılmış parçası; tek bir sınıf, resolver, hook veya UI bileşeni. | Evet | Evet (molecule/...) | Evet (önce stone ile birleştirilebilir) | Stone tamamlanınca | Birim test geçti kanıtı |
-| element | toz tanesi | Tekil işlev / test. Bir fonksiyon, bir Pydantic doğrulayıcı, bir CSS kuralı. | Evet | Evet (element/... veya üst branch'te) | Üst PR'a dahil | Molecule/stone tamamlanınca | İlgili test geçti |
-| atom | atom | En küçük bölünemez adım. Tek satır değişiklik, tek fixture, tek sabit. | Evet | Üst branch'te | Üst PR'a dahil | Molecule/stone tamamlanınca | Hayır (üst kanıt yeterli) |
+| app | ada | Ürün ailesi / portföy. Bir release train'in tepe düğümü. Altındaki tüm modülleri kapsayan tek bir deployment birimi tanımlar. | Hayır | Hayır | Hayır | Release train tamamlandığında | Yalnızca kapsam, ADR ve ilk dikey dilim çıktısı |
+| module | dağ | Bounded context / paket. Tek bir iş alanına kapalı sınır; ayrı paket kökü, kendi contract'ı ve bağımlılık listesi. PR/merge burada anlam kazanır. | Yalnızca sözleşme dosyaları (şema, ADR, test stratejisi) | Opsiyonel (contract-module/...) | Evet; contract değişikliği PR gerektirir | Modül kendi başına deploy edilemez; app'in release train'inde gider | Contract, bağımlılık matrisi, test strateji belgesi |
+| archetype | kaya | Domain model + sözleşme projeksiyonu. Entity tanımı, API yüzeyi (GraphQL tipi), UI bileşen haritası ve migration şeması bir arada. | Evet; skeleton model, şema taslağı, Alembic migration | Evet (archetype/...) | Evet; en az 1 reviewer | Staging'e deploy edilebilir birim başlar | DB migration, GraphQL şema dosyası, Playwright smoke testi |
+| feature | taş | Somut özellik. Tek bir kullanıcı hikayesini ya da servis metodunu karşılayan, bağımsız test edilebilir kod parçası. | Evet | Evet (feature/...) | Evet | Staging | Birim + entegrasyon test raporu |
+| component | kum | Alt özellik / bileşen. Bir feature'ın ayrıştırılmış parçası; tek bir sınıf, resolver, hook veya UI bileşeni. | Evet | Evet (component/...) | Evet (önce feature ile birleştirilebilir) | Feature tamamlanınca | Birim test geçti kanıtı |
+| work_unit | molekül | Tekil işlev / test. Bir fonksiyon, bir Pydantic doğrulayıcı, bir CSS kuralı. | Evet | Evet (work-unit/... veya üst branch'te) | Üst PR'a dahil | Component/feature tamamlanınca | İlgili test geçti |
+| micro_step | atom | En küçük bölünemez adım. Tek satır değişiklik, tek fixture, tek sabit. | Evet | Üst branch'te | Üst PR'a dahil | Component/feature tamamlanınca | Hayır (üst kanıt yeterli) |
 
 ### Önemli notlar
 
-Branch açma kuralı: atom ve element için ayrı branch açmak gerekli değildir; bunlar molecule veya stone branch'i içinde yaşar. archetype ve üzeri her biri kendi branch'ini alır.
+Branch açma kuralı: `micro_step` ve `work_unit` için ayrı branch açmak gerekli değildir; bunlar `component` veya `feature` branch'i içinde yaşar. `archetype` ve üzeri her biri kendi branch'ini alır.
 
 PR/merge kuralı: bir düğüm "done" sayılabilmesi için ilgili waterfall fazının kapısını geçmiş olmak zorundadır. PR açmak kapıyı geçmek değildir; faz kanıtı (`phases[<faz>].passed === true`) olmadan merge edilmez.
 
@@ -54,7 +54,7 @@ Faz sırası zorunludur; `phases[<önceki_faz>].passed === true` olmadan sonraki
 | requirements | Kabul kriterlerini (`acceptanceCriteria[]`) yazar. `owner` atar, `assignees[]` doldurur. Risk kaydını (`risks[]`) açar. Kapsam sınırını net çizer: neyin içinde, neyin dışında olduğunu. `deliverables[]` listesini oluşturur. | Kod yazar. Şema değişikliği yapar. Branch açar. Test dosyası oluşturur. |
 | test-plan | Test dosyalarını oluşturur — önce boş/kırmızı. `testCommand` alanını doldurur. `repoPath` belirler. `acceptanceCriteria[]` maddelerini test senaryolarına bire bir eşler. Test stratejisini (unit/integration/e2e/a11y) belgeler. | Production kodu yazar. Migration oluşturur. UI bileşeni geliştirir. |
 | db-schema | Alembic migration dosyasını yazar (`upgrade()` + `downgrade()`). SQLAlchemy/SQLModel modelini tanımlar. RLS politikasını ve tenant izolasyon kararını belgeler. `prodDataPolicy` ve `migrationMode` alanlarını doldurur. `rollback` alanını yazar. | Frontend kodu yazar. API resolver geliştirir. Uygulamayı çalıştırır. |
-| development | Branch açar (archetype/stone/molecule düzeyinde). Test-önce: önce testi kırmızı yak, sonra kodu yaz, sonra yeşile getir. FastAPI endpoint / GraphQL resolver / React bileşen / hook yazar. Birim ve integration testleri tamamlanmış olmalıdır bu faz kapanmadan. | Test yazmadan ilerlemeye çalışır. Migration değiştirir (db-schema fazına aittir). Deployment yapar. |
+| development | Branch açar (archetype/feature/component düzeyinde). Test-önce: önce testi kırmızı yak, sonra kodu yaz, sonra yeşile getir. FastAPI endpoint / GraphQL resolver / React bileşen / hook yazar. Birim ve integration testleri tamamlanmış olmalıdır bu faz kapanmadan. | Test yazmadan ilerlemeye çalışır. Migration değiştirir (db-schema fazına aittir). Deployment yapar. |
 | test-qa | E2E (Playwright) testlerini çalıştırır ve kanıtı `evidence[]`'a ekler. Güvenlik taraması (OWASP ZAP), performans testi (p95 < hedef), a11y taraması (axe-core 0 ihlal) çalıştırır. Her kanıt URL veya rapor olarak kaydedilir. | Yeni özellik ekler. Şema değişikliği yapar. Eksik testi görmezden gelir. |
 | verification | Staging deploy'unu doğrular. `deployTarget` üzerinde smoke testini çalıştırır. Evidence tamamlığını kontrol eder. Güvenlik ve WCAG kriterlerinin karşılandığını onaylar. Faz kapısını geçirir (`phases["verification"].passed = true`). | Yeni kod ekler. Testi atlar. Eksik kanıtla kapıyı geçirir. |
 | release-maintenance | Prod deploy'u gerçekleştirir. Audit log ve rollback prosedürünü test eder. Runbook'u günceller. Bağımlılık güvenlik taramasını çalıştırır (npm audit / pip-audit). On-call rotasyonunu belgeler. | Önceki fazlarda yapılmamış işleri burada tamamlamaya çalışır. |
@@ -98,9 +98,9 @@ Adım 3 — Seviye + faz + status birleşimi:
 | archetype | development | in-progress | Kodu geliştirmeye devam et; CI yeşil olduğunda test-qa hazırlığı yap. |
 | archetype | test-qa | todo | E2E, güvenlik, a11y ve performans kanıtlarını topla; evidence[] doldur. |
 | archetype | verification | todo | Staging'de smoke testini çalıştır; faz kapısını geçir. |
-| stone / molecule / element / atom | herhangi | backlog | Üst stone veya molecule henüz başlamadı; bekle veya üst düğümü başlat. |
-| stone / molecule / element | test-plan | todo | Birim test dosyasını yaz (kırmızı). |
-| stone / molecule / element | development | todo | Branch aç (molecule düzeyi yeterli); kodu yaz; testi yeşile getir. |
+| feature / component / work_unit / micro_step | herhangi | backlog | Üst feature veya component henüz başlamadı; bekle veya üst düğümü başlat. |
+| feature / component / work_unit | test-plan | todo | Birim test dosyasını yaz (kırmızı). |
+| feature / component / work_unit | development | todo | Branch aç (component düzeyi yeterli); kodu yaz; testi yeşile getir. |
 | herhangi | herhangi | blocked | Bloklayan düğümü bul (dependsOn veya blocks alanı); önce onu tamamla. |
 | herhangi | herhangi | done | Bu sayfada yapılacak iş kalmadı; bir üst düğüme veya bağımlı düğüme geç. |
 
@@ -115,9 +115,9 @@ Branch yalnızca platform monoreposunda açılır; actionplan'da veri/docs deği
 Platform monoreposunda kural:
 
 - archetype: `archetype/<slug>` (ör. `archetype/platform-customer-model`)
-- stone: `stone/<slug>`
-- molecule: `molecule/<slug>` veya üst stone branch'i içinde
-- element ve atom: molecule ya da stone branch'i içinde
+- feature: `feature/<slug>`
+- component: `component/<slug>` veya üst feature branch'i içinde
+- work_unit ve micro_step: component ya da feature branch'i içinde
 
 app ve module için platform monoreposunda branch açılmaz; bu seviyeler sözleşme ve kapsam belgesi taşır.
 
@@ -125,7 +125,7 @@ app ve module için platform monoreposunda branch açılmaz; bu seviyeler sözle
 
 PR zorunlu olduğu seviyeler: archetype ve üzeri (module, app). Ancak app ve module için PR içeriği yalnızca sözleşme/belge değişikliklerini kapsar; uygulama kodu içermez.
 
-stone, molecule ve alt seviyeler için PR, üst archetype veya stone PR'ına dahil edilebilir. Bağımsız küçük PR da kabul edilir; tercihen küçük tutulur.
+feature, component ve alt seviyeler için PR, üst archetype veya feature PR'ına dahil edilebilir. Bağımsız küçük PR da kabul edilir; tercihen küçük tutulur.
 
 Merge koşulu: tüm CI kapıları yeşil + ilgili waterfall fazı kapısı geçilmiş + en az 1 human reviewer onayı.
 
@@ -136,7 +136,7 @@ Merge koşulu: tüm CI kapıları yeşil + ilgili waterfall fazı kapısı geçi
 | app | Hayır (release train etiketi) | Tüm kritik path modüller tamamlandığında, release train olarak |
 | module | Hayır | app release train'inde |
 | archetype | Evet (en küçük deploy birimi) | verification fazı kapısı geçildikten sonra staging'e; release-maintenance fazında prod'a |
-| stone ve altı | Hayır | Üst archetype deploy'unda |
+| feature ve altı | Hayır | Üst archetype deploy'unda |
 
 ### Evidence
 
@@ -196,8 +196,8 @@ Migration dosyası ve rollback prosedürü olmadan yazılan kod, test ortamında
 **Uyarı 4: evidence olmadan faz kapısı geçirmek yanlıştır.**  
 "Bu test çalıştı, güven" ifadesi yeterli değildir. Her faz kapısı için URL veya dosya referansı olarak somut kanıt `evidence[]` alanına girilmelidir. Kanıtsız `passed: true` geçişi bir sonraki fazda keşfedilecek risk demektir.
 
-**Uyarı 5: atom / element'i bağımsız PR olarak açmak gereksizdir.**  
-Bu küçük değişiklikler için ayrı PR overhead yaratmak pratiği yavaşlatır. Bunlar molecule veya stone branch'ine dahil edilir.
+**Uyarı 5: micro_step / work_unit'i bağımsız PR olarak açmak gereksizdir.**  
+Bu küçük değişiklikler için ayrı PR overhead yaratmak pratiği yavaşlatır. Bunlar component veya feature branch'ine dahil edilir.
 
 **Uyarı 6: blocked status'taki düğümde çalışmaya devam etmek yanlıştır.**  
 `status: "blocked"` olan bir düğümde geliştirici zaman harcamamalıdır. `dependsOn` veya `blocks` alanındaki engelleyen düğümü bul; önce onu ilerlet.
@@ -214,16 +214,16 @@ Bu örnek, platform-customer-* kümesinin sözleşmeyi nasıl uyguladığını s
 ### Düğüm ağacı ve seviyeler
 
 ```
-platform-factory          (app — dağ)
-└── platform-db-schema    (module — kaya)
+platform-factory          (app — ada)
+└── platform-db-schema    (module — dağ)
     └── platform-customer-model  (archetype — büyük taş)
 
-platform-factory          (app — dağ)
-└── platform-graphql-api  (module — kaya)
+platform-factory          (app — ada)
+└── platform-graphql-api  (module — dağ)
     └── platform-customer-graphql  (archetype — büyük taş)
 
-platform-factory          (app — dağ)
-└── platform-ui-surface   (module — kaya)
+platform-factory          (app — ada)
+└── platform-ui-surface   (module — dağ)
     └── platform-customer-ui  (archetype — büyük taş)
 ```
 

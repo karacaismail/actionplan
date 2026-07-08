@@ -22,7 +22,8 @@
     "insan",
     "code",
     "first",
-    "girdi"
+    "girdi",
+    "module"
   ],
   "dependsOn": [
     "edu-u17"
@@ -151,7 +152,7 @@
         "ADR-0024 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -160,11 +161,12 @@
       "status": "filled",
       "items": [
         "ADR-0024 güvenlik açısı: main'e doğrudan push yasak; PR+inceleme+insan onayı zorunlu",
-        "ADR-0024 hassas bilgi gerektiğinde maskelenir",
-        "ADR-0024 ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "ADR-0024 kapı override/onay yetkisi rol bazlı (least-privilege): yalnız yetkili approver override edebilir; yetki tenant/app/module kapsamına bağlanır, kapı kanıtı bu kapsam dışına sızmaz",
+        "ADR-0024 kapı kanıtındaki (evidence/log) PII ve secret alanları saklanmadan önce maskelenir/redakte edilir",
+        "ADR-0024 override, onay ve waiver kararları değişmez (append-only, immutable) audit kaydına kim/ne zaman/neden ile yazılır"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Kapı geçiş/override yetkisi authz ile sınırlıdır; kanıtta PII/secret redakte edilir; tüm onay kararları değişmez audit izine düşer.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -173,11 +175,12 @@
       "status": "filled",
       "items": [
         "ADR-0024 yapısı: test-first, code review ve CI kapıları bloklayıcı",
-        "ADR-0024 tekrar eden mantık paylaşılan yardımcıya alınır",
+        "ADR-0024 kod sağlığı ekseni kapıya bağlanır: lint + tip + test kapısı yeşil olmadan merge yok; döngüsel karmaşıklık ve kapsam (coverage) eşikleri kapı tarafından zorlanır",
+        "ADR-0024 kapı koşucusu (gate runner) deterministiktir: aynı girdiye aynı sonuç; tekrar eden kapı mantığı paylaşılan yardımcıya alınır, ölü kod elenir",
         "ADR-0024 okunabilir ve test edilebilir kalır"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni lint/tip/test kapısı + karmaşıklık/coverage eşiği ile ölçülür; kapı koşucusu deterministiktir.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +188,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "ADR-0024 en-az-ayrıcalık ilkesine uyar",
-        "ADR-0024 değişikliği sürümlü ve izlenir",
-        "ADR-0024 girdi sınırda doğrulanır"
+        "ADR-0024 en-az-ayrıcalık ilkesine uyar; kapı araçları yalnız allowlist'teki komutları çalıştırır (serbest shell/JS/SQL yok)",
+        "ADR-0024 kapı araç zinciri için SBOM üretilir ve bağımlılık taraması (dependency scan) kapıya bağlanır; savunmasız sürüm merge'i bloklar",
+        "ADR-0024 kapı manifesti imzalıdır (signed manifest); imza doğrulanmadan kapı yapılandırması yüklenmez; kontrolsüz dış ağ erişimi (egress) engellenir",
+        "ADR-0024 girdi sınırda doğrulanır; değişiklik sürümlü ve izlenir"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Kapı aracı SBOM/dependency scan, imzalı manifest, allowlisted komut ve egress kısıtı ile sertleştirilir.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +202,12 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "ADR-0024 performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "ADR-0024 sık erişim indeksli/önbellekli tasarlanır",
-        "ADR-0024 büyük veride sayfalı işlenir"
+        "ADR-0024 performans açısı: kapı koşumu için ölçülebilir bütçe: PR başına kapı p95 ≤ 5 dk, tam CI kapı seti p95 ≤ 12 dk; eşiği aşan kapı uyarı üretir",
+        "ADR-0024 yalnız değişen (affected) dosyalar taranır; sonuçlar içerik-hash ile önbelleğe alınır, tüm repoyu yeniden tarayan N+1 dosya taraması önlenir",
+        "ADR-0024 ağır iş asenkron yapılır; sık erişim indeksli/önbellekli tasarlanır, büyük veride sayfalı işlenir"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Kapı koşum bütçesi ölçülür (p95 hedefi); affected-file cache ile N+1 dosya taraması önlenir.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -211,12 +215,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "ADR-0024 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "ADR-0024 mobil istemci aynı sözleşmeyi tüketir",
+        "ADR-0024 mobil açısı: kapı kanıtı görüntüleyicisi dar ekranda tek sütun ve okunur kalır; son kapı durumunun offline anlık görüntüsü (snapshot/cache) çevrimdışıyken de gösterilir",
+        "ADR-0024 mobil kapı görünümünde onay/override düğmeleri en az 44 px temas alanı taşır",
+        "ADR-0024 mobil istemci aynı sözleşmeyi tüketir; PWA paketlemesi çevrimdışıyken salt-okunur (read-only) fallback sunar, onay yalnız çevrimiçi verilebilir",
         "ADR-0024 bildirim/onay gerektiğinde push ile iletilir"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Mobil kapı kanıtı görünümü offline snapshot, en az 44 px temas alanı ve PWA read-only fallback ile çalışır.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +234,7 @@
         "ADR-0024 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -237,12 +242,13 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "ADR-0024 dağıtım açısı: ortam-paritesi: geliştirme/üretim tutarlı",
-        "ADR-0024 CI kapılarından geçtikten sonra yayınlanır",
-        "ADR-0024 shared hosting ortamında da çalışabilir"
+        "ADR-0024 dağıtım açısı: ortam-paritesi: geliştirme/üretim tutarlı; kapı koşucusu için liveness/readiness probe tanımlıdır, CI kapı durumu sağlık kontrolü olarak dışa verilir",
+        "ADR-0024 hatalı kapı yapılandırması için geri-alma: önceki imzalı kapı manifestine (signed manifest) rollback yapılır",
+        "ADR-0024 kapı yapılandırması koddan ayrıdır; secret'lar ortam/secret store üzerinden enjekte edilir (config/secret ayrımı), repoda tutulmaz",
+        "ADR-0024 CI kapılarından geçtikten sonra yayınlanır; shared hosting ortamında da çalışabilir"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "Kapı koşucusu liveness/readiness probe taşır; hata halinde önceki imzalı manifeste rollback; config/secret ayrımı zorunlu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +261,7 @@
         "ADR-0024 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +274,7 @@
         "ADR-0024 — AI PR açabilir ve öneri verir; merge ve onay kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -277,11 +283,12 @@
       "status": "filled",
       "items": [
         "ADR-0024 doğrulama: kapılar (test/tip/lint/a11y) yeşil olmadan merge yok",
-        "ADR-0024 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "ADR-0024 test tipleri açıkça tanımlı: unit (kapı kuralı mantığı), contract (kapı çıktı sözleşmesi), e2e (PR→kapı→merge yolu) ve negatif fixture: kapı fail senaryosu, override reddi (yetkisiz), süresi geçmiş waiver",
+        "ADR-0024 meta-test: her zorunlu kapının gerçekten bloklayıcı olduğu; CI smoke testi kapı koşucusunun ayakta olduğunu doğrular",
+        "ADR-0024 ilgili senaryolar gözden geçirilir; Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test tipleri açık: unit/contract/e2e + negatif fixture (fail, override reddi, süresi geçmiş waiver) + kapı meta-testi ve CI smoke.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +301,7 @@
         "ADR-0024 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +314,7 @@
         "ADR-0024 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +328,7 @@
         "ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (modül/kaya; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: adr-0024 — \"ADR-0024: Geliştirici Akışı Kapıları — Zorunlu Yönetişim\" (module/dağ; küme: Kararlar (ADR)). Özet: Test-first, code review, CI gate'leri, insan onayı, migration ve ortam-paritesi geliştirici akışında zorunludur; mutlu-yol yeterli değildir. Etiketler: adr, workflow, ci-cd, test-first, yönetişim.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

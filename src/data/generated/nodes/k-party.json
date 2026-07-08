@@ -17,7 +17,8 @@
     "temporal",
     "kimlik",
     "kernel",
-    "layer0"
+    "layer0",
+    "module"
   ],
   "dependsOn": [
     "k-schema",
@@ -317,11 +318,11 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "party çekirdek kimliği person veya organization olarak bir kez tanımlanır; type enum polimorfizmin taban ayrımıdır",
-        "party_role rol anahtarını (buyer, seller, employee, supplier, agent) context JSONB ve valid_from/valid_to ile zaman-aralıklı bağlar",
-        "party_relation taraflar arası ilişki kenarını (employs, owns, represents) from_party ve to_party grafiği olarak tutar",
-        "effective_roles(party_id, at) verilen anda geçerli rolleri, resolve_context bir rolün tenant/channel/app bağlamında geçerliliğini çözer",
-        "rol koda gömülmez; if role == buyer yerine party_role sorgusu çalışır, roller veridir"
+        "kapsam/işlev sınırı: party çekirdeği yalnız 'kim ve hangi rolde' sorusunu çözer; person veya organization bir kez tanımlanır, type enum polimorfizmin taban ayrımıdır, contact defteri yerine geçmez",
+        "girdi/çıktı: party_role girdi olarak rol anahtarını (buyer/seller/employee/supplier/agent) alır, çıktı olarak context JSONB + valid_from/valid_to ile zaman-aralıklı rol bağı üretir",
+        "durum/akış: party_relation taraflar arası kenarı (employs/owns/represents) from_party→to_party yönlü grafiği olarak tutar; akış rol-bağla → ilişki-kur → effective_roles-çöz sırasını izler",
+        "hata yolu: effective_roles(party_id, at) verilen anda geçerli rolleri döndürür; bağlam yoksa ya da rol süresi geçmişse fail-closed reddeder, resolve_context uyumsuz tenant/channel/app bağlamında boş küme çözer",
+        "sözleşme/kabul: rol koda gömülmez; if role == buyer yerine party_role sorgusu çalışır, roller veridir ve docs/actor-party-contract.md sözleşmesiyle doğrulanır"
       ],
       "notes": "party 'kim ve hangi rolde' sorusunu yanıtlar; l1-party contact-merkezli düğümünün kernel-seviyesi terfisidir, contact defterinin yerine geçmez.",
       "prompt": "\"Özellik Tanımları\" boyutunu k-party için üret. Bağlam: party — polimorfik aktör (buyer/seller/employee) sözleşmesi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: party/party_role/party_relation alan sözleşmesi, polimorfik rol çözümü, temporal valid_from/valid_to, effective_roles servis arayüzü, hata yolları. Güvenlik sınırı: AI app/module üretemez/güncelleyemez, ruleset override edemez; rol anahtarı icat edemez.",
@@ -425,11 +426,11 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "party backend ECA ruleset'i: approval_ref'siz bind_role denemesini ApprovalRequiredError ile deny eder, rol aktifleşmez",
-        "AI yeni rol anahtarı icat edemez (autonomy none); yeni rol tipi yalnız k-authz PR'ıyla eklenir, ruleset override denemesi deny",
-        "party rol-bağlama zincirinde döngü kırıcı (maks 6) + idempotency; tekrarlı bind_role aynı party_role'ü çoğaltmaz",
-        "party_role prod update append-only/expand-contract; geçmiş rol (valid_to) korunur, step-up + rollback ile revoke iz bırakır",
-        "RoleBindingDraft yalnız draft üretir; AI org şemasından rol önerir ama doğrudan aktif edemez, tenant izolasyonu ruleset'te sabit"
+        "olay: bind_role isteği geldiğinde approval_ref yoksa → eylem: party backend ruleset ApprovalRequiredError ile deny eder → sonuç: rol aktifleşmez",
+        "tetikleyici: AI yeni rol anahtarı icat etmeye kalkarsa (autonomy none) → eylem: deny → sonuç: yeni rol tipi yalnız k-authz PR'ıyla eklenir; ruleset override denemesi de deny edilir",
+        "olay: rol-bağlama zinciri maks 6 derinliği aşarsa ya da bind_role tekrarlanırsa → eylem: döngü kırıcı + idempotency uygulanır → sonuç: aynı party_role çoğaltılmaz",
+        "olay: party_role prod'da güncellendiğinde → eylem: append-only/expand-contract zorlanır → sonuç: geçmiş rol (valid_to) korunur, revoke step-up + rollback ile iz bırakır",
+        "tetikleyici: AI org şemasından rol önerdiğinde → eylem: yalnız RoleBindingDraft üretilir → sonuç: rol doğrudan aktif edilemez, tenant izolasyonu ruleset'te sabit kalır"
       ],
       "notes": "party ECA ruleset'i approval_ref'siz rol aktivasyonunu ve AI rol-anahtarı icadını deny eder; rol geçmişi append-only korunur.",
       "prompt": "\"ECA Kuralları\" boyutunu k-party için üret. Bağlam: party — polimorfik aktör (buyer/seller/employee) sözleşmesi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: approval_ref'siz bind_role deny (ApprovalRequiredError), AI rol-anahtarı icat yasağı, döngü kırıcı maks 6 + idempotency, append-only/expand-contract + step-up + rollback, RoleBindingDraft draft-only. Güvenlik sınırı: backend ruleset, AI ruleset override edemez.",
@@ -485,11 +486,11 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "party dependsOn k-schema (şema temeli) + k-tenancy (kiracı bağlamı); bunlar hazır olmadan party yazılamaz, kritik yol",
-        "party_role PDP'nin (k-policy-pdp) subject girdisidir; PDP effective_roles'u okuyup 'bu aktör bu kaynakta bu eylemi yapabilir mi' çözer",
-        "k-capability, k-mode ve k-policy-pdp kendi dependsOn'larında party'yi listeler; party bu üçünden önce gelir",
-        "ArcheType kendi Customer/Supplier tablosunu yazmaz; party_id + role=buyer bağlamına referans verir, party_relation ReBAC kenarı PDP'ye akar",
-        "Strawberry PartyType/PartyRoleType/PartyRelationType resolver'ları Depends(require_tenant) + RequirePermission ile korunur"
+        "bağımlılık yönü: party → k-schema (şema temeli) + k-tenancy (kiracı bağlamı); bu ikisi hazır olmadan party yazılamaz (kritik yol)",
+        "veri akış yönü: party_role, k-policy-pdp'nin subject girdisidir; PDP, effective_roles tipli arayüzünü okuyup 'bu aktör bu kaynakta bu eylemi yapabilir mi' çözer (party → PDP)",
+        "ters bağımlılık: k-capability, k-mode ve k-policy-pdp kendi dependsOn'larında party'yi listeler; party bu üçünden önce gelir",
+        "tipli API sözleşmesi: Strawberry PartyType/PartyRoleType/PartyRelationType GraphQL resolver'ları Depends(require_tenant) + RequirePermission ile korunur, arayüz tiplidir",
+        "ArcheType kendi Customer/Supplier tablosunu yazmaz; party_id + role=buyer bağlamına referans verir, party_relation ReBAC kenarı olay/veri olarak PDP'ye akar"
       ],
       "notes": "party kernel entegrasyonu k-schema/k-tenancy'ye bağlıdır ve PDP'nin subject girdisidir; ArcheType/Surface party'ye referans verir, tablo kopyalamaz.",
       "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu k-party için üret. Bağlam: party — polimorfik aktör (buyer/seller/employee) sözleşmesi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: dependsOn k-schema + k-tenancy, party_role PDP subject girdisi, k-capability/k-mode/k-policy-pdp party'ye bağımlı, ArcheType party referansı, Strawberry resolver koruması. Güvenlik sınırı: AI app/module üretemez.",
@@ -501,9 +502,9 @@
       "status": "filled",
       "items": [
         "party, üst app-layer0 içinde tek party kaydı + zaman-aralıklı party_role çözüm işlevini sağlar (kernel module sınırı)",
-        "diğer app'ler ve ArcheType'lar buyer/seller/employee rolünü üretilen GraphQL API üzerinden tüketir; doğrudan party tablosuna erişmez",
-        "50 uygulamanın hiçbiri kendi Customer/Supplier/Employee tablosunu yazmaz; hepsi party + party_role referansına bağlanır",
-        "PDP ve Surface party_role verisini effective_roles servis arayüzünden okur; rol dallanması modül dışına kod olarak sızmaz"
+        "doğrudan DB yasağı: diğer app'ler ve ArcheType'lar party tablosuna doğrudan erişemez; buyer/seller/employee rolünü yalnız üretilen GraphQL API (Contract kapısı) üzerinden tüketir",
+        "50 uygulamanın hiçbiri kendi Customer/Supplier/Employee tablosunu yazmaz; hepsi party + party_role referansına API sözleşmesiyle entegre olur",
+        "PDP ve Surface paneli party_role verisini effective_roles servis arayüzünden okur; rol dallanması modül dışına kod olarak sızmaz"
       ],
       "notes": "party modülü tek aktör kayıt defteridir; 50 app kendi aktör tablosunu yazmaz, party_role'ü API üzerinden tüketir.",
       "prompt": "\"Modül Kullanımı\" boyutunu k-party için üret. Bağlam: party — polimorfik aktör (buyer/seller/employee) sözleşmesi. Çıktı: 3-5 madde, Türkçe, somut. Kapsa: kernel module sınırı, buyer/seller/employee rolünün GraphQL API'den tüketimi, app'lerin kendi aktör tablosu yazmaması, PDP/Surface effective_roles okuması. Güvenlik sınırı: AI app/module üretemez, doğrudan DB erişimi yok.",

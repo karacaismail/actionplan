@@ -22,7 +22,8 @@
     "zaman",
     "kayıt",
     "ruleset",
-    "açık"
+    "açık",
+    "module"
   ],
   "dependsOn": [
     "sus-bitemporal"
@@ -150,10 +151,11 @@
       "items": [
         "Eskiden disiplin gerektiren şeyler ArcheType tanımında bayrak: bitemporal, pii, retention, audit",
         "Bayraklar koddan değil ArcheType sözleşmesinden okunur; davranış tanımla değişir",
-        "Her bayrak bir altyapı yeteneğini açar (örn. pii → maskeleme + retention zinciri)"
+        "Her bayrak bir altyapı yeteneğini açar (örn. pii → maskeleme + retention zinciri)",
+        "İşlev sınırı: modül yalnız bayrak şeması ve türetilmiş davranışı üretir; iş mantığı yazmaz. Girdi = bayrak kümesi + alan metadata'sı; Çıktı = üretilen kolonlar/politikalar/süpürme işleri/audit hook'ları"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kapsam sınırı net: girdi ArcheType bayrak kümesi + alan metadata, çıktı üretilen kolon/politika/iş/audit hook; hata yolu = çelişen bayraklar (örn. pii-kaldır + retention-zorunlu) sözleşme doğrulamasında reddedilir, davranış elle kodlanmaz sadece beyandan türetilir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -166,7 +168,7 @@
         "retention bayrağı saklama süresi sonunda anonimleştirme/silme kuralını tetikler"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -176,10 +178,11 @@
       "items": [
         "Bayrak işleme merkezî; her ArcheType'ta tekrar yazılmaz, sözleşmeden türetilir",
         "Bitemporal bayrağı çift zaman ekseni kolonlarını otomatik üretir (geçerli/işlem zamanı)",
-        "Bayrak kombinasyonları derlemede doğrulanır; çelişen bayrak reddedilir"
+        "Bayrak kombinasyonları derlemede doğrulanır; çelişen bayrak reddedilir",
+        "Bayrak-şeması parser + lint kapısı CI'da: bilinmeyen/yazım-hatalı bayrak build'i kırar. Bütçe eşiği: 0 bilinmeyen bayrak, her ArcheType için 0 tekrar (duplicate) bayrak-işleyici, döngüsel karmaşıklık ≤10"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Lint/gate: bayrak-şeması parser bilinmeyen bayrağı reddeder (zero-unknown-flag eşiği); duplicate per-ArcheType handler sayısı 0 zorunlu; parsing tek merkezde, davranış sözleşmeden türetilir.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -189,10 +192,11 @@
       "items": [
         "pii + retention birlikteyse en-az-saklama ilkesi; gereksiz kişisel veri tutulmaz",
         "audit bayrağı değişmez (append-only) günlüğe yazar; sonradan değiştirilemez",
-        "Bayrak değişikliği migration güvenliği gerektirir; pii kaldırma owner onayı"
+        "Bayrak değişikliği migration güvenliği gerektirir; pii kaldırma owner onayı",
+        "Sertleştirme: yalnız allowlist'teki bayraklar geçerli; bayrak-motoru şeması imzalı sürümlenir (signed schema version), her build'de SBOM + bağımlılık taraması; runtime override yok, motorun dış ağa egress'i kapalı (kısıtlı yüzey)"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Sertleştirme ekseni: allowlist'li bayraklar + imzalı şema sürümü (signature) + bayrak-motoru için SBOM/dependency scan; çalışma anında ruleset override edilemez ve motorun egress yüzeyi kapalı tutulur.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -202,10 +206,11 @@
       "items": [
         "Bitemporal sorgular için zaman-eksenli indeks bayrakla birlikte planlanır",
         "audit yazımı asenkron outbox ile; ana işlem yolunu yavaşlatmaz",
-        "retention süpürmesi toplu/zamanlanmış iş olarak; çevrimiçi yolu etkilemez"
+        "retention süpürmesi toplu/zamanlanmış iş olarak; çevrimiçi yolu etkilemez",
+        "Ölçülebilir hedef: bayrak değerlendirme/üretim p95 ≤ 50 ms, indeksli bitemporal sorgu p95 ≤ 150 ms; asenkron audit/outbox gecikme bütçesi p95 ≤ 2 sn ve kuyruk birikimi < 1000"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedefler: bayrak evaluation p95 ≤ 50 ms, indeksli bitemporal sorgu p95 ≤ 150 ms, audit/outbox drenaj bütçesi p95 ≤ 2 sn.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -215,10 +220,11 @@
       "items": [
         "Bayrak yönetim ekranı mobilde anahtar (switch) listesi; her bayrak açıklamalı",
         "iOS/Android'de bayrak durumu salt-okuma gösterilebilir",
-        "Bayrak değişimi yalnızca yetkili panelden; mobil görünümde kilitli olabilir"
+        "Bayrak değişimi yalnızca yetkili panelden; mobil görünümde kilitli olabilir",
+        "Çevrimdışı (offline) önbelleğe alınmış bayrak özeti salt-okuma gösterilir; mobil anahtarlarda (switch) en az 44 px temas alanı; PWA/Capacitor paketlemesinde salt-okuma köprü (bridge) — yazma yok"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "Offline: son senkron bayrak özeti önbellekten salt-okuma sunulur; 44px dokunma hedefi; PWA/Capacitor read-only bridge paketlemesi, mobilden bayrak yazımı devre dışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -231,7 +237,7 @@
         "Bayrak durumu yalnız renkle değil metin+ikonla; kontrast 7:1"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -241,10 +247,11 @@
       "items": [
         "Bayrak işleme kernel'de; Swarm/Kubernetes'te ArcheType deposuyla birlikte",
         "retention/audit süpürme işleri ayrı worker/CronJob olarak ölçeklenir",
-        "Shared hosting'de bitemporal/audit kısıtlı olabilir; degrade mod tanımlı"
+        "Shared hosting'de bitemporal/audit kısıtlı olabilir; degrade mod tanımlı",
+        "Bayrak-motoru için liveness/readiness probe (şema yüklendi + allowlist doğrulandı mı); rollback = önceki imzalı bayrak şeması sürümüne dön; config/secret ayrımı (bayrak şeması config, imza anahtarı secret store'da)"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "Health/probe: motor readiness'i şema+allowlist doğrulamasına bağlı; rollback önceki imzalı şema sürümüne; config (bayrak şeması) ile secret (imza anahtarı) ayrı yönetilir.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -257,7 +264,7 @@
         "Olay: audit bayraklı kayıt değişti → değişmez öncesi/sonrası hash günlüğü oluştur"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -270,7 +277,7 @@
         "AI bayrak önerebilir (örn. pii işaretle) ama retention/audit bayrağını tek başına kaldıramaz"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -280,10 +287,11 @@
       "items": [
         "Bitemporal bayrağı için çift-zaman sorgu doğruluk testi",
         "pii maskeleme + retention anonimleştirme e2e senaryosu",
-        "audit değişmezlik testi; geçmiş kayıt değiştirilemez"
+        "audit değişmezlik testi; geçmiş kayıt değiştirilemez",
+        "Negatif senaryo fixture'ları: çelişen bayrak (pii-kaldır + retention-zorunlu) reddi, yetkisiz pii silme denemesinin deny'lanması, bilinmeyen bayrak reddi — kanıt (evidence) artefaktı üretilir; testing-loop maks 6 tekrar, düzelmezse raporla"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Negatif senaryolar + fixture: çelişen/bilinmeyen bayrak reddi ve yetkisiz pii silme deny'i kanıtla doğrulanır; testing-loop maks 6, aşılırsa QA ajanı rapor üretir.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -293,10 +301,11 @@
       "items": [
         "A02 Cryptographic Failures: pii bayraklı alan şifreleme/maskeleme kuralına bağlı",
         "A09 Logging: audit bayrağı değişmez forensic iz sağlar",
-        "A04 Insecure Design: retention ile veri minimizasyonu tasarıma gömülü"
+        "A04 Insecure Design: retention ile veri minimizasyonu tasarıma gömülü",
+        "Standart eşlemesi: OWASP ASVS + NIST SSDF + bayrak-motoru SBOM'u; bayrak kümesi girdi doğrulaması (allowlist şema); audit bayrağı değişmez (immutable) denetim izi sağlar"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "ASVS/NIST SSDF eşlemesi + SBOM izlemesi; bayraklar için input validation (allowlist şema doğrulaması); audit bayrağı değişmez denetim izi (immutable audit trail) garantisi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -309,7 +318,7 @@
         "retention bayrağı zamanlanmış süpürme servisini tetikler"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -323,7 +332,7 @@
         "ArcheType Bayrakları — Zaman ve Veri Yaşamı bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "ArcheType Bayrakları — Zaman ve Veri Yaşamı, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (modül/kaya; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: k-archetype-bayraklari — \"ArcheType Bayrakları — Zaman ve Veri Yaşamı\" (module/dağ; küme: Kernel). Özet: Eskiden disiplin gerektiren şeyler artık tanımdaki bir bayrak: bitemporal, pii, retention, audit — kod değil beyan. Etiketler: archetype, bayrak, bitemporal, pii, retention.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -23,7 +23,8 @@
     "graceful",
     "uçları",
     "trafik",
-    "güvenli"
+    "güvenli",
+    "feature"
   ],
   "dependsOn": [
     "cc-obs",
@@ -150,12 +151,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Health Check + Readiness/Liveness Probes: servis sağlık uçları ve orkestratör entegrasyonu",
-        "Bağımlılık sağlığı (DB/kuyruk), graceful shutdown ve başlangıç sırası",
-        "Sağlık derecelendirme (healthy/degraded/unhealthy)"
+        "Kapsam/işlev sınırı: yalnız /health, /ready, /live sözleşmesini ve orkestratör kontratını tanımlar; gerçek probe endpoint kurulumu, K8s manifesti değişikliği veya trafik yönlendirme bu birimin dışındadır — birim sözleşme önerisi, checklist ve karar kaydı üretir.",
+        "Girdi: service id, dependency list, probe kind (liveness/readiness/startup), timeout budget. Çıktı: health status contract (healthy/degraded/unhealthy), degraded reason code, readiness decision (true/false).",
+        "Durum akışı: starting → ready → degraded → unhealthy → draining; her geçiş için tetikleyici ve orkestratöre verilen sözleşme/kabul kriteri tanımlı.",
+        "Hata yolları: DB timeout, queue unreachable, stale dependency, startup deadline aşımı → readiness false + reason code; timeout budget zorunlu, hiçbir hata probe'u kilitlemez.",
+        "AI sınırı: yalnız probe sözleşmesi önerisi, risk/evidence/checklist ve insan onayı bekleyen karar kaydı üretir; app/module/ruleset yaratamaz, değiştiremez veya override edemez."
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Kapsam yalnız sözleşme/kanıt/checklist; girdi-çıktı, durum akışı ve hata yolları burada net, uygulama (endpoint/K8s) dışarıda.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,12 +166,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Sağlık uçları iç bilgi sızdırmaz (genel durum); detay yetkili",
-        "Probe uçları kimlik-doğrulamasız ama bilgi-az",
-        "Sağlık metrikleri ops düzlemi yetkisiyle detaylı"
+        "Probe uçları kimlik-doğrulamasız ama bilgi-az: genel healthy/unhealthy döner; ayrıntılı bağımlılık durumu yalnız ops düzlemi yetkisiyle (RBAC, en-az-ayrıcalık) görünür — yetkisiz detay isteği deny edilir.",
+        "Yanıtlarda secret/PII maskelenir: dependency hata mesajı ham connection string, kullanıcı verisi ya da iç host/IP sızdırmaz; hassas alanlar redakte edilir.",
+        "Detay probe yüzeyi ağ izolasyonu ardında (internal/cluster-only) tutulur; dış yüzeyde yalnız minimal uç açıktır.",
+        "Sağlık durum geçişleri ve detay erişim denemeleri değişmez ops audit log'una yazılır (kim, ne zaman, hangi kapsam)."
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Yetkisiz detay deny + audit; secret/PII maskeleme ve ağ izolasyonu/en-az-ayrıcalık probe yanıtlarında zorunlu.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -181,7 +185,7 @@
         "Graceful shutdown sırası tanımlı — engine/görünüm ayrımı Health Check + Readiness/Liveness Probes modüler sınırıyla korunur; strict tip modu açık"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -189,12 +193,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Probe yanıtı minimal (sağlık sızıntısı yok)",
-        "Readiness false iken trafik almaz (güvenli)",
-        "Derecelendirme degraded'da kısmi hizmet"
+        "Sertleştirme (hardening) ekseni: probe uçları en-az-ayrıcalıkla çalışır, detay yüzeyi allowlist'li kaynaklara ve imzalı isteklere kapatılır; okuma dışı işlem yok.",
+        "Bağımlılık/SBOM: probe kütüphaneleri SBOM'a işlenir, SCA taramasıyla zafiyet izlenir; yeni bağımlılık imza/allowlist onayından geçmeden eklenmez.",
+        "Egress/saldırı yüzeyi daraltma: probe yalnız tanımlı bağımlılıklara (DB/kuyruk) çıkış yapar, dış egress engellenir; açık uç sayısı minimumda tutulur.",
+        "Readiness false iken trafik alınmaz, degraded'da kısmi hizmet — bilgi sızıntısı olmadan güvenli mod."
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "Hardening ekseni açık; SBOM/SCA, imza/allowlist ve egress/yüzey daraltma probe için somutlanır.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -202,12 +207,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Probe hafif (düşük ek-yük); sık çağrılır",
-        "Bağımlılık kontrolü önbellekli (kısa TTL)",
-        "Başlangıç sırası optimize — sayfalama penceresi Health Check + Readiness/Liveness Probes listelerinde sabit maliyetlidir; ofset büyümesi imleçle engellenir"
+        "Ölçülebilir hedef: p95 probe latency ≤ 50 ms, liveness ek-yükü < %1 CPU; hedef aşımı alarma bağlanır.",
+        "Bağımlılık kontrolü kısa TTL cache'li (ör. 5 sn): her probe çağrısında DB/kuyruk yeniden yoklanmaz, fanout tekrarı azalır.",
+        "Dependency fanout budget: readiness en çok N bağımlılığı paralel + bağımlılık başına timeout (ör. 250 ms) ile yoklar; toplam süre timeout budget'ı aşamaz.",
+        "Liveness hafif ve niyet-odaklı tutulur (dış bağımlılık yoklamaz); sık çağrıda sabit maliyetlidir."
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedef net: p95 ≤ 50 ms, TTL cache ve dependency fanout budget/timeout ile maliyet sınırlı.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -220,7 +226,7 @@
         "Bağlantı durumu gösterilir — Health Check + Readiness/Liveness Probes responsive kırılımları cihazda testlidir; offline taslak kaybolmaz (senkron kanıtı)"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -228,12 +234,13 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Sağlık panosu klavye+okuyucu erişimli",
-        "Sağlık durumu renk dışında metin+ikonla; kontrast 7:1",
-        "Degrade bildirimi açık — ARIA etiketleri Health Check + Readiness/Liveness Probes alanlarında bire bir; kontrast 7:1 üstü doğrulanır"
+        "Sağlık durumu renk dışında metin + ikon + ARIA ile taşınır; kontrast 7:1 üstü, renk körlüğünde de okunur.",
+        "Ekran okuyucu: durum değişimi aria-live=polite bölgesinden duyurulur; her uç/kart için açık etiket ve görünür odak sırası vardır.",
+        "axe/AAA kanıtı: panoda axe-core taraması 0 kritik ihlal, WCAG 2.2 AAA kontrol listesi CI'da koşar ve rapor evidence'a eklenir.",
+        "Etkileşimli öğeler (yenile/detay butonu) tam klavye erişimli ve en az 44 px temas alanı sağlar."
       ],
-      "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "notes": "Ekran okuyucu duyurusu, axe/AAA kanıtı ve en az 44 px hedef boyutu birlikte karşılanır.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -246,7 +253,7 @@
         "Shared hosting'de basit sağlık ucu — Health Check + Readiness/Liveness Probes sürümü mavi-yeşil geçişle alınır; smoke sonrası trafik anahtarlanır"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -259,7 +266,7 @@
         "Olay: shutdown sinyali → graceful: yeni istek alma, mevcutları bitir (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -272,7 +279,7 @@
         "AI sağlık anomali/kök-neden önerir; probe/shutdown davranışını kendisi değiştiremez"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -280,12 +287,13 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Liveness/readiness davranış testi (unhealthy'de trafik almaz)",
-        "Graceful shutdown testi (istek kaybı yok)",
-        "Bağımlılık timeout testi; en çok 6 tur"
+        "Contract test: /health, /ready, /live yanıt şeması ve status kodları sözleşmeye göre doğrulanır (fixture: healthy/degraded/unhealthy payload'ları).",
+        "Unit + integration: bağımlılık yoklama, TTL cache ve timeout bütçesi mantığı; negatif senaryolar — DB timeout, queue unreachable, stale dependency → readiness false + doğru reason code.",
+        "Negatif güvenlik senaryosu: unauth detail request deny edilir ve probe yanıtı secret/PII sızdırmaz (kanıtlı assertion).",
+        "e2e/CI: readiness false iken trafik almama ve graceful shutdown'da istek kaybı olmaması doğrulanır; testing-loop maks 6 tur, düzelmezse fixture kanıtıyla rapor edip durur (autonomous QA)."
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Test türleri açık (contract/unit/integration/e2e-CI); negatif senaryolar, fixture kanıtı ve maks 6 turlu QA loop içerilir.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -298,7 +306,7 @@
         "A09 Logging: sağlık geçişleri iz — Health Check + Readiness/Liveness Probes dosya/URL girdileri SSRF filtresinden geçer; doğrulama ihlali denetim izine düşer"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -311,7 +319,7 @@
         "Sağlık olayları uyarıya — geriye-uyumsuz değişiklik Health Check + Readiness/Liveness Probes sözleşme sürümünü artırır; uyum matrisi CI koşusundadır"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -325,7 +333,7 @@
         "Üst modül Health Check + Readiness/Liveness Probes birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Health Check + Readiness/Liveness Probes, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (taş/kum; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: cc-obs-deep — \"Health Check + Readiness/Liveness Probes\" (feature/taş; küme: Cross-cutting). Özet: /health, /ready, /live — Kubernetes ve LB'nin sistemi 'şu an çalışıyor mu?' sorusunu cevaplaması. Etiketler: crosscut, health, probes, k8s, liveness, readiness.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

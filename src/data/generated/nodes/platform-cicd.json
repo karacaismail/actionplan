@@ -21,7 +21,8 @@
     "test",
     "otomatik",
     "rollback",
-    "build"
+    "build",
+    "module"
   ],
   "dependsOn": [
     "platform-graphql-api",
@@ -329,10 +330,11 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "GitHub Actions cache katmanı: pip bağımlılıkları ve Docker layer cache actions/cache ile saklanır; pipeline süresini tekrar çalışmalarda %60 kısaltır.",
-        "Paralel job stratejisi: lint, birim test ve güvenlik taraması ayrı job olarak eş zamanlı çalıştırılır; toplam pipeline süresi p95 <8 dakika hedefi.",
-        "Docker image çok aşamalı (multi-stage) build: builder aşamasında derleme araçları, final aşamada yalnızca çalışma zamanı bağımlılıkları bulunur; image boyutu %50 küçülür.",
-        "Entegrasyon testleri için docker compose up --wait kullanılır; sabit sleep() yerine servis sağlık kontrolü tamamlanana kadar beklenir, güvenilmez zamanlama sorunu ortadan kalkar."
+        "GitHub Actions cache katmanı: pip bağımlılıkları ve Docker layer cache actions/cache ile saklanır; hedef, tekrar çalışmalarda pipeline süresini ~%60 kısaltmak.",
+        "Kod sağlığı kapısı: her PR'da tip (type/tip) denetimi mypy/pyright ve tsc ile sıfır hata; fonksiyon başına siklomatik karmaşıklık (complexity) ≤10 hedefi, eşik aşılırsa böl/refactor (split) önerisiyle merge engellenir.",
+        "Modülerlik guardrail'i: dosya başına ≤400, fonksiyon başına ≤50 satır hedefi ve döngüsel import tespiti; ihlalde modülü böl/refactor kaydı zorunlu tutulur, güçlü bağlaşım pipeline uyarısı üretir.",
+        "Ölü kod (dead code) ve kullanılmayan bağımlılık taraması: vulture/ts-prune ve depcheck CI job'ında çalışır; erişilemez kod ile kullanılmayan import raporlanır, eşik üstü artış deploy'u bloklar.",
+        "Docker image çok aşamalı (multi-stage) build: builder aşamasında derleme araçları, final aşamada yalnızca çalışma zamanı bağımlılıkları bulunur; image boyutu hedefi ~%50 küçültmektir."
       ],
       "notes": "Cache ve paralel job stratejisi, pipeline süresini minimize ederek geliştirici geri bildirim döngüsünü hızlandırır.",
       "prompt": "CI/CD modülü kod optimizasyon stratejilerini kapsa; Actions cache konfigürasyonu, paralel job mimarisi, multi-stage Dockerfile tasarımı ve sağlık kontrolü tabanlı servis bekleme mekanizmasını teknik düzeyde ele al. çıktı: optimize edilmiş workflow YAML örneği ve beklenen süre karşılaştırma tablosu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -360,8 +362,9 @@
       "status": "filled",
       "items": [
         "Deploy sonrası smoke test: /health/liveness ve /health/readiness uç noktaları 30 saniye timeout ile kontrol edilir; her iki uç nokta da 200 dönmezse deploy otomatik rollback'e gider.",
-        "Blue-green benzeri sıralı container yenileme: docker compose up --no-deps --scale app=2 ile yeni container ayağa kalkar, sağlık kontrolü geçince eski durdurulur; kesinti <10 saniye.",
-        "Pipeline artifact boyutu izlenir: Docker image ≥1 GB ise build aşaması uyarı üretir; ≥1.5 GB ise bloklayıcı hata ile pipeline durdurulur.",
+        "Deploy öncesi yük (load) testi kapısı: k6 ile kritik API uçlarına 200 eşzamanlı sanal kullanıcı; p95 yanıt süresi ≤300 ms ve hata oranı ≤%1 hedefi aşılırsa deploy bloklanır.",
+        "Sorgu katmanı guardrail'i: staging entegrasyon testinde SQL echo ile N+1 sorgu deseni tespit edilir ve sayfalama (pagination) zorunlu uçlarda önbellek (cache) isabet oranı ≥%80 hedeflenir; ihlal bloklayıcı uyarı üretir.",
+        "Blue-green benzeri sıralı container yenileme: docker compose up --no-deps --scale app=2 ile yeni container ayağa kalkar, sağlık kontrolü geçince eski durdurulur; kesinti hedefi <10 saniye.",
         "Hetzner sunucu kaynak izleme: deploy sonrası 5 dakika boyunca CPU >%80 veya bellek >%90 olursa otomatik alert tetiklenir ve rollback değerlendirmesi operatöre bildirilir."
       ],
       "notes": "Sıralı yenileme ve sağlık kontrolleri, deploy anında yaşayan kullanıcı oturumlarının kesilmesini önler.",
@@ -374,8 +377,9 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Bu modül doğrudan mobil uygulama sunmaz; ancak React/Vite frontend ve FastAPI backend'i aynı pipeline üzerinden dağıtır, mobil istemcinin tükettiği API'yi kapsar.",
-        "Mobil uygulama için ayrı bir pipeline aşaması tanımlanabilir: Expo/React Native build ve OTA (over-the-air) güncelleme adımı mevcut workflow'a ek job olarak eklenir.",
+        "Bu modül doğrudan mobil uygulama sunmaz; ancak React/Vite frontend ve FastAPI backend'i aynı pipeline üzerinden dağıtır, mobil istemcinin tükettiği API yüzeyini kapsar.",
+        "Mobil uygulama için ayrı pipeline aşaması: Expo/React Native build ve OTA (over-the-air) paketleme (package) adımı mevcut workflow'a ek job olarak eklenebilir; paket imzalama ve sürüm kanalı (staging/prod) ayrımı kural olarak zorunludur.",
+        "Mobil istemci sözleşmesi: çevrimdışı (offline) kuyruk ve senkronizasyon (sync) uçları için contract test hedefi; çevrimdışı yazmaların çakışma çözümü doğrulanmadan deploy edilmez, dokunulabilir öğelerde en az 44 px temas alanı kuralı a11y kapısında denetlenir.",
         "API sürüm uyumluluğu testi: mobil istemci için tutturulan minimum API versiyonu pipeline'da contract test ile doğrulanır; eski mobil sürümü kıracak değişiklik deploy edilmez.",
         "Mobil API entegrasyon testleri CI'da çalıştırılır: mobil istemci simülasyonu ile kritik akışlar (auth, veri listeleme) doğrulanır; mobil test başarısızlığı deploy'u bloklar."
       ],
@@ -434,10 +438,11 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "AI destekli PR inceleme asistanı: kod değişikliklerini analiz eden ajan, güvenlik açığı, performans regresyonu ve test eksikliği konusunda PR yorumu bırakır; birleştirme kararı geliştiriciye aittir.",
-        "Pipeline başarısızlık analiz ajanı: başarısız test loglarını okuyan ajan, hata kategorisini sınıflandırır (flaky test, gerçek hata, ortam sorunu) ve ilgili geliştiriciye Slack özeti iletir.",
-        "Bağımlılık güvenlik açığı triage ajanı: Dependabot CVE uyarılarını analiz eder, exploitability skorunu değerlendirir ve düşük riskli güncellemeleri otomatik onay listesine ekler; yüksek risk insan onayı bekler.",
-        "Deploy sonrası anomali dedektörü: deploy'dan sonraki 15 dakika boyunca hata oranı metriklerini izleyen ajan, anomali tespit ederse rollback önerisini operatör onayına sunar."
+        "Ajan yetki sınırı (izin/yasak): CI ajanlarına izinli (allowed) eylemler yalnızca diff, log ve metrik okuma ile PR yorumu bırakmadır; üretim ortamına yazma, image deploy, PR merge, branch koruması değiştirme, rollback tetikleme ve ruleset override yasaktır (forbidden/deny) ve insan onayı gerektirir.",
+        "AI PR inceleme asistanı: kod değişikliklerini yalnızca inceleyip güvenlik açığı, performans regresyonu ve test eksikliği için yorum bırakabilir; birleştirme (merge) kararı geliştiriciye aittir, ajan doğrudan merge edemez.",
+        "Pipeline başarısızlık analiz ajanı: başarısız test loglarını okuyan ajan hata kategorisini sınıflandırır (flaky test, gerçek hata, ortam sorunu) ve Slack özeti iletir; pipeline'ı yeniden çalıştıramaz veya kapıları değiştiremez.",
+        "Bağımlılık güvenlik açığı triage ajanı: Dependabot CVE uyarılarını analiz eder ve düşük riskli güncellemeleri yalnızca öneri listesine ekler; güncellemeyi kendisi merge/deploy edemez, yüksek risk insan onayı bekler.",
+        "Deploy sonrası anomali dedektörü: deploy'dan sonraki 15 dakika hata oranı metriklerini izleyen ajan, anomali tespit ederse yalnızca rollback önerisini operatör onayına sunar; onaysız rollback uygulayamaz."
       ],
       "notes": "AI ajanları CI/CD kararlarında tavsiye rolündedir; merge, deploy ve rollback kararları insan onayı gerektirir.",
       "prompt": "CI/CD modülü AI ajan entegrasyonunu kapsa; PR inceleme asistanı, başarısızlık analizi, bağımlılık triage ve deploy sonrası anomali dedektörü mimarisini ele al. güvenlik sınırı: ajanların operatör onayı olmadan otomatik uygulayabileceği ve uygulayamayacağı eylemleri listele. çıktı: ajan yetki matrisi ve entegrasyon şeması.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -452,7 +457,8 @@
         "Pipeline birim testi: GitHub Actions workflow YAML sözdizimi act aracıyla yerel olarak çalıştırılır; workflow logic hatası üretim pipeline'a ulaşmadan yakalanır.",
         "Deploy senaryosu entegrasyon testi: Hetzner staging sunucusuna tam pipeline çalıştırılır; liveness/readiness probe, rollback mekanizması ve migrasyon adımı gerçek Docker ortamında doğrulanır.",
         "Sözleşme (contract) testi: Pact veya Schemathesis ile FastAPI OpenAPI şeması doğrulanır; schema kırıcı değişiklik deploy edilmeden önce tespit edilir ve pipeline durdurulur.",
-        "Kaos mühendisliği testi: staging ortamında container'ı manuel olarak durdurarak rollback süresinin ≤120 saniye içinde tamamlandığı doğrulanır; sonuç runbook'a kaydedilir."
+        "Negatif (negatif) senaryo testleri: bozuk migration, imzasız image ve sağlıksız probe gibi hata yolları için beklenen rollback davranışı doğrulanır; API yanıtları golden fixture'larla karşılaştırılır ve sapma kanıt (evidence) olarak QA döngüsüne (loop) kaydedilir.",
+        "Kaos mühendisliği testi: staging ortamında container manuel durdurularak rollback süresinin ≤120 saniye içinde tamamlandığı doğrulanır; sonuç runbook'a kaydedilir."
       ],
       "notes": "Staging ortamı üretim ortamıyla birebir aynı Compose konfigürasyonunu çalıştırır; her test kategorisi farklı güven katmanını kapsar.",
       "prompt": "CI/CD modülü test stratejisini kapsa; act tabanlı workflow testi, staging deploy entegrasyon testi, OpenAPI sözleşme testi ve rollback kaos testi senaryolarını teknik detaylarla ele al. çıktı: test planı, kabul kriterleri ve örnek test komutları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",

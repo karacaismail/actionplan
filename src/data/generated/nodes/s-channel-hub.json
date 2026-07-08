@@ -22,7 +22,8 @@
     "archetype",
     "paket",
     "webhook",
-    "çoklu"
+    "çoklu",
+    "module"
   ],
   "dependsOn": [
     "stack-channel",
@@ -147,12 +148,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Pazaryeri Entegratör Hub'ı: çoklu pazaryeri (Trendyol/Hepsiburada/Amazon) ürün, sipariş, stok senkronu",
-        "Tek panelden çoklu kanal listeleme, sipariş toplama ve stok eşitleme",
-        "Kanal-özel ArcheType'ları (kanal listing, kanal sipariş) bir araya getirir"
+        "Kapsam sınırı: hub yalnız kanal adaptör orkestrasyonundan (Trendyol/Hepsiburada/Amazon) sorumludur; ürün sahipliği PIM'de, stok inventory'de, sipariş commerce'te kalır — hub kanonik veri üretmez, yalnız eşler.",
+        "Girdi/çıktı sözleşmesi: girdi olarak kanal API yanıtı ve kanal webhook'u alınır; çıktı olarak normalize edilmiş ürün listeleme, stok güncelleme ve içe aktarılan sipariş kaydı üretilir; her eşleme idempotent mapping anahtarıyla tekilleştirilir.",
+        "Durum/akış makinesi: listeleme taslak → gönderildi → onaylandı/reddedildi; sipariş içe-alındı → doğrulandı → commerce'e devredildi; stok senkron kuyruğa-alındı → uygulandı durumlarını izler.",
+        "Hata yolu: kanal 4xx/oran-sınırı hatasında istek üstel backoff ile yeniden denenir, kalıcı hata DLQ'ya düşer ve panelde başarısız-eşleme olarak işaretlenir; kısmi başarıda hiçbir kanal çift güncellenmez.",
+        "Kabul kuralı: aynı sipariş/stok olayının iki kez işlenmesi tek sonuç üretmeli (idempotent), ve hiçbir kanal yazması PIM/inventory sözleşmesini atlayarak doğrudan tabloya değmemelidir."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -165,7 +168,7 @@
         "Kanal webhook imza-doğrulamalı — Pazaryeri Entegratör Hub'ı satır-düzeyi erişim RLS ile tenant'a kilitlidir; deny kararı audit izine düşer"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -173,12 +176,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Pazaryeri Entegratör Hub'ı: kapsadığı ArcheType'ları bildirimsel birleştirir (kod kopyası yok)",
-        "Pazaryeri Entegratör Hub'ı bayrakla açılır/kapanır; kullanılmayan yetenek yük getirmez",
-        "Pazaryeri Entegratör Hub'ı sürüm uyumu paket manifestinde sabitlenir"
+        "Kod sağlığı: her kanal adaptörü (Trendyol/Hepsiburada/Amazon) ortak bir port arayüzünü uygular; kanala-özel dönüşüm tek adaptörde kalır, kanal ekleme ortak eşleme kodunu kopyalamaz.",
+        "Lint/tip kapısı: adaptör sözleşmeleri tipli (Zod) şemayla doğrulanır; lint ve tip kapıları yeşil olmadan build geçmez, ölü/erişilmeyen kanal kodu tree-shake ile elenir.",
+        "Bütçe/eşik: adaptör başına döngüsel karmaşıklık eşiği ve kanal başına eşleme fonksiyonu boyut bütçesi tanımlıdır; eşik aşılırsa CI uyarısı üretilir.",
+        "Motor/katman ayrımı: idempotent mapping ve stok/sipariş dönüşümü saf motor (engine) katmanında, kanal I/O ise adaptör katmanında tutulur; UI yalnız yönetim yüzeyidir, senkron mantığı taşımaz."
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -191,7 +195,7 @@
         "Pazaryeri Entegratör Hub'ı kapsadığı ArcheType güvenlik sınırlarını korur (bypass yok)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -204,7 +208,7 @@
         "Çoklu kanal paralel eşitleme — önbellek kaçırma oranı Pazaryeri Entegratör Hub'ı sıcak anahtarlarında izlenir; ısıtma stratejisi tanımlıdır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -217,7 +221,7 @@
         "Pazaryeri Entegratör Hub'ı dar ekranda öncelikli aksiyonları öne alır"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -230,7 +234,7 @@
         "Pazaryeri Entegratör Hub'ı klavye ve ekran okuyucu erişimini paket genelinde sağlar"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -238,12 +242,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "Kanal entegrasyonu ayrı worker (her kanal oran-sınırı)",
-        "Standart yatay ölçek: durum-bilgisiz servis kopyaları",
-        "Shared hosting'de az-kanal (kısıtlı)"
+        "Runtime: her kanal adaptörü ayrı worker konteyneri olarak dağıtılır (kanal başına oran-sınırı izole); Docker Swarm veya Kubernetes üzerinde durum-bilgisiz servis kopyaları olarak yatay ölçeklenir.",
+        "Sağlık/probe: her worker canlılık ve hazır-olma uç noktaları sunar; hazır-değil işareti aldığında kanal senkron kuyruğuna trafik yönlendirilmez, böylece yarım-yapılandırılmış adaptör sipariş içe almaz.",
+        "Config/secret/env: kanal API anahtarları ve oran-sınırı parametreleri ortam değişkeni/secret üzerinden enjekte edilir, imaja gömülmez; kanal listesi konfigürasyonla açılıp kapanır.",
+        "Rollback: dağıtım özellik bayrağı + sürümlü imajla yapılır; hatalı adaptör sürümünde ilgili worker önceki sürüme geri alınır ve kanal bayrağı kapatılarak senkron durdurulur.",
+        "Shared hosting kısıtı: WordPress sınıfı paylaşımlı barındırmada worker/kuyruk çalıştırılamayacağından yalnız az-kanal, senkron-dışı kısıtlı mod desteklenir."
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -256,7 +262,7 @@
         "Olay: stok değişti → tüm kanallara eşitle (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -269,7 +275,7 @@
         "AI fiyat/kanal optimizasyon önerir; listelemeyi işletme onaylar"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -282,7 +288,7 @@
         "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -290,12 +296,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "Pazaryeri Entegratör Hub'ı: A01 erişim kontrolü rol/tenant bazlı yetkili",
-        "Pazaryeri Entegratör Hub'ı: A05 gereksiz yetenek kapalı güvenli varsayılan",
-        "Pazaryeri Entegratör Hub'ı: A09 etkinleştirme/yapılandırma kararları forensic iz"
+        "A01 Erişim Kontrolü: kanal adaptör yönetimi ve sipariş içe-alma rol/tenant bazlı yetkilendirilir; bir tenant'ın kanal anahtarı veya siparişi başka tenant tarafından okunamaz (RLS).",
+        "A03 Enjeksiyon / girdi doğrulama: kanaldan gelen ürün, sipariş ve webhook yükleri tipli şemayla doğrulanır (input validation); imzasız/şema-dışı webhook reddedilir, ham alanlar sorguya doğrudan geçmez.",
+        "A05 Güvenli varsayılan: kullanılmayan kanal adaptörü kapalı gelir; kanal API anahtarı en-az-ayrıcalıkla saklanır ve gereksiz yetenek açılmaz.",
+        "A09 Denetim izi/loglama: kanal etkinleştirme, anahtar rotasyonu ve başarısız senkron kararları değişmez denetim izine (append-only) yazılır; korelasyon-id ile izlenir.",
+        "Standart eşlemesi: adaptör bağımlılıkları için ASVS girdi-doğrulama kontrolleri ve SBOM tabanlı bağımlılık envanteri tutulur; LLM önerileri güvensiz-çıktı olarak ele alınır, listelemeyi işletme onaylamadan uygulanmaz."
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -303,11 +311,14 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Channel Hub commerce (sipariş), inventory (stok), pim (ürün) ile entegre",
-        "Kanallar ipaas/adaptörden; webhook scale-webhook ile"
+        "Hub, commerce (sipariş), inventory (stok) ve PIM (ürün) çekirdek modülleriyle yalnız sürümlü sözleşme/üretilen API üzerinden entegre olur; doğrudan tablo erişimi yoktur, veri sahipliği ilgili core modülde kalır.",
+        "Bağımlılık yönü tek yönlüdür: hub core sözleşmelerine bağımlıdır, core hub'a bağımlı değildir; kanal eklenmesi commerce/inventory/PIM API'sini değiştirmez (bağımlılık yönü içe doğru).",
+        "Kanal olayları (sipariş içe-alındı, stok değişti) olay veriyolu üzerinden yayınlanır; abonelik olan modüller bunu dinler, hub çağrı için tipli adaptör arayüzü kullanır.",
+        "Kanal webhook alımı scale-webhook üzerinden idempotent mapping anahtarıyla tekilleştirilir; aynı olayın tekrarı çekirdek sözleşmesine ikinci kez yazılmaz.",
+        "Kırıcı değişiklik expand-contract ile yönetilir: hub'ın core sözleşmesi sürümlenir, geriye-uyum sözleşme testleriyle doğrulanmadan yeni sürüm devreye alınmaz."
       ],
       "notes": "Kabul: Pazaryeri Entegratör Hub'ı entegrasyonu olay/üretilen API üzerinden; bağımlılık yönü net, doğrudan tablo erişimi yok.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +332,7 @@
         "Pazaryeri Entegratör Hub'ı bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Pazaryeri Entegratör Hub'ı, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (modül/kaya; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-channel-hub — \"Pazaryeri Entegratör Hub'ı\" (module/dağ; küme: Aday). Özet: Sopyo/StockMount alanı — Activepieces arkada, headless: Trendyol, Hepsiburada, Amazon, N11 stok/fiyat/sipariş senkronu. Etiketler: pazaryeri, trendyol, entegrasyon, activepieces, headless.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

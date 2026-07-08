@@ -23,7 +23,8 @@
     "katman",
     "tenant",
     "geojson",
-    "denetlenir"
+    "denetlenir",
+    "archetype"
   ],
   "dependsOn": [
     "scale-gis"
@@ -94,9 +95,22 @@
       "notes": ""
     }
   },
-  "deliverables": [],
-  "acceptanceCriteria": [],
-  "risks": [],
+  "deliverables": [
+    "Geo Harita Yüzeyi (deck.gl + MapLibre) kapsam sozlesmesi",
+    "Geo Harita Yüzeyi (deck.gl + MapLibre) icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
+  "acceptanceCriteria": [
+    "Geo Harita Yüzeyi (deck.gl + MapLibre) icin kapsam, veri akisi ve hata davranisi tek sayfada dogrulanabilir",
+    "Geo Harita Yüzeyi (deck.gl + MapLibre) kanitlari traceability repoPath/testCommand alanlariyla eslenebilir"
+  ],
+  "risks": [
+    {
+      "id": "r-geo-map-surface-scope-drift",
+      "desc": "Geo Harita Yüzeyi (deck.gl + MapLibre) kapsami ust seviye sozlesmeden koparsa teslimat kaniti yorumlanamaz hale gelir",
+      "severity": "medium",
+      "mitigation": "Kapsam, acceptanceCriteria, rollback ve traceability alanlari ayni PR'da guncellenir"
+    }
+  ],
   "rollback": "Harita yüzeyi geri alımı: geo surface tanımı feature-flag arkasındadır; bayrak kapatılınca liste/tablo projeksiyonuna düşülür (degrade). deck.gl/MapLibre bağımlılık sürümleri lockfile'dan önceki imaja pinlenir; geo alan verisi salt-okunur projeksiyon olduğundan veri geri alımı gerekmez.",
   "evidence": [],
   "metrics": [],
@@ -109,7 +123,7 @@
         "ScatterplotLayer ile nokta geo alanları (ilan konumu, mağaza) renk/yarıçap encode edilerek render edilir",
         "GeoJsonLayer ve PolygonLayer ile mahalle/parsel poligonları PostGIS GeoJSON çıktısından çizilir",
         "HexagonLayer, HeatmapLayer ve H3HexagonLayer ile yoğunluk agregasyonu zoom seviyesine göre sunulur",
-        "MapLibre GL basemap üstüne deck.gl overlay; ArcheType geo alanı pick edilince picking/tooltip ile detay açılır"
+        "MapLibre GL basemap üstüne deck.gl overlay; ArcheType geo alanı pick edilince picking/tooltip ile detay açılır; kapsam sınırı Geo Harita Yüzeyi (deck.gl + MapLibre) (geo-map-surface) için girdi/çıktı sözleşmesi, durum akışı ve hata yolu kabul ölçütüne bağlanır"
       ],
       "notes": "Katmanlar ArcheType geo alan tipinden türetilir; tüketici doğrudan deck.gl API yazmaz.",
       "prompt": "\"Özellik Tanımları\" boyutunu geo-map-surface (deck.gl + MapLibre paylaşılan harita Surface) için üret. Bağlam: ArcheType geo alanlarını scale-gis/PostGIS GeoJSON/MVT'den harita olarak gösterir; ScatterplotLayer/GeoJsonLayer/PolygonLayer/HexagonLayer/H3HexagonLayer; MapLibre basemap; picking/tooltip.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -263,7 +277,7 @@
         "A01 Access Control: tile/feature erişimi tenant kapsamlıdır; yetkisiz parsel tile'ı asla servis edilmez",
         "A03 Injection: uzamsal sorgular parametreli yürütülür; bbox/zoom girdileri sınır kontrolünden geçirilir",
         "A10 SSRF: tile-proxy yalnız izinli tile/style origin allowlist'ine erişir; iç ağa istek yönlendirilemez",
-        "LLM01 Prompt Injection: geo öznitelik/etiket metni AI'a talimat olarak çalıştırılmadan izole edilir"
+        "LLM01 Prompt Injection: geo öznitelik/etiket metni AI'a talimat olarak çalıştırılmadan izole edilir; OWASP tehdidi Geo Harita Yüzeyi (deck.gl + MapLibre) (geo-map-surface) için injection, access control, SSRF veya prompt injection sınıfları; ASVS/NIST/SBOM, doğrulama ve denetim iziyle ele alınır"
       ],
       "notes": "Tehdit yüzeyi A01/A03/A10 ve tile-proxy SSRF korumasıyla daraltılır.",
       "prompt": "\"OWASP & Standartlar\" boyutunu geo-map-surface için üret. Bağlam: A01 tenant tile erişimi, A03 uzamsal sorgu parametreli, A10 SSRF tile-proxy koruması, LLM01.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
@@ -291,7 +305,7 @@
         "dist-realestate ilan harita görünümünü üretilen Surface API'siyle tüketir; doğrudan deck.gl katmanı yazmaz",
         "dist-sahibinden konum/yoğunluk haritasını aynı paylaşılan Surface üzerinden gömerek tutarlı UX sağlar",
         "Harita gereken her app geo alanını Surface'a verir; render, fallback ve a11y'yi Surface SDK üstlenir",
-        "Tüketici app'ler tile/sorgu erişimini doğrudan değil, Surface'ın yetkilendirilmiş API'si üzerinden yapar"
+        "Tüketici app'ler tile/sorgu erişimini doğrudan değil, Surface'ın yetkilendirilmiş API'si üzerinden yapar; kullanım yolu Geo Harita Yüzeyi (deck.gl + MapLibre) (geo-map-surface) için capability/API tüketimi contract kapısından geçer; panel entegrasyonu doğrudan DB/tablo erişimini yasaklar"
       ],
       "notes": "Tüketiciler paylaşılan Surface API'sini kullanır; deck.gl'i tekrarlamaz.",
       "prompt": "\"Modül Kullanımı\" boyutunu geo-map-surface için üret. Bağlam: dist-realestate/dist-sahibinden ve harita gereken her app üretilen Surface API'sini tüketir (doğrudan deck.gl yazmaz).\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",

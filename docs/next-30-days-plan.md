@@ -1,5 +1,8 @@
 # 30 Günlük Execution Planı — actionplan Veri Kalitesi ve Execution Readiness
 
+> Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
+
+
 **Tarih:** 2026-06-28
 **Kapsam:** P3-impl (owner/refs/deps otomatik doldurma + CI kapısı) ekseninde, daha geniş enterprise-readiness sıralamasıyla 30 günlük iş planı.
 **Çerçeve:** Test-önce (kırmızı → yeşil → commit). Her hafta bir kapı; kapıyı geçmeden sonraki haftaya geçilmez.

@@ -21,7 +21,8 @@
     "idempotency",
     "işleyici",
     "outbox",
-    "işler"
+    "işler",
+    "feature"
   ],
   "dependsOn": [
     "scale-idempotency",
@@ -161,12 +162,13 @@
       "status": "filled",
       "items": [
         "Async iş kuyruğu: outbox relay, projeksiyon yeniden-kurma, fan-out ve cron işlerini tek motorda yürütür",
+        "Kapsam sınırı: Workers yalnız asenkron iş yürütür ve zamanlar; senkron istek/yanıt, iş mantığı sahipliği ve UI render işlev sınırının dışındadır",
         "İş durum makinesi: kuyrukta → işleniyor → tamamlandı/başarısız/DLQ geçişlerini yönetir",
         "Girdi sözleşmesi iş tipi + idempotency anahtarı + yük alır, çıktı olarak iş sonucu/olay döner",
         "Hata yolu: iş 6 denemede başarısız olursa ölü-mektup kuyruğuna (DLQ) taşınır, sorumlu bilgilendirilir"
       ],
       "notes": "Workers tüm asenkron primitiflerin (outbox, projeksiyon, cron) ortak yürütme motorudur.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -180,7 +182,7 @@
         "Hassas iş yükü (PII alanları) günlükte maskelenir; DLQ kayıtları da redaksiyonlu tutulur"
       ],
       "notes": "İş yükü tenant_id taşır; çapraz-tenant iş işleme RLS ile engellenir.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -189,12 +191,12 @@
       "status": "filled",
       "items": [
         "İş işleyiciler saf/idempotent yazılır: aynı idempotency anahtarı yan etkiyi tekrarlamaz",
-        "İş tipleri ayrı işleyici modüllerine bölünür, döngüsel karmaşıklık işleyici başına düşük tutulur",
+        "İş tipleri ayrı işleyici modüllerine ayrıştırılır; ESLint + döngüsel karmaşıklık kapısı işleyici başına ≤10 eşiğini CI'da zorlar, eşiği aşan işleyici merge edilemez",
         "Kuyruk ve zamanlayıcı arasındaki sözleşme tipli (Zod) iş zarfıyla taşınır, ölü işleyici ayıklanır",
         "Uzun süren işler (projeksiyon yeniden-kurma) parçalı/devam-edilebilir checkpoint'lerle yürür"
       ],
       "notes": "İdempotent işleyiciler at-least-once teslim altında yeniden-çalıştırmayı güvenli kılar.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -205,10 +207,11 @@
         "Yeniden-deneme üst sınırı maks 6'dır; aşan iş üstel geri-çekilmeyle denenir, sonra DLQ'ya alınır",
         "Zehirli iş (sürekli çöken yük) otomatik karantinaya alınır, işçi havuzunu kilitlemesi önlenir",
         "İş başına zaman-aşımı tanımlanır; askıda kalan iş öldürülerek işçi kaynağı serbest bırakılır",
-        "İş tetikleme ucu oran sınırına alınır; iş işleyici bağımlılıkları CVE taramasından geçirilir"
+        "İşçi çalışma-zamanı sertleştirilir: salt-okunur konteyner dosya sistemi, düşürülmüş Linux yetenekleri (cap-drop) ve en-az-ayrıcalıklı ServiceAccount ile koşar",
+        "İş tetikleme ucu oran sınırına alınır; işçi giden ağ trafiği (egress) allowlist ile kısıtlanır ve bağımlılıklar CVE taramasından geçirilir"
       ],
       "notes": "Maks 6 deneme + DLQ + zaman-aşımı, kaynak tükenmesi ve iş döngüsü DoS'unu birlikte sınırlar.",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -222,7 +225,7 @@
         "İş seçimi (tenant_id, öncelik, hazır-zaman) bileşik indeksiyle yapılır, tam tarama (N+1) önlenir"
       ],
       "notes": "İş bekleme p95 hedefi kuyruk-derinlik tabanlı ölçekleme ve öncelikli sıralamayla tutulur.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -236,7 +239,7 @@
         "Bağlantı koparsa son kuyruk sağlık özeti çevrimdışı önbellekten okunur (offline davranışı)"
       ],
       "notes": "Mobil yüzey kuyruk izleme ve hızlı yeniden-çalıştırmaya odaklıdır, yapılandırma masaüstündedir.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -250,7 +253,7 @@
         "Canlı kuyruk derinliği değişimi aria-live bölgesiyle ekran okuyucuya duyurulur"
       ],
       "notes": "İş durumu renk körü operatörler için metin + ikonla da aktarılır.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -264,7 +267,7 @@
         "Shared hosting'de yalnız sistem cron'una bağlı sınırlı periyodik işler çalışır (fan-out kısıtlı)"
       ],
       "notes": "İş yükü dalgalı olduğundan kuyruk-derinlik tabanlı HPA ile esnek ölçekleme yapılır.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -278,7 +281,7 @@
         "Döngü kırıcı: iş→tetik→iş zinciri maks 6 adım; eylemler allowlist, tetik step-up ile korunur"
       ],
       "notes": "Kuyruk kuralları idempotenttir; aynı iş için yinelenen ölçekleme/DLQ tetiklenmez.",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -292,7 +295,7 @@
         "Ruleset override/disable denemesi anında deny; doğrudan prod write yok, kill-switch ve step-up devrede"
       ],
       "notes": "AI kapasite/hata analizinde yardımcıdır; iş yeniden-çalıştırma kararı insanındadır.",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -306,7 +309,7 @@
         "Testing-loop: başarısız kuyruk/DLQ testi en fazla 6 kez yeniden çalışır, düzelmezse raporlanır"
       ],
       "notes": "İdempotency ve DLQ davranışı yük testleriyle birlikte sürekli regresyon altında tutulur.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -316,11 +319,12 @@
       "items": [
         "OWASP A04: zaman-aşımı ve maks 6 retry sınırı tasarıma gömülür, sonsuz iş döngüsü engellenir",
         "OWASP A01: iş tetikleme ve DLQ-yeniden-çalıştırma yetkisi rol bazlı doğrulanır",
-        "OWASP A09: iş başarısızlığı ve DLQ kararları aktör + sebeple denetim günlüğüne yazılır",
-        "OWASP A08: iş yükü zarfı imza/şema ile doğrulanır, kurcalanmış iş işleyiciye geçmez"
+        "OWASP A09 + değişmez denetim izi (audit trail): iş başarısızlığı, DLQ ve yeniden-çalıştırma kararları aktör + sebep + zaman damgasıyla append-only kaydedilir",
+        "OWASP A08 + ASVS V5 girdi doğrulama: iş yükü zarfı imza + Zod şemasıyla doğrulanır (input validation), kurcalanmış iş işleyiciye geçmez",
+        "Tedarik zinciri kanıtı: işçi imajı için SBOM üretilir, bağımlılıklar NIST CVE/CVSS eşiğine göre taranır ve sürüm sabitlenir"
       ],
       "notes": "Async işleme tehdit yüzeyi retry-sınırı (A04) ve iş yükü bütünlüğü (A08) ile daraltılır.",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -334,7 +338,7 @@
         "İş metrikleri ve DLQ olayları gözlemlenebilirlik (s-observability) yüzeyine yayılır"
       ],
       "notes": "Workers diğer scale primitiflerinin yürütme tabanıdır; bağımlılık idempotency ve outbox'a uzanır.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -347,7 +351,7 @@
         "Cron/fan-out tüketen app'ler işçi havuzunu olay sözleşmesi üzerinden çağırır"
       ],
       "notes": "İş gönderimi daima kuyruk API'si/olay üzerinden olur, doğrudan kuyruk DB'sine erişilmez.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (taş/kum; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: scale-workers — \"Workers + Scheduler\" (feature/taş; küme: Scale Primitifleri). Özet: Async job queue. Outbox relay, projection rebuild, fan-out, cron — hepsi burada. Etiketler: workers, queue, cron, scheduler.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

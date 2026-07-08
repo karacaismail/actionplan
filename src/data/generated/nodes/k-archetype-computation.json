@@ -19,7 +19,8 @@
     "forecast",
     "türetilmiş-alan",
     "kernel",
-    "archetype"
+    "archetype",
+    "module"
   ],
   "dependsOn": [
     "k-schema"
@@ -122,7 +123,10 @@
     "baselineStart": null,
     "baselineEnd": null
   },
-  "deliverables": [],
+  "deliverables": [
+    "Computation / Derivation — Hesap Hattı Sözleşmesi kapsam sozlesmesi",
+    "Computation / Derivation — Hesap Hattı Sözleşmesi icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
   "acceptanceCriteria": [
     "Computation / Derivation — Hesap Hattı Sözleşmesi için surface işlevsel kabulü karşılandı",
     "tenant izolasyonu + AAA erişilebilirlik kapıları geçti"
@@ -313,10 +317,11 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "üçüncü kural sınıfı: validationRule/semanticRule assertion'dır (doğru/yanlış iddiası), computation ise hesap hattı — türetilmiş alan + saf yapısal ifade grafiği + tetik (on_write/on_query/batch)",
-        "computation tablosu: output_field, inputs, expr_kind(formula|lookup|graph), profile(pricing|tax|bom|payroll), version, deterministic; serbest kod değil whitelist operatör düğümü",
-        "derivation_edge DAG (döngüsüz) kenarları: depends_on_field_or_computation + edge_kind(field|computation); graph kind çok-seviyeli BOM patlaması için topolojik sırada çözülür",
-        "ComputationEngine.evaluate(key, inputs, tenant_id) sonucu + kullanılan girdiler + graph.version ile izlenebilir döner; fiyat/vergi 'neden bu değer' denetlenebilir"
+        "kapsam/işlev sınırı: computation = hesap hattı (türetilmiş alan + saf, yan-etkisiz ifade DAG'ı + tetik on_write/on_query/batch); validationRule/semanticRule assertion (doğru/yanlış) ekseni ayrıdır, karıştırılmaz — sınır dışı: serbest kod, yan-etki, dış çağrı",
+        "girdi/çıktı sözleşmesi: girdi output_field + inputs + expr_kind(formula|lookup|graph) + profile(pricing|tax|bom|payroll) + tenant_id; çıktı ComputationEngine.evaluate ile türetilmiş değer + kullanılan girdiler + graph.version izlenebilir üçlüsü döner",
+        "derivation_edge DAG (döngüsüz) kenarları depends_on_field_or_computation ile çok-seviyeli BOM patlamasını topolojik sırada çözer; serbest kod değil whitelist operatör düğümü",
+        "hata yolu: whitelist-dışı operatör, döngü içeren grafik, boyut/kur uyuşmazlığı (DimensionMismatchError) ve deterministic=false tanım anında reddedilir; hata {code, message, trace_id, details} formatında döner, çalışma anına sızmaz",
+        "kabul sözleşmesi (guardrail): aynı girdi→aynı çıktı (determinism) hedeftir, 'neden bu değer' graph.version ile denetlenebilir olmalı, CD-01..CD-12 requirement izlenebilirliği aranır"
       ],
       "notes": "Kaynak: computation-derivation-contract.md §1/§4/§5. Computation değeri üretir, validation kabul/ret eder — ayrı eksen; CD-01/CD-02.",
       "prompt": "Computation/derivation özellik sınırını kapsa: computation ve derivation_edge şeması, formula/lookup/graph ifade türü, BOM çok-seviyeli patlama, DAG ve determinism invariant'ı. Güvenlik sınırı: serbest Python evaluate yasak, yalnız whitelist operatör. Çıktı: türetilmiş alan (net-total/tax/BOM) izlenebilir üretimi + CD-01..CD-12 requirement izlenebilirliği.",
@@ -354,9 +359,10 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "AI önerir→insan onaylar→motor uygular: AI ifade grafiği taslağı önerir (autonomy:draft) ama aktif computation'ı değiştiremez; onaysız apply ApprovalRequiredError fırlatır ve audit'lenir",
-        "AI hesabı çalışma anında override edemez — motorun ürettiği türetilmiş değer bağlayıcıdır (fail-closed ilkesi); AI'ın döngü üreten grafik önermesi DAG invariant testinde engellenir",
-        "version monoton: eski değerler ve denetim korunur; whitelist operatör dışı ifade reddedilir, non-deterministik (rastgelelik/zaman/dış-çağrı) türetme deterministic=false ile elenir"
+        "sertleştirme (hardening) — AI önerir→insan onaylar→motor uygular: AI ifade grafiği taslağı önerir (autonomy:draft) ama aktif computation'ı değiştiremez; onaysız apply ApprovalRequiredError fırlatır, insan approval_ref ister ve audit'lenir (fail-closed)",
+        "egress kapalı yüzey (egress-closed surface): saf/deterministik motorda dış çağrı ve yan-etki yasak; AI hesabı çalışma anında override edemez (motor sonucu bağlayıcı), non-deterministik türetme (rastgelelik/zaman/dış-state) deterministic=false ile elenir — enjeksiyon ve veri-sızma yüzeyi daraltılır",
+        "whitelist/allowlist + imza: yalnız izin listesindeki operatör düğümü çalışır; system-katman resmî formül (yasal KDV) sürümleri imza/approval_ref ile mühürlenir, tenant override yalnız daraltır genişletemez; AI'ın döngü üreten grafik önerisi DAG invariant testinde engellenir",
+        "bağımlılık pin + SBOM: motor ve operatör kütüphaneleri sürüm-sabit (pin) tutulur ve SBOM ile envanterlenir; graph.version monoton, eski değer ve denetim korunur (override fail-closed'u deler → engellenir)"
       ],
       "notes": "Kaynak: computation-derivation-contract.md §10/§14. CD-11; AI override fail-closed'u deler, engellenir.",
       "prompt": "Computation/derivation güvenlik sertleştirmesini kapsa: AI draft sınırı + approval_ref, motor sonucu override edilemez, DAG döngü reddi, whitelist. Güvenlik sınırı: AI aktif hesabı değiştiremez, non-deterministik türetme reddedilir. Çıktı: ApprovalRequiredError + AI cycle önerisi engeli + version monotonluğu.",
@@ -402,9 +408,10 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "k-archetype-computation hesap-hattı servisi container replikası olarak dağıtılır; SQLAlchemy 2.0 modeli + Alembic expand-contract migration ile şema taşınır (downgrade zorunlu, CI'da alembic downgrade -1 test edilir)",
-        "on_query pricing/tax hesabı stateless derivation motorunda istek yolunda çalışır ve replika sayısıyla ölçeklenir; ağır BOM-patlama batch yeniden-hesabı ayrı worker/job'a ayrılır, kuyruk gecikmesi izlenir",
-        "Shared hosting: statik SPA + JSON; Strawberry GraphQL tipi + REST endpoint (Depends(require_tenant)); get_logger() kullanılır, print() yasak"
+        "k-archetype-computation hesap-hattı servisi container replikası olarak dağıtılır; SQLAlchemy 2.0 modeli + Alembic expand-contract migration ile şema taşınır ve geri-alma (rollback) zorunludur — CI'da alembic downgrade -1 yeşil olmalı",
+        "on_query pricing/tax hesabı stateless derivation motorunda istek yolunda çalışır ve replika sayısıyla ölçeklenir; sağlık yoklaması (health/readiness probe) hazır-değil replikayı trafiğe almaz, ağır BOM-patlama batch yeniden-hesabı ayrı worker/job'a alınır, kuyruk gecikmesi izlenir",
+        "config/sır (secret) politikası: tenant DB kimlik bilgisi ve system tax formül anahtarı gizli-yönetimden enjekte edilir, imaja gömülmez; get_logger() kullanılır, print() yasak",
+        "Shared hosting: statik SPA + JSON; Strawberry GraphQL tipi + REST endpoint (Depends(require_tenant)); dağıtım bozulursa version-anahtarlı geri-alma ile önceki computation sürümüne dönülür (eski değer korunur)"
       ],
       "notes": "Kaynak: computation-derivation-contract.md §7. Expand-contract + dolu downgrade; DoD migration downgrade testi.",
       "prompt": "Computation/derivation dağıtımını kapsa: Swarm/K8s/Shared, Alembic expand-contract + dolu downgrade, batch worker ayrımı. Güvenlik sınırı: downgrade CI'da test edilir, print() yasak. Çıktı: sağlık kontrolü + probe + alembic downgrade -1 yeşil + GraphQL/REST endpoint.",
@@ -443,9 +450,11 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "DAG doğrulaması (döngü içeren grafik reddediliyor) + determinism (aynı girdi→aynı çıktı) + yeniden-hesap (girdi değişince çıktı güncelleniyor, on_write/on_query) unit/integration testleri",
-        "BOM çok-seviyeli patlama miktar/maliyet toplaması doğru; version testi eski hesap eski değeri korur, yeni version yeni değer üretir; tip güvenliği boyut/kur uyumsuzluğu tanım anında reddedilir",
-        "whitelist: serbest kod/operatör-dışı ifade reddediliyor; cross-tenant izolasyon A tenant B'nin override'ını göremiyor (testing-loop maks 6, Playwright + unit + integration)"
+        "formül allowlist unit + property test: whitelist içi operatör düğümü değerlendirilir, whitelist-dışı operatör/serbest ifade tanım anında reddedilir; property test rastgele ifade ağaçlarında yalnız izinli düğümlerin geçtiğini, DimensionMismatchError'ın boyut/kur karışımında tetiklendiğini kanıtlar",
+        "DAG döngü reddi negatif test: self-besleme ve çok-düğümlü cycle içeren derivation_edge grafiği tanım anında reddediliyor; determinism property testi aynı girdi→aynı çıktı invariant'ını, negatif test deterministic=false türetmenin (zaman/rastgelelik/dış-state) elendiğini gösterir",
+        "tenant izolasyon integration testi: A tenant fiyat/pricing grafiği ve override'ı için sorgu B tenant bağlamında boş döner (RLS fail-closed), cross-tenant sızıntı yok; system tax tabanı üzerinde tenant override yalnız daraltır — genişletme denemesi reddedilir",
+        "idempotent türetme + yeniden-hesap integration testi: aynı girdiyle tekrarlı on_write/batch yeniden-hesap yan-etki üretmez, çıktı değişmez; girdi değiştiğinde çıktı güncellenir, çok-seviyeli BOM patlaması miktar/maliyet toplamı beklenen değerle (golden fixture) eşleşir",
+        "version rollback kanıtı: eski graph.version eski türetilmiş değeri korur, yeni version yeni değer üretir; monoton version invariant'ı ve önceki computation sürümüne geri-alma bir integration testiyle doğrulanır, geçmiş değer kaybolmaz"
       ],
       "notes": "Kaynak: computation-derivation-contract.md §12. 8 test: DAG, determinism, yeniden-hesap, version, BOM, tip, whitelist, tenant.",
       "prompt": "Computation/derivation test stratejisini kapsa: DAG döngü reddi, determinism, yeniden-hesap, version korunumu, BOM patlama, tip güvenliği, whitelist, tenant izolasyon. Güvenlik sınırı: serbest kod reddi test-kanıtlı. Çıktı: 8 test yeşil (önce kırmızı sonra yeşil) + BOM miktar/maliyet doğrulaması + golden fixture.",
@@ -456,9 +465,10 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A03 Injection doğrudan hedef: serbest Python/SQL/JS evaluate yasak, yalnız whitelist operatör düğümü — kod injection yüzeyi yapısal grafikle kapatılır",
-        "A04 Insecure Design: computation tek yerde (16 uygulamada tekrar yerine), fiyat/vergi denetlenebilir; A09 logging: tanım/version değişikliği AuditLogger ile yazılır",
-        "A08 Data Integrity: version monoton + eski değer korunumu; determinism (dış-çağrı yok) tedarik-zinciri/dış-state manipülasyonunu engeller; hata formatı {code, message, trace_id, details}"
+        "A05 Injection doğrudan hedef: serbest Python/SQL/JS evaluate yasak, yalnız whitelist operatör düğümü; girdi doğrulama (input validation) inputs/expr_kind/profile şemasında yapılır, geçersiz girdi tanım anında reddedilir — kod injection yüzeyi yapısal grafikle kapatılır",
+        "A06 Insecure Design: computation tek doğruluk kaynağında (16 uygulamada tekrar yerine), fiyat/vergi denetlenebilir; determinism + whitelist ile tasarımca güvenli türetme",
+        "A08 Software or Data Integrity Failures: version monoton + eski değer korunumu; dış-çağrı yok (deterministik) tedarik-zinciri/dış-state manipülasyonunu engeller, bağımlılık pin/SBOM ile bütünlük doğrulanır",
+        "A09 Security Logging and Alerting Failures: tanım/version değişikliği AuditLogger ile denetim izine (audit trail) yazılır — 'fiyat kuralı ne zaman, kim tarafından değişti'; hata {code, message, trace_id, details} formatında loglanır"
       ],
       "notes": "Kaynak: computation-derivation-contract.md §7/§14. Serbest kod yasağı A03'ü kapatır; denetlenebilirlik A04.",
       "prompt": "Computation/derivation OWASP uyumunu kapsa: A03 injection (whitelist, serbest kod yok), A04 insecure design (tek doğruluk kaynağı), A09 logging (tanım audit). Güvenlik sınırı: yapısal grafik, dış çağrı yok. Çıktı: OWASP Top 10:2025 karşılama + injection yüzeyi kapatma + fiyat denetim izi.",

@@ -1,5 +1,8 @@
 # Boyut/Standart Migration Runbook — Lazy Migration ve Güvenli Alan Yazımı
 
+> Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
+
+
 **Sürüm:** 1.0 · **Tarih:** 2026-06-29
 **Durum:** Kanonik, bağlayıcı. ADR-0027 §3 (geriye uyumlu default'lu şema) ve `src/schemas/task.ts` (`.strict()` + safeParse) türevidir.
 **Kapsam:** ADR-0027 ile gelen üç düğüm alanı — `standardRefs`, `applicability`, `waivers` — ve bunların `src/data/generated/nodes/*.json` (445 düğüm) üzerinde güvenli yazımı.

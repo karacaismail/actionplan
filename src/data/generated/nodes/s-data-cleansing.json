@@ -20,7 +20,8 @@
     "eşleşme",
     "güven",
     "insan",
-    "tekilleştirme"
+    "tekilleştirme",
+    "archetype"
   ],
   "dependsOn": [
     "l1-import",
@@ -152,7 +153,7 @@
         "Veri Temizleme Otomasyonu kapsam değişikliği sürüm kaydına işlenir; durum akışı etkisi beyanlıdır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -160,12 +161,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Temizlenen veri tenant_id RLS; PII işleme izli",
-        "Zenginleştirme dış kaynak allowlist'i; SSRF korumalı",
-        "Otomatik düzeltme eşik üstü insan onayı"
+        "Temizlenen kayıtlar tenant_id bazlı PostgreSQL RLS ile izole; deduper/normalizer sorguları tenant sınırını aşamaz, çapraz-tenant birleştirme denemesi deny edilir",
+        "PII alanları (e-posta, telefon, TCKN) sınıflandırılır; kural/AI görünümünde maskeleme, at-rest şifreleme ve secret'lar KMS'te tutulur — log ve öneri çıktısına ham PII sızmaz",
+        "Zenginleştirme yalnız dış kaynak allowlist'inden çağrılır (SSRF korumalı); allowlist dışı host ve iç IP hedefleri deny edilir",
+        "Roller least-privilege: kural yazma, düşük-güven onayı ve rollback ayrı yetkilerdir; eşik üstü otomatik düzeltmeyi ancak yetkili insan onaylar, aksi halde işlem deny",
+        "Her temizleme/birleştirme/rollback kararı append-only audit iz olarak kanıtlanır (kim, hangi kural, önceki değer, güven skoru); iz değiştirilemez/silinemez"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "W10: audit/deny, RLS tenant izolasyonu, least-privilege, PII maskeleme/şifreleme, allowlist ve append-only audit kanıtı açık geçirildi.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -173,12 +176,14 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Temizleme kuralları bildirimsel pipeline; idempotent",
-        "Tekilleştirme bulanık eşleştirme (fuzzy) skorlu",
-        "Dönüşüm geri-alınabilir (audit + önceki değer)"
+        "Kod sağlığı ekseni: lint + typecheck + Zod contract gate CI'da yeşil olmadan temizleme pipeline'ı derlenmez; sözleşme ihlali build'i durdurur",
+        "Rule-engine, normalizer ve deduper ayrı modüllere ayrıştırılır; her biri saf (pure) ve idempotent dönüşüm yapar — aynı girdi tekrar işlendiğinde çıktı değişmez",
+        "Temizleme kuralları bildirimsel; tekilleştirme bulanık eşleştirme (fuzzy) skoruyla bloklama yapar, döngüsel karmaşıklık ve batch boyutu sınırlıdır",
+        "Pipeline adım bütçesi ve eşik tanımlıdır (kayıt/sn, bellek); eşik aşımında iş parçalanır, ölü kod ve kullanılmayan kurallar elenir",
+        "Her dönüşüm önceki değeri audit'e yazarak geri-alınabilir kalır; saf transformasyon sözleşmesi sayesinde rollback yan etkisizdir"
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "W10: kod sağlığı ekseni açık; lint/typecheck/contract gate, pipeline bütçe/eşik, rule-engine/normalizer/deduper ayrışımı, idempotent saf dönüşüm ve complexity/batch sınırı eklendi.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -186,12 +191,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Düşük-güven eşleşme insana; otomatik birleştirme yüksek-güvende",
-        "Zenginleştirme kaynağı doğrulanır; zehirli veri reddi",
-        "Geri-alma (rollback) her toplu işlem için"
+        "Sertleştirme ekseni: temizleme bağımlılıkları SBOM ile envanterlenir, SCA taraması CI'da açık CVE'de build'i kırar; imzasız/eski paket girmez",
+        "Zenginleştirme provider ve source URL'leri allowlist + imza (signature) doğrulamasından geçer; egress yalnız izinli host'lara açık, kalan çıkış yüzeyi daraltılır",
+        "Dış çağrılar ve kural değerlendirme uçları rate-limit'li; düşük-güven eşleşme insana düşer, yüksek-güven otomatik birleşir, zehirli/anomali veri reddedilir",
+        "Secret'lar KMS'te tutulur ve rotasyona bağlanır; zenginleştirme API anahtarları düzenli döner, sızıntı yüzeyi minimize edilir",
+        "Her toplu işlem için sertleştirilmiş rollback: snapshot + önceki değerle geri-alma, rollback yolunun kendisi de yetki ve audit ile korunur"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "W10: sertleştirme ekseni açık; SBOM/SCA, provider/source allowlist + imza, egress/yüzey daraltma, rate-limit, secret rotation/KMS ve rollback hardening eklendi.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -206,7 +213,7 @@
         "Veri Temizleme Otomasyonu sıcak sorgu seti indeks kapsamındadır; p95 250ms aşan sorgu plan incelemesine düşer"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -221,7 +228,7 @@
         "Veri Temizleme Otomasyonu cihaz kamera/galeri seçiminde boyut-sıkıştırma kuralı uygulanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,12 +236,14 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Öncesi/sonrası diff renk dışında işaret+metinle; kontrast 7:1",
-        "Onay/red aksiyonu klavye erişimli — Veri Temizleme Otomasyonu form hataları metinle duyurulur; durum göstergesi renkten bağımsızdır",
-        "Eşleşme adayları okuyucuya yapılandırılmış"
+        "Öncesi/sonrası diff renkten bağımsız işaret + metinle gösterilir (ör. +/− simge, 'eklendi/silindi' etiketi); metin/arka plan kontrastı en az 7:1 (AAA)",
+        "Düşük-güven eşleşme onay/red aksiyonları tam klavye erişimli; her adımda görünür odak halkası ve mantıklı odak sırası korunur",
+        "Eşleşme adayları ekran okuyucuya ARIA rol/etiketiyle yapılandırılır; güven skoru ve alan farkları aria-live ile metinsel duyurulur",
+        "Onay/red düğmelerinde temizleme kararı için en az 44 px temas alanı bırakılır; form hataları metinle ilişkilendirilir (aria-describedby)",
+        "Erişilebilirlik kanıtı axe ile AAA kuralları 0 ihlal olarak CI'da doğrulanır ve evidence olarak saklanır"
       ],
-      "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "notes": "W10: ekran okuyucu/ARIA, axe AAA kanıtı, 7:1 kontrast, klavye onay/red, görünür odak, renk dışı diff işaretleme ve en az 44 px temas alanı eklendi.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -249,7 +258,7 @@
         "Veri Temizleme Otomasyonu dağıtımı imza-doğrulamalı hattan çıkar; elle kopyalama yasaktır (docker)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -262,7 +271,7 @@
         "Olay: yanlış birleştirme bildirildi → dönüşümü geri al + kuralı düzelt (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -275,7 +284,7 @@
         "AI eşleştirme/normalleştirme önerir; düşük-güven birleştirmeyi insan onaylar, AI tek başına uygulamaz"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -283,12 +292,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Tekilleştirme/normalleştirme doğruluk testi (golden)",
-        "Geri-alınabilirlik (rollback) testi",
-        "Düşük-güven eşleşme insan-onay akışı; en çok 6 tur"
+        "Unit: tekilleştirme, normalizasyon ve fuzzy skorlama saf transformasyonları golden fixture'larla doğrulanır (deterministik çıktı)",
+        "Contract: cleansing sözleşmesi (source event girişi, downstream çıkış tipi) Zod/şema testiyle kırıcı değişikliğe karşı kilitlenir",
+        "Integration: RLS tenant izolasyonu ve ETL/katalog olay akışı uçtan uca bağ testiyle sınanır; e2e ise düşük-güven onay/red kullanıcı yolculuğunu kapsar",
+        "Negatif senaryolar: PII sızıntısı (log/öneri çıktısına ham PII), düşük-güven auto-merge engeli ve zenginleştirme SSRF denemesi test edilir — hepsi reddedilmeli",
+        "QA testing-loop en çok 6 tekrarla çalışır; düzelmezse otonom QA ajanı raporlar, golden evidence artefakt olarak saklanır"
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "W10: test türleri (unit/contract/integration/e2e) açık; negatif senaryolar (PII sızıntısı, düşük-güven auto-merge, SSRF), golden fixture evidence ve testing-loop maks 6 sınırı eklendi.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -296,12 +307,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A10 SSRF: zenginleştirme dış çağrıları allowlist'li",
-        "A08 Integrity: dönüşüm geri-alınabilir ve izli",
-        "A09 Logging: temizleme kararları iz"
+        "A03/A08 Input validation: source URL, tenant_id, rule id, alan değeri (field value) ve güven skoru (confidence) ASVS'e göre şema doğrulaması ve sınır kontrolünden geçer; geçersiz girdi reddedilir",
+        "A10 SSRF: zenginleştirme dış çağrıları provider/host allowlist'li, iç ağ ve metadata uçları engellenir",
+        "A01 Access: tenant RLS ve least-privilege ile yetkisiz çapraz-tenant temizleme/onay deny edilir",
+        "A08 Integrity + A09 Logging: her temizleme/birleştirme/rollback kararı append-only denetim izine (audit trail) yazılır; iz değişmez ve NIST/SBOM ile bağımlılık bütünlüğü doğrulanır",
+        "A04 Design + LLM Top 10: AI yalnız öneri üretir; sub_prompt güvenilmez kabul edilir, prompt injection izolasyonu ve güvensiz çıktı filtresiyle ruleset override denemesi deny"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "W10: ASVS/NIST/SBOM, giriş doğrulama (source URL/tenant/rule id/field value/confidence), append-only denetim izi, A01/A03/A04/A08/A09/A10 bağlamı ve AI prompt injection izolasyonu eklendi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -309,12 +322,13 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Data-cleansing, ETL pipeline'ı içinde kalite aşaması",
-        "Temiz veri katalog/ambar ve CRM'e — olay sırası garantisi Veri Temizleme Otomasyonu için anahtar-bazlı bölümleme ile sağlanır",
-        "Zenginleştirme dış servisleri ipaas'tan"
+        "Sözleşmeli bağ: cleansing, ETL pipeline'ında bir kalite aşamasıdır; girişi typed 'source event' sözleşmesiyle alır, çıkışı downstream'e typed 'cleansing contract' olarak verir — doğrudan DB yazımı yok",
+        "Bağımlılık yönü tek yönlü: source event → cleansing contract → downstream (data catalog/warehouse/CRM); tüketiciler sözleşmeye bağlıdır, cleansing tüketici şemasına bağlı değildir",
+        "Temiz veri katalog/ambar ve CRM'e olay (event) üzerinden yayılır; olay sırası anahtar-bazlı bölümleme ile garanti edilir, teslimat outbox ile en-az-bir-kez'dir",
+        "Zenginleştirme dış servisleri iPaaS/allowlist üzerinden çağrılır; entegrasyon sürümlü ve geriye dönük uyumludur, kırıcı değişiklik migration ile yönetilir"
       ],
-      "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "notes": "W10: sözleşmeli bağ açık; ETL/data catalog/warehouse/CRM entegrasyonu typed contract/event üzerinden, bağımlılık yönü source event → cleansing contract → downstream, doğrudan DB yazımı yasak.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -328,7 +342,7 @@
         "Veri Temizleme Otomasyonu bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Veri Temizleme Otomasyonu, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (ArcheType/taş; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-data-cleansing — \"Veri Temizleme Otomasyonu\" (archetype/kaya; küme: Veri & Zeka (AI-first)). Özet: Tekilleştirme, normalizasyon, doğrulama ve zenginleştirme otomasyonu. Etiketler: saas, aday, fırsat.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

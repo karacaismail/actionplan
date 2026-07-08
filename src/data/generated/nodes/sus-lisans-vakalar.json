@@ -21,7 +21,8 @@
     "matrisi",
     "alınır",
     "girdi",
-    "ruleset"
+    "ruleset",
+    "feature"
   ],
   "dependsOn": [
     "be-kararlar",
@@ -143,12 +144,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Lisans Vakaları: Lisans Vakaları ve Karar Matrisi: Grafana'nın AGPL geçişi, Redis/Elastic krizleri ders ders",
-        "Lisans Vakaları kapsamı: sektörün lisans krizlerini ve çıkarılan dersleri karar matrisine dönüştürür",
-        "Lisans Vakaları bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam sınırı: yalnız lisans değişimi vakalarını (Grafana core projelerinde AGPLv3 duyurusu, Redis 7.4 için RSALv2/SSPLv1 kaynak-erişilebilir duyurusu, Elastic'in 2021 SSPL/Elastic License ve 2024 AGPLv3 seçeneği duyurusu) karar matrisi girdisine çevirir; hukuki tavsiye, güncel hukuki sonuç, mahkeme/enforceability garantisi veya şirketlerin bugünkü kesin lisans durumu iddiası üretmez",
+        "Girdi sözleşmesi: her vaka için vaka adı, kaynak URL + erişim tarihi + olay tarihi, lisans öncesi/sonrası durum, kullanım senaryosu ve etkilenen ürün bağımlılığı zorunlu alanlardır",
+        "Çıktı sözleşmesi: bir karar matrisi satırı = {risk seviyesi, kabul/ret/izleme kararı, insan/hukuk danışmanı inceleme durumu}; her satır ilgili evidence pack referansını taşır",
+        "Durum akışı: taslak → kaynak doğrulama → risk skoru → insan inceleme bekliyor → karar (kabul/ret/izle); insan onayı olmadan satır 'kesinleşti' durumuna geçemez",
+        "Hata yolu: kaynak URL erişilemez, olay/erişim tarihi çelişkili veya hukuk danışmanı incelemesi eksikse satır 'eksik kanıt' işaretlenir ve karar üretilmez"
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "AI hiçbir app/module/ruleset yaratamaz, güncelleyemez, silemez veya override edemez; yalnız risk/evidence/checklist önerisi ve insan onayı bekleyen karar matrisi satırı üretir.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -156,12 +159,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Lisans Vakaları güvenlik açısı: yanlış lisans = çatallanma/itibar riski; vakalardan ders alınır",
-        "Lisans Vakaları hassas bilgi gerektiğinde maskelenir",
-        "Lisans Vakaları ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki: vaka kayıtları rol bazlı yetkiyle (least-privilege) okunur; risk skoru ve kabul/ret/izle kararı yazımı yalnız yetkili hukuk/platform rolüne açıktır",
+        "Tenant izolasyonu: her vaka ve karar matrisi satırı tenant sınırında ayrılır (PostgreSQL RLS); tenant dışı vaka/karar verisine erişim engellenir",
+        "PII/hassas veri: vaka notlarındaki kişi verisi, danışman adı ve sözleşme alıntıları PII olarak sınıflandırılıp maskelenir; yalnız karar için gerekli alanlar açıkta kalır",
+        "Denetim: her kaynak ekleme, risk skoru ve karar değişikliği aktör + zaman damgasıyla değişmez (append-only) audit log'a yazılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -169,12 +173,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Vakaları yapısı: her vaka için karar matrisi girdisi (durum→öneri)",
-        "Lisans Vakaları tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Lisans Vakaları okunabilir ve test edilebilir kalır"
+        "Kod sağlığı kapısı: lint + typecheck + karar matrisi şeması için contract gate CI'da yeşil olmadan birleşme engellenir",
+        "Ayrıştırma: vaka kaynağını okuyan parser, riski hesaplayan evaluator ve matris satırı üreten reporter ayrı modüllere bölünür; tekrar eden mantık tek yardımcıda toplanır",
+        "Tip güvenliği: typed license anahtarı ve project key branded/enum tiplerle modellenir; serbest string yerine daraltılmış tipler kullanılır",
+        "Bütçe/eşik: policy matrix değerlendirme fonksiyonu için döngüsel karmaşıklık üst eşiği konur; eşik aşımı review'da uyarı üretir"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -182,12 +187,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Vakaları en-az-ayrıcalık ilkesine uyar",
-        "Lisans Vakaları değişikliği sürümlü ve izlenir",
-        "Lisans Vakaları girdi sınırda doğrulanır"
+        "SBOM/SCA: vaka verisini işleyen bağımlılıklar için SBOM üretilir ve SCA taraması CI'da koşar; bilinen açıklı paket birleşmeyi bloke eder",
+        "Allowlist/imza: karar matrisi kural seti (allowlist) imzalanır; imzasız/değiştirilmiş policy yüklenmez, tamper tespitinde son iyi sürüme rollback yapılır",
+        "Egress/yüzey: dış kaynak URL çözümlemesi allowlist'li egress'le sınırlanır; keyfi dış gönderim yapılmaz, ağ yüzeyi daraltılır",
+        "Secret yönetimi: kaynak API/depo erişim sırları vault'ta tutulur ve düzenli rotasyona tabidir; sır sızıntısı taramada yakalanır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -195,12 +201,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Lisans Vakaları performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Lisans Vakaları sık erişim indeksli/önbellekli tasarlanır",
-        "Lisans Vakaları büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: karar matrisi satır lookup'ı p95 < 200 ms; vaka listesi sorgusu p95 < 400 ms",
+        "Artımlı tarama: kaynak yeniden tarama incremental yapılır; yalnız değişen vaka kayıtları yeniden değerlendirilir",
+        "Önbellek: sık okunan matris/risk sonuçları önbelleğe alınır ve kaynak/olay tarihi değişince invalidasyon tetiklenir",
+        "Ölçek: vaka listesi imleç (cursor) sayfalamayla döner; ilişkili kaynak/inceleme verisi toplu yüklenerek N+1 önlenir"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -208,12 +215,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Lisans Vakaları mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Lisans Vakaları mobil istemci aynı sözleşmeyi tüketir",
-        "Lisans Vakaları bildirim/onay gerektiğinde push ile iletilir"
+        "Offline: onaylı vaka paketleri mobilde salt-okunur (read-only) case pack olarak önbelleğe alınır; çevrimdışıyken düzenleme kapalı, yalnız görüntüleme açıktır",
+        "İnceleme durumu: her satırın kabul/ret/izle ve hukuk inceleme durumu mobilde renkten bağımsız metin etiketiyle gösterilir",
+        "Köprü/derin bağlantı: vaka satırından kaynak URL'e ve ilgili WBS düğümüne deep link ile geçilir",
+        "Dokunma: birincil aksiyonlar için en az 44 px temas alanı bırakılır; dar ekranda tek sütun düzen korunur"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -226,7 +234,7 @@
         "Lisans Vakaları klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -239,7 +247,7 @@
         "Lisans Vakaları shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -252,7 +260,7 @@
         "Lisans Vakaları bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -265,7 +273,7 @@
         "Lisans Vakaları — AI vaka benzerliği/risk önerir; lisans stratejisi kararını insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -273,12 +281,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Lisans Vakaları doğrulama: karar matrisi mevcut lisans seçimiyle çelişmiyor mu denetlenir",
-        "Lisans Vakaları ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: risk skorlama ve matris satırı üretimi için birim testler; lisans durumu → öneri eşlemesi doğrulanır",
+        "Contract: karar matrisi girdi/çıktı Zod sözleşmesi contract testleriyle sabitlenir",
+        "Integration + e2e-CI: kaynak parser → evaluator → reporter zinciri entegrasyon testinde, kullanıcı inceleme yolculuğu e2e testte CI kapısında koşar",
+        "Negatif fixture'lar: stale source (bayat kaynak), conflicting license (çelişkili lisans), missing legal approval (eksik hukuk onayı), PII leak (kişi verisi sızıntısı) ve source URL missing (kaynak URL yok) senaryoları karar üretimini bloke etmeli",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -291,7 +301,7 @@
         "Lisans Vakaları girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -304,7 +314,7 @@
         "Lisans Vakaları sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -318,7 +328,7 @@
         "Lisans Vakaları ve Karar Matrisi kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Lisans Vakaları ve Karar Matrisi bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (taş/kum; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: sus-lisans-vakalar — \"Lisans Vakaları ve Karar Matrisi\" (feature/taş; küme: Platform Yetenekleri). Özet: Sektörün lisans krizleri ders ders: Grafana'nın çatallanmasız AGPL geçişinden Redis/Elastic/HashiCorp çatallarına ve WordPress/Envato'nun 20 yıllık belirsizliğine. Etiketler: lisans, vaka, agpl, oss.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

@@ -19,7 +19,8 @@
     "recomposition",
     "admin-flow",
     "rollback",
-    "kernel"
+    "kernel",
+    "module"
   ],
   "dependsOn": [
     "k-capability",
@@ -122,7 +123,10 @@
     "baselineStart": null,
     "baselineEnd": null
   },
-  "deliverables": [],
+  "deliverables": [
+    "Mode-Profile — Runtime İş-Modeli Anahtarı (B2C↔B2B↔C2C) kapsam sozlesmesi",
+    "Mode-Profile — Runtime İş-Modeli Anahtarı (B2C↔B2B↔C2C) icin test edilebilir kabul kriterleri ve rollback notu"
+  ],
   "acceptanceCriteria": [
     "Mode-Profile — Runtime İş-Modeli Anahtarı (B2C↔B2B↔C2C) için surface işlevsel kabulü karşılandı",
     "tenant izolasyonu + AAA erişilebilirlik kapıları geçti"
@@ -313,10 +317,11 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Edition statik paketleme varyantıdır; Mode-Profile ise canlı davranış profilidir: aktif capability seti + surface/workflow versiyonu + policy override toplamı",
-        "Mod değişimi ArcheType'ın mevcut ADMIN_FLOW'uyla yürür: preview → validation → data-impact → dry-run → approval → apply → rollback yedi kapı",
-        "Mode-Profile bir versiyon işaretçisidir; recomposition (yeniden-bileşim) capability bayraklarını ve surface versiyonunu değiştirir, şema göçü tetiklemez",
-        "B2C↔B2B↔C2C geçişi canlı sipariş/fatura verisini yıkmadan yapılır; apply geri alınınca önceki profil versiyonuna dönülür"
+        "Edition statik paketleme varyantıdır; Mode-Profile ise canlı davranış profilidir: aktif capability seti + surface/workflow versiyonu + policy override toplamı (B2C/B2B/C2C)",
+        "İşlev sınırı (kapsam): Mode-Profile yalnız profil bileşimini çözer — aktif capability seti + surface/workflow versiyon işaretçisi + policy override girdisi; sipariş/fatura iş mantığını, ödeme yürütmeyi ve şema DDL'ini kapsam-dışı bırakır",
+        "Girdi/çıktı sözleşmesi: girdi {tenant_id, channel, hedef profil versiyonu, override JSON}; çıktı {çözülmüş capability seti, surface/workflow versiyon işaretçisi, PDP'ye override girdisi}; recomposition tetikler, şema göçü tetiklemez",
+        "Hata yolu: eksik/uyumsuz alan ADMIN_FLOW validation kapısında, onaysız apply ApprovalRequiredError, başarısız apply snapshot'tan rollback ile önceki profil versiyonuna döner; her hata {code, message, trace_id} taşır",
+        "Kabul sözleşmesi (guardrail/hedef): B2C↔B2B↔C2C anahtarı canlı sipariş/fatura sayısını değiştirmemeli, apply yalnız approval sonrası uygulanmalı, rollback her koşulda önceki versiyona dönebilmeli — kural olarak yazılır, tamamlandı iddiası değil"
       ],
       "notes": "Kaynak: docs/mode-profile-contract.md §4-§8 (ArcheType ADMIN_FLOW, config-driven surface). Edition ≠ Mode-Profile: edition paket, Mode-Profile runtime davranış bileşimidir; recomposition veriyi yıkmaz.",
       "prompt": "Mode-Profile ArcheType'ın işlevsel sınırını kapsa: edition (statik) vs Mode-Profile (canlı) ayrımı, ADMIN_FLOW yedi kapısı ve capability/surface/policy recomposition. Kısıt: mod değişimi şema göçü değil, versiyon işaretçisi kaydırmasıdır. Çıktı: veri-yıkmayan B2C↔B2B↔C2C anahtarı.",
@@ -358,7 +363,8 @@
         "mode_profile:apply iznine en az ayrıcalık; apply yolunda step-up (approval) + snapshot + rate-limit ile kötüye kullanım daraltılır",
         "recomposition öncesi snapshot alınır ve rollback bağı zorunludur; başarısız apply önceki profil versiyonuna güvenle döner",
         "policy override kararları tek noktada (PDP) toplanır; ArcheType katmanı yetki dağıtmaz, yalnız override girdisi besler",
-        "Cross-tenant profil/edition okuma denemesi fail-closed reddedilir; her transition AuditLogger ile trace_id'li denetim izi bırakır"
+        "Cross-tenant profil/edition okuma denemesi fail-closed reddedilir; her transition AuditLogger ile trace_id'li denetim izi bırakır",
+        "channel/surface allowlist ile yalnız izinli capability yüzeyi açılır; profil dışı endpoint egress'i kapalı (closed) tutulur, profil konfigürasyon bağımlılıkları pin'li sürüm + imza (signature) doğrulamasıyla yüklenir (SBOM izlenir)"
       ],
       "notes": "Kaynak: docs/mode-profile-contract.md §9-§10 + agentPolicy.prodDataPolicy (requireSnapshot, requireRollback). Anti-pattern §14: veri yıkan geçiş ve tek-tık serbest anahtar yasak.",
       "prompt": "Mode-Profile ArcheType güvenlik optimizasyonunu kapsa: mode_profile:apply least-privilege, apply öncesi snapshot + zorunlu rollback ve override kararının PDP'de toplanması. Kısıt: yetki dağıtımı yok, veri yıkan geçiş yasak. Çıktı: snapshot-korumalı, geri-alınabilir mod anahtarı.",
@@ -450,7 +456,8 @@
         "validation eksik-alan raporunu doğru üretiyor: şirket cari hesabı, B2B fiyat listesi, min sipariş adedi eksikleri yakalanıyor (Integration)",
         "Canlı-veri korunumu invariant testi: recomposition öncesi sipariş sayısı = sonrası; rollback sonrası da veri kaybı yok (Integration/E2E)",
         "Config-driven statik analiz: UI hiçbir if b2b else dalı içermiyor; apply sonrası capability seti (RFQ, vadeli ödeme) değişiyor",
-        "Cross-tenant izolasyon: A tenant B'nin profilini göremiyor; B2B anonim fiyat gizleme E2E'de Playwright + axe ile doğrulanıyor"
+        "Cross-tenant izolasyon: A tenant B'nin profilini göremiyor; B2B anonim fiyat gizleme E2E'de Playwright + axe ile doğrulanıyor",
+        "Negatif senaryo (negatif senaryo kanıtı): onaysız apply reddedilmeli, cross-tenant profil okuma fail-closed dönmeli, veri yıkan geçiş bloklanmalı; dry-run data-impact çıktısı golden/fixture ile karşılaştırılır ve QA kanıtı (evidence) kayıt altına alınır"
       ],
       "notes": "Kaynak: docs/mode-profile-contract.md §12 (8 test tablosu). Test-önce zorunlu (önce kırmızı, sonra yeşil); E2E katmanı Playwright + axe WCAG 2.2 AA ile çalışır.",
       "prompt": "Mode-Profile ArcheType test stratejisini kapsa: validation eksik-alan raporu, canlı-veri korunumu invariant (sipariş öncesi=sonrası), config-driven statik analiz ve cross-tenant izolasyon. Kısıt: test-önce, önce kırmızı sonra yeşil. Çıktı: 8 testlik yeşil kapı + E2E axe.",
@@ -475,10 +482,11 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "k-capability aktif capability setini besler (recomposition onları açar/kapar); k-schema surface/workflow şema versiyonlarını sağlar",
-        "Mode-Profile ArcheType stack-editions ve edition-storefront ile ilişkilidir; edition statik paket, Mode-Profile canlı davranış katmanıdır",
-        "policy override girdisi k-policy-pdp'ye beslenir; fiyat/vergi profili k-computation'a pricing_policy_ref/tax_policy_ref üzerinden bağlanır",
-        "build-ilk-dikey-dilim Commerce dilimi bu ArcheType'ı tüketerek B2C→B2B mod anahtarını uçtan uca kanıtlar (canlı veri korunur)"
+        "k-capability recomposition ile aktif capability setini açıp kapatmalı; k-schema mod anahtarının okuduğu surface/workflow şema versiyon işaretçisini sağlamalı — B2C↔B2B↔C2C geçişi bu iki primitifin girdisidir",
+        "Tüketici app/surface aktif profili yalnız tipli API/arayüz (Zod-tiplenmiş sözleşme) üzerinden okumalı; mode_profile/transition tablosuna doğrudan erişim guardrail olarak kapalı tutulmalı",
+        "Bağımlılık yönü tek yönlü olmalı: üst app/surface bu ArcheType'a bağımlıdır, ArcheType tüketiciye bağımlı olamaz; edition statik paketleme, bu katman canlı davranış bileşimidir (ikisi karıştırılamaz)",
+        "recomposition/apply sonucu tenant_id + hedef profil versiyonuyla olay veriyoluna (event bus) yayımlanmalı; tüketici cache invalidation'ını bu olaydan almalı, senkron yeniden-derleme zorunlu olmamalı",
+        "policy override k-policy-pdp'ye, fiyat/vergi profili k-computation'a pricing_policy_ref/tax_policy_ref ile bağlanmalı; profil versiyon geçişi geriye-uyumlu (expand-contract) olmalı ve kanıt (evidence) transition kaydına yazılmalı — AI bu entegrasyonda app/module üretemez/güncelleyemez, ruleset override edemez"
       ],
       "notes": "Kaynak: docs/mode-profile-contract.md §6 (dependsOn: k-capability, k-schema) + §11 (bağlama). ArcheType kod-teslimatını taşır; k-mode module sözleşmesinin altında konumlanır.",
       "prompt": "Mode-Profile ArcheType entegrasyonunu kapsa: k-capability (set), k-schema (surface versiyonu), stack-editions/edition-storefront ilişkisi ve k-policy-pdp override girdisi. Kısıt: edition statik paket, ArcheType canlı davranış; yetki PDP'de. Çıktı: dört primitifi tüketen B2C↔B2B↔C2C anahtarı.",

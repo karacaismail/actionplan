@@ -21,7 +21,8 @@
     "kilometre",
     "alınır",
     "girdi",
-    "kritik"
+    "kritik",
+    "module"
   ],
   "dependsOn": [
     "build-enterprise-readiness",
@@ -146,12 +147,14 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Uzman Denetimi: Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı: fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları",
-        "Uzman Denetimi kapsamı: kritik kilometre taşlarında dış uzman review'unu zorunlu kılar",
-        "Uzman Denetimi bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Kapsam ve işlev sınırı: bu görev yalnızca milestone uzman review orkestrasyonunu yönetir — reviewer atama, bulgu/karar kaydı ve build kapısı kabul sözleşmesi; kapsam DIŞI olan kesin sınır: uygulama kodu yazmaz, app/module üretmez veya güncellemez, ruleset override/disable etmez, prod'a doğrudan yazma yapmaz — nihai karar yalnız build kapısına sinyal olarak iletilir",
+        "Girdi/çıktı sözleşmesi: girdi = review isteği {kilometre taşı kimliği, değişen artefaktlar (ADR/PR/şema diff), risk sınıfı, talep eden ekip üyesi} ve risk sınıfına göre atanan uzman (senior mimar / alan uzmanı); çıktı = {karar: onay|şartlı-onay|ret, bulgular[], gerekli-aksiyonlar[], imzalayan uzman, zaman damgası} biçiminde değişmez denetim kaydı — kod, migration veya app/module artefaktı üretilmez",
+        "Durum akışı: talep-edildi → uzman-atandı → inceleniyor → (şartlı-onay ise) düzeltme-bekliyor → onaylandı | reddedildi; kilometre taşı yalnız 'onaylandı' durumunda kapanır",
+        "Hata/eksik bulgu yolu: uzman atanamazsa (kapasite yok) talep kuyruğa alınır ve SLA sayacı durur; eksik artefakt gelirse review 'bloke' olur ve talep edene eksik listesi döner; kapsam dışı bir işlem (kod yazma, ruleset değişikliği) talep edilirse istek reddedilir",
+        "Kabul sözleşmesi: her kritik kilometre taşı için en az bir uzman onayı zorunludur; onay olmadan build/dağıtım kapısı geçilemez ve karar üç kişilik ekibin güvenlik ağı kaydına bağlanır — bu görev kapıyı yalnız 'geç/geçme' sinyaliyle yönetir, dağıtımın kendisini yürütmez"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -159,12 +162,13 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Uzman Denetimi güvenlik açısı: güvenlik-kritik kararlar uzman onayından geçer (güvenlik ağı)",
-        "Uzman Denetimi hassas bilgi gerektiğinde maskelenir",
-        "Uzman Denetimi ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Rol/yetki: review'u yalnız 'uzman-reviewer' rolüne atanmış senior mimar veya alan uzmanı imzalayabilir; talep eden kişi kendi kilometre taşını onaylayamaz (dört-göz ilkesi, least-privilege)",
+        "Tenant izolasyonu: uzman review kayıtları PostgreSQL RLS ile tenant'a bağlıdır; fractional dış uzman yalnız kendisine atanmış kilometre taşının artefaktlarını görür, başka tenant/proje verisine erişemez",
+        "PII redaksiyonu: incelenen artefaktlarda (log, örnek veri, ekran görüntüsü) geçen kişisel veri uzmana gösterilmeden maskelenir; uzmanın gördüğü şey karar için gereken minimum bağlamdır",
+        "Değişmez audit kanıtı: her onay/ret kararı append-only denetim kaydına yazılır (kim, ne zaman, hangi kilometre taşı, hangi bulgu); kayıt sonradan düzenlenemez, yalnız yeni karar eklenir; bu kayıt güvenlik ağının kanıt zinciridir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -172,12 +176,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Uzman Denetimi yapısı: review kapsamı ve kontrol listesi kilometre taşına bağlı",
-        "Uzman Denetimi tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Uzman Denetimi okunabilir ve test edilebilir kalır"
+        "Review checklist'i serbest metin değil tipli şema (Zod) olarak ayrıştırılır; her kontrol maddesi {id, kategori, zorunlu-mu, kanıt-alanı} yapısına oturur, böylece uzman bulguları makine-okunur ve raporlanabilir kalır",
+        "Lint/kapı eşiği: review orkestrasyon kodu ESLint + tip kapısından geçmeden birleşmez; uzman onay durumu enum ile sınırlanır, serbest string kabul edilmez (geçersiz karar değeri build'i kırar)",
+        "Kod sağlığı bütçesi: review atama ve durum-geçiş mantığı tek modülde toplanır; tekrar eden 'onay kapısı geçildi mi?' kontrolü paylaşılan yardımcıya alınır, kopyala-yapıştır eşiği bütçelenir",
+        "Karmaşıklık/sahiplik: durum makinesi geçişleri için döngüsel karmaşıklık sınırı konur; her review modülünün CODEOWNERS sahibi platform ekibidir, sahipsiz kritik yol bırakılmaz"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -185,12 +190,13 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Uzman Denetimi en-az-ayrıcalık ilkesine uyar",
-        "Uzman Denetimi değişikliği sürümlü ve izlenir",
-        "Uzman Denetimi girdi sınırda doğrulanır"
+        "Reviewer allowlist: kilometre taşını imzalayabilecek uzmanlar açık bir allowlist'te tutulur (rol + kimlik doğrulama); listede olmayan hiçbir hesap onay veremez, fractional dış uzman ayrılınca listeden düşürülür",
+        "İmzalı review çıktısı: her onay/ret kararı uzmanın kimliğiyle imzalanır (kriptografik imza/HMAC); imzasız veya imzası doğrulanamayan karar geçersiz sayılır, böylece kilometre taşı onayı taklit edilemez",
+        "SBOM/bağımlılık kontrolü: review sırasında incelenen sürümün SBOM'u ve bağımlılık taraması (kritik CVE) uzmana kanıt olarak sunulur; kritik güvenlik açığı açıksa uzman onay veremez",
+        "Egress/yüzey daraltma: review servisi yalnız kimlik doğrulama ve audit deposuna egress yapar; dış uzman erişimi salt-okunur artefakt yüzeyiyle sınırlanır, prod'a yazma yüzeyi hiç açılmaz"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -198,12 +204,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Uzman Denetimi performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Uzman Denetimi sık erişim indeksli/önbellekli tasarlanır",
-        "Uzman Denetimi büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef: review talebi oluşturma ve durum sorgulama uçları p95 < 200 ms yanıt verir; uzman ataması (bildirim gönderimi dahil) p95 < 5 sn içinde tamamlanır",
+        "Asenkron kuyruk: uzmana bildirim, SBOM üretimi ve diff hazırlama gibi ağır işler senkron istek yolundan çıkarılıp async queue'ya alınır; talep eden ekip üyesi anında talep-id alır, sonucu bildirimle öğrenir",
+        "Cache + sayfalama: kilometre taşı review geçmişi ve açık talep listesi imleç (cursor) sayfalama ile çekilir; sık okunan 'bekleyen review sayısı' özeti kısa TTL'li cache'te tutulur, N+1 sorgu önlenir",
+        "İş SLA'sı: bir kilometre taşı review'unun talep→karar süresi için uzman kapasitesine bağlı SLA hedefi (ör. 2 iş günü) izlenir; SLA aşımı gözlemlenebilirlik metriğine düşer"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -211,12 +218,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Uzman Denetimi mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Uzman Denetimi mobil istemci aynı sözleşmeyi tüketir",
-        "Uzman Denetimi bildirim/onay gerektiğinde push ile iletilir"
+        "Offline review paketi: uzman, kilometre taşının artefaktlarını (diff özeti, checklist, bulgu taslağı) çevrimdışı okunabilir bir paket olarak indirir; bağlantı gelince kararı senkronlanır, böylece fractional uzman seyahatte de inceleyebilir",
+        "Mobil onay/ret temas alanı: onay ve ret düğmeleri dar ekranda net ayrılır; mobil onay düğmelerinde en az 44 px temas alanı bırakılır ve yanlış dokunmayı önlemek için ret için ikinci bir doğrulama istenir",
+        "PWA/Capacitor push: review talebi atandığında uzmana push bildirimi (PWA web-push veya Capacitor) gider; bildirime dokunmak doğrudan ilgili kilometre taşının inceleme ekranını açar",
+        "Mobil salt-okunur güvenlik: mobil istemci aynı tipli sözleşmeyi tüketir ancak yalnız görüntüleme + imzalı onay/ret yapar; artefakt düzenleme veya prod yazma mobil yüzeyde hiç açılmaz"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -229,7 +237,7 @@
         "Uzman Denetimi klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -242,7 +250,7 @@
         "Uzman Denetimi shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -255,7 +263,7 @@
         "Uzman Denetimi bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -268,7 +276,7 @@
         "Uzman Denetimi — AI ön-review/bulgu özeti önerir; nihai onayı uzman/insan verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -276,12 +284,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Uzman Denetimi doğrulama: uzman review kapısı geçilmeden kilometre taşı kapanmaz",
-        "Uzman Denetimi ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit test: durum makinesi geçişleri (talep→atandı→inceleniyor→onay/ret) ve 'talep eden kendini onaylayamaz' kuralı birim testlerle doğrulanır",
+        "Contract test: review talep/karar API sözleşmesi (Zod şeması) build kapısıyla entegre olan tarafla sözleşme testinden geçer; imzalı çıktı formatı uyumsuzsa test kırılır",
+        "E2E + kullanıcı yolculuğu: 'kilometre taşı → uzman ataması → inceleme → onay → build kapısı açılır' uçtan uca senaryosu (AI-destekli Playwright) koşulur",
+        "Negative + security regression: onay olmadan kilometre taşı kapatma denemesi, imzasız karar, allowlist dışı hesabın onay girişimi ve yetkisiz tenant erişimi için negatif/güvenlik regresyon testleri düzenli koşar",
+        "Testing-loop: başarısız test en fazla 6 kez yeniden çalıştırılır, düzelmezse raporlanır; autonomous QA ajanı bulguyu üç kişilik ekibin review kuyruğuna düşürür"
       ],
       "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -294,7 +304,7 @@
         "Uzman Denetimi girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -307,7 +317,7 @@
         "Uzman Denetimi sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -321,7 +331,7 @@
         "Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (modül/kaya; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: build-uzman-denetimi — \"Uzman Denetimi — Üç Kişilik Ekibin Güvenlik Ağı\" (module/dağ; küme: Build & Dağıtım). Özet: Fractional senior mimar ve alan uzmanlarının zorunlu kilometre taşı review'ları. Etiketler: review, expert, governance, team.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

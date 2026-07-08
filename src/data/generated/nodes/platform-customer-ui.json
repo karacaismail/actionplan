@@ -21,7 +21,8 @@
     "müşteri",
     "customerdetail",
     "sorgusu",
-    "tanstack"
+    "tanstack",
+    "archetype"
   ],
   "dependsOn": [
     "platform-customer-graphql"
@@ -440,7 +441,7 @@
         "Hassas müşteri verisi (vergi numarası, IBAN) form alanlarında autocomplete=off olarak işaretlenir; tarayıcı bu değerleri otomatik doldurmaz veya hatırlamaz.",
         "Form gönderimleri istemci doğrulamasından geçse bile sunucu tarafı validasyona güvenilir; GraphQL hata yanıtları parse edilerek ilgili form alanına atanır."
       ],
-      "notes": "İstemci tarafı yetki kontrolü yalnızca UI görünürlüğü içindir; gerçek yetki kararı her zaman GraphQL resolver'da verilir.",
+      "notes": "İstemci tarafı yetki kontrolü yalnızca UI görünürlüğü içindir; gerçek yetki kararı her zaman GraphQL resolver'da verilir. En-az-ayrıcalık: CustomerList/Detail bileşenleri tenant context'ini yalnızca token claim'inden okur, tenantId'yi asla URL veya form alanından kabul etmez; çapraz-tenant müşteri sorgusu resolver'da deny edilir ve denied-access audit kaydı düşülür. PII maskesi: vergi no/IBAN alanları listede ve detay kartında varsayılan maskeli (•••1234) gösterilir, tam değer yalnızca 'göster' aksiyonuyla ve reveal-audit event'iyle açılır. Auth token'ı bellekte (in-memory) tutulur, localStorage'a yazılmaz; GraphQL istemcisi dışında hiçbir bileşen token secret'ına erişemez.",
       "prompt": "React Customer UI ekranlarında güvenlik mekanizmalarını kapsa: TanStack Router route guard, CSRF önlemi, hassas alan autocomplete kontrolü ve sunucu doğrulama önceliği; güvenlik sınırı: istemci validasyonu geçse bile sunucu reddi UI'da doğru hata olarak gösterilir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -455,7 +456,7 @@
         "CustomerList satırları React.memo ile sarmalanır; liste sırasındaki değişiklik yalnızca etkilenen satırı render eder, tüm liste yeniden çizilmez.",
         "Zod şema nesneleri modül düzeyinde (bileşen dışında) tanımlanır; her render'da yeniden oluşturulmaz, referans sabittir."
       ],
-      "notes": "React DevTools Profiler ile CustomerList 100 satırda render süresi 8 ms altında tutulur; aşımda memoization gözden geçirilir.",
+      "notes": "Kod sağlığı ekseni: CustomerList/Detail/Form bileşenleri ESLint (react-hooks, jsx-a11y) + TypeScript strict kapısından geçmeden PR merge edilemez; lint hatası ve `any` kullanımı CI'da bloke eder. Render bütçesi eşik olarak sabittir: React DevTools Profiler'da CustomerList 100 satır render'ı 8 ms, /customers lazy chunk parse süresi 40 ms altında tutulur; aşım memoization ve chunk ayrıştırmasını tetikler. Ayrıştırma: veri getirme (useQuery hook'ları), form şeması (modül düzeyi Zod) ve sunum (memo'lu satır bileşeni) ayrı katmanlarda tutulur; bir katman değişimi diğerini yeniden derletmez ve döngüsel bağımlılık madge kontrolüyle sıfırlanır.",
       "prompt": "React Customer UI ekranlarında render ve paket boyutu optimizasyonunu kapsa: lazy chunk, useQuery select, React.memo liste satırı ve sabit Zod şema referansı; çıktı: CustomerList bileşen kodu, lazy route sarmalayıcısı ve DevTools Profiler yorumlama rehberi.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -470,7 +471,7 @@
         "Dosya yükleme (müşteri logosu) istemcide MIME tipi ve boyut denetiminden geçer: izin verilen tipler image/jpeg, image/png, image/webp; maksimum 2 MB.",
         "Hata mesajları kullanıcıya yönelik soyut tutulur; stack trace veya sunucu iç detayı asla gösterilmez, yalnızca kullanıcı dostu açıklama ve hata kodu sunulur."
       ],
-      "notes": "İstemci tarafı sınır kontrolleri hız için yapılır; sunucu aynı kontrolleri ayrıca uygular, atlanması mümkün değildir.",
+      "notes": "İstemci tarafı sınır kontrolleri hız için yapılır; sunucu aynı kontrolleri ayrıca uygular, atlanması mümkün değildir. Sertleştirme ekseni — bağımlılık/SBOM: Customer UI paketi CycloneDX SBOM üretir, `npm audit`/OSV taraması CI kapısında yüksek/kritik açıkta pipeline'ı durdurur, lockfile pinlidir ve transitive bağımlılık ekleme review gerektirir. Egress/yüzey daralması: build çıktısı CSP ile sıkılaştırılır — script-src 'self', connect-src yalnızca GraphQL ve S3 upload origin'lerini içeren allowlist'e sınırlanır; inline script yasak, `unsafe-eval` kapalı, harici CDN/analitik origin'e egress engellenir. Üçüncü taraf gömme (harita, analitik) sandbox iframe + izin listesi olmadan eklenemez; müşteri logosu yalnızca imzalı S3 origin'inden servis edilir.",
       "prompt": "React Customer UI formlarında istemci tarafı güvenlik sertleştirmesini kapsa: karakter sınırı, UUID format doğrulama, dosya yükleme MIME/boyut kontrolü ve hata mesajı soyutlama; güvenlik sınırı: geçersiz UUID ile GraphQL sorgusu asla tetiklenmez.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -530,7 +531,7 @@
         "Hata izleme: Sentry React entegrasyonu ile çalışma zamanı hataları otomatik raporlanır; kullanıcı oturumu ve tenant bilgisi context olarak eklenir, PII eklenmez.",
         "Bundle boyutu kontrolü: CI'da bundlesize veya size-limit çalışır; customer-ui chunk 80 KB gzip sınırını aşarsa pipeline hata verir."
       ],
-      "notes": "Feature flag yönetimi ile aşamalı açılım, büyük form değişikliklerinde kullanıcı deneyimini korur.",
+      "notes": "Çalışma hedefi: Customer UI, Vite ile üretim moduna derlenen statik SPA olarak paketlenir ve Cloudflare Pages (ya da eşdeğer statik/CDN edge) üzerinde host edilir; immutable hash'li asset dosyaları uzun-cache, index.html no-cache ile servis edilir. Health/probe: Pages deployment'ı canlıya alınmadan önce smoke health-check /healthz benzeri bir statik uç ve kritik GraphQL bağlanabilirlik probe'u yeşil olmalı; başarısızsa promotion durur. Rollback: her deploy immutable sürüm olduğundan Pages önceki başarılı sürüme anında geri alınabilir (feature flag ile de anlık kapatma); rollback tetikleyici Sentry hata oranı veya bundle-budget ihlalidir. Config/sır: GraphQL endpoint ve Sentry DSN yalnızca build-time `VITE_` public env'lerinden gelir; API anahtarı/secret asla bundle'a gömülmez, gizli değerler backend'de kalır ve Pages ortam değişkenleri şifreli saklanır.",
       "prompt": "React Customer UI modülünün Turborepo monorepo dağıtım sürecini kapsa: değişim tabanlı rebuild, feature flag kademeli açılım, Sentry hata izleme ve bundle boyutu CI kontrolü; çıktı: turbo.json pipeline tanımı, Sentry DSN konfigürasyonu ve size-limit ayarları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -545,7 +546,7 @@
         "Toplu güncelleme aksiyonu: birden fazla müşteri seçilip durum güncellendiğinde batchUpdateCustomers mutasyonu çağrılır; ilerleme çubuğu tamamlanan kayıt sayısını gösterir.",
         "Hata kurtarma: ECA görevi başarısız olduğunda CustomerDetail ekranında uyarı rozeti görünür; kullanıcı 'Yeniden Dene' butonu ile görevi yeniden kuyruğa ekler."
       ],
-      "notes": "UI ECA durumunu GraphQL subscription üzerinden gerçek zamanlı izler; subscription mevcut değilse 15 saniyede bir polling yapılır.",
+      "notes": "Olay→eylem eşlemesi: UI 'kaydet' click event'i → createCustomer/updateCustomer GraphQL mutation → onSuccess'te CustomerList sorgusu invalidate → başarı toast'ı; customer.updated ve customer.revealed (PII göster) event'leri subscription ile UI'a akar, subscription yoksa 15 sn polling devreye girer. İdempotency: mutation'lar clientMutationId (UUID) taşır; aynı submit iki kez giderse (double-click, retry) sunucu tekrarı yok sayar ve UI aynı toast'ı tekrar üretmez. Zincir/döngü sınırı: invalidate → refetch → render döngüsü tek adımla biter, refetch yeni bir mutation tetikleyemez; toplu güncellemede batchUpdateCustomers tek çağrıya toplanır, satır başına ayrı mutation zinciri kurulmaz. Yıkıcı eylemlerde onay/deny kapısı: müşteri silme (soft-delete) mutation'ı yalnızca modal onayı sonrası çalışır, onay iptalinde event drop edilir; customer.revealed PII açığa çıkarma yalnızca 'göster' aksiyonu + reveal-audit event'iyle geçer, aksi halde maskeli kalır.",
       "prompt": "React Customer UI ekranlarının ECA otomasyon geri bildirim döngüsünü kapsa: onSuccess invalidation, subscription tabanlı ilerleme takibi, toplu güncelleme çubuğu ve yeniden deneme mekanizması; çıktı: useMutation onSuccess işleyicisi, subscription hook ve ECA durum rozet bileşeni.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -560,7 +561,7 @@
         "Anomali tespiti: CustomerList'te alışılmadık veri deseni (ör. aynı e-postayla birden fazla kayıt) tespit edildiğinde satırda sarı uyarı ikonu gösterilir.",
         "AI öneri paneli: CustomerDetail ekranında satış ekibine akıllı bir sonraki aksiyon önerisi sunulur; öneri modeli tenant'a özgü geçmiş veriden üretilir."
       ],
-      "notes": "AI özellikleri bağımsız bileşen olarak eklenir; temel Customer UI işlevleri AI modülü olmadan tam çalışmaya devam eder.",
+      "notes": "İzin/yasak sınırı: AI paneli (doğal dil arama, form otomatik doldurma, akıllı aksiyon önerisi) yalnızca öneri üretir — CustomerForm alanlarını doldurabilir, GraphQL filtre parametresi önerebilir, ama createCustomer/updateCustomer/soft-delete mutation'ını kendi başına ASLA çağırmaz; her mutasyon kullanıcının 'onayla' click'iyle ve mevcut route guard + resolver yetkisiyle tetiklenir. AI yalnızca token claim'inin izin verdiği tenant kapsamında okur; çapraz-tenant müşteri veya maskeli PII (vergi no/IBAN) AI paneline verilmez, reveal yalnızca kullanıcı 'göster' aksiyonuyla olur. Bu düğüm archetype seviyesindedir: AI app/module üretemez, app/module güncelleyemez, ruleset override edemez (ecaRules deny kapıları) — AI paneli en fazla archetype taslağı önerir, üretim yazımı yapmaz. Temel Customer UI işlevleri AI modülü olmadan tam çalışır; AI paneli devre dışıyken liste/detay/form aynı kalır.",
       "prompt": "React Customer UI ekranlarında AI destekli kullanıcı deneyimi özelliklerini kapsa: doğal dil arama, form otomatik doldurma, anomali uyarısı ve akıllı aksiyon önerisi; güvenlik sınırı: AI önerileri kullanıcı onayı olmadan asla mutasyon çalıştırmaz.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -575,7 +576,7 @@
         "Playwright E2E: müşteri oluşturma → listeleme → düzenleme → silme akışı tam tarayıcıda çalışır; her PR'da smoke suite olarak tetiklenir.",
         "Erişilebilirlik regresyon testi: axe-playwright ile her E2E testi sonrası WCAG 2.2 critical ve serious ihlali sayılır; artış sıfır toleransla engellenir."
       ],
-      "notes": "MSW handler'ları test ve Storybook ortamında paylaşılır; mock veri tek yerden yönetilir.",
+      "notes": "Negatif senaryolar zorunlu: CustomerForm testi geçerli girişin yanında eksik zorunlu alan, 254 karakter aşımı e-posta, geçersiz UUID route param (→ /not-found, sorgu çalışmaz) ve GraphQL 403/validation hata yanıtının doğru form alanına atanmasını kanıtlar; Playwright E2E'de çapraz-tenant müşteri erişimi denendiğinde resolver deny → UI'da yetkisiz hatası doğrulanır. Kanıt/fixture: MSW handler'ları hem başarı hem hata (network error, GraphQL errors[], boş liste) yollarını mock'lar ve test + Storybook ortamında paylaşılır — mock müşteri verisi tek fixture kaynağından yönetilir, PII alanları sahte/maskeli tutulur. QA loop/kanıt: her PR'da Vitest birim + MSW entegrasyon + Playwright smoke + axe-playwright çalışır; %85 satır kapsama altına düşerse veya WCAG critical/serious ihlali artarsa CI kapısı merge'i sıfır toleransla bloke eder ve kanıt olarak coverage + axe raporu artefakt olarak saklanır.",
       "prompt": "React Customer UI ekranlarının kapsamlı test stratejisini kapsa: Vitest birim, MSW entegrasyon, Playwright E2E ve axe-playwright erişilebilirlik testi; çıktı: MSW handler tanımları, Playwright test dosyası ve axe-playwright kontrol fonksiyonu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -619,7 +620,7 @@
         "platform-ui-surface modülü: tasarım token'ları, temel bileşenler (Button, Input, Modal, Toast) ve TanStack Router/Query yapılandırması bu modülden miras alınır.",
         "platform-auth-ui modülü: korumalı route sarmalayıcısı ve useCurrentUser hook'u bu modülden kullanılır; Customer UI kendi oturum yönetimi kodu yazmaz."
       ],
-      "notes": "platform-customer-ui tam olarak üç platfrom modülüne bağımlıdır; bu bağımlılıklar package.json peerDependencies olarak tanımlanır.",
+      "notes": "Doğrudan-DB yasağı: Customer UI hiçbir veritabanına, ORM'e veya ham SQL'e erişmez; tüm müşteri okuma/yazma yalnızca platform-customer-graphql modülünün sağladığı hook'lar (useCustomerQuery, useCustomerDetailQuery, createCustomer/updateCustomer) üzerinden geçer, bileşenler kendi sorgu stringi veya fetch/Apollo çağrısı yazmaz. Contract kapısı: bu hook'lar platform-customer-graphql'in yayımladığı tipli GraphQL şemasına (data-api-contract) bağlıdır; şema alanı kaldırılır/tip değişirse codegen tipleri kırılır ve CI derlemede durur — panel bu kontrata karşı derlenmeden merge edilemez. Panel/entegrasyon sınırı: paylaşılan bileşenler (Button/Input/Modal/Toast) ve Router/Query yapılandırması platform-ui-surface'ten, korumalı route sarmalayıcısı + useCurrentUser platform-auth-ui'den miras alınır; Customer paneli kendi oturum yönetimi veya token depolama kodu yazmaz, bildirim de doğrudan çağrılmaz, event emit edilir. platform-customer-ui bu üç platform modülüne bağımlıdır ve bağımlılıklar package.json peerDependencies olarak tanımlanır.",
       "prompt": "platform-customer-ui düğümünün platform-customer-graphql, platform-ui-surface ve platform-auth-ui modülleriyle bağımlılık ilişkisini kapsa; her modülden hangi hook, bileşen ve yapılandırmanın tüketildiğini göster; çıktı: bağımlılık diyagramı ve örnek CustomerList bileşen içe aktarma yapısı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"

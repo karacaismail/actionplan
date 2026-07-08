@@ -14,19 +14,23 @@
     "ornek",
     "7-seviye",
     "atom",
-    "atomu",
     "biçim",
     "vektör",
     "değeri",
     "ilkel",
     "örnek",
     "ruleset",
-    "skor"
+    "skor",
+    "micro_step"
   ],
   "dependsOn": [],
   "blocks": [],
   "related": [],
-  "refs": [],
+  "refs": [
+    "docs/task-to-code-contract.md",
+    "docs/dimension-contract-17.md",
+    "docs/engineering-standards-index.md"
+  ],
   "criticalPath": false,
   "status": "backlog",
   "priority": "medium",
@@ -294,12 +298,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Veri & Zeka kırılımının Atom örneği: bölünemez ilkel (ör. embedding vektörü değer nesnesi)",
-        "Atom, veride daha alt parçaya ayrılmayan ilkel sözleşme birimi",
-        "Örnek dal; veri atomunun granülerlik tabanındaki yeri"
+        "Kapsam/işlev sınırı: bu Atom tek bir bölünemez doğrulama/dönüşüm/sınıflandırma adımını yürütür — ham girdiyi tek embedding vektörü değer nesnesine ya da tek model skoruna çevirir; kalıcılık, indeksleme, vektör arama ve iş kuralı bilinçli olarak kapsam dışıdır",
+        "Girdi sözleşmesi: normalize edilmiş float[] boyut=D (ör. 1536) veya [0,1] aralığında skor + kaynak model kimliği; çıktı sözleşmesi: dtype+boyut+kaynak metaverisiyle imzalı, değişmez ve tipli değer nesnesi",
+        "Kabul sözleşmesi: boyut/tip/aralık doğrulaması geçmeden nesne örneklenemez ve aynı ham girdi daima aynı değer nesnesini üretir (deterministik, eşitlik değere göre); bu kural kabul koşuludur",
+        "Hata yolu: yanlış boyut/NaN/Inf/aralık dışı skorda sessiz düzeltme yerine InvalidVectorError/InvalidScoreError döner; kısmi ya da varsayılan değer üretilmez, idempotent yeniden değerlendirme aynı sonucu verir"
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -307,12 +312,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Veri atomu değişmez; beklenmeyen mutasyon engellenir",
-        "Atom değeri sınırda doğrulanır (geçerli vektör/skor)",
-        "Hassas atom üst katmanda maskelenir"
+        "Tenant/erişim sınırı: atom bir tenant kimliğine bağlı taşınır; üst katman PostgreSQL RLS + least-privilege yetkisi olmadan atom değerini okuyamaz, yazamaz veya çapraz-tenant eşleyemez",
+        "Yetkilendirme sınırı (AI): AI aktörü bu atomu içeren app/module üretemez veya güncelleyemez, ruleset override/disable edemez; backend ECA girişimi deny eder ve değişmez denetim kaydı bırakır",
+        "PII/hassas girdi: embedding'in türetildiği kaynak PII ise atom hassas sınıflandırılır; ham metin atomda tutulmaz, log/serileştirmede vektör maskelenir/redakte edilir",
+        "Değişmez değer sınırı: örneklenen vektör/skor alanları salt-okunur; mutasyon yerine yeni nesne üretilir, her üretim değişmez audit kanıtına bağlanır (yan-etkisiz)",
+        "Güvensiz payload doğrulaması: dışarıdan gelen serileştirilmiş vektör güven sınırında şema+boyut+aralık kontrolünden geçmeden içeri alınmaz; enjekte edilmiş meta/aşırı boyut reddedilir"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -320,12 +327,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Embedding/skor atomu değer nesnesi; eşitlik değere göre",
-        "Sabit boyut/tip; geçersiz vektör reddi",
-        "Atomlar paylaşılır, referans tutulur"
+        "Tip/şekil sözleşmesi: değer nesnesi tipli alanlarla (dtype, boyut=D, aralık) tanımlanır; `any`/serbest obje yasak, şema Zod/tip kapısında zorunlu tutulur",
+        "Kod-sağlığı ekseni — döngüsel karmaşıklık: doğrulama+eşitlik mantığı fonksiyon başına düşük karmaşıklıkta kalır (eşik ör. ≤10), aşımda refactor gerekir",
+        "Lint/kapı: değişmezliği ve saf fonksiyonu bozan mutasyon lint kuralıyla yakalanır; CI tip+lint kapısı yeşil olmadan atom birleştirilemez (guardrail)",
+        "Katman ayrımı: ilkel değer mantığı I/O, indeks ve model çağrısından ayrık tutulur; bağımlılık yönü tek yönlü, ölü kod ve sızan yardımcılar ayıklanır (split/separation)"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -338,7 +346,7 @@
         "Bağımlılıksız; saldırı yüzeyi minimal"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -346,12 +354,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Atom doğrulaması sabit zaman — yük regresyon testi CI eşiğiyle korunur; keyset sayfalama/indeks planı Atom — Veri & Zeka (AI-first) örnek kırılımı sorguları için gözden geçirilir",
-        "Değer internalize; bellek tekrarı az",
-        "Vektör karşılaştırma optimize — ölçüm noktası: Atom — Veri & Zeka (AI-first) örnek kırılımı uç gecikmesi; eşik aşımı alarmı error-budget'a bağlıdır"
+        "Vektör doğrulama hedefi: boyut+aralık+NaN kontrolü O(D) sabit maliyette, tek atom doğrulaması p95 < 1 ms; yük regresyon testi bu eşiği CI'da korur (SLO)",
+        "Embedding karşılaştırma: kosinüs/iç-çarpım hesabı önceden normalize edilmiş vektörle yapılır, karşılaştırma başına p95 hedefi tanımlı; tekrarlanan norm hesabı önlenir",
+        "Bellek/internalizasyon: aynı değere sahip atomlar internalize edilerek referansla paylaşılır; havuz isabet oranı ≥ %90 ve yinelenen vektör başına ek tahsis ≈ 0 bayt hedeflenir",
+        "İndeks/önbellek bağlamı: sık kullanılan atomlar için doğrulanmış değer önbelleğe alınır; ANN indeksine yalnız şema doğrulaması geçmiş vektör yazılır, eşik aşımı error-budget alarmına bağlanır"
       ],
       "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -366,7 +375,7 @@
         "Atom — Veri & Zeka (AI-first) örnek kırılımı cihaz matrisi: iOS/Android WebView + Chrome extension köprüsü; izin istemleri gerekçeli"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -381,7 +390,7 @@
         "Atom — Veri & Zeka (AI-first) örnek kırılımı için axe AAA taraması 0 ihlal kanıtıyla CI'da; ARIA etiketleri alan bazında"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -396,7 +405,7 @@
         "Atom — Veri & Zeka (AI-first) örnek kırılımı rollback: önceki imaj etiketi ile 5 dk içinde geri dönüş (release-versioning sözleşmesi)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -409,7 +418,7 @@
         "Olay: vektör/skor geçersiz → üst element kuralı reddeder (idempotent)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -422,7 +431,7 @@
         "AI veri atom tipi önerebilir; ilkel sözleşmeyi tek başına yazamaz, insan onayı gerekir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -437,7 +446,7 @@
         "Atom — Veri & Zeka (AI-first) örnek kırılımı e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam data-intelligence kümesi swarm turunda.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -450,7 +459,7 @@
         "Kabul/red izlenebilir — tehdit sınıfı eşlemesi Atom — Veri & Zeka (AI-first) örnek kırılımı için ASVS kontrol listesine bağlanır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -463,7 +472,7 @@
         "Üst seviyeler atomu birleştirir — bağımlılık yönü Atom — Veri & Zeka (AI-first) örnek kırılımı için yalnız aşağı; tipli arayüz dışı çağrı testle engellenir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -477,7 +486,7 @@
         "Üst modül Atom — Veri & Zeka (AI-first) örnek kırılımı birimini iç bileşen olarak çağırır; dış tüketim yalnız sözleşmeli yüzeyle (API/olay) olur."
       ],
       "notes": "Atom — Veri & Zeka (AI-first) örnek kırılımı, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: app-data-intelligence-x-atom — \"Atom — Veri & Zeka (AI-first) örnek kırılımı\" (micro_step/atom; küme: Veri & Zeka (AI-first)). Özet: Veri & Zeka (AI-first) için 7-seviye WBS kırılımının Atom seviyesi (örnek dal). Etiketler: data-intelligence, ornek, 7-seviye, atom.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

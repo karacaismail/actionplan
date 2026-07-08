@@ -22,7 +22,8 @@
     "abac",
     "audit",
     "deny",
-    "doğrulama"
+    "doğrulama",
+    "archetype"
   ],
   "dependsOn": [
     "k-authz",
@@ -144,12 +145,13 @@
       "title": "Özellik Tanımları",
       "status": "filled",
       "items": [
-        "Ünite 07: Yetkilendirme & Güvenlik: identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit",
-        "Ünite 07 kapsamı: kimlik, oturum, RBAC/ABAC, audit ve şifreleme temellerini öğretir",
-        "Ünite 07 bu eylem planında bir WBS görevi (sayfa) olarak izlenir"
+        "Girdi/çıktı sözleşmesi: girdi = doğrulanmış kimlik (subject) + oturum jetonu + istenen kaynak/aksiyon; çıktı = allow/deny kararı + gerekçe kodu + audit kanıtı. Ünite, RBAC (rol→izin) ve ABAC/ReBAC (öznitelik/ilişki→izin) matrisinin bu sözleşmeye nasıl bağlandığını öğretir.",
+        "Durum akışı: anonim → kimlik doğrulama → oturum açık → yetki değerlendirme (deny-by-default) → step-up (hassas işlemde MFA) → oturum yenileme/iptal. Öğrenci her geçişin hangi olayı tetiklediğini ve audit'e ne yazıldığını çıkarır.",
+        "Hata yolları: geçersiz/expired oturum → 401; yetki yok → 403 (kaynak varlığını sızdırmadan); step-up gerekli → 401 + WWW-Authenticate; tenant uyuşmazlığı → izolasyon deny. Her hata, kaynak numaralandırmasını önleyecek biçimde sabit-şekilli yanıt verir.",
+        "Kabul sözleşmesi: yetki matrisindeki her (rol, kaynak, aksiyon) hücresi için pozitif ve negatif senaryo geçmeli; deny kararları audit'e yazılmalı; RBAC↔ABAC çakışmasında en kısıtlayıcı karar (deny wins) uygulanmalı."
       ],
-      "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "notes": "Ünite 07, yetki kararını girdi→çıktı sözleşmesi + durum makinesi + hata yolu + kabul kriteri olarak tarif eder; içerik AI'nin app/module üretemeyeceği sınırını korur.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -157,12 +159,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Ünite 07 güvenlik açısı: güvenli-varsayılan deny; veri durağan ve aktarımda şifreli",
-        "Ünite 07 hassas bilgi gerektiğinde maskelenir",
-        "Ünite 07 ilgili kararlar denetlenebilir biçimde kaydedilir"
+        "Erişim/yetki (zorunlu): deny-by-default; her istek subject→kaynak→aksiyon için least-privilege ile değerlendirilir; hassas işlemler step-up MFA gerektirir; yetki kararı UI'da değil backend policy motorunda verilir.",
+        "Tenant izolasyonu (zorunlu): PostgreSQL RLS ile satır düzeyi izolasyon veya ReBAC/ABAC ilişki-öznitelik kontrolü; cross-tenant erişim denemesi hem deny edilir hem audit'e alarm olarak yazılır; sorgular tenant bağlamı olmadan çalıştırılamaz.",
+        "PII/KVKK (zorunlu): kimlik/oturum/audit alanları veri sınıflandırmasına tabidir; PII log'da ve hata mesajında maskelenir; KVKK aydınlatma/rıza kaydı tutulur; ünite bu maskeleme kurallarını örnekle öğretir.",
+        "Audit (zorunlu): allow/deny, oturum açma/kapama, rol/izin değişimi, step-up sonuçları değişmez (append-only) audit'e yazılır; kanıt correlation-id ile ilişkilendirilir.",
+        "Şifreleme (zorunlu): oturum jetonu ve kimlik verisi durağanda (at rest) ve aktarımda (TLS in transit) şifreli; anahtar rotasyonu ve secret yönetimi ünitenin kapsamındadır."
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "Zorunlu güvenlik ekseni: erişim/tenant/PII/yetki + audit + encryption; kararlar backend'de, AI ruleset override edemez.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -170,12 +174,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 07 yapısı: yetki kararı merkezi motor; oturum kısa ömürlü token",
-        "Ünite 07 tekrar eden mantık paylaşılan yardımcıya alınır",
-        "Ünite 07 okunabilir ve test edilebilir kalır"
+        "Kod sağlığı ekseni (zorunlu): yetki kararı tek modüler policy motorunda toplanır; tip güvenli izin/rol tipleriyle (string literal yerine union/enum) yanlış izin adı derleme zamanında yakalanır; oturum jetonu kısa ömürlü ve tipli tutulur.",
+        "Authorization lint/kapı: her uç noktanın açık bir yetki kontrolü taşıması lint kuralıyla zorlanır; kontrolsüz (\"public unutulmuş\") uç nokta CI kapısında kırılır; ölü/erişilemez yetki kuralları düzenli temizlenir.",
+        "Karmaşıklık bütçesi/eşik: policy değerlendirme fonksiyonları için döngüsel karmaşıklık eşiği belirlenir; eşiği aşan kural bloğu daha küçük, ayrıştırılmış kurallara bölünür (rule decomposition).",
+        "Ayrıştırma: kimlik doğrulama, oturum yönetimi ve yetki değerlendirme ayrı modüllere bölünür; tekrar eden kontrol mantığı paylaşılan yardımcıya alınır, böylece ünite kod düzeyinde okunabilir ve test edilebilir kalır."
       ],
-      "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "notes": "Kod sağlığı ekseni açık: tip güvenliği + authorization lint kapısı + karmaşıklık eşiği + kural ayrıştırma/ölü kural temizliği.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -183,12 +188,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 07 en-az-ayrıcalık ilkesine uyar",
-        "Ünite 07 değişikliği sürümlü ve izlenir",
-        "Ünite 07 girdi sınırda doğrulanır — güvenlik başlıkları Yetkilendirme & Güvenlik yanıtlarında zorunludur; eksik başlık testte yakalanır"
+        "Bağımlılık/SBOM: kimlik doğrulama ve kripto kütüphaneleri SBOM'da envanterlenir; bilinen CVE'ler için bağımlılık taraması CI kapısıdır; ünite güvenlik-kritik bağımlılıkların neden pinlenip düzenli güncellendiğini öğretir.",
+        "Allowlist/imza: yetki aksiyonları action-allowlist ile sınırlanır (serbest JS/SQL/shell yok); yayınlanan artefaktlar imzalanır ve doğrulanır; güvenlik başlıkları (CSP/HSTS) allowlist ile sabitlenir, eksik başlık testte yakalanır.",
+        "Egress/yüzey daraltma: kimlik/oturum servisinin dış ağa çıkışı (egress) yalnız gerekli hedeflere; kullanılmayan uçlar ve varsayılan hesaplar kapatılarak saldırı yüzeyi daraltılır.",
+        "Secret rotasyonu: oturum imzalama anahtarları, token secret'ları ve DB kimlik bilgileri düzenli rotasyona tabidir; sızıntı durumunda hızlı iptal (revoke) yolu tanımlıdır.",
+        "Hardening: least-privilege servis hesapları, rate-limit ve step-up ile brute-force/oturum çalma sertleştirilir; değişiklikler sürümlü ve izlenir kalır."
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "anyOf hedefleri karşılandı: bağımlılık/SBOM + allowlist/imza + egress/yüzey daraltma + secret rotasyonu + hardening.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -196,12 +203,14 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Ünite 07 performans açısı: ağır iş asenkron yapılır, sonuç uygun olduğunda önbelleğe alınır",
-        "Ünite 07 sık erişim indeksli/önbellekli tasarlanır",
-        "Ünite 07 büyük veride sayfalı işlenir"
+        "Ölçülebilir hedef (zorunlu): policy decision (yetki kararı) p95 ≤ 10 ms, session lookup p95 ≤ 15 ms; bu eşikler yük testiyle doğrulanır ve regresyonda kapı kırılır.",
+        "Önbellek: sık kullanılan rol→izin ve ReBAC ilişki sonuçları kısa TTL'li önbelleğe alınır; izin/rol değişince ilgili önbellek anahtarı invalide edilir, böylece stale yetki kararı verilmez.",
+        "Indexed lookup: oturum ve yetki tablolarında (subject, tenant, kaynak) üzerinde bileşik indeks; audit sorguları correlation-id/zaman indeksiyle hızlanır.",
+        "N+1 önleme: bir isteğin tüm izin kontrolleri tek toplu sorguda (batch) çözülür; kaynak listesinde her satır için ayrı yetki sorgusu atılmaz.",
+        "Sayfalama: büyük audit/oturum listeleri imleç (cursor) tabanlı sayfalanır; ağır raporlama işleri asenkron çalışıp sonuç önbelleğe alınır."
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "Ölçülebilir hedef zorunlu: policy decision p95 + session lookup p95 + önbellek + bileşik indeks + N+1 önleme.",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -209,12 +218,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Ünite 07 mobil açısı: dar ekranda tek sütun ve okunur kalır",
-        "Ünite 07 mobil istemci aynı sözleşmeyi tüketir",
-        "Ünite 07 bildirim/onay gerektiğinde push ile iletilir"
+        "Offline: ünite bir offline güvenlik ders paketi (lesson pack) olarak PWA'da önbelleğe alınıp çevrimdışı okunabilir; ancak yetki kararı asla istemcide önbellekten verilmez — bağlantı gelince backend policy motoruyla yeniden doğrulanır.",
+        "PWA/Capacitor: iOS/Android'de PWA veya Capacitor paketiyle sunulur; oturum jetonu güvenli depoda (Keychain/Keystore) tutulur, düz localStorage'da değil.",
+        "Mobil MFA temas alanı: mobil MFA/step-up düğmelerinde en az 44 px temas alanı; kod girişi ve biyometrik onay dar ekranda tek sütun ve okunur kalır.",
+        "Köprü/paketleme: Capacitor köprüsünden yalnız gerekli native yeteneklere (biyometri, güvenli depo) erişilir; kullanılmayan pluginler paketlenmez, böylece mobil saldırı yüzeyi daraltılır.",
+        "Deep link/push: hassas onay/step-up bildirimi push ile iletilir; deep link'ler doğrulanmış oturum olmadan hassas ekrana götürmez."
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "anyOf hedefleri karşılandı: offline lesson pack + mobil MFA en az 44 px temas alanı + köprü/paketleme + deep link/push.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -227,7 +238,7 @@
         "Ünite 07 klavye ve ekran okuyucu ile kullanılabilir"
       ],
       "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -240,7 +251,7 @@
         "Ünite 07 shared hosting ortamında da çalışabilir"
       ],
       "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -253,7 +264,7 @@
         "Ünite 07 bağımsız otomasyon tutmaz; üst kurala bağlanır"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -266,7 +277,7 @@
         "Ünite 07 — AI politika boşluğu önerir; yetki politikası kararını güvenlik ekibi verir"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -274,12 +285,14 @@
       "title": "Testler & QA",
       "status": "filled",
       "items": [
-        "Ünite 07 doğrulama: yetki matrisi ve yetki yükseltme negatif testle sınanır",
-        "Ünite 07 ilgili senaryolar gözden geçirilir",
-        "Test döngüsü: başarısız test en fazla 6 kez yeniden çalıştırılır, sonra raporlanır"
+        "Unit: policy motoru, rol→izin çözümleme ve oturum doğrulama fonksiyonları izole birim testleriyle sınanır (deny-by-default davranışı dahil).",
+        "Contract: yetki API'sinin girdi/çıktı sözleşmesi (allow/deny + gerekçe kodu + hata şekli) tüketici sözleşme testiyle sabitlenir; kaynak sızdırmayan 403 şekli doğrulanır.",
+        "Integration + e2e: RLS/tenant izolasyonu ve step-up MFA gerçek DB ve oturum akışıyla entegrasyon testinde; kullanıcı yolculuğu (giriş→yetki→hassas işlem→çıkış) AI-destekli Playwright e2e testiyle uçtan uca doğrulanır.",
+        "Negative privilege escalation: düşük yetkili öznenin yüksek yetkili kaynağa erişme, cross-tenant okuma ve step-up atlama denemeleri negatif testlerle deny beklenir; bu testler her sürümde koşar.",
+        "Security regression + audit fixture: bilinen geçmiş yetki açıkları için regresyon testi tutulur; audit kayıtları fixture'larla (beklenen allow/deny kanıtı yazıldı mı) doğrulanır. Testing-loop: başarısız test en çok 6 kez yeniden koşulur, düzelmezse raporlanır."
       ],
-      "notes": "",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "notes": "Zorunlu test türleri: unit + contract + integration + e2e + negative privilege escalation + security regression + audit fixture.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -292,7 +305,7 @@
         "Ünite 07 girdi doğrulama ile enjeksiyon daraltılır"
       ],
       "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -305,7 +318,7 @@
         "Ünite 07 sözleşme değişimi geriye uyumlu yönetilir"
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -319,7 +332,7 @@
         "Yetkilendirme & Güvenlik kapsamı vibecoding sırasında LLM/Cursor'a bağlam olarak verilir (Markdown/JSON dışa aktarımıyla)."
       ],
       "notes": "Yetkilendirme & Güvenlik bir karar/bilgi kaydıdır; \"modül kullanımı\" burada diğer düğümlerin ve geliştiricilerin ona referans vermesi anlamına gelir.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (ArcheType/taş; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: edu-u07 — \"Yetkilendirme & Güvenlik\" (archetype/kaya; küme: Eğitim). Özet: Identity, session, RBAC/ABAC, audit, KVKK, encryption at rest + transit. Etiketler: education, u07, security, rbac, kvkk.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

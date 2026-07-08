@@ -1,5 +1,8 @@
 # Repo Governance Planı — actionplan
 
+> Güncellik notu (2026-07-08): Bu dosya tarihsel/operasyonel bağlam taşır. Güncel canonical gerçeklik için `src/schemas/task.ts`, `docs/dimension-contract-17.md`, `docs/task-to-code-contract.md`, `docs/weak-content-17-report.md` ve `docs/yapi-content-celiski-denetimi-2026-07-08.md` esas alınır. Güncel generated node sayısı 467, üretim boyutu 17'dir.
+
+
 Statü: tasarım belgesi · Tarih: 2026-06-28 · Uygulama: Prompt 6-impl'de yapılacak.
 
 Bu belge `karacaismail/actionplan` reposunun yönetim kurallarını tanımlar. Kapsam: branch protection,

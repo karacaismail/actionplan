@@ -21,7 +21,8 @@
     "oran",
     "arşiv",
     "dönem",
-    "beyanı"
+    "beyanı",
+    "archetype"
   ],
   "dependsOn": [
     "cc-tr",
@@ -155,7 +156,7 @@
         "Tax Compliance / e-Fatura kapsam matrisi rol×işlev tablosuyla sürümlenir; kabul testine bağlanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
       "provenance": "swarm"
     },
     "security": {
@@ -163,12 +164,14 @@
       "title": "Güvenlik Önlemleri",
       "status": "filled",
       "items": [
-        "Vergi verisi tenant_id RLS; mükellef bilgisi maskeli",
-        "e-Fatura imza anahtarı kasada; gönderim değişmez izli",
-        "Vergi oran/kural değişikliği yetki+sürümle korunur"
+        "Mükellef vergi verisi PostgreSQL RLS ile tenant_id bazında izole edilir; cross-tenant e-fatura sorgusu policy tarafından deny edilir",
+        "Taxpayer id (VKN/TCKN) ve mükellef PII alan-seviyesinde maskelenir, sütun şifrelemesiyle at-rest saklanır; e-imza/GİB entegrasyon anahtarı ve secret KMS'te tutulur, kodda/logda görünmez",
+        "Vergi rolleri least-privilege: beyan görüntüleme, hazırlama ve GİB gönderim onayı ayrı yetkilerdir; kritik gönderim step-up (approval) ister",
+        "Vergi oran/kural değişikliği approval iş akışından geçer; yetkisiz veya sürümsüz değişiklik denemesi deny edilir ve yürürlük tarihiyle sürümlenir",
+        "Tüm e-fatura/e-arşiv/e-irsaliye gönderim ve beyan olayları append-only audit kanıtı olarak (correlation-id + aktör + before/after) değişmez tutulur"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
+      "notes": "W10 semantic sertleştirme: tenant RLS izolasyonu, taxpayer/PII maskeleme+şifreleme, KMS secret, rule change approval/deny ve append-only audit kanıtı netleştirildi.",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm"
     },
     "codeOptimization": {
@@ -183,7 +186,7 @@
         "Tax Compliance / e-Fatura içe-aktarım sınırları paket-sınırı lint kuralıyla korunur"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm"
     },
     "securityOptimization": {
@@ -191,12 +194,14 @@
       "title": "Güvenlik Optimizasyonu",
       "status": "filled",
       "items": [
-        "Geçmiş dönem beyanı dokunulmaz; düzeltme beyanı ayrı izli",
-        "Oran tablosu sürümlü; yürürlük tarihiyle uygulanır",
-        "GİB gönderimi idempotent; çift gönderim reddi"
+        "Sertleştirme ekseni: GİB/e-Belge endpoint'leri allowlist ile daraltılır; giden (egress) trafik yalnız onaylı e-fatura/e-arşiv adreslerine izinli, saldırı yüzeyi minimize edilir",
+        "e-Fatura gönderim isteği request signature + idempotency anahtarı taşır; çift gönderim ve tekrar-oynatma (replay) reddedilir",
+        "Bağımlılık zinciri SBOM üretimi + SCA taramasıyla izlenir; XML/imza kütüphaneleri için bilinen zafiyet build'i keser",
+        "GİB entegrasyon secret'ı ve e-imza anahtarı KMS'te periyodik rotasyonla yönetilir; sızıntı halinde anında iptal (revoke)",
+        "Gönderici worker'a per-tenant rate-limit uygulanır; hatalı sürüm rollback ile sertleştirilmiş son kararlı imaja döner, geçmiş dönem beyanı append-only korunur"
       ],
-      "notes": "",
-      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
+      "notes": "W10 semantic sertleştirme: SBOM/SCA, GİB endpoint allowlist + request signature/idempotency, egress daraltma, rate-limit, KMS secret rotasyonu ve rollback sertleştirmesi eklendi.",
+      "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
       "provenance": "swarm"
     },
     "performance": {
@@ -204,12 +209,13 @@
       "title": "Performans Optimizasyonu",
       "status": "filled",
       "items": [
-        "Yüksek hacimli e-fatura için kuyruk + toplu gönderim",
-        "Beyan hesabı dönem indeksiyle hızlı",
-        "Vergi kuralı değerlendirmesi önbellekli"
+        "Yüksek hacimli e-fatura gönderimi kuyruğa alınır; ölçülebilir hedef: submit enqueue→ack p95 ≤ 300 ms, toplu gönderim batch'leriyle throughput ölçülür",
+        "Dönem beyan raporu sorgusu bileşik indeks (tenant_id, dönem, belge_tipi) üzerinden çalışır; hedef p95 ≤ 500 ms, büyük defter listeleri cursor (imleç) sayfalama kullanır",
+        "Vergi oran/kural değerlendirmesi ve istisna tablosu önbelleğe alınır; sürüm değişince invalidasyon yapılır, hedef önbellek isabeti ≥ %90",
+        "Fatura kalemi → vergi hesabı erişiminde N+1 sorgu önlenir (batch/join ile); sayısal hedefler ölçüm amaçlıdır, mevzuat/oran iddiası içermez"
       ],
-      "notes": "",
-      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
+      "notes": "W10 semantic sertleştirme: e-fatura queue p95 submit latency, period report query p95, cursor pagination, cache isabet hedefi ve N+1 önleme ölçülebilir hale getirildi (mevzuat iddiası yok).",
+      "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
       "provenance": "swarm"
     },
     "mobileApps": {
@@ -217,12 +223,14 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Mobilde beyan durumu ve e-fatura gönderim takibi",
-        "iOS/Android push ile beyan son-tarih uyarısı",
-        "Dar ekranda vergi özeti — düşük bant genişliğinde Tax Compliance / e-Fatura kritik akışı ölçülü gecikmeyle doğrulanır"
+        "iOS/Android yüzeyi PWA veya Capacitor köprüsüyle paketlenir; e-fatura gönderim durumu ve beyan takibi native kabuk içinde web katmanından sunulur",
+        "Offline'da vergi durumu snapshot'ı salt-okunur cache'ten gösterilir; gönderim/onay işlemleri yalnız çevrimiçi ve sunucu doğrulamasıyla yapılır",
+        "Mobil beyan kartlarında en az 44 px temas alanı; liste, filtre ve gönder butonları tek elle erişilebilir yerleşimde",
+        "Push ve deep-link ile beyan/e-fatura durum uyarısı verilir; son tarihler konfigürasyondan (GİB/e-Belge kılavuzu parametresi) okunur, uygulama hukuki iddia kurmaz, yalnız hatırlatır",
+        "Dar ekran vergi özeti düşük bant genişliğinde kademeli yüklenir; kritik akış ölçülü gecikmeyle doğrulanır"
       ],
-      "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
+      "notes": "W10 semantic sertleştirme: PWA/Capacitor paketleme, offline salt-okunur tax status snapshot, en az 44 px temas alanı, push/deep-link durum uyarısı ve konfigürasyondan son tarih okuma netleştirildi.",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm"
     },
     "wcag": {
@@ -230,12 +238,13 @@
       "title": "WCAG 2.2 AAA",
       "status": "filled",
       "items": [
-        "Vergi/beyan formları alan-etiket ilişkili ve hata bildirimli",
-        "Tutar/oran metinle; yalnız renk değil; kontrast 7:1",
-        "Beyan tabloları klavye+okuyucu erişimli"
+        "Vergi/beyan formları ekran okuyucuyla erişilebilir: her alan ARIA label + açıklama ile ilişkili, hata mesajları aria-live ile duyurulur; klavye ile tam beyan akışı yürütülür",
+        "Beyan tabloları uygun ARIA table/rol yapısıyla ekran okuyucuya sunulur; satır/sütun başlıkları ilişkilendirilir, sıralama/filtre klavyeyle çalışır",
+        "Tutar/oran/durum yalnız renkle değil metin+ikonla işaretlenir (renk dışı işaretleme); metin kontrastı en az 7:1 (AAA), görünür odak sırası korunur",
+        "Erişilebilirlik axe ile otomatik test edilir, AAA hedefinde 0 ihlal kanıtı PR'a bağlanır; dokunulabilir alanlarda en az 44 px temas alanı sağlanır"
       ],
-      "notes": "",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
+      "notes": "W10 semantic sertleştirme: ekran okuyucu/ARIA form-table, axe AAA kanıtı, 7:1 kontrast, klavye beyan akışı, görünür odak, renk dışı işaretleme ve en az 44 px temas alanı eklendi.",
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
       "provenance": "swarm"
     },
     "deployment": {
@@ -243,12 +252,14 @@
       "title": "Dağıtım (Swarm/K8s/Shared)",
       "status": "filled",
       "items": [
-        "e-Fatura gönderici ayrı worker; GİB oran-sınırına uyumlu",
-        "Beyan olayları outbox ile muhasebeye",
-        "Shared hosting'de temel KDV + manuel beyan"
+        "e-Fatura gönderici ayrı worker olarak dağıtılır; Kubernetes liveness/readiness probe ile sağlık izlenir, hazır olmayan pod trafik almaz",
+        "Config ve secret ayrımı: GİB endpoint/dönem ayarları ConfigMap'te, entegrasyon anahtarı/e-imza secret'ı KMS/Secret store'da; imaja gömülmez",
+        "Hatalı sürüm rollback ile geri alınır; başarısız gönderimler DLQ'ya düşer ve kontrollü replay stratejisiyle yeniden işlenir",
+        "Yük altında HPA + kaynak (CPU/mem) limiti ölçeklenir; gönderici per-tenant rate-limit ile GİB yüzeyini korur",
+        "Shared hosting sınırı: worker/kuyruk çalışamadığında temel KDV özeti + manuel beyan akışına düşülür, arka plan gönderim devre dışıdır"
       ],
-      "notes": "",
-      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
+      "notes": "W10 semantic sertleştirme: worker health/liveness/readiness probe, rollback + DLQ replay, config/secret ayrımı, HPA/resource/rate-limit ve shared hosting sınırı netleştirildi.",
+      "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
       "provenance": "swarm"
     },
     "eca": {
@@ -261,7 +272,7 @@
         "Olay: beyan dönemi geldi → beyan taslağı üret + son-tarih hatırlat (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm"
     },
     "aiAgents": {
@@ -274,7 +285,7 @@
         "AI vergi kodu/istisna sınıflandırması önerir; beyanı veya e-fatura gönderimini kendisi onaylayamaz"
       ],
       "notes": "",
-      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
+      "prompt": "\"AI Ajan Davranışı\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: AI yalnız ArcheType taslağı/prod-update önerisi üretebilir; app/module üretemez/güncelleyemez; ruleset override edemez; doğrudan prod write yapamaz. ArcheType çok-parçalı sözleşme (fields/relations/permissions/ReBAC-ABAC/lifecycle/surfaces/workflows/migration/ai-policy). Admin akışı: prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply. AI doğrulama döngüsü: 1-3 otomatik, 3/6 admin'e çok-seçenekli soru, 9 tanı+dur. sub_prompt güvenilmez; kill-switch; step-up; PII redaksiyon.",
       "provenance": "swarm"
     },
     "testing": {
@@ -289,7 +300,7 @@
         "Tax Compliance / e-Fatura e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
       "provenance": "swarm"
     },
     "owasp": {
@@ -297,12 +308,14 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "A08 Integrity: beyan/e-fatura imza ve değişmezlik",
-        "A01 Access Control: vergi kuralı değişikliği yetkisi",
-        "A09 Logging: vergi kararları forensic iz"
+        "A08 Integrity: e-belge payload ve imza bütünlüğü yazılım tarafında doğrulanır; SBOM + tedarik zinciri kontrolü, imzasız/bozuk XML gönderime alınmaz",
+        "A01 Broken Access Control: vergi kuralı/oran değişikliği ve GİB gönderim yetkisi tenant + rol bazında ASVS erişim kontrolüyle sınırlanır",
+        "A04 Insecure Design: girdi doğrulama şeması taxpayer id (VKN/TCKN), invoice UUID, dönem, tutar, durum ve config version alanlarını sunucu tarafında sıkı validate eder",
+        "A09 Logging & Monitoring: beyan/e-fatura kararları append-only audit trail (denetim izi) olarak NIST uyumlu, correlation-id'li ve değişmez tutulur",
+        "AI yüzeyi için LLM riskleri (prompt injection, güvensiz çıktı) kapsanır: AI çıktısı doğrudan gönderim/prod-write tetikleyemez, yalnız öneri üretir"
       ],
-      "notes": "",
-      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
+      "notes": "W10 semantic sertleştirme: ASVS/NIST/SBOM, input validation (taxpayer id/invoice UUID/dönem/tutar/durum/config version), append-only denetim izi, A01/A04/A08/A09 bağlamı ve e-belge imza bütünlüğü yazılım kontrolü eklendi.",
+      "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
       "provenance": "swarm"
     },
     "integration": {
@@ -317,7 +330,7 @@
         "kernel çekirdek sözleşmesi Tax Compliance / e-Fatura tarafından salt-okunur tüketilir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
       "provenance": "swarm"
     },
     "moduleUsage": {
@@ -331,7 +344,7 @@
         "Tax Compliance / e-Fatura bağlı modüllere sürümlü bir entegrasyon sözleşmesi sunar; kırıcı değişiklik migration ile yönetilir."
       ],
       "notes": "Tax Compliance / e-Fatura, tüketicilere yalnız sözleşmeli yüzey (API/olay/araç) sunar; veri sahipliği ve şema bu birimde kalır, tenant izolasyonu korunur.",
-      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (ArcheType/taş; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
+      "prompt": "\"Modül Kullanımı\" boyutunu bu görev için üret.\nBağlam: s-tax-compliance — \"Tax Compliance / e-Fatura\" (archetype/kaya; küme: Finans & Muhasebe). Özet: TR: GİB, e-Arşiv, e-İrsaliye TR yerelleştirme: zorunlu. Etiketler: finance, tax-compliance, stack, tr-uyum.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).",
       "provenance": "swarm"
     },
     "dataLifecycle": {

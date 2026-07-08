@@ -20,7 +20,8 @@
     "customers",
     "customerfactory",
     "kaydı",
-    "kayıt"
+    "kayıt",
+    "archetype"
   ],
   "dependsOn": [
     "platform-customer-model"
@@ -448,12 +449,13 @@
       "title": "Kod Optimizasyonu",
       "status": "filled",
       "items": [
-        "CustomerFactory alt-factory'leri (AddressFactory, ContactFactory) LazyAttribute ile tanımlanır; yalnızca ilgili test senaryosu bu alt nesneleri talep ettiğinde üretilir, gereksiz DB round-trip yapılmaz.",
-        "Customer seed sırasında bulk_save_objects() ile 500'lük batch'ler halinde yazım yapılır; 10 000 customer kaydı tek transaction içinde 8 saniyenin altında tamamlanır.",
-        "Segment atama sorgusu subquery yerine VALUES listesi kullanan tek INSERT ... SELECT ile yapılır; N ayrı segment INSERT yerine toplu bağlama tek SQL deyimiyle gerçekleşir.",
-        "Seed profili seçici (--profile lite/full) ile küçük ortamlarda (CI) 100 kayıt, büyük ortamlarda (staging) 5 000 kayıt yüklenir; profil seçimi ortam değişkeni CUSTOMER_SEED_PROFILE ile de yapılabilir."
+        "Kod sağlığı ekseni customer seed için CI gate ile korunur: ruff lint + mypy typecheck + Pydantic contract doğrulaması aynı adımda çalışır; herhangi biri kırmızıysa seed paketi merge edilemez ve build gate durur.",
+        "Factory ile validator ayrıştırılır: CustomerFactory yalnızca nesne üretiminden, CustomerSchema (Pydantic) yalnızca doğrulamadan sorumludur; üretim ve doğrulama sorumlulukları tek sınıfta karışmaz, böylece seed mantığı test edilebilir kalır.",
+        "Seed boyutu performans bütçesi eşiğe bağlanır: 10 000 customer kaydı bulk_save_objects() ile 500'lük batch (maksimum batch sınırı 500) halinde tek transaction içinde 8 saniyenin altında yazılmalıdır; eşik aşılırsa codeOptimization gate uyarı verir.",
+        "Segment atama sorgusu subquery yerine VALUES listesi kullanan tek INSERT ... SELECT ile yapılır; N ayrı segment INSERT yerine toplu bağlama tek SQL deyimiyle gerçekleşir ve batch sınırı aşılmaz.",
+        "Döngüsel bağımlılık engeli: CustomerFactory alt-factory'leri (AddressFactory, ContactFactory) LazyAttribute ile tek yönlü tanımlanır; import grafiği içe/dışa döngü içermez ve import-linter contract'ı çevrimsel bağımlılığı build gate'te reddeder."
       ],
-      "notes": "LazyAttribute + bulk_save_objects + VALUES INSERT üçlüsü customer seed hızını optimize ederken kayıtsız FK üretimini önler.",
+      "notes": "Kod sağlığı ekseni lint/typecheck/contract gate, factory-validator ayrıştırması, batch sınırı (≤500) ve döngüsel bağımlılık engeliyle korunur; seed boyutu performans bütçesi (10 000 kayıt < 8 s) eşik olarak izlenir. Seed profili seçici (--profile lite/full veya CUSTOMER_SEED_PROFILE) ile CI'da 100, staging'de 5 000 kayıt yüklenir ve her profilin süre bütçesi ayrı ölçülür.",
       "prompt": "platform-customer-seed için codeOptimization boyutunu kapsa: LazyAttribute ile talep-bazlı alt-factory üretimi, 500'lük batch bulk_save_objects (10 000 kayıt < 8 s), VALUES listeli toplu segment INSERT, --profile lite/full ile 100↔5000 kayıt seçimi. Çıktı: factory tanım kodu, bulk INSERT SQL ve profil seçim mantığı.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -493,11 +495,13 @@
       "title": "Mobil Uygulama Uyumu",
       "status": "filled",
       "items": [
-        "Customer seed modülü mobil UI barındırmaz; katkısı React Native müşteri listesi e2e testlerine gerçek tenant verisi sağlamaktır (sayfalama, arama, filtre uç durumları).",
-        "Mobil e2e için özelleştirilmiş 'mobile-lite' profili: 30 customer/tenant, her biri tek adres ve tek iletişim kaydıyla sınırlıdır; cihaz bellekli e2e koşumlarında timeout riskini azaltır.",
-        "Mobil müşteri arama e2e testi için fixture'larda Türkçe özel karakter içeren müşteri adları (Özgür, Çiğdem, Şenol) kasıtlı olarak eklenir; arama normalleştirme ve karakter eşleştirme davranışı doğrulanır."
+        "Customer seed modülü mobil UI barındırmaz; buna rağmen mobil e2e seed profili tanımlar: React Native müşteri listesi e2e testlerine gerçek tenant verisi sağlar (sayfalama, arama, filtre uç durumları) ve Capacitor/React Native paketleme köprüsü üzerinden çalışan cihaz testlerini besler.",
+        "Offline davranış için mobile-lite fixture'ı çevrimdışı cache senaryosunu destekler: cihaz ağ bağlantısı yokken önceden yüklenmiş müşteri fixture'ı yerel cache'ten okunur; PWA service worker / React Native AsyncStorage köprüsü aynı deterministik veriyi sunar ve online olunca senkron farkı doğrulanır.",
+        "Mobil e2e için özelleştirilmiş 'mobile-lite' profili: 30 customer/tenant, her biri tek adres ve tek iletişim kaydıyla sınırlıdır; cihaz bellekli e2e koşumlarında timeout riskini azaltır ve offline fixture olarak paketlenebilir.",
+        "Mobil müşteri arama e2e testi için fixture'larda Türkçe özel karakter içeren müşteri adları (Özgür, Çiğdem, Şenol) kasıtlı olarak eklenir; arama normalleştirme ve karakter eşleştirme davranışı doğrulanır.",
+        "Mobil seed yönetim panelinde tetikleme/filtre butonları için en az 44 px temas alanı fixture senaryosunda not edilir; küçük ekranda dokunma hedeflerinin bu sınırı koruduğu mobil e2e ile kontrol edilir."
       ],
-      "notes": "Customer seed mobil UI içermez; 30 kayıt/tenant 'mobile-lite' profili ve özel karakter içeren fixture'lar mobil e2e kalitesini artırır.",
+      "notes": "Customer seed mobil UI içermez ama mobil e2e seed profili sağlar: 30 kayıt/tenant mobile-lite, offline cache fixture'ı, PWA/React Native/Capacitor köprü bağlamı, mobil seed panelinde en az 44 px temas alanı ve Türkçe karakter arama testi.",
       "prompt": "platform-customer-seed için mobileApps boyutunu kapsa: seed'in mobil UI yokluğu, 30 kayıt/tenant mobile-lite profili (timeout riski azaltma), Türkçe özel karakter fixture'ları ile arama normalleştirme e2e testi. Çıktı: mobile-lite profil tanımı ve özel karakter test senaryosu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -537,12 +541,12 @@
       "title": "ECA Kuralları",
       "status": "filled",
       "items": [
-        "Customer şemasında yeni migration merge edildiğinde ECA kuralı customer seed'in uyumluluk testini otomatik tetikler (Event: migration merge → Condition: customer tablosu değişti → Action: seed uyumluluk CI koşusu).",
-        "Seed çalışması sonrası ECA: customers tablosundaki toplam satır sayısı beklenen eşiğin (%±5) dışındaysa Slack #data-ops kanalına otomatik uyarı gönderilir ve sorumlu atanır.",
-        "Haftada bir ECA kuralı: golden customer fixture değişiklik tarihini son migration tarihiyle karşılaştırır; fixture migration'dan daha eskiyse güncelleme görevi otomatik oluşturulur.",
-        "Seed başarısız tenant tespitinde ECA: hangi tenant_id'de hata oluştuğu yapılandırılmış log'a yazılır ve issue tracker'da otomatik bug kaydı açılır."
+        "Event-Condition-Action zinciri açıkça tanımlıdır: Customer şemasında yeni migration merge edildiğinde (Event: migration merge → Condition: customer tablosu değişti → Action: seed uyumluluk CI koşusu) kural tetiklenir; her zincir maxChainDepth=6 ile sınırlanır ve idempotent çalışır, aynı migration için tekrarlı tetikleme aynı sonucu üretir.",
+        "Seed çalışması sonrası ECA sapma eşiği: customers tablosundaki toplam satır sayısı beklenen eşiğin (%±5) dışındaysa Slack #data-ops kanalına otomatik uyarı gönderilir ve sorumlu atanır; uyarı-eylem döngüsü tenant başına en fazla 3 tekrarla sınırlıdır, taşarsa susturulur.",
+        "Haftada bir ECA kuralı: golden customer fixture değişiklik tarihini son migration tarihiyle karşılaştırır; fixture migration'dan daha eskiyse güncelleme görevi otomatik oluşturulur ve bu görev bir onay/deny kapısından geçmeden fixture'a uygulanmaz.",
+        "Seed başarısız tenant tespitinde ECA: hangi tenant_id'de hata oluştuğu yapılandırılmış log'a yazılır ve issue tracker'da otomatik bug kaydı açılır; otomatik açılan issue insan onayı olmadan kapatılmaz ve aynı tenant için tekrar açma sınırı uygulanır."
       ],
-      "notes": "ECA kuralları customer seed'i migration uyumluluğu, sayısal sapma alarmı, fixture güncelleme ve hata izleme açısından otomatik denetler.",
+      "notes": "ECA kuralları Event-Condition-Action zinciri olarak tanımlıdır; maxChainDepth=6 zincir/döngü sınırı, idempotency, ±%5 sapma eşiği, tekrar sınırı ve otomatik issue/uyarılarda insan onay/deny kapısı ile customer seed'i denetler.",
       "prompt": "platform-customer-seed için eca boyutunu kapsa: migration merge → uyumluluk CI tetikleyicisi, ±%5 satır sayısı sapma → Slack uyarı + atama, haftalık fixture vs migration tarih karşılaştırması, başarısız tenant → otomatik bug kaydı. Çıktı: her ECA kuralının tetikleyici/koşul/eylem üçlüsü ve YAML şeması.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -552,12 +556,13 @@
       "title": "AI Ajan Davranışı",
       "status": "filled",
       "items": [
-        "Customer profil zenginleştirme ajanı: mevcut fixture kayıtlarını analiz ederek eksik segment (yeni müşteri, kayıp risk, VIP) arketiplerini belirler ve CustomerFactory'ye eklenmesi için öneride bulunur.",
-        "Veri tutarlılık ajanı customer seed çıktısını tarar: adres-telefon ülke kodu uyumsuzluğu, segment-durum çelişkisi gibi semantik anormallikleri JSON raporu olarak sunar; düzeltme insan onayına bırakılır.",
-        "E2E kapsam analiz ajanı: hangi customer fixture arketipinin hangi e2e test senaryosunda kullanılmadığını çapraz tablolayarak ölü fixture'ları (hiç kullanılmayan kayıtlar) raporlar.",
-        "Customer seed boyut tavsiyesi: son 30 günlük e2e test süre istatistiklerinden hareketle hangi tenant için fixture büyütülmeli ya da küçültülmeli olduğunu öneren bir rapor üretir; tenant başına %20'den fazla sapma eşiği aşılırsa uyarı verir."
+        "İzin/yasak sınırı açıktır: customer seed AI ajanı yalnızca öneri ve rapor üretir; fixture'ı, veritabanını veya modülü değiştiremez, seed script'ini çalıştıramaz ve insan onayı olmadan PR açamaz. Tüm çıktısı changeset önerisi düzeyinde kalır.",
+        "Customer profil zenginleştirme ajanı: mevcut fixture kayıtlarını analiz ederek eksik segment (yeni müşteri, kayıp risk, VIP) arketiplerini belirler ve CustomerFactory'ye eklenmesi için yalnızca öneride bulunur; ekleme kararını insan verir.",
+        "Veri tutarlılık ajanı customer seed çıktısını tarar: adres-telefon ülke kodu uyumsuzluğu, segment-durum çelişkisi gibi semantik anormallikleri JSON raporu olarak sunar; ajan gerçek/PII müşteri verisine erişemez, yalnız sentetik fixture üzerinde çalışır ve düzeltme insan onayına bırakılır.",
+        "E2E kapsam analiz ajanı: hangi customer fixture arketipinin hangi e2e test senaryosunda kullanılmadığını çapraz tablolayarak ölü fixture'ları (hiç kullanılmayan kayıtlar) raporlar; raporu uygulama yetkisi yoktur, sadece okur ve sunar.",
+        "Customer seed boyut tavsiyesi: son 30 günlük e2e test süre istatistiklerinden hareketle hangi tenant için fixture büyütülmeli ya da küçültülmeli olduğunu öneren bir rapor üretir; tenant başına %20'den fazla sapma eşiği aşılırsa uyarı verir ama boyutu kendisi değiştiremez."
       ],
-      "notes": "AI ajanları customer fixture'ının segment eksikliğini, semantik anormallikleri, ölü kayıtları ve boyut tavsiyelerini danışmanlık düzeyinde raporlar; otonom değişiklik yapmaz.",
+      "notes": "AI ajanlarının izin/yasak sınırı açıktır: yalnız öneri/rapor üretir; fixture/DB/module değiştiremez, seed çalıştıramaz, PII gerçek veriye erişemez ve insan onayı olmadan PR açamaz.",
       "prompt": "platform-customer-seed için aiAgents boyutunu kapsa: segment arketip eksiklik analiz ajanı, adres/ülke kodu uyumsuzluk tarama ajanı, kullanılmayan fixture kapsam raporlama ajanı, e2e süre istatistiklerine dayalı boyut tavsiye ajanı (%20 sapma eşiği). Çıktı: her ajanın girdi/çıktı formatı, otomasyon sınırı ve insan onay noktaları.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -582,12 +587,12 @@
       "title": "OWASP & Standartlar",
       "status": "filled",
       "items": [
-        "OWASP A03 (Injection): Customer seed tüm dinamik değerleri SQLAlchemy parametreli sorgu ile bağlar; müşteri adı, e-posta veya segment adı gibi string alanlar asla SQL deyimine doğrudan eklenmez.",
+        "OWASP A03 (Injection): Customer seed tüm dinamik değerleri SQLAlchemy parametreli sorgu ile bağlar; input validation olarak müşteri adı, e-posta, tenant_id, profile ve segment alanları allow-list şemasıyla doğrulanır ve asla SQL deyimine doğrudan eklenmez. Aynı doğrulama ASVS V5 (girdi doğrulama) gereksinimini karşılar.",
         "OWASP A01 (Broken Access Control): customer_seed_role yalnızca customer_schema'ya INSERT + SELECT yetkisine sahiptir; auth_schema, billing_schema gibi diğer şemalara erişim girişimi pg_hba kuralı ile engellenir ve loglanır.",
-        "OWASP A09 (Security Logging): her customer seed çalışması başlangıç zamanı, işlemi başlatan kimlik, etkilenen tenant_id listesi ve eklenen kayıt sayısıyla birlikte structured audit log'a yazılır; bu log değiştirilemez depolama alanına (append-only) iletilir.",
-        "OWASP A04 (Insecure Design): customer fixture'larında kullanılan e-posta adresleri RFC 5321 geçerlilik kontrolünden geçirilir; geçersiz format fixture'a eklenmez ve test hata kaydı olarak işaretlenir."
+        "OWASP A09 (Security Logging): her customer seed çalışması başlangıç zamanı, işlemi başlatan kimlik, etkilenen tenant_id listesi ve eklenen kayıt sayısıyla birlikte append-only audit trail (denetim izi) olarak structured log'a yazılır; bu log değiştirilemez depolama alanına iletilir ve NIST SP 800-92 log yönetimi ilkeleriyle hizalanır.",
+        "OWASP A04 (Insecure Design): customer fixture'larındaki e-posta, müşteri adı, tenant ve segment alanları RFC 5321 + şema düzeyinde input validation'dan geçirilir; geçersiz format fixture'a eklenmez ve test hata kaydı olarak işaretlenir. Seed bağımlılıkları için SBOM (CycloneDX) üretilir ve savunmasız paket sürümleri build gate'te taranır."
       ],
-      "notes": "Customer seed OWASP'ta parametreli sorgu (A03), minimal rol (A01), append-only audit log (A09) ve RFC 5321 e-posta geçerlilik kontrolü (A04) ile denetlenir.",
+      "notes": "Customer seed OWASP A01/A03/A04/A09 kapsamında input validation (name/email/tenant/profile/segment), minimal rol, append-only audit trail (denetim izi) ve RFC 5321 kontrolüyle denetlenir; ayrıca ASVS V5, NIST SP 800-92 ve SBOM (CycloneDX) standartlarına hizalanır.",
       "prompt": "platform-customer-seed için owasp boyutunu kapsa: A03 parametreli SQLAlchemy sorgusu (string alanlar dahil), A01 customer_seed_role şema kısıtı (diğer şemalar → pg_hba engel + log), A09 append-only structured audit log (değiştirilemez depolama), A04 RFC 5321 e-posta format doğrulaması. Güvenlik sınırı: hangi A-numarası customer seed için birincil risk? Çıktı: OWASP → kontrol → test eşlemesi.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -597,12 +602,12 @@
       "title": "Kernel/Core Entegrasyonu",
       "status": "filled",
       "items": [
-        "Customer seed FastAPI'nin lifespan startup event'ine bağlanır: CUSTOMER_SEED_ON_STARTUP=true ise CustomerFactory ile fixture yüklenir ve uygulama hazır olmadan önce /health endpoint 200 dönmez.",
-        "GraphQL Customer resolver entegrasyon testi: seed sonrası customers(tenantId: 'test') sorgusu çalıştırılır ve dönen kayıt sayısının seed edilen miktarla eşleştiği assert edilir (5 sorgu × CI).",
-        "Alembic customer migration uyum testi: her customer migration sonrası CustomerFactory'nin şemaya uyum sağlayıp sağlamadığı @customer_seed_compat marker'lı pytest'le kontrol edilir; uyumsuzluk build'i durdurur.",
-        "FastAPI REST endpoint entegrasyonu: GET /api/v1/customers tenant bağlamıyla çağrıldığında seed edilen kayıtlar paginated response olarak döner; e2e test sayfa boyutunu (page_size=10) ve toplam kayıt sayısını doğrular."
+        "Sözleşmeli bağ açıktır: customer seed FastAPI/GraphQL/REST/Alembic ile yalnızca seed contract (CustomerSchema) üzerinden entegre olur; bağımlılık yönü tek yönlüdür — seed contract → API/resolver/e2e. Seed FastAPI'nin lifespan startup event'ine bağlanır: CUSTOMER_SEED_ON_STARTUP=true ise CustomerFactory ile fixture yüklenir ve uygulama hazır olmadan önce /health endpoint 200 dönmez.",
+        "GraphQL Customer resolver entegrasyon testi contract üzerinden yürür: seed sonrası customers(tenantId: 'test') sorgusu çalıştırılır ve dönen kayıt sayısının seed edilen miktarla eşleştiği assert edilir (5 sorgu × CI); resolver şeması seed contract'ından türer.",
+        "Alembic customer migration uyum testi: her customer migration sonrası CustomerFactory'nin seed contract'a ve şemaya uyum sağlayıp sağlamadığı @customer_seed_compat marker'lı pytest'le kontrol edilir; doğrudan schema kırılması (contract'ı bozan migration) build gate'i durdurur.",
+        "FastAPI REST endpoint entegrasyonu: GET /api/v1/customers tenant bağlamıyla çağrıldığında seed edilen kayıtlar paginated response olarak döner; e2e test sayfa boyutunu (page_size=10) ve toplam kayıt sayısını contract'a göre doğrular."
       ],
-      "notes": "Customer seed entegrasyonu startup hook, GraphQL resolver doğrulama, Alembic uyum testi ve REST paginated response kontrolünü tek döngüde birleştirir.",
+      "notes": "Customer seed entegrasyonu sözleşmeli bağ üzerinden yürür: FastAPI/GraphQL/REST/Alembic bağı seed contract ile kurulur, bağımlılık yönü seed contract → API/resolver/e2e; doğrudan schema kırılması build gate'i durdurur.",
       "prompt": "platform-customer-seed için integration boyutunu kapsa: FastAPI CUSTOMER_SEED_ON_STARTUP + /health senkronizasyonu, GraphQL customers sorgusu sayısal doğrulama, Alembic @customer_seed_compat marker, GET /api/v1/customers paginated response e2e doğrulaması. Çıktı: her entegrasyon noktasının test kodu iskelet ve başarı koşulu.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
@@ -612,12 +617,12 @@
       "title": "Modül Kullanımı",
       "status": "filled",
       "items": [
-        "Customer seed CLI: python -m app.seed.customer --tenant acme --profile full --dry-run komutu ile çalıştırılır; --dry-run beklenen kayıt sayısını ve FK sıralamasını ekrana basar, veritabanına yazmaz.",
-        "Diğer modüller (billing, support, order) kendi e2e testlerinde customer_seed_db pytest fixture'ını import eder; her modül kendi CustomerFactory'sini yazmak zorunda kalmaz, merkezi factory yeniden kullanılır.",
-        "POST /internal/seed/customer endpoint'i INTERNAL_TOKEN + CUSTOMER_SEED_HMAC çift doğrulamasıyla korunur; staging Postman koleksiyonundan manuel tetikleme için kullanılır.",
-        "Locust yük testlerinde CustomerFactory.batch(size=1000) çağrısıyla eşsiz müşteri verisi üretilir; yük testi sırasında e-posta çakışması yaşanmaz ve test istatistikleri gerçekçi dağılım gösterir."
+        "Doğrudan DB yasağı açıktır: hiçbir tüketici modül customer tablolarına doğrudan yazmaz; tüm erişim merkezi seed contract / API / fixture kapısından geçer. Customer seed CLI: python -m app.seed.customer --tenant acme --profile full --dry-run komutu ile çalıştırılır; --dry-run beklenen kayıt sayısını ve FK sıralamasını ekrana basar, veritabanına yazmaz.",
+        "Diğer modüller (billing, support, order) kendi e2e testlerinde customer_seed_db pytest fixture'ını import eder; her modül kendi CustomerFactory'sini veya doğrudan SQL'ini yazmak zorunda kalmaz, merkezi seed sözleşmesini/factory'sini yeniden kullanır.",
+        "POST /internal/seed/customer internal endpoint'i INTERNAL_TOKEN + CUSTOMER_SEED_HMAC çift doğrulamasıyla korunur; yalnızca yetkili panel/entegrasyon kapısından (staging Postman koleksiyonu) tetiklenir, dışarıya açık değildir.",
+        "Locust yük testlerinde tüketiciler doğrudan DB'ye gitmez; CustomerFactory.batch(size=1000) çağrısıyla merkezi factory üzerinden eşsiz müşteri verisi üretilir; yük testi sırasında e-posta çakışması yaşanmaz ve test istatistikleri gerçekçi dağılım gösterir."
       ],
-      "notes": "Customer seed hem CLI, hem merkezi pytest fixture, hem korumalı HTTP endpoint, hem de locust veri üreticisi olarak farklı bağlamlarda yeniden kullanılır.",
+      "notes": "Doğrudan DB yasağı esastır: billing/support/order/locust gibi tüketiciler merkezi seed sözleşmesini Contract/API/fixture kapısından kullanır; internal endpoint/CLI yalnız yetkili panel/entegrasyon kapısından çalışır.",
       "prompt": "platform-customer-seed için moduleUsage boyutunu kapsa: CLI --dry-run ile preview, billing/support/order modülleri için customer_seed_db fixture import merkezi kullanımı, POST /internal/seed/customer çift token koruması, locust CustomerFactory.batch(1000) ile çakışmasız yük testi verisi. Çıktı: her kullanım biçimi için komut/import/curl örneği ve yetki gereksinimleri.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.",
       "provenance": "swarm",
       "promptVersion": "platform-content-v1"
