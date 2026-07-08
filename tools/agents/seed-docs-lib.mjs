@@ -1,6 +1,6 @@
 /**
  * seed-docs-lib — doküman-tipi kümeler (genel/meta/egitim/landx/sus/build/edu/kararlar) için ortak yardımcı.
- * Bunlar özellik değil DOKÜMAN/KARAR/EĞİTİM sayfaları; 14 boyut "bu konunun X açısı" olarak doldurulur.
+ * Bunlar özellik değil DOKÜMAN/KARAR/EĞİTİM sayfaları; 17 üretim boyutu "bu konunun X açısı" olarak doldurulur.
  * D(P, T, o): P = sayfaya-özel benzersiz önek (çapraz-tekrarı önler), T = başlık/konu, o = sayfaya-özel açılar.
  * Tüm maddeler P-önekli → benzersiz; her boyutta ≥1 sınır-dışı (allowlist-dışı) madde; yasak imza yok.
  */

@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  * contentQuality kapısı (Faz A2) — İçerik kalite sözleşmesinin (docs/icerik-kalite-sozlesmesi.md)
  * makine karşılığı. Bir boyutun maddeleri ŞABLON (kalıp) mı yoksa DERİN (sayfaya-özel) mi ölçer.
  *
- * Küme B TAMAM: 422/422 düğümün 5908 boyutu derinleştirildi (swarm/human), bu test artık YEŞİL.
+ * Küme B TAMAM: 467/467 düğümün 17 üretim boyutu derinleştirildi (swarm/human), bu test artık YEŞİL.
  * Faz F2 TAMAM: kapı CI'da bloklayıcıdır (deploy.yml: önce node checker `tools/agents/check-content.mjs`,
  * sonra bu kanonik vitest testi `npm run test:content`). Bir düğüm şablona geri dönerse deploy durur.
  */
@@ -60,6 +60,23 @@ const filledDims = (n: TaskNode) =>
 
 describe("contentQuality kapısı (A2) — başlangıçta KIRMIZI beklenir", () => {
   const nodes = loadNodes();
+
+  it("production generated data exact 17 üretim boyutu taşır", () => {
+    const valid = new Set<string>(DIMENSION_KEYS);
+    const violations: string[] = [];
+    for (const n of nodes) {
+      const keys = Object.keys(n.dimensions);
+      const complete =
+        keys.length === DIMENSION_KEYS.length && DIMENSION_KEYS.every((k) => keys.includes(k));
+      const unknown = keys.filter((k) => !valid.has(k));
+      if (!complete || unknown.length) {
+        violations.push(
+          `${n.id}: ${keys.length}/${DIMENSION_KEYS.length} boyut; unknown=${unknown.join("|")}`,
+        );
+      }
+    }
+    expect(violations).toEqual([]);
+  });
 
   it("hiçbir dolu boyutta yasak şablon imzası yok (sınır satırları hariç)", () => {
     const violations: string[] = [];

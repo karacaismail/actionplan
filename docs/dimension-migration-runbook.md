@@ -5,15 +5,15 @@
 
 **Sürüm:** 1.0 · **Tarih:** 2026-06-29
 **Durum:** Kanonik, bağlayıcı. ADR-0027 §3 (geriye uyumlu default'lu şema) ve `src/schemas/task.ts` (`.strict()` + safeParse) türevidir.
-**Kapsam:** ADR-0027 ile gelen üç düğüm alanı — `standardRefs`, `applicability`, `waivers` — ve bunların `src/data/generated/nodes/*.json` (445 düğüm) üzerinde güvenli yazımı.
+**Kapsam:** ADR-0027 ile gelen üç düğüm alanı — `standardRefs`, `applicability`, `waivers` — ve bunların `src/data/generated/nodes/*.json` üzerindeki güvenli yazımı. Güncel generated set 467 düğüm ve 17 üretim boyutu taşır.
 
 ---
 
 ## Önsöz — Neden "Runbook" ve Neden "Migration Yok"
 
-ADR-0027 üç yeni alan getirdi: `standardRefs` (14 referans), `applicability` (boyut→{applies, reason}) ve `waivers[]`. Klasik bir veritabanı dünyasında 445 satıra yeni kolon eklemek bir migration script'i, bir backfill ve bir rollback planı gerektirirdi. Burada gerektirmiyor. Bu runbook iki şeyi netleştirir: (1) neden bu alanlar 445 düğüm dosyasına DOKUNMADAN devreye girdi (lazy migration); (2) bir geliştirici veya AI ajan gerçekten bir değer SET ettiğinde adım adım nasıl, hangi dosyaya, hangi doğrulamayla yazacağı.
+ADR-0027 üç yeni alan getirdi: `standardRefs` (`StandardRefsSchema`), `applicability` (boyut→{applies, reason}) ve `waivers[]`. Klasik bir veritabanı dünyasında yüzlerce node kaydına yeni kolon eklemek bir migration script'i, bir backfill ve bir rollback planı gerektirirdi. Burada gerektirmiyor. Bu runbook iki şeyi netleştirir: (1) neden bu alanlar mevcut node dosyalarına DOKUNMADAN devreye girdi (lazy migration); (2) bir geliştirici veya AI ajan gerçekten bir değer SET ettiğinde adım adım nasıl, hangi dosyaya, hangi doğrulamayla yazacağı.
 
-Temel ilke: **dosya yalnızca bir değer SET edildiğinde yazılır.** Hiçbir toplu dönüştürme yoktur. 445 düğümün 430'u bu alanları dosyasında hiç taşımayabilir ve yine de geçerlidir; çünkü Zod şeması okuma anında varsayılanları doldurur.
+Temel ilke: **dosya yalnızca bir değer SET edildiğinde yazılır.** Hiçbir toplu dönüştürme yoktur. Bir düğüm bu alanları dosyasında hiç taşımayabilir ve yine de geçerlidir; çünkü Zod şeması okuma anında varsayılanları doldurur.
 
 ---
 
@@ -31,7 +31,7 @@ waivers: z.array(WaiverSchema).default([]),
 
 - Bir düğüm JSON'unda `standardRefs` anahtarı HİÇ yoksa, `safeParse` onu `{}` olarak doldurur ve içindeki 14 ref boş string olur. Düğüm geçerli parse olur.
 - Aynısı `applicability` ({}) ve `waivers` ([]) için geçerlidir.
-- Yani 445 düğüm, dosyaları hiç değiştirilmeden, runtime'da tam bir TaskNode'a tamamlanır. ADR-0027 §3'ün ifadesiyle: "default'lar safeParse'ta dolar; 445 düğüm dosyaya dokunmadan parse olur."
+- Yani düğümler, dosyaları hiç değiştirilmeden, runtime'da tam bir TaskNode'a tamamlanır. ADR-0027 §3'ün ifadesiyle: default'lar `safeParse` sırasında dolar; dosya yalnız değer set edilince yazılır.
 
 Bu yüzden bir toplu migration script'i YOK; olması da yanlış olurdu (445 dosyaya gereksiz diff, gereksiz git gürültüsü, gereksiz çakışma riski).
 
@@ -140,7 +140,7 @@ Pratik uyarı: `.strict()` nedeniyle bir düğüme "deneme" alanı eklemek YASAK
 
 ### 3.2 safeParse — eksik alan default'a tamamlanır, hata fırlatmaz
 
-Yükleme `safeParse` ile yapılır. Eksik (tanımlı ama yokmuş) alanlar default'a tamamlanır; bu yüzden 445 düğümün hiçbiri "alan yok" diye düşmez. `.strict()` ile birlikte oluşan denge nettir:
+Yükleme `safeParse` ile yapılır. Eksik (tanımlı ama yokmuş) alanlar default'a tamamlanır; bu yüzden düğüm "alan yok" diye düşmez. `.strict()` ile birlikte oluşan denge nettir:
 
 | Durum | Sonuç |
 |---|---|

@@ -11,7 +11,7 @@ describe("standards motoru (ADR-0027)", () => {
     expect(STANDARDS.every((s) => s.rules.length >= 3)).toBe(true);
   });
 
-  it("dimensionsByFamily 14 boyutun tümünü kapsar", () => {
+  it("dimensionsByFamily 17 üretim boyutunun tümünü kapsar", () => {
     const all = dimensionsByFamily().flatMap((g) => g.keys);
     expect(new Set(all).size).toBe(DIMENSION_KEYS.length);
   });

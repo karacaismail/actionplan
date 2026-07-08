@@ -2,9 +2,9 @@
 
 Sürüm: 1.0 · Tarih: 2026-06-29
 Durum: Referans. `src/data/generated/nodes/*.json` içindeki gerçek `dimensions[<key>].prompt` desenini standartlaştırır.
-İlgili: `src/schemas/task.ts` (14 boyut), `docs/adr-0027-engineering-standards.md` (standart referans deseni), `AGENTS.md` (altın kural).
+İlgili: `src/schemas/task.ts` (17 üretim boyutu), `docs/adr-0027-engineering-standards.md` (standart referans deseni), `AGENTS.md` (altın kural).
 
-Bu kütüphane, bir düğümün 14 üretim boyutundan her birini AI ile doldururken kullanılacak prompt şablonlarını tanımlar. Amaç: her boyut promptunun **somut, bağlama-özgü ve standart-bilinçli** olmasını sağlamak; jenerik çöp üretimini sözleşmeyle yasaklamak.
+Bu kütüphane, bir düğümün 17 üretim boyutundan her birini AI ile doldururken kullanılacak prompt şablonlarını tanımlar. Amaç: her boyut promptunun **somut, bağlama-özgü ve standart-bilinçli** olmasını sağlamak; jenerik çöp üretimini sözleşmeyle yasaklamak.
 
 ---
 
@@ -60,12 +60,15 @@ Boyut → ilgili standart referansı eşlemesi (prompt yazarken hangi `standardR
 | owasp | aiGovernanceRef | dataApiContractRef |
 | integration | architectureRef | dataApiContractRef |
 | moduleUsage | architectureRef | stateContractRef |
+| dataLifecycle | dataApiContractRef | releasePolicyRef |
+| observability | observabilityRef | qualityGateRef |
+| reliability | releasePolicyRef | observabilityRef |
 
 Not: Tüm boyutlar techProfileRef (tech-profile) ve shortCodeRef (kısa-kod) kilitlerine örtük tabidir; bunlar tekrar yazılmaz, kilit olarak varsayılır.
 
 ---
 
-## 3. Boyut Bazlı Şablonlar (14 Boyut)
+## 3. Boyut Bazlı Şablonlar (17 Boyut)
 
 Aşağıda her boyut için iskeletin değişen iki parçası verilir: **Başlık** (sabit eki ile) ve **Kapsa** maddesi. Diğer bloklar (Bağlam/Çıktı/Güvenlik sınırı) Bölüm 1'deki ortak iskeletten alınır; ilgili `standardRef` Bölüm 2'deki eşlemeden bağlanır.
 
@@ -124,6 +127,18 @@ Aşağıda her boyut için iskeletin değişen iki parçası verilir: **Başlık
 ### 3.14 moduleUsage — Modül Kullanımı
 - Başlık: `"Modül Kullanımı" boyutunu bu görev için üret.`
 - Kapsa: `bu birimi hangi app'ler nasıl tüketir (doğrudan DB değil, olay/araç kapsamı/üretilen API üzerinden).`
+
+### 3.15 dataLifecycle — Veri Yaşam Döngüsü & Uyum
+- Başlık: `"Veri Yaşam Döngüsü & Uyum" boyutunu bu görev için üret.`
+- Kapsa: `veri sınıflandırması, saklama/silme, yedekleme/restore, migration/backfill, KVKK/GDPR ve tenant veri sınırı.`
+
+### 3.16 observability — Gözlemlenebilirlik & Operasyonel Hazırlık
+- Başlık: `"Gözlemlenebilirlik & Operasyonel Hazırlık" boyutunu bu görev için üret.`
+- Kapsa: `SLO/SLA, metrik/log/trace, alarm eşiği, runbook, hata triage akışı ve operasyon kanıtı.`
+
+### 3.17 reliability — Dayanıklılık & Süreklilik
+- Başlık: `"Dayanıklılık & Süreklilik" boyutunu bu görev için üret.`
+- Kapsa: `hata modları, retry/idempotency, queue/outbox/DLQ, RTO/RPO, rollback/failover ve veri tutarlılığı.`
 
 ---
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-backend — Faz B13 (Cowork tek-ajan). backend (BE mimari/karar: deploy profilleri, SDK,
- * destek matrisi, karar defteri) kümesinin 12 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut
+ * destek matrisi, karar defteri) kümesinin 12 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu
  * içeriği uygular (provenance="swarm"). Veri stack: PostgreSQL (Supabase YASAK — proje kararı).
  * Doğrula: node tools/agents/check-content.mjs backend  (+ npm run typecheck)
  */

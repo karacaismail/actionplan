@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * gen-platform-content — platform düğümlerinin 14 boyutunu yama dosyalarından doldurur (Faz P4-içerik).
+ * gen-platform-content — platform düğümlerinin 17 üretim boyutuunu yama dosyalarından doldurur (Faz P4-içerik).
  *
- * tools/platform-content/<id>.json yamalarını okur; ilgili düğümün 14 boyutunu status="filled",
+ * tools/platform-content/<id>.json yamalarını okur; ilgili düğümün 17 üretim boyutuunu status="filled",
  * provenance="swarm" ile yazar. Yamalar paralel ajanlarca üretildi (FastAPI/GraphQL/PostgreSQL bağlamı).
  * Madde sayısını 2-5 aralığına kırpar (kalite kapısı sınırı). Yalnız dimensions alanını yazar.
  */
@@ -28,6 +28,9 @@ const DIMS = [
   "owasp",
   "integration",
   "moduleUsage",
+  "dataLifecycle",
+  "observability",
+  "reliability",
 ];
 
 const files = fs.readdirSync(PATCHES).filter((f) => f.endsWith(".json"));
@@ -67,7 +70,9 @@ for (const f of files) {
   fs.writeFileSync(np, `${JSON.stringify(n, null, 2)}\n`);
   applied++;
 }
-console.log(`[gen-platform-content] ${applied} düğüme 14 boyut uygulandı (provenance=swarm).`);
+console.log(
+  `[gen-platform-content] ${applied} düğüme 17 üretim boyutu uygulandı (provenance=swarm).`,
+);
 if (warns.length) {
   console.warn(`UYARILAR (${warns.length}):`);
   for (const w of warns) console.warn(`  - ${w}`);

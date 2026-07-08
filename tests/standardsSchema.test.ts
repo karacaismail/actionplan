@@ -64,7 +64,7 @@ describe("ST-1 — standardRefs / applicability / waivers şema temeli", () => {
     expect(w.expires).toBe("");
   });
 
-  it("DIMENSION_FAMILY 14 boyutun tümünü bir aileye atar (ontoloji)", () => {
+  it("DIMENSION_FAMILY 17 üretim boyutunun tümünü bir aileye atar (ontoloji)", () => {
     for (const k of DIMENSION_KEYS) expect(DIMENSION_FAMILY[k]).toBeTruthy();
     expect(new Set(Object.values(DIMENSION_FAMILY)).size).toBeGreaterThanOrEqual(4);
   });

@@ -11,7 +11,7 @@ Mühendislik standartları (bkz. `docs/engineering-standards-index.md`) bağlay�
 
 Waiver bu boşluğu kapatır: sapma **kayıt altına alınır, onaylanır ve süreye bağlanır.** Süre alanı sayesinde waiver kendiliğinden geçersizleşir; kalıcı bir kaçış yolu oluşamaz. Gerekçesiz veya süresiz bir waiver, ADR-0027'nin açıkça reddettiği şeydir ve `check-waivers` kapısınca bloklanır.
 
-Waiver kayıtları düğümde `waivers[]` dizisinde tutulur (`src/schemas/task.ts`, `WaiverSchema`). Bu alan default `[]`'dir; bu nedenle 445 düğüm dosyaya dokunulmadan parse olur (lazy migration) ve waiver yalnızca gerçekten bir sapma kaydedildiğinde dosyaya yazılır.
+Waiver kayıtları düğümde `waivers[]` dizisinde tutulur (`src/schemas/task.ts`, `WaiverSchema`). Bu alan default `[]`'dir; güncel 467 düğüm dosyaya dokunulmadan parse olur (lazy migration) ve waiver yalnızca gerçekten bir sapma kaydedildiğinde dosyaya yazılır.
 
 ---
 

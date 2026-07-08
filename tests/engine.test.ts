@@ -129,7 +129,7 @@ describe("export/import round-trip", () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("CSV tam-fidelity: _node ile 14 boyut/7 faz/risk round-trip korunur", () => {
+  it("CSV tam-fidelity: _node ile 17 boyut/7 faz/risk round-trip korunur", () => {
     const full = node({
       id: "gamma",
       title: "Gamma",

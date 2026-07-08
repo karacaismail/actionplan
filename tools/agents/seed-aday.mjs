@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-aday — Faz B7 (Cowork tek-ajan). aday kümesinin 36 ŞABLON düğümüne (dist-* dikey dağıtımlar,
- * edition-* varyantlar, stack-* yetenek paketleri, s-* servisler) ELLE yazılmış, düğüme-özel 14 boyut
+ * edition-* varyantlar, stack-* yetenek paketleri, s-* servisler) ELLE yazılmış, düğüme-özel 17 üretim boyutu
  * içeriği uygular (provenance="swarm"). Bunlar paketleme/kompozisyon düğümleridir.
  * Doğrula: node tools/agents/check-content.mjs aday  (+ npm run typecheck)
  */

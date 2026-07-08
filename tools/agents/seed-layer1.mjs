@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-layer1 — Faz B5 (Cowork tek-ajan). layer1 (yatay platform yetenekleri / in-tree modüller)
- * kümesinin 24 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * kümesinin 24 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs layer1  (+ npm run typecheck)
  */
 import fs from "node:fs";

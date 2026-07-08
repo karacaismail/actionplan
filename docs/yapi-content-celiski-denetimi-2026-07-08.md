@@ -1,5 +1,7 @@
 # Actionplan yapi / content / celiski denetimi - 2026-07-08
 
+> Güncellik notu (2026-07-08): Bu rapor önceki bir yerel snapshot'ın denetim kaydıdır. Güncel canonical gerçeklik: `src/schemas/task.ts` 17 üretim boyutu, `src/data/generated/meta.json` 467 düğüm, `npm run qa:content` exact-17 kapısı ve `docs/task-to-code-contract.md` handoff sözleşmesidir. Aşağıdaki eski 14-boyut/remote commit bulguları tarihsel kayıt olarak korunur.
+
 ## Kapsam
 
 Bu rapor, `/Users/karaca/DEV/mimari/actionplan` reposunun mevcut yerel durumunda uretilmistir.

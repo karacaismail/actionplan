@@ -38,7 +38,7 @@ Yasak (drift üreten anti-desen):
 - Serbest-metin "standart kartı" eklemek. 12+ yeni boyut kartı EKLENMEZ; UI şişer, drift artar.
 
 Doğru (referans deseni):
-- İlgili standardı `standardRefs.<...>Ref` ile bağla. 14 referans anahtarı:
+- İlgili standardı `standardRefs.<...>Ref` ile bağla. Kanonik anahtar seti `src/schemas/task.ts` içindeki `StandardRefsSchema`'dır; çekirdek varsayılan ref'ler:
   - `techProfileRef` → `src/data/tech-profiles.json` (frontend tech profili; ADR-0026)
   - `architectureRef` → `src/data/standards/architecture.json`
   - `codingStandardRef` → `src/data/standards/coding-standards.json`
@@ -53,6 +53,7 @@ Doğru (referans deseni):
   - `observabilityRef` → `src/data/standards/observability.json`
   - `releasePolicyRef` → `src/data/standards/release-versioning.json`
   - `aiGovernanceRef` → `src/data/standards/ai-governance.json`
+  - `i18nRef` → `src/data/standards/i18n-standards.json`
 - Bir boyut bu düğüme uygulanmıyorsa `applicability[dimKey] = { applies: false, reason: "<gerekçe>" }` yaz; jenerik dolgu üretme.
 - Standarttan bilinçli sapman varsa `waivers[]`'a **gerekçeli + onaylı + süreli** kayıt ekle. Gerekçesiz/süresiz waiver geçersizdir (CI bloklar).
 
@@ -140,7 +141,7 @@ Kural: **kırmızı kapıyı "sonra düzeltirim" diye bırakma.** Değişiklik, 
 Özellikle paralel swarm'da çakışmayı önlemek için:
 
 - **Her ajan yalnız kendi shard'ına yazar.** Başka ajanın dosyasına dokunma; üst üste yazma çakışması üretme.
-- Migration/toplu-yeniden-yazma çalıştırma. 445 düğüm dosyaya dokunmadan parse olur (default'lu lazy migration); bir dosya yalnız gerçek değer atanınca yazılır.
+- Migration/toplu-yeniden-yazma çalıştırma. Güncel node sayısı `src/data/generated/meta.json` içinden okunur; default'lu lazy migration sayesinde eski JSON'lar dosyaya dokunmadan parse olur, bir dosya yalnız gerçek değer atanınca yazılır.
 - Her PR **küçük ve tek-amaçlı**: kısa-kod bütçesine uy (≤ 400 satır net, ≤ 20 dosya). Aşan iş atomik PR'lara bölünür.
 - Her görev/PR `allowed-files` listesini ve en az bir `non-goal`'ı bildirir; listede olmayan dosyaya dokunma.
 - Sokete-bağlı çalışmada (socket-drop) yazılmış dosyalar diske düşer; onları harvest et, kaybetme.
@@ -158,7 +159,7 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 
 Yetki sınırı: Bu kanonik dosyaları ve bu `AGENTS.md`'yi yalnız **Kullanıcı/Admin (insan onayı)** değiştirebilir. AI ajan bunları doğrudan yeniden yazamaz; yalnız değişiklik **önerebilir** (changeset). Bir standardı güncellemek istiyorsan, kuralı düğüme kopyalamak yerine standart sözleşmesinde değişiklik öner ve insan onayına sun.
 
-Standartların gezinme indeksi ileride `docs/engineering-standards-index.md` altında toplanacaktır (ST-4/ST-7); bu dosya oluşturulduğunda 14 standardın tek listesi oradan izlenir. O ana kadar standart listesi için bu dosyanın Bölüm 2'sini ve `src/data/standards/` dizinini kaynak al.
+Standartların gezinme indeksi `docs/engineering-standards-index.md` altında toplanmıştır; standart listesi için bu dosyanın Bölüm 2'si yerine o hub'ı, `src/schemas/task.ts` içindeki `StandardRefsSchema`'yı ve `src/data/standards/` dizinini kaynak al.
 
 ---
 

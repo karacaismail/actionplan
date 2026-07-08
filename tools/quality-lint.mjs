@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * quality-lint — kalite kapısı (CI bloklayıcı).
- *  - Golden düğümler (allowlist) max çıtada kalmalı (≥ GOLDEN_MIN, 14 boyut dolu).
+ *  - Golden düğümler (allowlist) max çıtada kalmalı (≥ GOLDEN_MIN, 17 üretim boyutu dolu).
  *  - "human"/"swarm" köken iddiası taşıyan düğümler eşik altı OLAMAZ (≥ CLAIM_MIN);
  *    bu, zenginleştirme iddiasının kalitesiz yapılmasını engeller.
  *  - "template" düğümler backlog'tur; raporlanır ama kapıyı düşürmez.
@@ -10,7 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { auditNode } from "./lib/score.mjs";
+import { DIMENSION_KEYS, auditNode } from "./lib/score.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
@@ -18,6 +18,7 @@ const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
 const GOLDEN = new Set(["product", "customer", "s-crm"]);
 const GOLDEN_MIN = 2.3;
 const CLAIM_MIN = 2.0;
+const REQUIRED_DIMENSIONS = DIMENSION_KEYS.length;
 // moduleUsage tamlık çıtası: dolu (non-skeleton) moduleUsage en az bu kadar madde + notes taşımalı.
 // "Modül Kullanımı" boyutu sistematik olarak 1-satırda kalmıştı; bu kapı tamlığı kilitler.
 const MU_MIN_ITEMS = 3;
@@ -51,7 +52,10 @@ for (const n of nodes) {
   if (a.filled > 0 && a.score < SCORE_FLOOR)
     violations.push(`${n.id}: skor ${a.score} < taban ${SCORE_FLOOR}`);
   if (GOLDEN.has(n.id)) {
-    if (a.filled < 14) violations.push(`golden ${n.id}: 14 boyut dolu değil (${a.filled}/14)`);
+    if (a.filled < REQUIRED_DIMENSIONS)
+      violations.push(
+        `golden ${n.id}: 17 üretim boyutu dolu değil (${a.filled}/${REQUIRED_DIMENSIONS})`,
+      );
     if (a.score < GOLDEN_MIN) violations.push(`golden ${n.id}: skor ${a.score} < ${GOLDEN_MIN}`);
     else goldenOk++;
   } else if (a.provenance === "human" || a.provenance === "swarm" || a.provenance === "mixed") {

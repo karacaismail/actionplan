@@ -80,7 +80,7 @@ export function importCSV(text: string): ImportResult {
   const records = parseCSV(text);
   const nodes: TaskNode[] = [];
   records.forEach((rec, i) => {
-    // Tam-fidelity: _node sütunu varsa tüm düğümü oradan kur (14 boyut + 7 faz + kabul/risk dahil).
+    // Tam-fidelity: _node sütunu varsa tüm düğümü oradan kur (17 boyut + 7 faz + kabul/risk dahil).
     if (rec._node) {
       try {
         const full = TaskNodeSchema.safeParse(JSON.parse(rec._node));

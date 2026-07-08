@@ -2,7 +2,7 @@
 
 **Sürüm:** 1.0 · **Tarih:** 2026-06-29
 **Durum:** Kanonik, bağlayıcı. ADR-0027 (mühendislik standardı işletim katmanı) ve task-to-code-contract'ın türevidir; bu ikisiyle çelişen bir madde geçersizdir.
-**Kapsam:** `src/data/standards/*.json` altındaki 15 standart sözleşme, `src/schemas/task.ts` içindeki 14 üretim boyutu ve 7 seviyeli WBS hiyerarşisi.
+**Kapsam:** `src/data/standards/*.json` altındaki 15 standart sözleşme, `src/schemas/task.ts` içindeki 17 üretim boyutu ve 7 seviyeli WBS hiyerarşisi.
 
 ---
 
@@ -99,7 +99,7 @@ Kural: bu primitifler doğdukları seviyenin yüzey sınıfına ait Z standart s
 
 ## 3. Boyut Ailesi × Seviye Matrisi
 
-ADR-0027 14 boyutu altı aileye (`DIMENSION_FAMILY`, `src/schemas/task.ts`) atar. Bu matris aile düzeyinde uygulanabilirliği seviyeye göre verir; aile içindeki tekil boyutların düğüm-bazlı N/A kararı §4'teki disiplinle verilir.
+ADR-0027/ADR-0028 hattı 17 üretim boyutunu altı aileye (`DIMENSION_FAMILY`, `src/schemas/task.ts`) atar. Bu matris aile düzeyinde uygulanabilirliği seviyeye göre verir; aile içindeki tekil boyutların düğüm-bazlı N/A kararı §4'teki disiplinle verilir.
 
 Aile → boyut eşlemesi (kaynak: `DIMENSION_FAMILY`):
 
@@ -197,7 +197,7 @@ Kurallar:
 
 ## 6. CI Bağı — Bu Matris Nasıl Zorlanır
 
-Matris insan-okunur disiplindir; makine tarafı üç BLOKLAYICI kapıyla bağlanır (hepsi `src/data/generated/nodes` altındaki 445 düğümü tarar):
+Matris insan-okunur disiplindir; makine tarafı üç BLOKLAYICI kapıyla bağlanır (hepsi `src/data/generated/nodes` altındaki güncel 467 düğümü tarar):
 
 | Kapı (tools/agents) | Ne zorlar | Matristeki karşılığı |
 |---|---|---|

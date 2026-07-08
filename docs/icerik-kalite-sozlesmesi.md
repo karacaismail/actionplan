@@ -2,7 +2,7 @@
 
 Sürüm: 1.0 · Faz: A1 · Bağlı kapı: `tests/content/contentQuality.test.ts` (Faz A2)
 
-Bu sözleşme, "derin enterprise içerik" iddiasını ölçülebilir kritere çevirir. 422 görev sayfasının 14 boyutu bu kritere göre yazılır; `contentQuality` kapısı kontrolü otomatik yapar. Sözleşme hem insan (yazar/denetleyici) hem makine (kapı) için tek referanstır.
+Bu sözleşme, "derin enterprise içerik" iddiasını ölçülebilir kritere çevirir. 467 WBS düğümünün 17 üretim boyutu bu kritere göre yazılır; `contentQuality` kapısı kontrolü otomatik yapar. Sözleşme hem insan (yazar/denetleyici) hem makine (kapı) için tek referanstır.
 
 ## 1. Temel ilkeler
 

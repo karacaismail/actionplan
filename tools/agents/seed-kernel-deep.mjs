@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-kernel-deep — Faz B0 pilotu (Cowork'te tek-ajan, swarm yerine).
- * Kernel cluster'ının 11 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular
+ * Kernel cluster'ının 11 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular
  * (provenance="swarm") ve 4 GOLDEN düğümü provenance="human" damgalar (swarm ezmesin).
  * Yalnız items + status + provenance yazar; prompt/notes/title/key/şema korunur.
  * Doğrula: node tools/agents/check-content.mjs kernel  (+ npm run typecheck)

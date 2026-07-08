@@ -106,7 +106,7 @@ export function exportJSON(nodes: TaskNode[]): string {
 
 /**
  * Tek bir görevi EKSİKSİZ JSON olarak verir (vibecoding prompt'u). İçerik: düğümün TAMAMI
- * (14 boyut + prompt'lar + 7 faz + standardRefs/applicability/waivers + evidence) + çözülmüş
+ * (17 boyut + prompt'lar + 7 faz + standardRefs/applicability/waivers + evidence) + çözülmüş
  * `references`: bağımlılık/ilişki her biri tanım (title) + mutlak (Pages) + göreli URL ile.
  * Kaynak DOM değil veri → sayfaya bileşen eklense de export bozulmaz.
  */
@@ -488,7 +488,7 @@ export function exportCSV(nodes: TaskNode[]): string {
       n.dependsOn.join("|"),
       String(n.criticalPath),
       n.state,
-      // Tam-fidelity: 14 boyut + 7 faz + kabul/risk/teslimat dahil tüm düğüm JSON olarak.
+      // Tam-fidelity: 17 boyut + 7 faz + kabul/risk/teslimat dahil tüm düğüm JSON olarak.
       JSON.stringify(n),
     ]
       .map((v) => csvEscape(String(v)))

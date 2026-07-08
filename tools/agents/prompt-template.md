@@ -11,7 +11,7 @@ KESİN KURALLAR:
 - SADECE `source.cluster === "{{CLUSTER}}"` olan node JSON dosyalarını düzenle. Kod/config/index/navigation/meta veya başka cluster'a DOKUNMA.
 - KORU (insan içeriği): bir düğümde herhangi bir `dimensions[*].provenance === "human"` ise O DÜĞÜME DOKUNMA (altın referans/insan-onaylı içerik ezilmez).
 - `node tools/reindex.mjs` ÇALIŞTIRMA (orkestratör en sonda bir kez çalıştırır). Kurulum yapma. Emoji yok.
-- Şema: her düğümde `dimensions` 14 anahtar + `phases` 7 anahtar KORUNMALI. Şema-dışı alan ekleme. Geçerli JSON yaz.
+- Şema: her düğümde `dimensions` `DIMENSION_KEYS` içindeki 17 üretim boyutu + `phases` 7 anahtar KORUNMALI. Şema-dışı alan ekleme. Geçerli JSON yaz.
 - AI maliyeti önemli değil; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, publish/delete/direct-prod-write yapamaz.
 - AI yalnız ArcheType taslağı veya ArcheType prod-update önerisi üretebilir. Prod ArcheType update için geçmiş veri korunmalı; immutable snapshot, rollback planı, compatibility check ve append-only/expand-contract migration zorunludur.
 - ECA UI tasarlama. ECA yalnız backend/engine tarafında çalışan ruleset ve risk azaltma senaryosu olarak yazılmalı. AI ruleset dışına çıkamaz, ruleset override/disable edemez.
@@ -20,7 +20,7 @@ ADIMLAR:
 1. Bu cluster'ın düğüm listesini çıkar:
    `for f in src/data/generated/nodes/*.json; do node -e "const n=require('./'+process.argv[1]);if(n.source&&n.source.cluster==='{{CLUSTER}}')console.log(n.id+' :: '+n.title)" "$f"; done`
 2. HER düğüm için dosyayı OKU (`title`, `summary`, `tags`) → düğümün NE olduğunu anla.
-3. 14 boyutu O DÜĞÜME ÖZGÜ yaz. Her `dimensions[key]`: `{ "key", "title", "status": "filled", "items": [3-5 SOMUT madde], "notes": "", "provenance": "swarm" }`. YASAK KALIP ifadeleri (docs/icerik-kalite-sozlesmesi.md Bölüm 4: "net işlevsel sınır", "N+1 önleme + önbellek", "klavye gezinme + kontrast ≥7:1" vb.) KULLANMA — kapı (`npm run test:content`) bunları reddeder. Boyut rehberi (hepsi düğüme özel olmalı):
+3. 17 üretim boyutunu O DÜĞÜME ÖZGÜ yaz. Her `dimensions[key]`: `{ "key", "title", "status": "filled", "items": [3-5 SOMUT madde], "notes": "", "provenance": "swarm" }`. YASAK KALIP ifadeleri (docs/icerik-kalite-sozlesmesi.md Bölüm 4: "net işlevsel sınır", "N+1 önleme + önbellek", "klavye gezinme + kontrast ≥7:1" vb.) KULLANMA — kapı (`npm run qa:content`) bunları reddeder. Boyut rehberi (hepsi düğüme özel olmalı):
    - **featureDefs**: düğümün net işlevsel kapsamı, girdi/çıktı sözleşmesi.
    - **security**: bu düğümün GERÇEK tehdit yüzeyi (ör. yetki düğümü→policy template/least-privilege; veriyolu→poison message/SSRF; tenant→RLS+SET LOCAL).
    - **codeOptimization / securityOptimization / performance**: düğüme özel (ör. realtime→backpressure; ledger→bileşik indeks).
@@ -33,10 +33,13 @@ ADIMLAR:
    - **owasp**: OWASP Top 10:2025 (+ AI ilgiliyse LLM Top 10) — düğümün açık yüzeyine özel maddeler.
    - **integration**: bu düğümün kernel/core/modüller/app'lerle GERÇEK entegrasyonu (gerekli mi, nasıl).
    - **moduleUsage**: bu düğümü hangi app'ler nasıl kullanır (modül değilse kısa).
+   - **dataLifecycle**: veri sınıflandırması, saklama/silme, yedekleme/restore, migration/backfill, KVKK/GDPR ve tenant veri sınırı.
+   - **observability**: SLO/SLA, metrik/log/trace, alarm eşiği, runbook, hata triage akışı ve operasyon kanıtı.
+   - **reliability**: hata modları, retry/idempotency, queue/outbox/DLQ, RTO/RPO, rollback/failover ve veri tutarlılığı.
 4. `phases` (requirements, test-plan, db-schema, development, test-qa, verification, release-maintenance): her birine düğüme özgü 1-3 `criteria` (DoD). Test-önce: `test-plan` fazı `db-schema`/`development`'tan önce `passed`/`active` olmalı. Gerçekçi `status` (pending/active/passed/failed).
 5. PM alanları: `acceptanceCriteria` (2-4), `deliverables` (2-3), `risks` (1-2: {id,desc,severity,mitigation}), `effort` ({estimate,unit:'sp',spent}), `progress`, `status`, `phase`, `state` ('aday'/'incelemede') — düğüme uygun ayarla.
 6. KORU: `id, wbsCode, parentId, level, dependsOn, blocks, related, source, tags, title, slug, summary, schemaVersion`.
 
 7. ÖZ-DENETİM (her düğümü yazmadan önce, kalite sözleşmesi): (a) her dolu boyut 3-5 madde mi? (b) en az 1 madde düğüme özgü terim (başlık/etiket) içeriyor mu? (c) Bölüm 4 yasak kalıp imzası var mı (zorunlu eca/aiAgents sınır satırları hariç)? (d) her dolu boyut `"provenance": "swarm"` damgalı mı? Hepsi tamamsa yaz; değilse düzelt.
 
-Bitince: kaç düğümü benzersiz içerikle yazdığını + 2 örnek (id → bir security maddesi) tek paragraf raporla. Orkestratör sonda `npm run test:content` ile kapıyı koşacak — çıktın bu kapıdan geçmeli.
+Bitince: kaç düğümü benzersiz içerikle yazdığını + 2 örnek (id → bir security maddesi) tek paragraf raporla. Orkestratör sonda `npm run qa:content`, `npm run qa:dimensions` ve `npm run gen:audit` ile kapıları koşacak — çıktın bu kapılardan geçmeli.

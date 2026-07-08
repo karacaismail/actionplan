@@ -4,17 +4,17 @@ Sürüm: 1.0 · Tarih: 2026-06-29
 Durum: Referans. Tam-donanımlı bir TaskNode'un **yapısını** gösterir.
 İlgili: `src/schemas/task.ts` (şema = tek kaynak), `docs/adr-0027-engineering-standards.md`, `AGENTS.md`.
 
-Bu doküman "golden düğüm" desenini tanımlar: tüm `standardRefs` dolu, her boyut için `applicability` gerekçeli, `evidence` bağlı ve 14 boyutu doldurulmuş örnek bir düğüm **iskeleti**. Amaç yapıyı ve her alanın anlamını göstermektir; **gerçek mock veri doldurulmaz** (alanların ne taşıyacağı açıklanır, içerik uydurulmaz). Çalışan golden düğüm ST-5'te (Golden Slice) gerçek değerlerle gelecektir.
+Bu doküman "golden düğüm" desenini tanımlar: tüm `standardRefs` dolu, her boyut için `applicability` gerekçeli, `evidence` bağlı ve 17 üretim boyutu doldurulmuş örnek bir düğüm **iskeleti**. Amaç yapıyı ve her alanın anlamını göstermektir; **gerçek mock veri doldurulmaz** (alanların ne taşıyacağı açıklanır, içerik uydurulmaz). Çalışan golden düğüm ST-5'te (Golden Slice) gerçek değerlerle gelecektir.
 
 ---
 
 ## 1. "Golden Slice" Nedir
 
-Golden Slice, sözleşmenin kendi kendini kanıtladığı **dogfooding** referansıdır: en az bir gerçek düğüm, bu repodaki tüm sözleşme alanlarını eksiksiz ve gerekçeli doldurur ve tüm CI kapılarından yeşil geçer. Diğer 445 düğüm bu desene göre olgunlaşır.
+Golden Slice, sözleşmenin kendi kendini kanıtladığı **dogfooding** referansıdır: en az bir gerçek düğüm, bu repodaki tüm sözleşme alanlarını eksiksiz ve gerekçeli doldurur ve tüm CI kapılarından yeşil geçer. Diğer generated düğümler bu desene göre olgunlaşır.
 
 Golden bir düğüm şu beş koşulu birlikte karşılar:
 
-1. **Tüm `standardRefs` çözülür** — 14 referans anahtarı geçerli bir standart/profil dosyasına işaret eder; `check-standards-coverage` yeşildir.
+1. **Tüm set edilmiş `standardRefs` çözülür** — `StandardRefsSchema` içindeki referans anahtarları geçerli bir standart/profil dosyasına işaret eder; `check-standards-coverage` yeşildir.
 2. **Her boyut için `applicability` nettir** — boyut ya doludur ya `applies:false` + gerekçe taşır; jenerik dolgu yoktur; `check-dimension-applicability` yeşildir.
 3. **`evidence` somuttur** — faz kapıları URL/dosya referansıyla desteklenir; metin iddiası değil.
 4. **`waivers` disiplinlidir** — varsa her sapma gerekçeli + onaylı + süreli; `check-waivers` yeşildir.
@@ -93,7 +93,7 @@ Aşağıdaki iskelet `TaskNodeSchema` (`.strict()`) yapısını izler. Değerler
     "killSwitch": true
   },
 
-  // --- 14 üretim boyutu ---
+  // --- 17 üretim boyutu ---
   // Her boyut: {key,title,status,items[],notes,prompt,provenance}. Golden'da her boyut
   // YA doludur (status: "filled", items somut) YA da applicability ile N/A işaretlidir.
   // items[] standardın METNİNİ içermez; ilgili standardRef'e uyar (altın kural).
@@ -125,7 +125,7 @@ Aşağıdaki iskelet `TaskNodeSchema` (`.strict()`) yapısını izler. Değerler
   },
 
   // --- Mühendislik standardı bağı (ADR-0027): REFERANS, kopya DEĞİL ---
-  // Golden'da 14'ünün TAMAMI dolu; her biri gerçek bir standart/profil dosyasına çözülür.
+  // Golden'da set edilen referansların TAMAMI dolu; her biri gerçek bir standart/profil dosyasına çözülür.
   "standardRefs": {
     "techProfileRef":     "<tech-profiles.json içindeki profil id; ör. saas-app>",
     "architectureRef":    "architecture",        // -> src/data/standards/architecture.json
@@ -171,9 +171,9 @@ Aşağıdaki iskelet `TaskNodeSchema` (`.strict()`) yapısını izler. Değerler
 
 | Blok | Golden koşulu | İlgili kapı |
 |---|---|---|
-| `standardRefs` (14) | Hepsi dolu; her biri gerçek dosyaya çözülür | check-standards-coverage |
+| `standardRefs` | Set edilen ref'ler dolu; her biri gerçek dosyaya çözülür | check-standards-coverage |
 | `applicability` | Dolu olmayan her boyut için `applies:false` + reason | check-dimension-applicability |
-| `dimensions` (14) | Uygulanan boyutlar `status:"filled"` + somut, prompt'lu | check-content / test:content |
+| `dimensions` (17) | Uygulanan boyutlar `status:"filled"` + somut, prompt'lu | check-content / test:content |
 | `waivers` | Varsa gerekçe + onay + süre tam | check-waivers |
 | `agentPolicy` | Yetki sınırı kilitleri yerinde (app/module yasak) | check-ruleset |
 | kısa-kod | Boyut/içerik kapsam taşmasız | check-short-code |

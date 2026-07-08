@@ -24,6 +24,9 @@ const forbidText = (file, text, label = text) => {
   const content = read(file);
   if (content.includes(text)) failures.push(`${file}: eski/yanlis ifade kaldi: ${label}`);
 };
+const forbidContent = (file, content, text, label = text) => {
+  if (content.includes(text)) failures.push(`${file}: eski/yanlis ifade kaldi: ${label}`);
+};
 
 const manifest = readJson("src", "data", "workspace-manifest.json");
 const primary = manifest.workspaces?.find((w) => w.id === manifest.primaryWorkspaceId);
@@ -112,6 +115,59 @@ requireText(
   "implementation-workspace-manifest.md",
   "docs index workspace manifest referansi",
 );
+requireText("package.json", '"qa:content"', "qa:content script");
+requireText("package.json", '"qa:dimensions"', "qa:dimensions script");
+requireText("package.json", '"qa:flow"', "qa:flow script");
+requireText("package.json", '"qa:ci"', "qa:ci script");
+
+const activeCurrentFiles = [
+  "README.md",
+  "AGENTS.md",
+  "docs/engineering-standards-index.md",
+  "docs/standards-applicability-matrix.md",
+  "docs/icerik-kalite-sozlesmesi.md",
+  "docs/audit-report.md",
+  "docs/golden-node-examples.md",
+  "docs/prompt-template-library.md",
+  "docs/roadmap-pm-paritesi.md",
+  "docs/governance-plan.md",
+  "tools/agents/prompt-template.md",
+  "tools/agents/README.md",
+];
+for (const file of activeCurrentFiles) {
+  const content = read(file);
+  for (const stale of ["14 boyut", "422 görev", "445 düğüm", "363 görev"]) {
+    forbidContent(file, content, stale, stale);
+  }
+  for (const stale of ["PostgreSQL/Prisma", "Prisma + PostgreSQL", "erişim katmanı (Prisma)"]) {
+    forbidContent(file, content, stale, stale);
+  }
+}
+
+const generatedNodesDir = rel("src", "data", "generated", "nodes");
+for (const fileName of fs.readdirSync(generatedNodesDir).filter((f) => f.endsWith(".json"))) {
+  const file = path.join("src", "data", "generated", "nodes", fileName);
+  const content = read(file);
+  for (const stale of [
+    "14 boyut",
+    "PostgreSQL/Prisma",
+    "PostgreSQL + Prisma",
+    "erişim katmanı (Prisma)",
+  ]) {
+    forbidContent(file, content, stale, stale);
+  }
+}
+
+for (const file of [
+  "tools/agents/seed-layer0.mjs",
+  "tools/agents/seed-frontend.mjs",
+  "tools/gen-platform-content.mjs",
+]) {
+  const content = read(file);
+  for (const stale of ["PostgreSQL/Prisma", "PostgreSQL + Prisma", "erişim katmanı (Prisma)"]) {
+    forbidContent(file, content, stale, stale);
+  }
+}
 
 console.log(
   `[vibecoding-ready] workspace=${primary?.id ?? "yok"} · export modes=5 · ihlal=${failures.length}`,

@@ -2,7 +2,7 @@
 /**
  * seed-dx-atomic — Faz B17+B18 (Cowork tek-ajan). dx (Geliştirici Deneyimi: CLI/marketplace/API gateway/
  * dev portal/workflow/dış servisler) ve atomic (Atomik Tipler temeli) kümelerinin 8 ŞABLON düğümüne ELLE
- * yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs dx && node tools/agents/check-content.mjs atomic
  */
 import fs from "node:fs";

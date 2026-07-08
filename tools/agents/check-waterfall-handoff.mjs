@@ -107,6 +107,7 @@ for (const n of nodes) {
   }
 
   for (const phase of PHASES) {
+    const phaseIndex = PHASES.indexOf(phase);
     const gate = n.phases?.[phase];
     if (!gate) {
       fails.push(`phase-gate-yok: ${n.id}.${phase}`);
@@ -116,6 +117,26 @@ for (const n of nodes) {
       fails.push(`phase-criteria-yok: ${n.id}.${phase}`);
     if (!["pending", "active", "passed", "failed"].includes(gate.status))
       fails.push(`phase-status-gecersiz: ${n.id}.${phase} (${gate.status})`);
+    if (gate.status === "passed" && gate.passed !== true)
+      fails.push(`phase-status-passed-bool-false: ${n.id}.${phase}`);
+    if (gate.passed === true && gate.status !== "passed")
+      fails.push(`phase-bool-true-status-passed-degil: ${n.id}.${phase} (${gate.status})`);
+    if (gate.status === "passed" && !hasText(gate.notes))
+      fails.push(`phase-passed-notes-yok: ${n.id}.${phase}`);
+    if (gate.status === "active") {
+      for (const prev of PHASES.slice(0, phaseIndex)) {
+        const prevGate = n.phases?.[prev];
+        if (prevGate?.passed !== true)
+          fails.push(`phase-active-prev-passed-degil: ${n.id}.${phase} <- ${prev}`);
+      }
+    }
+  }
+
+  const currentPhaseIndex = PHASES.indexOf(n.phase);
+  for (const prev of PHASES.slice(0, currentPhaseIndex)) {
+    const prevGate = n.phases?.[prev];
+    if (prevGate?.passed !== true)
+      fails.push(`phase-current-prev-passed-degil: ${n.id}.${n.phase} <- ${prev}`);
   }
 
   for (const key of DIMENSIONS) {

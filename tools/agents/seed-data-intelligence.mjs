@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-data-intelligence — Faz B3 (Cowork tek-ajan, swarm yerine).
- * data-intelligence kümesinin 18 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği
+ * data-intelligence kümesinin 18 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği
  * uygular (provenance="swarm"). AI/veri alanı: aiAgents + OWASP LLM Top 10 derinliği vurgulu.
  * Doğrula: node tools/agents/check-content.mjs data-intelligence  (+ npm run typecheck)
  */

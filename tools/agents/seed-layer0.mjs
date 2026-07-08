@@ -2,7 +2,7 @@
 /**
  * seed-layer0 — Faz B16 (Cowork tek-ajan). layer0 (platformun en alt/atomik katmanı: identity, authz, tenancy,
  * schema/metadata motoru, event bus, module/plugin registry, archetype storage, SSO, sharding) kümesinin 11
- * ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Bu katman güvenlik/çok-kiracılık omurgasıdır; üstteki tüm ArcheType'lar buna dayanır.
  * Doğrula: node tools/agents/check-content.mjs layer0  (+ npm run typecheck)
  */
@@ -111,7 +111,7 @@ const CONTENT = {
     ],
     codeOptimization: [
       "Sık sorgulanan alan fiziksel kolona terfi (JSONB'den); GIN indeks esnek alanlar için",
-      "Okuma/yazma tipli erişim katmanı (Prisma); ham SQL sınırlı",
+      "Okuma/yazma katmanı SQLAlchemy 2.0/SQLModel; ham SQL yalnız parametreli ve sınırlı",
       "Sürümler arası okuma adaptörle (lazy upcast)",
     ],
     securityOptimization: [
@@ -160,7 +160,7 @@ const CONTENT = {
       "A08 Integrity: şema migration imzalı/sürümlü",
     ],
     integration: [
-      "ArcheType Depolama, k-schema (metadata), k-tenancy (izolasyon), PostgreSQL/Prisma ile entegre",
+      "ArcheType Depolama, k-schema (metadata), k-tenancy (izolasyon), PostgreSQL + SQLAlchemy/SQLModel + Alembic ile entegre",
       "Üstteki tüm ArcheType verisini saklar",
       "Migration aracı ve CI ile",
     ],

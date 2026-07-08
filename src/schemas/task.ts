@@ -75,8 +75,8 @@ export type PhaseGate = z.infer<typeof PhaseGateSchema>;
 
 /* ----------------------------------------------------------------------------
  * 17 üretim boyutu (14 miras + 3 day-2 operasyon — gap-2026-07-02-06)
- * Miras 14'ün sırası KORUNUR (UI sıralaması + eski JSON'lar bozulmaz);
- * yeni üçlü sona eklenir. Eski düğümler 14 boyutla geçerli kalır (lazy migration).
+ * Miras setin sırası KORUNUR (UI sıralaması + eski JSON'lar bozulmaz);
+ * yeni üçlü sona eklenir. Legacy JSON'lar eksik day-2 boyutları lazy migration ile tamamlar.
  * -------------------------------------------------------------------------- */
 export const LEGACY_DIMENSION_KEYS = [
   "featureDefs", // Özellik tanımları
@@ -123,7 +123,7 @@ export const DIMENSION_META: Record<DimensionKey, { tr: string; icon: string }> 
   reliability: { tr: uiStrings.dimensions.reliability, icon: "ph-shield-plus" },
 };
 
-/* ---- Boyut aileleri (ADR-0027) — 14 boyutu anlamlı kümeleyip "ontoloji yok" boşluğunu kapatır. ---- */
+/* ---- Boyut aileleri (ADR-0027/0028) — 17 boyutu anlamlı kümeleyip "ontoloji yok" boşluğunu kapatır. ---- */
 export const DIMENSION_FAMILIES = [
   "functional",
   "runtime-quality",
@@ -504,7 +504,7 @@ export type TaskNode = z.infer<typeof TaskNodeSchema>;
  * Yardımcılar
  * -------------------------------------------------------------------------- */
 
-/** 14 boyutun iskeletini (boş) üretir. */
+/** 17 üretim boyutunun iskeletini (boş) üretir. */
 export function makeSkeletonDimensions(): Record<DimensionKey, Dimension> {
   const out = {} as Record<DimensionKey, Dimension>;
   for (const key of DIMENSION_KEYS) {

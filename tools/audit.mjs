@@ -37,7 +37,7 @@ const md = [
   "",
   `Üretim: ${new Date().toISOString().slice(0, 10)} · Kaynak: \`tools/audit.mjs\` · Skorlama: \`tools/lib/score.mjs\` (uygulama ile ortak).`,
   "",
-  "Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanabilirlik (0.30)** ağırlıklı bileşik. Düğüm skoru = 14 boyutun ortalaması.",
+  "Her boyut 0-3: **somutluk+benzersizlik (0.45)**, **tamlık (0.25)**, **uygulanabilirlik (0.30)** ağırlıklı bileşik. Düğüm skoru = uygulanabilir 17 üretim boyutunun ortalaması.",
   "",
   "## Özet",
   "",

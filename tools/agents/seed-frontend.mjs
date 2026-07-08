@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-frontend — Faz B11 (Cowork tek-ajan). frontend (FE mimari kararları) kümesinin 14 ŞABLON
- * düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Stack: React + Vite + TanStack + Radix (Next.js/Supabase YASAK — proje kararı).
  * Doğrula: node tools/agents/check-content.mjs frontend  (+ npm run typecheck)
  */
@@ -825,7 +825,7 @@ const CONTENT = {
     ],
     codeOptimization: [
       "Next.js YASAK (server/client sınırı + sık değişim belirsizliği); Vite tercih",
-      "Supabase YASAK; PostgreSQL + Prisma (veri stack kararı)",
+      "Supabase ve Prisma YASAK; backend veri katmanı FastAPI + SQLAlchemy/SQLModel + Alembic + PostgreSQL",
       "Anti-pattern yerine deterministik/AI-dostu alternatif",
     ],
     securityOptimization: [
@@ -876,7 +876,7 @@ const CONTENT = {
     integration: [
       "Anti-stack, fe-locked (kilitli kararlar) ile birlikte FE seçimlerini sınırlar",
       "CI bu yasakları zorlar",
-      "Veri stack kararı (PostgreSQL/Prisma) ile tutarlı",
+      "Veri stack kararı (FastAPI + SQLAlchemy/SQLModel + Alembic + PostgreSQL) ile tutarlı",
     ],
     moduleUsage: [
       "FE Anti-Stack (taş) kullanılmayacakları ve gerekçelerini sabitler",

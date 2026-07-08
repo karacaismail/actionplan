@@ -2,7 +2,7 @@
 /**
  * seed-platform-horizontal — Faz B10 (Cowork tek-ajan). platform-horizontal (yatay platform servisleri:
  * IAM, BPM, Studio, GRC, iPaaS, RPA, i18n, audit, AI governance) kümesinin 14 ŞABLON düğümüne
- * ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs platform-horizontal  (+ npm run typecheck)
  */
 import fs from "node:fs";

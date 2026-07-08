@@ -2,7 +2,7 @@
 /**
  * seed-crosscut — Faz B6 (Cowork tek-ajan). crosscut (kesişen kaygılar: i18n, gizlilik, uyum,
  * gözlemlenebilirlik, güvenlik, jurisdiction) kümesinin 22 ŞABLON düğümüne ELLE yazılmış,
- * sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs crosscut  (+ npm run typecheck)
  */
 import fs from "node:fs";

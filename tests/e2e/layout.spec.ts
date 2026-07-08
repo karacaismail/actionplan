@@ -13,7 +13,7 @@ test("boyut kartları geniş ekranda yan yana (2 sütun grid)", async ({ page })
   await expect(grid).toBeVisible();
 
   const cards = grid.locator("> *");
-  expect(await cards.count()).toBeGreaterThanOrEqual(14);
+  await expect(cards).toHaveCount(17);
 
   const b0 = await cards.nth(0).boundingBox();
   const b1 = await cards.nth(1).boundingBox();

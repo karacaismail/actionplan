@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-supply-chain — Faz B9 (Cowork tek-ajan). supply-chain (tedarik zinciri & lojistik)
- * kümesinin 14 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * kümesinin 14 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs supply-chain  (+ npm run typecheck)
  */
 import fs from "node:fs";

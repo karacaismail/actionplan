@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-finance — Faz B2 (Cowork tek-ajan, swarm yerine).
- * finance kümesinin 17 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular
+ * finance kümesinin 17 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular
  * (provenance="swarm"). finance'te bespoke düğüm yok; tümü derinleştirilir.
  * Doğrula: node tools/agents/check-content.mjs finance  (+ npm run typecheck)
  */

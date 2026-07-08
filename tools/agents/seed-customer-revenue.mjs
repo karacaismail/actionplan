@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-customer-revenue — Faz B8 (Cowork tek-ajan). customer-revenue kümesinin 15 ŞABLON düğümüne
- * ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs customer-revenue  (+ npm run typecheck)
  */
 import fs from "node:fs";

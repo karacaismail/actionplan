@@ -95,10 +95,14 @@ const v = { marker: [], specific: [], format: [], repeat: [], dims: [] };
 const counts = new Map();
 
 for (const n of nodes) {
-  // Lazy migration: miras düğüm 14, yeni/dokunulan düğüm 17 boyut taşır; geçersiz anahtar yasak.
+  // Güncel production data 17 boyut taşır; legacy 14 yalnız import/lazy migration uyumluluğudur.
   const dimKeys = Object.keys(n.dimensions || {});
-  if (!(dimKeys.length === 14 || dimKeys.length === 17) || dimKeys.some((k) => !VALID_KEYS.has(k)))
-    v.dims.push(`${n.id}: ${dimKeys.length} boyut`);
+  if (
+    dimKeys.length !== DIMENSION_KEYS.length ||
+    dimKeys.some((k) => !VALID_KEYS.has(k)) ||
+    DIMENSION_KEYS.some((k) => !dimKeys.includes(k))
+  )
+    v.dims.push(`${n.id}: ${dimKeys.length}/${DIMENSION_KEYS.length} boyut`);
   for (const [key, dim] of filled(n)) {
     // Biçim: 2-5 madde (altın düğümler 2 maddeyle de kaliteli); moduleUsage min 1 (yaprak/app düğümlerde meşru).
     const len = dim.items.length;
@@ -127,7 +131,7 @@ for (const [k, label] of [
   ["specific", "sınır-dışı içerik"],
   ["format", "2-5 madde biçimi"],
   ["repeat", "çapraz tekrar (≥5×)"],
-  ["dims", "14/17 boyut"],
+  ["dims", "17 boyut"],
 ]) {
   const list = v[k];
   console.log(

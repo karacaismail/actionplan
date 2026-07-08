@@ -38,7 +38,7 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 - [i18n-standard.md](i18n-standard.md) — 15. mühendislik standardı: çok-dil/locale/RTL/currency/timezone/tax-legal-localization/data-residency + çeviri iş-akışı + fallback.
 - [ci-conformance-gates.md](ci-conformance-gates.md) — CI conformance kapıları kataloğu (her kapı ne zorlar, hangi dosya).
 - [standards-applicability-matrix.md](standards-applicability-matrix.md) — Hangi standart/boyut hangi WBS seviyesine uygulanır (N/A disiplini).
-- [dimension-migration-runbook.md](dimension-migration-runbook.md) — Lazy migration: default'lu alan yazımı + 445 düğüm güvenliği.
+- [dimension-migration-runbook.md](dimension-migration-runbook.md) — Tarihsel lazy migration runbook'u; güncel 17-boyut sözleşmesi için `dimension-contract-17.md` ve `src/schemas/task.ts` esas alınır.
 - [evidence-taxonomy.md](evidence-taxonomy.md) — Kanıt taksonomisi: ne kanıt sayılır, ne sayılmaz.
 - [prompt-template-library.md](prompt-template-library.md) — Boyut üretim prompt şablonları (vibecoding).
 - [golden-node-examples.md](golden-node-examples.md) — Altın düğüm referans deseni (tüm standardRefs dolu örnek).
@@ -76,8 +76,8 @@ Durum tespiti ve eksik analizleri (zaman damgalı; tarihsel olabilir).
 - [gap-2026-07-02-02-archetype.md](gap-2026-07-02-02-archetype.md) — ArcheType katmanı boşluk raporu: workflow, ledger, order, inventory, messaging ve fixture eksikleri.
 - [gap-2026-07-02-03-surface.md](gap-2026-07-02-03-surface.md) — Surface katmanı boşluk raporu: panel tier, archetypeRef çapraz-kontrolü ve eksik yüzey tipleri.
 - [gap-2026-07-02-05-uygulama-raporu.md](gap-2026-07-02-05-uygulama-raporu.md) — 2026-07-02 uygulama raporu: eklenen yönergeler, kapılar, fixture ve kalan insan-kararı işleri.
-- [work-unit-molecule-gap-claude-vibecoding-2026-07-02.md](work-unit-molecule-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Work unit / molekül yürütülebilirlik gap raporu; güncel handoff için Developer Brief / Agent Prompt exportları kullanılır.
-- [micro-step-atom-gap-claude-vibecoding-2026-07-02.md](micro-step-atom-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Micro step / atom yürütülebilirlik gap raporu; güncel handoff için Developer Brief / Agent Prompt exportları kullanılır.
+- [work-unit-molecule-gap-claude-vibecoding-2026-07-02.md](work-unit-molecule-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Work unit / molekül yürütülebilirlik gap raporu; güncel handoff için Raw JSON, Developer Brief, Agent Prompt, Evidence Patch ve Vobecoder Card exportları kullanılır.
+- [micro-step-atom-gap-claude-vibecoding-2026-07-02.md](micro-step-atom-gap-claude-vibecoding-2026-07-02.md) — Tarihsel Micro step / atom yürütülebilirlik gap raporu; güncel handoff için Raw JSON, Developer Brief, Agent Prompt, Evidence Patch ve Vobecoder Card exportları kullanılır.
 
 ## 7. AI Yönergeleri
 

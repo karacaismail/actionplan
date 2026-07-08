@@ -44,7 +44,7 @@ const PHASES = [
   "release-maintenance",
 ];
 
-// Her düğüm için 14 boyut (düğüme özgü) + 7 faz DoD + PM.
+// Her düğüm için 17 üretim boyutu (düğüme özgü) + 7 faz DoD + PM.
 const SEED = {
   "k-surface": {
     status: "in-progress",

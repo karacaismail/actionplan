@@ -55,11 +55,11 @@ gercek `run:` komutlarindan turetilmistir; takma ad veya uydurma isim yoktur.
 | Check adi (GitHub'a yazilacak) | Tetikleyen komut | Ne dogruluyor |
 | --- | --- | --- |
 | `Tip denetimi` | `npm run typecheck` | TypeScript derleyici hatasi sifir olmali |
-| `Icerik kalite kapisi (node checker)` | `node tools/agents/check-content.mjs` | 422 dusumun hicbiri kalip imzasina veya capraz-tekrara geri donmemeli |
+| `Icerik kalite kapisi (node checker)` | `node tools/agents/check-content.mjs` | 467 düğümün hiçbiri kalıp imzasına veya çapraz-tekrara geri dönmemeli |
 | `Icerik kalite kapisi (vitest)` | `npm run test:content` | `vitest.content.config.ts` altindaki kanonik icerik testleri yesil |
 | `ECA ruleset katalogu kapisi` | `node tools/agents/check-ruleset.mjs` | system-layer dugumleri AI-degistirilemez; maxChainDepth <= 6; layer/category gecerli |
 | `Surface/Workflow katalogu kapisi` | `node tools/agents/check-surface.mjs` | Durum makinesi tutarli (initial/terminal/transition); Workflow'un referans ettigi ECA paketi mevcut |
-| `Kalite kapisi (audit)` | `node tools/quality-lint.mjs` | Golden dugumler (product/customer/s-crm) >= 2.3 skorunda; 14 boyut dolu; swarm kokeni iddiasi esik altina dusmemis |
+| `Kalite kapisi (audit)` | `node tools/quality-lint.mjs` | Golden düğümler (product/customer/s-crm) >= 2.3 skorunda; 17 üretim boyutu dolu; swarm kökeni iddiası eşik altına düşmemiş |
 | `Birim testleri` | `npm test` | `vitest run` (vitest.config.ts) altindaki tum birim testleri yesil |
 | `E2E + axe` | `npm run test:e2e` | Playwright + axe-core; WCAG 2.2 ihlali yok; dev-server tabanli |
 | `Uretim derlemesi` | `npm run build` | Vite build + spa404.mjs tamamlanmali; dist/ uretilmeli |
@@ -311,7 +311,7 @@ body:
   - type: textarea
     id: dimensions
     attributes:
-      label: "Hangi 14 boyut etkilenecek?"
+      label: "Hangi 17 üretim boyutu etkilenecek?"
       placeholder: "featureDefs, security, wcag ... (bos birakabilirsiniz)"
   - type: checkboxes
     id: quality_gate

@@ -2,7 +2,7 @@
 /**
  * seed-core-operations — Faz B1 (Cowork tek-ajan, swarm yerine).
  * core-operations kümesinin 14 ŞABLON e-ticaret/operasyon düğümüne ELLE yazılmış, sayfaya-özel
- * 14 boyut içeriği uygular (provenance="swarm"); 11 CRM/app bespoke düğümünü provenance="human" damgalar.
+ * 17 üretim boyutu içeriği uygular (provenance="swarm"); 11 CRM/app bespoke düğümünü provenance="human" damgalar.
  * Doğrula: node tools/agents/check-content.mjs core-operations  (+ npm run typecheck)
  */
 import fs from "node:fs";

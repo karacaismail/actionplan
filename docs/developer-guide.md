@@ -116,7 +116,7 @@ PR açıklaması zorunlu bölümler:
 
 ### Adım 7 — CI kapilari
 
-Plan reposunda bu kapılar yeşil olmalı: `check-content`, `quality-lint`, `check-data-quality`, `check-waterfall-handoff`, `check-ready-for-dev`, `check-execution-readiness`.
+Plan reposunda lokal eşdeğer kapı `npm run qa:ci`'dır. En sık kullanılan alt kapılar: `qa:content`, `qa:dimensions`, `qa:lint`, `qa:data`, `qa:waterfall`, `qa:ready`, `qa:exec`, `qa:vibecoding`, `qa:flow`.
 Herhangi biri kırmızıysa merge edilmez. Kırmızı kapıyı geç; insan onayı beklemeden önce CI temiz olmalı.
 
 ### Adım 8 — Insan review ve merge

@@ -2,7 +2,7 @@
 /**
  * seed-content-collaboration — Faz B12 (Cowork tek-ajan). content-collaboration (içerik & işbirliği:
  * CMS, DMS, wiki, drive, community, event, survey, social) kümesinin 14 ŞABLON düğümüne
- * ELLE yazılmış, sayfaya-özel 14 boyut içeriği uygular (provenance="swarm").
+ * ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği uygular (provenance="swarm").
  * Doğrula: node tools/agents/check-content.mjs content-collaboration  (+ npm run typecheck)
  */
 import fs from "node:fs";

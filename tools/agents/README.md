@@ -1,6 +1,6 @@
 # Agent Swarm — per-node bespoke içerik üretimi (yerel)
 
-Bu paket, 363 görev düğümünün 14 boyutunu **her düğüme özgü** içerikle dolduran ajan
+Bu paket, generated node setinin 17 üretim boyutunu **her düğüme özgü** içerikle dolduran ajan
 swarm'ını **kendi makinende** (Claude Code ile) çalıştırır.
 
 ## Neden yerel?
@@ -36,7 +36,7 @@ düzenler (izole → çakışma yok). Tüm ajanlar bitince script otomatik `rein
 - Ajanlara `--permission-mode acceptEdits` + `Read/Edit/Write/Bash` verilir. Tam otonomi
   isteniyorsa `claude` çağrısına `--dangerously-skip-permissions` ekleyebilirsin (run-swarm
   içindeki `claudeArgs`).
-- Şema korunur: prompt, 14 boyut + 7 faz anahtarlarını ve kimlik/hiyerarşi alanlarını
+- Şema korunur: prompt, 17 üretim boyutu + 7 faz anahtarlarını ve kimlik/hiyerarşi alanlarını
   değiştirmemeyi şart koşar.
 
 ## Doğrulama (test-önce kapıları)
@@ -44,7 +44,7 @@ Swarm bitince **mutlaka** çalıştır:
 ```bash
 npm run typecheck && npm test && npm run build
 ```
-`npm test` içindeki `dataIntegrity` testi 363 düğümü Zod şemasına karşı doğrular; bozuk
+`npm test` içindeki `dataIntegrity` testi generated node setini Zod şemasına karşı doğrular; bozuk
 üretim varsa kırmızı verir. Yeşilse commit + push → CI Pages'e deploy eder.
 
 ## Loglar

@@ -50,12 +50,9 @@ jobs:
         run: npm run qa:wbs
 
       # İçerik kalite kapısı (Faz F2 — BLOKLAYICI). Önce bağımlılıksız node checker (hızlı, rollup gerekmez),
-      # sonra kanonik vitest testi. 422 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
-      - name: İçerik kalite kapısı (node checker — 422 düğüm)
-        run: node tools/agents/check-content.mjs
-
-      - name: İçerik kalite kapısı (vitest — kanonik)
-        run: npm run test:content
+      # sonra kanonik vitest testi. 467 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
+      - name: İçerik kalite kapısı (node checker + vitest)
+        run: npm run qa:content
 
       # ECA ruleset paket kataloğu kapısı (Küme C — BLOKLAYICI). Katalog şema/güvenlik kurallarını
       # (system katmanı AI-değiştirilemez, maxChainDepth ≤6, layer/category geçerli) zorlar.
@@ -82,18 +79,12 @@ jobs:
       - name: Boyut uygulanabilirliği kapısı (applies=false ⇒ gerekçe)
         run: node tools/agents/check-dimension-applicability.mjs
 
-      # Semantik boyut kapısı (gap-2026-07-02-06 tur 3 — BLOKLAYICI). Dolu dataLifecycle/
+      # Boyut semantiği + weak-content ratchet kapısı (BLOKLAYICI). Dolu dataLifecycle/
       # observability/reliability kartında must+anyOf kavram sözleşmesi: retention+PII,
       # SLO+metrik, failure-mode+idempotency zorunlu. Biçim (2-5 madde) yetmez; anlam aranır.
-      # Ayrıca WARN-ratchet: miras-14 uyarı sayısı baseline'ı aşarsa KIRMIZI.
-      - name: Semantik boyut kapısı (day-2 must+anyOf + WARN-ratchet)
-        run: node tools/agents/check-dimension-semantics.mjs
-
-      # İçerik kalite ratchet kapısı (W1 — BLOKLAYICI). empty-but-not-na / generic /
-      # short-items artamaz; top-40 zayıf node ortalaması düşemez. Konsol özeti rapordur.
-      - name: Weak-content ratchet kapısı
-        run: node tools/agents/check-weak-content.mjs
-
+      # empty-but-not-na / generic / short-items artamaz; konsol özeti rapordur.
+      - name: Boyut semantiği + weak-content ratchet kapısı
+        run: npm run qa:dimensions
       - name: Waiver yaşam döngüsü kapısı (gerekçe + onay + süre)
         run: node tools/agents/check-waivers.mjs
 
@@ -119,30 +110,30 @@ jobs:
         run: node tools/agents/check-core-contract.mjs
 
       # Denetim/kalite kapısı (audit golden + köken iddiası — BLOKLAYICI). Golden düğümler
-      # (product/customer/s-crm) ≥2.3 ve 14 boyut dolu kalmalı; "human/swarm" köken iddialı
+      # (product/customer/s-crm) ≥2.3 ve 17 üretim boyutu dolu kalmalı; "human/swarm" köken iddialı
       # düğümler eşik (2.0) altına düşemez. Skorlama uygulama-içi denetim görünümüyle ortak.
       - name: Kalite kapısı (audit — golden + köken)
-        run: node tools/quality-lint.mjs
+        run: npm run qa:lint
 
       # Veri kalite kapısı (Faz P3 — BLOKLAYICI). owner %100 dolu + geçerli ekip (people.json),
       # dependsOn/blocks/related referans bütünlüğü (dangling yok), dependsOn grafiği DAG (döngü yok).
       - name: Veri kalite kapısı (owner + referans bütünlüğü + DAG)
-        run: node tools/agents/check-data-quality.mjs
+        run: npm run qa:data
 
       # Yürütme hazırlığı kapısı (Faz P5+ — BLOKLAYICI). done=kanıtlı (evidence+verification),
       # dev+ fazdaki düğüm yürütülebilir (owner+refs+schedule+AC), platform izlenebilir (traceability).
       - name: Yürütme hazırlığı kapısı (done-evidence + execution-readiness + platform-traceability)
-        run: node tools/agents/check-execution-readiness.mjs
+        run: npm run qa:exec
 
       # Definition of Ready kapısı (DX — BLOKLAYICI). development fazındaki düğüm repoPath+testCommand+implementationStatus taşımalı.
       - name: Definition of Ready kapısı (ready-for-dev)
-        run: node tools/agents/check-ready-for-dev.mjs
+        run: npm run qa:ready
 
       # Vibecoding/vobecoding handoff kapısı (BLOKLAYICI). Task Detail exportları,
       # implementation workspace manifesti, yasak stack, Agent Prompt, Developer Brief,
       # Evidence Patch ve kısa görev kartı birlikte drift etmeden kalmalı.
       - name: Vibecoding handoff kapısı (export + workspace + docs)
-        run: node tools/agents/check-vibecoding-ready.mjs
+        run: npm run qa:vibecoding
 
       # Waterfall handoff kapısı (BLOKLAYICI). Bu repo ürün kodu değil; enterprise-grade
       # yol haritası ve geliştirici iş tanımı deposudur. Bu kapı tüm düğümlerin owner,
@@ -150,7 +141,7 @@ jobs:
       # geliştiriciye devredilebilir plan tanımı taşımasını zorlar; evidence/repoPath ise
       # yalnız gerçek development/done fazlarında ayrı kapılarla zorlanır.
       - name: Waterfall handoff kapısı (plan tanımı)
-        run: node tools/agents/check-waterfall-handoff.mjs
+        run: npm run qa:waterfall
 
       # Scale-invariant kapısı (ADR-K3 / SCV — BLOKLAYICI). Para/sipariş/stok yazan (financial|order|
       # inventory etiketli) mutasyon sözleşmesi outbox+idempotency zarfını beyan etmeden merge edilemez;
@@ -172,14 +163,8 @@ jobs:
       # "CI'da çalışıyor" diye anlatıyordu ama dosyaları yoktu; şimdi gerçekten çalışıyorlar.
       # event-semantics + state-machine + event, sert-fail yalnız imkansız/yasak durumda; eksik
       # beyan WARN (ratchet). archetype-relation geçersiz kind'da sert-fail, sarkan hedef WARN.
-      - name: Olay anlambilimi kapısı (idempotent-consumer/DLQ + exactly-once yasağı)
-        run: node tools/agents/check-event-semantics.mjs
-
-      - name: İlişki türü kapısı (archetype relation.kind + tree/dag döngü beyanı)
-        run: node tools/agents/check-archetype-relation.mjs
-
-      - name: Durum-makinesi tutarlılık kapısı (status/phase/implementationStatus kayması)
-        run: node tools/agents/check-state-machine-consistency.mjs
+      - name: Akış/semantik tutarlılık kapıları
+        run: npm run qa:flow
 
       # Sır sızıntısı kapısı (gitleaks yerine hafif desen-tabanlı — repo checklist P0'ını kapatır).
       - name: Sır sızıntısı kapısı (PAT/anahtar deseni)

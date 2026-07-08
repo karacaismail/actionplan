@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-hr — Faz B14 (Cowork tek-ajan). hr (İnsan Kaynakları: HRMS, payroll, ATS, performance, LMS,
- * onboarding, workforce) kümesinin 12 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 14 boyut içeriği
+ * onboarding, workforce) kümesinin 12 ŞABLON düğümüne ELLE yazılmış, sayfaya-özel 17 üretim boyutu içeriği
  * uygular (provenance="swarm"). Hassas çalışan PII + SGK/KVKK vurgulu.
  * Doğrula: node tools/agents/check-content.mjs hr  (+ npm run typecheck)
  */

@@ -10,7 +10,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 - **Test-önce**: her faz birim + (gerekliyse) e2e/axe test planıyla başlar; testler kırmızıyken geliştirme yok.
 - **Engine-first**: tüm hesap/mantık `src/engine`'de saf, UI-bağımsız, test edilebilir fonksiyonlarda; UI yalnız tüketir.
 - **JSON-as-DB**: kalıcı durum yalnız JSON + browser-storage override. Yeni alanlar Zod şemasında, geriye uyumlu (default).
-- **Mevcut üstünlükleri koru**: 7-seviye WBS, 14 boyut prompt blokları, ECA/agentPolicy yönetişimi, audit skoru, export/import.
+- **Mevcut üstünlükleri koru**: 7-seviye WBS, 17 üretim boyutu prompt blokları, ECA/agentPolicy yönetişimi, audit skoru, export/import.
 - **Kimlik tezi**: genel Jira/ClickUp klonu olma; "AI ajanlarını büyük bir WBS üzerinde yöneten tek planlayıcı" için en iyi araç ol.
 - **Erişilebilirlik**: WCAG 2.2 AAA; ≥1rem metin, ≥44px dokunma hedefi, ≥7:1 kontrast, tam klavye; Roboto ≥300; Phosphor ikon; emoji yok.
 - **CI kapıları**: her faz typecheck + birim + içerik kalite + quality-lint + e2e/axe + build kapılarını yeşil bırakır (bloklayıcı).
@@ -273,7 +273,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 **Amaç:** Sistemin rakipsiz olduğu AI-üretim/denetim döngüsünü ürünleştirmek. Burada Jira/ClickUp paritesi değil, **fark yaratma** hedeflenir.
 
 ### 7A — AI ajan köprüsü
-- Her görevin 14 boyut **prompt bloğu** → bir vibecoding ajanına (yerel `claude -p` / harici) gönderilir; çıktı **draft** olarak ArcheType admin akışına girer: `prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply`.
+- Her görevin 17 üretim boyutu **prompt bloğu** → bir vibecoding ajanına (yerel `claude -p` / harici) gönderilir; çıktı **draft** olarak ArcheType admin akışına girer: `prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply`.
 - Güvenlik sınırı (mevcut `evaluateAgentPolicy`): AI yalnız ArcheType taslağı/öneri; app/module üretemez, ruleset override edemez, doğrudan prod write yok. Köprü bu kapıdan geçer.
 - Test-önce: `agentBridge.test.ts` — istek/yanıt sözleşmesi, policy reddi, draft→diff üretimi (gerçek model çağrısı mock'lanır).
 
@@ -306,4 +306,3 @@ Cowork içi alt-ajanlar oturum-içi yoldur; **ürün/CI yolunda** ajan koşumu k
 **Riskler:** (a) paylaşılan dosyalarda paralel ajan çakışması → fazlar arası dosya sahipliği netleştirilir, ajanlar izole node/util dosyalarında çalışır; (b) 424 satır tablo/Gantt performansı → sanallaştırma/scope; (c) çok-kullanıcılı gerçek senaryolar backend ister → bilinçli kapsam dışı (assignee yalnız veri).
 
 **Dogfooding (öneri):** Bu 8 fazı, aracın KENDİ WBS'ine düğüm olarak ekle (her faz = archetype/feature, alt adımlar = component/work_unit) → araç kendi geliştirme planını yönetir, audit/yürütme/Gantt görünümlerini kendi yol haritasıyla test eder.
-

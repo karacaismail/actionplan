@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * fill-dimensions — İSKELET düğümlerin 14 boyutunu + 7 fazını + PM alanlarını
+ * fill-dimensions — İSKELET düğümlerin 17 üretim boyutuunu + 7 fazını + PM alanlarını
  * cluster/seviye-duyarlı, somut, kurumsal TR içerikle doldurur (merkezî generator deseni).
  * Zaten dolu (bespoke) düğümlere DOKUNMAZ. Eski projedeki uretim.mjs felsefesi:
  * %100 kapsama generator'dan; per-node derinlik sonradan overlay/ajanla.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * seed-scale — Faz B4 (Cowork tek-ajan). scale kümesinin 19 ŞABLON düğümüne ELLE yazılmış,
- * desene-özel 14 boyut içeriği uygular (provenance="swarm"). Backend ölçek primitifleri.
+ * desene-özel 17 üretim boyutu içeriği uygular (provenance="swarm"). Backend ölçek primitifleri.
  * Doğrula: node tools/agents/check-content.mjs scale  (+ npm run typecheck)
  */
 import fs from "node:fs";

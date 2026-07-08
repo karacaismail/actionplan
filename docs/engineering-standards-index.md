@@ -7,7 +7,7 @@ Durum: Kanonik hub. Mühendislik standardı işletim katmanının (ADR-0027) tek
 
 ## Önsöz — Bu Dizin Neden Var
 
-actionplan'da her WBS düğümü 14 üretim boyutu (`featureDefs`, `security`, `wcag`, `testing` ...) taşır. Bu boyutların neredeyse tamamı "**çalışma-zamanı/ürün/operasyon**" eksenindedir: ürünün ne yaptığını ve çalışırken hangi kaliteyi sağladığını tarif eder. Eksik olan eksen şudur: "**bu düğüm hangi mühendislik standardıyla üretilecek?**" — kodlama disiplini, SOLID, kısa-kod, tasarım sistemi, UI/UX sözleşmesi, veri/API kontratı, state, kalite kapısı, gözlemlenebilirlik, sürümleme, AI yönetişimi, çok-dil/yerelleştirme.
+actionplan'da her WBS düğümü 17 üretim boyutu (`featureDefs`, `security`, `wcag`, `testing`, `dataLifecycle`, `observability`, `reliability` ...) taşır. Bu boyutların neredeyse tamamı "**çalışma-zamanı/ürün/operasyon**" eksenindedir: ürünün ne yaptığını ve çalışırken hangi kaliteyi sağladığını tarif eder. Eksik olan eksen şudur: "**bu düğüm hangi mühendislik standardıyla üretilecek?**" — kodlama disiplini, SOLID, kısa-kod, tasarım sistemi, UI/UX sözleşmesi, veri/API kontratı, state, kalite kapısı, gözlemlenebilirlik, sürümleme, AI yönetişimi, çok-dil/yerelleştirme.
 
 ADR-0027 bu boşluğu **kart ekleyerek değil, işletim katmanı kurarak** kapatır. 12+ yeni serbest-metin boyut kartı eklemek UI'ı şişirir ve drift üretir (bir düğüm "Tailwind", diğeri "SCSS" der). Bunun yerine her standart **tek-kaynak makine-okunur bir sözleşmedir**; düğüm o sözleşmeye yalnızca **referans** verir. Bu dizin o sözleşmelerin haritasıdır.
 
@@ -21,13 +21,13 @@ ADR-0027'nin getirdiği ayrım, her düğümün taşıdığı bilgiyi üç ayrı
 
 | Grup | Ne içerir | Düğümdeki karşılığı | Niteliği |
 |---|---|---|---|
-| (1) Product/Runtime | Mevcut 14 üretim boyutu — ürün ne yapar, çalışırken hangi kaliteyi sağlar | `dimensions[<key>]` (14 anahtar) | Boyut (serbest-metin + prompt) |
+| (1) Product/Runtime/Operations | Mevcut 17 üretim boyutu — ürün ne yapar, çalışırken hangi kaliteyi sağlar | `dimensions[<key>]` (17 anahtar) | Boyut (serbest-metin + prompt) |
 | (2) Engineering Standards | 15 tek-kaynak standart sözleşmesi — düğüm hangi mühendislik kuralıyla üretilir | `standardRefs.<...>Ref` (15 ref) | Referans (boyut değil) |
 | (3) Governance & Evidence | Uygulanabilirlik, sapma kayıtları, kanıt — kural bu düğüme uygulanıyor mu, kanıtı ne | `applicability`, `waivers[]`, `evidence[]` | Yönetişim katmanı |
 
 Grup (1) içeriği düğümün kendisinde yaşar ve düğüme özgüdür. Grup (2) içeriği `src/data/standards/<id>.json` dosyalarında **tek kez** yaşar; düğüm yalnızca anahtarla bağlanır. Grup (3) düğüm ile standart arasındaki ilişkiyi yönetir: bir boyut uygulanmıyorsa gerekçesini (`applicability`), bir standarttan bilinçli sapılıyorsa onaylı+süreli kaydını (`waivers`), bir faz kapısının kanıtını (`evidence`) taşır.
 
-Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; bu nedenle 445 düğüm dosyaya dokunulmadan parse olur (**lazy migration** — dosya yalnız değer atanınca yazılır).
+Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; güncel generated data `src/data/generated/meta.json` sayımına göre 467 düğüm taşır ve dosya yalnız değer atanınca yazılır (**lazy migration**).
 
 ---
 

@@ -69,13 +69,13 @@ describe("üretilmiş veri seti", () => {
     expect(meta.counts.total).toBe(nodes.length);
   });
 
-  it("her düğümün 14 (miras) veya 17 boyutu ve 7 fazı var; tüm anahtarlar geçerli", () => {
-    // Lazy migration: eski düğümler 14 boyutla geçerli kalır (toplu rewrite YOK);
-    // yeni/dokunulan düğümler 17 taşır. Geçersiz anahtar hiçbir düğümde olamaz.
+  it("her düğümün 17 üretim boyutu ve 7 fazı var; tüm anahtarlar geçerli", () => {
+    // Legacy 14 boyut parse uyumluluğu şema/import katmanındadır; production generated data exact 17 taşır.
     const valid = new Set<string>(DIMENSION_KEYS);
     for (const n of nodes) {
       const keys = Object.keys(n.dimensions);
-      expect([14, 17]).toContain(keys.length);
+      expect(keys).toHaveLength(DIMENSION_KEYS.length);
+      expect(new Set(keys)).toEqual(valid);
       expect(keys.filter((k) => !valid.has(k))).toEqual([]);
       expect(Object.keys(n.phases)).toHaveLength(7);
     }
