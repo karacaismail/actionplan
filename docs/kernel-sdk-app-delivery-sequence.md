@@ -146,5 +146,6 @@ Gelistirici veya ajan su durumda kod baslatmaz:
 - `docs/task-to-code-contract.md` — seviye/faz master sozlesmesi.
 - `docs/core-contract-pack.md` — kernel ve module SDK sozlesmesi.
 - `docs/implementation-workspace-manifest.md` — implementation checkout ve kok dizinler.
+- `docs/meta-framework-implementation-development-plan.md` — bu teknik siranin wave/PR/evidence kuyrugu.
 - `docs/app-distribution-contract.md` — bagimsiz satilabilir app sozlesmesi.
 - `docs/waterfall-developer-handoff.md` — plan-start/code-start ayrimi.

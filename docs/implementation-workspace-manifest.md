@@ -27,7 +27,7 @@ Makine-okunur kaynak: `src/data/workspace-manifest.json`
 | varsayılan branch | `master` |
 | çalışma branch deseni | `task/<task-id>-<slug>` |
 
-2026-07-08 salt-okunur doğrulamasında checkout mevcuttur, aktif branch `master` görünmüştür ve `git remote -v` boş dönmüştür. Bu checkout'ta uzak GitHub remote'u kanıtlanmadığı için exportlar repo URL'si uydurmaz. Bir ajan veya geliştirici bu bilgiyi değiştirmeden önce gerçek `git status --short --branch` ve `git remote -v` çıktısıyla doğrulamalıdır.
+2026-07-08 salt-okunur doğrulamasında checkout mevcuttur, aktif branch `master` görünmüştür ve `git remote -v` boş dönmüştür. 2026-07-09 W0.1 audit sonucu `docs/platform-repo-reality-audit-2026-07-09.md` içinde belgelenmiştir. 2026-07-09 W0.2 readiness gap sonucu `docs/platform-cicd-readiness-gap-2026-07-09.md` içinde belgelenmiştir: CI/deploy workflow dosyaları yerelde vardır, fakat remote, branch protection ve CI run URL'si kanıtlanmış değildir. Bu checkout'ta uzak GitHub remote'u kanıtlanmadığı için exportlar repo URL'si uydurmaz. Bir ajan veya geliştirici bu bilgiyi değiştirmeden önce gerçek `git status --short --branch` ve `git remote -v` çıktısıyla doğrulamalıdır.
 
 ---
 
@@ -43,7 +43,7 @@ Makine-okunur kaynak: `src/data/workspace-manifest.json`
 
 Task exportlarında `traceability.repoPath` boşsa kod yazmaya başlanmaz. Önce ilgili kök altında gerçek hedef yol belirlenir ve Evidence Patch veya plan verisi güncellenir.
 
-Teknik teslim sırası için `docs/kernel-sdk-app-delivery-sequence.md` esas alınır: kernel hazır olmadan SDK, SDK hazır olmadan app-core, app-core hazır olmadan app module development başlatılmaz.
+Teknik teslim sırası için `docs/kernel-sdk-app-delivery-sequence.md` esas alınır: kernel hazır olmadan SDK, SDK hazır olmadan app-core, app-core hazır olmadan app module development başlatılmaz. Bu checkout'ta izlenecek wave/PR/evidence kuyruğu `docs/meta-framework-implementation-development-plan.md` içindedir.
 
 ---
 

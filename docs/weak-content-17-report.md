@@ -1,4 +1,4 @@
-# Zayıf İçerik Raporu — 17 Boyut (2026-07-08)
+# Zayıf İçerik Raporu — 17 Boyut (2026-07-09)
 
 Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + completeness 0.25 + applicability 0.30). Şema/kavram ihlali değildir; onlar ayrı kapılardadır. Üretici: `node tools/agents/report-weak-content.mjs`.
 

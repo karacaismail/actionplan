@@ -135,7 +135,10 @@ Deploy/doğrulama ve kanıt tamamlandıysa:
 2. `src/data/generated/nodes/<task-id>.json` dosyasını düzenle.
 3. `refs[]`, `evidence[]`, `traceability`, `schedule.actualStart/actualEnd` alanlarını gerçek kanıtla güncelle.
 4. `npm run gen:reindex` çalıştır.
-5. `npm run qa:waterfall`, `npm run qa:ready`, `npm run qa:exec`, `npm run test:content` çalıştır.
+5. Evidence writeback doğrulama zincirini çalıştır:
+   `npm run qa:data`, `npm run qa:exec`, `npm run qa:ready`, `npm run qa:waterfall`,
+   `npm run qa:content`, `npm run qa:dimensions`, `npm run qa:vibecoding`,
+   `node tools/agents/check-secrets.mjs`, `npm run qa:ci`.
 6. Commit ve PR aç.
 7. CI yeşil + insan onayı sonrası merge et.
 
@@ -187,7 +190,8 @@ Main'e doğrudan push normal akışta yasaktır. Yalnız repo sahibi bilinçli b
 - [ ] `traceability.repoPath[]`, `testCommand[]`, `deployTarget`, `implementationStatus` güncellendi.
 - [ ] `schedule.actualStart` ve `schedule.actualEnd` gerçek tarihlerle doldu.
 - [ ] `npm run gen:reindex` çalıştı.
-- [ ] `qa:waterfall`, `qa:ready`, `qa:exec`, `test:content` yeşil.
+- [ ] Evidence writeback doğrulama zinciri yeşil: `qa:data`, `qa:exec`, `qa:ready`, `qa:waterfall`, `qa:content`, `qa:dimensions`, `qa:vibecoding`, `check-secrets`, `qa:ci`.
+- [ ] Meta-framework implementation işleri için `docs/meta-framework-implementation-development-plan.md` içindeki `pr`, `commit`, `ci`, `test-log`, `deploy/smoke`, `rollback`, `manual-review` kanıt seti tamamlandı.
 
 ## Sık Hatalar
 

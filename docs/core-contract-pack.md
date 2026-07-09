@@ -43,6 +43,8 @@ Kernel sözleşmesi önce gelir. Platform geliştirme hattı `docs/kernel-sdk-ap
 
 Bu pack kernel ve Module SDK sözleşmelerinin kaynağıdır. SDK, bu public sözleşmelerden türetilir. App-core module, SDK hazır olmadan production koduna başlamaz. App'in diğer module'leri, app-core module hazır olmadan development'a alınmaz.
 
+Bu sözleşmelerin implementation reposunda hangi wave/PR/evidence sırasıyla yürütüleceği `docs/meta-framework-implementation-development-plan.md` içinde tanımlıdır.
+
 ---
 
 ## 2. Kernel Sözleşmeleri
@@ -660,6 +662,7 @@ Kural: negatif test (yetkisiz erişim, geçersiz tenant) her pozitif test kadar 
 ## 4. "Hello Platform" — Minimum Çalışan İskelet
 
 Bu bölüm, platform'u sıfırdan ayağa kaldırmak için minimum bileşenleri tarif eder. Dosya oluşturulmaz; ne yapılacağı açıklanır.
+Operasyonel yürütme sırası için `docs/meta-framework-implementation-development-plan.md` içindeki Wave 0 ve PR-01..PR-10 kuyruğu esas alınır.
 
 ### Adım 1. Repo ve Paket Yapısı
 

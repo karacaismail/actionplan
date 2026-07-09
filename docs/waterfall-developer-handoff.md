@@ -82,7 +82,7 @@ Code-start yalnız faza bakmaz; platformun doğum sırasına da uyar. Bağlayıc
 4. App'in ihtiyacı olan diğer module'ler.
 5. App assembly / release train.
 
-Bu sıra `docs/kernel-sdk-app-delivery-sequence.md` içinde kanoniktir. Kernel sözleşmesi hazır değilse SDK development başlatılmaz. SDK hazır değilse app-core production kodu yazılmaz. App-core hazır değilse app'in diğer module'leri development'a alınmaz. App düğümü doğrudan kod yazma yeri değildir; app assembly yalnız hazır module'leri paketler.
+Bu sıra `docs/kernel-sdk-app-delivery-sequence.md` içinde kanoniktir. Kernel sözleşmesi hazır değilse SDK development başlatılmaz. SDK hazır değilse app-core production kodu yazılmaz. App-core hazır değilse app'in diğer module'leri development'a alınmaz. App düğümü doğrudan kod yazma yeri değildir; app assembly yalnız hazır module'leri paketler. Bu teknik sıranın operasyonel PR kuyruğu `docs/meta-framework-implementation-development-plan.md` içinde tutulur.
 
 ## Done Kapısı
 

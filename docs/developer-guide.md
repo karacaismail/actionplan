@@ -62,6 +62,8 @@ Görev bulma sırası ile platformun teknik doğum sırası karıştırılmaz. P
 
 Bu sıranın ayrıntısı `docs/kernel-sdk-app-delivery-sequence.md` içindedir. App düğümü kod yazma yeri değildir; app-core module ve app module'leri implementation reposunda, task-to-code sözleşmesinin izin verdiği archetype ve alt seviyelerde kodlanır.
 
+Meta-framework vizyonunu gerçek yazılıma çevirecek wave/PR/evidence kuyruğu `docs/meta-framework-implementation-development-plan.md` içindedir. Bu kuyruk actionplan içinde kod yazma izni vermez; implementation geliştiricisinin `platform` reposunda hangi sırayla PR açacağını ve hangi kanıtla kapatacağını tanımlar.
+
 ---
 
 ## 3. Yürütme Döngüsü
@@ -267,6 +269,7 @@ Bu rehber, actionplan ekosisteminin genel bakışıdır. Ayrıntılar için:
 | `docs/task-to-code-contract.md` | Görev JSON alanı ile kod konumu / test türü eşlemesi |
 | `docs/doc-maintainer-operating-boundary.md` | actionplan doc-maintainer rol sınırı: dokümantasyon bakım işi ile implementation coding ayrımı |
 | `docs/kernel-sdk-app-delivery-sequence.md` | Kernel → SDK → app-core → app module → app assembly teslim sırası |
+| `docs/meta-framework-implementation-development-plan.md` | Meta-framework implementation için wave/PR/evidence kuyruğu |
 | `docs/core-contract-pack.md` | Platform core katmanının mimari sözleşmesi |
 | `docs/task-export-contract.md` | Developer Brief export JSON şeması |
 | `docs/evidence-update-runbook.md` | PR merge sonrası kanıtı plana geri yazma ritüeli |
