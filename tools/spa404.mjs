@@ -21,13 +21,36 @@ function markdownRoutes(root, current = root) {
   return routes;
 }
 
+const TASK_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+function taskRoutes(nodeDir) {
+  if (!fs.existsSync(nodeDir)) return [];
+
+  const routes = [];
+  const seen = new Set();
+  for (const file of fs
+    .readdirSync(nodeDir)
+    .filter((name) => name.endsWith(".json"))
+    .sort()) {
+    const node = JSON.parse(fs.readFileSync(path.join(nodeDir, file), "utf8"));
+    const id = node?.id;
+    if (typeof id !== "string" || !TASK_ID.test(id))
+      throw new Error(`[spa404] geçersiz task id: ${file} -> ${JSON.stringify(id)}`);
+    if (seen.has(id)) throw new Error(`[spa404] duplicate task id: ${id}`);
+    seen.add(id);
+    routes.push(`task/${id}`);
+  }
+  return routes;
+}
+
 if (fs.existsSync(src)) {
   fs.copyFileSync(src, dst);
   console.log("[spa404] dist/404.html oluşturuldu.");
 
   const docsDir = path.resolve(process.cwd(), "docs");
   const docRoutes = fs.existsSync(docsDir) ? markdownRoutes(docsDir) : [];
-  const staticRoutes = Array.from(new Set(["docs", ...docRoutes]));
+  const nodeDir = path.resolve(process.cwd(), "src/data/generated/nodes");
+  const staticRoutes = Array.from(new Set(["docs", ...docRoutes, ...taskRoutes(nodeDir)]));
 
   for (const route of staticRoutes) {
     const routeDir = path.join(dist, route);
