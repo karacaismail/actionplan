@@ -205,7 +205,7 @@ describe("export/import round-trip", () => {
     expect(brief).toContain("https://karacaismail.github.io/actionplan/task/customer-graphql");
   });
 
-  it("agent prompt kod ajanı için izinli yol, yasak stack ve branch sözleşmesini taşır", () => {
+  it("agent prompt directive-only, salt-okunur hedef ve insan branch önerisini taşır", () => {
     const n = node({
       id: "customer-ui",
       title: "Customer UI",
@@ -228,12 +228,16 @@ describe("export/import round-trip", () => {
     const prompt = exportAgentPrompt(n, idx);
 
     expect(prompt).toContain("# Agent Task Contract");
+    expect(prompt).toContain("DIRECTIVE-ONLY");
+    expect(prompt).toContain("Do not modify the platform workspace");
     expect(prompt).toContain("Code-start verdict: GO for code-start");
     expect(prompt).toContain("`apps/web/routes/customer`");
     expect(prompt).toContain(
       "Do not use forbidden stack: Next.js, Supabase, Prisma, Redux, Flowbite.",
     );
-    expect(prompt).toContain("Create branch `task/customer-ui-customer-ui`");
+    expect(prompt).toContain(
+      "Recommend human branch `task/customer-ui-customer-ui`; do not create it",
+    );
     expect(prompt).toContain("https://karacaismail.github.io/actionplan/task/customer-graphql");
   });
 

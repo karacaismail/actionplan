@@ -1,9 +1,9 @@
 # Task-to-Code Sözleşmesi — WBS Düğümünün Yazılım-Teslimat Karşılığı
 
-**Sürüm:** 1.0 · **Tarih:** 2026-06-29  
+**Sürüm:** 1.1 · **Tarih:** 2026-07-13
 **Durum:** Kanonik, bağlayıcı — bu dokümanla çelişen her yönerge geçersizdir.  
 **Kapsam:** actionplan'daki her WBS düğümü + 7 waterfall fazı.  
-**Aktörler:** Kullanıcı/Admin (insan), AI ajan (swarm), CI (GitHub Actions), Geliştirici.
+**Aktörler:** Kullanıcı/Admin, insan geliştirici, AI directive ajanı, CI. Platform ürün kodu yazarı `human-developer-only`dır.
 
 ---
 
@@ -12,6 +12,11 @@
 actionplan bir WBS planlayıcısıdır; kod actionplan'da değil, `platform` monoreposundadır. Bu iki dünya arasındaki köprü kurulmadığında şu yanlış anlaşılma kaçınılmaz olur: geliştirici bir görev sayfası açar, sayfada "Customer Veri Modeli" yazar, ne yapacağını bilemez. Kod mu yazacak? Toplantı mı? PR mi açacak?
 
 Bu sözleşme şunu netleştirir: bir düğümün hangi seviyede olduğu ve o anda hangi waterfall fazında bulunduğu, geliştiricinin atacağı sonraki adımı tek satırla belirler. Tahmin yoktur, soru işareti yoktur.
+
+Aktör kilidi: Bu belgedeki “kod yazılır”, “branch açılır”, “test oluşturulur” ve “PR”
+eylemlerinin tamamı insan geliştiriciye aittir. Codex, Claude, Cursor ve diğer AI ajanları
+platformu yalnız `read-only-audit` eder; actionplan içinde `DIRECTIVE-ONLY` handoff üretir.
+Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`.
 
 Temel ayrımı baştan koy: app ve module düğümleri kapsam ve sözleşme yöneticisidir, kod yazan değil. archetype ve altı somut kod + test görevidir.
 
@@ -53,6 +58,8 @@ Seviye/faz karar ağacının üstünde bir teknik teslim sırası daha vardır. 
 
 Bu sıra `docs/kernel-sdk-app-delivery-sequence.md` içinde bağlayıcı olarak tanımlıdır. Bu doküman seviye/faz master sözleşmesi olmaya devam eder; sequence dokümanı bu sözleşmenin teknik teslim sırası eklentisidir.
 
+URL/route üreten veya tüketen her teslimat ayrıca `standardRefs.urlPolicyRef = "url-policy"` bağını ve `src/data/url-policy/registry.json` içindeki seviye yükümlülüğünü miras alır: app namespace/mount, module sahipli RouteContribution, archetype resource-kind/exposure, feature route/capability, component tipli RouteRef, work_unit tek resolver davranışı, micro_step tek negatif invariant üretir. Bu kurallar düğümlere metin olarak kopyalanmaz.
+
 Sonuç: app sayfasından doğrudan kod yazılmaz; app-core module hazır olmadan app module development başlatılmaz; SDK hazır olmadan app-core production kodu yazılmaz; kernel sözleşmesi hazır olmadan SDK üretilmez.
 
 ---
@@ -72,6 +79,10 @@ Faz sırası zorunludur; `phases[<önceki_faz>].passed === true` olmadan sonraki
 | test-qa | E2E (Playwright) testlerini çalıştırır ve kanıtı `evidence[]`'a ekler. Güvenlik taraması (OWASP ZAP), performans testi (p95 < hedef), a11y taraması (axe-core 0 ihlal) çalıştırır. Her kanıt URL veya rapor olarak kaydedilir. | Yeni özellik ekler. Şema değişikliği yapar. Eksik testi görmezden gelir. |
 | verification | Staging deploy'unu doğrular. `deployTarget` üzerinde smoke testini çalıştırır. Evidence tamamlığını kontrol eder. Güvenlik ve WCAG kriterlerinin karşılandığını onaylar. Faz kapısını geçirir (`phases["verification"].passed = true`). | Yeni kod ekler. Testi atlar. Eksik kanıtla kapıyı geçirir. |
 | release-maintenance | Prod deploy'u gerçekleştirir. Audit log ve rollback prosedürünü test eder. Runbook'u günceller. Bağımlılık güvenlik taramasını çalıştırır (npm audit / pip-audit). On-call rotasyonunu belgeler. | Önceki fazlarda yapılmamış işleri burada tamamlamaya çalışır. |
+
+### UI / Master Component görevlerinde faz teslimatları (Storybook eki)
+
+UI kapsamındaki düğümlerde yukarıdaki tabloya şu teslimatlar eklenir (`docs/storybook-implementation.md` §5 ile hizalı): **requirements** = Master/local component kararı + component envanteri + non-goals (eksik component sınırıyla test-plan başlamaz); **test-plan** = story matrisi planı + interaction/a11y/visual test listesi + viewport/locale/theme fixture kararları (story/test planı koddan önce review edilir); **development** = component + stories birlikte, önce başarısız interaction/a11y story testi (story'siz Master Component merge edilemez); **test-qa** = story test runner + story axe + visual regression + responsive/i18n matrisi yeşil; **verification** = yayınlanmış Storybook preview URL'i + insan review kaydı (evidence olmadan UI doğrulanmış sayılmaz); **release-maintenance** = component semver/changelog + deprecated/migration story'leri (breaking API migration rehbersiz yayınlanmaz).
 
 ### Faz kapısı nedir
 

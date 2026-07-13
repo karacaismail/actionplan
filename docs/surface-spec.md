@@ -2,6 +2,8 @@
 
 Sürüm: 1.0 — 2026-07-01
 Durum: Kanonik. Surface (yüzey) katmanının bağlayıcı sözleşme dokümanı. Çelişen her tanımı geçersiz kılar.
+
+URL bağı: Her Surface, serbest path stringi yerine `src/data/url-policy/registry.json` içinde çözülen `routeRef`, `surfaceClass`, `renderer`, `accessPolicyRef`, `cachePolicyRef`, `indexabilityPolicyRef` ve `localePolicyRef` taşır. Component ve view URL birleştiremez; `standardRefs.urlPolicyRef = "url-policy"` merkezi sözleşmesini tüketir. Ayrıntıların tek otoritesi `docs/url-policy.md`dir.
 Kaynak: `src/schemas/surface.ts`, `k-surface`, `k-surface-consumer`, `k-control-planes`, `geo-map-surface`, ADR-0026 (tech-profiles), ADR-0027 (mühendislik standartları) · Eleştiri temeli: `elestiri-03-surface-2026-07-01.md`, `mrp-surface-2026-07-01.md`.
 
 Bu doküman **plan+sözleşme** katmanına aittir. Yüzeyleri **çizmez** (wireframe/ASCII yok); her yüzey tipini **bileşen + davranış + sözleşme** olarak tanımlar. Ürün kodu `platform` reposunda yazılır; burada ne yazılacağının normatif kuralı belirlenir.
@@ -265,5 +267,14 @@ Aşağıdaki kararlar bu spesifikasyondan türer ve ayrı ADR (Architecture Deci
 - **Custom render denetim kaçağı:** `renderStrategy: custom` yönetişimi koruma sözü verir; CI custom yüzeylerde de izin/audit/i18n/a11y'yi gerçekten zorluyor mu — kapı kapsamı doğrulanmalı.
 
 ---
+
+## Surface × Master Component / Storybook bağı
+
+Her Surface tipi, Master Component'lerin bir kompozisyonudur; bu bağ Storybook'ta görünür ve test edilir olmalıdır (`docs/storybook-implementation.md` §3; `ui-components.json` v1.1):
+
+- **Referans zorunluluğu:** her Surface tanımı, tükettiği Master Component'leri referanslar (ör. `list`/`table` → DataTable + FilterBar + BulkActions; `dashboard`/`report` → MetricCard + DataGrid; `form`/`wizard` → FormField + MoneyInput + DateRangeInput; `board` → kart/kolon bileşenleri). Surface, katalogda olmayan kopya bileşen üretemez.
+- **Composition story:** her Surface tipi için Storybook'ta en az bir composition story bulunur — Surface story'si Master Component'leri gerçek yerleşimle kompoze eder; ürün/tenant iş kuralı Surface story'sine gömülmez, fixture/args ile verilir.
+- **Yön kuralı:** Master Component story'si Surface'ten bağımsızdır (izole sözleşme); Surface story'si component'lere bağımlıdır (kompozisyon). Ters bağımlılık (component story'sinin Surface'e ihtiyaç duyması) anti-pattern'dir.
+- **E2E paritesi:** Surface composition story'si Playwright E2E'nin yerine geçmez; story kompozisyonu ve E2E yolculuğu ayrı kapılardır (storybook-ci + gate-e2e-axe-zero).
 
 *Bağlı dokümanlar: `elestiri-03-surface-2026-07-01.md` (bu spesifikasyonun analiz temeli) · `mrp-surface-2026-07-01.md` (Shop-Surface gerekçesi) · ADR-0026 (tech-profiles; `techProfileRef`) · ADR-0027 (mühendislik standartları; design-system/ux-interaction/ui-components) · `docs/ci-conformance-gates.md` (CI kapıları) · `docs/adr-geo-visualization.md` (`map-live` / `geo-map-surface` custom örneği). Bağlı düğümler: `k-surface`, `k-surface-consumer`, `k-control-planes`, `geo-map-surface`.*

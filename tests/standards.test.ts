@@ -48,6 +48,7 @@ describe("yeni standart ref anahtarları — kanonik id çözümü", () => {
     c13nRef: "c13n",
     c12nRef: "c12n",
     i18nRef: "i18n-standards",
+    urlPolicyRef: "url-policy",
   };
 
   it.each(Object.entries(REF_KEY_TO_STANDARD))(

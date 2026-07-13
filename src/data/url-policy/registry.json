@@ -1,0 +1,443 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "k-route-policy",
+  "version": "2.1.0",
+  "status": "active",
+  "canonicalDoc": "docs/url-policy.md",
+  "implementationProgramRef": "src/data/url-policy/implementation-program.json",
+  "standardRef": "url-policy",
+  "defaults": {
+    "workspaceTopology": "tenant-subdomain-suite-path",
+    "privatePiiTemplate": "/{app}/{collection}/{typedId}",
+    "publicTemplate": "/{locale}/{mount?}/{collection}/{typedId}/{asciiSlug}",
+    "graphqlPath": "/graphql",
+    "publicLocaleMode": "prefix-always",
+    "publicSlugProfileRef": "public-ascii-v1",
+    "unknownResourceExposure": "restricted"
+  },
+  "reservedNamespaces": [
+    "/api",
+    "/graphql",
+    "/auth",
+    "/admin",
+    "/assets",
+    "/static",
+    "/webhooks",
+    "/.well-known",
+    "/apps",
+    "/t"
+  ],
+  "invariants": [
+    "Internal dbId URL, API ve export yüzeyine çıkmaz.",
+    "Private PII canonical yalnız typedId taşır.",
+    "Public canonical locale ve typedId taşır; slug dekoratiftir.",
+    "Bilinmeyen resource restricted kabul edilir.",
+    "Unknown host ve tenant uyuşmazlığı fail-closed sonuçlanır.",
+    "Tenant RouteDefinition semantiğini değiştiremez.",
+    "Unsafe HTTP method SEO redirect zincirine girmez.",
+    "Frontend ve backend aynı RouteRef/registry sürümünü tüketir.",
+    "ASCII ve Unicode varyant birlikte 200 dönmez.",
+    "String URL birleştirme yerine tipli RouteRef kullanılır."
+  ],
+  "resourceKinds": [
+    {
+      "kind": "person",
+      "prefix": "p_",
+      "ownerBoundedContext": "party",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "restricted",
+      "slugPolicy": "none"
+    },
+    {
+      "kind": "user",
+      "prefix": "usr_",
+      "ownerBoundedContext": "identity",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "restricted",
+      "slugPolicy": "none"
+    },
+    {
+      "kind": "employment",
+      "prefix": "emp_",
+      "ownerBoundedContext": "employment",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "restricted",
+      "slugPolicy": "none"
+    },
+    {
+      "kind": "organization",
+      "prefix": "org_",
+      "ownerBoundedContext": "party",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "internal-readable",
+      "slugPolicy": "optional-decorative"
+    },
+    {
+      "kind": "company",
+      "prefix": "co_",
+      "ownerBoundedContext": "organization",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "internal-readable",
+      "slugPolicy": "optional-decorative"
+    },
+    {
+      "kind": "invoice",
+      "prefix": "inv_",
+      "ownerBoundedContext": "finance",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "internal-readable",
+      "slugPolicy": "optional-decorative"
+    },
+    {
+      "kind": "purchase-order",
+      "prefix": "po_",
+      "ownerBoundedContext": "procurement",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "internal-readable",
+      "slugPolicy": "optional-decorative"
+    },
+    {
+      "kind": "work-order",
+      "prefix": "wo_",
+      "ownerBoundedContext": "manufacturing",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "internal-readable",
+      "slugPolicy": "optional-decorative"
+    },
+    {
+      "kind": "product",
+      "prefix": "prd_",
+      "ownerBoundedContext": "catalog",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "public",
+      "slugPolicy": "required-decorative"
+    },
+    {
+      "kind": "listing",
+      "prefix": "lst_",
+      "ownerBoundedContext": "marketplace",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "public",
+      "slugPolicy": "required-decorative"
+    },
+    {
+      "kind": "published-report",
+      "prefix": "rpt_",
+      "ownerBoundedContext": "reporting",
+      "idStrategy": "random-128-crockford-base32",
+      "defaultExposure": "public",
+      "slugPolicy": "required-decorative"
+    }
+  ],
+  "routeDefinitions": [
+    {
+      "routeId": "workspace.private-pii-detail",
+      "ownerApp": "platform",
+      "surface": "workspace",
+      "pathTemplate": "/{app}/{collection}/{typedId}",
+      "paramsSchemaRef": "url.params.private-detail.v1",
+      "requiredCapability": "resource.read",
+      "accessPolicyRef": "pdp.resource-read",
+      "indexabilityPolicyRef": "noindex-private",
+      "cachePolicyRef": "private-no-store",
+      "renderer": "spa",
+      "version": 1
+    },
+    {
+      "routeId": "workspace.url-safe-detail",
+      "ownerApp": "platform",
+      "surface": "workspace",
+      "pathTemplate": "/{app}/{collection}/{typedId}/{decorativeSlug}",
+      "paramsSchemaRef": "url.params.internal-readable.v1",
+      "requiredCapability": "resource.read",
+      "accessPolicyRef": "pdp.resource-read",
+      "indexabilityPolicyRef": "noindex-private",
+      "cachePolicyRef": "private-policy",
+      "renderer": "spa",
+      "version": 1
+    },
+    {
+      "routeId": "public.indexable-detail",
+      "ownerApp": "platform",
+      "surface": "public",
+      "pathTemplate": "/{locale}/{mount?}/{collection}/{typedId}/{asciiSlug}",
+      "paramsSchemaRef": "url.params.public-detail.v1",
+      "requiredCapability": "resource.public-read",
+      "accessPolicyRef": "visibility.public",
+      "indexabilityPolicyRef": "index-policy",
+      "cachePolicyRef": "public-canonical",
+      "renderer": "ssr",
+      "version": 1
+    },
+    {
+      "routeId": "platform.graphql",
+      "ownerApp": "platform",
+      "surface": "graphql",
+      "pathTemplate": "/graphql",
+      "paramsSchemaRef": "url.params.none.v1",
+      "accessPolicyRef": "graphql-operation-policy",
+      "indexabilityPolicyRef": "noindex-api",
+      "cachePolicyRef": "graphql-operation-cache",
+      "renderer": "api",
+      "version": 1
+    },
+    {
+      "routeId": "platform.health",
+      "ownerApp": "platform",
+      "surface": "developer-api",
+      "pathTemplate": "/healthz",
+      "paramsSchemaRef": "url.params.none.v1",
+      "accessPolicyRef": "health-policy",
+      "indexabilityPolicyRef": "noindex-api",
+      "cachePolicyRef": "no-store",
+      "renderer": "api",
+      "version": 1
+    },
+    {
+      "routeId": "platform.webhook",
+      "ownerApp": "platform",
+      "surface": "webhook",
+      "pathTemplate": "/webhooks/{provider}/{version}",
+      "paramsSchemaRef": "url.params.webhook.v1",
+      "accessPolicyRef": "webhook-signature-policy",
+      "indexabilityPolicyRef": "noindex-api",
+      "cachePolicyRef": "no-store",
+      "renderer": "api",
+      "version": 1
+    },
+    {
+      "routeId": "platform.auth-callback",
+      "ownerApp": "platform",
+      "surface": "auth-callback",
+      "pathTemplate": "/auth/callback/{provider}",
+      "paramsSchemaRef": "url.params.auth-callback.v1",
+      "accessPolicyRef": "oidc-callback-policy",
+      "indexabilityPolicyRef": "noindex-auth",
+      "cachePolicyRef": "no-store",
+      "renderer": "api",
+      "version": 1
+    },
+    {
+      "routeId": "platform.asset",
+      "ownerApp": "platform",
+      "surface": "asset",
+      "pathTemplate": "/assets/{assetKey}",
+      "paramsSchemaRef": "url.params.asset.v1",
+      "accessPolicyRef": "asset-visibility-policy",
+      "indexabilityPolicyRef": "asset-policy",
+      "cachePolicyRef": "immutable-asset",
+      "renderer": "static",
+      "version": 1
+    }
+  ],
+  "hostBindingProfiles": [
+    {
+      "id": "tenant-subdomain-suite-path",
+      "mode": "tenant-subdomain",
+      "hostTemplate": "{tenant}.metaframer.net",
+      "pathPrefixTemplate": "/{app}",
+      "tenantSource": "host",
+      "appSource": "path",
+      "default": true,
+      "allowedSurfaces": ["workspace", "admin", "graphql", "auth-callback"],
+      "verificationRequired": false
+    },
+    {
+      "id": "tenant-path",
+      "mode": "tenant-path",
+      "hostTemplate": "app.metaframer.net",
+      "pathPrefixTemplate": "/t/{tenant}/{app}",
+      "tenantSource": "path",
+      "appSource": "path",
+      "default": false,
+      "allowedSurfaces": ["workspace", "admin", "graphql"],
+      "verificationRequired": false
+    },
+    {
+      "id": "tenant-custom-domain-suite-path",
+      "mode": "custom-domain",
+      "hostTemplate": "{verified-custom-domain}",
+      "pathPrefixTemplate": "/{app}",
+      "tenantSource": "binding-record",
+      "appSource": "path",
+      "default": false,
+      "allowedSurfaces": ["workspace", "admin", "public", "graphql", "auth-callback"],
+      "verificationRequired": true
+    },
+    {
+      "id": "app-subdomain",
+      "mode": "app-subdomain",
+      "hostTemplate": "{app}.{tenant}.metaframer.net",
+      "pathPrefixTemplate": "",
+      "tenantSource": "host",
+      "appSource": "host",
+      "default": false,
+      "allowedSurfaces": ["workspace", "admin", "graphql", "auth-callback"],
+      "verificationRequired": false
+    },
+    {
+      "id": "app-custom-domain",
+      "mode": "custom-domain",
+      "hostTemplate": "{verified-app-domain}",
+      "pathPrefixTemplate": "",
+      "tenantSource": "binding-record",
+      "appSource": "binding-record",
+      "default": false,
+      "allowedSurfaces": ["workspace", "admin", "public", "graphql", "auth-callback"],
+      "verificationRequired": true
+    },
+    {
+      "id": "public-custom-domain",
+      "mode": "custom-domain",
+      "hostTemplate": "{verified-public-domain}",
+      "pathPrefixTemplate": "/{locale}",
+      "tenantSource": "binding-record",
+      "appSource": "binding-record",
+      "default": false,
+      "allowedSurfaces": ["public", "asset"],
+      "verificationRequired": true
+    }
+  ],
+  "routeProjections": [
+    {
+      "id": "workspace-private-default",
+      "routeRef": "workspace.private-pii-detail",
+      "hostBindingProfileRef": "tenant-subdomain-suite-path",
+      "localeMode": "none",
+      "unicodeAliasEnabled": false,
+      "canonical": true,
+      "migrationState": "stable"
+    },
+    {
+      "id": "workspace-readable-default",
+      "routeRef": "workspace.url-safe-detail",
+      "hostBindingProfileRef": "tenant-subdomain-suite-path",
+      "localeMode": "none",
+      "canonicalSlugProfileRef": "machine-key-ascii-v1",
+      "unicodeAliasEnabled": false,
+      "canonical": true,
+      "migrationState": "stable"
+    },
+    {
+      "id": "public-detail-default",
+      "routeRef": "public.indexable-detail",
+      "hostBindingProfileRef": "public-custom-domain",
+      "localeMode": "prefix-always",
+      "canonicalSlugProfileRef": "public-ascii-v1",
+      "unicodeAliasEnabled": false,
+      "canonical": true,
+      "migrationState": "stable"
+    },
+    {
+      "id": "graphql-workspace-default",
+      "routeRef": "platform.graphql",
+      "hostBindingProfileRef": "tenant-subdomain-suite-path",
+      "localeMode": "none",
+      "unicodeAliasEnabled": false,
+      "canonical": true,
+      "migrationState": "stable"
+    }
+  ],
+  "slugProfiles": [
+    {
+      "id": "public-ascii-v1",
+      "version": 1,
+      "mode": "ascii",
+      "normalization": "NFC",
+      "sourceLocaleRequired": true,
+      "separator": "-",
+      "maxSerializedBytes": 160,
+      "transliterationProfileRefs": { "tr": "tr-ascii-v1", "default": "platform-ascii-v1" },
+      "unicodeSecurityProfileRef": "uts39-public-v1"
+    },
+    {
+      "id": "public-unicode-v1",
+      "version": 1,
+      "mode": "unicode",
+      "normalization": "NFC",
+      "sourceLocaleRequired": true,
+      "separator": "-",
+      "maxSerializedBytes": 160,
+      "transliterationProfileRefs": {},
+      "unicodeSecurityProfileRef": "uts39-public-v1"
+    },
+    {
+      "id": "tr-ascii-v1",
+      "version": 1,
+      "mode": "ascii",
+      "normalization": "NFC",
+      "sourceLocaleRequired": true,
+      "separator": "-",
+      "maxSerializedBytes": 160,
+      "transliterationProfileRefs": { "tr": "tr-ascii-v1" },
+      "unicodeSecurityProfileRef": "uts39-public-v1"
+    },
+    {
+      "id": "machine-key-ascii-v1",
+      "version": 1,
+      "mode": "machine-key",
+      "normalization": "NFC",
+      "sourceLocaleRequired": false,
+      "separator": "-",
+      "maxSerializedBytes": 96,
+      "transliterationProfileRefs": {},
+      "unicodeSecurityProfileRef": "uts39-machine-v1"
+    }
+  ],
+  "levelObligations": [
+    {
+      "level": "app",
+      "natureMetaphor": "ada",
+      "obligations": [
+        "Stable app key ve default mount beyan et.",
+        "Route namespace ve domain-binding capability bildir."
+      ]
+    },
+    {
+      "level": "module",
+      "natureMetaphor": "dağ",
+      "obligations": [
+        "Yalnız sahibi app altında RouteContribution üret.",
+        "Global root ve catch-all route alma."
+      ]
+    },
+    {
+      "level": "archetype",
+      "natureMetaphor": "kaya",
+      "obligations": [
+        "Resource kind ve public ID sahipliğini bildir.",
+        "URL exposure, privacy ve slug policy seç."
+      ]
+    },
+    {
+      "level": "feature",
+      "natureMetaphor": "taş",
+      "obligations": [
+        "Use-case routeRef, capability, access, cache ve indexability bağlarını tanımla."
+      ]
+    },
+    {
+      "level": "component",
+      "natureMetaphor": "kum",
+      "obligations": [
+        "Yalnız tipli RouteRef tüket.",
+        "String URL concat ve bağımsız canonical üretme."
+      ]
+    },
+    {
+      "level": "work_unit",
+      "natureMetaphor": "molekül",
+      "obligations": ["Tek resolver/generator/alias/facet davranışı ve contract test paketi üret."]
+    },
+    {
+      "level": "micro_step",
+      "natureMetaphor": "atom",
+      "obligations": [
+        "Tek parser invariantı doğrula.",
+        "Tek normalizer invariantı doğrula.",
+        "Collision negatif testi ekle.",
+        "Tenant/authorization bypass negatif testi ekle."
+      ]
+    }
+  ]
+}

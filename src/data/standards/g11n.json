@@ -1,10 +1,10 @@
 {
   "id": "g11n",
   "name": "Globalizasyon Stratejisi Standardı (g11n)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "engineering",
   "basedOnAdr": ["adr-0027", "adr-0026"],
-  "summary": "i18n (çok-dile hazırlama) ile l10n (bölgeye uyarlama) üstüne g11n katmanını ekleyen strateji sözleşmesi: Locale, Currency, Tax ve Data-residency BAĞIMSIZ (ortogonal) eksenlerdir; biri diğerinden türetilmez (tr-TR locale + EUR para + DE vergi + TR residency aynı anda olabilir). k-jurisdiction (6-eksen resolver) ile çözülür, eksen kombinasyonu koda değil politika/config katmanına yazılır. i18n/l10n kural değerleri i18n-standards.json içindedir; bu sözleşme onları kopyalamaz, g11n ortogonallik + residency + tenant-izolasyon çatısını tanımlar.",
+  "summary": "i18n (çok-dile hazırlama) ile l10n (bölgeye uyarlama) üstüne g11n katmanını ekleyen strateji sözleşmesi: Locale, Currency, Tax ve Data-residency BAĞIMSIZ (ortogonal) eksenlerdir; biri diğerinden türetilmez (tr-TR locale + EUR para + DE vergi + TR residency aynı anda olabilir). k-jurisdiction (6-eksen resolver) ile çözülür, eksen kombinasyonu koda değil politika/config katmanına yazılır. i18n/l10n kural değerleri i18n-standards.json içindedir; bu sözleşme onları kopyalamaz, g11n ortogonallik + residency + tenant-izolasyon çatısını tanımlar. v1.1: pazar-bağlam ekseni eklendi (g11n-market-context): UserPreferences ile AccountMarketContext ayrımı g11n çatısına bağlandı.",
   "appliesTo": [],
   "rules": [
     {
@@ -41,6 +41,13 @@
       "rationale": "Tenant'lar farklı jurisdiction profillerinde çalışır; global tek varsayılan bir tenant'ın parasını/vergisini/residency'sini diğerine sızdırır ve çok-bölge SaaS izolasyonunu kırar.",
       "severity": "must",
       "check": "integration (tenant eksen izolasyonu: bir tenant'ın varsayılan currency/residency diğerine sızmıyor) + review"
+    },
+    {
+      "id": "g11n-market-context",
+      "rule": "Pazar (market) ayrı bir eksendir; locale'den, dilden veya ülkeden türetilmez. Hesap/pazar bağlamı (AccountMarketContext: market, billingCountry, billingCurrency, taxJurisdiction, contractLanguage, dataRegion) kullanıcı tercihinden (UserPreferences: uiLanguage, contentLanguages, formatLocale, timeZone) AYRI modellenir ve doğrulanmış kaynaktan beslenir: kullanıcının arayüz dili tr iken hesabı us pazarında olabilir, faturası EUR, sözleşme dili en, veri bölgesi eu-central taşıyabilir. Locale'den pazar/vergi/para/veri bölgesi türetmek yasaktır; IP ve tarayıcı dili yalnız başlangıç önerisidir, pazar kararı üretemez.",
+      "rationale": "Pazar; hukuki yetki, faturalandırma ve sözleşme dilini belirleyen doğrulanmış iş verisidir; locale'den türetilirse çok-pazar hesapları yanlış vergi/para/sözleşmeye bağlanır.",
+      "severity": "must",
+      "check": "jurisdiction conformance (locale'den pazar türetimi yok; tercih/bağlam ayrık) + review"
     }
   ],
   "banned": [

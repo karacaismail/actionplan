@@ -19,15 +19,16 @@ describe("ST-1 — standardRefs / applicability / waivers şema temeli", () => {
   it("eski düğüm (yeni alanlar yok) hâlâ parse olur — lazy migration", () => {
     const n = TaskNodeSchema.parse(base);
     expect(n.standardRefs.techProfileRef).toBe("");
+    expect(n.standardRefs.urlPolicyRef).toBe("url-policy");
     expect(n.applicability).toEqual({});
     expect(n.waivers).toEqual([]);
   });
 
-  it("standardRefs 15 default'lu sözleşme anahtarını taşır, hepsi default ''", () => {
+  it("standardRefs 16 default'lu anahtar taşır; URL policy merkezi sabit, diğerleri lazy", () => {
     const r = StandardRefsSchema.parse({});
-    // 15 çekirdek anahtar default'ludur; yeni anahtarlar OPSİYONEL (default'suz),
-    // set edilmediğinde parse çıktısında yer almaz (geriye uyumlu).
-    expect(Object.keys(r).length).toBe(15);
+    // 15 legacy çekirdek ref boş/lazy; URL policy her düğümde merkezi kanonik default'tur.
+    expect(Object.keys(r).length).toBe(16);
+    expect(r.urlPolicyRef).toBe("url-policy");
     expect(r.designSystemRef).toBe("");
     expect(r.shortCodeRef).toBe("");
     expect(r.codingStandardRef).toBe("");

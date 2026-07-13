@@ -1,0 +1,83 @@
+{
+  "id": "finance-money-model",
+  "name": "Finansal Para Modeli Standardı (decimal + ISO 4217 + altı finansal durum)",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Para değerinin temsili ve finansal durum semantiğinin makine sözleşmesi: para = decimal/sabit-nokta + ISO 4217 para birimi kodu + açık ölçek (float yasak); iki-ondalık/minor unit varsayımı yasak; faturalandırma, gösterim ve muhasebe para birimi ayrı modellenir; kur dönüşüm tarihi ve yuvarlama politikası alan-bazında beyan edilir; Planned/Forecast/Committed/Accrued/Actual/Cash altı finansal durumu birbirine dönüştürülmez (runway=cash). Anlatı otoritesi docs/financial-state-model-contract.md'dir; bu sözleşme onun makine kontratıdır.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "fin-money-decimal-iso4217",
+      "rule": "Para değeri decimal/sabit-nokta model + ISO 4217 para birimi kodu + açık ölçek (scale) üçlüsüyle taşınır; float/double ile para tutmak ve para birimi kodu olmadan tutar kaydetmek yasaktır. Ölçek alanda açık beyan edilir; örtük ölçek varsayımı kabul edilmez.",
+      "rationale": "Float yuvarlama hatası muhasebe mutabakatını kırar; kodsuz tutar hangi para biriminde olduğu bilinmeyen bir sayıdır ve ISO 4217 minor unit ilişkisi bilinmeden ölçek belirsiz kalır.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-no-two-decimal-assumption",
+      "rule": "İki ondalık basamak / minor unit varsayımı yasaktır: her para birimi iki ondalık kullanmaz (sıfır ve üç minor-unit'li para birimleri vardır); 'her tutarı 100 ile çarpıp integer tut' yaklaşımı tüm para birimleri ve muhasebe işlemleri için YETERSİZDİR. Minor unit ilişkisi para birimi bazında ISO 4217 verisinden okunur, kodda sabitlenmez.",
+      "rationale": "İki-ondalık varsayımını sabitleyen kod, sıfır veya üç ondalıklı para birimlerinde sessizce yanlış tutar üretir; hata ancak o pazara girilince görünür ve geriye dönük düzeltilemez.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-three-currency-separation",
+      "rule": "Faturalandırma para birimi, gösterim para birimi ve muhasebe para birimi AYRI modellenir; üçünün aynı olduğu varsayılamaz. Her mali kayıt hangi para biriminin hangi rolde olduğunu açık taşır; roller arası dönüşüm yalnız kayıtlı kur ve kayıtlı tarihle yapılır.",
+      "rationale": "Kullanıcı EUR görürken fatura USD kesilebilir ve defter TRY tutulabilir; tek para-birimi alanı bu üç rolü ezer ve sessiz çevrim hatası üretir.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-fx-date-declaration",
+      "rule": "Kur dönüşüm tarihi ödeme, fatura, iade ve raporlama için AYRI ayrı beyan edilir; tek 'güncel kur' varsayımı yasaktır. İadenin orijinal kurla mı güncel kurla mı yapılacağı açık karardır ve kayıt altına alınır; işlem kuru ile raporlama kuru ayrı saklanır, sessiz çevrim yapılmaz.",
+      "rationale": "Kur tarihleri karışınca iade tutarı, vergi matrahı ve dönem raporu birbirini tutmaz; açık tarih beyanı mutabakatı mümkün kılar.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-rounding-policy",
+      "rule": "Gösterim yuvarlaması ile muhasebe yuvarlaması aynı politika DEĞİLDİR; yuvarlama politikası (yöntem, hassasiyet, uygulama noktası) alan-bazında beyan edilir. Prorasyon ve kupon dağıtımından doğan kuruş farklarının dağıtım kuralı açık yazılır; beyansız yuvarlama kabul edilmez.",
+      "rationale": "UI'da yuvarlanan değerin deftere yazılması toplamları kaydırır; satır-bazı/toplam-bazı vergi hesabı ve kuruş dağıtımı, yuvarlama politikası beyanı olmadan denetlenemez.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-financial-state-six",
+      "rule": "Planned/Forecast/Committed/Accrued/Actual/Cash altı finansal durumu ayrı SORULARIN cevaplarıdır ve birbirine dönüştürülerek gösterilemez; her mali görünüm hangi durumu gösterdiğini etiketler. Runway ve cash-flow forecast yalnız CASH durumundan türetilir (planned'dan değil); forecast hiçbir durumu değiştirmez, ayrı eksendir.",
+      "rationale": "'Bütçede var' ile 'kasada var' arasındaki fark yönetim kararının kendisidir; durumlar ezilirse runway taahhüt edilmiş harcamayı görmez ve yönetim yanlış nakit ihtiyacıyla karar verir.",
+      "severity": "must",
+      "check": "check-finance-model + review"
+    },
+    {
+      "id": "fin-tax-market-rules",
+      "rule": "Vergi gösterimi ve mekaniği pazar kurallarına bağlanır: reverse charge uygulanıp uygulanmayacağı, verginin fiyata dahil mi hariç mi gösterileceği ve satır-bazı/toplam-bazı vergi hesabı seçimi locale'den türetilmez; açık vergi/pazar konfigürasyonundan gelir.",
+      "rationale": "CLDR parayı yalnız GÖSTERİR; reverse charge ve vergi-dahil/hariç kararı hukuk/pazar konfigürasyonudur, locale'den türetilirse yanlış fatura kesilir.",
+      "severity": "should",
+      "check": "check-finance-model + review"
+    }
+  ],
+  "banned": [
+    "float-money",
+    "currency-code-missing-amount",
+    "two-decimal-minor-unit-assumption",
+    "single-currency-role-conflation",
+    "silent-fx-conversion",
+    "display-rounding-in-ledger",
+    "financial-state-conflation"
+  ],
+  "allowed": [
+    "decimal-fixed-point-money",
+    "iso-4217-currency-code",
+    "explicit-scale-declaration",
+    "three-currency-role-separation",
+    "per-field-rounding-policy",
+    "six-financial-states",
+    "cash-based-runway"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/financial-state-model-contract.md",
+    "ISO 4217"
+  ]
+}

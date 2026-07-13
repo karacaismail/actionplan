@@ -1,10 +1,10 @@
 {
   "id": "i18n-standards",
   "name": "Uluslararasılaştırma & Yerelleştirme Standardı (i18n/l10n)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "engineering",
   "basedOnAdr": ["adr-0027", "adr-0026"],
-  "summary": "Global ürün için zorunlu çapraz-kesen standart: ICU MessageFormat çeviri, CLDR locale biçimleme, RTL, çevrilebilir DB alanları (i18n-text), Locale≠Jurisdiction≠Currency≠Tax≠Timezone≠Data-residency 6-eksen ortogonal çözümleme, çeviri iş akışı ve fallback. Bir app bu standarda uymadan enterprise-ready sayılmaz.",
+  "summary": "Global ürün için zorunlu çapraz-kesen standart: ICU MessageFormat çeviri, CLDR locale biçimleme, RTL, çevrilebilir DB alanları (i18n-text), Locale≠Jurisdiction≠Currency≠Tax≠Timezone≠Data-residency 6-eksen ortogonal çözümleme, çeviri iş akışı ve fallback. Bir app bu standarda uymadan enterprise-ready sayılmaz. v1.1: tercih/pazar-bağlam ayrımı (UserPreferences / AccountMarketContext), kritik akışta karışık dil fallback yasağı ve l10n operasyon zorunlulukları (pseudo-localization + text expansion) delta olarak eklendi.",
   "appliesTo": [],
   "rules": [
     {
@@ -55,6 +55,27 @@
       "rationale": "Onaysız makine-çevirisi marka/hukuk riskidir; belirsiz locale çözümleme tutarsız deneyim üretir.",
       "severity": "must",
       "check": "check-i18n (locale-context taşıma) + çeviri onay akışı review"
+    },
+    {
+      "id": "i18n-market-context-separation",
+      "rule": "Kullanıcı tercihi (UserPreferences: uiLanguage, contentLanguages, formatLocale, timeZone, measurementSystem) ile hesap/pazar bağlamı (AccountMarketContext: market, billingCountry, billingCurrency, taxJurisdiction, contractLanguage, dataRegion) AYRI modellenir; biri diğerine gömülmez, biri diğerinden türetilmez. Yasak eşitlik zinciri geçerlidir: dil ≠ locale ≠ ülke ≠ pazar ≠ hukuki yetki alanı ≠ saat dilimi ≠ para birimi ≠ veri bölgesi. IP adresi, tarayıcı dili ve cihaz saat dilimi yalnız başlangıç önerisi üretebilir; kullanıcı tercihi ve doğrulanmış faturalandırma/hukuki veri bu önerilerin üzerine yazar, öneri kalıcı karara dönüştürülemez (IP'den ülke, ülkeden para birimi, para biriminden vergi türetip kalıcılaştırmak yasaktır).",
+      "rationale": "Tek bir tr-TR/de-DE etiketi arayüz dili, biçim, pazar, para, vergi ve veri bölgesi kararlarının tamamını temsil edemez; tercih ile doğrulanmış pazar bağlamını ayırmamak çok-pazar hesaplarını kırar.",
+      "severity": "must",
+      "check": "check-i18n + conformance (locale'den pazar/vergi/para/veri-bölgesi türetimi yok) + review"
+    },
+    {
+      "id": "i18n-no-mixed-language-critical-flows",
+      "rule": "Ödeme, silme, izin ve hukuki onay akışlarında karışık dil fallback YASAKTIR: kullanıcı kritik karar verirken buton, açıklama ve hata mesajı farklı dillerde olamaz. Kritik akış ya etkin locale'de eksiksiz sunulur ya da bütünsel olarak tek tutarlı dile düşülür; mesaj-başına karışık fallback uygulanamaz ve bu akışlarda eksik çeviri yayını bloklar.",
+      "rationale": "Kritik karar anında karışık dil hukuki geçerlilik ve kullanıcı güveni riskidir; kısmi mesaj-başına fallback en yüksek riskli akışlarda en sık oluşur.",
+      "severity": "must",
+      "check": "check-i18n + integration (ödeme/silme/izin/onay akışı tek tutarlı dilde; eksik çeviri yayını bloklar)"
+    },
+    {
+      "id": "i18n-l10n-operations",
+      "rule": "Localization operasyonu kurulmadan çeviri 'tamam' sayılmaz; şu bileşenler zorunludur ve operatör yüzeyinden izlenir: pseudo-localization render testi (metin taşması + eksik anahtar tespiti), text expansion testleri (en uzun locale'de taşma/kırpılma yok), eksik-çeviri alarmı, çeviri belleği + terminoloji sözlüğü, çevirmene ekran görüntüsü/bağlam sağlanması, kaynak metin sürümleme, insan tarafından in-context inceleme ve acil yayın/rollback mekanizması. Locale başına bir ürün sahibi tanımlıdır; hukuki/pazarlama/ürün çevirileri ayrı onay akışlarından geçer.",
+      "rationale": "Çeviri pipeline'ı kendiliğinden işlemez; pseudo-localization ve text expansion testleri UI kırılmasını çeviri tamamlanmadan yakalar, alarm ve bellek olmadan eksik/tutarsız çeviri sessizce yayılır.",
+      "severity": "must",
+      "check": "check-i18n + e2e (pseudo-locale + text expansion) + review (operasyon bileşen listesi)"
     }
   ],
   "banned": [
@@ -78,6 +99,7 @@
   "references": [
     "docs/adr-0027-engineering-standards.md",
     "docs/i18n-standard.md",
+    "docs/standards/01-i18n-l10n-g11n-standard.md",
     "BCP 47",
     "Unicode CLDR",
     "ICU MessageFormat"

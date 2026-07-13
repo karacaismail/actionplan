@@ -1,10 +1,10 @@
 {
   "id": "a11y",
   "name": "Erişilebilirlik (a11y) Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "design",
   "basedOnAdr": ["adr-0027"],
-  "summary": "WCAG 2.2 AA taban erişilebilirlik çatısı: semantic HTML + landmark, metin/arka-plan kontrast AA (normal 4.5:1, büyük 3:1), aria-live canlı bölge duyurusu, medya alt-text zorunluluğu ve axe-core CI konformansı. Klavye akışı, dokunma hedefi, focus halkası, form-hata bağı ve renk-dışı sinyal gibi mevcut kurallar ui-components + ux-interaction sözleşmelerinde yaşar; bu standart onları erişilebilirlik ekseninde toplar ve references ile işaret eder, değerlerini kopyalamaz. AAA yüzey-bazlı hedeftir (opt-in), taban AA'nın altına inilmez.",
+  "summary": "WCAG 2.2 AA taban erişilebilirlik çatısı: semantic HTML + landmark, metin/arka-plan kontrast AA (normal 4.5:1, büyük 3:1), aria-live canlı bölge duyurusu, medya alt-text zorunluluğu ve axe-core CI konformansı. Klavye akışı, dokunma hedefi, focus halkası, form-hata bağı ve renk-dışı sinyal gibi mevcut kurallar ui-components + ux-interaction sözleşmelerinde yaşar; bu standart onları erişilebilirlik ekseninde toplar ve references ile işaret eder, değerlerini kopyalamaz. AAA yüzey-bazlı hedeftir (opt-in), taban AA'nın altına inilmez. v1.1: dil × erişilebilirlik kesişimi eklendi: lang attribute zorunluluğu + dil-başına 9-eksen yeniden test matrisi (02-a11y §5.1/§11.1).",
   "appliesTo": ["product-ui", "component-library", "flows", "forms", "admin-panel"],
   "rules": [
     {
@@ -55,6 +55,20 @@
       "rationale": "Manuel a11y denetimi ölçeklenmez ve regresyon kaçırır; axe-core CI konformansı AA tabanını her merge'de zorlayarak drift'i engeller.",
       "severity": "must",
       "check": "check-ui-standards"
+    },
+    {
+      "id": "a11y-lang-attribute",
+      "rule": "Sayfa dili `<html lang>` ile, sayfa içinde dil değiştiren her metin parçası parça-düzeyi `lang` attribute ile işaretlenir ve değer etkin locale ile eşleşir (WCAG 3.1.1 Language of Page + 3.1.2 Language of Parts). lang'sız sayfa/parça ve lang-locale uyumsuzluğu YASAKTIR; screen reader doğru telaffuz/ses motorunu ancak doğru lang değeriyle seçebilir. Üretilen yerelleştirilmiş PDF'ler de etiketli (tagged) olur, doğru lang metadata'sı ve okuma sırası taşır.",
+      "rationale": "Yanlış veya eksik lang, screen reader'ın metni yanlış ses motoruyla okumasına yol açar; çeviri tamamlanmış olsa bile içerik anlaşılmaz kalır (WCAG 3.1.1/3.1.2).",
+      "severity": "must",
+      "check": "check-ui-standards (jest-axe lang denetimi) + conformance (yerelleştirilmiş PDF lang metadata + okuma sırası)"
+    },
+    {
+      "id": "a11y-per-language-retest",
+      "rule": "Erişilebilirlik dil-bazlı yeniden test edilir: kaynak dilde geçen akış diğer dillerde geçmiş SAYILMAZ. Her desteklenen dil için kritik akışlar dokuz eksende yeniden test edilir: klavye (tam akış + focus trap/Escape), screen reader (etkin locale'in ses motoruyla ad/rol/durum doğru telaffuzla), yüksek zoom (%200'de reflow ve akış tamam), büyük metin (taşma/kırpılma yok), yüksek kontrast (durum sinyalleri algılanır), sesli kontrol (görünen etiketle verilen komut hedefi bulur), RTL düzen (focus sırası görsel okuma sırasını izler), mobil ekran (44px hedef + tam akış) ve sade dil (bilişsel yük çeviride korunur). Sonuçlar dil × eksen kanıt matrisi olarak raporlanır ve sürüm kaydına eklenir; boş veya kanıtsız hücre geçmiş sayılmaz, otomatikleştirilemeyen eksenler (screen reader, sesli kontrol) sürüm öncesi manuel kontrol listesine bağlanır.",
+      "rationale": "a11y × i18n kesişim hataları (yanlış telaffuz, RTL odak bozulması, çevrilen metnin taşması) yalnız dil-başına testte görünür; tek-dilli yeşil sonuç diğer dillerde sahte güvencedir.",
+      "severity": "must",
+      "check": "check-ui-standards + conformance (dil × eksen kanıt matrisi; kanıtsız hücre = FAIL)"
     }
   ],
   "banned": [

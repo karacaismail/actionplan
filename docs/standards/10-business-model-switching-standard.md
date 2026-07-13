@@ -76,6 +76,29 @@ Kritik gözlem: hepsi aynı `business_model_config` şemasının **değerleridir
 
 Kural: bu eksenlerin hiçbiri React/servis koduna `if (model === 'b2b')` olarak yazılmaz; hepsi `business_model_config`'ten çözülür ve `k-policy-pdp` yetki kararını verir. Config bir kaynak; kod bir tüketicidir.
 
+### 4.1 Pazar-bazlı fiyatlandırma ve paketleme
+
+i18n para değerini biçimlendirir; doğru fiyatı veya doğru paketi BELİRLEMEZ — bu yüzden şu şekilde uygulanır: her hedef pazar için fiyatlandırma ve paketleme, `business_model_config`'in `pricing`/`checkout`/`tax_invoice` eksenlerine bağlanan bilinçli, pazar-bazlı iş kararlarıdır; hiçbiri biçimlendirme katmanına veya kur çevirisine devredilemez. Aşağıdaki tablo pazar bazında verilmesi zorunlu kararları ve her kararın ne belirlediğini verir; hiçbir karar atlanamaz.
+
+| # | Pazar-bazlı karar | Ne belirler |
+|---|---|---|
+| 1 | Liste fiyatı | Pazardaki fiyat noktası (kur çevirisi değil, bilinçli konumlandırma) |
+| 2 | Satın alma gücü | Fiyatın yerel satın alma gücüne göre kalibrasyonu |
+| 3 | Fiyat sonlandırma biçimi | Psikolojik fiyat bitişlerinin pazar alışkanlığına göre seçimi |
+| 4 | Vergi dahil/hariç gösterim | Fiyatın vergi dahil mi hariç mi gösterileceği (yerel mevzuat + beklenti) |
+| 5 | Aylık ve yıllık ödeme tercihi | Pazarın baskın fatura periyodu ve aylık/yıllık dengesi |
+| 6 | Koltuk, kullanım veya paket bazlı fiyatlama | Fiyatlama metriğinin pazara uygunluğu |
+| 7 | Minimum sözleşme süresi | Pazarda kabul gören en kısa taahhüt süresi |
+| 8 | Deneme süresi | Deneme süresinin uzunluğu, kapsamı ve koşulları |
+| 9 | Yerel satın alma/onay limitleri | Alıcı tarafındaki bütçe/onay eşikleri |
+| 10 | Fatura vadesi | Net-terms/vade beklentisi |
+| 11 | Banka transferi beklentisi | Kart dışı ödeme kanalının pazardaki ağırlığı ve zorunluluğu |
+| 12 | Kurumsal procurement süreçleri | Tedarikçi kaydı, RFP/PO gibi kurumsal satın alma gereksinimleri |
+| 13 | Yerel rakipler ve ürün algısı | Fiyatın yerel rakip seti ve ürün algısı bağlamındaki konumu |
+| 14 | Kampanya ve indirim mevzuatı | İndirim/kampanya gösteriminin yerel mevzuata uyumu |
+
+NORMATİF: "ABD fiyatını günlük kurla çevirme" çoğu zaman doğru global fiyatlandırma stratejisi DEĞİLDİR; günlük kurla çevrilen fiyat satın alma gücünü, yerel rakipleri, vergi dahil/hariç gösterim beklentisini ve fiyat sonlandırma alışkanlığını yok sayar. Fiyat, para birimi ve ödeme yöntemi ÜÇ AYRI KARARDIR: fiyat bu bölümün pazar-bazlı kararıdır; para modelinin kaynağı `financial-state-model-contract.md`'dir; ödeme yöntemi `global-market-readiness-directive.md`'ye bağlıdır (çapraz referans — kural burada tekrarlanmaz). Bu üçünü tek karara indirgeyen tasarım §14 anlamında anti-pattern'dir.
+
 ---
 
 ## 5. Kontrollü geçiş — preview → validate → publish → rollback
@@ -183,6 +206,7 @@ E2E katmanı Playwright + axe (WCAG 2.2 AA) ile çalışır.
 - AC-5: Ön yüz üç runtime endpoint'inden konfigürasyon okuyor; kodda iş-modeli koşul dalı yok.
 - AC-6: `publish` yalnız insan `approval_ref`'i ile çalışıyor; AI doğrudan uygulayamıyor.
 - AC-7: Her iş modeli (B2C/B2B/B2B2B/C2C/B2G/M2M/S2S/D2D) `business_model_config` değeri olarak eklenir; yeni `if` dalı veya yeni `*.json` standardı üretilmez.
+- AC-8: Pazar-bazlı fiyatlandırma/paketleme kararları (§4.1'deki 14 karar) config-driven olarak `business_model_config` üzerinden yönetiliyor; "günlük kurla çevirme" tek başına fiyat stratejisi olarak kullanılmıyor; fiyat, para birimi ve ödeme yöntemi üç ayrı karar olarak modellenmiş.
 
 ---
 
@@ -225,6 +249,9 @@ Aşağıdaki tablo bu capability'nin izlenebilir gereksinimlerini kimliklendirir
 | BMS-13 | account_type + tax_invoice config-driven (consumer/business/reseller) | Backend | P1 | Integration | AC-1 | Kernel geliştirici |
 | BMS-14 | Versiyonlu config; eski `business_model_config` erişilebilir | Backend | P1 | Unit | AC-4 | Kernel geliştirici |
 | BMS-15 | approval iş akışı (`s-bpm`) B2B sipariş onayında çalışıyor | Backend | P2 | Integration | AC-1 | Kernel geliştirici |
+| BMS-16 | Pazar-bazlı fiyat/paket kararları config-driven (liste fiyatı, satın alma gücü, fiyat sonlandırma, deneme süresi, minimum sözleşme süresi, aylık/yıllık tercih, fiyatlama metriği) | Backend | P1 | Integration | AC-8 | Kernel geliştirici |
+| BMS-17 | Vergi dahil/hariç gösterim + fatura vadesi + banka transferi beklentisi + yerel onay limitleri + procurement süreçleri pazar-bazlı config | Backend | P1 | Integration | AC-8 | Kernel geliştirici |
+| BMS-18 | Fiyat / para birimi / ödeme yöntemi üç ayrı karar; yerel rakip/algı ve kampanya-indirim mevzuatı pazar kararı olarak kayıtlı (`financial-state-model-contract.md` + `global-market-readiness-directive.md` çapraz referansı) | Governance | P1 | Review | AC-8 | Kernel geliştirici |
 
 ---
 

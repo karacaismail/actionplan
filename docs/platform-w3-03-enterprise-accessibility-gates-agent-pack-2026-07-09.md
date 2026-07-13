@@ -169,6 +169,7 @@ W3-03 ancak şu koşullarla kapanır:
 
 - W3-02 evidence daha önce verified durumdadır.
 - Customer/OrderOps/Inventory axe reportları geçer.
+- Component-story axe matrisi geçer: her Master Component'in story'leri (state × variant × theme × density × RTL) story-level axe + klavye testinden geçmiştir; story a11y ihlali uyarı olarak bırakılmamıştır (`docs/standards/02-a11y-accessibility-standard.md` §11 story-a11y satırı; e2e axe'in yerine geçmez, ikisi ayrı bloklayıcıdır).
 - Keyboard navigation ve focus order reportları geçer.
 - Contrast/token report geçer veya blocker note üretir.
 - UI redesign, feature work veya diğer Wave 3 işleri eklenmemiştir.

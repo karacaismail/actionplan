@@ -46,6 +46,19 @@ for (const d of docs) {
   if (!fs.existsSync(path.join(ROOT, d))) fail.push(`Yonerge eksik: ${d}`);
 }
 
+const semanticArtifacts = [
+  "src/schemas/atom.ts",
+  "src/data/value-atom-registry.ts",
+  "src/data/atom-definition-registry.json",
+  "tests/atomDefinitions.test.ts",
+  "tests/valueAtomRegistry.test.ts",
+  "tests/atomDefinitionRegistry.test.ts",
+];
+for (const artifact of semanticArtifacts) {
+  if (!fs.existsSync(path.join(ROOT, artifact)))
+    fail.push(`Semantik atom artefakti eksik: ${artifact}`);
+}
+
 const nodePath = path.join(ROOT, "src/data/generated/nodes/atomic-types.json");
 if (fs.existsSync(nodePath)) {
   const node = JSON.parse(fs.readFileSync(nodePath, "utf8"));
@@ -57,11 +70,13 @@ if (fs.existsSync(nodePath)) {
 }
 
 console.log(
-  `check-atomic-types — ${required.length} zorunlu atom + ${docs.length} yonerge + dugum referansi`,
+  `check-atomic-types — ${required.length} zorunlu atom + ${docs.length} yonerge + ${semanticArtifacts.length} semantik artefakt + dugum referansi`,
 );
 if (fail.length) {
   console.log(`SONUC: KIRMIZI — ${fail.length} ihlal\n  ${fail.join("\n  ")}`);
   process.exit(1);
 }
-console.log("SONUÇ: YEŞİL ✓ (atomik tip katmani yapi butunlugu tam)");
+console.log(
+  "SONUÇ: YEŞİL ✓ (yapisal kaynaklar mevcut; semantik conformance qa:atom testleriyle doğrulanır)",
+);
 process.exit(0);

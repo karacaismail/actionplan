@@ -178,6 +178,7 @@ CUST-04 ancak şu koşullarla kapanır:
 - Capability-hidden navigation testi geçer.
 - Empty/loading/error/form validation state tests geçer.
 - Axe/keyboard/focus evidence yeşildir.
+- Customer UI'nın tükettiği Master Component'ler story matrisi + story interaction + story a11y + visual regression evidence'ıyla Storybook'ta yayınlanmıştır; storybook-ci PASS'tır (story testleri Playwright E2E'nin yerine geçmez — bkz. `docs/storybook-implementation.md` §6, `docs/ci-conformance-gates.md` storybook-ci).
 - Backend schema/model/API/seed, OrderOps ve Inventory code eklenmemiştir.
 - `platform-customer-ui` node'una PR/CI/test/a11y evidence geri yazılmıştır.
 

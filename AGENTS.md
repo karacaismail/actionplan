@@ -1,6 +1,6 @@
 # AGENTS.md — Bu Repoda Çalışan AI Ajan(lar) İçin Bağlayıcı Çalışma Sözleşmesi
 
-Sürüm: 1.1 · Tarih: 2026-07-08
+Sürüm: 1.2 · Tarih: 2026-07-13
 Durum: Kanonik, bağlayıcı. Bu dosyayla çelişen her ajan davranışı geçersizdir.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm).
 
@@ -10,15 +10,15 @@ Bu dosya bir öğretici değildir; bir sözleşmedir. Aşağıdaki maddeler "ön
 
 ## 0. Kalıcı Rol Sınırı — Dokümantasyon Bakımı
 
-Bu repo üzerinde çalışan Codex/doc-maintainer rolü **proje, platform, kernel, SDK, app-core, module veya app geliştirmez**. Bu rolün işi, geliştiricilerin ve implementation ajanlarının tüketebileceği dokümantasyon sistemini yeterli seviyeye getirmektir.
+Codex, Claude, Cursor, Aider, Windsurf ve bu repo bağlamında çalışan başka hiçbir AI ajanı **proje, platform, kernel, SDK, app-core, module veya app geliştirmez**. AI erişimi `read-only-audit`, platform ürün kodu yazarı `human-developer-only`dır. AI'nın işi insan geliştiricinin tüketebileceği dokümantasyon ve directive sistemini yeterli seviyeye getirmektir.
 
 Bağlayıcı yorum:
-- Dokümanlardaki "kod yaz", "Claude Code'a ver", "Agent Prompt'u uygula" gibi ifadeler implementation geliştiricisi veya onun yönettiği coding ajanı içindir.
+- Dokümanlardaki "kod yaz", "Claude Code'a ver", "Agent Prompt'u uygula" gibi eski ifadeler AI'ya yazma yetkisi vermez; insan geliştirici için directive'e dönüştürülür.
 - `actionplan` doc-maintainer bu yönergeleri **uygulayıp ürün kodu üretmez**; yönergelerin eksik, çelişkili veya yetersiz kalan taraflarını düzeltir.
 - "Devam et", "eksikleri tamamla" veya benzeri talimatlar bu repo bağlamında dokümantasyon/handoff yeterliliğini tamamlamak anlamına gelir; platform implementation'a geçiş izni değildir.
 - Implementation repo okunacaksa bu yalnız açıkça istenen audit/kanıt doğrulama için salt-okunur yapılır; yazma, kod üretme, migration, test implementation veya app/module scaffold işi geliştirici sorumluluğudur.
 
-Kanonik rol sözleşmesi: `docs/doc-maintainer-operating-boundary.md`.
+Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`; rol sözleşmesi: `docs/doc-maintainer-operating-boundary.md`. Platform ürün kodunu **yalnız insan geliştirici** yazar.
 
 ---
 
@@ -26,8 +26,8 @@ Kanonik rol sözleşmesi: `docs/doc-maintainer-operating-boundary.md`.
 
 `actionplan` bir **WBS planlama + sözleşme katmanıdır**; çalışan ürün kodu burada **değildir**.
 
-- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (467 düğüm). Engine bu JSON'ları okur, React UI render eder.
-- Gerçek ürün/uygulama kodu `platform` monoreposundadır. `actionplan` o kodu **planlar ve sözleşmeye bağlar**, onu yazmaz.
+- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (485 düğüm). Engine bu JSON'ları okur, React UI render eder.
+- Gerçek ürün/uygulama kodu `platform` monoreposundadır. AI ajanları onu yalnız salt-okunur denetler; `actionplan` o kodu **planlar ve sözleşmeye bağlar**, ürün kodunu yalnız insan geliştirici yazar.
 - 7 seviye (doğa metaforu): `app` (ada) → `module` (dağ) → `archetype` (kaya) → `feature` (taş) → `component` (kum) → `work_unit` (molekül) → `micro_step` (atom).
 - 7 waterfall faz: `requirements` → `test-plan` → `db-schema` → `development` → `test-qa` → `verification` → `release-maintenance`.
 
@@ -107,8 +107,10 @@ Bu kilitler ADR'lerle sabitlenmiştir; ajan bunları gevşetemez.
 - Kaynak dosya ≤ **300 satır**; fonksiyon döngüsel karmaşıklık ≤ **10**.
 - Ölü kod, spekülatif soyutlama (YAGNI), derin kalıtım yasak. Her görev/PR `allowed-files` + en az bir `non-goal` bildirir.
 
-### 4.4 AI yetki sınırı kilidi (`src/schemas/task.ts` → `AgentPolicy`, ruleset)
-- AI **yalnız** ArcheType taslağı/prod-update **önerisi** üretebilir.
+### 4.4 AI yetki sınırı kilidi (`src/data/platform-product-code-write-policy.json`)
+- AI platform üzerinde yalnız `read-only-audit` yapar ve actionplan içinde `DIRECTIVE-ONLY` handoff üretir.
+- AI ürün kodu, test, migration, Storybook/config dosyası yazamaz; branch/commit/push/PR oluşturamaz.
+- Platform ürün kodu yazarı `human-developer-only`dır.
 - AI **app/module üretemez, app/module güncelleyemez**, ruleset'i devre dışı bırakamaz/override edemez, doğrudan prod write yapamaz, geçmişi rewrite edemez.
 - `forbiddenTargets` varsayılanı `["app", "module"]`. Tetiklenen ECA zinciri maksimum derinliği **6**.
 
@@ -135,6 +137,7 @@ Dokunduğun alana göre ek check-*.mjs kapıları (`tools/agents/`):
 |---|---|
 | `standardRefs` | `node tools/agents/check-standards-coverage.mjs` (her ref çözülmeli) |
 | `applicability` | `node tools/agents/check-dimension-applicability.mjs` (`applies:false` ⇒ gerekçe) |
+| `uiDelivery` / UI-impact içerik | `node tools/agents/check-ui-delivery.mjs` (UI adayı ⇒ sözleşme; backend-only ⇒ gerekçeli N/A; bkz. `docs/storybook-master-component-integration-directive.md`) |
 | `waivers` | `node tools/agents/check-waivers.mjs` (gerekçe + onay + süre) |
 | kısa-kod / boyut bütçesi | `node tools/agents/check-short-code.mjs` |
 | bağımlılık / paket | `node tools/agents/check-dependency-policy.mjs` |
@@ -170,6 +173,7 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 - `docs/adr-0026-tech-profiles.md`, `docs/adr-0027-engineering-standards.md` (ADR'ler)
 - `docs/task-to-code-contract.md`, `docs/ready-for-dev-gate.md` (kanonik kurallar)
 - `docs/doc-maintainer-operating-boundary.md` (actionplan doc-maintainer rol sınırı)
+- `docs/platform-product-code-write-prohibition-directive.md` (AI platform yazma yasağı; human-developer-only)
 - `src/schemas/*.ts` (şema = TS tiplerinin tek kaynağı)
 - `src/data/standards/*.json` + `src/data/tech-profiles.json` (standart sözleşmeleri)
 

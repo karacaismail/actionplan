@@ -91,6 +91,7 @@ Bir düğüm `done` sayılmadan önce `check-execution-readiness.mjs` kapısınd
 - `status=done` ise `evidence[]` dolu olmalıdır.
 - verification fazı geçmiş olmalıdır.
 - dev+ fazdaki düğümler owner, refs, schedule, AC ve rollback taşımalıdır.
+- UI / Master Component kapsamındaki düğümlerde `evidence[]` ayrıca yayınlanmış Storybook preview URL'i + story interaction/a11y sonucu + visual regression sonucu (veya reviewer-onaylı diff) taşımalıdır (`docs/storybook-implementation.md` §7; `docs/evidence-taxonomy.md`).
 
 ## Geliştiricinin İlk 30 Dakikası
 

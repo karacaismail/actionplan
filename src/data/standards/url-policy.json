@@ -1,0 +1,126 @@
+{
+  "id": "url-policy",
+  "name": "URL, Route, Host ve Kaynak Kimliği Standardı",
+  "version": "2.1.0",
+  "family": "engineering",
+  "basedOnAdr": ["url-policy"],
+  "summary": "Metaframer için k-route-policy, typed public ID, tenant/custom-domain topolojisi, canonical/alias, i18n slug, route ownership ve Ada'dan Atom'a URL sorumluluklarının tek standardı.",
+  "appliesTo": [
+    "app",
+    "module",
+    "archetype",
+    "feature",
+    "component",
+    "work_unit",
+    "micro_step",
+    "surface",
+    "frontend",
+    "backend"
+  ],
+  "rules": [
+    {
+      "id": "url-single-kernel",
+      "rule": "URL üreten her yüzey k-route-policy registry ve tipli RouteRef tüketir; app/module/component bağımsız path stringi veya canonical generator yazamaz.",
+      "rationale": "Tek politika çekirdeği frontend/backend ve app'ler arası drift'i önler.",
+      "severity": "must",
+      "check": "qa:url-policy + urlPolicyRegistry.test"
+    },
+    {
+      "id": "url-private-pii-id-only",
+      "rule": "Private PII canonical path yalnız typedId taşır; kişi adı ve başka PII slug/path/query kimliğine dönüştürülemez.",
+      "rationale": "URL, log, history ve Referer üzerinden kişisel veri sızıntısını önler.",
+      "severity": "must",
+      "check": "URLP-M1 registry parity + security E2E handoff"
+    },
+    {
+      "id": "url-public-canonical",
+      "rule": "Public detail canonical /{locale}/{mount?}/{collection}/{typedId}/{asciiSlug} profilini kullanır; typedId kimlik, slug dekoratiftir.",
+      "rationale": "Kararlı kimlik ile insan-okur/SEO projeksiyonunu ayırır.",
+      "severity": "must",
+      "check": "URLP-M1 grammar mutation + registry schema"
+    },
+    {
+      "id": "url-bounded-id",
+      "rule": "publicId ilgili bounded context tarafından random 128-bit Crockford Base32 olarak üretilir; internal UUIDv7 dışarı çıkmaz ve prefix authorization sağlamaz.",
+      "rationale": "Enumeration ve merkezi kimlik tablosu bağını önler.",
+      "severity": "must",
+      "check": "prefix/entropy contract tests"
+    },
+    {
+      "id": "url-host-tenant-fail-closed",
+      "rule": "HostBinding, token/session tenant claim ve tenant-path adayı uyuşmazsa istek fail-closed sonuçlanır; default tenant fallback yasaktır.",
+      "rationale": "Tenant confusion ve cache poisoning riskini keser.",
+      "severity": "must",
+      "check": "host/tenant mismatch integration tests"
+    },
+    {
+      "id": "url-locale-slug",
+      "rule": "Public locale prefix-always, onboarding slug profili ASCII-firsttir; Unicode canonical site seçimi, Unicode alias ise ayrı tenant opt-in ve migration kararıdır.",
+      "rationale": "i18n, canonical ve crawl davranışını deterministik tutar.",
+      "severity": "must",
+      "check": "registry parity + hreflang/canonical tests"
+    },
+    {
+      "id": "url-safe-redirect",
+      "rule": "308 yalnız güvenli canonical GET/HEAD akışında uygulanır; mutation, upload, webhook ve diğer unsafe methodlar SEO redirect zincirine girmez.",
+      "rationale": "İstek gövdesi/yan etkisi kaybını ve yanlış replay'i önler.",
+      "severity": "must",
+      "check": "method matrix integration tests"
+    },
+    {
+      "id": "url-tenant-config-boundary",
+      "rule": "Tenant yalnız doğrulanmış host/mount/locale/slug projection seçebilir; RouteDefinition, encoding, authorization sırası, reserved namespace ve facet operator semantiğini değiştiremez.",
+      "rationale": "Konfigürasyonu kod enjeksiyonuna veya güvenlik bypassına dönüştürmez.",
+      "severity": "must",
+      "check": "RouteProjection schema + control-plane policy tests"
+    },
+    {
+      "id": "url-nature-levels",
+      "rule": "Ada, Dağ, Kaya, Taş, Kum, Molekül ve Atom kendi registry levelObligations kaydını uygular; alt katman üst katmanın route sahipliğini yeniden tanımlamaz.",
+      "rationale": "URL politikasını tüm üretim granülerliğine tek anlamla yayar.",
+      "severity": "must",
+      "check": "URLP-M1 seven-level coverage test"
+    },
+    {
+      "id": "url-policy-migration",
+      "rule": "Canonical host, mount, locale mode veya slug profile değişikliği doğrudan ayar kaydı değildir; validate, collision report, redirect plan, preview, approval, activate, monitor ve finalize yaşam döngüsüdür.",
+      "rationale": "Link, SEO, auth callback ve tenant erişim kırılmalarını yönetir.",
+      "severity": "must",
+      "check": "migration-state registry + approval evidence"
+    }
+  ],
+  "banned": [
+    "numeric-public-id",
+    "private-pii-slug",
+    "string-url-concat",
+    "default-tenant-fallback",
+    "unverified-custom-domain",
+    "unsafe-method-canonical-redirect",
+    "app-local-url-generator",
+    "catch-all-module-route"
+  ],
+  "allowed": [
+    "typed-route-ref",
+    "random-public-id",
+    "bounded-context-id-owner",
+    "verified-host-binding",
+    "ascii-first-public-slug",
+    "scoped-alias",
+    "prefix-always-public-locale"
+  ],
+  "references": [
+    "docs/url-policy.md",
+    "src/data/url-policy/registry.json",
+    "src/data/url-policy/implementation-program.json",
+    "docs/url-policy-implementation-directive.md",
+    "RFC 3986",
+    "RFC 8820",
+    "RFC 6570",
+    "WHATWG URL",
+    "UAX 15",
+    "UTS 39",
+    "UTS 46",
+    "BCP 47",
+    "RFC 9110"
+  ]
+}

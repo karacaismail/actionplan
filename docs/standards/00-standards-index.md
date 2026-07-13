@@ -39,6 +39,16 @@ Aşağıdaki 15 standart bugün repoda makine-okunur sözleşme olarak vardır; 
 | i18n-standards | engineering | P2 | VAR | check-i18n |
 | dependency-policy | governance | P1 | VAR (repo-bazlı politika) | check-dependency-policy |
 
+2026-07-13 eki (J2/J3 — `json-standards-integration-gap-report-2026-07-13.md`): beş yeni makine-sözleşmesi eklendi. `standardRefs` anahtarları J4 fazında şemaya eklenecektir (KARAR BEKLİYOR — CPO).
+
+| standart (id) | family | priority | makine-kontratı var mı | CI kapısı |
+|---|---|---|---|---|
+| global-market-readiness | governance | P0 | VAR (`global-market-readiness.json`) | check-market-readiness |
+| finance-money-model | data | P0 | VAR (`finance-money-model.json`) | check-finance-model |
+| identity-data | data | P1 | VAR (`identity-data.json`) | check-standards-coverage |
+| search-quality | data | P1 | VAR (`search-quality.json`) | check-standards-coverage |
+| decision-grade-data | data | P1 | VAR (`decision-grade-data.json`) | check-standards-coverage |
+
 ---
 
 ## 3. Eklenen Anlatı Standartları (`docs/standards/01-14`)

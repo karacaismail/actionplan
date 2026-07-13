@@ -38,8 +38,8 @@ Aşağıdaki tablo task-to-code-contract §4 Evidence tablosuyla BİREBİR hizal
 | requirements | (kanıt zorunluluğu yok — çıktı `acceptanceCriteria[]`/`deliverables[]`; kapı kanıtı sonraki fazlarda başlar) | — |
 | test-plan | Test dosyası yolu (`repoPath` + `testCommand` ile tutarlı) — önce kırmızı testin dosyası | Dosya yolu |
 | db-schema | Alembic migration dosyası yolu (`upgrade()` + `downgrade()` dolu); rollback test logu | Dosya yolu + Log |
-| development | CI pipeline URL (yeşil) | URL |
-| test-qa | Playwright HTML raporu URL; axe-core 0 ihlal raporu; güvenlik tarama çıktısı (OWASP ZAP); performans p95 ölçümü | Rapor + URL |
+| development | CI pipeline URL (yeşil). UI/Master Component kapsamında ek: story dosya yolları (component ile birlikte geliştirilmiş) | URL (+ Dosya yolu) |
+| test-qa | Playwright HTML raporu URL; axe-core 0 ihlal raporu; güvenlik tarama çıktısı (OWASP ZAP); performans p95 ölçümü. UI/Master Component kapsamında ek: story interaction test sonucu + story a11y sonucu + visual regression sonucu veya reviewer-onaylı diff kaydı | Rapor + URL |
 | verification | Staging smoke test logu; `deployTarget` URL | Log + URL |
 | release-maintenance | Prod deploy logu; rollback test logu; bağımlılık audit çıktısı (npm audit / pip-audit) | Log |
 
@@ -47,6 +47,7 @@ Okuma kuralları:
 
 - Bir faz birden fazla kanıt türü istiyorsa hepsi `evidence[]`'ta bulunmalı (ör. test-qa için hem Playwright raporu hem axe raporu).
 - Kanıt fazla-yetkili değildir: development fazının yeşil CI URL'si test-qa'nın a11y kanıtını KARŞILAMAZ. Her faz kendi kanıtını ister.
+- UI/Master Component kanıtı (Storybook): `verification` fazında yayınlanmış Storybook preview URL'i + reviewer/onay kaydı zorunludur; story kimliği, viewport, theme, locale, fixture ve commit SHA yeniden üretilebilir olmalıdır — tek başına ekran görüntüsü kanıt SAYILMAZ (`docs/storybook-implementation.md` §7; `enterprise-dod §2.5`). Story testleri E2E kanıtının yerine geçmez; ikisi ayrı satırdır.
 - Faz sırası kanıtı da sıralar: bir fazın kanıtı, bir önceki fazın kanıtı yokken anlamsızdır (task-to-code-contract: önceki faz kapısı geçilmeden sonraki faz `active` olamaz).
 
 ---

@@ -44,9 +44,14 @@ Aşağıdaki tablo dört ekseni ve araçlarını verir.
 | Eksen | Hedef pay | Ne test eder | Araç (FE / BE) |
 |---|---|---|---|
 | Unit | ≥ %70 | Tekil fonksiyon/modül (engine, validator, hesap) | Vitest / pytest |
+| Story interaction (component) | Master Component başına zorunlu matris | Component kullanıcı etkileşimi ve state geçişi (izole, story fixture'ıyla) | Storybook test runner |
+| Story a11y (component) | Story başına | axe + klavye sözleşmesi component düzeyinde | Storybook a11y/axe |
+| Visual regression | UI/token PR'ları | Token, theme, layout, responsive görsel drift | Storybook build + diff sağlayıcı (vendor-neutral) |
 | Integration | ~ %20 | Sınır: resolver↔DB, sözleşme, çapraz-servis | Vitest + test container / pytest + testcontainer |
 | E2E | ≤ %10 | Gerçek tarayıcıda kullanıcı akışı | Playwright |
 | a11y (çapraz-kesen) | Her e2e sayfası | WCAG ihlali (§4) | @axe-core/playwright |
+
+Storybook katmanları (interaction, story-a11y, visual regression) unit ile E2E arasında component düzeyini kapatır; sözleşmeleri `ui-components.json` v1.1 ve `docs/storybook-implementation.md` §6'dadır. Kritik sınır: **story testleri E2E'nin yerine geçmez** — story pass etti diye Surface yolculuğu (Playwright) atlanamaz; ikisi ayrı kapıdır.
 
 ---
 
@@ -138,9 +143,9 @@ Aşağıdaki tablo flaky-kaynaklarını ve kesme yolunu verir.
 
 ## 9. Merge Kapıları (quality-gates köprüsü)
 
-Merge öncesi sekiz kapı bloklar; bunlar `quality-gates.json`'da (referans) tanımlıdır ve bu doküman değerlerini tekrar etmez, test-yazım disipliniyle (testing-strategy) ilişkisini gösterir. Herhangi bir kapı kırmızıysa merge yasaktır. Piramit (§2), test-önce (§3), e2e+axe (§4) ve coverage (§5) bu kapıların *girdisidir*: iyi yazılmış testler kapıları yeşil geçirir.
+Merge öncesi dokuz kapı bloklar; bunlar `quality-gates.json`'da (referans) tanımlıdır ve bu doküman değerlerini tekrar etmez, test-yazım disipliniyle (testing-strategy) ilişkisini gösterir. Herhangi bir kapı kırmızıysa merge yasaktır. Piramit (§2), test-önce (§3), e2e+axe (§4) ve coverage (§5) bu kapıların *girdisidir*: iyi yazılmış testler kapıları yeşil geçirir.
 
-Aşağıdaki tablo sekiz kapıyı ve girdisini verir.
+Aşağıdaki tablo dokuz kapıyı ve girdisini verir.
 
 | Kapı | Koşul | Girdi |
 |---|---|---|
@@ -148,10 +153,13 @@ Aşağıdaki tablo sekiz kapıyı ve girdisini verir.
 | `gate-lint-zero` | `biome check` 0 hata/uyarı | lint/format |
 | `gate-coverage-threshold` | line/branch ≥ %80, patch ≥ %90 | §5 coverage |
 | `gate-e2e-axe-zero` | Playwright yeşil + axe 0 ihlal | §4 e2e+axe |
+| `gate-storybook-ci` | UI/Master Component kapsamındaki PR'da PASS veya NO_CANDIDATES; REVIEW_REQUIRED yalnız reviewer onayıyla düşer (static build + story interaction + story a11y + visual diff) | §2 story katmanları; `ci-conformance-gates.md` storybook-ci |
 | `gate-perf-budget` | p95 ≤ 200ms, render ≤ 2500ms, bundle ≤ 250KB | perf testi |
 | `gate-build-green` | `vite build` + Alembic diff temiz | build + migration |
 | `gate-security-scan` | high/critical 0 + yasak paket yok | güvenlik taraması |
 | `gate-dod-checklist` | DoD maddeleri işaretli | §3 test-önce + doküman |
+
+Storybook kapısında test-önce ritüeli (§3) component düzeyinde uygulanır: Master Component geliştirmesi önce başarısız interaction/a11y story testiyle başlar; story'siz Master Component merge edilemez (`enterprise-dod §2.5`).
 
 ---
 

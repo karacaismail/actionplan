@@ -31,6 +31,9 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 - [waterfall-developer-handoff.md](waterfall-developer-handoff.md) — Geliştirici başlayabilir mi sorusunun go/no-go cevabı; plan-start ile code-start ayrımı.
 - [release-policy.md](release-policy.md) — Sürüm/yayın politikası (semver, changelog, rollback).
 - [waiver-policy.md](waiver-policy.md) — Standarttan bilinçli sapmanın (waiver) yaşam döngüsü: gerekçe + onay + süre.
+- [url-policy.md](url-policy.md) — Ürün kimliği, kanonik URL, alias/redirect ve route-projection kararlarının tek-kaynak sözleşmesi.
+
+- [global-market-readiness-directive.md](global-market-readiness-directive.md) — Global Pazar Hazırlığı Yönergesi: i18n standardının kapsamadığı beş pazar-operasyonel alanın (ödeme yöntemleri ve regülasyonu, UGC/içerik moderasyonu ve güven, coğrafya/politik hassasiyet, dağıtım/keşfedilebilirlik/SEO, müşteri desteği/satış/operasyon) tek sözleşmesi + 13 alanlık devir haritası (Durum: AI-DRAFT — CPO onayı bekler).
 
 ## 3. Mühendislik Standartları (ADR-0027 katmanı)
 
@@ -223,6 +226,19 @@ Araştırma turunda eksik bulunan kernel / archetype / surface sözleşmelerini 
 - [archetype-order-line-item-directive.md](archetype-order-line-item-directive.md) — Sipariş / satır kalemi / vergi / indirim / ödeme durumu metamodeli.
 - [archetype-inventory-stock-directive.md](archetype-inventory-stock-directive.md) — Envanter, depo, lot, seri no, rezervasyon ve stok hareketi metamodeli.
 - [archetype-messaging-thread-directive.md](archetype-messaging-thread-directive.md) — Mesajlaşma, thread, feed, participant, delivery state ve moderation metamodeli.
+
+## 14. Commerce Operating System (bağımsız ürün-ailesi / app sınırı)
+
+`commerce-operating-system` (ada, kısa kod `commerce-os`) için sınır/kapsam/kompozisyon/handoff dokümanları. Yalnız dokümantasyon; app/module düğümü açmaz ([../AGENTS.md](../AGENTS.md) §4.4).
+
+- [adr-0030-commerce-operating-system-boundary.md](adr-0030-commerce-operating-system-boundary.md) — Bağımsız Commerce OS app/ürün-ailesi sınırı kararı (kaynak yetki).
+- [commerce-os-product-scope.md](commerce-os-product-scope.md) — Ürün kapsamı: tez, persona, minimum ticari dilim, non-goal, tüketilen primitifler.
+- [commerce-os-bounded-context-map.md](commerce-os-bounded-context-map.md) — 19 bounded-context haritası (core/edition/advanced; BC-19 Classifieds & Lead Exchange bu doküman seti içinde append-only numara konvansiyonuyla sıra-dışı) + döngüsüz bağımlılık grafiği.
+- [commerce-os-capability-classification.md](commerce-os-capability-classification.md) — Araştırma korpusu prefix + DRC/MAG davranış sınıflandırması ve item-level triyaj kapısı.
+- [commerce-os-kernel-sdk-gap-directive.md](commerce-os-kernel-sdk-gap-directive.md) — Yatay motorların REUSE/EXTEND/SDK-PORT/APP-BC/PROVIDER/DEFER gap analizi.
+- [commerce-os-stack-app-composition.md](commerce-os-stack-app-composition.md) — Aday app manifest profili + mevcut `s-*`/`stack-*` artefakt eşlemesi (öneri, mutasyon değil).
+- [commerce-os-test-first-parallel-handoff.md](commerce-os-test-first-parallel-handoff.md) — Test-önce P0–P8 paralel implementasyon handoff planı (yalnız insan geliştiriciler; AI yalnız salt-okunur audit/direktif incelemesi).
+- [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel→SDK→app-core→module→app teslim sırası + Commerce OS profili (addendum).
 
 ---
 

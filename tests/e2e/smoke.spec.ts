@@ -7,8 +7,8 @@ test.describe("Duman testleri", () => {
   test("Gösterge Paneli açılır ve uygulama başlığı görünür", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
-    // Üst bardaki uygulama başlığı "Eylem Planı" görünür olmalı.
-    await expect(page.getByText("Eylem Planı", { exact: false }).first()).toBeVisible();
+    // Üst bardaki marka başlığı "meta-framer" görünür olmalı.
+    await expect(page.getByText("meta-framer", { exact: false }).first()).toBeVisible();
 
     // Gösterge Paneli başlığı (h1) görünür olmalı.
     await expect(page.getByRole("heading", { name: "Gösterge Paneli", level: 1 })).toBeVisible();

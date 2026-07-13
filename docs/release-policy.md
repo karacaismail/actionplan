@@ -109,6 +109,17 @@ eslesme bozulursa statik varliklar 404 verir.
 
 ---
 
+## Master Component surum politikasi (Storybook)
+
+Ortak UI paketindeki Master Component'ler bu politikaya tabidir (`docs/storybook-implementation.md` §5/§13 Wave SB-5; `ui-components.json` uic-storybook-deprecation):
+
+- **Semver etkisi:** props/API kirilimi = MAJOR; yeni variant/prop (geriye uyumlu) = MINOR; gorsel-davranissal duzeltme = PATCH. Token degisikliginin bilesende gorunur farki visual regression diff'iyle siniflandirilir.
+- **Changelog:** her Master Component degisikligi changelog kaydi tasir (Keep a Changelog formati; yukaridaki bolumle ayni disiplin).
+- **Deprecation:** deprecated component katalogdan sessizce silinmez; Storybook Deprecated bolumunde replacement baglantisi + migration story'siyle gorunur kalir. Breaking degisiklik migration rehberi olmadan yayinlanmaz.
+- **Visual baseline:** baseline guncellemesi bir surum eylemidir — diff nedeni, iliskili task/PR ve reviewer onayi olmadan yapilamaz.
+
+---
+
 ## Surum politikasinin guncellemesi
 
 Bu belgedeki degisiklikler `docs/release-policy.md` dosyasini etkileyen PR uzerinden

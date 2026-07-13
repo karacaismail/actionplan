@@ -103,11 +103,17 @@ const primary = manifest.workspaces?.find(
 );
 if (!primary) {
   fail("workspace-manifest: primary workspace yok");
-} else if (primary.roots?.sdk !== "packages/sdk") {
-  fail(`workspace-manifest: roots.sdk packages/sdk olmali, bulunan ${primary.roots?.sdk}`);
+} else {
+  if (primary.roots?.sdk !== "packages/sdk")
+    fail(`workspace-manifest: roots.sdk packages/sdk olmali, bulunan ${primary.roots?.sdk}`);
+  if (primary.roots?.urlPolicy !== "packages/url-policy")
+    fail(
+      `workspace-manifest: roots.urlPolicy packages/url-policy olmali, bulunan ${primary.roots?.urlPolicy}`,
+    );
 }
 
 requireText("src/engine/exportData.ts", "- SDK root:", "agent prompt SDK root");
+requireText("src/engine/exportData.ts", "- URL policy root:", "agent prompt URL policy root");
 requireText("tools/agents/check-vibecoding-ready.mjs", '"sdk"', "vibecoding root sdk check");
 requireText(
   "tools/agents/check-core-contract.mjs",

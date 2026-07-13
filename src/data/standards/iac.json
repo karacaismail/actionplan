@@ -1,10 +1,10 @@
 {
   "id": "iac",
   "name": "IaC-Hazırlık & v12n Standardı (DevOps Altyapı)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "devops",
   "basedOnAdr": ["adr-0027", "adr-p1"],
-  "summary": "Ürünün üretime nasıl taşındığını tek-kaynak, CI-zorlamalı bir sözleşmeye bağlar (IaC-hazırlık seviyesi). Altyapı elle-tıklama ile değil sürümlenmiş Docker Compose baz + env sözleşmesi ile tanımlanır; deploy hedefi Hetzner + Debian + AMD EPYC + Docker'dır ve aynı commit aynı imaj digest'ini üretir (reproducible: pinned Debian-slim base + lockfile). Tüm gerekli env değişkenleri başlangıçta doğrulanır (eksikse fail-fast); hiçbir parola/anahtar/token repoya düz-metin girmez, secret runtime'da env-injection veya Vault deseniyle enjekte edilir (.env.example commit'li, .env değil). v12n (sanallaştırma/konteyner) bu standarda aittir: imaj minimal-yüzeyli, non-root ve reproducible üretilir. Üretim DB'si yalnız PostgreSQL. YASAK: Next.js, Supabase, Prisma. Tam Terraform/Ansible otomasyonu platform reposunun işidir; bu sözleşme onun ön koşullarını (reproducible + env-validated + secret-free) tanımlar.",
+  "summary": "Ürünün üretime nasıl taşındığını tek-kaynak, CI-zorlamalı bir sözleşmeye bağlar (IaC-hazırlık seviyesi). Altyapı elle-tıklama ile değil sürümlenmiş Docker Compose baz + env sözleşmesi ile tanımlanır; deploy hedefi Hetzner + Debian + AMD EPYC + Docker'dır ve aynı commit aynı imaj digest'ini üretir (reproducible: pinned Debian-slim base + lockfile). Tüm gerekli env değişkenleri başlangıçta doğrulanır (eksikse fail-fast); hiçbir parola/anahtar/token repoya düz-metin girmez, secret runtime'da env-injection veya Vault deseniyle enjekte edilir (.env.example commit'li, .env değil). v12n (sanallaştırma/konteyner) bu standarda aittir: imaj minimal-yüzeyli, non-root ve reproducible üretilir. Üretim DB'si yalnız PostgreSQL. YASAK: Next.js, Supabase, Prisma. Tam Terraform/Ansible otomasyonu platform reposunun işidir; bu sözleşme onun ön koşullarını (reproducible + env-validated + secret-free) tanımlar. v1.1: bölge-başına 16-eksen ölçüm zorunluluğu + veri bölgesi replikasyon koruması (12-devops §9.1).",
   "appliesTo": ["infra", "backend"],
   "rules": [
     {
@@ -41,6 +41,20 @@
       "rationale": "Denenmemiş 'yedek var' iddiası DR'ı ölü metin yapar; restore-drill geri-yüklemenin gerçekten çalıştığını kanıtlar; migration snapshot + dolu downgrade geri-alınamaz deploy'u önler; uygulama ve veri katmanı rollback'inin ayrı doğrulanması kısmi kurtarmayı yakalar.",
       "severity": "should",
       "check": "restore-drill CI job (yedekten geri-yükleme çalışıyor) + migration downgrade testi (alembic downgrade -1 sonrası app çalışır) + requireSnapshot kanıtı + review (restore runbook + owner)"
+    },
+    {
+      "id": "iac-regional-measurement",
+      "rule": "Global ürün yalnız global CDN ile global OLMAZ: her hedef bölgeden gerçek koşullarda ölçüm alınır ve sonuç bölge-başına kanıt (evidence) olarak bırakılır; 'merkez bölgeden ölçtük' bölgesel kanıt yerine geçmez ve hiçbir eksen atlanamaz. Zorunlu 16 ölçüm ekseni: ilk yüklenme süresi, API latency (p95/p99), DNS çözümleme, CDN erişilebilirliği, font indirme, locale paket boyutu/yüklenmesi, üçüncü taraf script erişimi, CAPTCHA/harita/video/analitik erişimi (ulusal blokaj dahil), düşük bant genişliği, paket kaybı davranışı (retry/timeout/degrade tanımlı), eski cihaz ve tarayıcılar, mobil veri maliyeti, bölgesel outage/failover denemesi, yedekleme ve replikasyon rotası, destek personeli veri erişimi, log/telemetry/crash-dump hedefi. Locale dosyaları lazy-load edilir ANCAK kritik hata mesajlarının offline/paket-yüklenemedi durumunda hangi dilde gösterileceği önceden belirlenir ve test edilir; lazy-load hiçbir durumda 'hata anında mesajsız/dilsiz ekran' üretemez.",
+      "rationale": "Bölgesel latency, ulusal blokaj ve cihaz gerçekleri merkez bölgeden görünmez; 16 eksenden herhangi biri atlanırsa pazar 'çalışıyor' sanılırken bölgede kullanılamaz olabilir.",
+      "severity": "must",
+      "check": "integration/e2e (bölge-başına 16 eksen ölçüm kanıtı; eksen atlanamaz) + review (evidence kaydı)"
+    },
+    {
+      "id": "iac-data-region-replication-guard",
+      "rule": "Yedekleme, replikasyon, log, telemetry veya crash-dump akışlarından herhangi birinin veri bölgesi dışına çıkması P0 bulgudur: replikasyon rotası ve yedekleme hedefi veri bölgesi sınırları içinde kalır, bölgesel failover planı da aynı veri bölgesi sınırlarına uyar (k-jurisdiction residency zorlamasıyla kenetli: TR verisi TR'de). Veri-bölgesi-ihlalli replikasyon topolojisi kurulamaz; destek personelinin bölge dışından veri erişimi erişim politikasıyla denetlenir ve audit'lenir.",
+      "rationale": "Uygulama katmanı residency'yi korurken yedek/replikasyon/telemetri rotasının bölge dışına akması aynı mevzuat ihlalini altyapı katmanında yeniden üretir ve çoğu kez ancak failover anında görünür olur.",
+      "severity": "must",
+      "check": "integration (replikasyon/yedek rotası bölge içi; failover'da residency korunur) + audit (bölge dışı destek erişimi kayıtlı) + review"
     }
   ],
   "banned": [

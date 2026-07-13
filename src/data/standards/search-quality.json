@@ -1,0 +1,66 @@
+{
+  "id": "search-quality",
+  "name": "Arama Kalitesi Standardı (Collation / Transliteration / Tolerans Sınıfları)",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "k-search yüzeyinde dil-bilinçli arama kalitesinin veri sözleşmesi: aktif collation/ICU sürümü sabitlenir ve indeks yeniden oluşturmada (reindex) kayıt altına alınır; transliteration ve Latinleştirilmiş sorgu desteği alan bazında beyan edilir; aksan/diakritik toleransı alan sınıfına göre tanımlanır; dosya/etiket/kişi/kuruluş aramaları farklı tolerans sınıfları taşır; Türkçe I/ı gibi dil-bağımlı case dönüşümleri arama karşılaştırmasında açık ele alınır. Kaynak anlatı: k-search-directive §16.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "srq-collation-version-pinned",
+      "rule": "Aktif collation ve ICU/CLDR sürümü SABİTLENİR ve index metadata'sına yazılır; arama indeksi her yeniden oluşturmada (reindex) o an geçerli collation/ICU sürümü kayıt altına alınır. ICU/CLDR sürüm değişimi eşleşme ve sıralama davranışını değiştirebileceği için sürüm farkı reindex kararına girdi olur; UI sıralaması (ICU/CLDR collation) ile veritabanı sıralamasının farkı sözleşmede beyan edilir, gizlenmez.",
+      "rationale": "Collation/ICU sürümü kaydedilmeden hangi indeksin hangi Unicode davranışıyla kurulduğu bilinemez; sessiz sürüm atlaması eşleşme ve sıralamayı değiştirir ve regresyonun kökü ayıklanamaz (k-search-directive §16 locale sürüm kaydı).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "srq-transliteration-declared",
+      "rule": "Transliteration (yazı sistemleri arası çevrim, romanization dahil) ve Latinleştirilmiş sorgu desteği ALAN BAZINDA beyan edilir: hangi index alanının transliteration/alias eşleşmesi taşıdığı ve hangi yazı sistemi çiftlerinin kapsandığı index tanımında kayıtlıdır. Kullanıcı Latin klavye ile Kiril/Arap/Yunan/Japon bir adı Latinleştirilmiş biçimde arayabilir; standart collation bu sorgunun doğru sonucu bulacağını garanti etmez. Kapsam dışı bırakılan alan için karar ve gerekçe index tanımının yanında kayıt altına alınır.",
+      "rationale": "Beyansız transliteration desteği alanlar arasında tutarsız arama davranışı üretir; Latinleştirilmiş sorgu ürün açısından birinci-sınıf senaryodur ve collation'a havale edilemez (k-search-directive §16).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "srq-diacritic-tolerance",
+      "rule": "Aksan/diakritik toleransı ALAN SINIFINA göre tanımlanır ve dil-bilinçli uygulanır: diakritik katlamanın hangi alan sınıfında hangi dil profiliyle çalıştığı açık beyan edilir; körlemesine (dil-körü) unaccent bazı dillerde anlam ayrımını sildiği için tek global diakritik-katlama ayarı yasaktır.",
+      "rationale": "Diakritik bazı dillerde süs, bazı dillerde anlam ayırıcıdır; alan sınıfı ve dil profili beyan edilmeden uygulanan katlama yanlış pozitif/negatif eşleşme üretir (k-search-directive §16 aksan ve diakritik toleransı).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "srq-field-tolerance-classes",
+      "rule": "Dosya, etiket, kişi ve kuruluş aramaları FARKLI tolerans sınıfları taşır: dosya araması kesin/prefix ağırlıklı; kişi ve kuruluş araması diakritik + transliteration + eş anlamlı toleranslı; etiket araması sözlük-bağlı çalışır. Tek global fuzziness ayarı YASAKTIR; her yüzeyin tolerans sınıfı index sözleşmesinde beyan edilir.",
+      "rationale": "Dosya adında toleranslı eşleşme yanlış dosyayı buldurur, kişi/kuruluş adında kesin eşleşme gerçek kişiyi kaçırır; tolerans yüzeye göre ayrışmadan tek ayara bağlanırsa her yüzey için yanlış davranış üretilir (k-search-directive §16 yüzey-bazlı tolerans ayrımı).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "srq-turkish-case",
+      "rule": "Büyük/küçük harf karşılaştırmalarında dil-bağımlı dönüşümler (Türkçe I/ı ve İ/i gibi) arama karşılaştırmasında AÇIKÇA ele alınır: analyzer casefold davranışı dil profiliyle sabitlenir ve testle kanıtlanır; locale-bağımsız (dil-körü) casefold varsayımı YASAKTIR.",
+      "rationale": "Türkçede I harfinin küçüğü ı, İ harfinin küçüğü i'dir; dil-körü casefold Türkçe sorgu ve dokümanları yanlış katlar, hem eşleşmeyi hem sıralamayı bozar; davranış test kanıtı olmadan sabitlenmiş sayılmaz (k-search-directive §16 dil bağımlı case hataları).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    }
+  ],
+  "banned": [
+    "unpinned-collation-icu-version",
+    "blind-global-unaccent",
+    "single-global-fuzziness",
+    "locale-agnostic-casefold-assumption",
+    "undeclared-transliteration-support"
+  ],
+  "allowed": [
+    "index-metadata-collation-version-record",
+    "field-scoped-transliteration-declaration",
+    "per-field-class-diacritic-profile",
+    "per-surface-tolerance-classes",
+    "language-profile-pinned-casefold"
+  ],
+  "references": [
+    "docs/k-search-directive.md",
+    "docs/adr-0027-engineering-standards.md",
+    "Unicode CLDR",
+    "ICU"
+  ]
+}

@@ -1,10 +1,10 @@
 {
   "id": "ai-governance",
   "name": "Yapay Zeka Yönetişimi Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "ai",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon/çıktı doğrulama (Zod), maliyet/rate limit, human-in-the-loop onayı, kill-switch, PII redaksiyonu, AI yetki sınırı (uygulama/modül üretemez, ruleset override edemez) ve openclaw + n8n otomasyon sınırı için somut ve zorlanabilir kurallar.",
+  "summary": "Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon/çıktı doğrulama (Zod), maliyet/rate limit, human-in-the-loop onayı, kill-switch, PII redaksiyonu, platformda AI ürün-kodu yazma yasağı (read-only-audit; human-developer-only) ve openclaw + n8n otomasyon sınırı için somut ve zorlanabilir kurallar.",
   "appliesTo": [],
   "rules": [
     {
@@ -51,10 +51,17 @@
     },
     {
       "id": "ai-no-app-generation-authority",
-      "rule": "AI yeni uygulama/modül ÜRETEMEZ veya mevcut modülü kendiliğinden GÜNCELLEYEMEZ ve ruleset/standartları (bu sözleşmeler dâhil) OVERRIDE EDEMEZ; yalnız öneri/taslak üretir, uygulamayı insan PR'ı ile geçer. AI'nın ürettiği her değişiklik normal CI kapılarından (test, lint, schema-parity, review) geçmek zorundadır; standart kapılarını atlayamaz.",
+      "rule": "AI yeni uygulama/modül ÜRETEMEZ veya mevcut modülü GÜNCELLEYEMEZ ve ruleset/standartları (bu sözleşmeler dâhil) OVERRIDE EDEMEZ; yalnız actionplan içinde öneri/directive üretir. Platform uygulamasını, testi, branch/commit/PR'ı ve CI kanıtını insan geliştirici üretir; AI standart kapılarını atlayamaz veya insan kanıtı olmadan status ilerletemez.",
       "rationale": "AI'nın yetki sınırı, denetlenmemiş otonom kod/standart değişikliğinin sisteme girmesini kategorik olarak engeller.",
       "severity": "must",
-      "check": "review + CI kapı zorunluluğu (AI çıktısı insan PR'ı olarak akar) + audit log"
+      "check": "qa:platform-write-boundary + insan PR/CI evidence doğrulaması + audit log"
+    },
+    {
+      "id": "ai-platform-write-prohibited",
+      "rule": "Codex, Claude, Cursor, Aider, Windsurf ve diğer AI ajanları platform implementation workspace'inde yalnız read-only-audit yapabilir; ürün kodu, test, migration, Storybook/config, generated output, branch, commit, push veya pull request üretemez. Platform ürün kodu yazarı human-developer-only'dır. AI yalnız actionplan içinde DIRECTIVE-ONLY yönerge, WBS, test planı, rollback ve insan evidence handoff'u üretir.",
+      "rationale": "Directive ile implementation aktörünü ayırmak, AI'nın planı uygulama yetkisi sanmasını ve kanıtsız runtime completion üretmesini kategorik olarak engeller.",
+      "severity": "must",
+      "check": "qa:platform-write-boundary + export conformance testi + AGENTS/CLAUDE/CURSOR directive taraması"
     },
     {
       "id": "ai-automation-boundary",
@@ -72,7 +79,8 @@
     "embedded-freeform-prompt",
     "non-allowlisted-model-or-tool",
     "autonomous-irreversible-action",
-    "ad-hoc-automation"
+    "ad-hoc-automation",
+    "ai-writes-platform-product-code"
   ],
   "allowed": [
     "versioned-prompt-registry",
@@ -81,7 +89,11 @@
     "human-in-the-loop",
     "kill-switch",
     "pii-redaction",
-    "openclaw-n8n-automation"
+    "openclaw-n8n-automation",
+    "ai-produces-actionplan-directive"
   ],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/platform-product-code-write-prohibition-directive.md"
+  ]
 }

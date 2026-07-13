@@ -1,10 +1,10 @@
 {
   "id": "privacy",
   "name": "Kişisel Veri & KVKK/GDPR Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "governance",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Kişisel veri işlemenin tek-kaynak sözleşmesi: veri envanteri + sınıflandırma, amaç/dayanak kaydı, retention takvimi, DSAR (erişim/silme/taşıma) süreci, anonimleştirme kuralı, PII-güvenli loglama. dataLifecycle boyutunun standart bağıdır; düğümler privacyRef ile referans verir.",
+  "summary": "Kişisel veri işlemenin tek-kaynak sözleşmesi: veri envanteri + sınıflandırma, amaç/dayanak kaydı, retention takvimi, DSAR (erişim/silme/taşıma) süreci, anonimleştirme kuralı, PII-güvenli loglama. dataLifecycle boyutunun standart bağıdır; düğümler privacyRef ile referans verir. v1.1: global pazar hukuku deltaları (privacy-retention-decision-matrix §17): bağlayıcı dil ayrımı, veri bölgesi ve sınır ötesi aktarım beyanı, alt işleyen envanter sürümlemesi, dil+sürüm+zaman kabul kaydı.",
   "appliesTo": [],
   "rules": [
     {
@@ -41,9 +41,40 @@
       "rationale": "Geri döndürülebilir takma-adlaştırma KVKK/GDPR'da hâlâ kişisel veridir; yanlış 'anonim' etiketi sahte güvence üretir.",
       "severity": "should",
       "check": "anonimleştirme fonksiyonu review + yeniden-tanımlama (re-identification) testi"
+    },
+    {
+      "id": "priv-binding-language",
+      "rule": "Sözleşme ve gizlilik politikalarında bağlayıcı dil ile kullanıcıya gösterilen çeviri dili AYRILIR: çeviri bilgilendiricidir, uyuşmazlıkta bağlayıcı dil esas alınır ve bu ayrım metnin kendisinde beyan edilir. Hukuki metin çevirisi normal ürün çevirisi iş akışına bırakılmaz; hukuk-onaylı ayrı bir süreçten geçer (ajan taslak önerebilir, yürürlük kararı insanındır/hukukundur).",
+      "rationale": "Bağlayıcı dil beyanı olmadan çeviri farkları uyuşmazlıkta hangi metnin geçerli olduğunu belirsiz bırakır; hukuki metni ürün çeviri hattına bırakmak onaysız yürürlük riski üretir.",
+      "severity": "must",
+      "check": "review (hukuk onayı + bağlayıcı dil beyanı metinde) + check-privacy-retention"
+    },
+    {
+      "id": "priv-data-region-declaration",
+      "rule": "Tenant verisinin hangi veri bölgesinde durduğu açık ve denetlenebilir bir yapılandırma kaydıdır; 'nerede duruyor' cevabı pazarlama beyanı değil kayıttır. Verinin bölge dışına her çıkışı (replikasyon, destek erişimi, log/telemetri, yedek, DR) sınır ötesi aktarım sayılır ve aktarım mekanizması belgelenir; mekanizmasız bölge-dışı akış reddedilir. Veri merkezinin Avrupa'da olması tek başına uyumluluk sayılmaz: aktarım araçları, alt işleyen zinciri, destek erişimleri, yedekler ve DR trafiği birlikte değerlendirilir.",
+      "rationale": "GDPR Bölüm V (Art.44-49) / KVKK m.9 sınır ötesi aktarımı özel mekanizmaya bağlar; beyansız veri bölgesi ve mekanizmasız aktarım denetimde savunulamaz.",
+      "severity": "must",
+      "check": "integration (mekanizmasız bölge-dışı aktarım reddi) + review (veri bölgesi yapılandırma kaydı)"
+    },
+    {
+      "id": "priv-subprocessor-versioning",
+      "rule": "Her alt işleyen (hosting, e-posta, analitik, LLM sağlayıcı) envanterde kayıtlıdır ve envanter-dışı üçüncü taraf servis kullanımı yasaktır; alt işleyen değişikliği bildirime tabidir. Sözleşme, DPA, alt işleyen listesi ve güvenlik dokümanları tutarlı (birbirine sürüm-referanslı) sürümlenir: bir DPA'nın işaret ettiği alt işleyen listesi sürümü belirsiz olamaz.",
+      "rationale": "Envanter-dışı alt işleyen bildirimsiz veri aktarımı demektir; sürüm-referanssız DPA hangi alt işleyen setine rıza alındığını kanıtlanamaz kılar.",
+      "severity": "must",
+      "check": "review (alt işleyen envanteri + çapraz sürüm referansları) + integration (envanter-dışı servis reddi)"
+    },
+    {
+      "id": "priv-consent-record-language-version",
+      "rule": "Her sözleşme ve gizlilik politikası sürümlenir; sürümsüz hukuki metin yayınlanamaz. Kullanıcının hangi dilde hangi sürümü ne zaman kabul ettiği kayıt altına alınır (kullanıcı + dil + sürüm + zaman) ve kabul kaydı append-only audit'e düşer. Acil politika güncellemeleri tüm pazarları ve dilleri kapsayan yayın mekanizmasıyla dağıtılır; hangi pazarın hangi sürümde olduğu izlenebilirdir ve hiçbir pazar eski sürümde unutulamaz.",
+      "rationale": "Dil+sürüm+zaman içermeyen kabul kaydı kullanıcının neye rıza gösterdiğini kanıtlayamaz; sürüm izi olmadan acil güncellemede hangi pazarın eski metinde kaldığı görünmez kalır.",
+      "severity": "must",
+      "check": "audit (kabul kaydı: kullanıcı+dil+sürüm+zaman append-only) + review (acil yayın mekanizması)"
     }
   ],
   "banned": ["log'a ham PII", "süresiz saklama (waiver'sız)", "envantersiz PII alanı"],
   "allowed": ["maskeleme", "toplulaştırma", "geri döndürülemez anonimleştirme"],
-  "references": ["docs/gap-2026-07-02-06-boyut-analizi.md"]
+  "references": [
+    "docs/gap-2026-07-02-06-boyut-analizi.md",
+    "docs/privacy-retention-decision-matrix.md"
+  ]
 }

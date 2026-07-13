@@ -39,6 +39,7 @@ const REF_KEY_TO_STANDARD = {
   c13nRef: "c13n",
   c12nRef: "c12n",
   i18nRef: "i18n-standards",
+  urlPolicyRef: "url-policy",
   tenancyRef: "tenancy",
   privacyRef: "privacy",
 };
@@ -62,7 +63,9 @@ let withRef = 0;
 let refCount = 0;
 for (const f of files) {
   const n = rj(path.join(nodesDir, f));
-  const sr = n.standardRefs || {};
+  // URL policy tüm WBS/content katmanlarının ortak taban sözleşmesidir. Ham legacy
+  // JSON'a 467 kez kopyalanmaz; TaskNodeSchema ile aynı merkezi default burada uygulanır.
+  const sr = { urlPolicyRef: "url-policy", ...(n.standardRefs || {}) };
   const hay = [n.id, n.title, n.summary ?? "", ...(n.tags ?? [])].join(" ");
   const cluster = n.source?.cluster ?? "";
   const tenancyRisk = TENANCY_CLUSTERS.has(cluster) || TENANCY_RISK.test(hay);
@@ -99,6 +102,10 @@ for (const f of files) {
     }
     // Mapped anahtar: değer, kanonik id VEYA herhangi bir standart id olabilir.
     const mapped = REF_KEY_TO_STANDARD[k];
+    if (k === "urlPolicyRef" && val !== mapped) {
+      fail(`${n.id}: standardRefs.urlPolicyRef yalnız kanonik "url-policy" olabilir`);
+      continue;
+    }
     if (!standardIds.has(val) && !(mapped && val === mapped)) {
       const hint = mapped ? ` (beklenen kanonik: "${mapped}")` : "";
       fail(`${n.id}: standardRefs.${k} "${val}" standarda çözülemiyor${hint}`);

@@ -1,5 +1,8 @@
 import uiStrings from "@/data/strings.json";
 import { z } from "zod";
+import { AtomDefinitionSchema } from "./atom";
+import { UiArtifactRoleSchema } from "./storybook-registry";
+import { UiDeliverySchema } from "./ui-delivery";
 
 /**
  * TaskNode — Eylem planının tek doğruluk kaynağı (JSON-as-DB).
@@ -371,6 +374,8 @@ export const StandardRefsSchema = z.object({
   releasePolicyRef: z.string().default(""),
   aiGovernanceRef: z.string().default(""),
   i18nRef: z.string().default(""),
+  /** Tüm WBS/content düğümlerinin ortak URL/route kimlik sözleşmesi; ilgisiz düğüm yeni route icat etmez. */
+  urlPolicyRef: z.literal("url-policy").default("url-policy"),
   // Yeni standart bağları (opsiyonel, geriye uyumlu): eski JSON'da yoksa parse kırılmaz.
   // Değer set edilirse check-standards-coverage bunu bir standarda çözmeyi zorlar.
   g11nRef: z.string().optional(),
@@ -484,6 +489,9 @@ export const TaskNodeSchema = z
     // İzlenebilirlik (Faz P5) — plan ↔ gerçek kod artefaktı bağı (opsiyonel; geriye uyumlu)
     traceability: TraceabilitySchema.optional(),
 
+    /** WBS micro-step veya atomik değer tipi için tam, makine-okunur atom sözleşmesi. */
+    atomDefinition: AtomDefinitionSchema.optional(),
+
     // Mühendislik standardı bağı (ADR-0027) — düğüm tek-kaynak sözleşmelere REFERANS verir.
     standardRefs: StandardRefsSchema.default({}),
     /** Boyut uygulanabilirliği (dimKey → {applies, reason}). Boş = tüm boyutlar uygulanır. */
@@ -491,12 +499,50 @@ export const TaskNodeSchema = z
     /** Standarttan bilinçli sapma kayıtları (gerekçeli, onaylı, süreli). */
     waivers: z.array(WaiverSchema).default([]),
 
+    /**
+     * UI artifact rolü (produces-ui/changes-ui-contract/governs-ui/consumes-ui/no-ui) —
+     * docs/storybook-root-integration-gap-report.md §3: "UI hakkında konuşan" (governs)
+     * düğüm "UI üreten" sayılmaz; kapı adaylığı yalnız produces-ui/changes-ui-contract.
+     * Opsiyonel (lazy); açık karar migration'ı registry/generator ile yapılır.
+     */
+    uiArtifactRole: UiArtifactRoleSchema.optional(),
+
+    /**
+     * Makine-okunur UI teslimat sözleşmesi (Storybook + Master Component entegrasyonu).
+     * Opsiyonel (lazy migration); UI-impact adayları için check-ui-delivery kapısı zorlar.
+     * Kaynak: docs/storybook-master-component-integration-directive.md §3.
+     */
+    uiDelivery: UiDeliverySchema.optional(),
+
     // Köken & governance
     source: SourceSchema.optional(),
     state: MaturitySchema.default("taslak"),
     lastUpdated: z.string().default(""),
   })
-  .strict();
+  .strict()
+  .superRefine((node, ctx) => {
+    if (node.atomDefinition?.kind === "task-micro-step" && node.level !== "micro_step") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["atomDefinition"],
+        message: "task-micro-step atom tanımı yalnız level=micro_step düğümünde kullanılabilir",
+      });
+    }
+    if (node.atomDefinition?.kind === "task-demonstration" && node.level !== "micro_step") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["atomDefinition"],
+        message: "task-demonstration atom tanımı yalnız level=micro_step düğümünde kullanılabilir",
+      });
+    }
+    if (node.level === "micro_step" && node.atomDefinition?.kind === "value-type") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["atomDefinition"],
+        message: "micro_step WBS düğümü task-micro-step atom tanımı taşımalıdır",
+      });
+    }
+  });
 
 export type TaskNode = z.infer<typeof TaskNodeSchema>;
 

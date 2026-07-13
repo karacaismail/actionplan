@@ -1,0 +1,680 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "urlp-10",
+  "wbsCode": "1.4.1.1.2.11",
+  "level": "micro_step",
+  "title": "URLP-10 — Session, SSO ve Origin Modeli",
+  "slug": "urlp-10",
+  "summary": "Host-only cookie, app-subdomain/custom-domain handoff, exact OIDC callback, PKCE, rotating refresh-chain ve step-up akışlarını uygula.",
+  "parentId": "urlp-program-work-unit",
+  "order": 10,
+  "icon": "ph-link",
+  "tags": [
+    "url-policy",
+    "k-route-policy",
+    "implementation-program",
+    "urlp-10",
+    "test-first",
+    "platform-handoff"
+  ],
+  "dependsOn": [
+    "urlp-09"
+  ],
+  "blocks": [
+    "urlp-11"
+  ],
+  "related": [
+    "k-surface",
+    "l1-redirect"
+  ],
+  "refs": [
+    "docs/url-policy.md#15-cok-fazli-implementation-programi",
+    "docs/url-policy-implementation-directive.md#urlp-10",
+    "src/data/url-policy/implementation-program.json#URLP-10",
+    "src/data/url-policy/registry.json"
+  ],
+  "criticalPath": true,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi",
+    "qa-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 scope, allowed-files, non-goals, owner ve bağımlılık zinciri onaylandı.",
+        "URLP-10 risk, rollback ve kanonik policy referansları çelişkisiz doğrulandı."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 pozitif, negatif ve edge testleri development öncesi kırmızı kanıtlandı.",
+        "URLP-10 acceptance criteria ile test komutları birebir eşlendi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 veri/şema etkisi sınıflandırıldı; gerekiyorsa expand-contract migration ve backward reader tasarlandı.",
+        "URLP-10 frontend TypeScript ve backend Python contract parity kararı kaydedildi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 yalnız allowed-files kapsamında ve kırmızı testlerden sonra uygulandı.",
+        "URLP-10 forbidden/non-goal sınırlarına dokunulmadı; lint ve type kapıları yeşil."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 traceability.testCommand komutlarının tamamı yeşil.",
+        "URLP-10 tenant/topology negatif senaryoları ve ilgili security corpus geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 exit kriteri, diff, test logu ve rollback drill kanıtıyla bağımsız reviewer tarafından doğrulandı.",
+        "URLP-10 kanonik policy ve implementation-program parity kontrolü geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "URLP-10 canary/rollout sinyalleri ve runbook hazır.",
+        "URLP-10 rollback tetikleyicileri ölçülebilir; evidence rollup güncellendi."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": "URLP-M3",
+  "schedule": {
+    "start": "2026-07-13",
+    "end": "2027-12-31",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-13",
+    "baselineEnd": "2027-12-31"
+  },
+  "deliverables": [
+    "URLP-10 implementation diff'i yalnız tanımlı allowed-files kapsamında.",
+    "URLP-10 kırmızı→yeşil test kanıtı, rollback drill notu ve evidence patch'i.",
+    "URLP-10 için implementation-program allowedFiles/nonGoals sözleşmesine uyum raporu."
+  ],
+  "acceptanceCriteria": [
+    "Session tenant/origin sınırı exact callback ve doğrulanmış handoff olmadan genişlemez.",
+    "URLP-10 test komutlarının tamamı yeşil ve negatif failure mode kanıtı mevcut.",
+    "URLP-10 exit kriteri docs/url-policy.md ile çelişmiyor; implementationStatus evidence olmadan yükseltilmiyor."
+  ],
+  "risks": [
+    {
+      "id": "r-urlp-10-1",
+      "desc": "Origin değişiminde callback veya cookie scope genişlemesi hesap ele geçirmeye yol açar.",
+      "severity": "critical",
+      "mitigation": "urlp-10 negatif testleri, reviewer gate ve fail-closed rollout ile sınırla."
+    },
+    {
+      "id": "r-urlp-10-2",
+      "desc": "Faz bağımlılığı tamamlanmadan sonraki atomun başlatılması sözleşme drift'i üretir.",
+      "severity": "high",
+      "mitigation": "dependsOn zinciri, phase gate ve CI readiness kontrolü ile code-start blokla."
+    }
+  ],
+  "rollback": "Custom-domain/app-subdomain handoff kapatılır; merkezi auth host ve tenant-subdomain suite-path akışına dönülür.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "contract-test-pass-rate",
+      "target": "100%"
+    },
+    {
+      "key": "unresolved-critical-risk",
+      "target": "0"
+    },
+    {
+      "key": "rollback-drill",
+      "target": "passed before release"
+    }
+  ],
+  "ecaRules": [
+    {
+      "id": "eca-urlp-10-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "urlp-10"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-10-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "urlp-10"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-10-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "urlp-10"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-10-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "URLP-10 — Session, SSO ve Origin Modeli AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "apply-gated",
+    "capabilities": [
+      "read",
+      "run-tests",
+      "propose-platform-changeset"
+    ],
+    "allowedTargets": [
+      "archetype",
+      "feature",
+      "component",
+      "work_unit",
+      "micro_step"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "run-tests"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "activate-canonical-switch",
+      "apply-database-migration",
+      "change-host-binding"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli kapsamı, implementation-program phase contract ve kanonik URL policy exit kriteriyle sınırlandırılır.",
+        "URLP-10 — Session, SSO ve Origin Modeli girdileri, çıktıları, hata akışı ve kabul sözleşmesi phase exit criteria ile izlenir.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Özellik Tanımları kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 featureDefs kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 featureDefs değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli için threat model, fail-closed negatif vektör ve tenant izolasyon kanıtı acceptance içinde tutulur.",
+        "URLP-10 — Session, SSO ve Origin Modeli tenant erişimi, PII yetkisi, deny kararı ve audit denetimiyle en az ayrıcalık altında çalışır.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Güvenlik Önlemleri kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 security kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 security değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli değişiklikleri küçük PR, açık allowed-files ve tek sorumluluk sınırıyla yürütülür.",
+        "URLP-10 — Session, SSO ve Origin Modeli tip güvenli modüler katmanlara bölünür; karmaşıklık sınırı lint kapısında ölçülür.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Kod Optimizasyonu kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-origin-matrix.json çıktısına bağlar; step-up journey bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 codeOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 codeOptimization değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-origin-matrix.json ile step-up journey arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli hot path'i deny-by-default davranışı bozmadan cache ve doğrulama maliyeti için ölçülür.",
+        "URLP-10 — Session, SSO ve Origin Modeli secret rotasyonu, rate-limit allowlist'i ve bağımlılık SBOM taramasıyla sertleştirilir.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Güvenlik Optimizasyonu kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 securityOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 securityOptimization değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli için latency, cache-key doğruluğu veya crawl/cardinality bütçesi fazın test planında ölçülür.",
+        "URLP-10 — Session, SSO ve Origin Modeli için p95 200 ms hedefi, cache doğruluğu ve yük testi eşiği kanıtlanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Performans Optimizasyonu kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 performance kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 performance değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli deep-link, app-link, locale ve origin davranışının mobil tüketicilerde geri uyumu doğrulanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli mobil iOS/Android deep-link akışında offline geri dönüş ve 44px dokunma hedefli navigasyonu korur.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Mobil Uygulama Uyumu kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü auth-origin-matrix.json çıktısına bağlar; step-up journey bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 mobileApps kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 mobileApps değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: auth-origin-matrix.json ile step-up journey arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli görünür bir yüzeyi etkiliyorsa odak, klavye, anlamlı link adı ve hata yönlendirmesi Storybook/E2E kanıtına bağlanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli klavye ve focus sırasını, WCAG AAA/axe kanıtını ve ekran okuyucu link adlarını doğrular.",
+        "URLP-10 — Session, SSO ve Origin Modeli için WCAG 2.2 AAA kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 wcag kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 wcag değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli feature flag, canary, compatibility ve geri alma adımı olmadan production'a açılmaz.",
+        "URLP-10 — Session, SSO ve Origin Modeli Docker/Kubernetes dağıtımında readiness health probe ve rollback runbook'u taşır.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Dağıtım kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 deployment kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 deployment değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli activation ve migration olayları idempotent, denetlenebilir ve approval-gated rule üzerinden yürür.",
+        "URLP-10 — Session, SSO ve Origin Modeli activation event zinciri idempotenttir; approval/deny olayı maks 6 tetik derinliğiyle sınırlandırılır.",
+        "URLP-10 — Session, SSO ve Origin Modeli için ECA Kuralları kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-origin-matrix.json çıktısına bağlar; step-up journey bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 eca kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 eca değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-origin-matrix.json ile step-up journey arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli ajanı yalnız allowed-files içinde çalışır; app/module üretmez ve kanıtsız completion yazmaz.",
+        "URLP-10 — Session, SSO ve Origin Modeli için sub_prompt güvenilmezdir; app/module mutasyonu yasak ve insan step-up onayı zorunludur.",
+        "URLP-10 — Session, SSO ve Origin Modeli için AI Ajan Davranışı kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 aiAgents kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 aiAgents değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler ve QA",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli için pozitif, negatif ve edge vektörleri development öncesi kırmızı test olarak tanımlanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli unit, integration ve E2E testlerinde negatif fixture ile evidence üretir.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Testler ve QA kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 testing kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 testing değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP ve Standartlar",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli host/header, redirect, encoding, authorization ve veri sızıntısı tehditleri ilgili ASVS kontrollerine bağlanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli OWASP ASVS doğrulama, access control ve SSRF tehdit kontrollerine bağlanır.",
+        "URLP-10 — Session, SSO ve Origin Modeli için OWASP ve Standartlar kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü auth-origin-matrix.json çıktısına bağlar; step-up journey bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 owasp kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 owasp değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: auth-origin-matrix.json ile step-up journey arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli k-route-policy sözleşmesine RouteRef/ResourceRef üzerinden bağlanır; katmanlar string URL üretmez.",
+        "URLP-10 — Session, SSO ve Origin Modeli kernel sözleşmesi, tipli API ve tek yönlü bağımlılık üzerinden entegre edilir.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Kernel/Core Entegrasyonu kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 integration kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 integration değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli app/module tüketimini manifest ve RouteContribution sözleşmesiyle sınırlar; doğrudan tablo sahipliği vermez.",
+        "URLP-10 — Session, SSO ve Origin Modeli tüketicileri contract kapısından geçer; doğrudan DB veya tablo erişimi kullanmaz.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Modül Kullanımı kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 moduleUsage kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 moduleUsage değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü ve Uyum",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli alias, binding, projection ve audit verisi için retention, tombstone ve migration davranışını açıklar.",
+        "URLP-10 — Session, SSO ve Origin Modeli PII/kişisel veri sınıfı, KVKK/GDPR retention saklama takvimi, silme/anonimleştirme ve expand-contract migration kararını faz kanıtında tutar.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Veri Yaşam Döngüsü ve Uyum kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-origin-matrix.json çıktısına bağlar; step-up journey bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 dataLifecycle kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 dataLifecycle değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-origin-matrix.json ile step-up journey arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik ve Operasyon",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli resolution, redirect, mismatch ve failure sinyallerini dashboard, alarm ve runbook kanıtına bağlar.",
+        "URLP-10 — Session, SSO ve Origin Modeli SLI/SLO ve error-budget metrik hedefini; alarm, structured log, trace ve runbook bağlantısını release öncesi kanıtlar.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Gözlemlenebilirlik ve Operasyon kararı, “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” kabul ölçütünü session-origin-policy.py çıktısına bağlar; origin/cookie matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 observability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 observability değerlendirmesinde “6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.” ölçütünü kapsa. Güvenlik sınırı: Custom domain platform cookie'sini paylaşmaz.. Çıktı: session-origin-policy.py ile origin/cookie matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık ve Süreklilik",
+      "status": "filled",
+      "items": [
+        "Session, SSO ve Origin Modeli partial failure, retry/idempotency, degrade, RTO/RPO ve rollback drill kriterlerini taşır.",
+        "URLP-10 — Session, SSO ve Origin Modeli failure mode kataloğu idempotency, retry/backoff, circuit breaker, DLQ ve RTO/RPO degrade senaryolarını kapsar.",
+        "URLP-10 — Session, SSO ve Origin Modeli için Dayanıklılık ve Süreklilik kararı, “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” kabul ölçütünü auth-handoff.ts çıktısına bağlar; rotation/revocation logu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-10 reliability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-10 reliability değerlendirmesinde “Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.” ölçütünü kapsa. Güvenlik sınırı: Refresh token localStorage'a yazılmaz.. Çıktı: auth-handoff.ts ile rotation/revocation logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    }
+  },
+  "traceability": {
+    "repoPath": [
+      "apps/api/src/meta_api/auth/**",
+      "apps/api/src/meta_api/url_policy/origin/**",
+      "apps/api/tests/auth/**",
+      "apps/web/src/auth/**",
+      "apps/web/src/url-policy/origin/**",
+      "apps/web/e2e/auth/**"
+    ],
+    "testCommand": [
+      "cd apps/api && uv run pytest tests/auth",
+      "pnpm --filter @platform/web test -- src/auth src/url-policy/origin",
+      "pnpm --filter @platform/web e2e -- auth"
+    ],
+    "deployTarget": "platform-url-policy-canary",
+    "implementationStatus": "not-started",
+    "tenantStrategy": "hybrid",
+    "auditLogRef": "url-policy-audit"
+  },
+  "atomDefinition": {
+    "kind": "task-micro-step",
+    "parentLevel": "work_unit",
+    "invariant": "Session tenant/origin sınırı exact callback ve doğrulanmış handoff olmadan genişlemez.",
+    "change": "Host-only cookie, app-subdomain/custom-domain handoff, exact OIDC callback, PKCE, rotating refresh-chain ve step-up akışlarını uygula.",
+    "failureMode": "Wildcard callback, CSRF veya yanlış cookie scope cross-origin oturum kaçırılmasına neden olur.",
+    "allowedFiles": [
+      "apps/api/src/meta_api/auth/**",
+      "apps/api/src/meta_api/url_policy/origin/**",
+      "apps/api/tests/auth/**",
+      "apps/web/src/auth/**",
+      "apps/web/src/url-policy/origin/**",
+      "apps/web/e2e/auth/**"
+    ],
+    "nonGoals": [
+      "6 ay yaşayan tek token üretmek",
+      "Wildcard OAuth callback kabul etmek"
+    ],
+    "sideEffect": "external",
+    "riskLevel": "critical",
+    "rollback": "Custom-domain/app-subdomain handoff kapatılır; merkezi auth host ve tenant-subdomain suite-path akışına dönülür.",
+    "testVectors": [
+      {
+        "kind": "positive",
+        "name": "URLP-10 canonical success path",
+        "testRef": "cd apps/api && uv run pytest tests/auth",
+        "expected": "Kanonik sözleşme ve phase exit kriteri sağlanır."
+      },
+      {
+        "kind": "negative",
+        "name": "URLP-10 fail-closed violation",
+        "testRef": "pnpm --filter @platform/web test -- src/auth src/url-policy/origin",
+        "expected": "Wildcard callback, CSRF veya yanlış cookie scope cross-origin oturum kaçırılmasına neden olur."
+      },
+      {
+        "kind": "edge",
+        "name": "URLP-10 topology and migration edge",
+        "testRef": "pnpm --filter @platform/web e2e -- auth",
+        "expected": "Tenant, locale, host veya migration sınırında deterministic sonuç ve rollback kanıtı üretilir."
+      }
+    ],
+    "evidenceRollup": "urlp-program-work-unit",
+    "reviewer": "platform-architecture-reviewer"
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "urlPolicyRef": "url-policy",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy"
+  },
+  "applicability": {},
+  "waivers": [],
+  "uiArtifactRole": "no-ui",
+  "uiDelivery": {
+    "impact": "none",
+    "applies": false,
+    "reason": "Session, SSO ve Origin Modeli atomu UI bileşeni üretmez; runtime URL, güvenlik veya altyapı sözleşmesi teslim eder.",
+    "componentKind": "none",
+    "reviewStatus": "not-required",
+    "riskClass": "medium"
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "URLP-10",
+    "granularity": "atom",
+    "cluster": "url-policy-implementation"
+  },
+  "state": "aday",
+  "lastUpdated": "2026-07-13"
+}

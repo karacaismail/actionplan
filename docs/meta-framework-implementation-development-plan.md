@@ -45,6 +45,9 @@ Bu plan aşağıdaki dokümanları uygulama sırasına çevirir:
 - `docs/evidence-update-runbook.md`
 - `docs/enterprise-dod.md`
 - `docs/deploy-separation-runbooks.md`
+- `docs/storybook-implementation.md` — UI/component wave'leri için Storybook foundation bağımlılığı: herhangi bir wave'in UI teslimatı (Customer UI, Surface işleri, Master Component'ler), Storybook toolchain foundation'ı (Wave SB-1: workspace/config + decorator'lar + static build CI) ve test kapıları (Wave SB-2) kurulmadan story-evidence üretemez; UI wave planlaması bu bağımlılığı sıraya alır.
+- `docs/url-policy.md` + `src/data/url-policy/registry.json` — URL/route/host/resource kimliği işleri için tek politika ve makine registry'si; platform PR'ları ilgili route/resource/profile id'lerini tüketir, yeni grameri app içinde icat etmez.
+- `docs/url-policy-implementation-directive.md` + `src/data/url-policy/implementation-program.json` — URLP-00–16 için exact branch/allowed-files/non-goals/redTests/testCommands/evidence/rollback/stopConditions ve WBS `urlp-00`–`urlp-16` zinciri; predecessor verified olmadan ardıl development açılmaz.
 
 Çelişki halinde `docs/task-to-code-contract.md`, `docs/kernel-sdk-app-delivery-sequence.md` ve `docs/doc-maintainer-operating-boundary.md` üstündür.
 
@@ -67,6 +70,8 @@ Bu döngü her task için tekrarlanır. İnsan "devam et" dediğinde actionplan 
 13. `npm run gen:reindex` sonrası evidence writeback doğrulama zincirini ve en sonda `npm run qa:ci` çalıştır.
 14. Sonraki düğüme geç.
 
+URL/route programında “sonraki düğüm” serbest seçilmez: `urlp-00` ile başlanır ve yalnız `src/data/url-policy/implementation-program.json` predecessor zinciri izlenir. `qa:url-policy-implementation` kırmızıysa URLP implementation dispatch edilmez.
+
 ## 5. No-Go Kapıları
 
 Bu koşullardan biri varsa implementation kodu başlatılmaz; önce plan/handoff düzeltilir.
@@ -82,6 +87,7 @@ Bu koşullardan biri varsa implementation kodu başlatılmaz; önce plan/handoff
 - Rollback beklentisi yok.
 - Evidence taslağı gerçek PR/CI/test/deploy kanıtı gibi sunuluyor.
 - Plan işi gerçek WBS düğümüne bağlanmamış veya karşılık gelen düğüm bulunmamış.
+- URL/route etkili işte `urlPolicyRef`, registry route/resource/profile kaydı veya tenant/authorization negatif testi eksik.
 
 ## 6. WBS Node Bağlama Matrisi
 

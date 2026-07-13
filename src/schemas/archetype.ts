@@ -316,6 +316,13 @@ export const ArchetypeContractSchema = z
     testFixtures: z.array(z.record(z.string(), z.unknown())).default([]),
     conformanceTests: z.array(z.object({ id: z.string(), assert: z.string() })).default([]),
     versioning: VersioningSchema,
+    /** ArcheType → form/list/detail projection story bağı (integration-directive §5.3). Opsiyonel; geriye uyumlu. */
+    storybook: z
+      .object({
+        masterComponentRefs: z.array(z.string()).default([]),
+        projectionStoryRefs: z.array(z.string()).default([]),
+      })
+      .optional(),
   })
   .strict();
 

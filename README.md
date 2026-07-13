@@ -1,4 +1,8 @@
-# Eylem Planı — Stratejik WBS & Görev Yönetimi
+# meta-framer — Stratejik WBS & Görev Yönetimi
+
+**Proje adı:** `metaframer` · **Marka:** meta-framer · **Teknik sınıf:** meta-framework
+
+**Alan adları:** [metaframer.net](https://metaframer.net) · [metaframer.com](https://metaframer.com)
 
 Çok-ürünlü (28 app düğümü; hedef portföy 50+) AI-first SaaS framework'ünün **enterprise-grade
 waterfall** geliştirme sürecini planlayan, WBS tabanlı stratejik eylem planı ve görev yönetimi çerçevesi.
@@ -6,9 +10,12 @@ waterfall** geliştirme sürecini planlayan, WBS tabanlı stratejik eylem planı
 - **Mimari:** Frontend-only, JSON-as-DB (tüm veri `src/data/generated/**.json`), `engine` JSON'u render eder.
 - **Hiyerarşi (doğa metaforu, 7 seviye):** app(ada) → module(dağ) → archetype(kaya) → feature(taş) → component(kum) → work_unit(molekül) → micro_step(atom).
 - **Her düğüm bir görevdir** ve bir WBS kırılımı + 17 üretim boyutu + 7 waterfall faz taşır.
-- **Rol sınırı:** Bu repo proje/ürün kodu geliştirme yeri değildir. Codex/doc-maintainer yalnız dokümantasyon içeriği, yönerge, gap raporu ve handoff kalitesini iyileştirir; coding implementation geliştiricilerin ve onların yönettiği implementation ajanlarının işidir.
+- **Rol sınırı:** Bu repo proje/ürün kodu geliştirme yeri değildir. AI ajanları yalnız dokümantasyon, yönerge, gap raporu ve handoff kalitesini iyileştirir; platform ürün kodunu yalnız insan geliştirici yazar.
+- **Platform yazma yasağı:** Codex, Claude, Cursor ve diğer AI ajanları platformda yalnız `read-only-audit` yapar; ürün kodu yazarı `human-developer-only`dır. Kanonik hüküm: `docs/platform-product-code-write-prohibition-directive.md`.
 - **Stack (bu araç = tooling):** React 19 + Vite + TS, Tailwind + headless Radix (özel bileşenler; shadcn/ui değil), TanStack Router/Query/Table, React Hook Form, Zod, ECharts, React Flow (@xyflow) + ELK.js. **Ürün/platform stack'i AYRIDIR:** SCSS + CSS token, headless Radix, Tailwind YOK (bkz. ADR-0026).
 - **Export/Import:** Görevler Raw JSON, Developer Brief, Agent Prompt, Evidence Patch ve Vobecoder Card olarak dışa aktarılır; CSV/JSON import-export ayrı PM veri akışını destekler.
+- **URL politikası:** Kanonik gerekçe `docs/url-policy.md`, makine sözleşmesi `src/data/url-policy/registry.json`, standart `src/data/standards/url-policy.json`dır; generated corpus'un tamamı `standardRefs.urlPolicyRef = "url-policy"` bağını merkezi olarak miras alır.
+- **URL implementation handoff:** `docs/url-policy-implementation-directive.md` + `src/data/url-policy/implementation-program.json` + `urlp-00`–`urlp-16` WBS atomları; `qa:url-policy-implementation` execution-ready bütünlüğünü bloklayıcı olarak doğrular.
 
 ## Dokümanlar
 

@@ -1,11 +1,15 @@
 # Definition of Ready — Code-Start Kapısı
 
-Sürüm: 1.1 — 2026-07-08
+Sürüm: 1.2 — 2026-07-13
 Durum: Kanonik
 
 ## Genel Bakış
 
 Bu doküman, bir TaskNode'un **kod yazma aşamasına** geçmeden önce karşılaması gereken zorunlu koşulları tanımlar.
+
+Bu kapı AI'ya platform yazma izni vermez. AI erişimi `read-only-audit`, platform ürün kodu
+yazarı `human-developer-only`dır; code-start yalnız insan geliştirici için hazırlanır.
+Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`.
 
 Önemli ayrım:
 
@@ -26,6 +30,12 @@ Bir düğüm `phase=development` olduğunda aşağıdaki alanlar zorunludur:
 | Uygulama durumu | `traceability.implementationStatus` | `not-started` olamaz; `scaffolded`, `in-progress`, `implemented` veya `verified` olmalı |
 
 `repoPath` gerçek dosya sisteminde var mı kontrolü actionplan CI'ının işi değildir; bu kontrol implementation reposunun CI'ında yapılır. actionplan yalnızca plan düğümünün code-start için yeterli izlenebilirlik taşımasını zorlar.
+
+**UI development adayı için ek readiness alanları** (`docs/storybook-implementation.md` §5 requirements/test-plan kapıları): UI/Master Component kapsamına giren bir düğüm `phase=development` olmadan önce şunları da taşımalıdır — (1) **component kind kararı**: Master mı local mi (Master/local ayrımı `ui-components.json` uic-storybook-master-component; her local zorla Master yapılmaz); (2) **story planı**: zorunlu story matrisinden (uic-story-matrix-required) uygulanacak satırlar + gerekçeli hariç tutulanlar, `test-plan` fazında review edilmiş; (3) **Storybook test komutu**: `traceability.testCommand[]` içinde story interaction/a11y koşusunu içeren komut (ör. storybook test runner çağrısı). Bu üç alan eksikse UI düğümü code-start alamaz; story'siz Master Component merge edilemez.
+
+**URL/route development adayı için ek readiness:** `standardRefs.urlPolicyRef` kanonik `url-policy` değerine çözülmeli; kullanılacak `routeId`, resource kind/prefix, HostBindingProfile, RouteProjection ve SlugProfile registry'de bulunmalı; private/public veri sınıfı açık olmalı; test-plan en az bir canonical parity ve bir tenant/authorization negatif senaryo taşımalıdır. Registry dışı route/prefix veya string URL concat code-start alamaz.
+
+URLP program düğümlerinde ek olarak `src/data/url-policy/implementation-program.json` faz kaydı bulunmalı; `dependsOn` doğrudan predecessor WBS atomuyla eşleşmeli; allowedFiles, nonGoals, redTests, testCommands, evidenceRequirements, rollback ve stopConditions boş olmamalı; predecessor evidence ile verified değilse code-start reddedilmelidir.
 
 ## 2. Makine Kapısı
 
@@ -77,13 +87,13 @@ Kanıtsız done yasaktır; fakat requirements aşamasında kanıt boşluğu doğ
 
 ## 5. Go/No-Go
 
-Kod yazmaya başla:
+İnsan geliştirici kod yazmaya başlar:
 
 - Düğüm `phase=development`.
 - `check-ready-for-dev.mjs` yeşil.
 - Bağımlılık veya blocked durumu yok.
 
-Kod yazmaya başlama:
+İnsan geliştirici kod yazmaya başlamaz:
 
 - Düğüm requirements, test-plan veya db-schema fazında.
 - `repoPath` veya `testCommand` eksik.

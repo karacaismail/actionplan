@@ -1,0 +1,58 @@
+{
+  "id": "decision-grade-data",
+  "name": "Karar Verisi Doğruluk Zinciri Standardı (Decision-Grade Data)",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Karar besleyen her rakamın doğruluk zinciri sözleşmesi: kaynak, doğrulama, onay, mutabakat, dönem kilidi, formül-sürümlü hesaplama ve yayınlanmış snapshot halkaları atlanamaz; analitik/deney kayıtları 11 global boyutu ayrı izler ve tek locale alanına sıkıştırılamaz; analytics event adları çevrilmez ve UI metni event key olamaz; gelir raporlarında orijinal para ile normalize para ayrı tutulur ve günlük cohort sınırı ilgili saat dilimine göre tanımlanır. Kaynak anlatı: decision-grade-data-contract.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "dgd-chain-integrity",
+      "rule": "Karar-verisi zinciri bütündür: kaynak (provenance zarfı) → doğrulama → onay (maker-checker) → mutabakat → dönem kilidi → formül-sürümlü hesaplama (lineage) → yayınlanmış snapshot. Halka ATLANAMAZ; bir halkanın uygulanmadığı veri sınıfı için gerekçeli muafiyet kaydı (waiver-policy disiplini) zorunludur. Dönem kilidi sonrası (reporting_period.status=locked) o döneme yazım kapalıdır; zorunlu düzeltme restatement yoludur: eski sürüm ve yayınlanmış snapshot DEĞİŞMEZ, yeni sürüm fark notuyla yayınlanır.",
+      "rationale": "En tehlikeli hata modu doğru görünen yanlış veridir: mutabakatsız banka bakiyesi veya sürümsüz formülle hesaplanan KPI dashboard'da aynı kesinlikte görünür. Halka atlanırsa rakamın doğruluk sorularına (kaynağı ne, kim onayladı, dönem kilidi sonrası değişti mi, hangi formül sürümüyle hesaplandı) cevap verilemez (decision-grade-data-contract §2-§3).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "dgd-analytics-dimensions",
+      "rule": "Karar verisi taşıyan analitik/deney kayıtları 11 global boyutu AYRI AYRI izler: UI dili, içerik dili, format locale'i, pazar, fatura ülkesi, ödeme para birimi, saat dilimi, veri bölgesi, sözleşme dili, uygulama sürümü, çeviri sürümü. Bu boyutların tek bir locale alanına sıkıştırılması YASAKTIR; consent kaynaklı pazarlar arası kapsam farkları gizlenmez, raporda kapsam notu olarak beyan edilir.",
+      "rationale": "Dil, pazar, para ve bölge ayrı soruların cevaplarıdır; tek locale alanı gerçek kombinasyonları (örn. Almanya pazarında Türkçe UI ile USD ödeyen kullanıcı) ayrıştıramaz ve segment/deney analizini baştan bozar (decision-grade-data-contract §5).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "dgd-event-names-not-translated",
+      "rule": "Analytics event adları ÇEVRİLMEZ: event ad sözlüğü dil-bağımsızdır ve tüm pazarlarda aynı anahtar kullanılır. UI metni event key olarak KULLANILAMAZ; çeviri değişikliği conversion'ı etkileyebileceği için çeviri sürümü (localization sürümü) ayrı boyut olarak ölçülür ve event'e bağlanır.",
+      "rationale": "Çevrilmiş event adı veya UI metninden türetilmiş event key, metin her değiştiğinde anahtarı kırar ve zaman serisini koparır; seri kopunca pazarlar arası karşılaştırma ve trend analizi imkansızlaşır (decision-grade-data-contract §5).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "dgd-original-and-normalized-money",
+      "rule": "Gelir raporlarında orijinal para (işlem para birimi ve tutarı) ile normalize para (raporlama para birimine çevrilmiş tutar) AYRI alanlarda tutulur; normalizasyon kuru ve kur tarihi lineage'a yazılır. Günlük cohort sınırı sunucu UTC gününe göre DEĞİL, kullanıcının/işletmenin ilgili saat dilimine göre tanımlanır.",
+      "rationale": "Yalnız normalize tutar saklanırsa kur ve tarih denetim izi kaybolur, restatement üretilemez; sunucu UTC günü ile yerel gün farklı tarihlere düşen işlemleri yanlış cohort'a yazar ve günlük metrik karşılaştırmasını bozar (decision-grade-data-contract §5, §3.7).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    }
+  ],
+  "banned": [
+    "chain-link-skipping-without-waiver",
+    "single-locale-field-for-analytics",
+    "translated-event-names",
+    "ui-text-as-event-key",
+    "normalized-only-money-storage",
+    "server-utc-day-as-cohort-boundary",
+    "published-snapshot-mutation"
+  ],
+  "allowed": [
+    "provenance-envelope",
+    "maker-checker-approval",
+    "period-lock-restatement-versioning",
+    "formula-versioned-computation-lineage",
+    "eleven-dimension-analytics-tracking",
+    "original-plus-normalized-money",
+    "timezone-aware-cohort-boundary"
+  ],
+  "references": ["docs/decision-grade-data-contract.md", "docs/adr-0027-engineering-standards.md"]
+}

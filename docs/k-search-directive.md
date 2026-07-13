@@ -1,6 +1,7 @@
 # k-search Yönergesi — Arama Kernel Primitifi (Faceted / Filter / Sort, Tenant-Scoped Index)
 
 **Statü:** kanonik yönerge (kernel primitifi `k-search`). **Kod karşılığı:** `core-contract-pack.md` §2.1 (`platform_tenancy` — tenant izolasyonu), §2.6 (`platform_archetype` — `searchIndex` alanı), §2.9 (Observability — p95 bütçesi) + CI kapısı `check-search-contract`.
+**Makine kontratı:** `src/data/standards/search-quality.json` (search-quality — §16 collation/transliteration/tolerans kuralları)
 **Neden var:** Ürün/öznitelik arama 50 app'te tekrar eden, yanlış yapıldığında ya yavaş ya tenant-sızıntılı olan bir yüzeydir. Her app kendi `LIKE '%...%'` sorgusunu yazarsa: (1) p95 bütçesi (<300ms, 100k+ ürün) tutmaz, (2) faceted/sort her seferinde farklı, (3) `WHERE tenant_id` unutulursa çapraz-tenant sonuç sızar. Bu yönerge aramayı tek, sözleşmeli, index-tabanlı bir primitife bağlar. Stack: FastAPI + SQLAlchemy 2.0 + PostgreSQL FTS (GIN) taban → OpenSearch (ölçekte); deploy Hetzner/Debian/AMD EPYC/Docker.
 
 ---
@@ -146,6 +147,39 @@ Her kural bir izlenebilir kimliğe bağlanır; kapı/test bu kimliği referans a
 | SRCH-7 | App ham SQL/DSL vermez; yalnız yapısal `SearchQuery` | `check-search-contract` |
 | SRCH-8 | `pg-fts` → `opensearch` geçişi `SearchQuery` sözleşmesini bozmaz | Test-1/2 (iki backend) |
 | SRCH-9 | AI aktif index tanımını/tenant kapsamını onaysız değiştiremez | CI + AI-guardrail testi |
+| SRCH-10 | CLDR collation yalnız sıralamaya yardım eder; arama kalitesi §16 yetenek listesi (dil tespiti, segmentasyon, transliteration, diakritik toleransı, eş anlamlılar) index tasarımında tek tek değerlendirilerek sağlanır | review (§16 karar kaydı) |
+| SRCH-11 | Latin klavye ile Latinleştirilmiş sorgu senaryosu (Arapça/Japonca/Rusça/Yunanca ad) hedef-pazarlı index'lerde test edilir | ArcheType DoD testi (§16) |
+| SRCH-12 | UI collation'ı ile veritabanı sıralaması farkı sözleşmede beyan edilir | review (§16) |
+| SRCH-13 | Reindex'te locale sürüm kaydı tutulur (aktif collation/ICU sürümü index metadata'sında) | `check-search-contract` + §7 reindex job |
+| SRCH-14 | Büyük/küçük harf karşılaştırması dil profiliyle sabit; Türkçe I/ı sapması testli | analyzer unit testi (§16) |
+| SRCH-15 | Dosya, etiket, kişi ve kuruluş aramalarında tolerans profilleri farklı; tek global fuzziness yasak | review (§16 tolerans matrisi) |
+
+## 16. Global arama, collation ve transliteration
+
+**CLDR collation sıralamaya yardım eder; arama kalitesini çözmez.** `analyzer` profili (§5.1) yalnız `lower + unaccent + stopword` ile kalırsa tek-dilli Latin senaryosu dışındaki sorgular ıskalanır. Global arama, collation'dan bağımsız olarak aşağıdaki yetenek listesini gerektirir; her index tasarımında bu liste tek tek değerlendirilir ve karar (kapsam içi/dışı + gerekçe) index tanımının yanında kayıt altına alınır:
+
+- **Dil tespiti:** Sorgunun ve dokümanın dili tespit edilir; analyzer seçimi buna bağlanır — dil tespiti tek global profile indirgenemez.
+- **Yazı sistemi tespiti:** Sorgunun script'i (Latin/Kiril/Arap/CJK) tespit edilir; yazı sistemi, dil ile aynı şey değildir.
+- **Kelime segmentasyonu:** Boşluksuz yazılan dillerde (Japonca, Çince, Tayca) kelime segmentasyonu olmadan token üretilemez.
+- **Eklemeli dillerde kök ve biçimbirim işleme:** Türkçe gibi eklemeli dillerde kök/biçimbirim işleme (stem/lemma) olmadan çekimli sorgu ("faturalarımdaki") temel dokümanı ("fatura") bulamaz.
+- **Aksan ve diakritik toleransı:** Diakritik katlama dil-bilinçli yapılır; körlemesine `unaccent` bazı dillerde anlam ayrımını siler.
+- **Yazım varyantları:** Aynı adın/terimin yaygın yazım varyantları eşleşir.
+- **Eş anlamlılar:** Alan-terimli eş anlamlı sözlüğü index-yan uygulanır; sözlük değişimi §9 AI-guardrail onay akışına tabidir.
+- **Eski ve yeni imla:** İmla reformu geçirmiş dillerde eski ve yeni imla birlikte eşleşir.
+- **Birden fazla yazı sistemi:** Aynı dilin birden fazla yazı sisteminde yazılabildiği durumlar (Kiril/Latin gibi) çift-index veya transliteration ile kapsanır.
+- **Transliteration:** Yazı sistemleri arası çevrim (romanization dahil) arama katmanında birinci-sınıf yetenektir.
+- **Latinleştirilmiş kullanıcı sorguları:** Kullanıcı Latin klavye ile Arapça, Japonca, Rusça veya Yunanca bir adı Latinleştirilmiş biçimde arayabilir; standart collation bu sorgunun ürün açısından doğru sonucu bulacağını garanti etmez — transliteration/alias alanı gerekir.
+- **Karma dilli sorgular:** Tek sorguda birden fazla dil/script karışabilir; sorgu tek dile zorlanmaz.
+- **Alan terimleri:** Domain terminolojisi (ürün/sektör jargonu) genel dil sözlüğünden ayrı yönetilir.
+- **Dil bazlı arama ağırlıkları:** Alaka ağırlıkları dil başına ayarlanabilir; tek global ağırlık seti varsayılamaz.
+- **Yerel isimlerin alternatif yazımları:** Kişi/kuruluş/yer adlarının alternatif yazımları alias olarak indekslenir.
+
+Normatif ek kurallar:
+
+- **Sıralama farkı beyan edilir:** UI sıralaması (ICU/CLDR collation) ile veritabanı sıralaması aynı sonucu vermeyebilir; hangi yüzeyin hangi collation ile sıraladığı sözleşmede beyan edilir, fark gizlenmez.
+- **Locale sürümleri izlenir:** Arama indeksi yeniden oluşturulurken (§7 reindex) locale sürümleri izlenir: aktif collation/ICU sürümü index metadata'sına yazılır (locale sürüm kaydı); ICU/CLDR sürüm değişimi eşleşme ve sıralama davranışını değiştirebileceği için reindex kararına girdi olur.
+- **Dil bağımlı case hataları hesaba katılır:** Büyük/küçük harf karşılaştırmalarında dil bağımlı hatalar (Türkçe I/ı gibi) hesaba katılır; analyzer casefold davranışı dil profiliyle sabitlenir ve testle kanıtlanır.
+- **Yüzey-bazlı tolerans ayrımı:** Dosya, etiket, kişi ve kuruluş aramalarının toleransları farklı olmalıdır (dosya: kesin/prefix ağırlıklı; kişi/kuruluş: diakritik + transliteration + eş anlamlı toleranslı; etiket: sözlük-bağlı). Tek global fuzziness ayarı yasaktır.
 
 ---
 

@@ -1,4 +1,4 @@
-# Mühendislik Standartları Dizini — Üç-Grup Modeli ve 15 Standart Hub'ı
+# Mühendislik Standartları Dizini — Üç-Grup Modeli ve 16 Çekirdek Standart Hub'ı
 
 Sürüm: 1.0 — 2026-06-29
 Durum: Kanonik hub. Mühendislik standardı işletim katmanının (ADR-0027) tek giriş noktası.
@@ -22,18 +22,18 @@ ADR-0027'nin getirdiği ayrım, her düğümün taşıdığı bilgiyi üç ayrı
 | Grup | Ne içerir | Düğümdeki karşılığı | Niteliği |
 |---|---|---|---|
 | (1) Product/Runtime/Operations | Mevcut 17 üretim boyutu — ürün ne yapar, çalışırken hangi kaliteyi sağlar | `dimensions[<key>]` (17 anahtar) | Boyut (serbest-metin + prompt) |
-| (2) Engineering Standards | 15 tek-kaynak standart sözleşmesi — düğüm hangi mühendislik kuralıyla üretilir | `standardRefs.<...>Ref` (15 ref) | Referans (boyut değil) |
+| (2) Engineering Standards | 16 çekirdek tek-kaynak standart sözleşmesi — düğüm hangi mühendislik kuralıyla üretilir | `standardRefs.<...>Ref` | Referans (boyut değil) |
 | (3) Governance & Evidence | Uygulanabilirlik, sapma kayıtları, kanıt — kural bu düğüme uygulanıyor mu, kanıtı ne | `applicability`, `waivers[]`, `evidence[]` | Yönetişim katmanı |
 
 Grup (1) içeriği düğümün kendisinde yaşar ve düğüme özgüdür. Grup (2) içeriği `src/data/standards/<id>.json` dosyalarında **tek kez** yaşar; düğüm yalnızca anahtarla bağlanır. Grup (3) düğüm ile standart arasındaki ilişkiyi yönetir: bir boyut uygulanmıyorsa gerekçesini (`applicability`), bir standarttan bilinçli sapılıyorsa onaylı+süreli kaydını (`waivers`), bir faz kapısının kanıtını (`evidence`) taşır.
 
-Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; güncel generated data `src/data/generated/meta.json` sayımına göre 467 düğüm taşır ve dosya yalnız değer atanınca yazılır (**lazy migration**).
+Bu üç-grup ayrımı `src/schemas/task.ts` (`TaskNodeSchema`) içinde kodlanmıştır: `dimensions` (grup 1), `standardRefs` (grup 2), `applicability` + `waivers` + `evidence` (grup 3). Üç alanın tümü default'ludur; güncel generated data sayısı `src/data/generated/meta.json` kaynağından okunur ve dosya yalnız değer atanınca yazılır (**lazy migration**).
 
 ---
 
-## 2. 15 Standart Sözleşmesi Kataloğu
+## 2. 16 Çekirdek Standart Sözleşmesi Kataloğu
 
-Aşağıdaki 15 standart, `src/schemas/standard.ts` içindeki tek paylaşılan şemaya (`StandardContractSchema`) uyar ve `src/data/standards/<id>.json` olarak saklanır. Her satır bir standardı, ailesini, özetini, düğümün bağlandığı `standardRefs` anahtarını ve standardı zorlayan bloklayıcı CI kapısını listeler.
+Aşağıdaki 16 çekirdek standart, `src/schemas/standard.ts` içindeki tek paylaşılan şemaya (`StandardContractSchema`) uyar ve `src/data/standards/<id>.json` olarak saklanır. Her satır bir standardı, ailesini, özetini, düğümün bağlandığı `standardRefs` anahtarını ve standardı zorlayan bloklayıcı CI kapısını listeler.
 
 Tablo okunuşu: "standardRef anahtarı" sütunu, bir düğümde o standarda referans vermek için doldurulan alanın adıdır. "Zorlayan CI kapısı" sütunu, `.github/workflows/deploy.yml` içinde o standardı (veya referans bütünlüğünü) bloklayıcı olarak denetleyen adımdır.
 
@@ -51,14 +51,20 @@ Tablo okunuşu: "standardRef anahtarı" sütunu, bir düğümde o standarda refe
 | `observability` | devops | Yapısal JSON log + correlation/request id, RED/USE metrikleri, dağıtık trace, dashboard, SLO | `observabilityRef` | check-standards-coverage |
 | `testing-strategy` | testing | Test piramidi (unit/integration/contract/e2e/visual/load/mutation), seviye başına kapsam | `testingStandardRef` | check-standards-coverage |
 | `release-versioning` | devops | Semantik sürümleme (SemVer), Conventional Commits, otomatik changelog, feature flag ile dağıtım | `releasePolicyRef` | check-standards-coverage |
-| `ai-governance` | ai | Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon | `aiGovernanceRef` | check-standards-coverage |
+| `ai-governance` | ai | Prompt registry, eval/validation ve platformda AI ürün-kodu yazma yasağı: `read-only-audit`, `human-developer-only`, `DIRECTIVE-ONLY` | `aiGovernanceRef` | check-standards-coverage + check-platform-write-boundary |
 | `i18n-standards` | engineering | Çok-dil/locale/RTL/currency/timezone/tax-legal-localization/data-residency + çeviri-iş-akışı + fallback | `i18nRef` | check-i18n |
+| `url-policy` | engineering | `k-route-policy`, typed public ID, canonical/alias, tenant/custom-domain topolojileri ve Ada→Atom URL sorumlulukları | `urlPolicyRef` (merkezi default) | qa:url-policy |
 | `dependency-policy` | governance | Paket allowlist, lisans politikası (lisans-katman federasyonu), SBOM üretimi, lockfile commit | (politika; düğüm ref'i yok) | check-dependency-policy |
+| `global-market-readiness` | governance | Pazar/dil canlıya alma kapısı: 14 launch sorusu, pazar-başına ödeme/destek/moderasyon beyanı, IP-geolocation kimlik-değildir kuralı, kill switch | `marketReadinessRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-market-readiness |
+| `finance-money-model` | data | Para modeli: decimal+ISO 4217+ölçek+yuvarlama politikası, minor-unit varsayım yasağı, üç para birimi ayrımı, kur-dönüşüm-tarihi beyanı, altı finansal durum | `financeModelRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-finance-model |
+| `identity-data` | data | Kişi/kuruluş kimlik verisi: serbest displayName + yapılandırılmış hukuki isim, isim-regex yasağı, ülke-şablonlu adres (UPU S42), E.164 çift saklama, SMS-varsayımı yasağı | `identityDataRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
+| `search-quality` | data | Arama kalitesi: collation/ICU sürüm sabitleme, transliteration/diakritik tolerans beyanı, alan-bazlı tolerans sınıfları, dil-bağımlı case kuralları | `searchQualityRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
+| `decision-grade-data` | data | Karar-verisi zinciri: kaynak→onay→mutabakat→dönem kilidi→formül-sürüm, 11 analitik boyut, event-adı-çevrilmez, orijinal/normalize para ayrımı | `decisionGradeRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
 
 Notlar:
 
-- 15 standartdan 14'ü düğümde bir `standardRefs.<...>Ref` anahtarına karşılık gelir. `dependency-policy` standardı düğüm bazlı değil **repo bazlı** bir politikadır; `standardRefs` içinde ayrı bir anahtarı yoktur, doğrudan `check-dependency-policy` kapısıyla repoda taranır.
-- `standardRefs` içinde ek olarak bir `techProfileRef` anahtarı vardır (ADR-0026). Bu anahtar `src/data/standards/<id>.json`'a değil, `src/data/tech-profiles.json` içindeki bir tech-profile id'sine çözülür ve `check-tech-profile` kapısıyla zorlanır. Tech-profile bir standart sözleşmesi değil, frontend stack manifestidir; bu nedenle yukarıdaki 15'lik katalogda ayrı satır olarak yer almaz ama `standardRefs` ailesinin bir parçasıdır.
+- 16 çekirdek standarttan 15'i düğümde bir `standardRefs.<...>Ref` anahtarına karşılık gelir. `urlPolicyRef`, her JSON'a kopyalanmak yerine `TaskNodeSchema` tarafından merkezi `url-policy` default'u olarak miras verilir. `dependency-policy` repo bazlıdır ve ayrı ref taşımaz.
+- `standardRefs` içinde ek olarak bir `techProfileRef` anahtarı vardır (ADR-0026). Bu anahtar `src/data/standards/<id>.json`'a değil, `src/data/tech-profiles.json` içindeki bir tech-profile id'sine çözülür ve `check-tech-profile` kapısıyla zorlanır. Tech-profile bir standart sözleşmesi değil, frontend stack manifestidir; bu nedenle yukarıdaki 16'lık çekirdek katalogda ayrı satır olarak yer almaz ama `standardRefs` ailesinin bir parçasıdır.
 - Aile değerleri `src/schemas/standard.ts` içindeki `StandardFamilySchema` enum'undan gelir: `engineering | design | testing | devops | ai | data | governance`.
 
 ---
@@ -70,7 +76,13 @@ Notlar:
 | standardRef anahtarı | Çözüldüğü hedef |
 |---|---|
 | `techProfileRef` | `src/data/tech-profiles.json` içindeki profil id'si |
+| `marketReadinessRef` | `src/data/standards/global-market-readiness.json` (anahtar J4 fazında `StandardRefsSchema`'ya eklenir — KARAR BEKLİYOR, CPO) |
+| `financeModelRef` | `src/data/standards/finance-money-model.json` (J4 — KARAR BEKLİYOR) |
+| `identityDataRef` | `src/data/standards/identity-data.json` (J4 — KARAR BEKLİYOR) |
+| `searchQualityRef` | `src/data/standards/search-quality.json` (J4 — KARAR BEKLİYOR) |
+| `decisionGradeRef` | `src/data/standards/decision-grade-data.json` (J4 — KARAR BEKLİYOR) |
 | `i18nRef` | `src/data/standards/i18n-standards.json` |
+| `urlPolicyRef` | `src/data/standards/url-policy.json` + `src/data/url-policy/registry.json` |
 | `architectureRef` | `src/data/standards/architecture.json` |
 | `codingStandardRef` | `src/data/standards/coding-standards.json` |
 | `shortCodeRef` | `src/data/standards/short-code.json` |
@@ -123,6 +135,9 @@ Bu dizin aşağıdaki kararlardan türemiştir ve onlarla birlikte okunmalıdır
 | Waiver Politikası | `docs/waiver-policy.md` | Sapma yaşam döngüsü; `waivers[]` alan sözleşmesi; `check-waivers` reddetme kuralları |
 | Task-to-Code Sözleşmesi | `docs/task-to-code-contract.md` | WBS düğümünün yazılım-teslimat karşılığı; seviye/faz → eylem |
 | Definition of Ready | `docs/ready-for-dev-gate.md` | `development` fazı kapısı; `check-ready-for-dev` ile zorlanır |
+| Storybook Implementation | `docs/storybook-implementation.md` | Storybook'un zorunlu Master Component sözleşme/evidence yüzeyi kararı; normatif kurallar `ui-components.json` v1.1 + `design-system.json` v1.1'de, test kapıları `13-testing-quality-standard` + `ci-conformance-gates` (storybook-ci), a11y bağı `02-a11y-accessibility-standard` §11'de yaşar — bu rapor uygulama/entegrasyon haritasıdır |
+| Storybook Governance Pack | `docs/storybook-governance-pack.md` | İkinci seviye Storybook yönetişimi: risk-temelli coverage budget, fixture fidelity, baseline governance, güvenlik/publishing, federation ve 8 ek CI sinyali; kaynak risk analizi `docs/storybook-unknown-unknowns-gap-report.md` |
+| Storybook Root-Integration Gap | `docs/storybook-root-integration-gap-report.md` | Kök-entegrasyon denetimi: rol modeli (uiArtifactRole), registry/foreign-key katmanı (`src/data/storybook/`), dürüst migration sonucu (MIGRATION_INCOMPLETE) ve ratchet tamper-guard |
 
 Şema kaynakları: standart sözleşmesi `src/schemas/standard.ts` (`StandardContractSchema`), düğüm bağı `src/schemas/task.ts` (`StandardRefsSchema`, `ApplicabilitySchema`, `WaiverSchema`).
 
@@ -135,7 +150,7 @@ Bu hub'ın taşıdığı tek davranış kuralı: **bir düğümde standardın i�
 Bunun üç sonucu vardır:
 
 - **Drift imkânsız.** Standart tek yerde değiştiğinde, ona referans veren tüm düğümler otomatik olarak yeni sürümü işaret eder; çelişen iki kopya oluşamaz.
-- **UI şişmez.** 15 standart için 15 serbest-metin kartı eklenmez; düğüm yalnızca 15 referans anahtarı taşır.
+- **UI şişmez.** Çekirdek standartlar için serbest-metin kartları eklenmez; düğüm yalnızca tipli referans anahtarları taşır.
 - **CI zorlayabilir.** Referans makine-okunur olduğundan `check-standards-coverage` her referansın gerçek bir sözleşmeye çözüldüğünü doğrulayabilir; serbest metin bu denetimi mümkün kılmazdı.
 
 Standardın kendisini değiştirmek isteyen, ilgili `src/data/standards/<id>.json` sözleşmesini ve gerekiyorsa dayandığı ADR'yi günceller — düğümleri değil.

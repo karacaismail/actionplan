@@ -71,6 +71,14 @@ export const SurfaceContractSchema = z.object({
   /** Bağlı tech profili (tech-profiles.json id'si). "" = sınıfından devralır.
    *  Teknoloji Surface seviyesinde bağlanır; ArcheType linkedSurfaces ile miras alır (ADR-0026). */
   techProfileRef: z.string().default(""),
+  /** Surface → Master Component/story bağı (docs/surface-spec.md "Surface × Master Component"
+   *  bölümü; kök-entegrasyon raporu §5 surface-component-map ile eşlenir). Opsiyonel; geriye uyumlu. */
+  storybook: z
+    .object({
+      masterComponentRefs: z.array(z.string()).default([]),
+      compositionStoryRefs: z.array(z.string()).default([]),
+    })
+    .optional(),
 });
 export type SurfaceContract = z.infer<typeof SurfaceContractSchema>;
 

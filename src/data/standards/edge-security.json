@@ -1,10 +1,10 @@
 {
   "id": "edge-security",
   "name": "Kenar Güvenlik Standardı (Security & Edge)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "governance",
   "basedOnAdr": ["adr-0027", "adr-p1"],
-  "summary": "Uygulamanın dışa bakan kenarını (edge) güvenlik disiplinine bağlar: WAF-ready yapısal istek loglama (kötü-niyetli-istek görünürlüğü, PII-güvenli redakte), tenant-aware rate limiting (sınır aşımında 429 + Retry-After + RateLimit-* header), zorunlu security header seti (HSTS/CSP/nosniff/frame/referrer), allowlist-driven CORS (wildcard '*' + credential kombinasyonu yasak) ve hedefli-kapsam E2EE beyanı (envelope encryption, sunucuda plaintext yok). Kenar güvenlik kimlik (03) ve yetki (PDP, 04) katmanlarını tamamlar, yerine geçmez: rate-limit hacim eksenidir, yetki kararı PDP'nindir. Repoda/kenar-config'inde düz-metin secret yasaktır (detay iac standardında).",
+  "summary": "Uygulamanın dışa bakan kenarını (edge) güvenlik disiplinine bağlar: WAF-ready yapısal istek loglama (kötü-niyetli-istek görünürlüğü, PII-güvenli redakte), tenant-aware rate limiting (sınır aşımında 429 + Retry-After + RateLimit-* header), zorunlu security header seti (HSTS/CSP/nosniff/frame/referrer), allowlist-driven CORS (wildcard '*' + credential kombinasyonu yasak) ve hedefli-kapsam E2EE beyanı (envelope encryption, sunucuda plaintext yok). Kenar güvenlik kimlik (03) ve yetki (PDP, 04) katmanlarını tamamlar, yerine geçmez: rate-limit hacim eksenidir, yetki kararı PDP'nindir. Repoda/kenar-config'inde düz-metin secret yasaktır (detay iac standardında). v1.1: Unicode identifier güvenliği eklendi (edge-identifier-uts39; kaynak 03-authn §13).",
   "appliesTo": ["backend", "frontend", "infra"],
   "rules": [
     {
@@ -48,6 +48,13 @@
       "rationale": "Düz-metin secret repoda kalıcı sızıntıdır ve P0 blocker'dır; env/vault enjeksiyonu sırrı koddan ayırır; kenar-red kararlarını değişmez audit'e yazmak güvenlik olaylarının izlenebilirliğini ve adli incelemeyi sağlar.",
       "severity": "must",
       "check": "gitleaks (düz-metin secret taraması yeşil) + audit (429/403 kararı loglanır) + review (secret env/vault'tan enjekte)"
+    },
+    {
+      "id": "edge-identifier-uts39",
+      "rule": "Kritik identifier alanları (username, kuruluş adı, özel alan adı) UTS #39 kısıtlı profille sınırlanır: confusable tespiti ve mixed-script kısıtı uygulanır; görünmez (zero-width) karakterler ve sağdan-sola yönlendirme (bidi/RLO) karakterleri reddedilir. displayName ile username AYNI kurallara tabi tutulmaz: username güvenlik identifier'ıdır ve kısıtlı profille sınırlanır, displayName görüntüleme metnidir ve mümkün olduğunca korunur (yalnız görünmez/bidi karakter temizliği). Güvenlik amaçlı identifier karşılaştırmasında locale'e bağlı lowercase/uppercase dönüşümü YASAKTIR (Türkçe I/ı-İ/i sapması); benzersizlik açık bir normalizasyon + locale-bağımsız casefold politikasıyla tanımlanır ve normalizasyon değişikliği mevcut kullanıcı verisi için çakışma tespiti + etkilenen hesap listesi + geri dönüş adımı içeren migration planı gerektirir.",
+      "rationale": "Confusable/mixed-script/görünmez karakter kombinasyonları hesap taklidi (homograph/spoofing) yüzeyidir; locale-bağımlı casefold aynı identifier'ı login, arama ve erişim kontrolünde farklı sonuçlara götürür ve tutarsız güvenlik kararı üretir.",
+      "severity": "must",
+      "check": "unit (confusable/mixed-script/görünmez karakter örnek seti reddedilir; tr locale altında karşılaştırma değişmez) + review (normalizasyon politikası + migration planı)"
     }
   ],
   "banned": [
@@ -77,6 +84,7 @@
   ],
   "references": [
     "docs/standards/11-security-edge-standard.md",
+    "docs/standards/03-authn-authz-iam-standard.md",
     "docs/pdp-policy-contract.md",
     "docs/adr-0027-engineering-standards.md"
   ]

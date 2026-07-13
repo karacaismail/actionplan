@@ -138,6 +138,33 @@ Bu checklist, `enterprise-dod.md` §2.13 (Deployment) davranışsal kriterlerini
 
 Deploy ölçek-değişmezliği (scale-invariance) taşımalıdır ve şu şekilde uygulanır: para/sipariş/stok yazan her akış outbox + idempotency invariant'ı ile deploy edilir (bayrak değil). Ortam yeni tenant/bölge eklendikçe deploy topolojisi değişmez; `adr-0026-tech-profiles` RLS/schema-per-tenant kararına göre aynı imaj çok-tenant hizmet verir. L3 çok-bölge (K8s) residency (`k-jurisdiction`) ile tutarlı olmalıdır ("TR verisi TR'de"). Bu bağ `plan-01` Dalga 4 scale-invariant kapısıyla zorlanır.
 
+### 9.1 Global altyapı, bölgesel performans ve veri bölgeleri
+
+Global ürün yalnız global CDN ile global OLMAZ; bu yüzden şu şekilde uygulanır: her hedef bölgeden gerçek koşullarda ölçüm alınır, sonuç bölge-başına kanıt (`evidence[]`) olarak bırakılır ve veri bölgesi sınırları altyapı topolojisinde zorlanır. Aşağıdaki tablo her hedef bölgeden ölçülmesi zorunlu eksenleri ve her birinin neyi doğruladığını verir; hiçbir eksen atlanamaz — "merkez bölgeden ölçtük" bölgesel kanıt yerine geçmez.
+
+| # | Ölçüm ekseni | Ne doğrular |
+|---|---|---|
+| 1 | İlk yüklenme süresi | Hedef bölgeden gerçek ilk-yükleme performansının bütçe içinde olduğu |
+| 2 | API latency | Bölge → origin gecikmesinin kabul eşiğinde olduğu (p95/p99 izlenir) |
+| 3 | DNS çözümleme | Bölgesel DNS çözümleme süresi ve doğru kayda ulaşıldığı |
+| 4 | CDN erişilebilirliği | CDN uç noktalarının o bölgeden gerçekten erişilebilir olduğu |
+| 5 | Font indirme süresi | Font indirme süresinin bölgesel performans bütçesi içinde kaldığı |
+| 6 | Büyük locale paketleri | Locale paket boyutunun ve bölgeden yüklenme süresinin kabul eşiğinde olduğu |
+| 7 | Üçüncü taraf script erişilebilirliği | Üçüncü taraf script'lerin bölgede engelli veya yavaş olmadığı |
+| 8 | CAPTCHA, harita, video ve analitik erişimi | Bu servislerin bölgeden erişilebilir olduğu (ulusal blokaj dahil) |
+| 9 | Düşük bant genişliği | Ürünün düşük bant genişliğinde kullanılabilir kaldığı |
+| 10 | Paket kaybı | Yüksek paket kaybında davranışın tanımlı olduğu (retry/timeout/degrade) |
+| 11 | Eski cihaz ve tarayıcılar | Bölgede yaygın eski cihaz ve tarayıcılarda çalıştığı |
+| 12 | Mobil veri maliyeti | Sayfa/paket boyutunun bölgesel mobil veri maliyetine etkisinin ölçüldüğü |
+| 13 | Bölgesel outage ve failover | Bölge düştüğünde failover davranışının denenmiş olduğu |
+| 14 | Yedekleme ve replikasyon rotası | Yedekleme ve replikasyonun veri bölgesi ihlali yaratmadığı |
+| 15 | Destek personeli veri erişimi | Destek personelinin bölge dışından veri erişiminin veri bölgesi kurallarına uyduğu |
+| 16 | Log, telemetry ve crash dump hedefi | Log, telemetry ve crash dump'ların nereye gönderildiğinin bilindiği ve veri bölgesiyle uyumlu olduğu |
+
+NORMATİF: dil dosyaları, fontlar ve polyfill'ler ilk açılış paketini büyütür — locale'ler gerektiğinde yüklenir (lazy-load); ANCAK kritik hata mesajlarının offline/paket-yüklenemedi durumunda hangi dilde gösterileceği önceden belirlenir ve test edilir. Locale paket lazy-load'u hiçbir durumda "hata anında mesajsız/dilsiz ekran" sonucu üretemez.
+
+Veri bölgesi kuralı: 14-16 numaralı eksenler `k-jurisdiction` residency zorlamasıyla kenetlidir ("TR verisi TR'de", §9). Yedekleme, replikasyon, log, telemetry veya crash dump akışlarından herhangi biri veri bölgesi dışına çıkıyorsa bu P0 bulgudur; bölgesel failover planı da aynı veri bölgesi sınırları içinde kalmak zorundadır. Destek personelinin bölge dışından veri erişimi erişim politikasıyla denetlenir ve audit'lenir.
+
 ---
 
 ## 10. AI guardrail
@@ -189,6 +216,7 @@ Altyapı da test-önce doğrulanır ve şu şekilde uygulanır: her operasyon da
 - AC-5: Migration `upgrade()`+`downgrade()` dolu; downgrade sonrası app çalışıyor.
 - AC-6: Deployment checklist 9 kalemi işaretli; prod deploy release owner imzasıyla yapılıyor.
 - AC-7: Zero-downtime deploy (blue-green/rolling) staging'de doğrulandı.
+- AC-8: Her hedef bölge için bölgesel ölçüm kanıtı üretildi (ilk yüklenme, API latency, DNS çözümleme, CDN erişilebilirliği, font indirme, locale paket, üçüncü taraf script, düşük bant genişliği, paket kaybı, eski cihaz/tarayıcı, mobil veri maliyeti); bölgesel outage/failover denendi; yedekleme/replikasyon ile log/telemetry/crash dump hedefleri veri bölgesi kurallarına uygun.
 
 ---
 
@@ -232,6 +260,12 @@ Aşağıdaki tablo bu standardın izlenebilir gereksinimlerini kimliklendirir; h
 | DVI-14 | Health check `/health` endpoint | Backend | P1 | Integration | AC-1 | Backend geliştirici |
 | DVI-15 | scale-invariant deploy (outbox+idempotency invariant) | Infra | P1 | Integration | AC-6 | DevOps geliştirici |
 | DVI-16 | L3 çok-bölge residency tutarlılığı (K8s opsiyonel) | Infra | P2 | Integration | AC-6 | DevOps geliştirici |
+| DVI-17 | Bölgesel performans ölçümü: ilk yüklenme, API latency, DNS çözümleme, CDN erişilebilirliği her hedef bölgeden | Infra | P1 | Integration/E2E | AC-8 | DevOps geliştirici |
+| DVI-18 | Font indirme süresi + locale paket boyutu/yüklenme süresi bölge-bazlı ölçülür; locale lazy-load + kritik hata mesajı dil kararı belirli | Frontend | P1 | E2E | AC-8 | Frontend geliştirici |
+| DVI-19 | Üçüncü taraf script, CAPTCHA, harita, video ve analitik erişilebilirliği bölge-bazlı doğrulanır | Infra | P1 | E2E | AC-8 | DevOps geliştirici |
+| DVI-20 | Düşük bant genişliği, paket kaybı, eski cihaz/tarayıcı ve mobil veri maliyeti testleri | Infra | P2 | E2E | AC-8 | DevOps geliştirici |
+| DVI-21 | Bölgesel outage/failover davranışı belgeli ve denenmiş | Infra | P1 | Integration | AC-8 | DevOps geliştirici |
+| DVI-22 | Veri bölgesi uyumu: yedekleme/replikasyon rotası + log/telemetry/crash dump hedefi + bölge dışı destek erişimi denetimli | Infra | P0 | Integration | AC-8 | DevOps geliştirici |
 
 ---
 

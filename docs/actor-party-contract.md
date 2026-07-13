@@ -2,6 +2,7 @@
 
 **Tarih:** 2026-07-01
 **Durum:** Taslak sözleşme (kilitlenmeyi bekliyor — bkz. §6 ADR-A1)
+**Makine kontratı:** `src/data/standards/identity-data.json` (identity-data — §16 isim/adres/telefon kuralları)
 **Kaynak/bağlam:** `plan-03-yeni-yonergeler-2026-07-01.md §3.1` (Actor/Party yönergesi), `core-contract-pack.md §3.1` (platform_actor primitifi), `wbs-field-semantics.md` (dependsOn anlamı), `plan-01-vibecoding-eylem-faz-faz-2026-07-01.md` Dalga 1.
 **İlişki:** Bu doküman `capability-entitlement-contract.md`'nin kardeşidir: Actor "kim ve hangi rolde?" sorusunu, Capability "hangi yeteneğe hakkı var?" sorusunu yanıtlar. İkisi birlikte PDP'nin (`k-policy-pdp`) karar girdisini oluşturur. Bu doküman **kod yazmaz**; `k-party` kernel primitifinin davranış sözleşmesini normatif tanımlar. Makine-okunur karşılığı (SQLAlchemy modeli, Alembic migration, Strawberry tipi) ADR-A1 kilitlendiğinde ajan-draft + insan-onay ile `platform` reposunda üretilir.
 
@@ -147,6 +148,9 @@ Bu tablo `k-party` için zorunlu test senaryolarını ve türlerini tanımlar.
 | 5 | Audit: rol ekleme/çıkarma audit'e düşüyor, append-only korunuyor | Entegrasyon |
 | 6 | Migration downgrade: `alembic downgrade -1` veri kaybetmeden çalışıyor | CI |
 | 7 | GraphQL koruması: her resolver `permission_classes` taşıyor | Contract |
+| 8 | Kişi adı: tek isim kullanan ve Latin-dışı yazı sistemli party displayName ile kaydediliyor; gereksiz regex/karakter engeli yok | Birim |
+| 9 | Adres: posta kodu veya eyalet/bölge alanı olmayan ülke adresi geçerli kabul ediliyor | Birim |
+| 10 | Telefon: yerel format girişi korunuyor, normalize E.164 karşılığı ayrı tutuluyor; SMS-alabilirlik varsayılmıyor | Birim |
 
 ## 13. Acceptance criteria
 
@@ -156,6 +160,7 @@ Bu tablo `k-party` için zorunlu test senaryolarını ve türlerini tanımlar.
 - AI rol bağlamayı yalnız `draft` olarak öneriyor; `approval_ref` olmadan `bind_role` reddediliyor.
 - `party_role` PDP `subject` girdisi olarak okunabiliyor; PDP kararı role bakıyor.
 - Alembic migration downgrade otomatik test geçiyor; `check-core-contract` (tenant guard, resolver koruması, audit çağrısı, indeks) yeşil.
+- İsim/adres/iletişim modeli §16'ya uygun: tek isimli kişi kaydedilebiliyor; displayName serbest, hukuki isim alanları ayrı; posta kodu evrensel-zorunlu değil; telefon yerel format + ayrı E.164 tutuluyor; OTP teslimat ölçümü ülke+operatör bazında.
 
 ## 14. Anti-patterns
 
@@ -169,7 +174,7 @@ Bu tablo `k-party` için zorunlu test senaryolarını ve türlerini tanımlar.
 
 ## 15. Definition of Done
 
-- §12'deki 7 test senaryosu yeşil (test-önce kanıtı: kırmızı→yeşil geçişi belgeli).
+- §12'deki 10 test senaryosu yeşil (test-önce kanıtı: kırmızı→yeşil geçişi belgeli).
 - `core-contract-pack` tenant + audit + indeks uyumu sağlandı; `check-core-contract.mjs` yeşil.
 - Alembic migration downgrade CI'da çalışıyor.
 - `party_role` PDP tarafından `subject` olarak okunabiliyor (entegrasyon kanıtı).
@@ -177,7 +182,58 @@ Bu tablo `k-party` için zorunlu test senaryolarını ve türlerini tanımlar.
 - AI-guardrail testi: `draft`-dışı doğrudan rol yazımı reddediliyor.
 - Doküman `icerik-kalite-sozlesmesi` biçim kurallarına uyar (aktör-açık, emoji yok, her başlıkta nedir/yapar/yapmaz, her tablodan önce açıklama).
 
-## 16. Requirement-ID tablosu
+## 16. Kişi adları, adresler, telefon ve iletişim kimlikleri
+
+Bu bölüm, party'nin insan-veri yüzeyinin (kişi adı, adres, telefon, e-posta) modellenme kurallarını normatif sabitler. §3 non-goal'leri aynen korunur: bu bölüm contact/CRM yönetimi getirmez, kimlik doğrulama tanımlamaz; somut çok-alanlı yapıların (PersonName/Address/ContactPoint) üretimi Fragment kademesinin (`fragments-directive`) işidir — burada sabitlenen, o yapıların ve `party.display_name` gibi alanların uyacağı sözleşmedir. Aktör-açık ifade: *ajan* alan modelini önerir (draft); *insan* onaylar; *motor* onaylı modeli uygular.
+
+### 16.1 Kişi adları
+
+`firstName + lastName` evrensel model DEĞİLDİR; bu ikiliyi zorunlu kılan şema, tek isim kullanan veya farklı isim düzeni taşıyan kişileri yanlış modeller. İsim modeli aşağıdakilerin tamamını dikkate alır:
+
+- Tek isim kullanan kişiler (soyadı alanı zorunlu tutulamaz).
+- Birden fazla soyadı taşıyan kişiler.
+- Patronimik ve matronimik parçalar (baba/anne adına dayalı, soyadı olmayan bileşenler).
+- Soyadının önce yazıldığı kültürler.
+- Resmî isim ile tercih edilen ismin ayrışması.
+- Aynı kişinin birden fazla yazı sistemindeki isimleri.
+- İsim parçalarının sırasının bağlama göre değişmesi (resmî belge, hitap, sıralama bağlamları).
+- Hitap ve unvanlar (ismin parçası değil, sunum bağlamıdır).
+- İsim değişiklikleri (geçmişe dönük iz korunur; §14 "sessiz silme" yasağıyla uyumlu).
+- İsimlerin benzersiz kimlik olarak KULLANILAMAMASI (kimlik `party.id`'dir; isim tekil anahtar, dedup anahtarı veya login anahtarı yapılamaz).
+
+CLDR Person Names, locale'e göre GÖSTERİM yapıları sağlar; kimlik doğrulamayı, resmî ismi, tercih edilen ismi veya DB şemasını belirlemez (kaynak: https://www.unicode.org/reports/tr35/tr35-personNames.html). EN GÜVENLİ YAKLAŞIM (normatif): kullanıcı tam görüntüleme adını (displayName — §5 `party.display_name` alanının karşılığı) serbestçe girer; hukuki zorunluluk varsa AYRICA yapılandırılmış hukuki isim alanları tutulur; orijinal yazı sistemi korunur; transliteration bilgisi orijinalin üzerine yazılmadan ayrı tutulur; isim alanlarında gereksiz regex ve karakter yasağı KULLANILMAZ.
+
+### 16.2 Adresler
+
+Evrensel bir `street, city, state, ZIP` formu YOKTUR; adres modeli ülkeye göre şu eksenlerin tamamında değişir:
+
+- Alanların varlığı ülkeye göre değişir.
+- Alan sırası ülkeye göre değişir.
+- Posta kodu olmayabilir (posta kodu evrensel-zorunlu alan yapılamaz).
+- Eyalet/bölge alanı zorunlu olmayabilir.
+- Bina ve daire bilgisi farklı hiyerarşide olabilir.
+- Latin dışı yazı sistemi gerekebilir.
+- Yerel adres ile uluslararası posta adresi farklı olabilir (iki gösterim ayrı temsil ister).
+
+UPU S42, ülkeye özgü adres bileşenleri ve gösterim şablonları gerekliliğini ortaya koyar; teslim edilebilirliği, KYC'yi veya kullanıcının gerçekten o adreste bulunduğunu DOĞRULAMAZ (kaynak: https://www.upu.int/en/postal-solutions/programmes-services/addressing-solutions). Adres doğrulama ve teslim edilebilirlik ayrı operasyonel yeteneklerdir; şablon standardına uymak bunları ikame etmez.
+
+### 16.3 Telefon ve e-posta
+
+İletişim kimlikleri aşağıdaki kuralların tamamıyla modellenir:
+
+- Telefon girişinde kullanıcının yerel formatı kabul edilir; normalize E.164 karşılığı AYRI tutulur (girilen biçim kaybedilmez).
+- Her telefonun SMS alabildiği VARSAYILMAZ (sabit hat/sanal numara olabilir; SMS-yeteneği ayrı bir veridir).
+- OTP teslimatı ülke ve operatör bazında ölçülür; OTP teslimat oranı kanal seçim kararına veri sağlar (operasyon sahipliği §16.4).
+- E-postada uluslararası karakter (EAI) teknik olarak mümkündür; e-posta doğrulama kuralı ASCII varsaymaz.
+- Uluslararası alan adları (IDN) ve güvenli gösterimi ayrıca ele alınır (güvenlik sahipliği §16.4).
+
+ITU E.164 numaralandırma yapısını, IETF EAI uluslararası e-postayı, IDNA uluslararası alan adını tanımlar; hiçbiri doğrulama/teslimat/uyumluluk POLİTİKASINI tanımlamaz (kaynak: https://www.itu.int/rec/t-rec-e.164/en) — politika bu sözleşmede ve §16.4'te sahiplik verilen standartlarda veri olarak sabitlenir.
+
+### 16.4 Sahiplik ve çapraz referans
+
+Identifier güvenliği (username/confusable karakter politikası) bu sözleşmenin değil `standards/03-authn-authz-iam-standard.md`'nin kapsamındadır; OTP/hesap kurtarma operasyonu da orada tanımlanır. Bu bölüm yalnız party'nin isim/adres/iletişim veri modelini sabitler; kimlik doğrulama, kurtarma ve identifier-güvenliği kararları için ilgili standarda çapraz referans verilir (§3 non-goal ayrımıyla tutarlı).
+
+## 17. Requirement-ID tablosu
 
 Aşağıdaki tablo, bu sözleşmenin izlenebilir gereksinimlerini kimlik + katman + öncelik (P0–P3) + test türü + kabul + sahip ile listeler. Öncelik: P0 = bloklayıcı invariant, P1 = çekirdek, P2 = önemli, P3 = iyileştirme.
 
@@ -199,3 +255,8 @@ Aşağıdaki tablo, bu sözleşmenin izlenebilir gereksinimlerini kimlik + katma
 | AP-14 | Config-driven surface (hardcoded rol dallanması yok) | Frontend | P1 | E2E | UI rol verisinden türetilir | ui-team |
 | AP-15 | WCAG 2.2 AA + i18n rol/ilişki adları | Frontend/A11y | P2 | A11y(axe) | axe critical=0; roller çok-dilli | ui-team |
 | AP-16 | `k-party` WBS düğümü doğru dependsOn (k-schema, k-tenancy) | Governance/WBS | P1 | CI(data-quality) | DAG geçerli, dangling yok | pmo |
+| AP-17 | Kişi adı modeli: displayName serbest giriş; `firstName+lastName` dayatması yok (tek isim, çoklu soyadı, patronimik kabul) | Backend/Data | P1 | Unit | Tek isimli party kaydedilir; soyadı zorunlu değil | kernel-team |
+| AP-18 | İsim: hukuki isim ayrı yapılandırılmış alanlarda; yazı sistemi korunur; transliteration ayrı; gereksiz regex/karakter yasağı yok | Backend/Data | P1 | Unit | Latin-dışı isim bozulmadan saklanır; transliteration ayrı alanda | kernel-team |
+| AP-19 | Adres: ülkeye özgü bileşen/şablon (UPU S42 referans); posta kodu ve eyalet/bölge evrensel-zorunlu tutulamaz | Backend/Data | P1 | Contract | Posta kodsuz adres geçerli; şablon ülkeye göre çözülür | kernel-team |
+| AP-20 | Telefon: yerel format girişi + AYRI normalize E.164; SMS-alabilirlik varsayılmaz | Backend/Data | P1 | Unit | Giriş biçimi korunur; E.164 ayrı; SMS-yeteneği ayrı veri | kernel-team |
+| AP-21 | OTP teslimat ölçümü ülke+operatör bazında; identifier güvenliği ve hesap kurtarma `standards/03-authn-authz-iam-standard.md`'ye çapraz referanslı | Security/Integration | P2 | Integration | Teslimat metriği kaydedilir; sahiplik sınırı net | security-team |

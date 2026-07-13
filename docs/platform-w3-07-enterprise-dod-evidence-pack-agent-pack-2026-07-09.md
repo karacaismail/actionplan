@@ -185,6 +185,7 @@ W3-07 ancak şu koşullarla kapanır:
 - W3-01..W3-06 evidence linkleri gerçek PR/CI/deploy/test kanıtına bağlıdır.
 - API enterprise regression ve web enterprise e2e doğrulaması geçer.
 - Customer/OrderOps/Inventory Enterprise DoD matrix vardır.
+- Evidence pack, UI kapsamı için yayınlanmış Storybook preview URL'lerini, story interaction/a11y test sonuçlarını ve onaylı visual diff kayıtlarını içerir (story kimliği + viewport + theme + locale + commit SHA yeniden üretilebilir; `docs/enterprise-dod.md` §2.5, `docs/evidence-taxonomy.md`).
 - `reports/enterprise-readiness.md` ve actionplan evidence patch gerçek değerler taşır.
 - W4 portfolio scale, app factory, marketplace veya evidence dashboard işi eklenmemiştir.
 - `build-enterprise-readiness` node'una PR/CI/deploy/test/evidence geri yazılmıştır.

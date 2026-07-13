@@ -1,0 +1,78 @@
+{
+  "id": "identity-data",
+  "name": "Kimlik Verisi Standardı (Kişi Adı / Adres / Telefon-İletişim)",
+  "version": "1.0.0",
+  "family": "data",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Party'nin insan-veri yüzeyi (kişi adı, adres, telefon/e-posta) için zorunlu veri standardı: kullanıcı tam görüntüleme adını (displayName) serbest girer, hukuki isim gerektiğinde AYRI yapılandırılmış alanlarda tutulur, isim alanlarında regex/karakter-sınıfı yasağı uygulanmaz, adres formu ülke şablonuna (UPU S42) göre kurulur ve posta kodu evrensel zorunlu tutulamaz, telefon yerel formatta kabul edilip normalize E.164 karşılığı ayrı saklanır, her numaranın SMS alabildiği varsayılmaz. Kaynak anlatı: actor-party-contract §16.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "idd-displayname-free",
+      "rule": "Kullanıcı tam görüntüleme adını (displayName — `party.display_name` karşılığı) SERBESTÇE girer; firstName+lastName ikilisi evrensel model DEĞİLDİR ve zorunlu tutulamaz. Tek isim kullanan kişiler (soyadı alanı zorunlu yapılamaz), birden fazla soyadı taşıyanlar, patronimik/matronimik parçalar, soyadı-önce yazım düzenleri ve resmî isim / tercih edilen isim ayrışması desteklenir. İsim benzersiz kimlik, dedup anahtarı veya login anahtarı olarak kullanılamaz; kimlik `party.id`'dir.",
+      "rationale": "firstName+lastName şeması tek isimli veya farklı isim düzeni taşıyan kişileri yanlış modeller; CLDR Person Names yalnız locale'e göre GÖSTERİM yapısı sağlar, DB şemasını belirlemez. En güvenli yaklaşım serbest displayName + gerektiğinde ayrı yapılandırılmış alanlardır (actor-party-contract §16.1).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "idd-legal-name-structured",
+      "rule": "Hukuki isim (fatura, sözleşme, KYC gibi resmî zorunluluk) gerektiğinde displayName'den TÜRETİLMEZ; AYRI yapılandırılmış hukuki isim alanlarında tutulur. Hukuki isim alanlarının varlığı zorunluluğun doğduğu bağlama (jurisdiction / iş akışı) bağlıdır, her kullanıcıdan peşin toplanmaz; isim değişikliklerinde geçmişe dönük iz korunur (sessiz silme yasağı).",
+      "rationale": "displayName sunum içindir ve kişinin resmî belgesindeki isim yapısıyla eşleşme garantisi taşımaz; gösterim alanından hukuki isim türetmek yanlış resmî belge üretir ve düzeltme izini kaybettirir (actor-party-contract §16.1).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "idd-no-name-regex",
+      "rule": "İsim alanlarında karakter-sınıfı yasağı ve regex doğrulaması YASAKTIR (ör. yalnız [A-Za-z] kabulü, apostrof/tire/boşluk reddi, minimum-iki-kelime şartı). Orijinal yazı sistemi (Latin dışı dahil) olduğu gibi korunur; transliteration / Latinleştirilmiş karşılık gerekiyorsa orijinalin üzerine yazılmadan AYRI alanda tutulur.",
+      "rationale": "Karakter-sınıfı filtreleri gerçek isimleri (aksanlı, apostroflu, Latin dışı yazı sistemli) reddeder ve kullanıcıyı kendi ismini yanlış yazmaya zorlar; orijinal yazı sisteminin transliteration ile ezilmesi geri döndürülemez veri kaybıdır (actor-party-contract §16.1).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "idd-address-country-template",
+      "rule": "Adres formu ve saklama modeli ÜLKE ŞABLONUNA göre kurulur: alan varlığı ve alan sırası ülke bazlıdır (UPU S42 ülkeye özgü adres bileşenleri ve gösterim şablonları); evrensel street/city/state/ZIP formu dayatılamaz. Posta kodu evrensel-zorunlu alan YAPILAMAZ (posta kodu olmayan ülkeler vardır); eyalet/bölge alanı da ülkeye göre opsiyoneldir. Yerel adres gösterimi ile uluslararası posta gösterimi ayrı temsil edilebilir; adres doğrulama ve teslim edilebilirlik ayrı operasyonel yeteneklerdir, şablon standardına uymak bunları ikame etmez.",
+      "rationale": "Tek sabit adres formu bazı ülkelerde doldurulamayan zorunlu alanlar (posta kodu, eyalet) üreterek gerçek adresleri reddeder; UPU S42 alan varlığının ve sırasının ülkeye göre değiştiğini normatif ortaya koyar (actor-party-contract §16.2).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "idd-phone-e164-dual",
+      "rule": "Telefon numarası kullanıcının YEREL formatında kabul edilir ve girilen biçim kaybedilmez; normalize E.164 karşılığı AYRI alanda saklanır. Karşılaştırma, dedup ve yönlendirme E.164 alanı üzerinden; kullanıcıya gösterim girilen/yerel biçim üzerinden yapılır.",
+      "rationale": "Yalnız E.164 saklamak kullanıcının girdiği biçimi kaybeder; yalnız yerel biçim saklamak numara karşılaştırmasını ve uluslararası eşleşmeyi belirsizleştirir. ITU E.164 numaralandırma yapısını tanımlar, doğrulama/teslimat politikasını tanımlamaz — politika bu standartta veri olarak sabitlenir (actor-party-contract §16.3).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    },
+    {
+      "id": "idd-no-sms-assumption",
+      "rule": "Her telefon numarasının SMS alabildiği VARSAYILMAZ: sabit hat ve sanal numaralar SMS alamayabilir; SMS-yeteneği numaradan türetilmeyen AYRI bir veridir. OTP teslimatı ülke ve operatör bazında ÖLÇÜLÜR; teslimat oranı kanal seçim kararına (SMS / sesli arama / e-posta / authenticator) veri sağlar ve tek-kanal OTP zorunluluğu kurulmaz.",
+      "rationale": "SMS-alabilir varsayımı sabit hat veya sanal numara kullanan kullanıcıları hesaptan kilitler; OTP teslimat oranı ülkeye ve operatöre göre ciddi değişir, ölçülmeden kanal kararı verilemez (actor-party-contract §16.3; kurtarma paritesi mfa standardındadır).",
+      "severity": "must",
+      "check": "check-standards-coverage + review"
+    }
+  ],
+  "banned": [
+    "firstname-lastname-universal-model",
+    "name-charset-regex-validation",
+    "universal-mandatory-postal-code",
+    "fixed-address-form-all-countries",
+    "e164-only-storage-discarding-input",
+    "sms-capability-assumption",
+    "legal-name-derived-from-displayname",
+    "transliteration-overwriting-original-script"
+  ],
+  "allowed": [
+    "free-text-displayname",
+    "structured-legal-name-fields",
+    "country-address-template-upu-s42",
+    "dual-phone-storage-local-plus-e164",
+    "separate-transliteration-field",
+    "otp-delivery-measurement-per-country-operator"
+  ],
+  "references": [
+    "docs/actor-party-contract.md",
+    "docs/adr-0027-engineering-standards.md",
+    "UPU S42",
+    "ITU E.164",
+    "CLDR Person Names (UTS #35)"
+  ]
+}

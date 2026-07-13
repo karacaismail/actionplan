@@ -117,13 +117,14 @@ UI, kullanıcının doğrudan temas ettiği yüzeydir. "Bitti" demek ekranın re
 **Ne zaman DONE sayılır:**
 - Tüm `deliverables[]` listelenen UI ekranları tamamlanmış.
 - `acceptanceCriteria[]` dizisindeki her kriter bir Playwright testi ile karşılanmış.
-- Tasarım tokenları (Tailwind + Radix) kullanılmış; hardcoded renk/boyut yok.
+- Tasarım tokenları (SCSS + CSS custom property; headless Radix — ADR-0026) kullanılmış; hardcoded renk/boyut yok.
 - Responsive: 320px — 1920px arası kırılmıyor (Playwright viewport testleri).
 - Error boundary ve loading state her rotada mevcut.
+- Surface'in tükettiği her Master Component zorunlu story matrisiyle Storybook'ta yayınlanmış (`ui-components.json` v1.1: uic-storybook-master-component + uic-story-matrix-required); story'siz Master Component merge edilemez.
 
-**Hangi kanıt gerekir:**
+**Hangi kanıt gerekir (UI için Storybook ZORUNLU evidence'tır, opsiyonel değildir — bkz. `docs/storybook-implementation.md` §7):**
 - Playwright test raporu: tüm `acceptanceCriteria` senaryoları geçmiş.
-- Storybook veya visual regression snapshot (opsiyonel ama önerilen).
+- Yayınlanmış Storybook preview URL'i + story interaction/a11y test sonucu + visual regression sonucu (veya reviewer-onaylı diff) + ilgili component/version + reviewer kaydı. Story kimliği, viewport, theme, locale, fixture ve commit SHA yeniden üretilebilir olmalı; tek başına ekran görüntüsü yeterli değildir. Story testleri E2E'nin yerine geçmez; ikisi birlikte gerekir.
 - Lighthouse performans skoru: LCP < 2.5s, CLS < 0.1.
 
 **Kapandığı faz:** `development` → `test-qa`.

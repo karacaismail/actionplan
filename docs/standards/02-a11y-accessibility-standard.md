@@ -1,6 +1,6 @@
 # 02 — a11y (Erişilebilirlik) Standardı (Anlatı)
 
-Sürüm: 1.0 — 2026-07-01
+Sürüm: 1.1 — 2026-07-13 (a11y × i18n kesişimi bölümü ve dil-bazlı test matrisi eklendi)
 Durum: Anlatı standardı (`docs/standards/00-standards-index.md` §3, satır 02). Mevcut boyut ve sözleşmeleri *tamamlar*, kural değerlerini kopyalamaz.
 Kaynaklar (referans, kopya değil): Boyut `dimensions.wcag` (`src/schemas/task.ts`) · Sözleşmeler `src/data/standards/ui-components.json` + `src/data/standards/ux-interaction.json` · CI kapısı: `check-ui-standards` · Otomatik tarama: axe-core (jest-axe bileşen + Playwright e2e).
 
@@ -26,10 +26,11 @@ Bu standart React bileşen katmanını, form/etkileşim akışlarını, klavye n
 | Form hatası | role=alert + aria-describedby + spesifik mesaj | `ux-interaction/uxi-inline-validation-rhf-zod` |
 | Renk-dışı sinyal | renk + metin + ikon | `ux-interaction/uxi-status-not-color-only` |
 | Hareket | prefers-reduced-motion saygısı | `ux-interaction/uxi-reduced-motion` |
+| Dil × erişilebilirlik kesişimi | lang attribute, telaffuz, RTL focus sırası, alt metin ve altyazı çevirisi, yerelleştirilmiş PDF, IME | bu anlatı §5.1 + §11.1 (A11Y-15..A11Y-23) |
 
 ## 3. Non-goals
 
-Bu standart yeni bir bileşen kütüphanesi tasarlamaz; `ui-components` sözleşmesinin Radix-tabanlı headless primitiflerini tüketir. WCAG kriterlerinin metnini de yeniden yazmaz; boyut ve sözleşme kurallarına referans verir. AAA'yı her yüzeyde zorunlu kılmaz (plan-00 C3: AAA yüzey-bazlı hedef). İçerik erişilebilirliğini (ör. alt-text metninin *kalitesi*, kolay-okunur dil) editöryel süreçlere bırakır; bu doküman *mekanizmayı* (alt-text alanının varlığı, ARIA bağı) tanımlar.
+Bu standart yeni bir bileşen kütüphanesi tasarlamaz; `ui-components` sözleşmesinin Radix-tabanlı headless primitiflerini tüketir. WCAG kriterlerinin metnini de yeniden yazmaz; boyut ve sözleşme kurallarına referans verir. AAA'yı her yüzeyde zorunlu kılmaz (plan-00 C3: AAA yüzey-bazlı hedef). İçerik erişilebilirliğini (ör. alt-text metninin *kalitesi*, kolay-okunur dil) editöryel süreçlere bırakır; bu doküman *mekanizmayı* (alt-text alanının varlığı, ARIA bağı) tanımlar. §5.1 kesişim maddeleri bu sınırı değiştirmez: sade dil ve alt metin çevirisinin *varlığı* burada mekanizma ve kapı olarak tanımlanır; metnin editöryel kalitesinin sahipliği editöryel süreçte kalır, ancak doğrulama adımı §11.1 matrisinde zorunludur.
 
 ## 4. Backend Requirements
 
@@ -40,6 +41,26 @@ Erişilebilirlik ağırlıkla frontend yüzeyidir; backend katkısı hata ve dur
 React bileşenleri semantic HTML üzerine kurulur ve erişilebilir ad taşır; bu bölüm `uic-a11y-roles-per-component`, `uxi-keyboard-full` ve `uxi-focus-order-logical` kurallarının uygulama karşılığıdır.
 
 Etkileşimli öğeler doğru elementle işaretlenir: buton için `<button>`, bağlantı için `<a>`, `<div onClick>` ile buton taklidi yasaktır. İkon-buton `aria-label` taşır. Modal/dialog açıldığında odak içine taşınır, içeride döngüsel tuzaklanır (focus trap) ve kapanınca tetikleyiciye geri döner; Escape açık katmanı kapatır. Dinamik içerik (bildirim, canlı sonuç) `aria-live` bölgesiyle duyurulur. Odak sırası DOM sırasına eşittir; pozitif `tabindex` (≥1) yasaktır. Görünür odak halkası her etkileşimli öğede korunur (`uic-focus-visible-7to1`); çıplak `outline: none` yasaktır.
+
+### 5.1 Erişilebilirlik × i18n Kesişimi
+
+Erişilebilirlik i18n'in alt başlığı değildir; i18n ile kesişen bağımsız bir kalite eksenidir. Çeviri yüzde yüz tamamlanmış olsa dahi erişilebilirlik kırılabilir; bu nedenle iki eksen hem ayrı ayrı hem de kesişim noktalarında doğrulanır. Dayanak: W3C, sayfanın ve metin bölümlerinin dilinin belirtilmesinin, yardımcı teknolojilerin doğru telaffuz ve sunum yapabilmesi için önemli olduğunu belirtir (https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html). WCAG web, mobil ve diğer dijital arayüzler için ayrı gereksinimler getirir; tek platformda geçen doğrulama diğerlerine devredilemez. i18n mekanizmalarının sahibi `01-i18n-l10n-g11n-standard.md`'dir; aşağıdaki tablo çeviri tamamlandıktan sonra dahi oluşabilecek kesişim sorunlarını ayrı denetim maddeleri olarak sabitler.
+
+| Kesişim sorunu (çeviri tamamlandıktan sonra dahi oluşabilir) | Norm | Bağlı gereksinim |
+|---|---|---|
+| Sayfanın veya metin parçasının dili belirtilmemiş | `<html lang>` ve parça-düzeyi `lang` attribute etkin locale ile eşleşir (WCAG 3.1.1/3.1.2 referansı) | A11Y-15 |
+| Screen reader yanlış telaffuz motorunu kullanıyor | `lang` doğru değilse screen reader metni yanlış ses motoruyla okur; telaffuz doğrulaması locale-bazlı yapılır | A11Y-15, A11Y-23 |
+| Görsel etiket ile erişilebilir ad farklı çevrilmiş | `aria-label` görünen etiketle aynı çeviri kaynağından gelir; label-in-name uyumu her dilde korunur ve sesli kontrol görünen etiketle çalışır | A11Y-16 |
+| Çevrilen metin butona sığmıyor | Düzen metin genişlemesine dayanıklıdır; en uzun locale'de taşma, kırpılma, üst üste binme yok | A11Y-17 |
+| RTL düzende focus sırası bozuk | Ayna düzende (`dir="rtl"`) focus sırası görsel okuma sırasını izler; DOM sırası RTL'de de mantıklı kalır | A11Y-18 |
+| Alt metinler çevrilmemiş | `alt_text` i18n-text'tir (bkz. §6); etkin locale'de alt metin yoksa medya yayın akışına giremez | A11Y-19 |
+| Altyazı ve transkript yok | Ses/video içerik her desteklenen dilde altyazı ve transkript taşır; yalnız kaynak-dil altyazısı yeterli değildir | A11Y-20 |
+| Hata mesajı yalnızca renkle iletiliyor | Çeviri katmanı metni düşürse bile renk + metin + ikon üçlüsü her locale'de korunur (ref: `uxi-status-not-color-only`) | A11Y-10, A11Y-23 |
+| Metin büyütülünce kritik kontroller kayboluyor | %200 zoom ve büyük metin ayarında kritik kontroller görünür ve çalışır kalır | A11Y-17 |
+| Yerelleştirilmiş PDF erişilebilir değil | Üretilen her yerelleştirilmiş PDF etiketli (tagged) olur, doğru `lang` metadata'sı ve okuma sırası taşır | A11Y-21 |
+| Klavye ve IME kullanımında form davranışı bozuk | IME kompozisyonu sırasında Enter/karakter olayları formu erken submit edemez; klavye akışı her giriş yönteminde korunur | A11Y-22 |
+
+Bu maddelerin dil-bazlı yeniden testi §11.1'deki normatif matrisle zorlanır; kesişim ihlali tek-dilli a11y ihlaliyle aynı ağırlıkta bloklayıcıdır.
 
 ## 6. Database Requirements
 
@@ -73,12 +94,37 @@ Testler `check-ui-standards` kapısının ve axe-core taramasının yeşil olma 
 | unit | dokunma hedefi ≥44px + ≥8px boşluk | `uic-touch-target-44`, `uxi-mobile-ergonomics-44` |
 | unit | pozitif tabindex yok, odak sırası DOM sırası | `uxi-focus-order-logical` |
 | unit | reduced-motion media query altında animasyon durur | `uxi-reduced-motion` |
+| story a11y (Storybook axe) | Master Component'in HER story'sinde (state × variant × theme × density × RTL) axe ihlali = 0; klavye sözleşmesi (Tab/Enter/Escape/ok tuşları) interaction testiyle; screen-reader adları ve focus sırası story fixture'ında doğrulanır | `uic-storybook-master-component`, `uic-story-matrix-required`, `uic-a11y-roles-per-component` |
 | e2e | klavye-only navigasyon (Tab/Enter/Escape) tam akış | `uxi-keyboard-full` |
 | e2e (axe) | Playwright axe taraması WCAG 2.2 AA 0 ihlal | tüm a11y kuralları |
+| a11y (jest-axe) | sayfa ve parça-düzeyi lang attribute mevcut, etkin locale ile eşleşir | A11Y-15 (§5.1) |
+| e2e | RTL locale'de klavye-only akış; focus sırası görsel okuma sırasını izler | A11Y-18 (§5.1) |
+| e2e | en uzun locale'de %200 zoom + büyük metin: taşma ve kritik kontrol kaybı yok | A11Y-17 (§5.1) |
+| conformance | yerelleştirilmiş PDF etiketli, doğru lang metadata'lı, okuma sıralı | A11Y-21 (§5.1) |
+
+Katman sınırı: story-level axe/klavye testi component sözleşmesini izole doğrular; **e2e + axe taramasının yerine geçmez** — Surface yolculuğundaki bileşim, odak yönetimi ve sayfa-düzeyi ihlaller yalnız e2e'de görünür. İkisi ayrı bloklayıcıdır (`gate-storybook-ci` + `gate-e2e-axe-zero`). Story a11y ihlali uyarı olarak bırakılamaz.
+
+### 11.1 a11y × i18n Test Matrisi (Normatif)
+
+Her desteklenen dil için kritik akışlar aşağıdaki eksenlerin her biriyle yeniden test edilir; kaynak dilde geçen akış diğer dillerde geçmiş sayılmaz. Matris normatiftir: eksen atlanamaz, hücre boş bırakılamaz. Sonuçlar dil × eksen kanıt matrisi olarak raporlanır ve sürüm kaydına eklenir (A11Y-23). Otomatikleştirilemeyen eksenler (screen reader okuma, sesli kontrol) sürüm öncesi manuel kontrol listesine bağlanır; kanıtsız hücre geçmiş sayılmaz.
+
+| Test ekseni | Yeniden test koşulu (her desteklenen dil için) | Doğruladığı kesişim riski |
+|---|---|---|
+| Klavye | klavye-only tam akış tamamlanır; focus trap ve Escape çalışır | IME/klavye form davranışı, odak yönetimi |
+| Screen reader | etkin locale'in ses motoruyla okuma; ad/rol/durum anlamlı ve doğru telaffuzla duyurulur | lang attribute, telaffuz, erişilebilir ad çevirisi |
+| Yüksek zoom | %200 zoom'da akış tamamlanır, içerik reflow olur | metin büyütmede kritik kontrol kaybı |
+| Büyük metin | büyük metin ayarında taşma ve kırpılma yok | çevrilen metnin kontrole sığmaması |
+| Yüksek kontrast | yüksek kontrast modunda tüm durum sinyalleri algılanır | renk-dışı sinyalin her locale'de korunması |
+| Sesli kontrol | görünen etiketle verilen komut hedefi bulur | görsel etiket ile erişilebilir ad uyumu |
+| RTL düzen | ayna düzende focus sırası görsel okuma sırasını izler | RTL odak ve okuma sırası |
+| Mobil ekran | küçük viewport'ta ≥44px dokunma hedefi ve tam akış korunur | dokunmatik ergonominin dilden bağımsız korunması |
+| Sade dil | kritik akış metinleri düşük bilişsel yük gerektiren sade dil ile yazılır ve bu nitelik çeviride korunur | bilişsel erişilebilirlik |
+
+Bu matris §11 tablosundaki otomatik kapıların yerine geçmez; onları dil boyutunda çoğaltır. Story-level RTL kapsamı (`uic-story-matrix-required`) matrisin RTL eksenini besler ama tek başına yeterli değildir; sayfa-düzeyi RTL focus sırası yalnız e2e'de görünür.
 
 ## 12. Acceptance Criteria
 
-Standart, `check-ui-standards` kapısı yeşil olduğunda ve axe-core taraması (jest-axe bileşen + Playwright e2e) WCAG 2.2 AA seviyesinde kritik/serious kategoride sıfır ihlal verdiğinde karşılanmış sayılır. Klavye-only e2e akışı tüm kritik yolları fare olmadan tamamlayabilmeli; her form hatası `role="alert"` ile duyurulup ilgili input'a bağlı olmalı; her etkileşimli öğe görünür odak halkasına ve ≥44px dokunma hedefine sahip olmalı; renk-dışı sinyal (metin + ikon) her durum bileşeninde bulunmalı. AA taban ihlali olan tek bir yüzey bile kabul edilmez.
+Standart, `check-ui-standards` kapısı yeşil olduğunda ve axe-core taraması (jest-axe bileşen + Playwright e2e) WCAG 2.2 AA seviyesinde kritik/serious kategoride sıfır ihlal verdiğinde karşılanmış sayılır. Klavye-only e2e akışı tüm kritik yolları fare olmadan tamamlayabilmeli; her form hatası `role="alert"` ile duyurulup ilgili input'a bağlı olmalı; her etkileşimli öğe görünür odak halkasına ve ≥44px dokunma hedefine sahip olmalı; renk-dışı sinyal (metin + ikon) her durum bileşeninde bulunmalı. AA taban ihlali olan tek bir yüzey bile kabul edilmez. Çok dilli yüzeylerde kabul ayrıca §11.1 a11y × i18n matrisinin her desteklenen dil için eksiksiz ve kanıtlı kapatılmasını gerektirir.
 
 ## 13. Anti-patterns
 
@@ -103,7 +149,7 @@ Bir düğüm bu standarda `ui-components` ve `ux-interaction` sözleşmelerine r
 
 ## 15. Definition of Done
 
-Standart şu koşullar birlikte sağlandığında tamamlanır: ilgili düğümler `standardRefs.uiComponentRef` ve `standardRefs.uxStandardRef` ile bağlı ve `dimensions.wcag` boyutu WCAG 2.2 AA tabanını taşıyor; `check-ui-standards` kapısı yeşil; axe-core taraması (bileşen + e2e) AA seviyesinde sıfır kritik/serious ihlal; §11 test tablosundaki her satır için en az bir test mevcut ve geçiyor; klavye-only e2e akışı tüm kritik yolları kapsıyor; AAA yalnız yüzey-bazlı hedef olarak (opt-in) işaretli, taban AA'nın altına inilmemiş; hiçbir WCAG kriteri veya kural değeri bu anlatıda tekrar tanımlanmamış (drift yok), yalnız boyut ve sözleşmelere referans verilmiş.
+Standart şu koşullar birlikte sağlandığında tamamlanır: ilgili düğümler `standardRefs.uiComponentRef` ve `standardRefs.uxStandardRef` ile bağlı ve `dimensions.wcag` boyutu WCAG 2.2 AA tabanını taşıyor; `check-ui-standards` kapısı yeşil; axe-core taraması (bileşen + e2e) AA seviyesinde sıfır kritik/serious ihlal; §11 test tablosundaki her satır için en az bir test mevcut ve geçiyor; klavye-only e2e akışı tüm kritik yolları kapsıyor; AAA yalnız yüzey-bazlı hedef olarak (opt-in) işaretli, taban AA'nın altına inilmemiş; hiçbir WCAG kriteri veya kural değeri bu anlatıda tekrar tanımlanmamış (drift yok), yalnız boyut ve sözleşmelere referans verilmiş. Çok dilli kapsamda ayrıca §5.1 kesişim maddeleri denetlenmiş ve §11.1 dil × eksen matrisi her desteklenen dil için kanıtla kapatılmış olmalıdır.
 
 ---
 
@@ -127,6 +173,15 @@ Aşağıdaki tablo bu anlatının gereksinimlerini izlenebilir ID'lere böler. H
 | A11Y-12 | prefers-reduced-motion saygısı (ref: `uxi-reduced-motion`) | Frontend | P2 | unit | reduced-motion'da animasyon durur | frontend-owner |
 | A11Y-13 | Medya alt_text alanı (alt-text'siz yayın yok) | Database+Frontend | P2 | conformance | Alt-text alanı zorunlu | data-owner |
 | A11Y-14 | Tenant tema AA taban koruması (AAA yüzey-bazlı opt-in) | Multi-tenant | P1 | e2e | AA-altı palet reddedilir | platform-owner |
+| A11Y-15 | Sayfa ve metin parçası dili: `<html lang>` + parça-düzeyi lang attribute etkin locale ile eşleşir; screen reader doğru telaffuz motorunu seçebilir | Frontend | P1 | a11y | lang'sız sayfa/parça 0; lang-locale uyumsuzluğu 0 | frontend-owner |
+| A11Y-16 | Görsel etiket ile erişilebilir ad her dilde aynı çeviri kaynağından gelir; sesli kontrol görünen etiketle çalışır | Frontend | P1 | unit | Etiket ile erişilebilir ad arasında çeviri sapması 0 | frontend-owner |
+| A11Y-17 | Metin genişlemesi ve büyütme dayanıklılığı: çevrilen metin kontrole sığar; %200 zoom ve büyük metinde kritik kontrol kaybolmaz | Frontend | P1 | e2e | En uzun locale'de taşma ve kontrol kaybı 0 | frontend-owner |
+| A11Y-18 | RTL düzende focus sırası görsel okuma sırasını izler | Frontend | P2 | e2e | RTL locale'de klavye-only akış tamam | frontend-owner |
+| A11Y-19 | Alt metin çevirisi: alt_text her desteklenen dilde mevcut; çevrilmemiş alt metinle medya yayınlanamaz | Database+Frontend | P2 | conformance | Etkin locale'de alt metin eksiği olan medya 0 | data-owner |
+| A11Y-20 | Altyazı ve transkript her desteklenen dilde mevcut | Frontend+Database | P2 | conformance | Altyazısız veya transkriptsiz medya yayında 0 | data-owner |
+| A11Y-21 | Yerelleştirilmiş PDF erişilebilirliği: etiketli PDF + doğru lang metadata + okuma sırası | Frontend+API | P2 | conformance | Etiketsiz yerelleştirilmiş PDF 0 | platform-owner |
+| A11Y-22 | Klavye + IME form davranışı: kompozisyon sırasında erken submit yok; klavye akışı her giriş yönteminde korunur | Frontend | P2 | e2e | IME ile form akışı hatasız tamam | frontend-owner |
+| A11Y-23 | Dil-bazlı yeniden test matrisi (§11.1): her desteklenen dil için kritik akışlar klavye, screen reader, yüksek zoom, büyük metin, yüksek kontrast, sesli kontrol, RTL düzen, mobil ekran ve sade dil eksenlerinde yeniden test edilir | Frontend+QA | P2 | conformance | Dil × eksen matrisinde boş veya kanıtsız hücre 0 | qa-owner |
 
 ---
 

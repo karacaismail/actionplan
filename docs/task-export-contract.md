@@ -1,6 +1,6 @@
 # Task Export Sözleşmesi
 
-Sürüm: 1.1 — 2026-07-08
+Sürüm: 1.2 — 2026-07-13
 Durum: Kanonik / uygulanmış
 
 ---
@@ -13,9 +13,13 @@ Raw JSON tam veri taşıyan kanonik girdidir. Diğer dört artifact aynı veriyi
 
 ## Aktör Sınırı
 
-Bu sözleşmedeki Agent Prompt, Developer Brief ve Vobecoder Card çıktıları implementation geliştiricisinin veya onun yönettiği coding ajanının tüketmesi içindir. actionplan üzerinde çalışan Codex/doc-maintainer bu artifact'leri uygulayıp platform, kernel, SDK, app-core, module veya app kodu yazmaz.
+Bu sözleşmedeki Agent Prompt, Developer Brief ve Vobecoder Card çıktıları `DIRECTIVE-ONLY` insan handoff'udur. Codex, Claude, Cursor ve diğer AI ajanları bu artifact'leri platformda uygulamaz; erişimleri `read-only-audit`, ürün kodu yazarı `human-developer-only`dır.
 
-Doc-maintainer'ın görevi export sözleşmesini, alan açıklamalarını, yasakları, kabul ölçütlerini ve kanıt beklentisini çelişkisiz hale getirmektir. Export'un kod üretim tarafı ayrı implementation repo/branch'inde, geliştirici sorumluluğunda yürütülür.
+AI'nın görevi export sözleşmesini, alan açıklamalarını, yasakları, kabul ölçütlerini ve kanıt beklentisini çelişkisiz hale getirmektir. Platform branch'i, kodu, testi, migration'ı ve PR'ı yalnız insan geliştirici üretir. Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`.
+
+## UI Delivery Beyanı (tüm export modları)
+
+Developer Brief, Agent Prompt ve Vobecoder Card, düğümün `uiDelivery` sözleşmesini (varsa) taşır (`docs/storybook-master-component-integration-directive.md` §11): UI impact + gerekçesi, componentKind (master/pattern/surface-composition/local/none), masterComponentRefs, story/test/evidence beklentisi (storyRefs, requiredStoryStates/Viewports/Locales/Themes, interaction/a11y/e2e refs), story path'lerinin allowed-files bağı ve insan review gereği (reviewer + reviewStatus). Export üretici kör kelime eşlemesi yapmaz; `tools/lib/ui-impact.mjs` sınıflandırıcısının sonucunu taşır. UI etkisi yoksa export alanı sessizce boş bırakılmaz — açıkça `Storybook: N/A — <somut gerekçe>` yazılır. Gerçek URL/CI evidence yokken `storybookUrl` uydurulmaz.
 
 ---
 
@@ -80,11 +84,11 @@ Yapılmayacaklar: başka tenant modüllerine dokunulmaz, migration dışı DDL �
 
 ---
 
-## Mod 2 — Agent Prompt Export (AI ajana sıkı sözleşme)
+## Mod 2 — Agent Prompt Export (`DIRECTIVE-ONLY` insan handoff'u)
 
 ### Ne zaman kullanılır
 
-Bir görev otomatik kodlama ajanına (örneğin Claude Code, Aider, Cursor Agent) verildiğinde kullanılır. Ajan bu export'u sistem promptu olarak alır; izin verilen dosyaların ve durdurma koşullarının dışına çıkamaz.
+Bir görev Codex, Claude, Aider veya Cursor'a verildiğinde AI'nın platformu değiştirmeden insan geliştirici için uygulanabilir directive üretmesini sağlar. AI platform path'lerini yalnız okur; yazılabilir dosya listesi olarak yorumlayamaz.
 
 ### İçerik şablonu
 
@@ -92,14 +96,14 @@ Bir görev otomatik kodlama ajanına (örneğin Claude Code, Aider, Cursor Agent
 
 `id`, `title`, `phase`, `level`, export tarihi sabit başlık olarak yer alır.
 
-**İzin verilen dosyalar**
+**İnsan geliştiricinin hedef dosyaları**
 
-`traceability.repoPath` + `deliverables` listesinden türetilir. Ajan yalnızca bu yolları değiştirebilir.
+`traceability.repoPath` + `deliverables` listesinden türetilir. AI bunları yalnız salt-okunur inceler; insan geliştirici directive onaylandıktan sonra değiştirir.
 
-| Yol | İzin türü |
-|---|---|
-| `traceability.repoPath` | Okuma + yazma |
-| Test dosyaları (`testCommand`'dan türetilir) | Okuma + yazma |
+| Yol | AI erişimi | İnsan erişimi |
+|---|---|---|
+| `traceability.repoPath` | Salt-okunur audit | Onaylı branch'te okuma + yazma |
+| Test dosyaları (`testCommand`'dan türetilir) | Yalnız test planı üretme | Onaylı branch'te okuma + yazma |
 
 **Yasak dosyalar**
 
@@ -107,7 +111,9 @@ Açıkça listelenir. Aşağıdaki öğeler her zaman yasaktır ve görev içeri
 
 | Yasak kategori | Açıklama |
 |---|---|
-| Ana dal | `main`/`master` branch'e doğrudan push yapılamaz |
+| Platformun tamamı | AI ürün kodu, test, migration, Storybook/config veya generated output yazamaz |
+| Git işlemleri | AI branch, commit, tag, push veya pull request oluşturamaz |
+| Ana dal | İnsan geliştirici de `main`/`master` branch'e doğrudan push yapamaz |
 | Ruleset ve konfigürasyon | `.eslintrc`, `biome.json`, `pyproject.toml`, CI workflow dosyaları değiştirilemez |
 | Diğer task'lara ait dosyalar | `dependsOn` listesindeki görevlerin sahip olduğu yollar salt okunurdur |
 | AI uygulama veya modül üretimi | Kapsam dışı yeni uygulama veya modül oluşturulamaz |
@@ -116,13 +122,13 @@ Açıkça listelenir. Aşağıdaki öğeler her zaman yasaktır ve görev içeri
 
 | Alan | Değer |
 |---|---|
-| Format | unified diff / patch dosyası |
-| Hedef branch | `task/<task-id>-<slug>` |
-| Commit mesajı formatı | `[task.id] [task.title]: kısa açıklama` |
+| Format | `DIRECTIVE-ONLY` implementation yönergesi |
+| Hedef branch | İnsan geliştirici için öneri: `task/<task-id>-<slug>` |
+| Kod çıktısı | Yasak; patch/diff/source dosyası üretilmez |
 
 **Zorunlu testler**
 
-`traceability.testCommand` değeri ajanın çalıştırması gereken komuttur. Testler geçmeden patch teslim edilemez.
+`traceability.testCommand` insan geliştiricinin çalıştıracağı komuttur. AI kırmızı test dosyasını yazmaz; test adı, assertion, fixture ve beklenen failure reason'ı tarif eder.
 
 **Maksimum iterasyon**
 
@@ -130,12 +136,12 @@ Varsayılan: 5 iterasyon. `notes.prompt` veya `items` içinde özel bir sınır 
 
 **Evidence formatı**
 
-Ajandan beklenen evidence kaydı biçimi (Mod 3 ile uyumlu):
+AI yalnız evidence beklentisi taslağı üretir. Evidence kaydı ancak insan geliştiricinin gerçek PR/CI/test çıktısından alınır:
 
 ```json
 {
-  "type": "agent-run",
-  "ref": "PR veya commit URL",
+  "type": "human-implementation-run",
+  "ref": "İnsan geliştiricinin gerçek PR veya commit URL'si",
   "testResult": "pass | fail",
   "iterations": 3,
   "timestamp": "ISO 8601"
@@ -146,31 +152,31 @@ Ajandan beklenen evidence kaydı biçimi (Mod 3 ile uyumlu):
 
 Ajan aşağıdaki koşullardan herhangi biri gerçekleştiğinde durdurulur ve insan onayı beklenir:
 
-- Yasak dosyalar listesindeki bir dosyaya yazma girişimi
-- `testCommand` başarısız ve 5 iterasyon tükenmiş
-- `deliverables` dışında yeni dosya oluşturma girişimi
-- Kapsam dışı modül, uygulama veya servis üretme girişimi
-- Ruleset veya CI konfigürasyonu değiştirme girişimi
+- Herhangi bir platform dosyasına yazma gereği
+- Test, migration, Storybook/config veya generated output üretme gereği
+- Branch, commit, push veya PR oluşturma gereği
+- İnsan ürünü gerçek evidence olmadan status ilerletme isteği
+- Kapsam, güvenlik veya migration kararının insan onayı gerektirmesi
 
 **AI ajana mutlak sınırlar**
 
 Bu sınırlar görev içeriğinden bağımsız olarak geçerlidir ve hiçbir koşulda geçersiz kılınamaz:
 
-- Ajan, kapsam tanımında yer almayan yeni uygulama veya modül üretemez.
+- Ajan hiçbir platform ürün kodu, test, uygulama veya modül üretemez.
 - Ajan, proje ruleset'ini (lint kuralları, CI pipeline adımları, güvenlik politikaları) override edemez.
-- Ajan, `main` branch'e push yapamaz; her çıktı bir feature branch'e yönlendirilmelidir.
-- Ajan, evidence kaydı oluşturmadan görevi tamamlanmış olarak işaretleyemez.
+- Ajan branch/commit/push/PR oluşturamaz; yalnız insan geliştiriciye branch önerir.
+- Ajan, insan kaynaklı evidence olmadan görevi tamamlanmış olarak işaretleyemez.
 
 ### Örnek çıktı başlığı
 
 ```
-# Agent Task Contract — [task.id]
+# Agent Directive Contract — [task.id] — DIRECTIVE-ONLY
 
-İzin verilen dosyalar: platform/apps/customer/models.py, platform/apps/customer/tests/test_models.py
-Yasak: main branch push, ruleset değişikliği, yeni modül üretimi
-Maks iterasyon: 5
-Test komutu: pytest platform/apps/customer/tests -x
-Durdurma koşulu: yasak dosya yazımı, test başarısızlığı + iterasyon bitti
+İnsan hedef dosyaları: apps/api/src/... ve apps/api/tests/...
+AI erişimi: read-only-audit
+Ürün kodu yazarı: human-developer-only
+İnsan test komutu: pytest tests/... -x
+Durdurma koşulu: platform yazma, branch/commit/PR veya gerçek-evidence eksikliği
 ```
 
 ---
@@ -179,7 +185,7 @@ Durdurma koşulu: yasak dosya yazımı, test başarısızlığı + iterasyon bit
 
 ### Ne zaman kullanılır
 
-Geliştirici veya ajan görevi tamamladıktan sonra, kanıtları ve izlenebilirlik bilgilerini TaskNode'a geri yazmak için kullanılır. Bu export, doğrudan veritabanına veya JSON dosyasına uygulanabilecek bir RFC 6902 JSON Patch taslağı üretir.
+İnsan geliştirici görevi tamamladıktan sonra kanıtları ve izlenebilirlik bilgilerini TaskNode'a geri yazmak için kullanılır. AI yalnız taslak üretir; ref/testResult/timestamp değerlerini uyduramaz.
 
 ### İçerik şablonu
 
@@ -187,7 +193,7 @@ Aşağıdaki alanları patch işlemi olarak içerir:
 
 | Patch yolu | Kaynak | Açıklama |
 |---|---|---|
-| `/evidence/-` | Geliştirici/ajan girişi | PR linki, commit hash, test sonucu |
+| `/evidence/-` | İnsan geliştirici/reviewer girişi | PR linki, commit hash, test sonucu |
 | `/traceability/repoPath/-` | Gerçek repo yolu | Uygulama sırasında netleşen repo-içi yol |
 | `/traceability/testCommand/-` | Çalışan komut | Doğrulanmış test komutu |
 | `/traceability/implementationStatus` | `implemented` / `verified` | Uygulama durumu |
@@ -229,7 +235,7 @@ Geliştirici `platform/apps/customer/models.py` değişikliğini tamamladı, PR 
 
 ### Ne zaman kullanılır
 
-Vibecoding/vobecoding akışında geliştiricinin veya operatörün uzun Developer Brief yerine kısa, tek ekranlık bir görev kartı yapıştırması gerektiğinde kullanılır. Bu kart tam sözleşmenin yerine geçmez; hızlı yürütme komutudur.
+Vibecoding/vobecoding akışında AI'nın platform kodu üretmeden kısa bir insan uygulama directive'i hazırlaması için kullanılır. Bu kart kod yürütme komutu veya yazma yetkisi değildir.
 
 ### İçerik şablonu
 
@@ -238,10 +244,10 @@ Kart aşağıdaki alanları taşır:
 | Alan | Açıklama |
 |---|---|
 | Yapıştırılacak prompt | Görev başlığı, actionplan URL'si, workspace kökü, hedef yol, test komutu |
-| Kurallar | Test-önce, küçük değişiklik, yasak stack, main/master push yasağı |
+| Kurallar | `DIRECTIVE-ONLY`, read-only-audit, insan test-önce sırası, yasak stack |
 | Beklenen dosyalar | `traceability.repoPath` değerleri |
 | Çalıştırılacak test | Birincil `traceability.testCommand` |
-| Red flag | Test yoksa, negatif test yoksa, hedef dışı dosya varsa veya AI yalnız açıklama yazdıysa reddet |
+| Red flag | AI platforma yazıyorsa, patch/branch/commit/PR üretiyorsa veya insan evidence'ı uyduruyorsa reddet |
 
 `repoPath` veya `testCommand` eksikse kart açık biçimde `NO-GO` üretir. Bu sinyal kod yazmaya başlama izni değildir; eksik traceability alanlarının tamamlanması gerekir.
 

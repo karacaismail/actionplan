@@ -1,10 +1,10 @@
 {
   "id": "observability",
   "name": "Gözlemlenebilirlik Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "devops",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Yapısal JSON log + correlation/request id, RED/USE metrikleri, dağıtık trace, dashboard, SLO + error-budget'a bağlı alert, değişmez audit event, log seviyesi disiplini, PII-güvenli loglama ve 'çözüldü' iddiası için zorunlu production hata kanıtı formatı.",
+  "summary": "Yapısal JSON log + correlation/request id, RED/USE metrikleri, dağıtık trace, dashboard, SLO + error-budget'a bağlı alert, değişmez audit event, log seviyesi disiplini, PII-güvenli loglama ve 'çözüldü' iddiası için zorunlu production hata kanıtı formatı. v1.1: telemetry hedef bölge beyanı (obs-telemetry-data-region, 12-devops §9.1).",
   "appliesTo": [],
   "rules": [
     {
@@ -76,6 +76,13 @@
       "rationale": "Kanıtsız 'düzeltildi', doğrulanmamış ve tekrar edebilen arızadır; kanıt formatı kök-neden ve regresyon korumasını zorunlu kılar.",
       "severity": "must",
       "check": "review (kapanışta correlationId + sinyal + regresyon testi/alert kanıtı)"
+    },
+    {
+      "id": "obs-telemetry-data-region",
+      "rule": "Log, metrik, trace, telemetry ve crash-dump akışlarının nereye gönderildiği açıkça beyan edilir ve hedef, verinin veri bölgesi kurallarıyla uyumludur: bölge-bağlı veriden türeyen telemetry bölge dışına mekanizmasız akıtılamaz (bu bir sınır ötesi aktarımdır) ve hedef bölge beyanı denetlenebilir bir yapılandırma kaydıdır. Üçüncü taraf gözlemlenebilirlik servisi (APM, log toplayıcı, crash raporlayıcı) kullanımı alt işleyen envanterine kayıtlıdır; beyansız telemetry hedefi YASAKTIR ve bölge-dışı akış P0 bulgudur.",
+      "rationale": "Telemetri en kolay unutulan veri çıkışıdır: uygulama verisi bölgede kalırken log/crash-dump'ın bölge dışı SaaS'a akması aynı mevzuat ihlalini gözlemlenebilirlik katmanında yeniden üretir.",
+      "severity": "must",
+      "check": "review (telemetry hedef bölge beyanı + alt işleyen envanter kaydı) + integration (bölge-bağlı telemetry bölge dışına akmıyor)"
     }
   ],
   "banned": [
@@ -99,5 +106,8 @@
     "append-only-audit-event",
     "redacted-pii-logging"
   ],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/standards/12-devops-infrastructure-standard.md"
+  ]
 }

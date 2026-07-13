@@ -1,12 +1,12 @@
 # Prompt Şablon Kütüphanesi — Boyut (Dimension) Üretim Promptları
 
-Sürüm: 1.0 · Tarih: 2026-06-29
+Sürüm: 1.1 · Tarih: 2026-07-13
 Durum: Referans. `src/data/generated/nodes/*.json` içindeki gerçek `dimensions[<key>].prompt` desenini standartlaştırır.
 İlgili: `src/schemas/task.ts` (17 üretim boyutu), `docs/adr-0027-engineering-standards.md` (standart referans deseni), `AGENTS.md` (altın kural).
 
 Bu kütüphane, bir düğümün 17 üretim boyutundan her birini AI ile doldururken kullanılacak prompt şablonlarını tanımlar. Amaç: her boyut promptunun **somut, bağlama-özgü ve standart-bilinçli** olmasını sağlamak; jenerik çöp üretimini sözleşmeyle yasaklamak.
 
-Doc-maintainer sınırı: Bu şablonlar actionplan düğüm içeriği ve implementation ajan prompt artifact'i içindir. Codex/actionplan doc-maintainer bu şablonu takip ederek platform kodu üretmez; yalnız promptların ve düğüm içeriklerinin geliştiriciye yeterli hale gelmesini sağlar (`docs/doc-maintainer-operating-boundary.md`).
+Platform yazma sınırı: Bu şablonların tamamı `DIRECTIVE-ONLY`dır. Codex, Claude, Cursor ve diğer AI ajanları platformu yalnız `read-only-audit` eder; ürün kodu yazarı `human-developer-only`dır. AI yalnız promptların ve düğüm içeriklerinin insan geliştiriciye yeterli hale gelmesini sağlar (`docs/platform-product-code-write-prohibition-directive.md`).
 
 ---
 
@@ -18,7 +18,7 @@ Mevcut düğümlerdeki `prompt` alanı tek bir gövde desenini izler. Her boyut 
 "<BOYUT_BAŞLIK_TR>" boyutunu bu görev için üret.
 Bağlam: <id> — "<title>" (<level metaphor>; küme: <cluster>). Özet: <summary>. Etiketler: <tags>.
 Çıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.
-Güvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.
+Güvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI platform ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretemez; yalnız actionplan directive'i yazar.
 Kapsa: <BOYUTA_ÖZGÜ_KAPSAM>.
 ```
 
@@ -27,7 +27,7 @@ Blok açıklaması:
 - **Başlık satırı** — Boyutun Türkçe başlığı (`DIMENSION_META[key].tr`) + sabit "boyutunu bu görev için üret." eki.
 - **Bağlam** — Düğümün kimliği: `id`, `title`, seviye metaforu (app/ada, module/dağ, archetype/kaya, feature/taş, component/kum, work_unit/molekül, micro_step/atom), kümesi (`source.cluster`), `summary` ve `tags`. Bu blok promptu o düğüme bağlar; jenerikleşmeyi kırar.
 - **Çıktı** — Her zaman sabit: 3-5 madde, Türkçe, somut. "Generic ifade kullanma" cümlesi zorunludur.
-- **Güvenlik sınırı** — Her zaman sabit: AI'nin yetki sınırı (app/module üretemez/güncelleyemez, ruleset override edemez). Bu blok `AgentPolicy` kilidiyle hizalıdır.
+- **Güvenlik sınırı** — Her zaman sabit: AI platformu yalnız salt-okunur denetler; ürün kodu, test, migration, Storybook/config veya git teslimatı üretmez. Bu blok `platform-product-code-write-policy.json` ile hizalıdır.
 - **Kapsa** — Boyuta özgü, ölçülebilir kapsam maddeleri. Bölüm 3'te her boyut için verilmiştir.
 
 Şablonun yer-tutucuları (`<...>`) düğümün gerçek alanlarından doldurulur; elle uydurulmaz.
@@ -67,6 +67,12 @@ Boyut → ilgili standart referansı eşlemesi (prompt yazarken hangi `standardR
 | reliability | releasePolicyRef | observabilityRef |
 
 Not: Tüm boyutlar techProfileRef (tech-profile) ve shortCodeRef (kısa-kod) kilitlerine örtük tabidir; bunlar tekrar yazılmaz, kilit olarak varsayılır.
+
+Not (UI ajan promptları): UI component/Surface ile ilgili her AI promptu Master Component + story + test + evidence zorunluluğunun **insan uygulama directive'ini** üretir; AI component, story, baseline veya Storybook config yazmaz. Component kind kararı (Master/local), zorunlu story matrisi, "önce başarısız interaction/a11y story testi" sırası ve Storybook preview evidence beklentisi prompt sözleşmesinin parçasıdır (`docs/storybook-implementation.md` §4/§7/§11; `ui-components.json` v1.1). Prompt üretici "frontend/UI/form/table" kelimesi gördüğünde kör biçimde Storybook eklemez; `tools/lib/ui-impact.mjs` sınıflandırıcısının sonucunu (`uiDelivery.impact` + gerekçe) prompta taşır; UI etkisi yoksa `Storybook: N/A — <somut gerekçe>` yazar (`docs/storybook-master-component-integration-directive.md` §11).
+
+Not (URL/route ajan promptları): Prompt URL, route, slug, canonical, redirect, locale path, custom domain, host binding, app mount, facet URL veya resource link etkisi taşıyorsa `standardRefs.urlPolicyRef = "url-policy"`, ilgili `routeId`/`ResourceRef` ve `src/data/url-policy/registry.json` kaydı prompta referans olarak eklenir. Prompt registry kuralını yeniden yazmaz; yeni prefix/path grameri uydurmaz. URL etkisi yoksa URL implementasyonu istemez, yalnız merkezi default bağı korunur.
+
+URLP runtime fazı promptu ayrıca `src/data/url-policy/implementation-program.json` içindeki tek faz kaydından üretilir: `agentPrompt.objective/instructions/stopConditions` ile allowedFiles, nonGoals, redTests, testCommands, evidenceRequirements ve rollback eksiksiz taşınır. Faz kartından alan düşüren özet prompt geçersizdir; predecessor verified olmadan prompt yalnız blocker raporu üretebilir.
 
 ---
 

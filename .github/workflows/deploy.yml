@@ -50,7 +50,7 @@ jobs:
         run: npm run qa:wbs
 
       # İçerik kalite kapısı (Faz F2 — BLOKLAYICI). Önce bağımlılıksız node checker (hızlı, rollup gerekmez),
-      # sonra kanonik vitest testi. 467 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
+      # sonra kanonik vitest testi. 485 düğümün hiçbiri şablona (kalıp imzası/çapraz-tekrar) geri dönerse deploy durur.
       - name: İçerik kalite kapısı (node checker + vitest)
         run: npm run qa:content
 
@@ -96,6 +96,36 @@ jobs:
 
       - name: UI standartları kapısı (emoji/styled-kit yok)
         run: node tools/agents/check-ui-standards.mjs
+
+      # UI delivery kapısı (Storybook + Master Component entegrasyonu — BLOKLAYICI).
+      # UI-impact adayı düğümler makine-okunur uiDelivery sözleşmesi taşır; backend-only
+      # düğümler zorlanmaz (NO_CANDIDATES). Ratchet: legacy ihlaller baseline'da warning.
+      - name: UI delivery kapısı (uiDelivery sözleşmesi + ratchet)
+        run: node tools/agents/check-ui-delivery.mjs
+
+      # URL policy kapısı (kanonik karar koruması — BLOKLAYICI)
+      # docs/url-policy.md tek kanonik otoritedir; eski tilde grameri, eski route-identity adı,
+      # merkezi resource-identity tablosu ve node-id kanonik route önerileri docs katmanına geri
+      # sızamaz; sekiz kanonik karar belgede kalır. Muafiyet: url-policy.md (reddiye) + node.md.
+      - name: URL policy kapısı (yasak desen taraması + kanonik karar varlığı)
+        run: npm run qa:url-policy
+
+      # Global pazar hazırlığı sözleşme kapısı (JSON-STD J2 — BLOKLAYICI). global-market-readiness.json
+      # (14 soruluk launch kapısı, IP-geolocation sınırı, kill switch, ödeme matrisi, destek dili
+      # taahhüdü, locale-bazlı moderasyon) + indeks/matris kayıtları + anlatı çapası birlikte korunur.
+      - name: Market-readiness kapısı (sözleşme + indeks + çapa)
+        run: node tools/agents/check-market-readiness.mjs
+
+      # Finansal para modeli sözleşme kapısı (JSON-STD J2 — BLOKLAYICI). finance-money-model.json
+      # (decimal + ISO 4217 + açık ölçek, minor-unit varsayımı yasağı, üç para-birimi ayrımı,
+      # kur tarihi beyanı, yuvarlama politikası, altı finansal durum) + indeks/matris + çapa.
+      - name: Finans para-modeli kapısı (sözleşme + indeks + çapa)
+        run: node tools/agents/check-finance-model.mjs
+
+      # Storybook registry kapısı (kök-entegrasyon — BLOKLAYICI): src/data/storybook/
+      # 16 kanonik registry ailesinin şema geçerliliği + FK/duplicate/orphan denetimi.
+      - name: Storybook registry kapısı (FK + duplicate + şema)
+        run: node tools/agents/check-storybook-registry.mjs
 
       # i18n/l10n kapısı (ADR-0027 / 15. standart — BLOKLAYICI). i18n-standards.json sözleşmesi
       # (yedi must kuralı + banned/allowed primitifleri), i18nRef referans bütünlüğü ("i18n-standards"),

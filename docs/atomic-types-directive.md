@@ -19,6 +19,8 @@ Bu sözleşme şunları kapsar: (1) üç-kademe modelinin **Atom** kademesi (Fie
 
 Bu sözleşme şunları **kapsamaz**: (1) **Fragment kademesi** — Address/PersonName/ContactPoint gibi çok-alanlı, parçaları bağımsız anlamlı kayıtlar; bunlar `fragments-directive` + `platform_fragments`'ın işidir. Bu yönerge Fragment'i yalnız "atom değildir" sınırı olarak anar. (2) **ArcheType kademesi** — kimlik/yaşam-döngüsü/ilişki/izin taşıyan varlıklar (Party/Contract); `archetype-uretim-spec`'in işidir. (3) **Görsel/binary depolama** — `AssetRef` bir atomdur (referans-değer, Katman C) ama binary'nin kendisi `k-storage`'ın işidir; atom yalnız `digital_asset.id` referansını taşır. (4) **Registry verisinin kendisi** — ISO-4217 para kodu tablosu, UCUM birim tablosu bir referans-data primitifidir (`k-mdm`/`reference-data` adayı); atom yalnız o registry'ye **versiyonlu bağlanır**, tabloyu içermez. (5) **Standart metnin kopyalanması** — RFC 5322 / ISO 13616 / RFC 5545 gibi standartların içeriği bu belgeye gömülmez; atom yalnız standarda **referans** verir. (6) **Kanonik şema mutasyonu** — bu belge `FieldTypeSchema`'yı (`archetype.ts:77`) değiştirmez; yalnız değişiklik gereksinimini ve göç yolunu **önerir** (§5, §10). (7) **MDM golden-record/survivorship** — dedup fuzzy-eşitlik atomun bir boyutudur (`equality/fuzzy`), ama kayıt-birleştirme kararı `k-mdm`'in işidir. (8) **Mock veri** — bu belge hiçbir tabloda dolu/örnek değer vermez; yalnız alan adı + tip + amaç.
 
+URL/route atomu ayrıca `src/data/url-policy/registry.json` ve `standardRefs.urlPolicyRef` sözleşmesine tabidir: bir `micro_step` yalnız tek parser, normalizer, collision veya tenant/authorization negatif invariantını doğrular. Atom yeni route grameri, public ID prefix'i, slug profile veya app-local canonical generator icat edemez; bunların sahibi `k-route-policy`dir.
+
 ## 4. Tanım (nedir / ne yapar / ne yapmaz)
 
 **Nedir:** Atomik tip sistemi (`platform_fieldtypes`), üç-kademe kompozisyon zincirinin en alt kademesidir: **tek kanonik temsili ve bütün-değer semantiği olan, iç bileşenleri bağımsız iş-alanı değil değerin parametresi/ucu olan, kimliği/yaşam-döngüsü/ilişkisi olmayan bölünemez değer tiplerinin** kanonik kütüphanesidir. Kod tabanı karşılığı `FieldTypeSchema`'dır (`archetype.ts:77`). Atom, düz bir enum değil **parametreli bir değer tipidir** (`Money⟨currency,precision,rounding⟩`); parametrelerle somutlaşır ve motor ondan 13 sözleşme boyutunu deterministik türetir.
@@ -83,6 +85,34 @@ Aşağıdaki tablo, her atomik tipin `check-atomic-types` kapısından geçmek i
 | 11 | **surface-projection** | Türetilen form-widget | Money→para-input; Range→aralık-widget; EnumType→select |
 | 12 | **security-class** | PII/PHI/PCI sınıfı + maske/şifre | NationalId→PII-yüksek; IBAN→PII-orta; Email→PII-düşük |
 | 13 | **versioning** | Tip-terfi/precision-değişimi sözleşmesi | string→enum terfi; Money precision değişimi |
+
+### 5.3.1 Makine-okunur tam atom tanımı
+
+`src/schemas/atom.ts`, “atom” sözcüğünün iki ayrı anlamını `kind` discriminator'ıyla ayırır:
+
+- `task-micro-step`: WBS yaprağı olan en küçük davranış değişikliği,
+- `value-type`: metadata motorunun kullandığı atomik bütün-değer tipi.
+
+Bir `value-type` tanımı yalnız tip adı değildir. Aşağıdaki alanların tamamını taşır:
+
+| Alan | Zorunlu içerik |
+|---|---|
+| `atomicityReason` | Neden Fragment veya ArcheType olmadığı |
+| `baseType` | Dayandığı fiziksel/semantik taban |
+| `params` | Tip ailesine göre discriminated, serbest olmayan parametre sözleşmesi |
+| `dimensions` | §5.3'teki 13 boyutun eksiksiz makine kaydı |
+| `registryRefs` | Registry kimliği, sürümü ve yürürlük tarihi |
+| `runtime` | Backend adapter, frontend adapter ve ortak contract fingerprint |
+| `migration` | Strateji, backward reader ve downgrade davranışı |
+| `testVectors` | En az bir pozitif ve bir negatif test |
+| `deprecation` | active/deprecated/retired durumu, replacement ve sunset |
+| `owner/reviewer` | Üreten ve bağımsız inceleyen taraf |
+
+`params` tip ailesine bağlıdır. Money; `currencySet`, `precision`, `scale`, `rounding` olmadan; Range `elementType`, `bounds`, `allowUnbounded` olmadan; Identifier `scheme`, `checksum`, `jurisdiction` olmadan geçemez. Bilinmeyen parametre strict şema tarafından reddedilir.
+
+WBS `task-micro-step` tanımı ise satır sayısını atomiklik ölçüsü kabul etmez. Tek invariant, tek değişiklik, tek failure mode; dar `allowedFiles`; en az bir `nonGoal`; side-effect ve risk sınıfı; rollback; pozitif-negatif test vektörleri; parent evidence roll-up ve bağımsız reviewer taşır. Bu tanım yalnız `level=micro_step` düğümüne bağlanabilir.
+
+Geçiş kuralı: tarihsel `backlog + requirements` atomları geriye uyumlu parse olabilir. Ancak `status` veya `phase` yürütmeye doğru ilerlediği anda `qa:atom` tam `task-micro-step` tanımını zorlar. Denetlenecek aday yoksa kapı `PASS` demez, `NO_CANDIDATES` raporlar.
 
 ### 5.4 Önerilen iki kanonik düzeltme (AI önerir, insan onaylar)
 
@@ -202,6 +232,10 @@ Bu tablo atomik tip sistemi için zorunlu test senaryolarını, beklentiyi ve t�
 | 11 | (tümü) | 13 boyut beyanı eksik bir FieldType | `check-atomic-types` kırmızı (yeşil geçemez) | Contract (CI) |
 | 12 | (registry) | Sürüm-kilidi olmayan Money/Measure | Registry-sürüm beyanı zorunlu; reddedilir | Contract (CI) |
 | 13 | `Money` | Tip-migrasyon `currency→Money` downgrade | `alembic downgrade -1` veri kaybetmez | CI |
+| 14 | `LocalDate` | Doğum tarihi dilim dönüşümüne sokulur | Dönüşüm reddedilir; takvim günü dilimden bağımsız korunur (gün kaymaz) | Birim |
+| 15 | `ZonedDateTime` | Dilim sabit `UTC+3` offset ile beyan edilir | Reddedilir; yalnız IANA kimliği (`Europe/Istanbul`) kabul edilir | Birim |
+| 16 | `Recurrence` | "Her pazartesi 09.00" tekrarı yaz saati geçişini kapsar | Yerel 09.00 korunur; sabit 168-saat kayması oluşmaz | Birim |
+| 17 | `BusinessDay` | Vade resmî tatile denk gelir | Sonraki iş gününe kaydırma iş-takvimi verisinden çözülür | Birim |
 
 ## 13. Acceptance criteria
 
@@ -214,6 +248,7 @@ Bu tablo atomik tip sistemi için zorunlu test senaryolarını, beklentiyi ve t�
 - I18nText fallback zinciriyle çözülüyor; EnumType etiketi alias'tan dile göre geliyor; string sıralama locale-collation'a (Türkçe İ/ı) saygılı.
 - `security-class` PII/PHI/PCI atomlar (NationalId, IBAN) maskeli sunuluyor; ham değer yalnız PDP-yetkili görünümde.
 - AI tipi yalnız `draft` öneriyor; tip-migrasyon (`currency→Money`, string→enum) `approval_ref` + Migration Policy olmadan reddediliyor; AI kanonik `FieldTypeSchema`'yı değiştiremiyor.
+- Zaman semantiği ayrımı korunuyor: Instant / zoned date-time / local date / local time / duration / recurrence / iş günü birbirine dönüştürülmüyor; saat dilimi yalnız IANA kimliğiyle (`Europe/Istanbul`) beyan ediliyor; iş-zamanı kuralları (resmî ve bölgesel tatil, SLA durdurma, faturalandırma kesim) takvim verisinden çözülüyor (§17).
 - Alembic tip-migrasyon downgrade CI'da veri kaybetmeden geçiyor; `check-atomic-types` yeşil.
 
 ## 14. Anti-patterns
@@ -233,7 +268,7 @@ Bu tablo atomik tip sistemi için zorunlu test senaryolarını, beklentiyi ve t�
 
 ## 15. Definition of Done
 
-- §12'deki 13 test senaryosu yeşil (test-önce kanıtı: kırmızı→yeşil geçişi belgeli).
+- §12'deki 17 test senaryosu yeşil (test-önce kanıtı: kırmızı→yeşil geçişi belgeli).
 - En yüksek-kaldıraç atomlar (§6 sıra: `decimal`/`uuid`/`timestamptz`/`duration` → `EnumType`/`Money`/`Measure`/`I18nText`/`Range<T>`/`Percentage`) TypeDecorator ile tipli ve kilitli.
 - Her `FieldType` 13 sözleşme boyutunu beyan ediyor; `check-atomic-types` CI kapısı yeşil; beyansız/sürümsüz tip kırmızı.
 - `core-contract-pack` float-yasağı + atom sözleşmesi uyumu sağlandı; Alembic tip-migrasyon downgrade CI'da çalışıyor.
@@ -263,7 +298,56 @@ Aşağıdaki tablo, bu sözleşmenin CLM (Contract Lifecycle Management) ve PIM 
 | PIM/CLM ürün/madde görseli | **Atom** `AssetRef` (`k-storage` `digital_asset.id` referansı) |
 | Party `address` / `name` / `contacts[]` | **Fragment** (atom değil — bu yönerge dışı, `fragments-directive`; §3, §11) |
 
-## 17. Requirement-ID tablosu
+## 17. Zaman, takvim ve iş-zamanı semantiği
+
+Tarihi doğru **göstermek** (locale-biçim; §5.3 boyut 8 `i18n`, CLDR/BCP-47) ile zamanı doğru **modellemek** (değerin hangi zaman atomunda yaşadığı) iki ayrı problemdir; bu bölüm ikincisini normatif sabitler. Zaman tek bir timestamp tipine sıkıştırılamaz: aşağıdaki yedi veri türü ayrı birer atomik tip adayıdır ve birbirine **dönüştürülmez** — motor hiçbirini diğerinin özel hâli olarak temsil edemez, otomatik tip-daraltma (zoned date-time → Instant, local date → `timestamptz`) yapamaz. Aktör-açık ifade: *AI* bir kolonun hangi zaman atomunu taşıması gerektiğini **önerir** (draft: "bu kolon `LocalDate` olmalı, `timestamptz` değil"); *insan* semantik kararı ve tip-migrasyonunu onaylar (§10); *motor* onaylı atomdan 13 sözleşme boyutunu (§5.3) türetir.
+
+### 17.1 Birbirine dönüştürülmeyecek zaman veri türleri (atom adayları)
+
+Bu tablo zaman semantiğinin yedi atom adayını tanımlar; her satır 5-test karar kuralından geçen bağımsız bir bütün-değer tipidir ve `platform_fieldtypes` kataloğuna ayrı `type_id` ile aday gösterilir (mevcut `timestamptz`/`duration`/`Recurrence` satırları bu ayrımın alt kümesidir; eksik adaylar ADR-AT1 kapsamında insan onayına önerilir).
+
+| Atom adayı | Semantik | Neden başka türe dönüştürülmez |
+|---|---|---|
+| `Instant` | Evrensel zaman çizgisinde tek bir an (katalog karşılığı `timestamptz` tabanı) | Duvar-saati/dilim bilgisi taşımaz; "yerelde saat kaçtı" sorusunu tek başına yanıtlayamaz |
+| `ZonedDateTime` (zoned date-time) | Belirli bir saat dilimindeki tarih-saat | An + IANA dilim kimliği bir bütündür; dilim atılırsa DST ve politik kural bilgisi kaybolur |
+| `LocalDate` (local date) | Saat diliminden bağımsız takvim tarihi | Bir takvim günü bir an değildir; dilim eklemek günü kaydırır |
+| `LocalTime` (local time) | Saat diliminden bağımsız yerel saat | "Sabah 09.00" tek başına an üretmez; ancak güne ve dilime bağlanınca an olur |
+| `Duration` | Geçen süre | Takvim bilgisi taşımaz; takvimsel "1 gün" yaz saati geçiş gününde 23 veya 25 saattir |
+| `Recurrence` (recurrence rule) | Tekrar eden yerel takvim kuralı (RFC 5545 referans) | Sabit-aralık `Duration`'a indirgenemez; kural yerel takvimde çözülür |
+| `BusinessDay` (iş günü) | Pazara ve kuruma bağlı iş günü | Evrensel tanımı yoktur; iş-takvimi + sözleşme verisi olmadan hesaplanamaz (§17.4) |
+
+### 17.2 Normatif örnekler (tip-seçim kuralları)
+
+Aşağıdaki örnekler mock veri değil, "hangi değer hangi atomda yaşar" sorusunu sabitleyen normatif sınırlardır:
+
+- Gerçekleşmiş olay anları (audit kaydı, ödeme anı, `created_at`) genellikle UTC tutulabilir (`Instant`); yerel gösterim sunum katmanında türetilir.
+- ANCAK **doğum tarihi** UTC timestamp DEĞİLDİR; saat diliminden bağımsız bir `LocalDate`'tir — dilim dönüşümü uygulanırsa kişinin doğum günü dilime göre bir gün kayar.
+- Fatura dönemi başlangıcı yalnızca timestamp değildir; organizasyonun faturalandırma kesim kuralı ve yerel takvimiyle birlikte anlam kazanır (§17.4).
+- "Her pazartesi 09.00" tekrarı "her 168 saat" DEĞİLDİR; yaz saati geçişinde sabit-aralık model yerel 09.00'dan kayar — tekrar `Recurrence` (yerel takvim kuralı) ile modellenir.
+- Kullanıcının yerel son teslim tarihi yalnızca UTC tarihine indirgenemez; "son gün", kullanıcının dilimindeki takvim günüdür ve dilim bağlamıyla birlikte saklanır.
+- Bir etkinlik için **etkinlik saat dilimi, organizasyon saat dilimi ve izleyici saat dilimi farklı olabilir**; üç bağlam tek kolona indirgenemez, her biri kendi dilim kimliğini taşır.
+
+### 17.3 Saat dilimi kimliği: IANA ZORUNLU, sabit offset YASAK
+
+Saat dilimini sabit `UTC+3` gibi bir offset olarak saklamak YASAK — offset bir anın türetilmiş görünümüdür, kuralın kendisi değildir; ne yaz saati (DST) geçişini ne politik değişikliği izleyebilir. `Europe/Istanbul`, `America/New_York` gibi IANA saat dilimi kimlikleri ZORUNLU; `ZonedDateTime`, `Recurrence` ve iş-zamanı takvimleri dilimi bu kimlikle taşır. IANA veritabanı, siyasi kararlarla değişen offset ve yaz saati (DST) kurallarını yansıtmak için düzenli güncellenir; ilgili atomlar bu registry'ye sürüm-kilitli bağlanır (§7 "IANA tz database" satırı) (kaynak: https://www.iana.org/time-zones). DST geçişinde **var olmayan** (saat ileri alınınca atlanan) veya **iki kere oluşan** (saat geri alınınca yinelenen) yerel saatler için atom deterministik bir çözüm politikası beyan eder; beyansız davranış `check-atomic-types` kapısından geçmez.
+
+### 17.4 İş zamanı: i18n standartlarının çözmediği katman
+
+CLDR/BCP-47 yalnız locale-biçim sağlar; aşağıdaki iş-zamanı konularının hiçbirini çözmez. Bunların tamamı **pazar + müşteri sözleşmesi + organizasyon** bazında veri olarak modellenir (iş-takvimi verisi `k-mdm`/`reference-data` primitifinin işidir, §3; `BusinessDay` hesabı bu takvime referansla çözülür):
+
+- Yerel hafta sonları (hafta sonu her pazarda cumartesi-pazar değildir).
+- Resmî ve bölgesel tatiller (ulusal ve il/eyalet düzeyi ayrımıyla).
+- Yarım günler (arife/yarım mesai günleri).
+- Banka günleri (takas/valör günü iş gününden ayrışabilir).
+- Çalışma saatleri (organizasyon ve lokasyon bazlı).
+- SLA durdurma kuralları (sayaç hangi takvimde işler, hangi durumda durur).
+- Faturalandırma kesim saatleri (dönem sınırı hangi dilimde, hangi saatte kapanır).
+- Vade tatile denk geldiğinde sonraki iş gününe kaydırma kuralı.
+- DST geçişindeki var olmayan veya iki kere oluşan saatlerin iş-kuralı karşılığı.
+
+Sabit "hafta içi 5 gün, 09.00-18.00" varsayımı YASAK; "iş günü" bu takvim verisi olmadan hesaplanamaz, "her pazartesi" tekrarı da recurrence kuralı olmadan çözülemez.
+
+## 18. Requirement-ID tablosu
 
 Aşağıdaki tablo, bu sözleşmenin izlenebilir gereksinimlerini kimlik + katman + öncelik (P0–P3) + test türü + kabul + sahip ile listeler. Öncelik: P0 = bloklayıcı invariant, P1 = çekirdek, P2 = önemli, P3 = iyileştirme.
 
@@ -291,3 +375,8 @@ Aşağıdaki tablo, bu sözleşmenin izlenebilir gereksinimlerini kimlik + katma
 | AT-20 | Frontend i18n + collation duyarlı sunum (Phosphor ikon, SCSS token) | Frontend/A11y | P2 | A11y(axe) | axe critical=0; İ/ı sıralama; alias etiket | ui-team |
 | AT-21 | `atomic-types` WBS düğümü doğru dependsOn (`k-schema`) | Governance/WBS | P1 | CI(data-quality) | DAG geçerli, dangling yok | pmo |
 | AT-22 | `currency→Money` çelişki düzeltmesi öneri olarak sunuldu (AI uygulamadı) | Data/Governance | P1 | Contract | Öneri insan onayına düştü; kanonik değişmedi | kernel-team |
+| AT-23 | Zaman atomları ayrık: `Instant`, zoned date-time, local date, local time, `Duration`, `Recurrence`, `BusinessDay` birbirine dönüştürülmez | Data/Contract | P0 | Contract | Otomatik tip-daraltma yok; yedi tür ayrı atom adayı (§17.1) | kernel-team |
+| AT-24 | Saat dilimi IANA kimliğiyle beyan edilir (`Europe/Istanbul`); sabit `UTC+3` offset saklama YASAK | Backend/Data | P0 | Unit | Offset-beyan reddedilir; IANA sürüm-kilitli çözülür | kernel-team |
+| AT-25 | `LocalDate` semantiği: doğum tarihi gibi takvim günleri dilim dönüşümsüz | Backend/Data | P1 | Unit | Doğum tarihi gün kaymaz; timestamp'e indirgenmez | kernel-team |
+| AT-26 | `Recurrence` yerel takvim kuralı; sabit-aralık süreye indirgenmez | Backend/Data | P1 | Unit | Yaz saati geçişinde yerel saat korunur | kernel-team |
+| AT-27 | İş-zamanı verisi (yerel hafta sonu, resmî ve bölgesel tatil, yarım gün, banka günü, çalışma saati, SLA durdurma, faturalandırma kesim, iş gününe kaydırma, DST boşluk/örtüşme) pazar+sözleşme+organizasyon bazlı modellenir | Backend/Data | P1 | Unit | `BusinessDay` yalnız iş-takvimi verisiyle hesaplanır | kernel-team |

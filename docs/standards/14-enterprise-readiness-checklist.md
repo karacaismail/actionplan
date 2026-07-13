@@ -140,6 +140,46 @@ Master checklist bir terfi kapısıdır ve şu şekilde uygulanır: bir app bir 
 
 Kural: CI graduation'ı **onaylamaz**, yalnız kriterlerin karşılandığını doğrular; terfi kararı insanındır. Bir kademe kapısı kırmızıysa graduation başlatılamaz.
 
+### 7.1 Global launch kapısı — pazar/dil canlıya alma ön koşulları
+
+Graduation kapısı app'in kademe terfisini denetler; Global launch kapısı ise aynı ikili ilkeyle (kanıt-yeşil + insan-onay) **pazar/dil düzeyinde** çalışır ve şu şekilde uygulanır: bir pazar veya dil canlıya alınmadan önce aşağıdaki 14 sorunun TAMAMINA olumlu cevap verilmelidir; tek bir olumsuz cevap launch'ı bloklar (fail-closed). Durum alanı soru-başına doldurulur (PASS / N/A+gerekçe / TODO) ve kapı kademe-eşiğinden bağımsız, pazar/dil-başına uygulanır (çok-dil aktivasyonu L2 kriteridir — §3 S-14); graduation app'i terfi ettirir, global launch kapısı pazarı/dili açar.
+
+1. Kullanıcı kayıt olabilir, giriş yapabilir ve hesabını kurtarabilir mi?
+2. Ödeme yapabilir, doğru vergiyle doğru faturayı alabilir ve iade sürecini tamamlayabilir mi?
+3. Kritik tarih, tekrar, son teslim ve faturalandırma zamanları kendi saat diliminde doğru mu?
+4. Ad, adres, telefon, e-posta ve kuruluş bilgileri gerçek kullanıcıları reddetmeden kaydedilebiliyor mu?
+5. Verinin nerede işlendiği, saklandığı, yedeklendiği ve kimlerce erişildiği hukuken açıklanmış mı?
+6. Sözleşme, gizlilik, izin ve iptal metinleri doğru sürüm ve dilde mi?
+7. Unicode spoofing, karma script ve identifier güvenliği test edildi mi?
+8. Klavye, IME, RTL, font, PDF, e-posta, SMS ve dışa aktarımlar test edildi mi?
+9. Erişilebilirlik testleri desteklenen dilde tekrarlandı mı?
+10. Arama, moderasyon ve varsa AI özellikleri o dilde ölçüldü mü?
+11. Destek, güvenlik olayı, ödeme itirazı ve hesap kurtarma operasyonları hazır mı?
+12. Analytics dili, pazarı, ülkeyi, para birimini ve veri bölgesini ayrı ayrı izliyor mu?
+13. Hedef pazardan gerçek kullanıcı veya uzmanlarla in-market QA yapıldı mı?
+14. Problemler için locale/market bazlı kill switch ve rollback var mı?
+
+Her soru kuralın sahibi olan yönergeye referans verir ("reference, don't duplicate" — kural burada kopyalanmaz, kanıt sahibinden istenir). Aşağıdaki tablo soru → sahip yönerge eşlemesini verir.
+
+| Soru | Sahip yönerge |
+|---|---|
+| 1 | `03-authn-authz-iam-standard.md` |
+| 2 | `financial-state-model-contract.md` + `global-market-readiness-directive.md` |
+| 3 | `atomic-types-directive.md` |
+| 4 | `actor-party-contract.md` |
+| 5 | `privacy-retention-decision-matrix.md` |
+| 6 | `privacy-retention-decision-matrix.md` |
+| 7 | `03-authn-authz-iam-standard.md` |
+| 8 | `01-i18n-l10n-g11n-standard.md` |
+| 9 | `02-a11y-accessibility-standard.md` |
+| 10 | `k-search-directive.md` + `global-market-readiness-directive.md` |
+| 11 | `global-market-readiness-directive.md` |
+| 12 | `decision-grade-data-contract.md` |
+| 13 | `global-market-readiness-directive.md` |
+| 14 | `12-devops-infrastructure-standard.md` + `release-policy.md` |
+
+Kapanış ilkesi: Global launch tanımı "bir dilin eklenmiş olması değil; o dil ve pazardaki kullanıcının ürünü keşiften hesap kapatmaya kadar hukuken, finansal olarak, teknik olarak ve operasyonel olarak eksiksiz kullanabilmesi"dir. Bu kapı kırmızıyken pazar/dil canlıya alınamaz; launch kararı graduation'daki gibi ikilidir — kanıt yeşil (makine) + release owner imzası (insan).
+
 ---
 
 ## 8. Hayalet kapılar ve boşluklar (bilinçli izlenen)
@@ -193,6 +233,7 @@ Bu ritüel her app için ayrı çalışır; portföy görünümü `core-enterpri
 - AC-4: Graduation kapısı ikili: CI-yeşil (makine) + insan-onay; CI tek başına terfi ettirmiyor.
 - AC-5: `check-i18n` ve `check-core-contract` artık yazıldı; kalan yazılmamış kapılar (ör. gitleaks) açıkça "TODO" işaretli, "PASS" sayılmıyor.
 - AC-6: `core-enterprise-maturity-ladder.md` L1/L2/L3 tanımlarıyla çelişki yok.
+- AC-7: Global launch kapısı (§7.1) 14 ön koşul sorusunu numaralı ve sahip-yönerge eşlemeli taşıyor; pazar/dil canlıya alma yalnız 14/14 olumlu cevap + release owner imzasıyla mümkün; locale/market bazlı kill switch ve rollback launch öncesi hazır.
 
 ---
 
@@ -209,7 +250,7 @@ Bu ritüel her app için ayrı çalışır; portföy görünümü `core-enterpri
 
 ## 13. DoD (Definition of Done)
 
-15 makine-standardı (§3) + 13 anlatı standardı (§4) + 18 DoD katmanı (§5) + 5 L3 ek kriteri (§6) master satır olarak listelendi; her satır P0-P3 + CI kapısı + durum alanı + kademe taşıyor; graduation kapıları (§7) `core-enterprise-maturity-ladder.md` ile hizalı; hayalet kapılar (§8) açıkça işaretli; hiçbir standart kuralı kopyalanmadı (yalnız referans); `check-standards-coverage` bu dokümanın atıfladığı ref anahtarlarını çözebiliyor; PR açıldı, insan reviewer merge etti.
+15 makine-standardı (§3) + 13 anlatı standardı (§4) + 18 DoD katmanı (§5) + 5 L3 ek kriteri (§6) master satır olarak listelendi; her satır P0-P3 + CI kapısı + durum alanı + kademe taşıyor; graduation kapıları (§7) `core-enterprise-maturity-ladder.md` ile hizalı; global launch kapısı (§7.1) pazar/dil canlıya alma için 14 ön koşul sorusunu numaralı ve sahip-yönerge eşlemeli taşıyor; hayalet kapılar (§8) açıkça işaretli; hiçbir standart kuralı kopyalanmadı (yalnız referans); `check-standards-coverage` bu dokümanın atıfladığı ref anahtarlarını çözebiliyor; PR açıldı, insan reviewer merge etti.
 
 ---
 
@@ -231,6 +272,9 @@ Aşağıdaki tablo bu master checklist'in kendi izlenebilir gereksinimlerini kim
 | ERC-10 | App-başı denetim ritüeli (§10) tanımlı | Governance | P1 | Review | AC-2 | Release owner |
 | ERC-11 | Durum alanı makine-okunur (evidence/ref/kapı) | Governance | P1 | Review | AC-2 | Enterprise architect |
 | ERC-12 | Waiver ile geçici geçiş `waiver-policy.md`'ye bağlı | Governance | P2 | check-waivers | AC-5 | Release owner |
+| ERC-13 | Global launch kapısı: 14 ön koşul sorusunun tamamı olumlu olmadan pazar/dil canlıya alınmaz (fail-closed) | Governance | P0 | Review | AC-7 | Release owner |
+| ERC-14 | 14 launch sorusunun her biri sahip yönergeye referanslı (kural kopyalanmaz, kanıt sahibinden istenir) | Governance | P1 | Review | AC-7 | Enterprise architect |
+| ERC-15 | Locale/market bazlı kill switch + rollback launch öncesi kanıtlı hazır | Governance | P0 | Review | AC-7 | Release owner |
 
 ---
 

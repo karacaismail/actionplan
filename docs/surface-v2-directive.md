@@ -137,10 +137,11 @@ Aşağıdaki testler `check-surface` CI kapısında zorunludur; bir yüzey bunla
 | 6 | i18n/RTL | pseudo-localization testi taşan/kırılan yüzeyi yakalıyor; `rtl: auto` locale'den doğru türüyor |
 | 7 | State davranışı | empty/loading/error/optimistic davranışları beyanlı; optimistic başarısızlıkta rollback çalışıyor |
 | 8 | Versiyon-kayması fail-safe | Surface v2 alanı beklerken ArcheType v1 eksikse render fail-safe davranıyor (çökmüyor) |
+| 9 | Storybook story zorunluluğu | Consumer/shop/custom yüzeyin composition story'si mevcut ve viewport (sm/md/lg), theme (light/dark + tenant-tema), i18n/pseudo-locale, RTL, prefers-reduced-motion ve fallback/failure (empty/error/stale) fixture'larını merkezi decorator'lardan tüketiyor; story interaction + story a11y testleri yeşil (`storybook-ci`; `docs/storybook-implementation.md` §4) |
 
 ## 12. Acceptance criteria
 
-Bu yönerge şu ölçütler karşılandığında "uygulanmış" sayılır: (1) `SurfaceTypeSchema` 22 tipe genişledi (8 admin + 8 consumer + 6 shop); (2) `renderStrategy`, `perf`, `i18n`, `aiSurface` blokları şemada tanımlı ve varsayılanlı; (3) `a11y.wcag` varsayılanı `2.2-AA`, `wcagAspirational` opsiyonel; (4) §11'deki 8 test yeşil; (5) `check-surface` CI kapısı yeni tipleri + AI-PDP kapısını + CWV bütçe beyanını + AA gate'ini zorluyor; (6) `custom` renderStrategy yönetişim alanlarını (permission/audit/i18n/a11y) koruyor; (7) mevcut 8 admin tipi ve alanları geriye-dönük bozulmadı; (8) ADR-S1..S7 kilitlendi.
+Bu yönerge şu ölçütler karşılandığında "uygulanmış" sayılır: (1) `SurfaceTypeSchema` 22 tipe genişledi (8 admin + 8 consumer + 6 shop); (2) `renderStrategy`, `perf`, `i18n`, `aiSurface` blokları şemada tanımlı ve varsayılanlı; (3) `a11y.wcag` varsayılanı `2.2-AA`, `wcagAspirational` opsiyonel; (4) §11'deki 9 test yeşil; (5) `check-surface` CI kapısı yeni tipleri + AI-PDP kapısını + CWV bütçe beyanını + AA gate'ini zorluyor; (6) `custom` renderStrategy yönetişim alanlarını (permission/audit/i18n/a11y) koruyor; (7) mevcut 8 admin tipi ve alanları geriye-dönük bozulmadı; (8) ADR-S1..S7 kilitlendi.
 
 ## 13. Anti-patterns
 

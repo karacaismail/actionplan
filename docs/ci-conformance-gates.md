@@ -68,6 +68,69 @@ Bu yedi kapı, standardRefs / applicability / waivers / kısa-kod / bağımlıl�
 - Yeşil koşul: Emoji yok; yasaklı styled-kit deseni yok; tasarım/bileşen sözleşmesine aykırı işaret yok.
 - Veri doldukça nasıl dişlenir: `design-system.json`, `ui-components.json` ve `ux-interaction.json` sözleşmelerine yeni ölçülebilir kural (token zorunluluğu, a11y bayrağı) eklendikçe kapı dişlenir.
 
+### check-ui-delivery
+
+- Ne zorlar: Makine-okunur UI teslimat sözleşmesi (`uiDelivery` — `src/schemas/ui-delivery.ts`; `docs/storybook-master-component-integration-directive.md` §2/§3). UI etkisi içerik sinyallerinden makinece sınıflandırılır (`tools/lib/ui-impact.mjs`); UI-impact adayı düğüm sözleşme taşımadan geçemez; backend-only düğüm somut gerekçeyle N/A kalır ve zorlanmaz.
+- Dosya yolu: `tools/agents/check-ui-delivery.mjs` (+ ratchet baseline: `tools/agents/ui-delivery-baseline.json`)
+- Sonuç sınıfları: **PASS** · **FAIL** (aday sözleşmesiz veya sözleşme kural ihlali) · **NO_CANDIDATES** (UI-impact adayı yok — backend PR'ı başarısız olmaz) · **REVIEW_REQUIRED** (`reviewStatus=in-review`; insan kabulü bekler, bloklar) · **MIGRATION_INCOMPLETE** (ihlal yok ama corpus'ta açık-kararsız düğüm veya legacy warning var — dürüst ara durum, exit 0, asla 'PASS' yazmaz; PASS yalnız tüm düğümler açık kararlı + 0 warning).
+- Ek sinyaller (v2 — docs/storybook-governance-pack.md §13): içerik tarafında üretilen BUDGET_EXCEEDED (coverage bütçe aşımı), SECURITY_REVIEW_REQUIRED (permission story'li critical/high düğümde backend authz test ref'i yok), MANUAL_A11Y_REQUIRED (critical/high'ta manuel a11y review kaydı yok), OWNER_MISSING (approved baseline'da owner yok) ihlal/uyarı olarak raporlanır; BASELINE_STALE, FIXTURE_DRIFT (çalışma-zamanı), VERSION_MISMATCH, FLAKY_QUARANTINED sinyalleri implementation reposunun storybook-ci kapısında üretilir.
+- Yeşil koşul: PASS veya NO_CANDIDATES; baseline'daki legacy ihlaller warning kalır, baseline DIŞI her ihlal kırar. Baseline'a yeni id eklemek yasaktır (yalnız çıkarılır); liste boşalınca ratchet hard-fail olur (R4).
+- Tamper-guard: baseline dosyası originChecksum + originAllowedWarnings taşır; allowedWarnings yalnız origin'in alt kümesi olabilir (monotonic azalma), ihlalde RATCHET_TAMPERED ile kapı kırılır; adaylık uiArtifactRole modeline bağlıdır (yalnız produces-ui/changes-ui-contract).
+- Veri doldukça nasıl dişlenir: Ratchet dalgaları (R1 yeni/değişen → R2 Master Component kritik yolu → R3 Surface zinciri → R4 legacy kapanış) ilerledikçe baseline küçülür ve kapı sertleşir; classifier sinyal listesi genişledikçe aday yakalama hassasiyeti artar.
+
+### check-url-policy
+
+- Ne zorlar: Kanonik URL sözleşmesi koruması dört katmanlıdır: (1) scope'lu yasak-desen/mutation taraması, (2) zorunlu doküman karar probe'ları, (3) `src/data/url-policy/registry.json` için Zod + duplicate/FK/parity testleri, (4) `src/data/standards/url-policy.json` ve bütün WBS/content düğümlerindeki merkezi `urlPolicyRef` mirası. `url-policy.md` ve `node.md` DAHİL bütün docs taranır; bütün-dosya muafiyeti yoktur.
+- Dosya yolu: `tools/agents/check-url-policy.mjs`
+- Yeşil koşul: Doküman taraması temiz; registry şemaya uyuyor; route/projection/host/slug referansları çözülüyor; 11 prefix ve yedi doğa seviyesi tam; private/public/GraphQL gramerleri doküman-registry paritesinde; URL standardı çözülüyor; generated corpus'un tamamı `urlPolicyRef=url-policy` miras alıyor.
+- Veri doldukça nasıl dişlenir: Yeni tarihsel karar reddedildikçe yasak desen listesi genişler; prefix ailesine üye eklendikçe probe listesi üye-bazlı büyür; url-policy implementation fazları ilerledikçe zorunlu karar listesi genişler ve kapı sözleşme driftini daha erken yakalar.
+- URLP-M1 — **TAMAMLANDI:** RouteDefinition, HostBindingProfile, RouteProjection, SlugProfile, resource-kind/prefix ailesi ve Ada→Atom yükümlülükleri `src/data/url-policy/registry.json` içinde; Zod şeması `src/schemas/url-policy-registry.ts`; standardı `src/data/standards/url-policy.json`; parity/content yayılım testi `tests/urlPolicyRegistry.test.ts`.
+
+### check-url-policy-implementation
+
+- Ne zorlar: `URLP-00`–`URLP-16` için tam/sıralı program, yalnız doğrudan predecessor bağı, exact platform branch ve allowed-files/non-goals, test-first redTests, acceptance/evidence/rollback/security/stopConditions alanları, execution directive parity'si ve 17 ayrı WBS atomu.
+- Dosya yolu: `tools/agents/check-url-policy-implementation.mjs`; Zod şeması `src/schemas/url-policy-implementation-program.ts`; veri `src/data/url-policy/implementation-program.json`; test `tests/urlPolicyImplementationProgram.test.ts`.
+- Yeşil koşul: 17/17 faz ve WBS atomu bulunur; WBS bağımlılıkları programla aynıdır; directive bütün faz/alanları kapsar; node'lar `urlPolicyRef=url-policy`, boş evidence ve `status!=done` taşır; hiçbir faz geniş `**` wildcard veya uydurma evidence ile gevşetilmez.
+- Sonuç semantiği: Bu kapının yeşili **execution-ready actionplan handoff** demektir; platform runtime implemented/verified/done demek değildir. Runtime statüsü yalnız gerçek PR/CI/test/staging/drill evidence writeback ile ilerler.
+
+### check-platform-write-boundary
+
+- Ne zorlar: Codex, Claude, Cursor, Aider ve Windsurf için platform erişimi `read-only-audit`; ürün kodu yazarı `human-developer-only`; AI çıktısı yalnız actionplan içinde `DIRECTIVE-ONLY` handoff'tur.
+- Dosya yolu: `tools/agents/check-platform-write-boundary.mjs`; makine policy `src/data/platform-product-code-write-policy.json`; Zod şeması `src/schemas/platform-write-boundary.ts`; test `tests/platformProductCodeWriteProhibition.test.ts`.
+- Yeşil koşul: `AGENTS.md`, `CLAUDE.md`, `CURSOR-RULES.md`, developer/export/workspace belgeleri kanonik directive'e bağlıdır; export motoru coding-agent, platform patch, branch/commit/PR veya minimum-code uygulama komutu üretmez.
+- Yasak: AI platform ürün kodu, test, migration, Storybook/config veya generated output yazamaz; platform branch, commit, push, PR veya runtime evidence üretemez.
+- Kanonik directive: `docs/platform-product-code-write-prohibition-directive.md`.
+
+### check-market-readiness
+
+- Ne zorlar: `global-market-readiness` makine sözleşmesinin bütünlüğü (J2 — `docs/json-standards-integration-gap-report-2026-07-13.md`): sözleşme dosyası geçerli JSON + doğru id/family; altı zorunlu kural id'si (`gmr-launch-gate-14`, `gmr-ip-geolocation-not-identity`, `gmr-market-kill-switch`, `gmr-payment-market-matrix`, `gmr-support-language-commitment`, `gmr-moderation-per-locale`) mevcut ve rule/rationale dolu; iki indeks kaydı + applicability matris ref anahtarı + anlatı çapası (`docs/global-market-readiness-directive.md`) yerinde.
+- Dosya yolu: `tools/agents/check-market-readiness.mjs`; sözleşme `src/data/standards/global-market-readiness.json`; test `tests/jsonStandardsIntegration.test.ts`.
+- Yeşil koşul: Sözleşme + 4 indeks/çapa probe'u tam; hiçbir zorunlu kural eksik değil.
+- Veri doldukça nasıl dişlenir: `marketReadinessRef` J4'te `StandardRefsSchema`'ya eklenince (KARAR BEKLİYOR — CPO) app düğümlerinde ref zorunluluğu ve pazar-başına evidence denetimi bu kapıya bağlanır; launch-gate 14 sorusunun evidence writeback'i release akışına bağlandıkça kapı pazar/dil başına graduation'ı bloklar.
+
+### check-finance-model
+
+- Ne zorlar: `finance-money-model` makine sözleşmesinin bütünlüğü (J2): geçerli JSON + doğru id/family; altı zorunlu kural id'si (`fin-money-decimal-iso4217`, `fin-no-two-decimal-assumption`, `fin-three-currency-separation`, `fin-fx-date-declaration`, `fin-rounding-policy`, `fin-financial-state-six`) mevcut ve dolu; indeks/matris/çapa (`docs/financial-state-model-contract.md`) kayıtları yerinde.
+- Dosya yolu: `tools/agents/check-finance-model.mjs`; sözleşme `src/data/standards/finance-money-model.json`; test `tests/jsonStandardsIntegration.test.ts`.
+- Yeşil koşul: Sözleşme + 4 indeks/çapa probe'u tam.
+- Veri doldukça nasıl dişlenir: `financeModelRef` J4'te şemaya eklenince para dokunan archetype/feature düğümlerinde Z uygulanabilirliği denetlenir; para taşıyan alan beyanları (ölçek/yuvarlama politikası) generated corpus'a girdikçe kapı alan-bazlı doğrulamaya terfi eder.
+
+### check-storybook-registry
+
+- Ne zorlar: `src/data/storybook/` altındaki registry ailelerinin şema geçerliliği (`src/schemas/storybook-registry.ts`) ve referans bütünlüğü: `story-catalog` içindeki `componentRef` → `master-components`, `deprecation-migrations` eski/yeni component referansları, `component-consumers` referansları; duplicate id reddi ve orphan tespiti.
+- Dosya yolu: `tools/agents/check-storybook-registry.mjs`
+- Yeşil koşul: Tüm registry dosyaları şemaya uyar; kırık referans ve duplicate id yok; boş registry geçerlidir (iskelet dönemi).
+- Veri doldukça nasıl dişlenir: Kayıt sayısı arttıkça foreign-key denetimi genişler; `master-components` dolmaya başlayınca `uiDelivery.masterComponentRefs` FK'sı da bu registry'ye bağlanır.
+
+### storybook-ci (implementation-repo kapısı — sözleşmesi burada, koşusu `platform/` reposunda)
+
+- Ne zorlar: Storybook'un zorunlu Master Component sözleşme/evidence yüzeyi olması (`ui-components.json` v1.1, `design-system.json` v1.1, `docs/storybook-implementation.md`). UI/Master Component kapsamına giren her PR için bloklayıcı sıra: `typecheck → lint → component unit tests → Storybook static build → story interaction tests → story a11y tests → visual regression diff → product E2E + axe → publish preview`.
+- Dosya yolu: implementation reposunda `.github/workflows/storybook-ci.*` (bu repo yalnız sözleşmeyi tanımlar; kurulum Wave SB-1/SB-2 teslimatıdır).
+- Sonuç sınıfları: **PASS** (kapsamda story var, tüm bloklayıcı testler geçti) · **FAIL** (story/build/test/diff ihlali) · **NO_CANDIDATES** (PR UI/Master Component kapsamına girmiyor) · **REVIEW_REQUIRED** (kasıtlı visual diff insan kabulü bekliyor).
+- v2 sinyal taksonomisi: PASS/FAIL/NO_CANDIDATES/REVIEW_REQUIRED çekirdek sonuçlarına ek olarak BASELINE_STALE, FIXTURE_DRIFT, VERSION_MISMATCH, OWNER_MISSING, SECURITY_REVIEW_REQUIRED, BUDGET_EXCEEDED, FLAKY_QUARANTINED, MANUAL_A11Y_REQUIRED rapor sinyalleri üretilir; hangilerinin blokladığı risk politikasında tanımlıdır (docs/storybook-governance-pack.md §13).
+- Yeşil koşul: PASS veya NO_CANDIDATES; REVIEW_REQUIRED yalnız gerekçe + ilişkili task/PR + reviewer onayıyla PASS'a düşer. Visual baseline, diff nedeni ve reviewer onayı olmadan güncellenemez; story a11y ihlali uyarı olarak bırakılamaz (bloklar). Story testleri ürün E2E'sinin yerine geçmez — E2E ayrıca yeşil olmalıdır.
+- Veri doldukça nasıl dişlenir: Story matrisi kapsamı (`uic-story-matrix-required`) ve Master Component sayısı arttıkça kapı daha çok senaryoyu (theme/locale/RTL/density/permission/failure) bloklayıcı yapar; component coverage raporu eşiği Wave SB-3+ ile yükselir.
+
 ---
 
 ## 2. Mevcut İçerik, Veri ve Yürütme Kapıları
@@ -76,7 +139,7 @@ Aşağıdaki kapılar ADR-0026/0027'den önce de vardı ve standart katmanıyla 
 
 ### check-content
 
-- Ne zorlar: İçerik kalite kapısı (node checker — 467 düğüm, exact-17 üretim boyutu). Düğüm içeriğinin kalıp/golden ölçütlerini karşılaması.
+- Ne zorlar: İçerik kalite kapısı (node checker — güncel sayı `src/data/generated/meta.json`, exact-17 üretim boyutu). Düğüm içeriğinin kalıp/golden ölçütlerini karşılaması.
 - Dosya yolu: `tools/agents/check-content.mjs`
 - Yeşil koşul: Tüm düğümler içerik kalite eşiğini geçer.
 - Veri doldukça nasıl dişlenir: Düğüm sayısı ve içerik beklentileri arttıkça eşik yükselir.

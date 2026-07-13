@@ -9,8 +9,7 @@ Bu rehber, actionplan'a bağlantı alan her geliştirici için tek kanonik başl
 
 actionplan, uygulama kodu içermeyen, frontend-only bir WBS (Work Breakdown Structure) planlayıcısıdır.
 Görevi, başka projenin enterprise-grade waterfall yol haritasını, geliştirici iş tanımlarını ve teslimat kanıtı disiplinini tutmaktır.
-Gerçek uygulama kodu burada değil, ayrı implementation reposunda yaşar.
-actionplan'daki her düğüm bir planlama nesnesidir; geliştirici burada işi anlar, waterfall fazını yürütür, kod gerekiyorsa ilgili implementation reposunda çalışır.
+Gerçek uygulama kodu burada değil, ayrı implementation reposunda yaşar ve yalnız insan geliştirici tarafından yazılır. AI erişimi `read-only-audit`, ürün kodu yazarı `human-developer-only`dır. Kanonik hüküm: `docs/platform-product-code-write-prohibition-directive.md`.
 
 **Rolünü seç.** Hangi rolde olduğuna karar ver ve aşağıdaki ilgili bölüme git.
 
@@ -21,13 +20,13 @@ actionplan'daki her düğüm bir planlama nesnesidir; geliştirici burada işi a
 | QA / Güvenlik inceleyici | Acceptance criteria doğrulama, CI kapı sonuçları, güvenlik sınırları |
 | Product / PM | Mileston takibi, öncelik değerlendirmesi, faz kapısı onayı |
 | Dokümantasyon bakım ajanı (Codex/actionplan) | Eksik veya çelişkili dokümantasyonu düzelt, handoff'u yeterli hale getir; ürün/platform kodu yazma |
-| Implementation ajan operatörü (Claude Code/Cursor/Aider) | Developer Brief veya Agent Prompt'u implementation reposunda uygulat, PR aç; main'e doğrudan push etme |
+| AI directive operatörü (Claude/Cursor/Aider) | Platformu salt-okunur denetlet; actionplan içinde `DIRECTIVE-ONLY` insan handoff'u üret; ürün kodu/branch/commit/PR üretme |
 
 ### Dokümantasyon bakım rolü
 
 Codex/actionplan doc-maintainer bu rehberi takip ederek platform, kernel, SDK, app-core, module veya app kodu yazmaz. Bu rolün işi; kapsam, acceptance criteria, risk, rollback, referans, traceability, export ve handoff ifadelerini geliştirici için yeterli hale getirmektir.
 
-Bu rehberdeki Claude Code, Cursor, Aider veya Agent Prompt adımları implementation geliştiricisinin ya da onun yönettiği coding ajanının adımlarıdır. actionplan doc-maintainer yalnız bu adımların dokümantasyonunu iyileştirir; implementation workspace'e geçip kod üretmez.
+Bu rehberdeki Claude, Cursor, Aider veya Agent Prompt adımları yalnız directive üretimidir. AI implementation workspace'e geçip kod, test, migration, Storybook/config, branch, commit veya PR üretmez; bunları insan geliştirici uygular.
 
 Hangi rolde olursan ol, actionplan'ı tarayıcıda aç:
 `https://karacaismail.github.io/actionplan/`
@@ -70,6 +69,8 @@ Meta-framework vizyonunu gerçek yazılıma çevirecek wave/PR/evidence kuyruğu
 
 Her görev için döngü aynıdır. Aktörler ve sorumluluklar netdir; atlanacak adım yoktur.
 
+UI / Master Component görevlerinde döngünün component-düzeyi karşılığı şudur: **red story test → component → Storybook review → E2E** — önce başarısız interaction/a11y story testi yazılır, component testi yeşile getirir, yayınlanmış Storybook preview'unda insan review'u alınır (visual diff dahil), son olarak Surface E2E'si ayrıca geçer. Story pass etti diye E2E atlanmaz; story'siz Master Component merge edilemez (`docs/storybook-implementation.md` §5-6, `enterprise-dod` §2.5, `ready-for-dev-gate` UI ek alanları).
+
 ### Adım 1 — Hazır görevi al
 
 Waterfall handoff kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JSON'unu indir ya da tarayıcıda aç; `refs`, `deliverables`, `acceptanceCriteria`, `risks`, `schedule` ve `rollback` alanlarını not al.
@@ -79,50 +80,54 @@ Waterfall handoff kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JS
 Görev detay ekranındaki export butonlarını kullan:
 
 - Developer Brief: insan geliştirici için kapsam, acceptance criteria, traceability, risk ve evidence özeti.
-- Agent Prompt: Claude Code / Cursor Agent / Aider gibi kod ajanlarına verilecek sıkı sözleşme.
+- Agent Prompt: Claude / Cursor / Aider'a verilecek `DIRECTIVE-ONLY`, read-only-audit ve insan handoff sözleşmesi.
 - Vobecoder Card: kısa, tek ekranlık yapıştırılabilir görev kartı.
 - Evidence Patch: iş bitince actionplan'a geri yazılacak kanıt taslağı.
 - Raw JSON: TaskNode'un tam verisi.
 
 `repoPath` veya `testCommand` eksikse kod yazmaya başlama. Bu durumda Evidence Patch veya plan düzenlemesiyle traceability tamamlanır.
 
-### Adım 3 — AI ajana ver (Claude Code)
+### Adım 3 — AI'dan `DIRECTIVE-ONLY` handoff al
 
-Agent Prompt veya Developer Brief'i ilgili implementation reposunda Claude Code'a ver. Birincil workspace `implementation-workspace-manifest.md` içinde tanımlıdır:
-
-Bu adım actionplan üzerinde çalışan dokümantasyon bakım ajanının adımı değildir. Doc-maintainer burada yalnız Agent Prompt/Developer Brief içeriğini eksiksiz ve çelişkisiz hale getirir; kod üretme işi geliştirici veya implementation ajan operatörü tarafından ayrı repo/branch'te yürütülür.
+Agent Prompt veya Developer Brief'i actionplan bağlamında Claude/Cursor/Aider'a ver. AI,
+`implementation-workspace-manifest.md` içindeki platformu yalnız salt-okunur denetler ve
+insan geliştirici için test-first implementation directive'i üretir.
 
 ```bash
-cd /Users/karaca/DEV/mimari/platform
-git checkout -b task/<task-id>-<slug>
+cd /Users/karaca/DEV/mimari/actionplan
+# AI burada yalnız directive/handoff dosyası yazar; platforma geçmez.
 ```
 
 Komut şablonu:
 
 ```
-claude "Bu Agent Prompt'a göre task/<task-id> için kod üret.
-Referanslar: <refs>
-Acceptance Criteria: <liste>
-Kısıt: Test-önce çalış; her AC için önce kırmızı test, sonra geçer kod."
+claude "DIRECTIVE-ONLY. Platformu yalnız read-only-audit et.
+Platform dosyası, test, migration, Storybook/config, branch, commit veya PR üretme.
+task/<task-id> için insan geliştiricinin uygulayacağı kırmızı test planı, minimum
+implementation sırası, güvenlik negatifleri, rollback ve evidence handoff'u yaz."
 ```
 
-AI ajanı main'e doğrudan push etmez. Üretir, PR açar; karar insana aittir.
+AI hiçbir branch'e push etmez ve PR açmaz. Platform ürün kodunu yalnız insan geliştirici yazar.
 
-### Adım 4 — Test-önce kodla (Core Contract + AC odaklı)
+### Adım 4 — İnsan geliştirici test-önce kodlar
 
-İlgili implementation reposunda çalış. Kod fazındaysan her acceptance criterion için önce başarısız testi yaz, sonra geçer kodu üret. Requirements/test-plan/db-schema fazındaysan çıktı kod değil; sözleşme, test planı, şema/migration kararı ve kanıt beklentisidir.
+İnsan geliştirici ilgili implementation reposunda çalışır. Kod fazındaysa her acceptance criterion için önce başarısız testi, sonra minimum geçer kodu yazar. AI bu dosyaları yazmaz; yalnız directive'i ve review checklist'ini actionplan içinde geliştirir.
 
 Backend stack: FastAPI + Strawberry GraphQL + SQLAlchemy 2.0/SQLModel + Alembic + PostgreSQL.
 Frontend stack: React + Vite + TanStack Router + TanStack Query.
 Bu stack'in dışına çıkma. Next.js, Supabase, Prisma, Redux ve Flowbite yasaktır.
 
-### Adım 5 — Uret / Eleştir / Islet ritueli (3'lu)
+URL, route, slug, canonical, redirect, locale path, custom domain, app mount veya kaynak linki içeren her görevde `docs/url-policy.md` + `src/data/url-policy/registry.json` + `standardRefs.urlPolicyRef` birlikte okunur. İnsan implementation'ı serbest path concat, app-local URL generator, sıralı public ID veya registry dışı prefix üretemez; AI yalnız bu kontrolleri directive'e yazar.
+
+URL runtime implementation'ı için ayrıca `docs/url-policy-implementation-directive.md` ve `src/data/url-policy/implementation-program.json` zorunludur. Başlangıç düğümü `urlp-00`, son düğüm `urlp-16`dır; predecessor gerçek evidence ile verified olmadan sonraki faz development'a alınmaz. Her agent prompt programdaki allowedFiles/nonGoals/redTests/testCommands/evidenceRequirements/rollback/stopConditions alanlarını aynen taşır.
+
+### Adım 5 — Yönerge / İnsan uygulaması / İnsan review ritüeli
 
 Her yeni modül veya kritik mantık bloğu için sırasıyla:
 
-- Uret: AI ajanı kodu üretir; insan geliştiriciye sunar.
-- Eleştir: insan geliştirici kodu okur, Core Contract ve güvenlik sınırlarıyla karşılaştırır, eksikleri listeler.
-- Islet: AI ajanı eleştiriyi uygular; döngü, tüm AC'ler geçene kadar tekrar eder.
+- Yönerge: AI test planı, implementation sırası, security negatives ve rollback handoff'u üretir.
+- Uygulama: İnsan geliştirici directive'i platform branch'inde kod ve test olarak uygular.
+- Review: Bağımsız insan reviewer kodu, kanıtı ve Core Contract uyumunu inceler.
 
 Bu ritüel, kalitesiz kodun PR'a ulaşmasını önler.
 
@@ -135,7 +140,7 @@ PR açıklaması zorunlu bölümler:
 - Görev ID'si ve actionplan linki (kök + uygulama-içi navigasyon yolu)
 - Acceptance Criteria eşleme tablosu (AC-1, AC-2 ... her biri "bu testfile:satir ile karşılandı" biçiminde)
 - Risk ve rollback planı (tam olarak görev JSON'undaki `rollback` alanından kopyala)
-- AI-üretim notu: hangi bölümlerin AI tarafından üretildiğini, insan incelemesinin kapsamını belirt
+- AI-directive notu: hangi plan/yönerge bölümlerinin AI tarafından hazırlandığını belirt; ürün kodu AI üretimi olarak işaretlenemez
 
 ### Adım 7 — CI kapilari
 
@@ -144,7 +149,7 @@ Herhangi biri kırmızıysa merge edilmez. Kırmızı kapıyı geç; insan onay�
 
 ### Adım 8 — Insan review ve merge
 
-Bağımsız bir insan reviewcısı kodu inceler. AI ajanı review'u kendi kendine onaylayamaz. Onay sonrası insan main'e merge eder.
+Bağımsız bir insan reviewcısı kodu inceler. AI yalnız review checklist'i üretebilir; review'u onaylayamaz. Onay sonrası insan main'e merge eder.
 
 ### Adım 9 — Deploy ve dogrulama
 
@@ -246,7 +251,7 @@ PR açıklamasında şu bilgiler zorunludur:
 
 ## 6. Hangi Seviyede Kod Yazilir
 
-actionplan'ın kendisinde ürün/platform kod değişikliği yapılmaz. actionplan yalnızca planlama verisini ve dokümantasyon sözleşmelerini tutar. Codex/doc-maintainer için bu hüküm mutlak sınırdır: eksik yönergeyi tamamlar, ancak yönergeyi uygulayıp ürünü geliştirmez.
+actionplan'ın kendisinde ürün/platform kod değişikliği yapılmaz. AI ajanları platformda yalnız `read-only-audit` yapar; aşağıdaki kod konumlarını yalnız insan geliştirici değiştirir (`human-developer-only`).
 
 Kod şu hiyerarşiye göre yazılır:
 
@@ -268,6 +273,7 @@ Bu rehber, actionplan ekosisteminin genel bakışıdır. Ayrıntılar için:
 |---|---|
 | `docs/task-to-code-contract.md` | Görev JSON alanı ile kod konumu / test türü eşlemesi |
 | `docs/doc-maintainer-operating-boundary.md` | actionplan doc-maintainer rol sınırı: dokümantasyon bakım işi ile implementation coding ayrımı |
+| `docs/platform-product-code-write-prohibition-directive.md` | Codex/Claude/Cursor için platform read-only-audit ve human-developer-only yazma yasağı |
 | `docs/kernel-sdk-app-delivery-sequence.md` | Kernel → SDK → app-core → app module → app assembly teslim sırası |
 | `docs/meta-framework-implementation-development-plan.md` | Meta-framework implementation için wave/PR/evidence kuyruğu |
 | `docs/core-contract-pack.md` | Platform core katmanının mimari sözleşmesi |
@@ -286,11 +292,11 @@ Görev `requirements`, `test-plan` veya `db-schema` fazındaysa kod henüz bekle
 **Bir kapı sürekli kırmızı; ne yapmalıyım?**
 CI logunu oku, hangi kontrol başarısız olduğunu bul. `check-data-quality` genellikle eksik alan, `check-execution-readiness` genellikle eksik bağımlılık gösterir. Sorunu görev JSON'unda çöz, ardından tekrar dene.
 
-**AI ajanı bir şeyi yanlış ürettiyse kim karar verir?**
-İnsan geliştirici. AI ajanı öneri üretir, PR açar; karar her zaman insana aittir. "Eleştir" adımını geç, doğrulama satırlarını PR'a ekle.
+**AI directive'i yanlışsa kim karar verir?**
+İnsan geliştirici veya reviewer. AI yalnız directive'i düzeltir; platform kodu veya PR üretmez.
 
 **Codex/actionplan bu rehbere göre platformu geliştirecek mi?**
-Hayır. Codex/actionplan doc-maintainer yalnız dokümantasyon, sözleşme, export, gap raporu ve handoff içeriğini yeterli hale getirir. Platform/kernel/SDK/app/module kodu geliştirici veya onun yönettiği implementation ajanının işidir.
+Hayır. Codex, Claude, Cursor ve diğer AI ajanları yalnız dokümantasyon, sözleşme, export, gap raporu ve handoff içeriğini yeterli hale getirir. Platform/kernel/SDK/app/module kodunu yalnız insan geliştirici yazar.
 
 **OrderOps'u canlı pilot olarak kullanabilir miyim?**
 Hayır. OrderOps bir build referans uygulamasıdır; canlı pilot değildir. Öğretici referans örnek olarak incelenebilir.

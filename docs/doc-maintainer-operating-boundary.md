@@ -1,6 +1,6 @@
 # Doc-Maintainer Operating Boundary
 
-Sürüm: 1.0 - 2026-07-08
+Sürüm: 1.1 - 2026-07-13
 Durum: Kanonik / bağlayıcı
 
 ---
@@ -9,7 +9,7 @@ Durum: Kanonik / bağlayıcı
 
 Bu doküman, actionplan reposunda çalışan Codex/doc-maintainer rolünün sınırını bağlayıcı olarak tanımlar. actionplan başka bir projenin enterprise-grade waterfall yol haritası, görev sözleşmeleri ve geliştirici handoff dokümantasyonudur. Bu repo hedef projenin implementation alanı değildir.
 
-Kısa hüküm: Codex/actionplan **proje geliştirmez**; yetersiz dokümantasyonu geliştirici için yeterli hale getirir.
+Kısa hüküm: Codex, Claude, Cursor ve diğer AI ajanları **proje geliştirmez**; yetersiz dokümantasyonu insan geliştirici için yeterli hale getirir. Platform erişimi `read-only-audit`, ürün kodu yazarı `human-developer-only`dır. Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`.
 
 ---
 
@@ -17,9 +17,9 @@ Kısa hüküm: Codex/actionplan **proje geliştirmez**; yetersiz dokümantasyonu
 
 | Rol | Ne yapar | Ne yapmaz |
 |---|---|---|
-| Codex/actionplan doc-maintainer | Dokümantasyon, sözleşme, gap raporu, export açıklaması, acceptance criteria, risk, rollback, referans ve handoff içeriğini iyileştirir | Platform, kernel, SDK, app-core, module veya app kodu yazmaz |
+| AI directive ajanı (Codex/Claude/Cursor/Aider/Windsurf) | Dokümantasyon, sözleşme, gap raporu, export açıklaması, acceptance criteria, risk, rollback, referans ve handoff içeriğini actionplan içinde iyileştirir | Platform, kernel, SDK, app-core, module, app, test, migration veya Storybook kodu yazmaz; branch/commit/PR oluşturmaz |
 | İnsan geliştirici | actionplan görevini yorumlar, implementation reposunda branch açar, kod/test/PR üretir | actionplan dokümanını code-start kanıtı olmadan done saymaz |
-| Implementation coding ajanı | Geliştiricinin verdiği Developer Brief veya Agent Prompt'u ayrı implementation repo/branch'inde uygular | Kendi çıktısını onaylamaz, main'e doğrudan push etmez, kapsam dışı dosyaya yazmaz |
+| AI implementation danışmanı | Platformu salt-okunur inceler; insan geliştirici için `DIRECTIVE-ONLY` uygulama sırası ve review checklist'i üretir | Platform dosyası değiştirmez veya uygulama yaptığını iddia etmez |
 | Product / PM | Kapsam, öncelik, faz kapısı ve kabul kararını verir | Eksik evidence ile işi tamamlanmış saymaz |
 
 ---
@@ -31,11 +31,11 @@ Codex/actionplan doc-maintainer aşağıdaki işleri yapmaz:
 - `platform`, `projector` veya başka implementation reposunda ürün kodu yazmak.
 - Kernel, SDK, app-core, module veya app scaffold etmek.
 - Alembic migration, SQLAlchemy model, Strawberry resolver, React surface, SDK generator veya test implementation üretmek.
-- Dokümanlardaki Agent Prompt'u uygulayıp kod diff'i çıkarmak.
+- Dokümanlardaki Agent Prompt'u uygulayıp kod diff'i çıkarmak; branch, commit veya PR açmak.
 - `implementation-workspace-manifest.md` içindeki path'e geçip yazma işlemi yapmak.
 - "Devam et" talimatını implementation izni olarak yorumlamak.
 
-Bu yasaklar, dokümanların içinde "kodla", "Claude Code'a ver", "test-önce geliştir" gibi ifadeler geçse bile değişmez. O ifadeler implementation geliştiricisine veya onun yönettiği coding ajanına yöneliktir.
+Bu yasaklar, dokümanların içinde "kodla", "Claude Code'a ver", "test-önce geliştir" gibi ifadeler geçse bile değişmez. Bu ifadeler AI tarafından insan geliştirici için `DIRECTIVE-ONLY` handoff'a dönüştürülür.
 
 ---
 
@@ -78,9 +78,9 @@ actionplan'ın çıktısı geliştiriciye şu seviyede teslim edilir:
 - Hangi test veya kanıt işi bekleniyor?
 - Hangi işler kapsam dışı?
 - Hangi risk ve rollback bilgisi PR'a taşınacak?
-- Hangi export artifact'i insan veya coding ajanı tarafından kullanılacak?
+- Hangi export artifact'i insan geliştirici tarafından uygulanacak?
 
-Bu bilgiler yeterliyse geliştirici veya implementation ajan operatörü ayrı repo/branch'te çalışabilir. Codex/actionplan'ın görevi burada biter; kod üretimi developer işidir.
+Bu bilgiler yeterliyse yalnız insan geliştirici ayrı repo/branch'te çalışabilir. AI'nın görevi burada biter; kod üretimi `human-developer-only`dır.
 
 ---
 
@@ -90,7 +90,7 @@ Bu dokümanla çelişen ifade bulunduğunda yorum sırası şöyledir:
 
 1. Bu dokümandaki doc-maintainer rol sınırı geçerlidir.
 2. `AGENTS.md` aynı sınırı repo ajan sözleşmesi olarak uygular.
-3. `developer-guide.md` ve export dokümanları geliştirici/implementation ajan akışını anlatır; Codex/actionplan için kod yazma izni sayılmaz.
+3. `developer-guide.md` ve export dokümanları AI için directive, insan için implementation akışını anlatır; AI'ya kod yazma izni vermez.
 4. Çelişkili ifade dokümantasyon düzeltme konusu yapılır.
 
-Son karar: actionplan doc-maintainer, hedef projeyi geliştirmek için değil, hedef projeyi geliştirecek insan ve coding ajanlarına yeterli dokümantasyon sağlamak için çalışır.
+Son karar: AI ajanı hedef projeyi geliştirmez; platform ürün kodunu yazacak insan geliştiriciye yeterli directive ve handoff sağlar.

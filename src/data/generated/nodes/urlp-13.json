@@ -1,0 +1,746 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "urlp-13",
+  "wbsCode": "1.4.1.1.2.14",
+  "level": "micro_step",
+  "title": "URLP-13 — Public Renderer ve SEO",
+  "slug": "urlp-13",
+  "summary": "SSR veya deterministic prerender kararıyla doğru status, canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 davranışını uygula.",
+  "parentId": "urlp-program-work-unit",
+  "order": 13,
+  "icon": "ph-link",
+  "tags": [
+    "url-policy",
+    "k-route-policy",
+    "implementation-program",
+    "urlp-13",
+    "test-first",
+    "platform-handoff"
+  ],
+  "dependsOn": [
+    "urlp-12"
+  ],
+  "blocks": [
+    "urlp-14"
+  ],
+  "related": [
+    "k-surface",
+    "l1-redirect"
+  ],
+  "refs": [
+    "docs/url-policy.md#15-cok-fazli-implementation-programi",
+    "docs/url-policy-implementation-directive.md#urlp-13",
+    "src/data/url-policy/implementation-program.json#URLP-13",
+    "src/data/url-policy/registry.json"
+  ],
+  "criticalPath": true,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi",
+    "qa-ekibi"
+  ],
+  "effort": {
+    "estimate": 5,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 scope, allowed-files, non-goals, owner ve bağımlılık zinciri onaylandı.",
+        "URLP-13 risk, rollback ve kanonik policy referansları çelişkisiz doğrulandı."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 pozitif, negatif ve edge testleri development öncesi kırmızı kanıtlandı.",
+        "URLP-13 acceptance criteria ile test komutları birebir eşlendi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 veri/şema etkisi sınıflandırıldı; gerekiyorsa expand-contract migration ve backward reader tasarlandı.",
+        "URLP-13 frontend TypeScript ve backend Python contract parity kararı kaydedildi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 yalnız allowed-files kapsamında ve kırmızı testlerden sonra uygulandı.",
+        "URLP-13 forbidden/non-goal sınırlarına dokunulmadı; lint ve type kapıları yeşil."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 traceability.testCommand komutlarının tamamı yeşil.",
+        "URLP-13 tenant/topology negatif senaryoları ve ilgili security corpus geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 exit kriteri, diff, test logu ve rollback drill kanıtıyla bağımsız reviewer tarafından doğrulandı.",
+        "URLP-13 kanonik policy ve implementation-program parity kontrolü geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "URLP-13 canary/rollout sinyalleri ve runbook hazır.",
+        "URLP-13 rollback tetikleyicileri ölçülebilir; evidence rollup güncellendi."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": "URLP-M4",
+  "schedule": {
+    "start": "2026-07-13",
+    "end": "2027-12-31",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-13",
+    "baselineEnd": "2027-12-31"
+  },
+  "deliverables": [
+    "URLP-13 implementation diff'i yalnız tanımlı allowed-files kapsamında.",
+    "URLP-13 kırmızı→yeşil test kanıtı, rollback drill notu ve evidence patch'i.",
+    "URLP-13 için implementation-program allowedFiles/nonGoals sözleşmesine uyum raporu."
+  ],
+  "acceptanceCriteria": [
+    "Indexlenebilir public route server-readable içerik ve tek doğrulanmış canonical host üretir.",
+    "URLP-13 test komutlarının tamamı yeşil ve negatif failure mode kanıtı mevcut.",
+    "URLP-13 exit kriteri docs/url-policy.md ile çelişmiyor; implementationStatus evidence olmadan yükseltilmiyor."
+  ],
+  "risks": [
+    {
+      "id": "r-urlp-13-1",
+      "desc": "Platform ve custom domain aynı içerik için birlikte canonical 200 döner.",
+      "severity": "critical",
+      "mitigation": "urlp-13 negatif testleri, reviewer gate ve fail-closed rollout ile sınırla."
+    },
+    {
+      "id": "r-urlp-13-2",
+      "desc": "Faz bağımlılığı tamamlanmadan sonraki atomun başlatılması sözleşme drift'i üretir.",
+      "severity": "high",
+      "mitigation": "dependsOn zinciri, phase gate ve CI readiness kontrolü ile code-start blokla."
+    }
+  ],
+  "rollback": "Renderer/canonical switch önceki stable sürüme alınır; preview noindex korunur ve sitemap yeniden üretilir.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "contract-test-pass-rate",
+      "target": "100%"
+    },
+    {
+      "key": "unresolved-critical-risk",
+      "target": "0"
+    },
+    {
+      "key": "rollback-drill",
+      "target": "passed before release"
+    }
+  ],
+  "ecaRules": [
+    {
+      "id": "eca-urlp-13-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "urlp-13"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-13-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "urlp-13"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-13-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "urlp-13"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-13-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "URLP-13 — Public Renderer ve SEO AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "apply-gated",
+    "capabilities": [
+      "read",
+      "run-tests",
+      "propose-platform-changeset"
+    ],
+    "allowedTargets": [
+      "archetype",
+      "feature",
+      "component",
+      "work_unit",
+      "micro_step"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "run-tests"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "activate-canonical-switch",
+      "apply-database-migration",
+      "change-host-binding"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO kapsamı, implementation-program phase contract ve kanonik URL policy exit kriteriyle sınırlandırılır.",
+        "URLP-13 — Public Renderer ve SEO girdileri, çıktıları, hata akışı ve kabul sözleşmesi phase exit criteria ile izlenir.",
+        "URLP-13 — Public Renderer ve SEO için Özellik Tanımları kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü public-renderer.ts çıktısına bağlar; HTML snapshot bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 featureDefs kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 featureDefs değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: public-renderer.ts ile HTML snapshot arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO için threat model, fail-closed negatif vektör ve tenant izolasyon kanıtı acceptance içinde tutulur.",
+        "URLP-13 — Public Renderer ve SEO tenant erişimi, PII yetkisi, deny kararı ve audit denetimiyle en az ayrıcalık altında çalışır.",
+        "URLP-13 — Public Renderer ve SEO için Güvenlik Önlemleri kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü seo-head.ts çıktısına bağlar; status/canonical matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 security kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 security değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: seo-head.ts ile status/canonical matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO değişiklikleri küçük PR, açık allowed-files ve tek sorumluluk sınırıyla yürütülür.",
+        "URLP-13 — Public Renderer ve SEO tip güvenli modüler katmanlara bölünür; karmaşıklık sınırı lint kapısında ölçülür.",
+        "URLP-13 — Public Renderer ve SEO için Kod Optimizasyonu kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-conformance-report.json çıktısına bağlar; sitemap/robots validation bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 codeOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 codeOptimization değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-conformance-report.json ile sitemap/robots validation arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO hot path'i deny-by-default davranışı bozmadan cache ve doğrulama maliyeti için ölçülür.",
+        "URLP-13 — Public Renderer ve SEO secret rotasyonu, rate-limit allowlist'i ve bağımlılık SBOM taramasıyla sertleştirilir.",
+        "URLP-13 — Public Renderer ve SEO için Güvenlik Optimizasyonu kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü public-renderer.ts çıktısına bağlar; crawler smoke bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 securityOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 securityOptimization değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: public-renderer.ts ile crawler smoke arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO için latency, cache-key doğruluğu veya crawl/cardinality bütçesi fazın test planında ölçülür.",
+        "URLP-13 — Public Renderer ve SEO için p95 200 ms hedefi, cache doğruluğu ve yük testi eşiği kanıtlanır.",
+        "URLP-13 — Public Renderer ve SEO için Performans Optimizasyonu kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-head.ts çıktısına bağlar; HTML snapshot bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 performance kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 performance değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-head.ts ile HTML snapshot arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO deep-link, app-link, locale ve origin davranışının mobil tüketicilerde geri uyumu doğrulanır.",
+        "URLP-13 — Public Renderer ve SEO mobil iOS/Android deep-link akışında offline geri dönüş ve 44px dokunma hedefli navigasyonu korur.",
+        "URLP-13 — Public Renderer ve SEO için Mobil Uygulama Uyumu kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü seo-conformance-report.json çıktısına bağlar; status/canonical matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 mobileApps kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 mobileApps değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: seo-conformance-report.json ile status/canonical matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO görünür bir yüzeyi etkiliyorsa odak, klavye, anlamlı link adı ve hata yönlendirmesi Storybook/E2E kanıtına bağlanır.",
+        "URLP-13 — Public Renderer ve SEO klavye ve focus sırasını, WCAG AAA/axe kanıtını ve ekran okuyucu link adlarını doğrular.",
+        "URLP-13 — Public Renderer ve SEO için WCAG 2.2 AAA kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü public-renderer.ts çıktısına bağlar; sitemap/robots validation bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 wcag kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 wcag değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: public-renderer.ts ile sitemap/robots validation arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO feature flag, canary, compatibility ve geri alma adımı olmadan production'a açılmaz.",
+        "URLP-13 — Public Renderer ve SEO Docker/Kubernetes dağıtımında readiness health probe ve rollback runbook'u taşır.",
+        "URLP-13 — Public Renderer ve SEO için Dağıtım kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü seo-head.ts çıktısına bağlar; crawler smoke bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 deployment kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 deployment değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: seo-head.ts ile crawler smoke arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO activation ve migration olayları idempotent, denetlenebilir ve approval-gated rule üzerinden yürür.",
+        "URLP-13 — Public Renderer ve SEO activation event zinciri idempotenttir; approval/deny olayı maks 6 tetik derinliğiyle sınırlandırılır.",
+        "URLP-13 — Public Renderer ve SEO için ECA Kuralları kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-conformance-report.json çıktısına bağlar; HTML snapshot bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 eca kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 eca değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-conformance-report.json ile HTML snapshot arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO ajanı yalnız allowed-files içinde çalışır; app/module üretmez ve kanıtsız completion yazmaz.",
+        "URLP-13 — Public Renderer ve SEO için sub_prompt güvenilmezdir; app/module mutasyonu yasak ve insan step-up onayı zorunludur.",
+        "URLP-13 — Public Renderer ve SEO için AI Ajan Davranışı kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü public-renderer.ts çıktısına bağlar; status/canonical matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 aiAgents kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 aiAgents değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: public-renderer.ts ile status/canonical matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler ve QA",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO için pozitif, negatif ve edge vektörleri development öncesi kırmızı test olarak tanımlanır.",
+        "URLP-13 — Public Renderer ve SEO unit, integration ve E2E testlerinde negatif fixture ile evidence üretir.",
+        "URLP-13 — Public Renderer ve SEO için Testler ve QA kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-head.ts çıktısına bağlar; sitemap/robots validation bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 testing kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 testing değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-head.ts ile sitemap/robots validation arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP ve Standartlar",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO host/header, redirect, encoding, authorization ve veri sızıntısı tehditleri ilgili ASVS kontrollerine bağlanır.",
+        "URLP-13 — Public Renderer ve SEO OWASP ASVS doğrulama, access control ve SSRF tehdit kontrollerine bağlanır.",
+        "URLP-13 — Public Renderer ve SEO için OWASP ve Standartlar kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü seo-conformance-report.json çıktısına bağlar; crawler smoke bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 owasp kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 owasp değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: seo-conformance-report.json ile crawler smoke arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO k-route-policy sözleşmesine RouteRef/ResourceRef üzerinden bağlanır; katmanlar string URL üretmez.",
+        "URLP-13 — Public Renderer ve SEO kernel sözleşmesi, tipli API ve tek yönlü bağımlılık üzerinden entegre edilir.",
+        "URLP-13 — Public Renderer ve SEO için Kernel/Core Entegrasyonu kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü public-renderer.ts çıktısına bağlar; HTML snapshot bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 integration kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 integration değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: public-renderer.ts ile HTML snapshot arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO app/module tüketimini manifest ve RouteContribution sözleşmesiyle sınırlar; doğrudan tablo sahipliği vermez.",
+        "URLP-13 — Public Renderer ve SEO tüketicileri contract kapısından geçer; doğrudan DB veya tablo erişimi kullanmaz.",
+        "URLP-13 — Public Renderer ve SEO için Modül Kullanımı kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü seo-head.ts çıktısına bağlar; status/canonical matrix bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 moduleUsage kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 moduleUsage değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: seo-head.ts ile status/canonical matrix arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü ve Uyum",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO alias, binding, projection ve audit verisi için retention, tombstone ve migration davranışını açıklar.",
+        "URLP-13 — Public Renderer ve SEO PII/kişisel veri sınıfı, KVKK/GDPR retention saklama takvimi, silme/anonimleştirme ve expand-contract migration kararını faz kanıtında tutar.",
+        "URLP-13 — Public Renderer ve SEO için Veri Yaşam Döngüsü ve Uyum kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-conformance-report.json çıktısına bağlar; sitemap/robots validation bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 dataLifecycle kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 dataLifecycle değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-conformance-report.json ile sitemap/robots validation arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik ve Operasyon",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO resolution, redirect, mismatch ve failure sinyallerini dashboard, alarm ve runbook kanıtına bağlar.",
+        "URLP-13 — Public Renderer ve SEO SLI/SLO ve error-budget metrik hedefini; alarm, structured log, trace ve runbook bağlantısını release öncesi kanıtlar.",
+        "URLP-13 — Public Renderer ve SEO için Gözlemlenebilirlik ve Operasyon kararı, “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” kabul ölçütünü public-renderer.ts çıktısına bağlar; crawler smoke bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 observability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 observability değerlendirmesinde “Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.” ölçütünü kapsa. Güvenlik sınırı: Preview/custom domain canonical host karışamaz.. Çıktı: public-renderer.ts ile crawler smoke arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık ve Süreklilik",
+      "status": "filled",
+      "items": [
+        "Public Renderer ve SEO partial failure, retry/idempotency, degrade, RTO/RPO ve rollback drill kriterlerini taşır.",
+        "URLP-13 — Public Renderer ve SEO failure mode kataloğu idempotency, retry/backoff, circuit breaker, DLQ ve RTO/RPO degrade senaryolarını kapsar.",
+        "URLP-13 — Public Renderer ve SEO için Dayanıklılık ve Süreklilik kararı, “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” kabul ölçütünü seo-head.ts çıktısına bağlar; HTML snapshot bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-13 reliability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-13 reliability değerlendirmesinde “Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.” ölçütünü kapsa. Güvenlik sınırı: Private workspace içeriği public render'a giremez.. Çıktı: seo-head.ts ile HTML snapshot arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    }
+  },
+  "traceability": {
+    "repoPath": [
+      "apps/web/src/public/**",
+      "apps/web/src/seo/**",
+      "apps/web/src/routes/public/**",
+      "apps/web/e2e/seo/**",
+      "apps/web/vite.config.ts",
+      "apps/web/package.json"
+    ],
+    "testCommand": [
+      "pnpm --filter @platform/web test -- seo",
+      "pnpm --filter @platform/web build",
+      "pnpm --filter @platform/web e2e -- seo"
+    ],
+    "deployTarget": "platform-url-policy-canary",
+    "implementationStatus": "not-started",
+    "tenantStrategy": "hybrid",
+    "auditLogRef": "url-policy-audit"
+  },
+  "atomDefinition": {
+    "kind": "task-micro-step",
+    "parentLevel": "work_unit",
+    "invariant": "Indexlenebilir public route server-readable içerik ve tek doğrulanmış canonical host üretir.",
+    "change": "SSR veya deterministic prerender kararıyla doğru status, canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 davranışını uygula.",
+    "failureMode": "SPA-only veya soft-404 davranışı arama motoruna yanlış durum ve duplicate canonical sunar.",
+    "allowedFiles": [
+      "apps/web/src/public/**",
+      "apps/web/src/seo/**",
+      "apps/web/src/routes/public/**",
+      "apps/web/e2e/seo/**",
+      "apps/web/vite.config.ts",
+      "apps/web/package.json"
+    ],
+    "nonGoals": [
+      "CSR shell'i SEO evidence saymak",
+      "Preview hostu indexlemek"
+    ],
+    "sideEffect": "local-write",
+    "riskLevel": "critical",
+    "rollback": "Renderer/canonical switch önceki stable sürüme alınır; preview noindex korunur ve sitemap yeniden üretilir.",
+    "testVectors": [
+      {
+        "kind": "positive",
+        "name": "URLP-13 canonical success path",
+        "testRef": "pnpm --filter @platform/web test -- seo",
+        "expected": "Kanonik sözleşme ve phase exit kriteri sağlanır."
+      },
+      {
+        "kind": "negative",
+        "name": "URLP-13 fail-closed violation",
+        "testRef": "pnpm --filter @platform/web build",
+        "expected": "SPA-only veya soft-404 davranışı arama motoruna yanlış durum ve duplicate canonical sunar."
+      },
+      {
+        "kind": "edge",
+        "name": "URLP-13 topology and migration edge",
+        "testRef": "pnpm --filter @platform/web e2e -- seo",
+        "expected": "Tenant, locale, host veya migration sınırında deterministic sonuç ve rollback kanıtı üretilir."
+      }
+    ],
+    "evidenceRollup": "urlp-program-work-unit",
+    "reviewer": "platform-architecture-reviewer"
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "urlPolicyRef": "url-policy",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy"
+  },
+  "applicability": {},
+  "waivers": [],
+  "uiArtifactRole": "produces-ui",
+  "uiDelivery": {
+    "impact": "surface",
+    "applies": true,
+    "reason": "Public Renderer ve SEO görünür route/surface sözleşmesini değiştirir ve Storybook composition kanıtı gerektirir.",
+    "componentKind": "surface-composition",
+    "masterComponentRefs": [],
+    "storyRefs": [
+      "apps/web/src/public-renderer/public-route.stories.tsx"
+    ],
+    "requiredStoryStates": [
+      "default",
+      "loading",
+      "empty",
+      "error",
+      "permission-denied"
+    ],
+    "requiredViewports": [
+      "mobile",
+      "desktop"
+    ],
+    "requiredLocales": [
+      "tr",
+      "en"
+    ],
+    "requiredThemes": [
+      "light",
+      "dark"
+    ],
+    "interactionTestRefs": [
+      "apps/web/src/public-renderer/public-route.stories.tsx#interaction"
+    ],
+    "a11yTestRefs": [
+      "apps/web/src/public-renderer/public-route.stories.tsx#a11y"
+    ],
+    "visualEvidenceRefs": [],
+    "e2eRefs": [
+      "apps/web/e2e/seo/public-route.spec.ts"
+    ],
+    "storybookUrl": null,
+    "reviewStatus": "planned",
+    "reviewer": null,
+    "riskClass": "medium",
+    "dataDense": false,
+    "ownerRef": "team-platform-web",
+    "coverageBudget": {
+      "maxStories": 80,
+      "justification": "URL surface topoloji, locale, theme ve temel durum matrisini kapsar."
+    },
+    "fixtureContract": {
+      "fingerprintRef": "fixture.urlp-13.v1",
+      "sanitized": true,
+      "containsRealData": false
+    },
+    "securityLinkage": {
+      "permissionStoryRefs": [
+        "apps/web/src/public-renderer/public-route.stories.tsx#permission-denied"
+      ],
+      "backendAuthzTestRefs": [
+        "pnpm --filter @platform/web test -- seo"
+      ]
+    },
+    "baselineGovernance": {
+      "approvedBy": "",
+      "reason": "",
+      "taskRef": ""
+    },
+    "manualA11yReviewRef": "",
+    "performanceProfileRef": "perf.urlp-13.v1",
+    "breakGlass": {
+      "used": false,
+      "auditRef": "",
+      "remediationTaskRef": ""
+    }
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "URLP-13",
+    "granularity": "atom",
+    "cluster": "url-policy-implementation"
+  },
+  "state": "aday",
+  "lastUpdated": "2026-07-13"
+}

@@ -7,17 +7,26 @@ import path from "node:path";
 const dist = path.resolve(process.cwd(), "dist");
 const src = path.join(dist, "index.html");
 const dst = path.join(dist, "404.html");
+
+function markdownRoutes(root, current = root) {
+  const routes = [];
+  for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+    const absolute = path.join(current, entry.name);
+    if (entry.isDirectory()) routes.push(...markdownRoutes(root, absolute));
+    if (entry.isFile() && entry.name.endsWith(".md")) {
+      const relative = path.relative(root, absolute).slice(0, -3);
+      routes.push(`docs/${relative.split(path.sep).join("--")}`);
+    }
+  }
+  return routes;
+}
+
 if (fs.existsSync(src)) {
   fs.copyFileSync(src, dst);
   console.log("[spa404] dist/404.html oluşturuldu.");
 
   const docsDir = path.resolve(process.cwd(), "docs");
-  const docRoutes = fs.existsSync(docsDir)
-    ? fs
-        .readdirSync(docsDir)
-        .filter((name) => name.endsWith(".md"))
-        .map((name) => `docs/${path.basename(name, ".md")}`)
-    : [];
+  const docRoutes = fs.existsSync(docsDir) ? markdownRoutes(docsDir) : [];
   const staticRoutes = Array.from(new Set(["docs", ...docRoutes]));
 
   for (const route of staticRoutes) {

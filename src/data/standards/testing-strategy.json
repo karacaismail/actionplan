@@ -1,10 +1,10 @@
 {
   "id": "testing-strategy",
   "name": "Test Stratejisi Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "testing",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Test piramidi (unit/integration/contract/e2e/visual/load/mutation), seviye başına kapsam, coverage eşikleri, test verisi/fixture disiplini (factory + tenant izolasyonu + deterministik), test-önce red→green döngüsü, Playwright + axe (WCAG 2.2 AAA, 0 ihlal) ve şema/sözleşme parite testleri için somut ve zorlanabilir kurallar.",
+  "summary": "Test piramidi (unit/integration/contract/e2e/visual/load/mutation), seviye başına kapsam, coverage eşikleri, test verisi/fixture disiplini (factory + tenant izolasyonu + deterministik), test-önce red→green döngüsü, Playwright + axe (WCAG 2.2 AAA, 0 ihlal) ve şema/sözleşme parite testleri için somut ve zorlanabilir kurallar. v1.1: Storybook story interaction / story a11y / visual regression katmanları unit ile E2E arasında component düzeyini kapatır (docs/storybook-implementation.md §6, docs/storybook-master-component-integration-directive.md).",
   "appliesTo": [],
   "rules": [
     {
@@ -62,6 +62,13 @@
       "rationale": "Sızan only/skip yeşil ama aldatıcı bir suite üretir; gerçek ağ çağrısı CI'yı kırılgan ve yavaş yapar.",
       "severity": "must",
       "check": "biome (noFocusedTests) + CI .only/.skip taraması + review"
+    },
+    {
+      "id": "test-story-layers",
+      "rule": "UI/Master Component kapsamındaki işlerde üç Storybook test katmanı zorunludur: (1) story interaction — component kullanıcı etkileşimi ve state geçişi izole story fixture'ıyla test edilir; (2) story a11y — her story (state × variant × theme × density × RTL) axe + klavye sözleşmesinden geçer, ihlal uyarı olarak bırakılamaz; (3) visual regression — token/theme/layout/responsive görsel drift diff'le yakalanır, baseline yalnız gerekçe + task/PR bağı + reviewer onayıyla güncellenir. Test-önce ritüeli component düzeyinde uygulanır: önce başarısız interaction/a11y story testi, sonra component. Story testleri Playwright E2E'nin YERİNE GEÇMEZ; Surface yolculuğu ayrıca E2E ile kanıtlanır. Story kaynak component'in gerçek export'unu tüketir; story içinde paralel implementation yazmak yasaktır.",
+      "rationale": "Component düzeyi boşluğu unit ve E2E arasında kalır; story katmanları bu boşluğu izole, tekrarlanabilir ve review-edilebilir biçimde kapatır. E2E ikamesi olarak kullanılırsa Surface bileşim hataları görünmez kalır.",
+      "severity": "must",
+      "check": "storybook-ci (static build + interaction + a11y + visual diff; implementation repo) + check-ui-delivery.mjs (actionplan içerik tarafı: uiDelivery.interactionTestRefs/a11yTestRefs)"
     }
   ],
   "banned": [
@@ -70,7 +77,9 @@
     "shared-mutable-fixture",
     "nondeterministic-time-random",
     "ice-cream-cone-distribution",
-    "coverage-regression"
+    "coverage-regression",
+    "story-as-e2e-substitute",
+    "parallel-implementation-in-story"
   ],
   "allowed": [
     "test-factory-builder",
@@ -78,5 +87,9 @@
     "msw-mock",
     "issue-referenced-skip"
   ],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/storybook-implementation.md",
+    "docs/storybook-master-component-integration-directive.md"
+  ]
 }

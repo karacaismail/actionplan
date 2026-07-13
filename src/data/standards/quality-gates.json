@@ -1,10 +1,10 @@
 {
   "id": "quality-gates",
   "name": "Kalite Kapıları Standardı",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "family": "testing",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Merge öncesi bloklayıcı kapılar: typecheck 0, biome 0, kapsam eşiği, e2e + axe 0 ihlal (WCAG 2.2 AAA), perf p95 bütçesi, yeşil build ve DoD checklist; herhangi bir kapı kırmızıysa merge yasak.",
+  "summary": "Merge öncesi bloklayıcı kapılar: typecheck 0, biome 0, kapsam eşiği, e2e + axe 0 ihlal (WCAG 2.2 AAA), perf p95 bütçesi, yeşil build ve DoD checklist; herhangi bir kapı kırmızıysa merge yasak. v1.1: gate-storybook-ci — UI/Master Component kapsamında Storybook build/test/a11y/visual-diff bloklayıcı merge kapısı (PASS/FAIL/NO_CANDIDATES/REVIEW_REQUIRED). v1.2: qg-global-launch-gate: pazar/dil canlıya almadan önce 14-soru Global launch kapısı + locale/market kill switch ve rollback koşulu (14-enterprise §7.1).",
   "appliesTo": [],
   "rules": [
     {
@@ -62,14 +62,34 @@
       "rationale": "DoD, kalite kapılarının manuel olmayan boşluklarını kapatır.",
       "severity": "should",
       "check": "PR şablonu DoD kutuları + review onayı zorunlu"
+    },
+    {
+      "id": "gate-storybook-ci",
+      "rule": "UI/Master Component kapsamına giren her PR'da bloklayıcı Storybook kapısı koşar: typecheck → lint → component unit → Storybook static build → story interaction → story a11y → visual regression diff → product E2E + axe → publish preview. Sonuç sınıfları: PASS (kapsamda story var, bloklayıcı testler geçti), FAIL (story/build/test/diff ihlali), NO_CANDIDATES (PR UI kapsamına girmiyor — backend-only PR başarısız OLMAZ), REVIEW_REQUIRED (kasıtlı visual diff insan kabulü bekliyor; reviewer onayıyla PASS'a düşer). Visual baseline diff nedeni + task/PR + reviewer onayı olmadan güncellenemez. actionplan içerik tarafında karşılığı check-ui-delivery.mjs kapısıdır: UI-impact adayı düğüm makine-okunur uiDelivery sözleşmesi taşımadan geçemez; legacy ihlaller ratchet baseline'ında warning kalır, baseline dışı ihlal kapıyı kırar.",
+      "rationale": "Story'siz Master Component ve denetimsiz visual baseline, UI kalite güvencesini görünmez biçimde eritir; NO_CANDIDATES sınıfı backend işlerine gereksiz yük bindirmeyi önler.",
+      "severity": "must",
+      "check": "storybook-ci workflow (implementation repo) + node tools/agents/check-ui-delivery.mjs (actionplan)"
+    },
+    {
+      "id": "qg-global-launch-gate",
+      "rule": "Bir pazar/dil canlıya alınmadan önce Global launch kapısının 14 sorusu kanıtla yanıtlanır ve kapı graduation koşuludur: (1) kayıt/giriş/hesap kurtarma çalışıyor, (2) ödeme + doğru vergi/fatura + iade tamam, (3) kritik tarih/tekrar/son teslim kullanıcının saat diliminde doğru, (4) ad/adres/telefon/e-posta gerçek kullanıcıyı reddetmeden kaydediliyor, (5) verinin nerede işlendiği/saklandığı/yedeklendiği hukuken açıklanmış, (6) sözleşme/gizlilik/izin/iptal metinleri doğru sürüm ve dilde, (7) Unicode spoofing + karma script + identifier güvenliği test edildi, (8) klavye/IME/RTL/font/PDF/e-posta/SMS/dışa aktarım test edildi, (9) a11y testleri o dilde tekrarlandı, (10) arama/moderasyon/AI o dilde ölçüldü, (11) destek/güvenlik olayı/ödeme itirazı/hesap kurtarma operasyonu hazır, (12) analytics dil/pazar/ülke/para birimi/veri bölgesini ayrı ayrı izliyor, (13) hedef pazarda in-market QA yapıldı, (14) locale/market bazlı kill switch ve rollback mevcut. Her soru kuralın sahibi yönergeye referans verir (kural kopyalanmaz, kanıt sahibinden istenir); kapı kırmızıyken pazar/dil canlıya alınamaz ve launch kararı ikilidir: kanıt yeşil (makine) + release owner imzası (insan).",
+      "rationale": "Global launch bir dilin eklenmesi değil, kullanıcının keşiften hesap kapatmaya kadar o pazarda hukuken/finansal/teknik/operasyonel eksiksiz ilerleyebilmesidir; kill switch ve rollback olmadan açılan pazar geri alınamaz risk taşır.",
+      "severity": "must",
+      "check": "release review (14-soru kanıt matrisi + kill switch/rollback kanıtı + release owner imzası) + check-standards-coverage + review"
     }
   ],
   "banned": [
     "merge-with-red-ci",
     "skip-coverage-gate",
     "ignore-axe-violation",
-    "merge-on-perf-regression"
+    "merge-on-perf-regression",
+    "baseline-update-without-review"
   ],
   "allowed": ["blocking-required-checks", "patch-coverage-gate"],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/storybook-implementation.md",
+    "docs/storybook-master-component-integration-directive.md",
+    "docs/standards/14-enterprise-readiness-checklist.md"
+  ]
 }

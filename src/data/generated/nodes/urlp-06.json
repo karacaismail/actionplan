@@ -1,0 +1,695 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "urlp-06",
+  "wbsCode": "1.4.1.1.2.7",
+  "level": "micro_step",
+  "title": "URLP-06 — Slug, Canonical ve Alias Motoru",
+  "slug": "urlp-06",
+  "summary": "ASCII-first/Unicode profile, NFC/UTS39, locale-versioned transliteration, alias history, loop, tombstone ve byte budget davranışlarını uygula.",
+  "parentId": "urlp-program-work-unit",
+  "order": 6,
+  "icon": "ph-link",
+  "tags": [
+    "url-policy",
+    "k-route-policy",
+    "implementation-program",
+    "urlp-06",
+    "test-first",
+    "platform-handoff"
+  ],
+  "dependsOn": [
+    "urlp-05"
+  ],
+  "blocks": [
+    "urlp-07"
+  ],
+  "related": [
+    "k-surface",
+    "l1-redirect"
+  ],
+  "refs": [
+    "docs/url-policy.md#15-cok-fazli-implementation-programi",
+    "docs/url-policy-implementation-directive.md#urlp-06",
+    "src/data/url-policy/implementation-program.json#URLP-06",
+    "src/data/url-policy/registry.json"
+  ],
+  "criticalPath": true,
+  "status": "backlog",
+  "priority": "critical",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi",
+    "qa-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 scope, allowed-files, non-goals, owner ve bağımlılık zinciri onaylandı.",
+        "URLP-06 risk, rollback ve kanonik policy referansları çelişkisiz doğrulandı."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 pozitif, negatif ve edge testleri development öncesi kırmızı kanıtlandı.",
+        "URLP-06 acceptance criteria ile test komutları birebir eşlendi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 veri/şema etkisi sınıflandırıldı; gerekiyorsa expand-contract migration ve backward reader tasarlandı.",
+        "URLP-06 frontend TypeScript ve backend Python contract parity kararı kaydedildi."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 yalnız allowed-files kapsamında ve kırmızı testlerden sonra uygulandı.",
+        "URLP-06 forbidden/non-goal sınırlarına dokunulmadı; lint ve type kapıları yeşil."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 traceability.testCommand komutlarının tamamı yeşil.",
+        "URLP-06 tenant/topology negatif senaryoları ve ilgili security corpus geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 exit kriteri, diff, test logu ve rollback drill kanıtıyla bağımsız reviewer tarafından doğrulandı.",
+        "URLP-06 kanonik policy ve implementation-program parity kontrolü geçti."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "URLP-06 canary/rollout sinyalleri ve runbook hazır.",
+        "URLP-06 rollback tetikleyicileri ölçülebilir; evidence rollup güncellendi."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": "URLP-M2",
+  "schedule": {
+    "start": "2026-07-13",
+    "end": "2027-12-31",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-13",
+    "baselineEnd": "2027-12-31"
+  },
+  "deliverables": [
+    "URLP-06 implementation diff'i yalnız tanımlı allowed-files kapsamında.",
+    "URLP-06 kırmızı→yeşil test kanıtı, rollback drill notu ve evidence patch'i.",
+    "URLP-06 için implementation-program allowedFiles/nonGoals sözleşmesine uyum raporu."
+  ],
+  "acceptanceCriteria": [
+    "Canonicalization idempotenttir; tek kaynak varyantı aynı anda yalnız bir canonical URL ile 200 döner.",
+    "URLP-06 test komutlarının tamamı yeşil ve negatif failure mode kanıtı mevcut.",
+    "URLP-06 exit kriteri docs/url-policy.md ile çelişmiyor; implementationStatus evidence olmadan yükseltilmiyor."
+  ],
+  "risks": [
+    {
+      "id": "r-urlp-06-1",
+      "desc": "Alias yeniden tahsisi veya çok atlamalı zincir yanlış resource'a yönlendirme yapar.",
+      "severity": "critical",
+      "mitigation": "urlp-06 negatif testleri, reviewer gate ve fail-closed rollout ile sınırla."
+    },
+    {
+      "id": "r-urlp-06-2",
+      "desc": "Faz bağımlılığı tamamlanmadan sonraki atomun başlatılması sözleşme drift'i üretir.",
+      "severity": "high",
+      "mitigation": "dependsOn zinciri, phase gate ve CI readiness kontrolü ile code-start blokla."
+    }
+  ],
+  "rollback": "Alias yazıcısı durdurulur, önceki slug profile version aktive edilir ve canonical switch kayıtları terslenir.",
+  "evidence": [],
+  "metrics": [
+    {
+      "key": "contract-test-pass-rate",
+      "target": "100%"
+    },
+    {
+      "key": "unresolved-critical-risk",
+      "target": "0"
+    },
+    {
+      "key": "rollback-drill",
+      "target": "passed before release"
+    }
+  ],
+  "ecaRules": [
+    {
+      "id": "eca-urlp-06-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "urlp-06"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-06-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "urlp-06"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-06-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "urlp-06"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-urlp-06-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "URLP-06 — Slug, Canonical ve Alias Motoru AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "apply-gated",
+    "capabilities": [
+      "read",
+      "run-tests",
+      "propose-platform-changeset"
+    ],
+    "allowedTargets": [
+      "archetype",
+      "feature",
+      "component",
+      "work_unit",
+      "micro_step"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "run-tests"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "activate-canonical-switch",
+      "apply-database-migration",
+      "change-host-binding"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru kapsamı, implementation-program phase contract ve kanonik URL policy exit kriteriyle sınırlandırılır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru girdileri, çıktıları, hata akışı ve kabul sözleşmesi phase exit criteria ile izlenir.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Özellik Tanımları kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 featureDefs kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 featureDefs değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru için threat model, fail-closed negatif vektör ve tenant izolasyon kanıtı acceptance içinde tutulur.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru tenant erişimi, PII yetkisi, deny kararı ve audit denetimiyle en az ayrıcalık altında çalışır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Güvenlik Önlemleri kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 security kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 security değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru değişiklikleri küçük PR, açık allowed-files ve tek sorumluluk sınırıyla yürütülür.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru tip güvenli modüler katmanlara bölünür; karmaşıklık sınırı lint kapısında ölçülür.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Kod Optimizasyonu kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü unicode-golden-vectors.json çıktısına bağlar; alias loop/tombstone raporu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 codeOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 codeOptimization değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: unicode-golden-vectors.json ile alias loop/tombstone raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru hot path'i deny-by-default davranışı bozmadan cache ve doğrulama maliyeti için ölçülür.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru secret rotasyonu, rate-limit allowlist'i ve bağımlılık SBOM taramasıyla sertleştirilir.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Güvenlik Optimizasyonu kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 securityOptimization kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 securityOptimization değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru için latency, cache-key doğruluğu veya crawl/cardinality bütçesi fazın test planında ölçülür.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için p95 200 ms hedefi, cache doğruluğu ve yük testi eşiği kanıtlanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Performans Optimizasyonu kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 performance kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 performance değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru deep-link, app-link, locale ve origin davranışının mobil tüketicilerde geri uyumu doğrulanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru mobil iOS/Android deep-link akışında offline geri dönüş ve 44px dokunma hedefli navigasyonu korur.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Mobil Uygulama Uyumu kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü unicode-golden-vectors.json çıktısına bağlar; alias loop/tombstone raporu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 mobileApps kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 mobileApps değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: unicode-golden-vectors.json ile alias loop/tombstone raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru görünür bir yüzeyi etkiliyorsa odak, klavye, anlamlı link adı ve hata yönlendirmesi Storybook/E2E kanıtına bağlanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru klavye ve focus sırasını, WCAG AAA/axe kanıtını ve ekran okuyucu link adlarını doğrular.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için WCAG 2.2 AAA kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 wcag kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 wcag değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru feature flag, canary, compatibility ve geri alma adımı olmadan production'a açılmaz.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru Docker/Kubernetes dağıtımında readiness health probe ve rollback runbook'u taşır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Dağıtım kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 deployment kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 deployment değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru activation ve migration olayları idempotent, denetlenebilir ve approval-gated rule üzerinden yürür.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru activation event zinciri idempotenttir; approval/deny olayı maks 6 tetik derinliğiyle sınırlandırılır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için ECA Kuralları kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü unicode-golden-vectors.json çıktısına bağlar; alias loop/tombstone raporu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 eca kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 eca değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: unicode-golden-vectors.json ile alias loop/tombstone raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru ajanı yalnız allowed-files içinde çalışır; app/module üretmez ve kanıtsız completion yazmaz.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için sub_prompt güvenilmezdir; app/module mutasyonu yasak ve insan step-up onayı zorunludur.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için AI Ajan Davranışı kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 aiAgents kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 aiAgents değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler ve QA",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru için pozitif, negatif ve edge vektörleri development öncesi kırmızı test olarak tanımlanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru unit, integration ve E2E testlerinde negatif fixture ile evidence üretir.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Testler ve QA kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 testing kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 testing değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP ve Standartlar",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru host/header, redirect, encoding, authorization ve veri sızıntısı tehditleri ilgili ASVS kontrollerine bağlanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru OWASP ASVS doğrulama, access control ve SSRF tehdit kontrollerine bağlanır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için OWASP ve Standartlar kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü unicode-golden-vectors.json çıktısına bağlar; alias loop/tombstone raporu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 owasp kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 owasp değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: unicode-golden-vectors.json ile alias loop/tombstone raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru k-route-policy sözleşmesine RouteRef/ResourceRef üzerinden bağlanır; katmanlar string URL üretmez.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru kernel sözleşmesi, tipli API ve tek yönlü bağımlılık üzerinden entegre edilir.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Kernel/Core Entegrasyonu kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 integration kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 integration değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru app/module tüketimini manifest ve RouteContribution sözleşmesiyle sınırlar; doğrudan tablo sahipliği vermez.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru tüketicileri contract kapısından geçer; doğrudan DB veya tablo erişimi kullanmaz.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Modül Kullanımı kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 moduleUsage kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 moduleUsage değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü ve Uyum",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru alias, binding, projection ve audit verisi için retention, tombstone ve migration davranışını açıklar.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru PII/kişisel veri sınıfı, KVKK/GDPR retention saklama takvimi, silme/anonimleştirme ve expand-contract migration kararını faz kanıtında tutar.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Veri Yaşam Döngüsü ve Uyum kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü unicode-golden-vectors.json çıktısına bağlar; alias loop/tombstone raporu bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 dataLifecycle kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 dataLifecycle değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: unicode-golden-vectors.json ile alias loop/tombstone raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik ve Operasyon",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru resolution, redirect, mismatch ve failure sinyallerini dashboard, alarm ve runbook kanıtına bağlar.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru SLI/SLO ve error-budget metrik hedefini; alarm, structured log, trace ve runbook bağlantısını release öncesi kanıtlar.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Gözlemlenebilirlik ve Operasyon kararı, “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” kabul ölçütünü slug-profile-engine.ts çıktısına bağlar; Unicode golden vectors bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 observability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 observability değerlendirmesinde “Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.” ölçütünü kapsa. Güvenlik sınırı: ASCII ve Unicode varyant birlikte 200 dönmez.. Çıktı: slug-profile-engine.ts ile Unicode golden vectors arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık ve Süreklilik",
+      "status": "filled",
+      "items": [
+        "Slug, Canonical ve Alias Motoru partial failure, retry/idempotency, degrade, RTO/RPO ve rollback drill kriterlerini taşır.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru failure mode kataloğu idempotency, retry/backoff, circuit breaker, DLQ ve RTO/RPO degrade senaryolarını kapsar.",
+        "URLP-06 — Slug, Canonical ve Alias Motoru için Dayanıklılık ve Süreklilik kararı, “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” kabul ölçütünü alias-resolver.py çıktısına bağlar; property-test seedleri bulunmadan ilerleme yapılmaz."
+      ],
+      "notes": "urlp-06 reliability kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
+      "prompt": "urlp-06 reliability değerlendirmesinde “ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.” ölçütünü kapsa. Güvenlik sınırı: PII kaynak slug'a giremez.. Çıktı: alias-resolver.py ile property-test seedleri arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "provenance": "human",
+      "promptVersion": "urlp-wbs-v1",
+      "lastReviewed": "2026-07-13"
+    }
+  },
+  "traceability": {
+    "repoPath": [
+      "packages/url-policy/src/slug/**",
+      "packages/url-policy/src/canonical/**",
+      "packages/url-policy/src/alias/**",
+      "packages/url-policy/tests/slug/**",
+      "packages/url-policy/tests/canonical/**",
+      "packages/url-policy/tests/alias/**",
+      "apps/api/src/meta_api/url_policy/slug/**",
+      "apps/api/src/meta_api/url_policy/canonical/**",
+      "apps/api/src/meta_api/url_policy/alias/**",
+      "apps/api/src/meta_api/db/url_policy/alias/**",
+      "apps/api/migrations/*route_alias*",
+      "apps/api/tests/url_policy/slug/**",
+      "apps/api/tests/url_policy/canonical/**",
+      "apps/api/tests/url_policy/alias/**"
+    ],
+    "testCommand": [
+      "pnpm --filter @platform/url-policy test -- slug canonical alias",
+      "cd apps/api && uv run pytest tests/url_policy/slug tests/url_policy/canonical tests/url_policy/alias"
+    ],
+    "deployTarget": "platform-url-policy-canary",
+    "implementationStatus": "not-started",
+    "tenantStrategy": "hybrid",
+    "auditLogRef": "url-policy-audit"
+  },
+  "atomDefinition": {
+    "kind": "task-micro-step",
+    "parentLevel": "work_unit",
+    "invariant": "Canonicalization idempotenttir; tek kaynak varyantı aynı anda yalnız bir canonical URL ile 200 döner.",
+    "change": "ASCII-first/Unicode profile, NFC/UTS39, locale-versioned transliteration, alias history, loop, tombstone ve byte budget davranışlarını uygula.",
+    "failureMode": "Slug/profile drift'i duplicate content, redirect loop veya yanlış kaynağa alias tahsisi üretir.",
+    "allowedFiles": [
+      "packages/url-policy/src/slug/**",
+      "packages/url-policy/src/canonical/**",
+      "packages/url-policy/src/alias/**",
+      "packages/url-policy/tests/slug/**",
+      "packages/url-policy/tests/canonical/**",
+      "packages/url-policy/tests/alias/**",
+      "apps/api/src/meta_api/url_policy/slug/**",
+      "apps/api/src/meta_api/url_policy/canonical/**",
+      "apps/api/src/meta_api/url_policy/alias/**",
+      "apps/api/src/meta_api/db/url_policy/alias/**",
+      "apps/api/migrations/*route_alias*",
+      "apps/api/tests/url_policy/slug/**",
+      "apps/api/tests/url_policy/canonical/**",
+      "apps/api/tests/url_policy/alias/**"
+    ],
+    "nonGoals": [
+      "Tenant arbitrary transliteration kodu çalıştırmak",
+      "Mevcut slugları profile upgrade'de otomatik rewrite etmek"
+    ],
+    "sideEffect": "database",
+    "riskLevel": "critical",
+    "rollback": "Alias yazıcısı durdurulur, önceki slug profile version aktive edilir ve canonical switch kayıtları terslenir.",
+    "testVectors": [
+      {
+        "kind": "positive",
+        "name": "URLP-06 canonical success path",
+        "testRef": "pnpm --filter @platform/url-policy test -- slug canonical alias",
+        "expected": "Kanonik sözleşme ve phase exit kriteri sağlanır."
+      },
+      {
+        "kind": "negative",
+        "name": "URLP-06 fail-closed violation",
+        "testRef": "cd apps/api && uv run pytest tests/url_policy/slug tests/url_policy/canonical tests/url_policy/alias",
+        "expected": "Slug/profile drift'i duplicate content, redirect loop veya yanlış kaynağa alias tahsisi üretir."
+      },
+      {
+        "kind": "edge",
+        "name": "URLP-06 topology and migration edge",
+        "testRef": "cd apps/api && uv run pytest tests/url_policy/slug tests/url_policy/canonical tests/url_policy/alias",
+        "expected": "Tenant, locale, host veya migration sınırında deterministic sonuç ve rollback kanıtı üretilir."
+      }
+    ],
+    "evidenceRollup": "urlp-program-work-unit",
+    "reviewer": "platform-architecture-reviewer"
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "urlPolicyRef": "url-policy",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy"
+  },
+  "applicability": {},
+  "waivers": [],
+  "uiArtifactRole": "no-ui",
+  "uiDelivery": {
+    "impact": "none",
+    "applies": false,
+    "reason": "Slug, Canonical ve Alias Motoru atomu UI bileşeni üretmez; runtime URL, güvenlik veya altyapı sözleşmesi teslim eder.",
+    "componentKind": "none",
+    "reviewStatus": "not-required",
+    "riskClass": "medium"
+  },
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "URLP-06",
+    "granularity": "atom",
+    "cluster": "url-policy-implementation"
+  },
+  "state": "aday",
+  "lastUpdated": "2026-07-13"
+}

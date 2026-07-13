@@ -140,3 +140,61 @@ Kimlik katmanı beş test sınıfıyla doğrulanır; DoD bunları zorunlu tutar.
 | IAM-R15 | Frontend token httpOnly+Secure cookie; localStorage yasak | frontend | P1 | e2e | Hassas token localStorage'da değil | Frontend ekibi |
 | IAM-R16 | Yetki kararı PDP'ye delege; AuthN'de yetki mantığı yok | backend | P0 | review | Anti-pattern review yeşil | IAM ekibi |
 | IAM-R17 | Stack FastAPI+SQLAlchemy+Alembic+PostgreSQL; Next/Supabase/Prisma yasak | backend | P0 | review | `check-dependency-policy` yeşil | IAM ekibi |
+| IAM-R18 | `username` benzersizliği açık normalizasyon + karşılaştırma politikasıyla tanımlı; `displayName` ayrı kurallara tabi (§13) | backend | P0 | unit | Normalizasyon/confusable varyantı ikinci kaydı üretemez | IAM ekibi |
+| IAM-R19 | Güvenlik amaçlı identifier alanlarında locale'e bağlı lowercase/uppercase dönüşümü yasak | backend | P0 | unit | tr locale altında karşılaştırma sonucu değişmez | IAM ekibi |
+| IAM-R20 | Kritik identifier alanlarında UTS #39 karakter kısıtı + confusable/mixed-script/görünmez karakter/bidi kontrolü | backend | P0 | unit | Riskli identifier reddedilir veya güvenlik incelemesine düşer | IAM ekibi |
+| IAM-R21 | Normalizasyon değişikliği mevcut kullanıcı verisi için migration planı gerektirir | backend | P1 | review | Çakışma tespiti + geri dönüş adımı içeren migration planı PR'da mevcut | IAM ekibi |
+| IAM-R22 | Benzer username/kuruluş adı/özel alan adı için spoofing kontrolü; IDN gösterimi ve link güvenliği ayrıca testli | backend | P1 | integration | Benzer ad kaydı spoofing kontrolüne takılır; IDN link testi yeşil | IAM ekibi |
+| IAM-R23 | Pazar-bazlı authentication kontrol matrisi (§14) doğrulanmadan pazar "destekleniyor" beyan edilmez | backend | P1 | review | Desteklenen her pazar için §14 matris kaydı dolu | IAM ekibi |
+| IAM-R24 | Hesap kurtarma paritesi: hesabın oluşturulabildiği fakat kurtarılamadığı pazar desteklenmiş sayılmaz | backend | P0 | e2e | Desteklenen her pazarda kurtarma akışı uçtan uca yeşil | IAM ekibi |
+
+## 13. Unicode Güvenliği, Kullanıcı Adları ve Identifier Disiplini
+
+Unicode desteği yalnız görüntüleme meselesi değil, bir **güvenlik yüzeyidir**: kimlik katmanındaki her serbest-metin identifier (`username`, e-posta, kuruluş adı, özel alan adı) saldırı yüzeyine dahildir. UTS #39 (Unicode Security Mechanisms), kritik identifier alanları için karakter kısıtları ve confusable tespiti mekanizmaları tanımlar (normatif kaynak: https://www.unicode.org/reports/tr39/). URL/slug tarafındaki UTS #39 uygulaması `docs/url-policy.md`'de yaşar; bu bölüm aynı disiplinin kimlik alanlarına uygulanmasını bağlar (çapraz referans).
+
+Risk yüzeyi (hepsi tehdit modeline girer):
+
+- **Confusable karakterler:** Görsel olarak birbirine benzeyen farklı karakterler (Latin `a` / Kiril `а` gibi) hesap taklidine kapı açar.
+- **Mixed-script karışımı:** Latin, Kiril ve Yunan alfabelerinin tek identifier içinde karıştırılması homograph saldırısının ana kalıbıdır.
+- **Normalizasyon biçimi farkları:** Aynı görünen metnin farklı Unicode normalizasyon biçimleri (NFC/NFD/NFKC/NFKD) farklı byte dizileri üretir; benzersizlik ve eşleşme bozulur.
+- **Görünmez karakterler:** Zero-width türü görünmez karakterler iki "aynı" username'i teknik olarak farklı kılar.
+- **Sağdan sola yönlendirme karakterleri:** Bidi/RLO kontrol karakterleri metnin görüntülenme sırasını manipüle eder (identifier ve dosya adı gizleme).
+- **Kullanıcı adı benzerliği:** Mevcut hesaba benzeyen username ile kimlik taklidi (spoofing).
+- **Alan adı ve bağlantı taklidi:** IDN homograph alan adları ve benzer linkler oltalama yüzeyidir.
+- **Arama ve erişim kontrolünde farklı karşılaştırma sonuçları:** Aynı identifier'ın login, arama ve erişim kontrolünde farklı normalize edilmesi tutarsız güvenlik kararları üretir.
+- **Audit loglarında yanıltıcı gösterim:** Bidi/görünmez karakter içeren identifier, audit kaydını inceleyen insanı yanıltır.
+
+| Kural ID | Kural (şu şekilde uygulanır) | severity | Doğrulama (check) |
+|---|---|---|---|
+| ident-display-vs-username | `displayName` ile `username` aynı kurallara tabi tutulmaz: `username` güvenlik identifier'ıdır ve UTS #39 kısıtlı profille sınırlanır; `displayName` görüntüleme metnidir ve mümkün olduğunca korunur (yalnız görünmez/bidi karakter temizliği yapılır). | must | unit (profil ayrımı) + review |
+| ident-normalization-policy | Benzersizlik, açık bir normalizasyon + karşılaştırma politikasıyla tanımlanır (ör. NFC + locale-bağımsız casefold sonucu ayrı kanonik kolon); yazılı politika olmadan unique-constraint yeterli sayılmaz. | must | unit (varyant çifti → ikinci kayıt reddi) |
+| ident-no-locale-casefold | Güvenlik amaçlı identifier alanlarında locale'e bağlı lowercase/uppercase dönüşümü kullanılmaz (Türkçe `I/ı-İ/i` sapması); karşılaştırma locale-bağımsız casefold ile yapılır. | must | unit (tr locale altında aynı sonuç) |
+| ident-confusable-mixed-script | Kritik identifier alanlarında confusable tespiti ve mixed-script kısıtı uygulanır (UTS #39); görünmez karakterler ve sağdan sola yönlendirme karakterleri reddedilir. | must | unit (confusable/mixed-script örnek seti → red) |
+| ident-spoofing-review | Benzer kullanıcı adları, kuruluş adları ve özel alan adları için mevcut kayıtlara karşı spoofing kontrolü yapılır (confusable/skeleton eşleşmesi); IDN gösterimi ve link güvenliği ayrıca test edilir. | should | integration (benzer ad → kontrol) + e2e (IDN link) |
+| ident-migration-plan | Mevcut kullanıcı verisi için normalizasyon değişiklikleri migration planı gerektirir: çakışma tespiti, etkilenen hesap listesi, kullanıcı iletişimi ve geri dönüş adımı olmadan normalizasyon değiştirilemez. | must | review + migration |
+
+## 14. Global Kimlik Doğrulama ve Hesap Kurtarma
+
+Login ekranının çevrilmiş olması global authentication desteği değildir; kimlik akışının her adımı pazar-bazlı altyapı, sağlayıcı ve regülasyon farklarına tabidir. Bir pazar için "destekleniyor" beyanı, aşağıdaki kontrol matrisi o pazar için doğrulanmadan verilemez (hepsi kontrol edilir):
+
+| Kontrol | Pazar-bazlı doğrulanacak soru |
+|---|---|
+| E-posta teslimatı | Doğrulama/kurtarma e-postaları pazarın yaygın sağlayıcılarına ulaşıyor mu? |
+| SMS OTP teslimatı | SMS OTP pazarın operatörlerinde gecikmesiz ve filtrelenmeden teslim ediliyor mu? |
+| Telefon numarası değişikliği | Numara değişikliği/taşıma akışı hesabı kilitlemeden tamamlanabiliyor mu? |
+| Hesap kurtarma | Parola/faktör kaybında kurtarma kanalı bu pazarda fiilen işliyor mu? |
+| Yerel spam filtreleri | Kimlik e-postaları yerel spam filtrelerine takılıyor mu? |
+| Linklerin açılabildiği ağlar | Doğrulama/kurtarma linkleri pazarın ağlarında (kurumsal proxy, ulusal filtreleme) açılabiliyor mu? |
+| MFA yöntemlerinin kullanılabilirliği | TOTP/WebAuthn ve fallback yöntemler bu pazarda fiilen kullanılabilir mi? |
+| Destekli donanım anahtarları | Pazarda yaygın donanım anahtarları WebAuthn akışında destekleniyor mu? |
+| Kurumsal SSO sağlayıcıları | Pazarda yaygın kurumsal IdP'ler `idp_config` ile bağlanabiliyor mu? |
+| Uluslararası alan adları | IDN alan adları ve IDN e-posta adresleri kayıt ve login'de kabul ediliyor mu? |
+| Yerel sosyal login sağlayıcıları | Pazarda baskın sosyal login sağlayıcıları OAuth2/OIDC ile bağlanabiliyor mu? |
+| Kimlik belgesi doğrulaması | Kimlik belgesi doğrulaması pazarın belge tipleriyle çalışıyor mu? |
+| Kuruluş ve vergi kimlikleri | Kuruluş kaydı pazarın vergi/ticaret sicil kimlik formatlarını doğruluyor mu? |
+| Account takeover destek süreci | Hesap ele geçirme (account takeover) bildirimi için pazarın dilinde ve saat diliminde işleyen destek süreci var mı? |
+
+| Kural ID | Kural (şu şekilde uygulanır) | severity | Doğrulama (check) |
+|---|---|---|---|
+| glob-auth-market-matrix | Bir pazarın "destekleniyor" beyanı, yukarıdaki matrisin o pazar için doğrulanmış kaydına bağlanır; kayıtsız beyan yapılamaz. | should | review (pazar matris kaydı) |
+| glob-auth-recovery-parity | Kullanıcının hesabını oluşturabildiği fakat kurtaramadığı bir pazar desteklenmiş sayılmaz; hesap kurtarma akışı desteklenen her pazarda uçtan uca test edilir. | must | e2e (pazar-bazlı kurtarma akışı) |

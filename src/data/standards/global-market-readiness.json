@@ -1,0 +1,83 @@
+{
+  "id": "global-market-readiness",
+  "name": "Global Pazar Hazırlığı Standardı (launch kapısı, ödeme, moderasyon, coğrafya, destek)",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Pazar/dil canlıya almayı çeviri işi değil, pazar başına verilecek operasyonel kararlar kümesi olarak zorlayan yönetişim sözleşmesi: 14 soruluk evidence'lı launch kapısı, IP-geolocation sınırı, pazar başına kill switch + rollback, pazar başına ödeme matrisi (3-D Secure, dunning, chargeback, iade), destek dili taahhüdü (status page dahil) ve dil/pazar başına moderasyon değerlendirmesi. Anlatı otoritesi docs/global-market-readiness-directive.md'dir; bu sözleşme onun makine kontratıdır.",
+  "appliesTo": [],
+  "rules": [
+    {
+      "id": "gmr-launch-gate-14",
+      "rule": "Bir pazar veya dil canlıya alınmadan önce 14 launch sorusunun TAMAMINA evidence'lı olumlu cevap verilir (sorular docs/standards/14-enterprise-readiness-checklist.md §7.1'dedir); tek olumsuz veya cevapsız soru launch'ı bloklar (fail-closed). 'Uygulanamaz' cevabı yalnız gerekçeli N/A kaydıyla geçerlidir; 'değerlendirilmedi' ile N/A ayrı kayıtlardır.",
+      "rationale": "Launch kapısı kanıtsız 'hazırız' beyanını engeller; 'çeviri bitti' hiçbir pazarda 'pazar açıldı' demek değildir ve atlanan her soru ödeme/moderasyon/destek borcu olarak üretimde ortaya çıkar.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-ip-geolocation-not-identity",
+      "rule": "IP geolocation kullanıcının uyruğu, vergi mukimliği, fatura ülkesi veya hukuki yetki alanı DEĞİLDİR; hukuki veya vergisel hiçbir karar yalnız IP verisine dayandırılamaz. IP'ye göre öneri/ön-seçim gösterilebilir; fakat kullanıcının pazar/dil seçimi engellenemez (seyahat, VPN ve kurumsal ağ senaryoları dahil).",
+      "rationale": "IP bir konum sinyalidir, hukuki statü kaynağı değildir; IP'den hukuk türetmek yanlış vergi, yanlış sözleşme metni ve seçimi kilitlenmiş kullanıcı üretir.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-market-kill-switch",
+      "rule": "Her pazar/locale için bağımsız kill switch ve rollback mekanizması zorunludur: bir pazar, diğer pazarları etkilemeden kapatılabilir veya önceki duruma döndürülebilir; kapatma senaryosu (kim, hangi yetkiyle, hangi kullanıcı mesajıyla) launch öncesi tanımlanır ve tatbik edilir.",
+      "rationale": "Regülasyon değişikliği, ödeme kesintisi veya moderasyon krizi pazar-lokal olaydır; kill switch olmadan tek pazarın krizi global kapanmaya veya paniğe dönüşür.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-payment-market-matrix",
+      "rule": "Pazar başına ödeme matrisi beyan ve test edilir: ödeme yöntemi seti, 3-D Secure / güçlü müşteri doğrulaması akışı, dunning (ödeme tekrar deneme) stratejisi, chargeback/itiraz süreci ve iade (tam/kısmi) senaryoları. Yalnız happy-path kanıtıyla pazar 'ödeme-hazır' sayılmaz; reddedilme, bekleyen işlem, gecikmiş bildirim ve çift bildirim senaryoları da koşulur.",
+      "rationale": "Ödeme başarı oranını yerel ağlar, doğrulama adımları ve başarısız-akış davranışı belirler; test edilmemiş chargeback/dunning akışı gelir kaybı ve regülasyon riski olarak üretimde patlar.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-support-language-commitment",
+      "rule": "Menüye eklenen dil bir hizmet taahhüdüdür: destek kanallarının, status page'in, güvenlik olayı bildirimlerinin ve fatura itirazlarının hangi dillerde işleneceği pazar açılmadan AÇIK beyan edilir; kritik mesaj sınıfı taahhüt verilen dillerle hizalanır, hizalanamıyorsa kayıtlı karar (kim/neden/hangi risk) zorunludur.",
+      "rationale": "Sessiz varsayımla oluşan dil taahhüdü, kullanıcının anlamadığı güvenlik veya ödeme mesajını onaylamasıyla sonuçlanır; taahhüt bilinçli verilir, varsayımla doğmaz.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-moderation-per-locale",
+      "rule": "Moderasyon kural setleri dil/pazar başına AYRI değerlendirilir; İngilizce kural setinin makine çevirisiyle diğer dillere taşınması yasaktır (yerel argo, kodlanmış söylem, tarihsel/siyasi bağlam pazar başına incelenir). AI özelliği varsa prompt injection ve politika aşımı testleri çok-dilde koşulur; model, moderasyon ve retrieval bileşenleri locale bazında ayrı değerlendirilir.",
+      "rationale": "Moderasyon dil bilgisi değil kültür ve bağlam bilgisidir; makine-çevrilmiş kural seti yanlış pozitif ve yanlış negatifi birlikte artırır, tek-dil güvenlik testi prompt injection'ı diğer dillerde açık bırakır.",
+      "severity": "must",
+      "check": "check-market-readiness + review"
+    },
+    {
+      "id": "gmr-geography-policy-layer",
+      "rule": "Coğrafya ürün politikasıdır: tartışmalı bölge adları, harita sınırları, bayraklar ve resmî/yerel isimler çeviri dosyasında değil merkezi, sürümlü ve politika kontrollü coğrafi veri katmanında yönetilir; bir bölge adı veya sınır değişikliği translation release beklemeden yayınlanabilir.",
+      "rationale": "Tartışmalı bölge adı veya sınır gösterimi yanlış yönetildiğinde pazar kaybettirir; politika kontrollü veri katmanı bu kararı çeviri kuyruğundan ayırır.",
+      "severity": "may",
+      "check": "check-market-readiness + review"
+    }
+  ],
+  "banned": [
+    "launch-without-evidence",
+    "ip-derived-legal-decision",
+    "market-without-kill-switch",
+    "happy-path-only-payment-evidence",
+    "silent-support-language-commitment",
+    "machine-translated-moderation-ruleset",
+    "geo-names-in-translation-files"
+  ],
+  "allowed": [
+    "launch-gate-14-evidence",
+    "per-market-payment-matrix",
+    "market-kill-switch-rollback",
+    "explicit-support-language-declaration",
+    "per-locale-moderation-ruleset",
+    "versioned-geo-policy-layer"
+  ],
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/global-market-readiness-directive.md",
+    "docs/standards/14-enterprise-readiness-checklist.md",
+    "EMV 3-D Secure"
+  ]
+}

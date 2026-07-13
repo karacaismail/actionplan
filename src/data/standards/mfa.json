@@ -1,10 +1,10 @@
 {
   "id": "mfa",
   "name": "Çok Faktörlü Kimlik Doğrulama (MFA) Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "governance",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Parola ötesinde ikinci faktör zorunluluğu: TOTP (RFC 6238) ve WebAuthn/FIDO2 enrollment, birinci faktör geçse bile oturumu yarım tutan MFA enforcement, hassas eylemler için step-up doğrulama (izin kararı PDP'de), tek-kullanımlık hash'li kurtarma kodları ve tenant+user-scoped, envelope-şifreli faktör saklama. SMS-OTP yalnız düşük-güvenlik fallback'idir, birincil değildir.",
+  "summary": "Parola ötesinde ikinci faktör zorunluluğu: TOTP (RFC 6238) ve WebAuthn/FIDO2 enrollment, birinci faktör geçse bile oturumu yarım tutan MFA enforcement, hassas eylemler için step-up doğrulama (izin kararı PDP'de), tek-kullanımlık hash'li kurtarma kodları ve tenant+user-scoped, envelope-şifreli faktör saklama. SMS-OTP yalnız düşük-güvenlik fallback'idir, birincil değildir. v1.1: pazar-başına kurtarma paritesi (mfa-recovery-parity-per-market): hesabın oluşturulabildiği ama kurtarılamadığı pazar desteklenmiş sayılmaz.",
   "appliesTo": [],
   "rules": [
     {
@@ -41,6 +41,13 @@
       "rationale": "Şifreli, tenant-scoped saklama veritabanı sızıntısında faktör materyalini korur ve çapraz-tenant erişimi engeller; düz-metin secret tüm MFA'yı geçersiz kılar.",
       "severity": "must",
       "check": "review (envelope şifreleme + RLS) + migration (mfa_factors tenant-scoped)"
+    },
+    {
+      "id": "mfa-recovery-parity-per-market",
+      "rule": "Kimlik doğrulama ve hesap kurtarma paritesi pazar-başına doğrulanır: hesabın oluşturulabildiği fakat kurtarılamadığı pazar DESTEKLENMİŞ SAYILMAZ. Desteklenen her pazar için OTP teslimatı (SMS-OTP'nin yerel operatörlerce gerçekten ulaştığı), e-posta teslimatı ve hesap kurtarma akışı uçtan uca test edilir; SMS-OTP'nin ulaşmadığı pazarda çalışan bir kurtarma alternatifi (TOTP/WebAuthn/e-posta/kurtarma kodu) doğrulanmadan pazar 'destekleniyor' beyan edilemez. Login ekranının çevrilmiş olması global authentication desteği değildir; pazar-bazlı authentication kontrol matrisi (03-authn §14) doğrulanmadan beyan verilmez.",
+      "rationale": "Kurtarılamayan hesap o pazarda kalıcı kilitlenme ve destek yükü demektir; OTP/e-posta teslimat kanalları pazar altyapısına göre değişir ve tek pazarda yeşil olan akış diğerinde sessizce kırılır.",
+      "severity": "must",
+      "check": "e2e (pazar-başına kayıt + giriş + hesap kurtarma uçtan uca yeşil) + review (pazar kontrol matrisi kaydı)"
     }
   ],
   "banned": [

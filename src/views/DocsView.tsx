@@ -5,9 +5,9 @@ import { t } from "@/lib/strings";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-// Vite tüm docs/*.md dosyalarını ham metin olarak pakete gömer (build'e girer; çalışma anında
+// Vite tüm docs/**/*.md dosyalarını ham metin olarak pakete gömer (build'e girer; çalışma anında
 // fetch yok, GitHub'a gidilmez). BASE_URL'den bağımsız, derleme-zamanı statik içerik.
-const MODULES = import.meta.glob("/docs/*.md", {
+const MODULES = import.meta.glob("/docs/**/*.md", {
   query: "?raw",
   import: "default",
   eager: true,
@@ -19,10 +19,12 @@ interface DocEntry {
   content: string;
 }
 
-// Dosya adından slug + ilk H1'den başlık çıkar. README en üstte, gerisi başlığa göre sıralı.
+// Göreli yoldan tek-segment slug + ilk H1'den başlık çıkar. İç içe yollar "--" ile düzleşir;
+// böylece TanStack'in /docs/$docSlug rotası alt klasörlerde de kararlı kalır.
 const DOCS: DocEntry[] = Object.entries(MODULES)
   .map(([path, content]) => {
-    const slug = path.replace(/^.*\//, "").replace(/\.md$/, "");
+    const relativePath = path.replace(/^\/docs\//, "").replace(/\.md$/, "");
+    const slug = relativePath.replaceAll("/", "--");
     const h1 = /^#\s+(.+)$/m.exec(content);
     return { slug, title: h1 ? h1[1].trim() : slug, content };
   })

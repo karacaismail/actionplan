@@ -1,0 +1,1536 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "url-policy-implementation-program",
+  "version": "1.0.0",
+  "status": "active",
+  "canonicalPolicyRef": "docs/url-policy.md",
+  "targetRepo": "platform",
+  "phases": [
+    {
+      "phaseId": "URLP-00",
+      "order": 0,
+      "title": "Repo gerçekliği ve yanlış varsayımları kapatma",
+      "status": "blocked",
+      "owner": "platform-architecture-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-00-repo-reality",
+      "dependsOn": [],
+      "allowedFiles": [
+        "docs/url-policy/**",
+        "README.md",
+        ".github/workflows/**",
+        "apps/api/tests/url_policy/reality/**",
+        "apps/web/src/url-policy/**/*.reality.test.ts*",
+        "tools/url-policy/audit/**"
+      ],
+      "nonGoals": [
+        "Runtime URL motoru yazmak",
+        "Kirli worktree veya missing-remote durumunu gizlemek"
+      ],
+      "requiredRegistryRefs": ["k-route-policy", "url-policy"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-00-AC-01",
+          "statement": "TanStack Router, FastAPI ve GraphQL current-state dosya kanıtlarıyla kaydedilir.",
+          "evidence": "repo-reality raporu + komut çıktısı"
+        },
+        {
+          "id": "URLP-00-AC-02",
+          "statement": "Remote, branch, worktree ve CI durumu kanıtsız varsayılmaz.",
+          "evidence": "git/CI evidence manifest"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-00-RED-01",
+          "file": "docs/url-policy/repo-reality.contract.test",
+          "assertion": "React Router veya çalışmayan runtime iddiası fixture'ı reddedilir."
+        }
+      ],
+      "testCommands": [
+        "git status --short",
+        "git remote -v",
+        "pnpm --filter @platform/web test -- reality",
+        "cd apps/api && uv run pytest tests/url_policy/reality",
+        "pnpm -r --if-present test"
+      ],
+      "evidenceRequirements": [
+        "commit SHA",
+        "remote/default branch çıktısı",
+        "current route/API envanteri"
+      ],
+      "rollback": {
+        "trigger": "Audit platform gerçekliğiyle çelişir.",
+        "procedure": "Audit değişikliğini geri al ve current-state'i yeniden ölç.",
+        "verification": "Salt-okunur komut çıktıları raporla birebir eşleşir."
+      },
+      "securityNegativeTests": [
+        "Kanıtsız WORKING iddiası reddedilir.",
+        "Secret içeren config/log evidence'a alınmaz."
+      ],
+      "outputArtifacts": [
+        "docs/url-policy/repo-reality.md",
+        "docs/url-policy/evidence/urlp-00.json"
+      ],
+      "wbsRefs": ["urlp-00"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Platform URL current-state gerçekliğini kilitle.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce salt-okunur audit yap.",
+          "Çalışan ve planlanan davranışı ayır.",
+          "Yalnız allowedFiles içinde rapor yaz.",
+          "Evidence uydurma."
+        ],
+        "stopConditions": [
+          "Platform worktree sahipliği belirsiz.",
+          "Remote/CI bilgisi kullanıcı yetkisi gerektiriyor.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-01",
+      "order": 1,
+      "title": "Platform URL Architecture Profile",
+      "status": "blocked",
+      "owner": "platform-architecture-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-01-architecture-profile",
+      "dependsOn": ["URLP-00"],
+      "allowedFiles": [
+        "packages/url-policy/src/profile/**",
+        "packages/url-policy/tests/profile/**",
+        "packages/url-policy/package.json",
+        "apps/api/src/meta_api/url_policy/profile/**",
+        "apps/api/tests/url_policy/profile/**"
+      ],
+      "nonGoals": [
+        "Host middleware yazmak",
+        "Tenantın invariantları override etmesine izin vermek"
+      ],
+      "requiredRegistryRefs": [
+        "k-route-policy#defaults",
+        "k-route-policy#reservedNamespaces",
+        "url-policy#url-single-kernel"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-01-AC-01",
+          "statement": "Parse/validate/normalize/resolve/authorize/serialize sırası ve reserved namespace'ler tipli profildir.",
+          "evidence": "profile contract test raporu"
+        },
+        {
+          "id": "URLP-01-AC-02",
+          "statement": "MUST/SHOULD/MAY ve tenant override sınırı registry ile paritededir.",
+          "evidence": "registry parity çıktısı"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-01-RED-01",
+          "file": "packages/url-policy/tests/profile/url-architecture-profile.test.ts",
+          "assertion": "Unknown surface, reserved namespace override ve sırasız pipeline reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- profile",
+        "pnpm --filter @platform/url-policy typecheck",
+        "cd apps/api && uv run pytest tests/url_policy/profile"
+      ],
+      "evidenceRequirements": [
+        "kırmızı/yeşil test logu",
+        "profile snapshot",
+        "registry parity raporu"
+      ],
+      "rollback": {
+        "trigger": "Profile mevcut /graphql veya /healthz davranışını kırar.",
+        "procedure": "Yeni profile versionını devre dışı bırak ve önceki registry snapshot'ına dön.",
+        "verification": "Mevcut smoke testler yeniden yeşildir."
+      },
+      "securityNegativeTests": [
+        "Tenant reserved namespace değiştiremez.",
+        "Double-decode ve dot-segment normalize edilmeden resolve edilemez."
+      ],
+      "outputArtifacts": [
+        "packages/url-policy/src/profile/index.ts",
+        "packages/url-policy/tests/profile/url-architecture-profile.test.ts"
+      ],
+      "wbsRefs": ["urlp-01"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için URL Architecture Profile sözleşmesini test-first üret.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce negatif contract testlerini kırmızı çalıştır.",
+          "Registry değerlerini kopyalama; build-time adapter ile tüket.",
+          "Tenant override sınırını tipte kapat.",
+          "Runtime middleware'e geçme."
+        ],
+        "stopConditions": [
+          "URLP-00 evidence yok.",
+          "Registry ile doküman çelişiyor.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-02",
+      "order": 2,
+      "title": "Kernel tipleri ve sözleşme şemaları",
+      "status": "blocked",
+      "owner": "kernel-contract-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-02-kernel-contracts",
+      "dependsOn": ["URLP-01"],
+      "allowedFiles": [
+        "packages/url-policy/src/contracts/**",
+        "packages/url-policy/tests/contracts/**",
+        "packages/url-policy/src/generated/**",
+        "apps/api/src/meta_api/url_policy/contracts/**",
+        "apps/api/tests/url_policy/contracts/**"
+      ],
+      "nonGoals": [
+        "Resolver veya DB persistence yazmak",
+        "Global resource identity tablosu oluşturmak"
+      ],
+      "requiredRegistryRefs": [
+        "k-route-policy#resourceKinds",
+        "k-route-policy#routeDefinitions",
+        "k-route-policy#slugProfiles"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-02-AC-01",
+          "statement": "RouteDefinition, RouteRef, ResourceRef, HostBinding, RouteProjection, ResolvedLocation, SlugProfile, RouteAlias ve FacetDefinition tipleri TS/Pydantic paritesindedir.",
+          "evidence": "schema parity raporu"
+        },
+        {
+          "id": "URLP-02-AC-02",
+          "statement": "Duplicate, unknown ve collision fixture'ları reddedilir.",
+          "evidence": "contract test logu"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-02-RED-01",
+          "file": "packages/url-policy/tests/contracts/schema-parity.test.ts",
+          "assertion": "Eksik policy ref, duplicate prefix ve unknown kind kırmızı olur."
+        },
+        {
+          "id": "URLP-02-RED-02",
+          "file": "apps/api/tests/url_policy/contracts/test_schema_parity.py",
+          "assertion": "Python ve TypeScript golden fixture sonuçları eşleşmezse kırmızı olur."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- contracts",
+        "cd apps/api && uv run pytest tests/url_policy/contracts",
+        "git diff --exit-code packages/url-policy/src/generated"
+      ],
+      "evidenceRequirements": [
+        "TS/Pydantic parity çıktısı",
+        "golden fixture checksum",
+        "negative test logu"
+      ],
+      "rollback": {
+        "trigger": "Contract tüketicileri kırılır veya schema parity kaybolur.",
+        "procedure": "Yeni contract versionını kaldır, önceki export'u restore et.",
+        "verification": "Eski ve yeni tüketici compatibility testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Internal UUID dış API şemasına çıkamaz.",
+        "Prefix permission gibi yorumlanamaz."
+      ],
+      "outputArtifacts": [
+        "packages/url-policy/src/contracts/index.ts",
+        "apps/api/src/meta_api/url_policy/contracts/models.py",
+        "schema-parity-report.json"
+      ],
+      "wbsRefs": ["urlp-02"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için URL kernel contractlarını iki dilde pariteli üret.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce TS ve Python negatif testlerini yaz.",
+          "Registry şemalarını tek kaynaktan türet.",
+          "Internal/public kimliği ayır.",
+          "Persistence yazma."
+        ],
+        "stopConditions": [
+          "URLP-01 profile kanıtı yok.",
+          "Schema codegen/parity stratejisi belirsiz.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-03",
+      "order": 3,
+      "title": "Host ve tenant resolution",
+      "status": "blocked",
+      "owner": "platform-tenancy-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-03-host-tenant-resolution",
+      "dependsOn": ["URLP-02"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/url_policy/host/**",
+        "apps/api/src/meta_api/url_policy/tenant/**",
+        "apps/api/src/meta_api/middleware/**",
+        "apps/api/src/meta_api/db/url_policy/**",
+        "apps/api/migrations/*url_policy_host*",
+        "apps/api/tests/url_policy/host/**",
+        "apps/api/tests/url_policy/tenant/**",
+        "apps/api/tests/integration/url_policy/**"
+      ],
+      "nonGoals": [
+        "Authentication sistemi tamamlamak",
+        "Bilinmeyen hostu default tenant'a düşürmek"
+      ],
+      "requiredRegistryRefs": [
+        "k-route-policy#hostBindingProfiles",
+        "url-policy#url-host-tenant-fail-closed"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-03-AC-01",
+          "statement": "Trusted proxy sonrası exact HostBinding ve tenant adayları çapraz doğrulanır.",
+          "evidence": "host/tenant integration testleri"
+        },
+        {
+          "id": "URLP-03-AC-02",
+          "statement": "Resolved tenant olmadan cache key üretilemez.",
+          "evidence": "cache-key contract testi"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-03-RED-01",
+          "file": "apps/api/tests/url_policy/host/test_tenant_resolution.py",
+          "assertion": "Host A/token B, unknown host ve spoofed forwarded host fail-closed olur."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/url_policy/host tests/url_policy/tenant tests/integration/url_policy",
+        "cd apps/api && uv run pyright"
+      ],
+      "evidenceRequirements": [
+        "tenant mismatch matrisi",
+        "trusted proxy config",
+        "cache isolation test logu"
+      ],
+      "rollback": {
+        "trigger": "Geçerli tenant trafiği yanlış reddedilir veya cross-tenant çözüm görülür.",
+        "procedure": "Resolver feature flag'ini kapat ve önceki edge yoluna dön.",
+        "verification": "Tenant smoke ve cross-tenant deny testleri yeniden koşar."
+      },
+      "securityNegativeTests": [
+        "X-Forwarded-Host yalnız allowlist proxyden kabul edilir.",
+        "Unicode/Punycode eşitsizliği başka binding'e düşmez."
+      ],
+      "outputArtifacts": [
+        "host-binding-resolver.py",
+        "tenant-context-middleware.py",
+        "tenant-resolution-matrix.json"
+      ],
+      "wbsRefs": ["urlp-03"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Host ve tenant resolution'ı fail-closed uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce cross-tenant negatif testleri yaz.",
+          "Exact binding kullan.",
+          "Forwarded header trust sınırını uygula.",
+          "Default tenant fallback ekleme."
+        ],
+        "stopConditions": [
+          "URLP-02 contractları yok.",
+          "Proxy allowlist kararı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-04",
+      "order": 4,
+      "title": "App ve Module Route Registry SDK",
+      "status": "blocked",
+      "owner": "module-sdk-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-04-route-registry-sdk",
+      "dependsOn": ["URLP-03"],
+      "allowedFiles": [
+        "packages/url-policy/src/registry/**",
+        "packages/url-policy/src/sdk/**",
+        "packages/url-policy/tests/registry/**",
+        "apps/api/src/meta_api/url_policy/registry/**",
+        "apps/api/tests/url_policy/registry/**"
+      ],
+      "nonGoals": ["Domain CRUD route'ları üretmek", "Module catch-all veya global root vermek"],
+      "requiredRegistryRefs": [
+        "k-route-policy#routeDefinitions",
+        "k-route-policy#reservedNamespaces"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-04-AC-01",
+          "statement": "RouteContribution ownership, capability, namespace, version ve collision açısından doğrulanır.",
+          "evidence": "registry contract raporu"
+        },
+        {
+          "id": "URLP-04-AC-02",
+          "statement": "Capability kapalı route/menu görünmez.",
+          "evidence": "capability visibility integration testi"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-04-RED-01",
+          "file": "packages/url-policy/tests/registry/route-contribution.test.ts",
+          "assertion": "Duplicate/static-dynamic collision, reserved path ve global catch-all reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- registry",
+        "cd apps/api && uv run pytest tests/url_policy/registry"
+      ],
+      "evidenceRequirements": [
+        "route registry snapshot",
+        "collision test logu",
+        "capability deny kanıtı"
+      ],
+      "rollback": {
+        "trigger": "Registry mevcut route boot'unu kırar.",
+        "procedure": "Yeni contribution adapterını kapat ve registry snapshotını geri al.",
+        "verification": "Boot/smoke ve eski route testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Module /graphql veya /auth alamaz.",
+        "Capability olmadan deep link resolve olmaz."
+      ],
+      "outputArtifacts": ["route-contribution.ts", "route-registry.ts", "registry-snapshot.json"],
+      "wbsRefs": ["urlp-04"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için App/Module Route Registry SDK'yı test-first kur.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce collision/reserved testleri yaz.",
+          "Ownership ve capability bağlarını zorla.",
+          "Custom app mountunu /apps altında tut.",
+          "Domain route üretme."
+        ],
+        "stopConditions": [
+          "URLP-03 tenant context yok.",
+          "Module ownership belirsiz.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-05",
+      "order": 5,
+      "title": "Public ID ve bounded-context sahipliği",
+      "status": "blocked",
+      "owner": "domain-architecture-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-05-public-id",
+      "dependsOn": ["URLP-04"],
+      "allowedFiles": [
+        "packages/url-policy/src/identity/**",
+        "packages/url-policy/tests/identity/**",
+        "apps/api/src/meta_api/url_policy/identity/**",
+        "apps/api/tests/url_policy/identity/**"
+      ],
+      "nonGoals": ["Tek global identity tablosu kurmak", "Person, employee ve user'ı birleştirmek"],
+      "requiredRegistryRefs": ["k-route-policy#resourceKinds", "url-policy#url-bounded-id"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-05-AC-01",
+          "statement": "11 prefix tekil ve random 128-bit public ID üretimi bounded context sahipliğindedir.",
+          "evidence": "entropy/prefix test raporu"
+        },
+        {
+          "id": "URLP-05-AC-02",
+          "statement": "Cross-app ilişki yalnız ResourceRef kullanır.",
+          "evidence": "dependency/import boundary testi"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-05-RED-01",
+          "file": "packages/url-policy/tests/identity/public-id.test.ts",
+          "assertion": "Numeric/sequential ID, duplicate prefix ve zaman-sızdıran gövde reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- identity",
+        "cd apps/api && uv run pytest tests/url_policy/identity"
+      ],
+      "evidenceRequirements": [
+        "prefix registry snapshot",
+        "entropy ölçümü",
+        "internal-ID leak taraması"
+      ],
+      "rollback": {
+        "trigger": "Public ID collision veya internal ID sızıntısı görülür.",
+        "procedure": "Yeni ID issuance'ı durdur, affected prefix/versionı tombstone et.",
+        "verification": "Collision ve leak corpus'u sıfır sonuç verir."
+      },
+      "securityNegativeTests": [
+        "Public ID authorization yerine geçmez.",
+        "Internal UUID URL/API/export'a çıkmaz."
+      ],
+      "outputArtifacts": ["public-id.ts", "resource-ref.ts", "public-id-security-report.json"],
+      "wbsRefs": ["urlp-05"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Bounded-context public ID sözleşmesini uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce collision/entropy/leak testleri yaz.",
+          "Registry prefixlerini tüket.",
+          "ResourceRef dışı cross-app bağ kurma.",
+          "Global identity persistence yazma."
+        ],
+        "stopConditions": [
+          "Resource owner belli değil.",
+          "Migration/compatibility kararı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-06",
+      "order": 6,
+      "title": "Slug, canonical ve alias motoru",
+      "status": "blocked",
+      "owner": "url-canonicalization-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-06-slug-alias",
+      "dependsOn": ["URLP-05"],
+      "allowedFiles": [
+        "packages/url-policy/src/slug/**",
+        "packages/url-policy/src/canonical/**",
+        "packages/url-policy/src/alias/**",
+        "packages/url-policy/tests/slug/**",
+        "packages/url-policy/tests/canonical/**",
+        "packages/url-policy/tests/alias/**",
+        "apps/api/src/meta_api/url_policy/slug/**",
+        "apps/api/src/meta_api/url_policy/canonical/**",
+        "apps/api/src/meta_api/url_policy/alias/**",
+        "apps/api/src/meta_api/db/url_policy/alias/**",
+        "apps/api/migrations/*route_alias*",
+        "apps/api/tests/url_policy/slug/**",
+        "apps/api/tests/url_policy/canonical/**",
+        "apps/api/tests/url_policy/alias/**"
+      ],
+      "nonGoals": [
+        "Tenant arbitrary transliteration kodu çalıştırmak",
+        "Mevcut slugları profile upgrade'de otomatik rewrite etmek"
+      ],
+      "requiredRegistryRefs": [
+        "k-route-policy#slugProfiles",
+        "url-policy#url-public-canonical",
+        "url-policy#url-locale-slug"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-06-AC-01",
+          "statement": "ASCII/Unicode canonicalization idempotent ve locale-versioned çalışır.",
+          "evidence": "property/golden vector raporu"
+        },
+        {
+          "id": "URLP-06-AC-02",
+          "statement": "Alias zinciri tek atlama, döngüsüz ve tombstone güvenlidir.",
+          "evidence": "alias graph testleri"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-06-RED-01",
+          "file": "packages/url-policy/tests/slug/canonicalization.property.test.ts",
+          "assertion": "NFC, byte budget, confusable ve idempotency ihlalleri reddedilir."
+        },
+        {
+          "id": "URLP-06-RED-02",
+          "file": "apps/api/tests/url_policy/alias/test_alias_graph.py",
+          "assertion": "Loop, reassignment ve unauthorized alias resolution reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- slug canonical alias",
+        "cd apps/api && uv run pytest tests/url_policy/slug tests/url_policy/canonical tests/url_policy/alias"
+      ],
+      "evidenceRequirements": [
+        "Unicode golden vectors",
+        "property-test seedleri",
+        "alias loop/tombstone raporu"
+      ],
+      "rollback": {
+        "trigger": "Canonical drift, collision veya redirect loop görülür.",
+        "procedure": "Slug profile versionını önceki sürüme pinle ve yeni alias activationı durdur.",
+        "verification": "Canonical comparator ve alias graph yeniden yeşildir."
+      },
+      "securityNegativeTests": [
+        "PII kaynak slug'a giremez.",
+        "ASCII ve Unicode varyant birlikte 200 dönmez."
+      ],
+      "outputArtifacts": [
+        "slug-profile-engine.ts",
+        "alias-resolver.py",
+        "unicode-golden-vectors.json"
+      ],
+      "wbsRefs": ["urlp-06"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Slug/canonical/alias motorunu property-test ile uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce mutation/property testlerini yaz.",
+          "NFC ve UTS39 profilini uygula.",
+          "Alias zincirini tek atlamaya indir.",
+          "Profile upgrade ile toplu rewrite yapma."
+        ],
+        "stopConditions": [
+          "URLP-05 public ID yok.",
+          "Locale transliteration profile kararı eksik.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-07",
+      "order": 7,
+      "title": "FastAPI ve GraphQL edge entegrasyonu",
+      "status": "blocked",
+      "owner": "api-edge-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-07-fastapi-graphql-edge",
+      "dependsOn": ["URLP-06"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/app.py",
+        "apps/api/src/meta_api/middleware/url_policy/**",
+        "apps/api/src/meta_api/url_policy/edge/**",
+        "apps/api/tests/url_policy/edge/**",
+        "apps/api/tests/integration/url_policy/**"
+      ],
+      "nonGoals": [
+        "GraphQL field hiyerarşisini UI route'a eşitlemek",
+        "Unsafe methodları canonical redirect etmek"
+      ],
+      "requiredRegistryRefs": [
+        "platform.graphql",
+        "tenant-subdomain-suite-path",
+        "url-policy#url-safe-redirect"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-07-AC-01",
+          "statement": "Middleware sırası request-id→proxy→host→tenant→auth→route→capability→PDP olarak kanıtlanır.",
+          "evidence": "middleware order integration raporu"
+        },
+        {
+          "id": "URLP-07-AC-02",
+          "statement": "Browser GraphQL same-origin /graphql kalır ve mutation redirect almaz.",
+          "evidence": "GraphQL edge testleri"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-07-RED-01",
+          "file": "apps/api/tests/url_policy/edge/test_middleware_order.py",
+          "assertion": "Spoofed host, tenant mismatch ve mutation redirect kırmızı olur."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/url_policy/edge tests/integration/url_policy",
+        "cd apps/api && uv run pytest tests/test_health.py",
+        "cd apps/api && uv run ruff check .",
+        "cd apps/api && uv run pyright"
+      ],
+      "evidenceRequirements": [
+        "middleware trace",
+        "GraphQL method matrix",
+        "error-envelope leak testi"
+      ],
+      "rollback": {
+        "trigger": "/graphql veya /healthz smoke kırılır.",
+        "procedure": "URL edge middleware feature flag'ini kapat ve app wiring'i önceki sürüme döndür.",
+        "verification": "Health/ping ve security regression testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Internet tenant header güvenilir sayılmaz.",
+        "Error envelope tenant/domain ayrıntısı sızdırmaz."
+      ],
+      "outputArtifacts": [
+        "url-policy-middleware.py",
+        "edge-method-matrix.json",
+        "middleware-order-evidence.json"
+      ],
+      "wbsRefs": ["urlp-07"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için URL policy'yi FastAPI/GraphQL edge'e güvenli bağla.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce spoof/mismatch/method negatif testlerini yaz.",
+          "Mevcut health ve GraphQL ping'i koru.",
+          "Trusted proxy allowlist uygula.",
+          "Mutation redirect etme."
+        ],
+        "stopConditions": [
+          "URLP-06 canonical resolver yok.",
+          "Authentication/PDP adapterı tanımsız.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-08",
+      "order": 8,
+      "title": "TanStack Router entegrasyonu",
+      "status": "blocked",
+      "owner": "web-routing-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-08-tanstack-router",
+      "dependsOn": ["URLP-07"],
+      "allowedFiles": [
+        "apps/web/src/router.tsx",
+        "apps/web/src/url-policy/**",
+        "apps/web/src/routes/**",
+        "apps/web/src/**/*.url-policy.test.ts*",
+        "apps/web/e2e/url-policy/**"
+      ],
+      "nonGoals": ["React Router eklemek", "Component içinde string URL concat yapmak"],
+      "requiredRegistryRefs": [
+        "k-route-policy#routeDefinitions",
+        "k-route-policy#routeProjections",
+        "url-policy#url-single-kernel"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-08-AC-01",
+          "statement": "Tek urlFor(RouteRef), typed params/search ve capability-gated route tree kullanılır.",
+          "evidence": "router contract testleri"
+        },
+        {
+          "id": "URLP-08-AC-02",
+          "statement": "Frontend/backend canonical generator parity kanıtlanır.",
+          "evidence": "shared golden vectors"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-08-RED-01",
+          "file": "apps/web/src/url-policy/urlFor.route.test.ts",
+          "assertion": "Unknown RouteRef, invalid param/search ve capability-disabled deep link reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/web test -- src/url-policy",
+        "pnpm --filter @platform/web build",
+        "pnpm --filter @platform/web e2e -- e2e/url-policy"
+      ],
+      "evidenceRequirements": [
+        "route tree snapshot",
+        "frontend/backend parity report",
+        "deep-link E2E"
+      ],
+      "rollback": {
+        "trigger": "Boot route veya deep links kırılır.",
+        "procedure": "Generated route adapterını kapat ve önceki route tree'yi restore et.",
+        "verification": "Smoke, route ve deep-link testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Capability-disabled route render edilmez.",
+        "Route masking canonical identity olarak kullanılamaz."
+      ],
+      "outputArtifacts": [
+        "apps/web/src/url-policy/urlFor.ts",
+        "generated-route-tree.ts",
+        "canonical-parity-report.json"
+      ],
+      "wbsRefs": ["urlp-08"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için TanStack Router'ı k-route-policy ile tipli bağla.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce route/search negatif testlerini yaz.",
+          "Tek urlFor API'si oluştur.",
+          "String concatı lint ile yasakla.",
+          "Storybook'u URL kimliği için kullanma."
+        ],
+        "stopConditions": [
+          "URLP-07 edge parity yok.",
+          "Route registry exportu yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-09",
+      "order": 9,
+      "title": "Custom domain ve TLS control plane",
+      "status": "blocked",
+      "owner": "domain-control-plane-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-09-custom-domain-tls",
+      "dependsOn": ["URLP-08"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/url_policy/domains/**",
+        "apps/api/src/meta_api/url_policy/certificates/**",
+        "apps/api/src/meta_api/db/url_policy/domains/**",
+        "apps/api/migrations/*host_binding*",
+        "apps/api/tests/url_policy/domains/**",
+        "apps/api/tests/url_policy/certificates/**",
+        "infra/url-policy/domains/**"
+      ],
+      "nonGoals": [
+        "Doğrulanmamış hostname aktive etmek",
+        "Wildcard custom-app domaini otomatik açmak"
+      ],
+      "requiredRegistryRefs": [
+        "tenant-custom-domain-suite-path",
+        "app-custom-domain",
+        "public-custom-domain"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-09-AC-01",
+          "statement": "DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.",
+          "evidence": "domain lifecycle integration raporu"
+        },
+        {
+          "id": "URLP-09-AC-02",
+          "statement": "Detached/tombstoned domain takeover engellenir.",
+          "evidence": "takeover drill"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-09-RED-01",
+          "file": "apps/api/tests/url_policy/domains/test_domain_lifecycle.py",
+          "assertion": "Unverified, duplicate, invalid punycode ve detached-domain takeover reddedilir."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/url_policy/domains tests/url_policy/certificates",
+        "cd apps/api && uv run pytest tests/integration/url_policy/test_domain_lifecycle.py",
+        "cd infra && ./url-policy/test-acme-lifecycle.sh"
+      ],
+      "evidenceRequirements": [
+        "DNS verification fixture",
+        "certificate lifecycle logu",
+        "takeover drill raporu"
+      ],
+      "rollback": {
+        "trigger": "Certificate veya canonical host switch başarısız.",
+        "procedure": "Binding'i suspended yap, önceki canonical hostu restore et.",
+        "verification": "Eski host health ve certificate doğrulaması geçer."
+      },
+      "securityNegativeTests": [
+        "Domain ownership proof olmadan active olamaz.",
+        "Invalid IDNA/confusable host binding'e dönüşemez."
+      ],
+      "outputArtifacts": [
+        "domain-binding-service.py",
+        "domain-lifecycle-state-machine.py",
+        "custom-domain-drill.json"
+      ],
+      "wbsRefs": ["urlp-09"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Custom-domain/TLS lifecycle'ını takeover güvenli uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce ownership/takeover negatif testlerini yaz.",
+          "Exact hostname uniqueness uygula.",
+          "ACME failure state'lerini sakla.",
+          "Wildcardı kendiliğinden açma."
+        ],
+        "stopConditions": [
+          "URLP-08 canonical host adapterı yok.",
+          "DNS/ACME test ortamı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-10",
+      "order": 10,
+      "title": "Session, SSO ve origin modeli",
+      "status": "blocked",
+      "owner": "identity-security-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-10-session-sso-origin",
+      "dependsOn": ["URLP-09"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/auth/**",
+        "apps/api/src/meta_api/url_policy/origin/**",
+        "apps/api/tests/auth/**",
+        "apps/web/src/auth/**",
+        "apps/web/src/url-policy/origin/**",
+        "apps/web/e2e/auth/**"
+      ],
+      "nonGoals": ["6 ay yaşayan tek token üretmek", "Wildcard OAuth callback kabul etmek"],
+      "requiredRegistryRefs": ["tenant-subdomain-suite-path", "app-subdomain", "app-custom-domain"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-10-AC-01",
+          "statement": "Host-only session, exact callback, OIDC/PKCE ve custom-domain auth handoff çalışır.",
+          "evidence": "origin/auth E2E matrisi"
+        },
+        {
+          "id": "URLP-10-AC-02",
+          "statement": "6 aylık deneyim rotating refresh-chain, revocation ve step-up ile sağlanır.",
+          "evidence": "token rotation/revocation testi"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-10-RED-01",
+          "file": "apps/api/tests/auth/test_origin_session.py",
+          "assertion": "CSRF, callback wildcard, replay, revoked refresh ve cross-origin cookie abuse reddedilir."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/auth",
+        "pnpm --filter @platform/web test -- src/auth src/url-policy/origin",
+        "pnpm --filter @platform/web e2e -- auth"
+      ],
+      "evidenceRequirements": [
+        "origin/cookie matrix",
+        "rotation/revocation logu",
+        "step-up journey"
+      ],
+      "rollback": {
+        "trigger": "Login/logout/revocation veya custom-domain handoff kırılır.",
+        "procedure": "Yeni origin mode'u kapat, mevcut host-only session yoluna dön.",
+        "verification": "Login/logout smoke ve revocation testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Refresh token localStorage'a yazılmaz.",
+        "Custom domain platform cookie'sini paylaşmaz."
+      ],
+      "outputArtifacts": ["session-origin-policy.py", "auth-handoff.ts", "auth-origin-matrix.json"],
+      "wbsRefs": ["urlp-10"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Session/SSO/origin modelini exact-host güvenliğiyle uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce CSRF/replay/callback negatif testlerini yaz.",
+          "Host-only cookie kullan.",
+          "Rotating refresh-chain uygula.",
+          "Uzun ömürlü tek token üretme."
+        ],
+        "stopConditions": [
+          "URLP-09 domain lifecycle yok.",
+          "OIDC provider/callback kararı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-11",
+      "order": 11,
+      "title": "i18n ve L10n route politikası",
+      "status": "blocked",
+      "owner": "localization-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-11-i18n-routes",
+      "dependsOn": ["URLP-10"],
+      "allowedFiles": [
+        "packages/url-policy/src/locale/**",
+        "packages/url-policy/tests/locale/**",
+        "apps/api/src/meta_api/url_policy/locale/**",
+        "apps/api/tests/url_policy/locale/**",
+        "apps/web/src/url-policy/locale/**",
+        "apps/web/src/url-policy/locale/**/*.test.ts*",
+        "apps/web/e2e/locale/**"
+      ],
+      "nonGoals": [
+        "Currency/tax/jurisdiction'ı locale'den türetmek",
+        "Eksik çeviriyi yanlış locale altında sessiz 200 yapmak"
+      ],
+      "requiredRegistryRefs": ["k-route-policy#slugProfiles", "url-policy#url-locale-slug"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-11-AC-01",
+          "statement": "UI/content/format/route locale ayrıdır; public prefix-always ve BCP47 registry kullanır.",
+          "evidence": "locale resolver contract raporu"
+        },
+        {
+          "id": "URLP-11-AC-02",
+          "statement": "Hreflang grafı reciprocal ve locale migration güvenlidir.",
+          "evidence": "hreflang/migration testleri"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-11-RED-01",
+          "file": "packages/url-policy/tests/locale/locale-route.test.ts",
+          "assertion": "Invalid BCP47, silent fallback, mixed locale slug ve eksik reciprocal hreflang reddedilir."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- locale",
+        "cd apps/api && uv run pytest tests/url_policy/locale",
+        "pnpm --filter @platform/web test -- src/url-policy/locale",
+        "pnpm --filter @platform/web e2e -- locale"
+      ],
+      "evidenceRequirements": [
+        "BCP47 corpus",
+        "hreflang graph snapshot",
+        "locale removal migration raporu"
+      ],
+      "rollback": {
+        "trigger": "Locale route veya hreflang graph drift eder.",
+        "procedure": "Locale projection versionını geri al, yeni locale publish'i durdur.",
+        "verification": "Canonical/hreflang ve fallback testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Bidi/default-ignorable slug'a sızamaz.",
+        "Locale değişimi authorization/tenant context'i değiştiremez."
+      ],
+      "outputArtifacts": [
+        "locale-route-resolver.ts",
+        "hreflang-graph.ts",
+        "locale-migration-report.json"
+      ],
+      "wbsRefs": ["urlp-11"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için i18n/L10n route politikasını BCP47 ve hreflang ile uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce invalid locale/fallback testlerini yaz.",
+          "Dört locale eksenini ayır.",
+          "Public prefix-always uygula.",
+          "Currency/jurisdiction türetme."
+        ],
+        "stopConditions": [
+          "URLP-10 origin modeli yok.",
+          "Yayınlanmış locale envanteri yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-12",
+      "order": 12,
+      "title": "Listing, facet ve search URL parity",
+      "status": "blocked",
+      "owner": "search-platform-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-12-facet-search",
+      "dependsOn": ["URLP-11"],
+      "allowedFiles": [
+        "packages/url-policy/src/facets/**",
+        "packages/url-policy/tests/facets/**",
+        "apps/api/src/meta_api/search/**",
+        "apps/api/tests/search/**",
+        "apps/web/src/search/**",
+        "apps/web/src/url-policy/facets/**",
+        "apps/web/e2e/search/**"
+      ],
+      "nonGoals": [
+        "URL paramını doğrudan OpenSearch DSL/field yapmak",
+        "Rastgele facet kombinasyonunu SEO landing yapmak"
+      ],
+      "requiredRegistryRefs": ["public.indexable-detail", "url-policy#url-tenant-config-boundary"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-12-AC-01",
+          "statement": "Tek normalized facet state Router, Query key, GraphQL ve OpenSearch compiler'ı besler.",
+          "evidence": "four-layer parity raporu"
+        },
+        {
+          "id": "URLP-12-AC-02",
+          "statement": "Same-key OR, cross-key AND ve repeated-key serialization deterministiktir.",
+          "evidence": "facet property testleri"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-12-RED-01",
+          "file": "packages/url-policy/tests/facets/facet-normalization.property.test.ts",
+          "assertion": "Duplicate/default/unknown facet, unstable ordering ve raw DSL injection reddedilir."
+        },
+        {
+          "id": "URLP-12-RED-02",
+          "file": "apps/api/tests/search/test_tenant_search.py",
+          "assertion": "Tenant filtresi eksik search compile edilemez."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- facets",
+        "cd apps/api && uv run pytest tests/search",
+        "pnpm --filter @platform/web test -- src/search src/url-policy/facets",
+        "pnpm --filter @platform/web e2e -- search"
+      ],
+      "evidenceRequirements": [
+        "facet golden vectors",
+        "cache-key parity",
+        "cross-tenant search deny raporu"
+      ],
+      "rollback": {
+        "trigger": "Facet canonical cardinality veya search parity bozulur.",
+        "procedure": "Yeni facet mapping versionını kapat ve önceki compiler'a dön.",
+        "verification": "Golden vectors ve tenant search testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "Tenant filtresiz OpenSearch request üretilemez.",
+        "URL value raw field/DSL'e dönüşemez."
+      ],
+      "outputArtifacts": [
+        "facet-normalizer.ts",
+        "search-input-compiler.py",
+        "facet-parity-report.json"
+      ],
+      "wbsRefs": ["urlp-12"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Facet URL state'ini Router→Query→GraphQL→OpenSearch pariteli uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce property ve tenant-leak testlerini yaz.",
+          "Stable facet ID kullan.",
+          "Tek normalizer tüket.",
+          "Raw DSL mapping yapma."
+        ],
+        "stopConditions": [
+          "URLP-11 locale route yok.",
+          "OpenSearch mapping/version kararı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-13",
+      "order": 13,
+      "title": "Public renderer ve SEO",
+      "status": "blocked",
+      "owner": "public-web-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-13-public-renderer-seo",
+      "dependsOn": ["URLP-12"],
+      "allowedFiles": [
+        "apps/web/src/public/**",
+        "apps/web/src/seo/**",
+        "apps/web/src/routes/public/**",
+        "apps/web/e2e/seo/**",
+        "apps/web/vite.config.ts",
+        "apps/web/package.json"
+      ],
+      "nonGoals": ["CSR shell'i SEO evidence saymak", "Preview hostu indexlemek"],
+      "requiredRegistryRefs": [
+        "public.indexable-detail",
+        "public-custom-domain",
+        "public-ascii-v1"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-13-AC-01",
+          "statement": "Seçilen SSR veya deterministic prerender doğru status ve server-readable content üretir.",
+          "evidence": "render/crawl E2E raporu"
+        },
+        {
+          "id": "URLP-13-AC-02",
+          "statement": "Canonical, hreflang, sitemap, robots, JSON-LD ve soft-404 testleri geçer.",
+          "evidence": "SEO conformance raporu"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-13-RED-01",
+          "file": "apps/web/e2e/seo/public-seo.spec.ts",
+          "assertion": "Soft-404, çift canonical, preview index ve JS-only content kırmızı olur."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/web test -- seo",
+        "pnpm --filter @platform/web build",
+        "pnpm --filter @platform/web e2e -- seo"
+      ],
+      "evidenceRequirements": [
+        "HTML snapshot",
+        "status/canonical matrix",
+        "sitemap/robots validation",
+        "crawler smoke"
+      ],
+      "rollback": {
+        "trigger": "Public render status/canonical veya crawl davranışı bozulur.",
+        "procedure": "Yeni renderer deploymentını geri al, önceki public hostu noindex/maintenance ile koru.",
+        "verification": "Crawler smoke ve canonical matrisi yeşildir."
+      },
+      "securityNegativeTests": [
+        "Private workspace içeriği public render'a giremez.",
+        "Preview/custom domain canonical host karışamaz."
+      ],
+      "outputArtifacts": ["public-renderer.ts", "seo-head.ts", "seo-conformance-report.json"],
+      "wbsRefs": ["urlp-13"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Public renderer/SEO yüzeyini gerçek HTTP semantics ile uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce soft-404/canonical testlerini yaz.",
+          "SSR veya deterministic prerender kararını kaydet.",
+          "Server-readable içerik kanıtla.",
+          "CSR shell'i yeterli sayma."
+        ],
+        "stopConditions": [
+          "URLP-12 facet/canonical parity yok.",
+          "Renderer kararı onaysız.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-14",
+      "order": 14,
+      "title": "App entegrasyon dalgaları",
+      "status": "blocked",
+      "owner": "app-integration-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-14-app-integrations",
+      "dependsOn": ["URLP-13"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/apps/**/routes/**",
+        "apps/api/tests/apps/**/routes/**",
+        "apps/web/src/apps/**/routes/**",
+        "apps/web/e2e/apps/**/routes/**"
+      ],
+      "nonGoals": ["Bütün app'leri tek PR'da geçirmek", "App-local URL policy fork'u oluşturmak"],
+      "requiredRegistryRefs": [
+        "k-route-policy#levelObligations",
+        "k-route-policy#resourceKinds",
+        "k-route-policy#routeDefinitions"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-14-AC-01",
+          "statement": "Party→CRM→HRMS→ERP→MRP→storefront→listing→custom app→third-party sırası ayrı küçük PR/evidence ile tamamlanır.",
+          "evidence": "app integration matrix"
+        },
+        {
+          "id": "URLP-14-AC-02",
+          "statement": "Her app manifest route/capability/access/profile beyanı registry'ye çözümlenir.",
+          "evidence": "manifest FK raporu"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-14-RED-01",
+          "file": "apps/api/tests/apps/routes/test_app_route_contracts.py",
+          "assertion": "App-local prefix, dangling RouteRef, capability'siz route ve cross-context direct import reddedilir."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/apps/routes",
+        "pnpm --filter @platform/web test -- app-routes",
+        "pnpm --filter @platform/web e2e -- app-routes"
+      ],
+      "evidenceRequirements": [
+        "10 dalgalı app matrisi",
+        "manifest/registry FK çıktısı",
+        "cross-app navigation E2E"
+      ],
+      "rollback": {
+        "trigger": "Bir app entegrasyonu route veya domain davranışını kırar.",
+        "procedure": "Yalnız ilgili app projection versionını geri al; ortak kernel'i fork etme.",
+        "verification": "İlgili app smoke ve ortak registry testleri yeşildir."
+      },
+      "securityNegativeTests": [
+        "CRM ve HRMS aynı Party'yi yetki dışı alanlarla paylaşamaz.",
+        "Third-party module global/catch-all route alamaz."
+      ],
+      "outputArtifacts": [
+        "app-route-integration-matrix.json",
+        "app-manifest-parity-report.json",
+        "cross-app-navigation-report.json"
+      ],
+      "wbsRefs": ["urlp-14"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için URL policy'yi app dalgalarına sırayla entegre et.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Her app için önce contract/negative test yaz.",
+          "Dalgaları tek PR'a sıkıştırma.",
+          "Registry RouteRef tüket.",
+          "App-local generator oluşturma."
+        ],
+        "stopConditions": [
+          "URLP-13 public renderer kanıtı yok.",
+          "Önceki app dalgası verified değil.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-15",
+      "order": 15,
+      "title": "Tenant URL control plane",
+      "status": "blocked",
+      "owner": "tenant-control-plane-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-15-tenant-control-plane",
+      "dependsOn": ["URLP-14"],
+      "allowedFiles": [
+        "apps/api/src/meta_api/url_policy/control_plane/**",
+        "apps/api/tests/url_policy/control_plane/**",
+        "apps/web/src/apps/admin/url-policy/**",
+        "apps/web/src/**/*.url-policy.stories.tsx",
+        "apps/web/e2e/url-policy/control-plane/**",
+        "packages/ui/src/components/url-policy/**",
+        "packages/ui/src/components/url-policy/**/*.stories.tsx",
+        "packages/ui/.storybook/**",
+        "packages/ui/package.json"
+      ],
+      "nonGoals": [
+        "Tenantın invariant/authorization semantiğini değiştirmesi",
+        "Storybook'suz veya Master Component kararsız UI merge etmek"
+      ],
+      "requiredRegistryRefs": [
+        "k-route-policy#hostBindingProfiles",
+        "k-route-policy#routeProjections",
+        "url-policy#url-tenant-config-boundary"
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-15-AC-01",
+          "statement": "Domain, mount, locale, slug profile, alias, SEO landing ve migration preview workflow'u draft→finalize işler.",
+          "evidence": "control-plane workflow E2E"
+        },
+        {
+          "id": "URLP-15-AC-02",
+          "statement": "UI Master/local kararı, Storybook states, interaction, a11y ve visual evidence taşır.",
+          "evidence": "Storybook preview + review manifest"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-15-RED-01",
+          "file": "apps/api/tests/url_policy/control_plane/test_policy_workflow.py",
+          "assertion": "Collision/approval/migration olmadan activate reddedilir."
+        },
+        {
+          "id": "URLP-15-RED-02",
+          "file": "packages/ui/src/components/url-policy/UrlPolicyEditor.stories.test.tsx",
+          "assertion": "Permission, loading, empty, error ve collision states eksikse kırmızı olur."
+        }
+      ],
+      "testCommands": [
+        "cd apps/api && uv run pytest tests/url_policy/control_plane",
+        "pnpm --filter @platform/ui storybook:build",
+        "pnpm --filter @platform/ui storybook:test -- url-policy",
+        "pnpm --filter @platform/ui storybook:a11y -- url-policy",
+        "pnpm --filter @platform/ui test -- url-policy",
+        "pnpm --filter @platform/web test -- url-policy-admin",
+        "pnpm --filter @platform/web e2e -- url-policy-control-plane"
+      ],
+      "evidenceRequirements": [
+        "workflow state audit",
+        "collision/redirect preview",
+        "Storybook preview URL",
+        "a11y/visual/interaction raporu",
+        "insan review kaydı"
+      ],
+      "rollback": {
+        "trigger": "Policy activation tenant erişimini veya canonical URL'leri kırar.",
+        "procedure": "Activationı durdur, önceki RouteProjection snapshotını yeniden aktive et.",
+        "verification": "Tenant smoke, canonical ve control-plane E2E yeşildir."
+      },
+      "securityNegativeTests": [
+        "Tenant reserved namespace/PII slug/authorization sırası değiştiremez.",
+        "Başka tenantın domain veya alias kaydını göremez."
+      ],
+      "outputArtifacts": [
+        "url-policy-control-plane.py",
+        "UrlPolicyEditor.tsx",
+        "UrlPolicyEditor.stories.tsx",
+        "control-plane-evidence.json"
+      ],
+      "wbsRefs": ["urlp-15"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için Tenant URL control plane'i Storybook-governed ve approval-gated uygula.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce backend workflow ve story interaction testlerini yaz.",
+          "Master/local component kararını kaydet.",
+          "Preview/collision/approval olmadan activate etme.",
+          "Tenant override sınırını koru."
+        ],
+        "stopConditions": [
+          "URLP-14 app entegrasyonları verified değil.",
+          "Storybook foundation/test runner yok.",
+          "Human approval workflow kararı yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    },
+    {
+      "phaseId": "URLP-16",
+      "order": 16,
+      "title": "Fuzz, migration ve rollout",
+      "status": "blocked",
+      "owner": "url-policy-release-owner",
+      "targetRepo": "platform",
+      "branch": "task/URLP-16-fuzz-rollout",
+      "dependsOn": ["URLP-15"],
+      "allowedFiles": [
+        "packages/url-policy/tests/fuzz/**",
+        "apps/api/tests/url_policy/fuzz/**",
+        "apps/web/src/url-policy/**/*.fuzz.test.ts",
+        "apps/web/e2e/url-policy/rollout/**",
+        "tools/url-policy/**",
+        "infra/url-policy/observability/**",
+        ".github/workflows/url-policy.yml",
+        "docs/url-policy/runbooks/**"
+      ],
+      "nonGoals": [
+        "Tek adımda bütün tenantlarda canonical switch yapmak",
+        "Budget veya test başarısızlığında maturity complete demek"
+      ],
+      "requiredRegistryRefs": ["k-route-policy", "url-policy#url-policy-migration"],
+      "acceptanceCriteria": [
+        {
+          "id": "URLP-16-AC-01",
+          "statement": "Edge/FastAPI/TanStack differential fuzz korpusu ve güvenlik matrisi yeşildir.",
+          "evidence": "fuzz/security report"
+        },
+        {
+          "id": "URLP-16-AC-02",
+          "statement": "Shadow→compare→dual generation→canary→canonical switch→retirement rolloutı ölçümlü ve rollback'lıdır.",
+          "evidence": "rollout/canary raporu"
+        },
+        {
+          "id": "URLP-16-AC-03",
+          "statement": "docs/url-policy.md §18 maturity exit kriterlerinin tamamı gerçek evidence'a bağlanır.",
+          "evidence": "maturity exit manifest"
+        }
+      ],
+      "redTests": [
+        {
+          "id": "URLP-16-RED-01",
+          "file": "packages/url-policy/tests/fuzz/url-parser.fuzz.test.ts",
+          "assertion": "Encoded slash, double decode, bidi, confusable, invalid punycode ve oversized URL ayrışması bulunursa kırmızı olur."
+        },
+        {
+          "id": "URLP-16-RED-02",
+          "file": "apps/web/e2e/url-policy/rollout/canary.spec.ts",
+          "assertion": "Tenant mismatch, redirect loop, cache poisoning veya rollback başarısızlığı kırmızı olur."
+        }
+      ],
+      "testCommands": [
+        "pnpm --filter @platform/url-policy test -- fuzz",
+        "cd apps/api && uv run pytest tests/url_policy/fuzz",
+        "pnpm --filter @platform/web test -- url-policy/fuzz",
+        "pnpm --filter @platform/web e2e -- url-policy-rollout",
+        "pnpm url-policy:maturity-gate"
+      ],
+      "evidenceRequirements": [
+        "fuzz seed corpus ve sonuçları",
+        "security regression matrix",
+        "canary metrics",
+        "rollback drill",
+        "maturity exit manifest",
+        "human approval"
+      ],
+      "rollback": {
+        "trigger": "Canary hata bütçesi, security invariantı veya canonical metric eşiği aşılır.",
+        "procedure": "Canonical switch'i durdur, önceki policy versionına dön, aliasları tek atlama hedefe normalize et.",
+        "verification": "Rollback drill, tenant smoke, cache/canonical ve fuzz regresyonu yeşildir."
+      },
+      "securityNegativeTests": [
+        "Host-header spoofing ve cache poisoning canary'de sızıntı üretemez.",
+        "Removed module/detached domain eski URL'yi başka resource'a yönlendiremez.",
+        "PII URL/log/Referer corpusunda bulunamaz."
+      ],
+      "outputArtifacts": [
+        "url-fuzz-corpus.json",
+        "rollout-runbook.md",
+        "rollback-drill.json",
+        "url-policy-maturity-exit.json"
+      ],
+      "wbsRefs": ["urlp-16"],
+      "agentPrompt": {
+        "objective": "DIRECTIVE-ONLY: İnsan geliştirici için URL policy'yi fuzz, canary, migration ve evidence ile maturity exit'e taşı.",
+        "instructions": [
+          "Platform workspace'ini değiştirme; yalnız read-only-audit yap.",
+          "Ürün kodu, test, migration, Storybook/config, branch, commit veya PR üretme.",
+          "Çıktıyı actionplan içinde insan geliştirici için uygulanabilir directive olarak yaz.",
+          "Önce differential fuzz ve rollback E2E'yi yaz.",
+          "Shadow/compare aşamasını atlama.",
+          "Her exit kriterini gerçek evidence'a bağla.",
+          "Hata bütçesi aşılırsa otomatik dur."
+        ],
+        "stopConditions": [
+          "URLP-15 verified değil.",
+          "Canary/observability altyapısı yok.",
+          "Rollback drill başarısız.",
+          "Human approval yok.",
+          "Herhangi bir platform yazımı gerekiyor.",
+          "Branch, commit, push veya pull request gerekiyor.",
+          "İnsan kaynaklı gerçek PR/CI/test/deploy evidence yok."
+        ]
+      }
+    }
+  ]
+}

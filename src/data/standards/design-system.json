@@ -1,10 +1,10 @@
 {
   "id": "design-system",
   "name": "Tasarım Sistemi & Token Yönetişimi Standardı",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "family": "design",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Tek-kaynak tasarım token taksonomisi (color/space/type-scale/radius/elevation/motion), SCSS + CSS custom property theming, 8pt spacing ölçeği, Roboto/≥300/≥1rem tipografi, dark+light tema ve WCAG 2.2 AAA ≥7:1 kontrast.",
+  "summary": "Tek-kaynak tasarım token taksonomisi (color/space/type-scale/radius/elevation/motion), SCSS + CSS custom property theming, 8pt spacing ölçeği, Roboto/≥300/≥1rem tipografi, dark+light tema ve WCAG 2.2 AAA ≥7:1 kontrast. v1.1: token/theme/density değişiklikleri Storybook Foundations story'leri ve visual regression ile kanıtlanır (docs/storybook-implementation.md). v1.2: ds-font-fallback-chain: yazı sistemi başına font fallback zinciri + glyph kapsam beyanı (01-i18n §5.2).",
   "appliesTo": ["product-ui", "design-tokens", "theming"],
   "rules": [
     {
@@ -69,6 +69,20 @@
       "rationale": "Token'laştırılmış elevation/motion tutarlı derinlik ve hareket sağlar; reduced-motion vestibüler güvenliği korur.",
       "severity": "should",
       "check": "stylelint (bare box-shadow/transition-duration) + reduced-motion media query testi"
+    },
+    {
+      "id": "ds-foundations-storybook-evidence",
+      "rule": "Token, theme, density ve motion değişiklikleri Storybook Foundations story'leri (Colors, Typography, Spacing, Radius, Elevation, Motion, Density) ve visual regression diff'i ile KANITLANIR; kanıtsız token/theme değişikliği merge edilemez. Theme, viewport, locale, RTL ve reduced-motion fixture'ları merkezi Storybook decorator'larından gelir; story başına elle kopyalanmaz. Theme ve tenant farklarını hardcoded story kopyalarıyla çoğaltmak YASAK. Story fixture'larında gerçek PII, finansal sır veya production verisi kullanılamaz.",
+      "rationale": "Foundations story'leri token değişiminin görsel etkisini tüm bileşen ağacında görünür kılar; merkezi decorator fixture drift'ini, sentetik fixture veri sızıntısını engeller.",
+      "severity": "must",
+      "check": "storybook-ci (Foundations story + visual regression) + design-system owner review"
+    },
+    {
+      "id": "ds-font-fallback-chain",
+      "rule": "Desteklenen her yazı sistemi için font fallback zinciri token olarak tanımlanır ve fontun gerekli glyph'leri kapsadığı beyan edilir (glyph kapsam beyanı): Roboto birincil metin fontudur, kapsamadığı yazı sistemleri (Arapça, CJK, Devanagari vb.) için fallback fontlar --ap-font-family-* zincirinde açıkça sıralanır; sistem-varsayılanına sessiz düşüş yasaktır, düşüş varsa kayıtlı bir karardır. Font lisansının web + PDF + mobil kullanıma izin verdiği doğrulanır; shaping, ligatür, combining mark ve emoji/sembol fallback davranışı desteklenen yazı sistemlerinde test edilir. Kapsanmayan glyph'in tofu (boş kutu) olarak yayına çıkması YASAKTIR.",
+      "rationale": "Bir karakterin Unicode'da bulunması üründe doğru görüntüleneceği anlamına gelmez; beyansız font fallback zinciri tofu, yanlış shaping ve platform-bağımlı görünüm üretir (01-i18n §5.2).",
+      "severity": "must",
+      "check": "check-ui-standards (font token + fallback zinciri beyanı) + e2e (desteklenen yazı sistemlerinde tofu/shaping kırılması yok)"
     }
   ],
   "banned": [
@@ -84,5 +98,9 @@
     "inline-style-theming"
   ],
   "allowed": ["scss", "css-custom-properties", "roboto", "data-theme-attribute"],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": [
+    "docs/adr-0027-engineering-standards.md",
+    "docs/storybook-implementation.md",
+    "docs/standards/01-i18n-l10n-g11n-standard.md"
+  ]
 }

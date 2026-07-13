@@ -31,7 +31,7 @@ Sade özet: yedi kural, i18n'in yedi kritik ekseni. Hepsi `severity: must`; her 
 2. **CLDR locale biçimleme** — tarih/saat/sayı/para locale-farkında; sabit format ve naive datetime yasak.
 3. **RTL tam düzen** — mantıksal CSS (start/end), `dir=auto`, ayna-çeviri, RTL görsel test.
 4. **Çevrilebilir DB alanları** — çok-dilli içerik `i18n-text` (locale→değer); ArcheType çevrilebilir alanı açıkça beyan eder; enum/etiket alias ile.
-5. **Ortogonal jurisdiction** — Locale ≠ Jurisdiction ≠ Currency ≠ Tax ≠ Timezone ≠ Data-residency; `k-jurisdiction` (6-eksen) ile çözülür; biri diğerinden türetilmez.
+5. **Ortogonal jurisdiction** — Locale ≠ Jurisdiction ≠ Currency ≠ Tax ≠ Timezone ≠ Data-residency; `k-jurisdiction` (6-eksen) ile çözülür; biri diğerinden türetilmez. Ayrım kuralı geneldir: dil ≠ locale ≠ ülke ≠ pazar ≠ hukuki yetki alanı ≠ saat dilimi ≠ para birimi ≠ veri bölgesi — bu zincirde hiçbir eşitlik kurulamaz (detay ve veri modeli: `docs/standards/01-i18n-l10n-g11n-standard.md` §1.1, §6.1).
 6. **Veri-ikamet (residency)** — bölgeye bağlı veri sorgu katmanında zorlanır; failover'da residency kapısı korunur (KVKK/GDPR).
 7. **Çeviri iş akışı + locale çözümleme** — taslak→inceleme→yayın; etkin locale = kullanıcı-tercihi ?? tenant-varsayılanı ?? Accept-Language ?? sistem-varsayılanı; her istek locale-context taşır.
 
@@ -54,6 +54,8 @@ Sade özet: yedi kural, i18n'in yedi kritik ekseni. Hepsi `severity: must`; her 
 ## 6. Mevcut varlıklarla ilişki
 
 Bu standart sıfırdan tasarım değildir; mevcut zengin i18n tasarımını **governance katmanına** bağlar: `cc-i18n-standards` (BCP47/CLDR/ICU/RTL teknik standardı), `s-i18n` (çeviri iş akışı + fallback + FX), `cc-jurisdiction-resolver` → `k-jurisdiction` (6-eksen), `l1-misc` (Money/i18n), `cc-privacy`/`s-kvkk` (hukuki yerelleştirme). Eksik olan "tasarım" değil, "zorunlu-standart + kernel-primitifi"ydi; bu doküman + `i18n-standards.json` onu kapatır.
+
+Kapsam-sınırı sahipleri: vergi-fatura semantiği `financial-state-model-contract.md`, zaman/iş-günü `atomic-types-directive.md`, kişi adı/adres/telefon `actor-party-contract.md`, Unicode identifier güvenliği `standards/03-authn-authz-iam-standard.md`, arama/collation `k-search-directive.md`, hukuk/veri bölgesi `privacy-retention-decision-matrix.md`, ödeme/moderasyon/coğrafya/destek/SEO `global-market-readiness-directive.md`.
 
 ---
 
