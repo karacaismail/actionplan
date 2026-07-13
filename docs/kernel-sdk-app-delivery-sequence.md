@@ -149,3 +149,37 @@ Gelistirici veya ajan su durumda kod baslatmaz:
 - `docs/meta-framework-implementation-development-plan.md` — bu teknik siranin wave/PR/evidence kuyrugu.
 - `docs/app-distribution-contract.md` — bagimsiz satilabilir app sozlesmesi.
 - `docs/waterfall-developer-handoff.md` — plan-start/code-start ayrimi.
+
+## Commerce Operating System Profili (Addendum)
+
+Tarih: 2026-07-13 · Kaynak yetki: [`adr-0030-commerce-operating-system-boundary.md`](./adr-0030-commerce-operating-system-boundary.md)
+
+Bu addendum yukaridaki kanonik sirayi degistirmez; onu `commerce-operating-system` app'i (ada, kisa kod `commerce-os`) icin ozellestirir. Kapsam yalniz dokumantasyon: **bu addendum app/module dugumu acmaz, kod/implementation iddiasi tasimaz** ([`AGENTS.md`](../AGENTS.md) §0, §4.4). BC/kapsam kaynagi: [`commerce-os-bounded-context-map.md`](./commerce-os-bounded-context-map.md), [`commerce-os-product-scope.md`](./commerce-os-product-scope.md); primitif boslugu: [`commerce-os-kernel-sdk-gap-directive.md`](./commerce-os-kernel-sdk-gap-directive.md).
+
+### App-core sorumlulugu ve namespace
+
+- App slug `commerce-operating-system`, module namespace `commerce_os_*`, event namespace `commerce-os.*`.
+- App-core (Kapi 2) sunlari tanimlar, **is mantigi yazmaz**: BC (dag) listesi, edition/mode kompozisyon kurallari ([`mode-profile-contract.md`](./mode-profile-contract.md)), ortak commerce sozlugu, app-level policy varsayilanlari, tuketilen platform primitifi bagi (kopya yok).
+- App-core generic kernel degildir; kernel herkesindir, app-core yalniz Commerce OS'a aittir (yukari §2).
+
+### Minimum BC hazirlik sirasi (satilabilir en kucuk dilim)
+
+[`commerce-os-product-scope.md`](./commerce-os-product-scope.md) §3 yedi core BC, dogrultu grafigine gore ([`commerce-os-bounded-context-map.md`](./commerce-os-bounded-context-map.md) §6): Catalog Governance → Offer&Pricing → Inventory&Availability → Cart&Checkout → Payment&Adjustment → Order Orchestration → Fulfillment&Returns. Her BC bir `module`'dur (dag), app degil; app-core hazir olmadan hicbiri development'a gecmez (§2).
+
+### App-core/module oncesi zorunlu SDK portlari
+
+Asagidaki portlar SDK'da (Kapi 1) hazir olmadan commerce-os app-core/modul production kodu baslamaz ([`be-sdk-readiness-gap-2026-07-09.md`](./be-sdk-readiness-gap-2026-07-09.md) Cikis Esigi): tenant/context zarfi, PDP/policy karar zarfi, audit+outbox/event zarfi, capability/entitlement ([`capability-entitlement-contract.md`](./capability-entitlement-contract.md)), workflow/state ([`workflow-directive.md`](./workflow-directive.md)), provider-port ([`k-provider-adapter-directive.md`](./k-provider-adapter-directive.md)), search projeksiyon ([`k-search-directive.md`](./k-search-directive.md)), storage/DAM ([`k-storage-dam-directive.md`](./k-storage-dam-directive.md)), ledger ([`archetype-ledger-directive.md`](./archetype-ledger-directive.md)). Gap direktifinde **EXTEND/SDK-PORT/DEFER** isaretli yatay motorlar (odeme/vergi port sinifi, acting-context, availability, out-of-process health) app-core'u bloklamaz ama ilgili module oncesi §8 insan kararina baglanir.
+
+### Test-onceligi ve kanit kapilari
+
+Yukaridaki "Kanit Beklentisi" tablosu aynen gecerlidir. Commerce OS eki: her BC module'u once kirmizi sozlesme testi tasir (multi-tenant izolasyon, idempotency/replay, provider-failure, negatif-test, version-compat, evidence ciktisi — [`commerce-os-kernel-sdk-gap-directive.md`](./commerce-os-kernel-sdk-gap-directive.md) §6, [`kernel-execution-contract-matrix.md`](./kernel-execution-contract-matrix.md) §9, §12). Kanitsiz "yapildi" gecersizdir.
+
+### No-go kosullari (yukaridaki §No-Go'ya ek)
+
+- ADR-0030 slug/kisa-kod ve BC ayrimi insan onayindan gecmeden app-core development.
+- Yedi core BC'den once opsiyonel edition/advanced-network module'u (BC-map Grup B/C) development'a alinmasi.
+- Tuketilecek platform primitifi (§Tekrar-etme listesi) kopyalanarak BC icinde yeniden yazilmasi.
+- Bir commerce-os module'unun baska app'i veya baska commerce-os module'unu **dogrudan** import etmesi; kernel internals import etmesi. Haberlesme yalniz SDK/public port veya event bus uzerinden.
+- Duzenlenmis yurutmenin (odeme/escrow/MoR/vergi) app icinde insan karari olmadan yerlestirilmesi (ADR-0030 §7; saglayici sinirinda kalir).
+
+Bu addendum yeni app/module dugumu **acmaz** ve hicbir implementasyonun mevcut oldugunu **iddia etmez**; yalniz commerce-os teslim sirasini kanonik sozlesmeye baglar.
