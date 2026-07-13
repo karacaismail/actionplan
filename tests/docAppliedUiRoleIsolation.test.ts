@@ -1,0 +1,286 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import {
+  classifyUiImpact,
+  deriveUiArtifactRole,
+  evaluateUiDeliveryGate,
+} from "../tools/lib/ui-impact.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+
+type UiRole = "produces-ui" | "changes-ui-contract" | "governs-ui" | "consumes-ui" | "no-ui";
+
+type UiDelivery = {
+  applies: boolean;
+  impact: string;
+  reviewStatus: string;
+  storyRefs?: string[];
+  requiredStoryStates?: string[];
+  storybookUrl?: string | null;
+  visualEvidenceRefs?: string[];
+};
+
+type TaskNode = {
+  id: string;
+  level?: string;
+  title?: string;
+  summary?: string;
+  refs?: string[];
+  deliverables?: string[];
+  acceptanceCriteria?: string[];
+  uiArtifactRole?: UiRole;
+  uiDelivery?: UiDelivery;
+};
+
+type RoleRecord = {
+  nodeId: string;
+  role: UiRole;
+  reason: string;
+  decidedBy: string;
+  decidedAt: string;
+};
+
+type DeliveryRecord = {
+  nodeId: string;
+  sourceRules: string[];
+  storyTargetStatus: string;
+  uiDelivery: UiDelivery;
+};
+
+const readJson = <T>(relativePath: string): T =>
+  JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8")) as T;
+
+const nodes = fs
+  .readdirSync(NODE_DIR)
+  .filter((file) => file.endsWith(".json"))
+  .sort()
+  .map((file) => readJson<TaskNode>(`src/data/generated/nodes/${file}`));
+const nodeById = new Map(nodes.map((node) => [node.id, node]));
+
+const roleFile = readJson<{ records: RoleRecord[] }>("src/data/storybook/ui-artifact-roles.json");
+const deliveryFile = readJson<{ records: DeliveryRecord[] }>(
+  "src/data/doc-task-ui-deliveries.json",
+);
+const roleRegistry = Object.fromEntries(
+  roleFile.records.map((record) => [record.nodeId, record.role]),
+);
+const deliveryByNodeId = new Map(deliveryFile.records.map((record) => [record.nodeId, record]));
+
+const EXPECTED_ROLES = {
+  "cc-security": "no-ui",
+  customer: "changes-ui-contract",
+  "deploy-yap": "governs-ui",
+  "l1-audit": "no-ui",
+  "l1-search-deep": "changes-ui-contract",
+  "platform-customer-graphql": "changes-ui-contract",
+  "platform-customer-seed": "changes-ui-contract",
+  product: "changes-ui-contract",
+  "s-accounting": "changes-ui-contract",
+  "s-cms": "consumes-ui",
+  "s-commerce": "changes-ui-contract",
+  "s-community": "consumes-ui",
+  "s-data-catalog": "changes-ui-contract",
+  "s-dms": "no-ui",
+  "s-helpdesk": "consumes-ui",
+  "s-inventory": "produces-ui",
+  "s-marketplace": "consumes-ui",
+  "s-membership": "consumes-ui",
+  "s-observability": "governs-ui",
+  "s-payment-methods": "consumes-ui",
+  "s-pim": "changes-ui-contract",
+  "s-sales": "produces-ui",
+  "s-social": "consumes-ui",
+  "s-social-commerce": "consumes-ui",
+  "s-studio": "consumes-ui",
+  "s-tax-compliance": "consumes-ui",
+  "scale-invariant": "no-ui",
+  "sus-actions": "changes-ui-contract",
+  "sus-declarative": "changes-ui-contract",
+} satisfies Record<string, UiRole>;
+
+const EXPECTED_UI_DELIVERY_NODES = Object.entries(EXPECTED_ROLES)
+  .filter(([, role]) => role === "produces-ui" || role === "changes-ui-contract")
+  .map(([nodeId]) => nodeId)
+  .sort();
+
+describe("DOC-APPLY semantic UI role projection", () => {
+  it("records the exact 29-node semantic decision matrix", () => {
+    expect(roleRegistry).toEqual(EXPECTED_ROLES);
+    expect(roleFile.records).toHaveLength(29);
+    expect(
+      roleFile.records.reduce<Record<UiRole, number>>(
+        (counts, record) => {
+          counts[record.role] += 1;
+          return counts;
+        },
+        {
+          "produces-ui": 0,
+          "changes-ui-contract": 0,
+          "governs-ui": 0,
+          "consumes-ui": 0,
+          "no-ui": 0,
+        },
+      ),
+    ).toEqual({
+      "produces-ui": 2,
+      "changes-ui-contract": 11,
+      "governs-ui": 2,
+      "consumes-ui": 10,
+      "no-ui": 4,
+    });
+  });
+
+  it("materializes all 29 role decisions and only 13 planned uiDelivery contracts", () => {
+    expect([...deliveryByNodeId.keys()].sort()).toEqual(EXPECTED_UI_DELIVERY_NODES);
+    expect(deliveryFile.records).toHaveLength(13);
+
+    for (const [nodeId, role] of Object.entries(EXPECTED_ROLES)) {
+      const node = nodeById.get(nodeId);
+      expect(node, nodeId).toBeDefined();
+      expect(node?.uiArtifactRole, nodeId).toBe(role);
+      expect(node?.refs, nodeId).toContain(
+        `doc-ui-contract:${nodeId}: src/data/storybook/ui-artifact-roles.json`,
+      );
+
+      const planned = deliveryByNodeId.get(nodeId);
+      if (planned) {
+        expect(node?.uiDelivery, nodeId).toEqual(planned.uiDelivery);
+        expect(node?.refs, nodeId).toContain(
+          `doc-ui-delivery:${nodeId}: src/data/doc-task-ui-deliveries.json`,
+        );
+      } else {
+        expect(node?.uiDelivery, nodeId).toBeUndefined();
+        expect(
+          node?.refs?.some((ref) => ref.startsWith("doc-ui-delivery:")),
+          nodeId,
+        ).toBe(false);
+      }
+    }
+  });
+
+  it("keeps planned story targets separate from runtime evidence", () => {
+    for (const record of deliveryFile.records) {
+      expect(record.storyTargetStatus, record.nodeId).toBe("planned-not-created");
+      expect(record.sourceRules.length, record.nodeId).toBeGreaterThan(0);
+      expect(record.uiDelivery.applies, record.nodeId).toBe(true);
+      expect(record.uiDelivery.impact, record.nodeId).not.toBe("none");
+      expect(record.uiDelivery.reviewStatus, record.nodeId).toBe("planned");
+      expect(record.uiDelivery.storybookUrl, record.nodeId).toBeNull();
+      expect(record.uiDelivery.visualEvidenceRefs ?? [], record.nodeId).toEqual([]);
+      expect(record.uiDelivery).not.toHaveProperty("reviewer");
+      expect(record.uiDelivery).not.toHaveProperty("baselineGovernance");
+      expect(record.uiDelivery.storyRefs?.length ?? 0, record.nodeId).toBeGreaterThan(0);
+      expect(record.uiDelivery.requiredStoryStates, record.nodeId).toEqual([
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "permission-denied",
+        "long-content",
+      ]);
+      expect(
+        record.uiDelivery.storyRefs?.every((ref) => ref.includes(".stories.")),
+        record.nodeId,
+      ).toBe(true);
+
+      const serializedNode = JSON.stringify(nodeById.get(record.nodeId));
+      for (const sourceRule of record.sourceRules) {
+        expect(serializedNode, `${record.nodeId}:${sourceRule}`).toContain(
+          `[DOC-APPLY:${sourceRule}]`,
+        );
+      }
+    }
+  });
+
+  it("preserves DOC-APPLY UI semantics and uses explicit roles to resolve false positives", () => {
+    const genuineContract = {
+      id: "managed-ui-contract",
+      title: "Backend projection",
+      deliverables: ["[DOC-APPLY:surface] Surface state, locale ve navigation sözleşmesi"],
+    };
+    expect(classifyUiImpact(genuineContract).impact).toBe("surface");
+    expect(deriveUiArtifactRole(genuineContract).role).toBe("produces-ui");
+
+    const explicitNonProducer = {
+      ...genuineContract,
+      id: "managed-non-producer",
+      uiArtifactRole: "no-ui",
+    } as const;
+    expect(deriveUiArtifactRole(explicitNonProducer).role).toBe("no-ui");
+  });
+
+  it("rejects an explicit candidate role with an N/A uiDelivery contract", () => {
+    const node = {
+      id: "declared-na",
+      title: "Declared producer",
+      uiArtifactRole: "produces-ui",
+      uiDelivery: {
+        applies: false,
+        impact: "none",
+        componentKind: "none",
+        reason: "Bu somut gerekçe eski N/A sözleşmesini açıklıyor.",
+      },
+    };
+
+    const result = evaluateUiDeliveryGate([node], { allowedWarnings: [] });
+    expect(result.result).toBe("FAIL");
+    expect(result.violations.join("\n")).toContain("applies=true");
+  });
+
+  it("rejects a registry candidate role with an N/A uiDelivery contract", () => {
+    const node = {
+      id: "registry-na",
+      title: "Registry producer",
+      uiDelivery: {
+        applies: false,
+        impact: "none",
+        componentKind: "none",
+        reason: "Bu somut gerekçe eski N/A sözleşmesini açıklıyor.",
+      },
+    };
+
+    const result = evaluateUiDeliveryGate(
+      [node],
+      { allowedWarnings: [] },
+      {
+        roleRegistry: { "registry-na": "changes-ui-contract" },
+      },
+    );
+    expect(result.result).toBe("FAIL");
+    expect(result.violations.join("\n")).toContain("applies=true");
+  });
+
+  it("keeps the full generated corpus free of baseline-external violations", () => {
+    const baseline = readJson<{ allowedWarnings: string[] }>(
+      "tools/agents/ui-delivery-baseline.json",
+    );
+    const result = evaluateUiDeliveryGate(nodes, baseline, { roleRegistry });
+
+    expect(result.violations).toEqual([]);
+    expect(result.candidates).toBe(80);
+    expect(result.result).toBe("MIGRATION_INCOMPLETE");
+  });
+
+  it("passes the audited 29-node subcorpus with exactly 13 candidates", () => {
+    const auditedNodes = Object.keys(EXPECTED_ROLES).map((nodeId) => nodeById.get(nodeId));
+    expect(auditedNodes.every(Boolean)).toBe(true);
+
+    const result = evaluateUiDeliveryGate(
+      auditedNodes as TaskNode[],
+      { allowedWarnings: [] },
+      {
+        roleRegistry,
+      },
+    );
+    expect(result).toMatchObject({
+      result: "PASS",
+      candidates: 13,
+      violations: [],
+      warnings: [],
+      migration: { decided: 29, undecided: 0 },
+    });
+  });
+});

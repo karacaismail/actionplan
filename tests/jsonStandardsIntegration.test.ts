@@ -249,16 +249,22 @@ describe("JSON-STD-4 entegrasyon beşlisi", () => {
     for (const ref of REF_ANAHTARLARI) expect(icerik, `matris eksik: ${ref}`).toContain(ref);
   });
 
-  it("check-market-readiness ve check-finance-model kapıları mevcut ve deploy.yml'de", () => {
-    for (const kapi of ["check-market-readiness", "check-finance-model"]) {
+  it("market-readiness ve finance-model kapıları package scriptinden deploy'a bağlanır", () => {
+    const pkg = JSON.parse(oku("package.json")) as { scripts: Record<string, string> };
+    const kapilar = [
+      ["qa:market-readiness", "check-market-readiness"],
+      ["qa:finance-model", "check-finance-model"],
+    ] as const;
+    for (const [script, kapi] of kapilar) {
       expect(
         fs.existsSync(path.join(ROOT, `tools/agents/${kapi}.mjs`)),
         `kapı dosyası yok: ${kapi}.mjs`,
       ).toBe(true);
+      expect(pkg.scripts[script], `package script eksik: ${script}`).toContain(`${kapi}.mjs`);
     }
     const deploy = oku(".github/workflows/deploy.yml");
-    expect(deploy).toContain("check-market-readiness");
-    expect(deploy).toContain("check-finance-model");
+    expect(deploy).toContain("run: npm run qa:market-readiness");
+    expect(deploy).toContain("run: npm run qa:finance-model");
   });
 
   it("anlatı yönergeleri makine kontratı çapası taşır (00-index ilkesi)", () => {

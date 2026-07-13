@@ -96,15 +96,29 @@ export const UiArtifactRoleSchema = z.enum([
 export type UiArtifactRole = z.infer<typeof UiArtifactRoleSchema>;
 
 export const UiArtifactRolesSchema = z.object({
-  nodeId: z.string().min(1),
+  nodeId: z.string().trim().min(1),
   role: UiArtifactRoleSchema,
-  reason: z.string().min(1),
-  decidedBy: z.string().min(1),
-  decidedAt: z.string().min(1),
+  reason: z.string().trim().min(1),
+  decidedBy: z.string().trim().min(1),
+  decidedAt: z.string().date(),
 });
 export type UiArtifactRoles = z.infer<typeof UiArtifactRolesSchema>;
 
-export const UiArtifactRolesFileSchema = registryFileSchema(UiArtifactRolesSchema);
+export const UiArtifactRolesFileSchema = registryFileSchema(UiArtifactRolesSchema).superRefine(
+  (file, ctx) => {
+    const seenNodeIds = new Set<string>();
+    for (const [index, record] of file.records.entries()) {
+      if (seenNodeIds.has(record.nodeId)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `duplicate nodeId: ${record.nodeId}`,
+          path: ["records", index, "nodeId"],
+        });
+      }
+      seenNodeIds.add(record.nodeId);
+    }
+  },
+);
 export type UiArtifactRolesFile = z.infer<typeof UiArtifactRolesFileSchema>;
 
 // ---------------------------------------------------------------------------

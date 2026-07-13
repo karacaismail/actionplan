@@ -8,6 +8,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
 const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
 const CLASSIFICATION = path.join(ROOT, "src/data/doc-task-content-classification.json");
+const UI_ROLE_REGISTRY = path.join(ROOT, "src/data/storybook/ui-artifact-roles.json");
+const UI_DELIVERY_REGISTRY = path.join(ROOT, "src/data/doc-task-ui-deliveries.json");
 const REPORT = path.join(ROOT, "reports/doc-task-content-matrix.csv");
 const INLINE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
 const PHASES = [
@@ -35,6 +37,18 @@ const rules = fs
   .flatMap((file) => readJson(path.join(RULE_DIR, file)).rules ?? []);
 const classifications = readJson(CLASSIFICATION);
 const classificationByDoc = new Map(classifications.map((entry) => [entry.docPath, entry]));
+const uiRoleRecords = readJson(UI_ROLE_REGISTRY).records ?? [];
+const uiDeliveryRecords = readJson(UI_DELIVERY_REGISTRY).records ?? [];
+const uiRoleByNodeId = new Map(uiRoleRecords.map((record) => [record.nodeId, record.role]));
+const uiDeliveryByNodeId = new Map(uiDeliveryRecords.map((record) => [record.nodeId, record]));
+const UI_ROLES = new Set([
+  "produces-ui",
+  "changes-ui-contract",
+  "governs-ui",
+  "consumes-ui",
+  "no-ui",
+]);
+const UI_DELIVERY_ROLES = new Set(["produces-ui", "changes-ui-contract"]);
 
 const duplicates = (values) => values.filter((value, index) => values.indexOf(value) !== index);
 const marker = (id) => `[DOC-APPLY:${id}]`;
@@ -61,15 +75,8 @@ function validateSelector(selector, ruleId, location = "selector") {
   for (const level of selector.levels ?? []) {
     if (!INLINE_LEVELS.has(level)) throw new Error(`${ruleId}: korunan selector level ${level}`);
   }
-  const uiArtifactRoles = new Set([
-    "produces-ui",
-    "changes-ui-contract",
-    "governs-ui",
-    "consumes-ui",
-    "no-ui",
-  ]);
   for (const role of selector.uiArtifactRoles ?? []) {
-    if (!uiArtifactRoles.has(role)) throw new Error(`${ruleId}: geçersiz uiArtifactRole ${role}`);
+    if (!UI_ROLES.has(role)) throw new Error(`${ruleId}: geçersiz uiArtifactRole ${role}`);
   }
   for (const nodeId of selector.nodeIds ?? []) {
     const node = nodeById.get(nodeId);
@@ -116,6 +123,64 @@ for (const rule of rules) {
   }
 }
 
+if (new Set(uiRoleRecords.map((record) => record.nodeId)).size !== uiRoleRecords.length)
+  throw new Error("ui-artifact-roles duplicate nodeId");
+if (new Set(uiDeliveryRecords.map((record) => record.nodeId)).size !== uiDeliveryRecords.length)
+  throw new Error("doc-task-ui-deliveries duplicate nodeId");
+for (const record of uiRoleRecords) {
+  const node = nodeById.get(record.nodeId);
+  if (!node) throw new Error(`ui-artifact-role node yok: ${record.nodeId}`);
+  if (!INLINE_LEVELS.has(node.level))
+    throw new Error(`ui-artifact-role korunan node seçiyor: ${record.nodeId}:${node.level}`);
+  if (!UI_ROLES.has(record.role))
+    throw new Error(`ui-artifact-role geçersiz: ${record.nodeId}:${record.role}`);
+  if (String(record.reason ?? "").trim().length < 40)
+    throw new Error(`ui-artifact-role gerekçesi kısa: ${record.nodeId}`);
+  const delivery = uiDeliveryByNodeId.get(record.nodeId);
+  if (UI_DELIVERY_ROLES.has(record.role) !== Boolean(delivery))
+    throw new Error(`${record.nodeId}: ui role / planned uiDelivery parity bozuk`);
+
+  const hasManagedUiRef = (node.refs ?? []).some(
+    (ref) =>
+      String(ref).startsWith("doc-ui-contract:") || String(ref).startsWith("doc-ui-delivery:"),
+  );
+  if (!hasManagedUiRef && node.uiArtifactRole && node.uiArtifactRole !== record.role)
+    throw new Error(
+      `${record.nodeId}: unmanaged uiArtifactRole registry ile çelişiyor: ${node.uiArtifactRole} != ${record.role}`,
+    );
+  if (
+    !hasManagedUiRef &&
+    node.uiDelivery != null &&
+    JSON.stringify(node.uiDelivery) !== JSON.stringify(delivery?.uiDelivery)
+  )
+    throw new Error(`${record.nodeId}: unmanaged uiDelivery registry projeksiyonuyla çelişiyor`);
+}
+for (const record of uiDeliveryRecords) {
+  if (!uiRoleByNodeId.has(record.nodeId))
+    throw new Error(`${record.nodeId}: uiDelivery için role kararı yok`);
+  if (record.storyTargetStatus !== "planned-not-created")
+    throw new Error(`${record.nodeId}: story target mevcut/evidence gibi gösterilemez`);
+  if (!record.sourceRules?.length)
+    throw new Error(`${record.nodeId}: uiDelivery sourceRules zorunlu`);
+  for (const ruleId of record.sourceRules) {
+    if (!knownRuleIds.has(ruleId))
+      throw new Error(`${record.nodeId}: uiDelivery rule yok: ${ruleId}`);
+  }
+  const delivery = record.uiDelivery;
+  if (delivery?.applies !== true || delivery.impact === "none")
+    throw new Error(`${record.nodeId}: planlı uiDelivery applies=true ve impact!=none olmalı`);
+  if (delivery.reviewStatus !== "planned" || delivery.storybookUrl !== null)
+    throw new Error(`${record.nodeId}: uiDelivery gerçek preview/evidence iddiası kuramaz`);
+  if ((delivery.visualEvidenceRefs ?? []).length > 0)
+    throw new Error(`${record.nodeId}: planlı uiDelivery visual evidence uyduramaz`);
+  if (!(delivery.storyRefs ?? []).length)
+    throw new Error(`${record.nodeId}: planlı story target zorunlu`);
+  for (const ref of delivery.storyRefs) {
+    if (!String(ref).includes(".stories."))
+      throw new Error(`${record.nodeId}: story target *.stories.* olmalı: ${ref}`);
+  }
+}
+
 const render = (text, node) =>
   text
     .replaceAll("{{title}}", node.title)
@@ -153,8 +218,10 @@ function matchesSelector(selector, node) {
     (node.uiDelivery?.applies === true) !== selector.hasUiDelivery
   )
     return false;
-  if (selector.uiArtifactRoles && !selector.uiArtifactRoles.includes(node.uiArtifactRole))
-    return false;
+  if (selector.uiArtifactRoles) {
+    const effectiveRole = uiRoleByNodeId.get(node.id) ?? node.uiArtifactRole;
+    if (!selector.uiArtifactRoles.includes(effectiveRole)) return false;
+  }
   if (
     selector.riskSeverities &&
     !(node.risks ?? []).some((risk) => selector.riskSeverities.includes(risk.severity))
@@ -169,18 +236,33 @@ function matches(rule, node) {
 
 const managedMarkerPattern = /^\[DOC-APPLY:[^\]]+\]/;
 const managedRefPattern = /^doc-apply:([^:]+): docs\/.+\.md$/;
+const managedUiRefPattern =
+  /^doc-ui-contract:([^:]+): src\/data\/storybook\/ui-artifact-roles\.json$/;
+const managedUiDeliveryRefPattern =
+  /^doc-ui-delivery:([^:]+): src\/data\/doc-task-ui-deliveries\.json$/;
 
 function assertManagedStructure(node) {
   const serialized = JSON.stringify(node);
   for (const ref of node.refs ?? []) {
-    if (!String(ref).startsWith("doc-apply:")) continue;
-    if (!String(ref).match(managedRefPattern))
+    if (String(ref).startsWith("doc-apply:") && !String(ref).match(managedRefPattern))
       throw new Error(`${node.id}: malformed managed ref ${ref}`);
+    if (String(ref).startsWith("doc-ui-contract:") && !String(ref).match(managedUiRefPattern))
+      throw new Error(`${node.id}: malformed managed UI ref ${ref}`);
+    if (
+      String(ref).startsWith("doc-ui-delivery:") &&
+      !String(ref).match(managedUiDeliveryRefPattern)
+    )
+      throw new Error(`${node.id}: malformed managed UI delivery ref ${ref}`);
   }
   if (!INLINE_LEVELS.has(node.level)) {
     if (
       serialized.includes("[DOC-APPLY:") ||
-      (node.refs ?? []).some((ref) => ref.startsWith("doc-apply:"))
+      (node.refs ?? []).some(
+        (ref) =>
+          ref.startsWith("doc-apply:") ||
+          ref.startsWith("doc-ui-contract:") ||
+          ref.startsWith("doc-ui-delivery:"),
+      )
     )
       throw new Error(`Korunan app/module managed içerik taşıyor: ${node.id}`);
     return;
@@ -204,7 +286,16 @@ function assertManagedStructure(node) {
 for (const node of nodes) assertManagedStructure(node);
 
 function cleanAllManaged(node) {
+  const hadManagedUi = (node.refs ?? []).some((ref) =>
+    ["doc-ui-contract:", "doc-ui-delivery:"].some((prefix) => String(ref).startsWith(prefix)),
+  );
   node.refs = (node.refs ?? []).filter((ref) => !String(ref).startsWith("doc-apply:"));
+  node.refs = node.refs.filter((ref) => !String(ref).startsWith("doc-ui-contract:"));
+  node.refs = node.refs.filter((ref) => !String(ref).startsWith("doc-ui-delivery:"));
+  if (hadManagedUi) {
+    node.uiArtifactRole = undefined;
+    node.uiDelivery = undefined;
+  }
   node.deliverables = (node.deliverables ?? []).filter(
     (item) => !managedMarkerPattern.test(String(item)),
   );
@@ -283,16 +374,44 @@ for (const rule of rules) {
   }
 }
 
+for (const record of uiRoleRecords) {
+  const node = nodeById.get(record.nodeId);
+  node.uiArtifactRole = record.role;
+  const deliveryRecord = uiDeliveryByNodeId.get(record.nodeId);
+  if (deliveryRecord) {
+    for (const ruleId of deliveryRecord.sourceRules) {
+      if (!selectedPairs.has(`${ruleId}\u0000${node.id}`))
+        throw new Error(`${node.id}: uiDelivery source rule node'a uygulanmamış: ${ruleId}`);
+    }
+    node.uiDelivery = structuredClone(deliveryRecord.uiDelivery);
+    node.refs.push(`doc-ui-delivery:${node.id}: src/data/doc-task-ui-deliveries.json`);
+  } else {
+    node.uiDelivery = undefined;
+  }
+  node.refs.push(`doc-ui-contract:${node.id}: src/data/storybook/ui-artifact-roles.json`);
+}
+
 function assertManagedPostflight(node) {
   assertManagedStructure(node);
   for (const match of JSON.stringify(node).matchAll(/\[DOC-APPLY:([^\]]+)\]/g)) {
     if (!knownRuleIds.has(match[1])) throw new Error(`${node.id}: orphan marker ${match[1]}`);
   }
   for (const ref of node.refs ?? []) {
-    if (!String(ref).startsWith("doc-apply:")) continue;
-    const owner = String(ref).match(managedRefPattern)?.[1];
-    if (!owner || !knownRuleIds.has(owner))
-      throw new Error(`${node.id}: orphan managed ref ${ref}`);
+    if (String(ref).startsWith("doc-apply:")) {
+      const owner = String(ref).match(managedRefPattern)?.[1];
+      if (!owner || !knownRuleIds.has(owner))
+        throw new Error(`${node.id}: orphan managed ref ${ref}`);
+    }
+    if (String(ref).startsWith("doc-ui-contract:")) {
+      const owner = String(ref).match(managedUiRefPattern)?.[1];
+      if (!owner || !uiRoleByNodeId.has(owner) || owner !== node.id)
+        throw new Error(`${node.id}: orphan managed UI ref ${ref}`);
+    }
+    if (String(ref).startsWith("doc-ui-delivery:")) {
+      const owner = String(ref).match(managedUiDeliveryRefPattern)?.[1];
+      if (!owner || !uiDeliveryByNodeId.has(owner) || owner !== node.id)
+        throw new Error(`${node.id}: orphan managed UI delivery ref ${ref}`);
+    }
   }
 }
 

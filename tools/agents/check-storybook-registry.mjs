@@ -8,14 +8,17 @@
  * dalgalarıyla dolar, uydurma kayıt girilmez (gap-report §5).
  * Denetimler: {note, records[]} sarmalayıcı; master-components mc.* id + duplicate reddi;
  * story-catalog.componentRef ve deprecation-migrations old/new refs → master id FK;
- * ui-artifact-roles rol sözlüğü. Kaynak: docs/storybook-root-integration-gap-report.md §5.
+ * ui-artifact-roles rol/FK/karar-provenance bütünlüğü. Kaynak:
+ * docs/storybook-root-integration-gap-report.md §5.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateUiArtifactRoleRecords } from "../lib/storybook-registry-validation.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DIR = path.join(ROOT, "src", "data", "storybook");
+const NODE_DIR = path.join(ROOT, "src", "data", "generated", "nodes");
 
 /** 16 kanonik registry (gap-report §5); eksik dosya da fazladan dosya da ihlaldir. */
 const KANONIK = [
@@ -37,13 +40,6 @@ const KANONIK = [
   "visual-baseline-governance.json",
 ];
 
-const UI_ROLLERI = new Set([
-  "produces-ui",
-  "changes-ui-contract",
-  "governs-ui",
-  "consumes-ui",
-  "no-ui",
-]);
 const MASTER_ID = /^mc\.[a-z0-9-]+$/;
 
 const v = [];
@@ -120,15 +116,30 @@ for (const [i, r] of kayitlar("deprecation-migrations.json").entries()) {
   }
 }
 
-// ── ui-artifact-roles: nodeId + rol sözlüğü denetimi (U16; gap §3).
-for (const [i, r] of kayitlar("ui-artifact-roles.json").entries()) {
-  if (typeof r?.nodeId !== "string" || r.nodeId.trim() === "")
-    v.push(`ui-artifact-roles.json[${i}]: nodeId zorunlu`);
-  if (!UI_ROLLERI.has(r?.role))
-    v.push(
-      `ui-artifact-roles.json[${i}]: geçersiz role ${JSON.stringify(r?.role)} (izinli: ${[...UI_ROLLERI].join(", ")})`,
-    );
+// ── ui-artifact-roles: node FK + duplicate + rol + karar provenance (U16; gap §3).
+const nodeIdler = new Set();
+if (!fs.existsSync(NODE_DIR)) {
+  v.push("ui-artifact-roles.json: generated WBS node dizini yok");
+} else {
+  for (const file of fs
+    .readdirSync(NODE_DIR)
+    .filter((name) => name.endsWith(".json"))
+    .sort()) {
+    try {
+      const node = JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8"));
+      if (typeof node?.id !== "string" || node.id.trim() === "") {
+        v.push(`src/data/generated/nodes/${file}: id zorunlu`);
+      } else if (nodeIdler.has(node.id)) {
+        v.push(`src/data/generated/nodes/${file}: duplicate WBS node id: ${node.id}`);
+      } else {
+        nodeIdler.add(node.id);
+      }
+    } catch (error) {
+      v.push(`src/data/generated/nodes/${file}: JSON parse hatası — ${error.message}`);
+    }
+  }
 }
+v.push(...validateUiArtifactRoleRecords(kayitlar("ui-artifact-roles.json"), nodeIdler));
 
 const toplamKayit = Object.values(dosyalar).reduce((acc, d) => acc + d.records.length, 0);
 console.log(

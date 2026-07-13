@@ -43,6 +43,11 @@ jobs:
       - name: Lint (biome)
         run: npm run lint
 
+      # Platform ürün-kodu yazma sınırı (BLOKLAYICI). Actionplan yalnız directive/handoff
+      # üretir; AI aktörlerinin platform implementation dosyalarına yazma yetkisi yoktur.
+      - name: Platform yazma sınırı kapısı (AI read-only)
+        run: npm run qa:platform-write-boundary
+
       # WBS doğa metaforu kapısı (BLOKLAYICI). app=ada, module=dağ, archetype=kaya,
       # feature=taş, component=kum, work_unit=molekül, micro_step=atom eşlemesini
       # şema/UI/generated data/doküman/CI yüzeyinde tek sözleşme olarak zorlar.
@@ -106,7 +111,7 @@ jobs:
       # UI-impact adayı düğümler makine-okunur uiDelivery sözleşmesi taşır; backend-only
       # düğümler zorlanmaz (NO_CANDIDATES). Ratchet: legacy ihlaller baseline'da warning.
       - name: UI delivery kapısı (uiDelivery sözleşmesi + ratchet)
-        run: node tools/agents/check-ui-delivery.mjs
+        run: npm run qa:ui-delivery
 
       # URL policy kapısı (kanonik karar koruması — BLOKLAYICI)
       # docs/url-policy.md tek kanonik otoritedir; eski tilde grameri, eski route-identity adı,
@@ -119,18 +124,18 @@ jobs:
       # (14 soruluk launch kapısı, IP-geolocation sınırı, kill switch, ödeme matrisi, destek dili
       # taahhüdü, locale-bazlı moderasyon) + indeks/matris kayıtları + anlatı çapası birlikte korunur.
       - name: Market-readiness kapısı (sözleşme + indeks + çapa)
-        run: node tools/agents/check-market-readiness.mjs
+        run: npm run qa:market-readiness
 
       # Finansal para modeli sözleşme kapısı (JSON-STD J2 — BLOKLAYICI). finance-money-model.json
       # (decimal + ISO 4217 + açık ölçek, minor-unit varsayımı yasağı, üç para-birimi ayrımı,
       # kur tarihi beyanı, yuvarlama politikası, altı finansal durum) + indeks/matris + çapa.
       - name: Finans para-modeli kapısı (sözleşme + indeks + çapa)
-        run: node tools/agents/check-finance-model.mjs
+        run: npm run qa:finance-model
 
       # Storybook registry kapısı (kök-entegrasyon — BLOKLAYICI): src/data/storybook/
       # 16 kanonik registry ailesinin şema geçerliliği + FK/duplicate/orphan denetimi.
       - name: Storybook registry kapısı (FK + duplicate + şema)
-        run: node tools/agents/check-storybook-registry.mjs
+        run: npm run qa:storybook-registry
 
       # i18n/l10n kapısı (ADR-0027 / 15. standart — BLOKLAYICI). i18n-standards.json sözleşmesi
       # (yedi must kuralı + banned/allowed primitifleri), i18nRef referans bütünlüğü ("i18n-standards"),
@@ -191,8 +196,9 @@ jobs:
         run: node tools/agents/check-scale-invariant.mjs
 
       # Atomik tip + Fragment + execution-contract yapı bütünlüğü kapıları (BLOKLAYICI).
-      - name: Atomik tip katmanı kapısı (FieldTypeSchema atomları + yönergeler + düğüm referansı)
-        run: node tools/agents/check-atomic-types.mjs
+      # qa:atom readiness, schema/registry ve value-atom test paketinin tamamını çalıştırır.
+      - name: Atomik tip katmanı kapısı (readiness + registry + şema + düğüm referansı)
+        run: npm run qa:atom
 
       - name: Fragment kademesi kapısı (FragmentSchema canonical/storage/crossFieldRules + yönerge)
         run: node tools/agents/check-fragments.mjs

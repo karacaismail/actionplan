@@ -396,7 +396,19 @@ export function evaluateUiDeliveryGate(nodes, baseline = { allowedWarnings: [] }
     if (karar.role !== "produces-ui" && karar.role !== "changes-ui-contract") continue;
     candidates += 1;
 
-    const viols = validateUiDelivery(n, registries);
+    // An explicit/registry role is authoritative even when lexical impact is none. Do not allow a
+    // declared producer or contract-changer to bypass uiDelivery merely because its prose is
+    // generated or intentionally terse.
+    let viols;
+    if (n.uiDelivery == null) {
+      viols = [`${n.id}: uiArtifactRole=${karar.role} ama uiDelivery sözleşmesi yok`];
+    } else if (n.uiDelivery.applies !== true || n.uiDelivery.impact === "none") {
+      viols = [
+        `${n.id}: uiArtifactRole=${karar.role} için uiDelivery applies=true ve impact!=none olmalı`,
+      ];
+    } else {
+      viols = validateUiDelivery(n, registries);
+    }
     if (viols.length > 0) {
       if (allowed.has(n.id)) warnings.push(...viols.map((m) => `[legacy] ${m}`));
       else violations.push(...viols);
