@@ -7,10 +7,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const EXPECTED_REFS: Record<string, string[]> = {
   "k-schema": ["docs/claude-ai-archetype-eca-directive.md"],
-  "l1-workflow": [
-    "docs/claude-ai-archetype-eca-directive.md",
-    "docs/workflow-directive.md",
-  ],
+  "l1-workflow": ["docs/claude-ai-archetype-eca-directive.md", "docs/workflow-directive.md"],
   "dx-workflow": [
     "docs/doc-maintainer-operating-boundary.md",
     "docs/platform-product-code-write-prohibition-directive.md",

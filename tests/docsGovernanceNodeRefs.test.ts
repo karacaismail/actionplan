@@ -9,10 +9,7 @@ const EXPECTED_REFS: Record<string, string[]> = {
   "sus-ai-uretim-sozlesmesi": ["docs/ai-governance-master.md"],
   "std-ci-gates": ["docs/ci-conformance-gates.md"],
   "std-schema-foundation": ["docs/dimension-migration-runbook.md"],
-  "std-docs": [
-    "docs/icerik-kalite-sozlesmesi.md",
-    "docs/prompt-template-library.md",
-  ],
+  "std-docs": ["docs/icerik-kalite-sozlesmesi.md", "docs/prompt-template-library.md"],
   "std-contracts": ["docs/release-policy.md", "docs/waiver-policy.md"],
 };
 
