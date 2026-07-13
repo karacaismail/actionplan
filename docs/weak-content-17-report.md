@@ -176,4 +176,3 @@ En zayıf kümeler: atomic (2.86), aday (2.89), backend (2.89), landx (2.89), me
 - **l1-pseo** (2.87, deployment): evidence[] alanına test/deploy/audit kanıtı bağla
 - **l1-webhook-in** (2.87, testing): evidence[] alanına test/deploy/audit kanıtı bağla
 - **landx-l1** (2.87, integration): evidence[] alanına test/deploy/audit kanıtı bağla; maddeleri ölçü/eşik/kanıtla genişlet (≥35 karakter, sayfaya-özgü)
-
