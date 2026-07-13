@@ -23,6 +23,15 @@ const standardIds = new Set(
 const techIds = new Set(
   rj(path.join(ROOT, "src", "data", "tech-profiles.json")).profiles.map((p) => p.id),
 );
+const applicability = rj(path.join(ROOT, "src", "data", "standards-applicability.json"));
+const uiRoles = new Set(applicability.surfaceOverlays.frontendUi.uiArtifactRoles);
+
+const overlayApplies = (overlay, node, text) => {
+  if (overlay.levels && !overlay.levels.includes(node.level)) return false;
+  if (overlay.uiArtifactRoles && !overlay.uiArtifactRoles.includes(node.uiArtifactRole ?? ""))
+    return false;
+  return new RegExp(overlay.match, "i").test(text);
+};
 
 // Ref anahtarı → kanonik standart id (src/data/standards/<id>.json) eşlemesi.
 // Anahtar adı standart dosya adından farklı olabildiğinde (ör. authzRef → authz-rbac-abac)
@@ -37,11 +46,21 @@ const REF_KEY_TO_STANDARD = {
   mfaRef: "mfa",
   authzRef: "authz-rbac-abac",
   c13nRef: "c13n",
+  dataNormalizationRef: "data-normalization",
+  i14yRef: "i14y",
   c12nRef: "c12n",
+  p13nRef: "p13n",
+  edgeSecurityRef: "edge-security",
+  iacRef: "iac",
   i18nRef: "i18n-standards",
   urlPolicyRef: "url-policy",
   tenancyRef: "tenancy",
   privacyRef: "privacy",
+  globalMarketReadinessRef: "global-market-readiness",
+  financeModelRef: "finance-money-model",
+  identityDataRef: "identity-data",
+  searchQualityRef: "search-quality",
+  decisionGradeRef: "decision-grade-data",
 };
 
 // Riskli düğümde boş tenancy/privacy ref POLİTİKASI (tur 3): WARN, FAIL değil.
@@ -67,6 +86,34 @@ for (const f of files) {
   // JSON'a 467 kez kopyalanmaz; TaskNodeSchema ile aynı merkezi default burada uygulanır.
   const sr = { urlPolicyRef: "url-policy", ...(n.standardRefs || {}) };
   const hay = [n.id, n.title, n.summary ?? "", ...(n.tags ?? [])].join(" ");
+  const protectedScope = n.level === "app" || n.level === "module";
+  for (const key of applicability.requiredByLevel[n.level] ?? []) {
+    const expected = applicability.canonicalRefValues[key];
+    if (protectedScope) sr[key] ||= expected;
+    else if (sr[key] !== expected)
+      fail(`${n.id}: Z level ref standardRefs.${key}="${sr[key] ?? ""}"; beklenen "${expected}"`);
+  }
+  if (!protectedScope && uiRoles.has(n.uiArtifactRole ?? "")) {
+    for (const key of applicability.surfaceOverlays.frontendUi.requiredRefs) {
+      if (key === "techProfileRef") {
+        if (!techIds.has(sr[key])) fail(`${n.id}: frontend-ui techProfileRef geçersiz/boş`);
+        continue;
+      }
+      const expected = applicability.canonicalRefValues[key];
+      if (sr[key] !== expected)
+        fail(`${n.id}: frontend-ui standardRefs.${key}="${sr[key] ?? ""}"; beklenen "${expected}"`);
+    }
+  }
+  for (const overlay of applicability.semanticOverlays ?? []) {
+    if (!overlayApplies(overlay, n, hay)) continue;
+    for (const [key, expected] of Object.entries(overlay.requiredRefs)) {
+      if (protectedScope) sr[key] ||= expected;
+      else if (sr[key] !== expected)
+        fail(
+          `${n.id}: ${overlay.id} standardRefs.${key}="${sr[key] ?? ""}"; beklenen "${expected}"`,
+        );
+    }
+  }
   const cluster = n.source?.cluster ?? "";
   const tenancyRisk = TENANCY_CLUSTERS.has(cluster) || TENANCY_RISK.test(hay);
   const privacyRisk = PRIVACY_CLUSTERS.has(cluster) || PRIVACY_RISK.test(hay);

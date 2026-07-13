@@ -106,7 +106,7 @@ Bu yedi kapı, standardRefs / applicability / waivers / kısa-kod / bağımlıl�
 - Ne zorlar: `global-market-readiness` makine sözleşmesinin bütünlüğü (J2 — `docs/json-standards-integration-gap-report-2026-07-13.md`): sözleşme dosyası geçerli JSON + doğru id/family; altı zorunlu kural id'si (`gmr-launch-gate-14`, `gmr-ip-geolocation-not-identity`, `gmr-market-kill-switch`, `gmr-payment-market-matrix`, `gmr-support-language-commitment`, `gmr-moderation-per-locale`) mevcut ve rule/rationale dolu; iki indeks kaydı + applicability matris ref anahtarı + anlatı çapası (`docs/global-market-readiness-directive.md`) yerinde.
 - Dosya yolu: `tools/agents/check-market-readiness.mjs`; sözleşme `src/data/standards/global-market-readiness.json`; test `tests/jsonStandardsIntegration.test.ts`.
 - Yeşil koşul: Sözleşme + 4 indeks/çapa probe'u tam; hiçbir zorunlu kural eksik değil.
-- Veri doldukça nasıl dişlenir: `marketReadinessRef` J4'te `StandardRefsSchema`'ya eklenince (KARAR BEKLİYOR — CPO) app düğümlerinde ref zorunluluğu ve pazar-başına evidence denetimi bu kapıya bağlanır; launch-gate 14 sorusunun evidence writeback'i release akışına bağlandıkça kapı pazar/dil başına graduation'ı bloklar.
+- Veri doldukça nasıl dişlenir: `globalMarketReadinessRef` artık `StandardRefsSchema` ve applicability registry'sinde aktiftir; app düğümlerinde ref zorunluluğu bu kapıya bağlıdır. Launch-gate 14 sorusunun gerçek pazar-başına evidence writeback'i release akışına bağlandıkça kapı pazar/dil graduation'ını bloklar; evidence mevcut değilken PASS uydurulmaz.
 
 ### check-finance-model
 

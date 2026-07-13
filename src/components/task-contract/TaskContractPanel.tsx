@@ -3,7 +3,7 @@ import { t } from "@/lib/strings";
 import { PHASE_META, type TaskNode, WATERFALL_PHASES } from "@/schemas";
 
 const DOC_REF_PATTERN = /\bdocs\/[A-Za-z0-9._/-]+\.md/;
-const DOC_APPLY_MARKER = /^\[DOC-APPLY:[^\]]+\]\s*/;
+const DOC_APPLY_MARKER = /\[\/?DOC-APPLY:[^\]]+\]\s*/g;
 const DOC_APPLY_REF_PREFIX = /^doc-apply:[^:]+:\s*/;
 
 export function visibleTaskContent(value: string): string {

@@ -109,9 +109,18 @@ describe("export/import round-trip", () => {
   ];
 
   it("JSON tam-doğruluklu döner", () => {
-    const result = importJSON(exportJSON(nodes));
+    const exported = JSON.parse(exportJSON(nodes));
+    const result = importJSON(JSON.stringify(exported));
     expect(result.errors).toEqual([]);
     expect(result.nodes).toEqual(nodes);
+    expect(
+      exported.resolvedStandardsByNode.alpha.find(
+        (standard: { id: string }) => standard.id === "url-policy",
+      ),
+    ).toMatchObject({
+      id: "url-policy",
+      source: "src/data/standards/url-policy.json",
+    });
   });
 
   it("CSV düz alanları korur (virgül/escape dahil)", () => {
@@ -203,6 +212,8 @@ describe("export/import round-trip", () => {
     expect(brief).toContain("| AC-1 | Tenant filtresi zorunlu |");
     expect(brief).toContain("pull-request-url");
     expect(brief).toContain("https://karacaismail.github.io/actionplan/task/customer-graphql");
+    expect(brief).toContain("Canonical Engineering Standards — Resolved From JSON");
+    expect(brief).toContain("src/data/standards/url-policy.json");
   });
 
   it("agent prompt directive-only, salt-okunur hedef ve insan branch önerisini taşır", () => {
@@ -290,6 +301,8 @@ describe("export/import round-trip", () => {
     expect(card).toContain("NO-GO: testCommand eksik");
     expect(card).toContain("NO-GO: repoPath eksik");
     expect(card).toContain("Yasak stack kullanma: Next.js, Supabase, Prisma, Redux, Flowbite.");
+    expect(card).toContain("Canonical Engineering Standards — Resolved From JSON");
+    expect(card).toContain("src/data/standards/url-policy.json");
   });
 
   it("exportTaskArtifact modlara göre doğru dosya adını ve mime tipini döndürür", () => {

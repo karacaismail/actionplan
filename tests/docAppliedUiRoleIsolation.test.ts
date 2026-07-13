@@ -70,11 +70,19 @@ const roleRegistry = Object.fromEntries(
 const deliveryByNodeId = new Map(deliveryFile.records.map((record) => [record.nodeId, record]));
 
 const EXPECTED_ROLES = {
+  "atom-crm-domain-blocklist": "no-ui",
+  "atom-crm-email-regex": "no-ui",
+  "atom-crm-score-range-check": "no-ui",
   "cc-security": "no-ui",
   customer: "changes-ui-contract",
+  "customer-app-core-shell": "changes-ui-contract",
   "deploy-yap": "governs-ui",
+  "hello-platform-smoke": "governs-ui",
+  "k-wbs": "governs-ui",
   "l1-audit": "no-ui",
   "l1-search-deep": "changes-ui-contract",
+  "molekul-crm-score-field-validator": "no-ui",
+  "molekul-crm-score-weight-config": "no-ui",
   "platform-customer-graphql": "changes-ui-contract",
   "platform-customer-seed": "changes-ui-contract",
   product: "changes-ui-contract",
@@ -91,12 +99,15 @@ const EXPECTED_ROLES = {
   "s-observability": "governs-ui",
   "s-payment-methods": "consumes-ui",
   "s-pim": "changes-ui-contract",
+  "s-pmo": "consumes-ui",
+  "s-property": "consumes-ui",
   "s-sales": "produces-ui",
   "s-social": "consumes-ui",
   "s-social-commerce": "consumes-ui",
   "s-studio": "consumes-ui",
   "s-tax-compliance": "consumes-ui",
   "scale-invariant": "no-ui",
+  "sdk-app-core-template": "changes-ui-contract",
   "sus-actions": "changes-ui-contract",
   "sus-declarative": "changes-ui-contract",
 } satisfies Record<string, UiRole>;
@@ -107,9 +118,9 @@ const EXPECTED_UI_DELIVERY_NODES = Object.entries(EXPECTED_ROLES)
   .sort();
 
 describe("DOC-APPLY semantic UI role projection", () => {
-  it("records the exact 29-node semantic decision matrix", () => {
+  it("records the exact 40-node semantic decision matrix", () => {
     expect(roleRegistry).toEqual(EXPECTED_ROLES);
-    expect(roleFile.records).toHaveLength(29);
+    expect(roleFile.records).toHaveLength(40);
     expect(
       roleFile.records.reduce<Record<UiRole, number>>(
         (counts, record) => {
@@ -126,16 +137,16 @@ describe("DOC-APPLY semantic UI role projection", () => {
       ),
     ).toEqual({
       "produces-ui": 2,
-      "changes-ui-contract": 11,
-      "governs-ui": 2,
-      "consumes-ui": 10,
-      "no-ui": 4,
+      "changes-ui-contract": 13,
+      "governs-ui": 4,
+      "consumes-ui": 12,
+      "no-ui": 9,
     });
   });
 
-  it("materializes all 29 role decisions and only 13 planned uiDelivery contracts", () => {
+  it("materializes all 40 role decisions and only 15 planned uiDelivery contracts", () => {
     expect([...deliveryByNodeId.keys()].sort()).toEqual(EXPECTED_UI_DELIVERY_NODES);
-    expect(deliveryFile.records).toHaveLength(13);
+    expect(deliveryFile.records).toHaveLength(15);
 
     for (const [nodeId, role] of Object.entries(EXPECTED_ROLES)) {
       const node = nodeById.get(nodeId);
@@ -196,6 +207,16 @@ describe("DOC-APPLY semantic UI role projection", () => {
   });
 
   it("preserves DOC-APPLY UI semantics and uses explicit roles to resolve false positives", () => {
+    const globalGateText = {
+      id: "managed-global-gates",
+      title: "Backend atom",
+      deliverables: ["[DOC-APPLY:ready-for-dev] UI/URL etkisi varsa ilgili ek kapı girdileri."],
+      acceptanceCriteria: [
+        "[DOC-APPLY:evidence-dod] Planlanan kanıt, tek ekran görüntüsü veya kırık bağ reddedilir.",
+      ],
+    };
+    expect(classifyUiImpact(globalGateText).impact).toBe("none");
+
     const genuineContract = {
       id: "managed-ui-contract",
       title: "Backend projection",
@@ -260,11 +281,11 @@ describe("DOC-APPLY semantic UI role projection", () => {
     const result = evaluateUiDeliveryGate(nodes, baseline, { roleRegistry });
 
     expect(result.violations).toEqual([]);
-    expect(result.candidates).toBe(80);
+    expect(result.candidates).toBe(82);
     expect(result.result).toBe("MIGRATION_INCOMPLETE");
   });
 
-  it("passes the audited 29-node subcorpus with exactly 13 candidates", () => {
+  it("passes the audited 40-node subcorpus with exactly 15 candidates", () => {
     const auditedNodes = Object.keys(EXPECTED_ROLES).map((nodeId) => nodeById.get(nodeId));
     expect(auditedNodes.every(Boolean)).toBe(true);
 
@@ -277,10 +298,10 @@ describe("DOC-APPLY semantic UI role projection", () => {
     );
     expect(result).toMatchObject({
       result: "PASS",
-      candidates: 13,
+      candidates: 15,
       violations: [],
       warnings: [],
-      migration: { decided: 29, undecided: 0 },
+      migration: { decided: 40, undecided: 0 },
     });
   });
 });

@@ -61,11 +61,11 @@ Okuma kuralı: app ve module düğümleri `doc-governance` yüzeyidir (task-to-c
 | i18n-standards | i18nRef | Z | Z | Z | Ö | Ö | Ö | N/A |
 | dependency-policy | (ref alanı yok; repo geneli) | Z | Z | Z | Ö | Ö | Ö | N/A |
 | tech-profiles | techProfileRef | Z | Z | Z | Ö | Ö | N/A | N/A |
-| global-market-readiness | marketReadinessRef (J4 — KARAR BEKLİYOR, CPO) | Z | N/A | N/A | N/A | N/A | N/A | N/A |
-| finance-money-model | financeModelRef (J4 — KARAR BEKLİYOR, CPO) | Ö | Ö | Z (para dokunan) | Ö | N/A | N/A | N/A |
-| identity-data | identityDataRef (J4 — KARAR BEKLİYOR, CPO) | Ö | Ö | Z (kişi/kuruluş verisi dokunan) | Ö | N/A | N/A | N/A |
-| search-quality | searchQualityRef (J4 — KARAR BEKLİYOR, CPO) | N/A | Ö | Ö | Ö (arama/liste yüzeyi) | N/A | N/A | N/A |
-| decision-grade-data | decisionGradeRef (J4 — KARAR BEKLİYOR, CPO) | Ö | Ö | Ö | N/A | N/A | N/A | N/A |
+| global-market-readiness | globalMarketReadinessRef | Z | N/A | N/A | N/A | N/A | N/A | N/A |
+| finance-money-model | financeModelRef | Ö | Ö | Z (para dokunan) | Ö | N/A | N/A | N/A |
+| identity-data | identityDataRef | Ö | Ö | Z (kişi/kuruluş verisi dokunan) | Ö | N/A | N/A | N/A |
+| search-quality | searchQualityRef | N/A | Ö | Ö | Ö (arama/liste yüzeyi) | N/A | N/A | N/A |
+| decision-grade-data | decisionGradeRef | Ö | Ö | Ö | N/A | N/A | N/A | N/A |
 
 Notlar:
 

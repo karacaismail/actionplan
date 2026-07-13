@@ -3,6 +3,10 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  cleanManagedDimensionProjection,
+  projectRuleIntoDimension,
+} from "./lib/doc-task-dimension-projection.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
@@ -35,6 +39,11 @@ const rules = fs
   .filter((file) => file.endsWith(".json"))
   .sort()
   .flatMap((file) => readJson(path.join(RULE_DIR, file)).rules ?? []);
+const humanDecisionRuleSources = new Set(
+  rules
+    .filter((rule) => rule.content?.humanDecisionBlocker === true)
+    .flatMap((rule) => rule.sources ?? []),
+);
 const classifications = readJson(CLASSIFICATION);
 const classificationByDoc = new Map(classifications.map((entry) => [entry.docPath, entry]));
 const uiRoleRecords = readJson(UI_ROLE_REGISTRY).records ?? [];
@@ -270,7 +279,6 @@ function assertManagedStructure(node) {
   const forbiddenMarkerFields = [
     ...(node.evidence ?? []),
     node.rollback ?? "",
-    ...Object.values(node.dimensions ?? {}).flatMap((dimension) => dimension.items ?? []),
     ...Object.values(node.phases ?? {}).map((phase) => phase.notes ?? ""),
     ...(node.risks ?? []).map((risk) => risk.mitigation ?? ""),
   ];
@@ -286,6 +294,7 @@ function assertManagedStructure(node) {
 for (const node of nodes) assertManagedStructure(node);
 
 function cleanAllManaged(node) {
+  cleanManagedDimensionProjection(node);
   const hadManagedUi = (node.refs ?? []).some((ref) =>
     ["doc-ui-contract:", "doc-ui-delivery:"].some((prefix) => String(ref).startsWith(prefix)),
   );
@@ -317,11 +326,11 @@ for (const node of nodes) {
   cleanAllManaged(node);
 }
 
-function applyRule(rule, node) {
+function applyRule(rule, node, { projectDimension = true } = {}) {
   const content = rule.content ?? {};
   for (const source of rule.sources) {
-    if (!node.refs.some((ref) => normalizeRef(ref) === source))
-      node.refs.push(`doc-apply:${rule.id}: ${source}`);
+    const managedRef = `doc-apply:${rule.id}: ${source}`;
+    if (!node.refs.includes(managedRef)) node.refs.push(managedRef);
   }
   for (const field of ["deliverables", "acceptanceCriteria"]) {
     for (const item of content[field] ?? []) node[field].push(marked(rule, item, node));
@@ -337,6 +346,7 @@ function applyRule(rule, node) {
       mitigation: render(risk.mitigation, node),
     });
   }
+  if (projectDimension) projectRuleIntoDimension(rule, node, render);
 }
 
 // Selector'lar yalnız canonical alanları değil, başka source-specific kuralların eklediği riskleri
@@ -352,7 +362,7 @@ while (selectionProgress) {
     for (const node of selectionNodes) {
       const pair = `${rule.id}\u0000${node.id}`;
       if (selectedPairs.has(pair) || !matches(rule, node)) continue;
-      applyRule(rule, node);
+      applyRule(rule, node, { projectDimension: false });
       selectedPairs.add(pair);
       selectionProgress = true;
     }
@@ -472,8 +482,17 @@ function validateClassifications() {
       throw new Error(`${entry.docPath}: geçersiz decision ${entry.decision}`);
     if (String(entry.rationale ?? "").length < 30)
       throw new Error(`${entry.docPath}: classification rationale kısa`);
-    if ((entry.decision === "task-materialize") !== sourceDocs.has(entry.docPath))
-      throw new Error(`${entry.docPath}: rule-source/classification decision parity bozuk`);
+    const hasRule = sourceDocs.has(entry.docPath);
+    if (entry.decision === "reference-only" && hasRule)
+      throw new Error(`${entry.docPath}: reference-only kaynak task rule taşıyamaz`);
+    if (entry.decision === "task-materialize" && !hasRule)
+      throw new Error(`${entry.docPath}: task-materialize rule kaynağı eksik`);
+    if (entry.decision === "human-decision") {
+      if (!hasRule || !humanDecisionRuleSources.has(entry.docPath))
+        throw new Error(`${entry.docPath}: human-decision blocker rule eksik`);
+    } else if (humanDecisionRuleSources.has(entry.docPath)) {
+      throw new Error(`${entry.docPath}: human-decision blocker yanlış classification altında`);
+    }
   }
 }
 
@@ -525,7 +544,10 @@ function buildMatrix() {
     const semanticOwners = [...new Set(semantic)].sort();
     if ((classification.decision === "human-decision") !== decision)
       throw new Error(`${doc}: human-decision ref/classification parity bozuk`);
-    if ((classification.decision === "task-materialize") !== targets.length > 0)
+    if (
+      ["task-materialize", "human-decision"].includes(classification.decision) !==
+      targets.length > 0
+    )
       throw new Error(`${doc}: materialized target/classification parity bozuk`);
     const lanes = [];
     if (std.length) lanes.push("standard-ref");

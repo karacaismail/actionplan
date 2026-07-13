@@ -55,11 +55,11 @@ Tablo okunuşu: "standardRef anahtarı" sütunu, bir düğümde o standarda refe
 | `i18n-standards` | engineering | Çok-dil/locale/RTL/currency/timezone/tax-legal-localization/data-residency + çeviri-iş-akışı + fallback | `i18nRef` | check-i18n |
 | `url-policy` | engineering | `k-route-policy`, typed public ID, canonical/alias, tenant/custom-domain topolojileri ve Ada→Atom URL sorumlulukları | `urlPolicyRef` (merkezi default) | qa:url-policy |
 | `dependency-policy` | governance | Paket allowlist, lisans politikası (lisans-katman federasyonu), SBOM üretimi, lockfile commit | (politika; düğüm ref'i yok) | check-dependency-policy |
-| `global-market-readiness` | governance | Pazar/dil canlıya alma kapısı: 14 launch sorusu, pazar-başına ödeme/destek/moderasyon beyanı, IP-geolocation kimlik-değildir kuralı, kill switch | `marketReadinessRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-market-readiness |
-| `finance-money-model` | data | Para modeli: decimal+ISO 4217+ölçek+yuvarlama politikası, minor-unit varsayım yasağı, üç para birimi ayrımı, kur-dönüşüm-tarihi beyanı, altı finansal durum | `financeModelRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-finance-model |
-| `identity-data` | data | Kişi/kuruluş kimlik verisi: serbest displayName + yapılandırılmış hukuki isim, isim-regex yasağı, ülke-şablonlu adres (UPU S42), E.164 çift saklama, SMS-varsayımı yasağı | `identityDataRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
-| `search-quality` | data | Arama kalitesi: collation/ICU sürüm sabitleme, transliteration/diakritik tolerans beyanı, alan-bazlı tolerans sınıfları, dil-bağımlı case kuralları | `searchQualityRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
-| `decision-grade-data` | data | Karar-verisi zinciri: kaynak→onay→mutabakat→dönem kilidi→formül-sürüm, 11 analitik boyut, event-adı-çevrilmez, orijinal/normalize para ayrımı | `decisionGradeRef` (J4'te şemaya eklenir — KARAR BEKLİYOR) | check-standards-coverage |
+| `global-market-readiness` | governance | Pazar/dil canlıya alma kapısı: 14 launch sorusu, pazar-başına ödeme/destek/moderasyon beyanı, IP-geolocation kimlik-değildir kuralı, kill switch | `globalMarketReadinessRef` | check-market-readiness |
+| `finance-money-model` | data | Para modeli: decimal+ISO 4217+ölçek+yuvarlama politikası, minor-unit varsayım yasağı, üç para birimi ayrımı, kur-dönüşüm-tarihi beyanı, altı finansal durum | `financeModelRef` | check-finance-model |
+| `identity-data` | data | Kişi/kuruluş kimlik verisi: serbest displayName + yapılandırılmış hukuki isim, isim-regex yasağı, ülke-şablonlu adres (UPU S42), E.164 çift saklama, SMS-varsayımı yasağı | `identityDataRef` | check-standards-coverage |
+| `search-quality` | data | Arama kalitesi: collation/ICU sürüm sabitleme, transliteration/diakritik tolerans beyanı, alan-bazlı tolerans sınıfları, dil-bağımlı case kuralları | `searchQualityRef` | check-standards-coverage |
+| `decision-grade-data` | data | Karar-verisi zinciri: kaynak→onay→mutabakat→dönem kilidi→formül-sürüm, 11 analitik boyut, event-adı-çevrilmez, orijinal/normalize para ayrımı | `decisionGradeRef` | check-standards-coverage |
 
 Notlar:
 
@@ -76,11 +76,11 @@ Notlar:
 | standardRef anahtarı | Çözüldüğü hedef |
 |---|---|
 | `techProfileRef` | `src/data/tech-profiles.json` içindeki profil id'si |
-| `marketReadinessRef` | `src/data/standards/global-market-readiness.json` (anahtar J4 fazında `StandardRefsSchema`'ya eklenir — KARAR BEKLİYOR, CPO) |
-| `financeModelRef` | `src/data/standards/finance-money-model.json` (J4 — KARAR BEKLİYOR) |
-| `identityDataRef` | `src/data/standards/identity-data.json` (J4 — KARAR BEKLİYOR) |
-| `searchQualityRef` | `src/data/standards/search-quality.json` (J4 — KARAR BEKLİYOR) |
-| `decisionGradeRef` | `src/data/standards/decision-grade-data.json` (J4 — KARAR BEKLİYOR) |
+| `globalMarketReadinessRef` | `src/data/standards/global-market-readiness.json` |
+| `financeModelRef` | `src/data/standards/finance-money-model.json` |
+| `identityDataRef` | `src/data/standards/identity-data.json` |
+| `searchQualityRef` | `src/data/standards/search-quality.json` |
+| `decisionGradeRef` | `src/data/standards/decision-grade-data.json` |
 | `i18nRef` | `src/data/standards/i18n-standards.json` |
 | `urlPolicyRef` | `src/data/standards/url-policy.json` + `src/data/url-policy/registry.json` |
 | `architectureRef` | `src/data/standards/architecture.json` |

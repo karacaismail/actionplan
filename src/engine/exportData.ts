@@ -1,5 +1,11 @@
 import workspaceManifest from "@/data/workspace-manifest.json";
 import type { TaskNode } from "@/schemas";
+import {
+  type EffectiveDirectiveApplication,
+  effectiveDirectiveApplications,
+} from "./effectiveDirectives";
+import { indexById } from "./resolve";
+import { nodeStandards } from "./standards";
 
 /** GitHub Pages mutlak taban (export referans URL'leri için). */
 export const PAGES_BASE = "https://karacaismail.github.io/actionplan";
@@ -52,9 +58,60 @@ function taskFilename(node: TaskNode, suffix: string, ext: string): string {
   return `${prefix}-${node.id}-${suffix}.${ext}`;
 }
 
+function visibleDirectiveContent(value: string): string {
+  return value.replace(/\[\/?DOC-APPLY:[^\]]+\]\n?/g, "").trim();
+}
+
 function linesList(items: string[], empty = "_Yok._"): string {
   if (!items.length) return empty;
-  return items.map((item) => `- ${item}`).join("\n");
+  return items.map((item) => `- ${visibleDirectiveContent(item)}`).join("\n");
+}
+
+function resolvedDirectives(
+  node: TaskNode,
+  index?: Map<string, TaskNode>,
+): EffectiveDirectiveApplication[] {
+  return effectiveDirectiveApplications(node, index ?? indexById([node]));
+}
+
+function resolvedDirectivesMarkdown(node: TaskNode, index?: Map<string, TaskNode>): string {
+  const applications = resolvedDirectives(node, index);
+  if (!applications.length) return "_Bu görev için çözümlenmiş doküman yönergesi yok._";
+  return applications
+    .map(
+      (application) => `### ${application.ruleId}
+
+- Canonical source: \`${application.source}\`
+- Application mode: \`${application.mode}\`
+- Execution owner: \`${application.ownerNodeId}\`
+
+Applied JSON task clause:
+
+${visibleDirectiveContent(application.item)}
+
+Task prompt:
+
+${visibleDirectiveContent(application.prompt)}`,
+    )
+    .join("\n\n");
+}
+
+function resolvedStandardsMarkdown(node: TaskNode): string {
+  const standards = nodeStandards(node);
+  if (!standards.length) return "_Bu görev için çözümlenmiş standart sözleşmesi yok._";
+  return standards
+    .map((standard) => {
+      const rules = standard.rules.length
+        ? standard.rules
+            .map(
+              (rule) =>
+                `- [${rule.severity}] \`${rule.id}\`: ${rule.rule}\n  - Check: ${rule.check || "İnsan review"}\n  - Rationale: ${rule.rationale || "—"}`,
+            )
+            .join("\n")
+        : "- Kural paketi bu katalog türü için ayrı kaynaktan çözülür.";
+      return `### ${standard.name} (\`${standard.id}\`)\n\n- Canonical JSON: \`${standard.source}\`\n- Summary: ${standard.summary || "—"}\n- References: ${standard.references.length ? standard.references.join(", ") : "—"}\n\n${rules}`;
+    })
+    .join("\n\n");
 }
 
 function commandList(commands: CommandSpec[]): string {
@@ -131,14 +188,28 @@ function uiDeliverySection(node: TaskNode, compact = false): string {
  * başlık + mutlak (Pages) + göreli URL çözüm tablosu → dependsOn/blocks/related id'leri çözülebilir.
  */
 export function exportJSON(nodes: TaskNode[]): string {
+  const index = indexById(nodes);
   const links = Object.fromEntries(
     nodes.map((n) => [
       n.id,
       { title: n.title, absoluteUrl: `${PAGES_BASE}/task/${n.id}`, relativeUrl: `/task/${n.id}` },
     ]),
   );
+  const resolvedStandardsByNode = Object.fromEntries(
+    nodes.map((node) => [node.id, nodeStandards(node)]),
+  );
+  const resolvedDirectivesByNode = Object.fromEntries(
+    nodes.map((node) => [node.id, resolvedDirectives(node, index)]),
+  );
   return JSON.stringify(
-    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), nodes, links },
+    {
+      schemaVersion: "1.0.0",
+      exportedAt: new Date().toISOString(),
+      nodes,
+      links,
+      resolvedStandardsByNode,
+      resolvedDirectivesByNode,
+    },
     null,
     2,
   );
@@ -162,7 +233,14 @@ export function exportTask(node: TaskNode, index?: Map<string, TaskNode>): strin
     related: node.related.map((id) => taskRef(id, index)),
   };
   return JSON.stringify(
-    { schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), task: node, references },
+    {
+      schemaVersion: "1.0.0",
+      exportedAt: new Date().toISOString(),
+      task: node,
+      references,
+      resolvedStandards: nodeStandards(node),
+      resolvedDirectives: resolvedDirectives(node, index),
+    },
     null,
     2,
   );
@@ -177,7 +255,10 @@ export function exportDeveloperBrief(node: TaskNode, index?: Map<string, TaskNod
     : "Eksik: test-plan fazında doldur.";
   const acRows = node.acceptanceCriteria.length
     ? node.acceptanceCriteria
-        .map((criterion, idx) => `| AC-${idx + 1} | ${criterion} | ${tests} |`)
+        .map(
+          (criterion, idx) =>
+            `| AC-${idx + 1} | ${visibleDirectiveContent(criterion)} | ${tests} |`,
+        )
         .join("\n")
     : "| — | Eksik acceptance criterion | Eksik |";
 
@@ -256,6 +337,14 @@ ${linesList(PRIMARY_WORKSPACE.evidence.requiredForDone)}
 ## 11. Storybook / UI Delivery
 
 ${uiDeliverySection(node)}
+
+## 12. Canonical Engineering Standards — Resolved From JSON
+
+${resolvedStandardsMarkdown(node)}
+
+## 13. Resolved Document Directives — From JSON
+
+${resolvedDirectivesMarkdown(node, index)}
 `;
 }
 
@@ -330,6 +419,14 @@ ${refsMarkdown(dependsOn)}
 ## Storybook / UI Delivery
 
 ${uiDeliverySection(node)}
+
+## Canonical Engineering Standards — Resolved From JSON
+
+${resolvedStandardsMarkdown(node)}
+
+## Resolved Document Directives — From JSON
+
+${resolvedDirectivesMarkdown(node, index)}
 
 ## DIRECTIVE-ONLY Output Contract
 
@@ -414,7 +511,7 @@ export function exportEvidencePatch(node: TaskNode): string {
   );
 }
 
-export function exportVobecoderCard(node: TaskNode): string {
+export function exportVobecoderCard(node: TaskNode, index?: Map<string, TaskNode>): string {
   const tr = traceability(node);
   const primaryTest = tr.testCommand[0] ?? "NO-GO: testCommand eksik";
   const primaryPath = tr.repoPath[0] ?? "NO-GO: repoPath eksik";
@@ -449,6 +546,14 @@ ${linesList(
 \`\`\`bash
 ${primaryTest}
 \`\`\`
+
+## Canonical Engineering Standards — Resolved From JSON
+
+${resolvedStandardsMarkdown(node)}
+
+## Resolved Document Directives — From JSON
+
+${resolvedDirectivesMarkdown(node, index)}
 
 ## Red Flag
 
@@ -486,7 +591,7 @@ export function exportTaskArtifact(
     case "vobecoder-card":
       return {
         filename: taskFilename(node, "vobecoder-card", "md"),
-        content: exportVobecoderCard(node),
+        content: exportVobecoderCard(node, index),
         mime: "text/markdown",
       };
     case "raw-json":

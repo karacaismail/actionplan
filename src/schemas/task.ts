@@ -395,6 +395,16 @@ export const StandardRefsSchema = z.object({
   tenancyRef: z.string().optional(),
   /** Kişisel veri/KVKK-GDPR standardı — dataLifecycle boyutunun tek-kaynak sözleşme bağı. */
   privacyRef: z.string().optional(),
+  /** Pazar/ülke açılımı, residency ve locale readiness sözleşmesi. */
+  globalMarketReadinessRef: z.string().optional(),
+  /** Para/kur/vergi/yuvarlama modeli sözleşmesi. */
+  financeModelRef: z.string().optional(),
+  /** Kişi, kuruluş ve kimlik verisi modelleme sözleşmesi. */
+  identityDataRef: z.string().optional(),
+  /** Arama, sıralama ve sonuç-kalitesi sözleşmesi. */
+  searchQualityRef: z.string().optional(),
+  /** Karar, KPI ve rapor verisinin doğruluk/provenance sözleşmesi. */
+  decisionGradeRef: z.string().optional(),
 });
 export type StandardRefs = z.infer<typeof StandardRefsSchema>;
 

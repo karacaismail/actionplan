@@ -17,18 +17,29 @@ kapsam sayıları için bu bölüm üstündür.
 | Ölçüm | Değer |
 |---|---|
 | Git tarafından izlenen Markdown | 290 |
-| Doğrudan semantik WBS sahibi | 280 |
+| Task içeriğine materyalize edilen | 218 |
 | İnsan sahiplik kararı bekleyen | 10 |
+| Canonical standard / arşiv / kök indeks kaynağı | 62 |
 | Sınıfsız / erişilemeyen | 0 |
-| WBS düğümü | 485 |
-| Toplu katalog backstop bağı | 118 adet `catalog:` ref |
-| Bu uygulama dalgasında değişen düğüm seviyesi | 15 archetype + 12 feature; app/module 0 |
+| WBS düğümü / görev sayfası | 496 |
+| Executable raw JSON projection | 290/290 görev |
+| Korumalı app/module runtime projection | 206/206 görev |
+| Source-specific materyalizasyon kuralı | 250 |
+| Görev uygulaması (items + prompt) | 2.426 |
+| Runtime direct rule×task eşliği | 2.426/2.426 |
+| Korumalı sayfalarda task-source görünürlüğü | 327/327 bağ (76 sayfa) |
+| Canonical standard sözleşmesi | 36 |
+| Çözülmüş standard ref | 6.493 |
 
 `catalog:` bağı belgenin docs-hub üzerinden bulunmasını sağlar fakat semantik sahiplik iddiası
 kurmaz. `decision:` bağı ise doğru feature/archetype sahibinin bulunmadığını ve yeni app/module
 kararının insan yetkisinde kaldığını açıkça gösterir. Dinamik Vitest kapısı her izlenen Markdown'ın
 en az bir WBS `refs[]` bağından erişilmesini, catalog/decision sınıflarının ayrılmasını ve exact path
 sınırını zorlar; public aggregate `npm run gen:reindex` ile kanonik node refs'leriyle eşlenir.
+Task-materialize ve human-decision sınıflarının yürütülebilir yönergeleri yalnız `refs[]` olarak
+bırakılmaz: ilgili executable görevin 17-boyut JSON kartındaki `items` ve `prompt` alanlarına
+task-specific clause olarak yazılır. Korumalı app/module JSON'ları değişmeden kalır; aynı içerik
+sayfa, export ve agent prompt'unda source-owned `resolvedDirectives` projeksiyonuyla görünür.
 
 İnsan sahiplik kararı bekleyen 10 belge şunlardır: `archetype-venture-core-directive.md`,
 `drafts/k-kms-directive.md`, yedi kernel primitifi (`k-evidence-seal`, `k-kms`,
@@ -69,7 +80,9 @@ Bu repoda bir `.md` yönergesinin JSON dünyasına bağlanmasının beş yolu va
 | M4 — Şema alanı (her düğümde yaşayan) | `dimensions`, `applicability`, `waivers`, `evidence[]`, `uiDelivery`, fazlar | Kural her düğümün kendi verisinde beyan istiyorsa |
 | M5 — Kapı (gate) | `tools/agents/check-*.mjs` + vitest + deploy.yml | Kuralın ihlali otomatik yakalanacaksa |
 
-Altın Kural burada da geçerlidir: metin 485 sayfaya **kopyalanmaz**; kural tek JSON'da yaşar, sayfalar referansla bağlanır (`AGENTS.md §2`, ADR-0027).
+Altın Kural burada da geçerlidir: Markdown'ın tamamı 496 sayfaya körlemesine kopyalanmaz; kural
+tek JSON registry kaydında yaşar, ilgili görevlerin `items` ve `prompt` alanlarına task-specific
+clause olarak materyalize edilir ve kaynak bağı korunur (`AGENTS.md §2`, ADR-0027).
 
 ## 3. KOVA A — Yeni JSON yönergesi + yeni sayfa gerekenler
 
@@ -135,16 +148,16 @@ Bu sınıfta yeni JSON açılmaz; orphan doküman, halihazırda var olan düğü
 
 ## 5. KOVA C — "Her yere" entegrasyon: üç ayrı soruya üç ayrı cevap
 
-"Heryere entegre olmalı" tek mekanizma değildir; kardeş raporun ilkesi geçerli: **yeni alan icat edilmez, kural JSON'a girer, 485 sayfa referansla miras alır.** Kopyalama anti-pattern'dir.
+"Heryere entegre olmalı" tek mekanizma değildir; kardeş raporun ilkesi geçerli: **yeni alan icat edilmez, kural JSON'a girer, 496 sayfa raw/effective referansla miras alır.** Kopyalama anti-pattern'dir.
 
-### 5.1 Her düğüme / her sayfaya (485/485) — zaten global olanlar + iki eksik
+### 5.1 Her düğüme / her sayfaya (496/496) — global sözleşmeler + açık kararlar
 
 Zaten her sayfada yaşayanlar (kanıt: şema + kapılar): 17 boyut (`dimension-contract-17` ↔ `dimension-semantics.mjs`), `standardRefs` + `applicability` + `waivers`, `evidence[]`, 7 waterfall fazı (`task-to-code-contract`, 89 düğümde açık ref + şema herkese uygular), AI yetki sınırı (`platform-product-code-write-policy.json` + her düğümün `aiAgents` boyutu), içerik-kalite kapısı. **Bunlar için yapılacak yayılım işi yoktur.**
 
-Eksik iki global:
+Açık iki konu:
 
-1. **`maturity_level` alanı (L1/L2/L3)** — `core-enterprise-maturity-ladder.md` hiçbir JSON'da yaşamıyor; ADR-D3.1 kilitlenince 28 app düğümüne alan olarak girer (app-seviyesi; alt düğümler miras okur, kopyalamaz). Her app sayfasının başlığında kademe rozeti = "her sayfaya entegre"nin doğru hali.
-2. **Kaynak-geri-bağı:** yeni standart JSON'ları doğdukça (kardeş rapor J2-J3) ilgili düğümler ref'i otomatik miras alır; elle 485 düzenleme **yapılmaz**.
+1. **`maturity_level` alanı (L1/L2/L3)** — ADR-D3.1 insan kararı kilitlenmeden 28 app için değer uydurulmaz; bu kaynak `human-decision` blocker olarak ilgili görevlerde görünür. Karar sonrası app-seviyesi değer alt düğümlerce miras alınır.
+2. **Kaynak-geri-bağı:** J2-J3 standartları applicability overlay'leriyle tamamlandı; ilgili düğümler ref'i otomatik çözer. Elle 496 JSON'a aynı standart metni kopyalamak yerine görev sayfası sözleşmenin tam kuralını gösterir.
 
 ### 5.2 Her feature'a (101 feature + 18 component)
 
@@ -158,9 +171,9 @@ Kardeş rapor §3.2 ref terfileri geçerlidir: `financeModelRef`/`identityDataRe
 
 Launch-gate (app+release seviyesi), `venture-core` (yalnız EVM), moderasyon kuralları (yalnız UGC-dokunan düğümler), tüm KOVA D. Gerekçe: alakasız düğüme yayılan kural gürültüdür ve içerik-kalite kapısının "sayfaya-özel madde" ilkesini bozar.
 
-## 6. KOVA D — JSON'a aktarılmayacaklar (bilinçli sınır)
+## 6. KOVA D — ilk orphan denetiminin tarihsel reference-only alt kümesi
 
-Raporlar, denetimler, planlar ve örnek/not dosyaları **karar günlüğü/evidence** sınıfıdır; JSON yönergesine çevrilmez (çevrilirse tarih dondurulmuş analiz "kural" gibi davranır — drift). Orphan kümesindeki tam liste (39):
+Raporlar, denetimler, planlar ve örnek/not dosyaları **karar günlüğü/evidence** sınıfıdır; JSON yönergesine çevrilmez (çevrilirse tarih dondurulmuş analiz "kural" gibi davranır — drift). İlk 117-orphan denetimindeki tarihsel alt küme (39) aşağıdadır; güncel kanonik `reference-only` toplamı §0'da 62'dir:
 
 `PENDING-HUMAN-FIXES-2026-07-01`, `README` (docs indeksi), `atom-archetype-bagi-clm-ornegi-2026-07-01`, `atom-micro-step-gap-unknown-unknowns-report-2026-07-12`, `atomik-primitif-katman-gap-2026-07-01`, `audit-report`, `data-quality-report`, `doc-maintainer-boundary-gap-report-2026-07-08`, `execution-readiness-gap`, `gap-2026-07-02-00..06` (6 dosya), `golden-node-examples` (eğitim örneği), `governance-plan`, `historical-gap-report-freshness-gap-report-2026-07-08`, `implementation-prompt-boundary-gap-report-2026-07-08`, `implementation-workspace-reality-gap-report-2026-07-08`, `json-standards-integration-gap-report-2026-07-13` (kardeş rapor — kendisi de bu sınıfta), `kernel-sdk-app-sequence-gap-report-2026-07-08`, `kume-e-panel-eca-plan`, `micro-step-atom-gap-claude-vibecoding-2026-07-02`, `next-30-days-plan`, `node.md` (çalışma notu — temizlik adayı), `platform-implementation-advanced-gap-report-2026-07-09`, `repo-reality-audit`, `rewrite-debt-cleanup-plan`, `short-items-wave2/3-plan` (2), `storybook-root-integration-gap-report`, `storybook-unknown-unknowns-gap-report`, `storybook_gap`, `wave4-plan`, `wave4-review-map`, `weak-content-17-report`, `work-unit-molecule-gap-claude-vibecoding-2026-07-02`, `yapi-content-celiski-denetimi-2026-07-08`.
 
@@ -168,7 +181,7 @@ Raporlar, denetimler, planlar ve örnek/not dosyaları **karar günlüğü/evide
 
 ## 7. Tarihsel sayısal kapanış — ilk 117 orphan'ın kova dağılımı
 
-Bu tablo ilk denetimin planlama dağılımıdır; güncel refs kapanışı §0'da 290/280/10/0 olarak verilmiştir.
+Bu tablo ilk denetimin planlama dağılımıdır; güncel sınıflandırma kapanışı §0'da 290/218/10/62 olarak verilmiştir.
 
 | Kova | Adet | İçerik |
 |---|---|---|
@@ -179,9 +192,9 @@ Bu tablo ilk denetimin planlama dağılımıdır; güncel refs kapanışı §0'd
 | D — aktarılmaz | 39 | §6 listesi |
 | **Toplam** | **117** | — |
 
-## 8. Uygulama sırası ve insan kapıları
+## 8. Tarihsel uygulama sırası ve kalan insan kapıları
 
-Kardeş raporun J1-J5 fazları standart ekseni için geçerli; bu rapor E-fazlarını ekler. Aktörler: *Codex* doküman/registry taslağı üretir, *CI* kapıları doğrular, *insan* düğüm/şema/ADR kararlarını onaylar.
+Bu tablo ilk denetimin uygulama planını korur. Makineye aktarılabilen içerik güncel rule registry ve owner-leaf görevleriyle materyalize edilmiştir; şema değeri veya silme/tekilleştirme kararı isteyen satırlar insan kapısı olarak kalır. Aktörler: *Codex* doküman/registry taslağı üretir, *CI* kapıları doğrular, *insan* düğüm/şema/ADR kararlarını onaylar.
 
 | Faz | İş | İnsan kapısı |
 |---|---|---|
@@ -197,9 +210,9 @@ Sıra gerekçesi: E1 ucuz ve navigasyonu hemen onarır; E2-E3 içerik sayfası s
 ## 9. Dört soruya bire bir özet
 
 1. **Yeni JSON yönerge + yeni sayfa:** standart ekseni kardeş raporun 5+2 sözleşmesi; bu rapordan: 16 archetype dokümanı (14 registry kaydı + uretim-spec/storage-canonical bağları) ve düğümleri, 7 kernel module düğümü, medya ailesinin İş-planı çıktıları, `maturity_level` alanı (ADR-D3.1), P2 aday olarak applicability-matrix ve naming-map makineleşmesi.
-2. **Mevcut JSON içerik sayfalarına entegre:** §4 tablosu — 48 doküman refs turuyla mevcut düğümlere bağlanır (E1 changeset).
-3. **Her yere / her feature / her sayfa:** yeni mekanizma kurulmaz. Her düğüme zaten global 6 mekanizma işliyor; eksik olan yalnız `maturity_level` (app sayfaları) ve yeni standartların ref-mirasıdır. Feature seviyesi: veri-sınıfı-dokunan ref terfileri + `uiDelivery`. UI sayfaları: `wcag`/`mobileApps` + a11y×i18n deltası + Surface locale beyanı + responsive medya kuralı — hepsi tek-JSON'dan miras, kopya yasak.
-4. **Aktarılmayacaklar:** 49 rapor/plan/denetim (§6) — bunlar evidence katmanıdır; JSON yönergesine çevrilmesi bilinçli olarak reddedilir.
+2. **Mevcut JSON içerik sayfalarına entegre:** 228 aktif/human-decision kaynak 250 rule'a ayrıldı; 290 executable göreve 2.426 rule×task clause ve prompt olarak materyalize edildi.
+3. **Her yere / her feature / her sayfa:** 496/496 sayfa source-owned directive ve standard sözleşmesini çözer. 206 korumalı app/module sayfası raw JSON mutasyonu olmadan inherited/virtual projeksiyon kullanır; kendi raw ref'lerindeki 327 aktif kaynak bağının 327'si de export ve agent prompt'unda görünür.
+4. **Aktarılmayacaklar:** 62 `reference-only` rapor/plan/denetim (§0; §6 ilk tarihsel alt kümeyi listeler) — bunlar evidence katmanıdır; JSON yönergesine çevrilmesi bilinçli olarak reddedilir.
 
 ---
 

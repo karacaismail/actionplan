@@ -6,7 +6,16 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
 
+const PR01_REQUIRED_TEMPLATE_AND_INTAKE_DOCS = [
+  "docs/platform-pr01-blocker-report-template-2026-07-09.md",
+  "docs/platform-pr01-evidence-intake-template-2026-07-09.md",
+  "docs/platform-pr01-remote-unblock-request-2026-07-09.md",
+  "docs/platform-pr01-remote-unblock-response-intake-2026-07-09.md",
+  "docs/platform-pr01-remote-verification-evidence-report-template-2026-07-09.md",
+] as const;
+
 const REQUIRED_TASK_MATERIALIZATION_DOCS = [
+  "docs/archetype-storage-canonical-directive.md",
   "docs/archetype-uretim-spec.md",
   "docs/claude-ai-archetype-eca-directive.md",
   "docs/commerce-os-contract-test-plan.md",
@@ -47,13 +56,23 @@ const REQUIRED_TASK_MATERIALIZATION_DOCS = [
   "docs/url-policy-implementation-directive.md",
   "docs/workflow-directive.md",
   "docs/platform-initial-11-pr-execution-handoff-2026-07-09.md",
+  "docs/platform-cust01-customer-app-core-agent-pack-2026-07-09.md",
   "docs/platform-pr01-ci-baseline-agent-pack-2026-07-09.md",
   "docs/platform-pr01-implementation-dispatch-2026-07-09.md",
   "docs/platform-pr01-remote-verification-runbook-2026-07-09.md",
+  ...PR01_REQUIRED_TEMPLATE_AND_INTAKE_DOCS,
+  "docs/platform-pr02-tenancy-context-agent-pack-2026-07-09.md",
+  "docs/platform-pr03-authz-pdp-agent-pack-2026-07-09.md",
   "docs/platform-pr04-event-outbox-agent-pack-2026-07-09.md",
   "docs/platform-pr05-eca-runtime-agent-pack-2026-07-09.md",
   "docs/platform-pr06-audit-envelope-agent-pack-2026-07-09.md",
+  "docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md",
+  "docs/platform-pr08-db-schema-migrations-agent-pack-2026-07-09.md",
   "docs/platform-pr09-observability-agent-pack-2026-07-09.md",
+  "docs/platform-pr10-sdk-public-contract-agent-pack-2026-07-09.md",
+  "docs/platform-pr11-hello-platform-agent-pack-2026-07-09.md",
+  "docs/platform-w2-01-sdk-app-core-template-agent-pack-2026-07-09.md",
+  "docs/platform-w2-02-sdk-module-template-agent-pack-2026-07-09.md",
   "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
   "docs/platform-w2-04-orderops-vertical-slice-agent-pack-2026-07-09.md",
   "docs/platform-w2-05-inventory-vertical-slice-agent-pack-2026-07-09.md",
@@ -76,27 +95,7 @@ const REQUIRED_TASK_MATERIALIZATION_DOCS = [
   "docs/platform-wave4-portfolio-pr-handoff-2026-07-09.md",
 ] as const;
 
-const PROTECTED_OR_UNMODELED_REFERENCE_DOCS = [
-  "docs/archetype-storage-canonical-directive.md",
-  "docs/roadmap-pm-paritesi.md",
-  "docs/platform-pr02-tenancy-context-agent-pack-2026-07-09.md",
-  "docs/platform-pr03-authz-pdp-agent-pack-2026-07-09.md",
-  "docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md",
-  "docs/platform-pr08-db-schema-migrations-agent-pack-2026-07-09.md",
-  "docs/platform-pr10-sdk-public-contract-agent-pack-2026-07-09.md",
-  "docs/platform-pr11-hello-platform-agent-pack-2026-07-09.md",
-  "docs/platform-w2-01-sdk-app-core-template-agent-pack-2026-07-09.md",
-  "docs/platform-w2-02-sdk-module-template-agent-pack-2026-07-09.md",
-] as const;
-
 const HUMAN_DECISION_DOCS = ["docs/app-distribution-contract.md"] as const;
-
-const DOCUMENT_ONLY_REFERENCE_DOCS = [
-  "docs/commerce-os-vibecoder-readiness-oracles.md",
-  "docs/enterprise-saas-phase-5-11-acceptance-oracles.md",
-  "docs/enterprise-saas-phase-6-unknown-unknown-probes.md",
-  "docs/enterprise-saas-requirement-constitution.md",
-] as const;
 
 const rules = fs
   .readdirSync(RULE_DIR)
@@ -114,38 +113,37 @@ const classifications = JSON.parse(
 
 describe("required docs -> task content coverage", () => {
   it("keeps the audited active directive and handoff corpus explicit", () => {
-    expect(REQUIRED_TASK_MATERIALIZATION_DOCS).toHaveLength(67);
-    expect(new Set(REQUIRED_TASK_MATERIALIZATION_DOCS).size).toBe(67);
+    expect(REQUIRED_TASK_MATERIALIZATION_DOCS).toHaveLength(82);
+    expect(new Set(REQUIRED_TASK_MATERIALIZATION_DOCS).size).toBe(82);
     for (const docPath of REQUIRED_TASK_MATERIALIZATION_DOCS)
       expect(fs.existsSync(path.join(ROOT, docPath)), docPath).toBe(true);
   });
 
-  it("keeps docs-only, pre-WBS and NOT-RUN designs out of executable task gates", () => {
-    for (const docPath of DOCUMENT_ONLY_REFERENCE_DOCS) {
-      expect(ruleSources.has(docPath), `${docPath}: docs-only must not materialize`).toBe(false);
-      const classification = classifications.find((entry) => entry.docPath === docPath);
-      expect(classification?.decision, docPath).toBe("reference-only");
-      expect(classification?.rationale, docPath).toMatch(
-        /docs-only|pre-WBS|NOT-RUN|yürütülebilir/i,
-      );
-    }
-  });
+  it("requires all five PR01 templates and intake artifacts to materialize into task content", () => {
+    const failures = PR01_REQUIRED_TEMPLATE_AND_INTAKE_DOCS.flatMap((docPath) => {
+      const entry = classifications.find((candidate) => candidate.docPath === docPath);
+      const problems: string[] = [];
+      if (entry?.decision !== "task-materialize")
+        problems.push(`${docPath}: classification=${entry?.decision ?? "missing"}`);
+      if (!ruleSources.has(docPath)) problems.push(`${docPath}: materialization rule missing`);
+      return problems;
+    });
 
-  it("does not force protected or unmodeled owners into unrelated executable leaves", () => {
-    for (const docPath of PROTECTED_OR_UNMODELED_REFERENCE_DOCS) {
-      expect(ruleSources.has(docPath), `${docPath}: must not materialize`).toBe(false);
-      const classification = classifications.find((entry) => entry.docPath === docPath);
-      expect(classification?.decision, docPath).toBe("reference-only");
-      expect(classification?.rationale, docPath).toMatch(/protected|korunan|model|eşleşen/i);
-    }
+    expect(failures, failures.join("\n")).toEqual([]);
   });
 
   it("keeps unresolved draft contracts behind an explicit human decision", () => {
     for (const docPath of HUMAN_DECISION_DOCS) {
-      expect(ruleSources.has(docPath), `${docPath}: must not materialize`).toBe(false);
+      expect(ruleSources.has(docPath), `${docPath}: decision blocker must materialize`).toBe(true);
       expect(classifications.find((entry) => entry.docPath === docPath)?.decision, docPath).toBe(
         "human-decision",
       );
+      expect(
+        rules
+          .filter((rule) => (rule.sources ?? []).includes(docPath))
+          .every((rule) => rule.content?.humanDecisionBlocker === true),
+        `${docPath}: approval cannot be implied`,
+      ).toBe(true);
     }
   });
 
@@ -164,23 +162,39 @@ describe("required docs -> task content coverage", () => {
           Boolean(rule.selector?.nodeIds?.length) || rule.selector?.all === true,
           `${docPath}: explicit owners`,
         ).toBe(true);
-        expect(rule.content?.deliverables?.length, `${docPath}: deliverable`).toBeGreaterThan(0);
-        expect(
-          rule.content?.acceptanceCriteria?.length,
-          `${docPath}: acceptance`,
-        ).toBeGreaterThanOrEqual(2);
-        const phases = Object.keys(rule.content?.phaseCriteria ?? {});
-        expect(phases.length, `${docPath}: phase criteria`).toBeGreaterThanOrEqual(2);
-        if (docPath.startsWith("docs/platform-")) {
-          expect(phases, `${docPath}: test-plan`).toContain("test-plan");
-          expect(phases, `${docPath}: verification`).toContain("verification");
-          expect(phases, `${docPath}: release-maintenance`).toContain("release-maintenance");
-        }
         expect(rule.content, `${docPath}: evidence gerçekleşmiş gibi yazılamaz`).not.toHaveProperty(
           "evidence",
         );
       }
     }
+  });
+
+  it("gives every task-materialize source a complete aggregate actionable contract", () => {
+    const failures: string[] = [];
+    const materializedDocs = classifications.filter((entry) => entry.decision !== "reference-only");
+
+    for (const { docPath } of materializedDocs) {
+      const owners = rules.filter((rule) => (rule.sources ?? []).includes(docPath));
+      const deliverableCount = owners.flatMap((rule) => rule.content?.deliverables ?? []).length;
+      const acceptanceCount = owners.flatMap(
+        (rule) => rule.content?.acceptanceCriteria ?? [],
+      ).length;
+
+      if (owners.length === 0) failures.push(`${docPath}: materialization rule missing`);
+      if (deliverableCount < 1)
+        failures.push(`${docPath}: deliverables=${deliverableCount}, need>=1`);
+      if (acceptanceCount < 2)
+        failures.push(`${docPath}: acceptanceCriteria=${acceptanceCount}, need>=2`);
+
+      for (const phase of ["test-plan", "verification", "release-maintenance"] as const) {
+        const phaseCount = owners.flatMap(
+          (rule) => rule.content?.phaseCriteria?.[phase] ?? [],
+        ).length;
+        if (phaseCount < 1) failures.push(`${docPath}: phaseCriteria.${phase}=0, need>=1`);
+      }
+    }
+
+    expect(failures, failures.join("\n")).toEqual([]);
   });
 
   it("classifies every tracked document and keeps rule-source decisions exact", () => {
@@ -196,7 +210,7 @@ describe("required docs -> task content coverage", () => {
     expect(new Set(classifications.map((entry) => entry.docPath)).size).toBe(290);
     const classifiedMaterialized = new Set(
       classifications
-        .filter((entry) => entry.decision === "task-materialize")
+        .filter((entry) => entry.decision !== "reference-only")
         .map((entry) => entry.docPath),
     );
     expect([...classifiedMaterialized].sort()).toEqual([...ruleSources].sort());

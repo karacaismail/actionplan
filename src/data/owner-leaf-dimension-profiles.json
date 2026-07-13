@@ -1,0 +1,137 @@
+{
+  "version": "owner-leaf-dimensions-v1",
+  "profiles": {
+    "archetype-storage-contract": {
+      "focus": "ArcheType shared-row JSONB depolama ve ölçülmüş fiziksel tablo terfisi",
+      "input": "alan şeması, tenant_id, JSONB payload, sorgu ısısı/kardinalitesi, veri sınıfı ve approval_ref",
+      "output": "storage mapping, GIN/generated-column indeksleri, idempotent backfill ve expand-contract downgrade planı",
+      "threat": "cross-tenant sızıntı, veri kaybı/çoğalması, API-storage drift'i ve onaysız DDL",
+      "performance": "100k+ satır filtresinde p95 ≤300 ms; yük testi indeks ve backfill etkisini ayrı raporlar",
+      "mobile": "mobil/PWA consumer aynı storage-agnostic API'yi kullanır; offline yazım doğrudan JSONB erişimine dönüşmez",
+      "deployment": "insan onaylı Alembic expand-contract; gerçek repo/test/deploy traceability henüz çözülmemiştir",
+      "failure": "approval_ref yoksa apply reddi; terfi hatasında dual-write kapanır, okuma JSONB'ye döner ve downgrade çalışır",
+      "lifecycle": "tenant_id+RLS, PII/KVKK-GDPR sınıfı, retention/saklama takvimi, silme/anonimleştirme ve restore snapshot'ı",
+      "consumer": "ArcheType motoru ve generated API consumer'ları sözleşmeyi storage-agnostic port üzerinden tüketir"
+    },
+    "atomic-type-contract": {
+      "focus": "kanonik atomik tip registry'si ile atom, fragment ve ArcheType sorumluluk sınırı",
+      "input": "aday tip, sıralı parametreler, consumer alanı, locale/timezone/money/reference kısıtları ve owner disposition'ı",
+      "output": "kanonik kimlik, validator/serializer/equality/storage projection, golden conformance vektörleri ve consumer manifesti",
+      "threat": "aynı anlam için çift tip, deterministik olmayan kimlik, scalar coercion ve consumer'a özgü sözleşme drift'i",
+      "performance": "runtime sayısal SLA uydurulmaz; conformance ve round-trip CI süresi ölçülür ve p95 hedef kararı kaydedilir",
+      "mobile": "iOS/Android/PWA SDK consumer'ı aynı wire tipini çözer; offline serialization round-trip kaybı üretmez",
+      "deployment": "yalnız sürümlü registry yayını planlanır; gerçek repo yolu, test komutu ve deploy hedefi çözülmeden uygulanmaz",
+      "failure": "duplicate, sınıflandırılmamış veya uyumsuz tip reddedilir; son uyumlu registry ve wire biçimi korunur",
+      "lifecycle": "sürümlü registry, alias/supersede izi, PII örnek yasağı, fixture retention/saklama süresi ve eski wire restore'u",
+      "consumer": "ArcheType alanları, CLM sözleşmeleri ve SDK üreticileri atomik tipi yalnız kanonik registry API'sinden tüketir"
+    },
+    "capability-registry-contract": {
+      "focus": "typed module manifest registry'si ve tenant capability/entitlement kararı",
+      "input": "manifest kimliği/slug/sürüm/permission/health ile tenant grant, expiry ve revoke bağlamı",
+      "output": "registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu",
+      "threat": "duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver",
+      "performance": "entitlement resolver p95 ve timeout değeri ölçülür; insan eşik kararı yokken sayı uydurulmaz ve timeout deny üretir",
+      "mobile": "mobil/PWA shell capability kararını server API'den tüketir; offline cache yalnız son deny-safe snapshot'ı gösterir",
+      "deployment": "PR-07 registry kaydı quarantine/revoke ile planlanır; gerçek runtime repo ve deploy hedefi çözülmemiştir",
+      "failure": "invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir",
+      "lifecycle": "versioned manifest, tenant-scoped grant, PII içermeyen audit, retention/saklama, expiry/revoke ve rollback snapshot'ı",
+      "consumer": "app-core shell ve module loader capability kararını typed contract kapısından tüketir; doğrudan registry DB erişimi yasaktır"
+    },
+    "customer-app-core-shell": {
+      "focus": "Customer app-core slug, capability-gated route/menu shell ve customer.* event namespace'i",
+      "input": "Customer slug, capability binding, route/menu descriptor'ları, event namespace ve Foundation predecessor kanıtı",
+      "output": "registry binding, guarded shell smoke ve çakışmasız namespace; Customer CRUD açıkça kapsam dışıdır",
+      "threat": "yetkisiz route görünürlüğü, slug/namespace çakışması, domain sınırı taşması ve erken kuyruk ilerlemesi",
+      "performance": "route/menu capability çözümü ile shell boot p95 hedefi CI'da ölçülür; kanonik sayı kararı olmadan eşik uydurulmaz",
+      "mobile": "responsive PWA shell 320px+ görünümde capability-deny durumunu korur; touch hedefleri 44px ve offline menü deny-safe'dir",
+      "deployment": "yalnız CUST-01 registration planlanır; CUST-02 blocker'ı ve çözülmemiş traceability deploy iddiası üretmez",
+      "failure": "capability yoksa shell gizlenir; namespace collision veya predecessor açığı registration'ı reddeder",
+      "lifecycle": "yalnız registry metadata'sı; Customer PII kaydı yoktur, retention/saklama audit politikasına bağlıdır ve snapshot restore edilir",
+      "consumer": "Customer ürün shell'i route/menu/capability contract'ını app-core panelinde tüketir; domain CRUD modülleri bu göreve bağlı değildir"
+    },
+    "hello-platform-smoke": {
+      "focus": "aynı SHA üzerinde API, GraphQL, tenant, UI/storefront ve public SDK Foundation boot smoke'u",
+      "input": "PR-01..10 doğrulanmış SHA/build, API config, tenant fixture, browser shell, SDK fixture ve CI/staging ortamı",
+      "output": "local, CI ve staging sonuçlarını birbirine karıştırmayan katmanlı smoke evidence paketi",
+      "threat": "local sonucu remote PASS sayma, stale checkout/path, missing-tenant fail-open ve eksik predecessor",
+      "performance": "boot/health/GraphQL/browser/SDK süreleri ve timeout p95 hedefleri katman bazında ölçülür; sayı uydurulmaz",
+      "mobile": "iOS/Android viewport ve responsive PWA boot smoke'u 44px touch ile offline/ağ-kesintisi sonucunu ayrı kaydeder",
+      "deployment": "exact SHA üzerinde CI/staging smoke planlanır; staging erişilemiyorsa açık blocker kalır ve deploy PASS yazılmaz",
+      "failure": "tek katmanın eksikliği Foundation'ı incomplete tutar, release'i durdurur, son verified commit'e rollback ve tam rerun ister",
+      "lifecycle": "ephemeral tenant fixture, PII/KVKK-GDPR redaksiyonu, 24 saat fixture retention/saklama, silme ve evidence restore izi",
+      "consumer": "release gate API, UI/storefront ve SDK smoke çıktılarını tek build kimliğiyle tüketir; katmanlar birbirinin yerine geçmez"
+    },
+    "platform-migration-contract": {
+      "focus": "PostgreSQL engine/base, Alembic baseline, tenant şeması ve reversible migration sözleşmesi",
+      "input": "DATABASE_URL, boş/mevcut schema, migration manifesti, tenant stratejisi, veri sınıfı, backup ve rollback notu",
+      "output": "upgrade/downgrade, schema version, tenant_id/index+RLS izolasyonu ve restore/reconciliation kanıt planı",
+      "threat": "veri kaybı, cross-tenant escape, rollback'siz destructive migration ve provider/restore sınırı çökmesi",
+      "performance": "connection, lock, migration ve backfill p95 süreleri yük testinde ölçülür; abort hedefi insan kararı olmadan uydurulmaz",
+      "mobile": "mobil/PWA consumer migration boyunca versioned API contract'ı kullanır; offline sync eski schema yazımını yeniden oynatamaz",
+      "deployment": "apps/api PostgreSQL/Alembic planlıdır; kayıtlı repoPath ve pytest komutu gerçek çalıştırma öncesi kanıt sayılmaz",
+      "failure": "DATABASE_URL eksikliği açık hata üretir; round-trip/idempotency kırığı apply'ı durdurur, downgrade ve verified restore çalışır",
+      "lifecycle": "PII/KVKK-GDPR sınıfı, retention/saklama, backup/restore, immutable snapshot, silme ve versioned schema",
+      "consumer": "API repository katmanı migration contract'ını typed DB boundary'den tüketir; app/module doğrudan Alembic ownership almaz"
+    },
+    "policy-context-contract": {
+      "focus": "ActorContext+TenantContext bağlı PolicyContext ve default-deny PDP kararı",
+      "input": "verified session, actor/tenant, action/resource/relationship attributes, permission ve policy version",
+      "output": "401/403 veya allow/deny reason+policyRef+auditFields ile guard-coverage sonucu",
+      "threat": "default allow, missing resolver guard, unknown permission, spoofed/cross-tenant actor ve policy mismatch",
+      "performance": "synchronous authorization p95 ve timeout hedefi ölçülür; karar servisi unavailable olduğunda deny üretilir",
+      "mobile": "iOS/Android/PWA client raw PolicyContext ileri süremez; server decision reason code'u responsive erişim yüzeyine taşınır",
+      "deployment": "PR-02 sonrasında versioned guard/policy bundle planlanır; gerçek repo ve deploy traceability çözülmemiştir",
+      "failure": "invalid identity 401, missing permission 403, unknown/missing guard deny üretir; rollback deny smoke'unu korur",
+      "lifecycle": "versioned policy bundle, append-only decision audit, token/secret saklamama, PII/KVKK-GDPR sınıfı ve audit retention'ı",
+      "consumer": "API guard, GraphQL resolver ve background job policy kararını tek typed PDP contract'ından tüketir"
+    },
+    "sdk-app-core-template": {
+      "focus": "byte-stable app-core manifest/route/menu/capability/event skeleton template'i",
+      "input": "normalized app manifest, route/menu/capability/event namespace ve template version; zaman/random/env ordering hariç",
+      "output": "generated-header dosyaları, dry-run diff ve yalnız app-core shell snapshot'ları",
+      "threat": "nondeterminism, manual edit, forbidden stack, event collision ve domain scaffold kapsam taşması",
+      "performance": "dual-render generation p95 süresi CI'da ölçülür; hash'ler byte-identical olmalı, runtime SLA bu görevin dışındadır",
+      "mobile": "üretilen responsive PWA shell 320px+ ve 44px touch contract'ını taşır; offline route cache capability deny'ı aşamaz",
+      "deployment": "W2-01 versioned SDK template package yayınıdır; app deploy'u değildir ve çözülmemiş traceability uydurulmaz",
+      "failure": "invalid manifest, collision, hash drift, manual edit veya forbidden stack publish'i durdurur; önceki snapshot yeniden üretilir",
+      "lifecycle": "immutable template+snapshot, PII içermeyen fixture, 90 gün retention/saklama ve reproducible artifact restore'u",
+      "consumer": "SDK renderer app-core template contract'ını tüketir; generated app shell domain model/API/CRUD üretmez"
+    },
+    "sdk-module-template": {
+      "focus": "byte-stable fail-closed module manifest, shallow healthz, permission fixture ve test harness'i",
+      "input": "module id/name/version, permission/capability/authz binding, health config ve template version",
+      "output": "validated manifest, shallow healthz, default-deny permission fixture, generated header ve snapshot",
+      "threat": "public-by-default permission, healthz PII sızıntısı, missing field, nondeterminism ve marketplace kapsam taşması",
+      "performance": "dual-render p95 süresi ölçülür; healthz domain scan yapmaz ve numeric bütçe insan kararına kadar uydurulmaz",
+      "mobile": "mobil/PWA module consumer yalnız capability API'sini kullanır; offline paket permission deny kuralını gevşetmez",
+      "deployment": "W2-02 versioned SDK template package'i W2-01 sonrasında planlanır; runtime deploy traceability çözülmemiştir",
+      "failure": "missing field render'ı reddeder, permission default-deny kalır, unhealthy response tenant/domain veri sızdırmaz ve snapshot restore edilir",
+      "lifecycle": "template metadata'sı PII içermez; healthz state saklamaz, snapshot retention/saklama 90 gündür ve eski sürüm restore edilir",
+      "consumer": "module authoring harness'i template contract'ını tüketir; app/module runtime doğrudan template store'a erişmez"
+    },
+    "sdk-public-contract": {
+      "focus": "tek sürümlü public SDK contract'ı ve deterministik codegen/export yüzeyi",
+      "input": "kanonik schema, semver, export allowlist, generator config ve PR-09/capability predecessor kanıtı",
+      "output": "typed client, dar public-export snapshot, generated header/hash ve compatibility raporu",
+      "threat": "nondeterminism, manual edit, internal export leak, gizli breaking change ve design-time dependency cycle",
+      "performance": "codegen ve compatibility p95 süresi CI'da ölçülür; runtime client SLA uydurulmaz, byte stability zorunludur",
+      "mobile": "browser/iOS/Android/PWA paketi aynı typed public API'yi tüketir; offline queue wire-version uyumsuzluğunu reddeder",
+      "deployment": "yalnız semver/deprecation kapılı package release planlanır; CLI/template/domain deploy'u bu görevin dışındadır",
+      "failure": "snapshot kırığı, hash mismatch, manual edit veya predecessor açığı release'i bloklar; önceki package+snapshot restore edilir",
+      "lifecycle": "versioned contract, consumer pin, deprecation retention/saklama penceresi, PII örneksiz fixture ve artifact restore'u",
+      "consumer": "SDK client'ları ve generator template'leri public contract'ı allowlisted export üzerinden tüketir; internal modül import'u yasaktır"
+    },
+    "tenant-context-contract": {
+      "focus": "request, job ve event sınırlarında trusted immutable TenantContext propagation'ı",
+      "input": "verified tenant source, actor, request/job/event envelope, correlation id ve seçilen RLS/schema/hybrid strateji",
+      "output": "scoped context+DB access+audit correlation veya fail-closed rejection reason",
+      "threat": "raw tenant_id spoof/override, async context kaybı, cross-tenant read/write/update ve çalıştırılmamış isolation probe",
+      "performance": "context extraction/propagation ve DB-scope p95 overhead'i ölçülür; timeout veya missing context deny üretir",
+      "mobile": "mobil/PWA client raw tenant_id ile güven kuramaz; offline event trusted server envelope olmadan replay edilmez",
+      "deployment": "PR-02 context wiring bağımsız revert ile planlanır; gerçek repo/test/deploy traceability çözülmemiştir",
+      "failure": "missing, invalid, override veya cross-tenant context DB'den önce reddedilir; context'siz async envelope quarantine edilir",
+      "lifecycle": "context ephemeral; yalnız minimal PII'siz audit correlation, KVKK-GDPR sınıfı, retention/saklama ve fixture silme/restore izi",
+      "consumer": "API request guard, worker ve event handler TenantContext'i tek typed boundary'den tüketir; doğrudan header trust edilmez"
+    }
+  }
+}

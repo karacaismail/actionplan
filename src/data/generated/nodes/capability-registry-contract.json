@@ -1,0 +1,834 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "capability-registry-contract",
+  "wbsCode": "3.10.1",
+  "level": "archetype",
+  "title": "Module Registry ve Capability Entitlement Sözleşmesi",
+  "slug": "capability-registry-contract",
+  "aliases": [],
+  "summary": "Module manifest doğrulaması, capability/entitlement çözümü, health görünürlüğü ve revoke/quarantine davranışını fail-closed tanımlar.",
+  "parentId": "k-capability",
+  "order": 1,
+  "icon": "ph-file-code",
+  "tags": [
+    "capability",
+    "entitlement",
+    "module-registry",
+    "manifest",
+    "health"
+  ],
+  "dependsOn": [
+    "policy-context-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:catalog-enterprise-capability-ontology: docs/enterprise-saas-capability-ontology.md",
+    "doc-apply:catalog-enterprise-identity-tenant-candidates: docs/enterprise-saas-phase-5b-identity-tenant-org-candidates.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md",
+    "doc-apply:capability-registry-contract: docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md",
+    "doc-apply:k-capability-registry-open-gaps: docs/k-capability-registry-readiness-gap-2026-07-09.md",
+    "doc-apply:platform-linear-execution-queue-evidence-gate: docs/platform-implementation-execution-queue-2026-07-09.md"
+  ],
+  "criticalPath": true,
+  "status": "backlog",
+  "priority": "critical",
+  "owner": "platform-ekibi",
+  "assignees": [],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "[DOC-APPLY:task-handoff] Module Registry ve Capability Entitlement Sözleşmesi kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Module Registry ve Capability Entitlement Sözleşmesi için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet.",
+        "[DOC-APPLY:capability-registry-contract] Manifest kimliğini, registry yaşam döngüsünü, capability/entitlement karar girdisini ve module-health sınırını tanımla; marketplace runtime'ı non-goal tut."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "[DOC-APPLY:catalog-enterprise-capability-ontology] Altılı kimlik çakışması, ad-benzerliğiyle yanlış merge, iki writer, design-time cycle ve beş terfi ölçütünden eksik aday fixture'larını kırmızı tanımla.",
+        "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Cross-tenant erişim, iki authority, parolayı domain'de tutma, süresiz delegation ve grantsiz cross-org share negatiflerini önce yaz.",
+        "[DOC-APPLY:high-risk-dod] Module Registry ve Capability Entitlement Sözleşmesi riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Module Registry ve Capability Entitlement Sözleşmesi kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Module Registry ve Capability Entitlement Sözleşmesi için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Module Registry ve Capability Entitlement Sözleşmesi acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] capability-registry-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] capability-registry-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] capability-registry-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla.",
+        "[DOC-APPLY:capability-registry-contract] Valid register, duplicate slug, invalid manifest, forbidden permission diff, fail-closed entitlement, capability-yok visibility ve ayrı module healthz testlerini önce kırmızı tanımla.",
+        "[DOC-APPLY:k-capability-registry-open-gaps] Önce duplicate slug, invalid manifest, permission escalation, missing/expired entitlement, cross-tenant resolution ve unhealthy module fixture'larını kırmızı tanımla.",
+        "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Önce missing predecessor, sıra atlama, placeholder URL/SHA, eksik 6'lı evidence, docs-only status=verified ve closed item'dan iki sonraki item'ı açma negatif queue fixture'larını kırmızı tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "capability-registry-contract için manifest kimliği/slug/sürüm/permission/health ile tenant grant, expiry ve revoke bağlamı girdisinin typed schema, indeks ve migration etkisini registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu çıktısına eşle; veri modeli etkisi yoksa gerekçeli N/A kaydet, DDL veya migration kanıtı uydurma."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "[DOC-APPLY:ready-for-dev] Module Registry ve Capability Entitlement Sözleşmesi yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "capability-registry-contract için invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir failure mode'unu önce negatif unit/integration testiyle doğrula; registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu kabul çıktısını gerçek test raporuna bağlamadan PASS veya evidence yazma."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "[DOC-APPLY:catalog-enterprise-capability-ontology] Her disposition'ı altılı kimlik, owner otoritesi, DAG kenarı, duplicate kanıtı ve promotion/demotion ölçütleriyle doğrula.",
+        "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Her candidate için owner/dataAuthority/lifecycleAuthority ile tenant, actor ve policy context bağlarını doğrula; belirsiz sahibi uydurma.",
+        "[DOC-APPLY:high-risk-dod] Module Registry ve Capability Entitlement Sözleşmesi kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] capability-registry-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] capability-registry-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Module Registry ve Capability Entitlement Sözleşmesi done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] capability-registry-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme.",
+        "[DOC-APPLY:capability-registry-contract] Manifest/duplicate/entitlement/module-health loglarını gerçek CI çıktısıyla doğrula; marketplace, Customer app-core, SDK generator veya dynamic plugin runtime diff'i olmadığını denetle.",
+        "[DOC-APPLY:k-capability-registry-open-gaps] Registry, entitlement ve module-health testlerini gerçek çıktı ile doğrula; genel /healthz sonucunu registry readiness kanıtı sayma.",
+        "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] capability-registry-contract queue item'ının predecessor durumunu ve PR/merge/CI/test/rollback/manual-review referanslarını gerçek kaynaklarda çöz; yalnız rapor metni, template veya NOT-RUN kaydıyla verified yazma."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "[DOC-APPLY:catalog-enterprise-capability-ontology] Kimlik veya authority değişiminde alias/supersede ve etki kaydı tut; önceki kanonik disposition'a dönüş yolunu koru.",
+        "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Authority kararı geldiğinde candidate disposition'ını ve izolasyon regresyonlarını güncelle; önceki default-deny davranışını rollback tabanı olarak tut.",
+        "[DOC-APPLY:high-risk-dod] capability-registry-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Module Registry ve Capability Entitlement Sözleşmesi teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Module Registry ve Capability Entitlement Sözleşmesi repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Module Registry ve Capability Entitlement Sözleşmesi için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Module Registry ve Capability Entitlement Sözleşmesi kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Module Registry ve Capability Entitlement Sözleşmesi için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet.",
+        "[DOC-APPLY:capability-registry-contract] Registry kaydı bağımsız quarantine/revert edilebilir olmalı; entitlement rollback sonrası fail-closed smoke çalışmalı ve PR-07 done olmadan PR-08 başlamamalıdır.",
+        "[DOC-APPLY:k-capability-registry-open-gaps] Manifest/capability sürümü değişince permission diff, revoke/quarantine ve önceki registry kaydına dönüş smoke'unu yeniden çalıştır.",
+        "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Gerçek evidence ile kapanışta ilgili WBS refs/evidence ve implementationStatus kaydını, queue JSON'da verified→tek next-actionable geçişini ve reindex+qa:ci sonucunu güncelle; yanlış/stale kanıtta önceki blocked duruma rollback yap."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "[DOC-APPLY:catalog-enterprise-capability-ontology] Module Registry ve Capability Entitlement Sözleşmesi için concept, owner, dataAuthority, lifecycleAuthority, consumer ve outcome altılısına dayalı capability identity, alias/supersede, granularity, ownership, DAG ve promotion disposition kaydı.",
+    "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Module Registry ve Capability Entitlement Sözleşmesi için identity, SSO, machine principal, delegation, party/org, tenancy, residency/key-ref, quota ve cross-org share candidate'larını tekil platform authority ve unresolved lifecycle alanlarıyla eşle.",
+    "[DOC-APPLY:high-risk-dod] capability-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Module Registry ve Capability Entitlement Sözleşmesi için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] capability-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] capability-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Module Registry ve Capability Entitlement Sözleşmesi için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Module Registry ve Capability Entitlement Sözleşmesi kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Module Registry ve Capability Entitlement Sözleşmesi için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.",
+    "[DOC-APPLY:capability-registry-contract] Register/list/health contract, fail-closed manifest schema ve capability/entitlement resolver.",
+    "[DOC-APPLY:capability-registry-contract] Valid/duplicate/invalid/forbidden manifest, entitlement ve ayrı module-healthz test paketi.",
+    "[DOC-APPLY:k-capability-registry-open-gaps] Typed module manifest doğrulaması, benzersiz slug, capability/tenant entitlement çözümü ve platform healthz'den ayrı module readiness sonucu üreten Module Registry ve Capability Entitlement Sözleşmesi sözleşmesi.",
+    "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Module Registry ve Capability Entitlement Sözleşmesi (capability-registry-contract) için PR-01..PR-11 → CUST-01..06 → W2-01..06 → W3-01..07 → W4-01..07 doğrusal kuyruktaki exact item/predecessor, dağıtım hedefi, allowed handoff, readiness config, rollback/smoke, blocker, gerçek evidence alanları ve bir-sonraki-item step-up kaydı."
+  ],
+  "acceptanceCriteria": [
+    "[DOC-APPLY:catalog-enterprise-capability-ontology] Ad, vendor, araştırma sayısı, edition veya protokol capability kimliği ya da module terfi kanıtı sayılmaz; belirsiz authority insan karar kuyruğuna gider.",
+    "[DOC-APPLY:catalog-enterprise-capability-ontology] Yalnız dataAuthority state yazar ve lifecycleAuthority geçişi yönetir; duplicate fold kanonik kaynak, duplicateOf ve alias/supersede izi olmadan yapılmaz.",
+    "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Commerce görevleri credential, tenant, org, party, entitlement veya PDP otoritesini kopyalamaz; yalnız audit izli ve default-deny doğrulanmış context/grant referanslarını tüketir.",
+    "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] Machine principal, delegation expiry, quota authority, cross-org share ve session/device trust sahibi çözülmediyse candidate unresolved kalır ve default-deny uygulanır.",
+    "[DOC-APPLY:high-risk-dod] Module Registry ve Capability Entitlement Sözleşmesi yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] capability-registry-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] capability-registry-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Module Registry ve Capability Entitlement Sözleşmesi için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Module Registry ve Capability Entitlement Sözleşmesi development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] capability-registry-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Module Registry ve Capability Entitlement Sözleşmesi evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] capability-registry-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Module Registry ve Capability Entitlement Sözleşmesi evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.",
+    "[DOC-APPLY:capability-registry-contract] Valid module manifest register olur; duplicate slug deterministik reddedilir.",
+    "[DOC-APPLY:capability-registry-contract] Invalid manifest ve forbidden permission diff reddedilir.",
+    "[DOC-APPLY:capability-registry-contract] Capability/entitlement resolver fail-closed davranır.",
+    "[DOC-APPLY:capability-registry-contract] Module healthz platform /healthz'den ayrıdır ve entitlement kararı audit-compatible alanlar taşır.",
+    "[DOC-APPLY:k-capability-registry-open-gaps] Valid manifest register olur; duplicate slug, invalid schema ve forbidden permission diff deterministik hata ile reddedilir.",
+    "[DOC-APPLY:k-capability-registry-open-gaps] Capability/entitlement çözümü eksik, süresi dolmuş veya tenant-dışı bağlamda default-deny olur; module health ve typed registry output SDK consumer'ına ayrı contract sunar.",
+    "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] capability-registry-contract ilgili queue item ve exact predecessor'a eşlenir; predecessor verified olmadan bu item next-actionable/done olmaz ve Foundation→Customer→W2→W3→W4 sırası atlanmaz.",
+    "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Verified kaydı PR URL, merge commit SHA, CI run URL, test log/rapor, rollback/smoke notu ve manual review notunun 6/6'sı gerçek ve çözülebilir olmadan yazılmaz.",
+    "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Queue JSON status'u product gerçekliği veya implementation kanıtı sayılmaz; agent pack DIRECTIVE-ONLY kalır ve yalnız handoff'taki repo/branch/non-goal/test/evidence sınırını insan geliştiriciye aktarır.",
+    "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] PR-01 remote/default-branch/CI baseline evidence yokken PR-02+, Customer, W2, W3 veya W4 açılmaz."
+  ],
+  "risks": [
+    {
+      "id": "r-doc-pr07-fail-open-entitlement",
+      "desc": "[DOC-APPLY:capability-registry-contract] Hatalı veya duplicate manifest ile fail-open entitlement kararı yetkisiz yüzeyleri açabilir.",
+      "severity": "critical",
+      "mitigation": "Fail-closed resolver, deterministic duplicate rejection, forbidden-permission diff testi ve ayrı module healthz uygula."
+    },
+    {
+      "id": "r-gap-capability-default-allow",
+      "desc": "[DOC-APPLY:k-capability-registry-open-gaps] Doğrulanmamış manifest veya fail-open entitlement çözümü yetkisiz modülü tenant yüzeyine açabilir.",
+      "severity": "critical",
+      "mitigation": "Schema doğrulama, uniqueness, permission diff ve tenant-scoped default-deny entitlement testlerini zorunlu tut."
+    },
+    {
+      "id": "r-platform-queue-evidence-or-order-bypass",
+      "desc": "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] Docs/template durumunun product evidence sayılması veya doğrusal predecessor zincirinin atlanması bağımlı dalgaları sahte hazır gösterir.",
+      "severity": "critical",
+      "mitigation": "Exact predecessor ve gerçek 6'lı evidence setini fail-closed kontrol et; her kapanışta yalnız tek sonraki item'ı aç."
+    }
+  ],
+  "rollback": "Yeni registry kaydı quarantine edilir, entitlement geri çekilir ve önceki imzalı manifest snapshot'ına dönülür; public-by-default fallback kullanılmaz.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-capability-registry-contract-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Module Registry ve Capability Entitlement Sözleşmesi tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Module Registry ve Capability Entitlement Sözleşmesi blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "capability-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "capability-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "capability-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Module Registry ve Capability Entitlement Sözleşmesi AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-capability-registry-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "capability-registry-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-capability-registry-contract-archetype-prod-history-deny",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "neq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "prod-archetype-update-must-preserve-history",
+          "node": "capability-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-capability-registry-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "capability-registry-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: işlev ve kapsam sınırı typed module manifest registry'si ve tenant capability/entitlement kararı; komşu domain davranışı non-goal olarak kalır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: Girdi: manifest kimliği/slug/sürüm/permission/health ile tenant grant, expiry ve revoke bağlamı. Çıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.",
+        "[DOC-APPLY:catalog-enterprise-capability-ontology] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi için concept, owner, dataAuthority, lifecycleAuthority, consumer ve outcome altılısına dayalı capability identity, alias/supersede, granularity, ownership, DAG ve promotion disposition kaydı.\n[DOC-APPLY:waterfall-handoff] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/featureDefs):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:catalog-enterprise-capability-ontology]\nKaynak: docs/enterprise-saas-capability-ontology.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi için concept, owner, dataAuthority, lifecycleAuthority, consumer ve outcome altılısına dayalı capability identity, alias/supersede, granularity, ownership, DAG ve promotion disposition kaydı.\n- Ad, vendor, araştırma sayısı, edition veya protokol capability kimliği ya da module terfi kanıtı sayılmaz; belirsiz authority insan karar kuyruğuna gider.\n- Yalnız dataAuthority state yazar ve lifecycleAuthority geçişi yönetir; duplicate fold kanonik kaynak, duplicateOf ve alias/supersede izi olmadan yapılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-enterprise-capability-ontology]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: tenant, kimlik ve yetki sınırı deny-by-default çalışır; ana tehditler duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: erişim kararı actor+tenant bağlamına göre verilir; reddedilen deneme reason code ve audit izi üretir.",
+        "[DOC-APPLY:catalog-enterprise-identity-tenant-candidates] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi için identity, SSO, machine principal, delegation, party/org, tenancy, residency/key-ref, quota ve cross-org share candidate'larını tekil platform authority ve unresolved lifecycle alanlarıyla eşle."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/security):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:catalog-enterprise-identity-tenant-candidates]\nKaynak: docs/enterprise-saas-phase-5b-identity-tenant-org-candidates.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi için identity, SSO, machine principal, delegation, party/org, tenancy, residency/key-ref, quota ve cross-org share candidate'larını tekil platform authority ve unresolved lifecycle alanlarıyla eşle.\n- Commerce görevleri credential, tenant, org, party, entitlement veya PDP otoritesini kopyalamaz; yalnız audit izli ve default-deny doğrulanmış context/grant referanslarını tüketir.\n- Machine principal, delegation expiry, quota authority, cross-org share ve session/device trust sahibi çözülmediyse candidate unresolved kalır ve default-deny uygulanır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-enterprise-identity-tenant-candidates]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: tipli JSON/schema contract'ı ile modüler producer-consumer ayrımı korunur; engine ve görünüm sorumlulukları karıştırılmaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: codingStandardRef içindeki karmaşıklık bütçesi ve lint gate çözülür; eşik metni bu task içine kopyalanmaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: refactor yalnız tekrarlı projection yolunu sadeleştirir; dead-code ve spekülatif abstraction handoff kapsamına alınmaz."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Kod Optimizasyonu kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: tipli JSON/schema contract'ı ile modüler producer-consumer ayrımı korunur; engine ve görünüm sorumlulukları karıştırılmaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: codingStandardRef içindeki karmaşıklık bütçesi ve lint gate çözülür; eşik metni bu task içine kopyalanmaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: refactor yalnız tekrarlı projection yolunu sadeleştirir; dead-code ve spekülatif abstraction handoff kapsamına alınmaz.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: codeOptimization kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: secret/privilege yüzeyi harden edilir; rate-limit ve fail-closed davranış duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver riskini büyütmez.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: dependency pin ve SBOM taraması quality gate'te çözülür; imzasız artifact veya geniş egress allowlist'e alınmaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: generated prompt/export secret taşımaz; credential rotasyonu ve least-privilege sahibi insan handoff'unda belirtilir."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Güvenlik Optimizasyonu kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: secret/privilege yüzeyi harden edilir; rate-limit ve fail-closed davranış duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver riskini büyütmez. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: dependency pin ve SBOM taraması quality gate'te çözülür; imzasız artifact veya geniş egress allowlist'e alınmaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: generated prompt/export secret taşımaz; credential rotasyonu ve least-privilege sahibi insan handoff'unda belirtilir.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: securityOptimization kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: entitlement resolver p95 ve timeout değeri ölçülür; insan eşik kararı yokken sayı uydurulmaz ve timeout deny üretir",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: indeks/cache veya input-hash cache kararı ölçümle gerekçelendirilir; pagination ya da load-test sonucu kanıtsız optimize edilmez.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: performans çıktısı p95 hedefi, fixture hacmi, ölçüm komutu ve regresyon sonucunu ayrı alanlarda raporlar."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Performans Optimizasyonu kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: entitlement resolver p95 ve timeout değeri ölçülür; insan eşik kararı yokken sayı uydurulmaz ve timeout deny üretir capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: indeks/cache veya input-hash cache kararı ölçümle gerekçelendirilir; pagination ya da load-test sonucu kanıtsız optimize edilmez. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: performans çıktısı p95 hedefi, fixture hacmi, ölçüm komutu ve regresyon sonucunu ayrı alanlarda raporlar.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: performance kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: mobil/PWA shell capability kararını server API'den tüketir; offline cache yalnız son deny-safe snapshot'ı gösterir",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: responsive consumer contract iOS/Android/PWA üzerinde 44px touch hedefini ve dar viewport durumunu doğrular.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: offline/senkron kuyruğu ile native bridge/package aynı versioned contract'ı kullanır; client trust boundary genişlemez."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Mobil Uygulama Uyumu kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: mobil/PWA shell capability kararını server API'den tüketir; offline cache yalnız son deny-safe snapshot'ı gösterir capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: responsive consumer contract iOS/Android/PWA üzerinde 44px touch hedefini ve dar viewport durumunu doğrular. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: offline/senkron kuyruğu ile native bridge/package aynı versioned contract'ı kullanır; client trust boundary genişlemez.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: mobileApps kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: consumer UI'ya taşınan durum/reason code klavye ve görünür focus akışını, ARIA adını ve erişilebilir hata metnini destekler.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: screen-reader ve axe WCAG 2.2 AAA sonucu gerçek UI surface varsa evidence'a bağlanır; backend PASS'i UI kanıtı sayılmaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: responsive yüzeyde 44px hedef boyutu ve contrast kararı standardRefs'ten çözülür; bu task yalnız görev-özel acceptance üretir."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için WCAG 2.2 AAA kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: consumer UI'ya taşınan durum/reason code klavye ve görünür focus akışını, ARIA adını ve erişilebilir hata metnini destekler. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: screen-reader ve axe WCAG 2.2 AAA sonucu gerçek UI surface varsa evidence'a bağlanır; backend PASS'i UI kanıtı sayılmaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: responsive yüzeyde 44px hedef boyutu ve contrast kararı standardRefs'ten çözülür; bu task yalnız görev-özel acceptance üretir.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: wcag kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: PR-07 registry kaydı quarantine/revoke ile planlanır; gerçek runtime repo ve deploy hedefi çözülmemiştir",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: Docker/Compose/Swarm/K8s/Pages hedefi ancak traceability ile doğrulanır; config/env ayrımı ve health/readiness sonucu kaydedilir.",
+        "[DOC-APPLY:platform-linear-execution-queue-evidence-gate] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi (capability-registry-contract) için PR-01..PR-11 → CUST-01..06 → W2-01..06 → W3-01..07 → W4-01..07 doğrusal kuyruktaki exact item/predecessor, dağıtım hedefi, allowed handoff, readiness config, rollback/smoke, blocker, gerçek evidence alanları ve bir-sonraki-item step-up kaydı."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/deployment):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:platform-linear-execution-queue-evidence-gate]\nKaynak: docs/platform-implementation-execution-queue-2026-07-09.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi (capability-registry-contract) için PR-01..PR-11 → CUST-01..06 → W2-01..06 → W3-01..07 → W4-01..07 doğrusal kuyruktaki exact item/predecessor, dağıtım hedefi, allowed handoff, readiness config, rollback/smoke, blocker, gerçek evidence alanları ve bir-sonraki-item step-up kaydı.\n- capability-registry-contract ilgili queue item ve exact predecessor'a eşlenir; predecessor verified olmadan bu item next-actionable/done olmaz ve Foundation→Customer→W2→W3→W4 sırası atlanmaz.\n- Verified kaydı PR URL, merge commit SHA, CI run URL, test log/rapor, rollback/smoke notu ve manual review notunun 6/6'sı gerçek ve çözülebilir olmadan yazılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:platform-linear-execution-queue-evidence-gate]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Otomasyonu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: event tetikleyicisi manifest kimliği/slug/sürüm/permission/health ile tenant grant, expiry ve revoke bağlamı bağlamını doğrular; koşul sağlanmazsa aksiyon çalışmaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: ECA zinciri max 6 derinlikte kesilir; dış etkili action idempotency key olmadan yeniden oynatılamaz.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: approval/deny kolu insan onayı olmadan kapsam genişletmez; failure sonucu invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için ECA Otomasyonu kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: event tetikleyicisi manifest kimliği/slug/sürüm/permission/health ile tenant grant, expiry ve revoke bağlamı bağlamını doğrular; koşul sağlanmazsa aksiyon çalışmaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: ECA zinciri max 6 derinlikte kesilir; dış etkili action idempotency key olmadan yeniden oynatılamaz. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: approval/deny kolu insan onayı olmadan kapsam genişletmez; failure sonucu invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: eca kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Agents",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: AI izin sınırı directive-only'dir; app/module ürün kodu üretmesi veya ruleset mutation yapması forbidden/deny sonucudur.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: kapsam, traceability ya da gerçek evidence değişikliği insan approval/step-up ister; kill-switch denetçi tarafından işletilir.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: sub_prompt güvenilmez girdi sayılır; secret/PII redaksiyonu yapılır ve geçmiş test/deploy sonucu uydurulmaz."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için AI Agents kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: AI izin sınırı directive-only'dir; app/module ürün kodu üretmesi veya ruleset mutation yapması forbidden/deny sonucudur. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: kapsam, traceability ya da gerçek evidence değişikliği insan approval/step-up ister; kill-switch denetçi tarafından işletilir. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: sub_prompt güvenilmez girdi sayılır; secret/PII redaksiyonu yapılır ve geçmiş test/deploy sonucu uydurulmaz.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: aiAgents kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler ve QA",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: unit ve integration negatif testleri şu failure mode'u önce kırmızı yakalar: invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: golden fixture ve contract evidence çıktısı registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu kabul kriterlerine birebir bağlanır.",
+        "[DOC-APPLY:high-risk-dod] capability-registry-contract: capability-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] capability-registry-contract: capability-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] capability-registry-contract: capability-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/testing):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- capability-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Module Registry ve Capability Entitlement Sözleşmesi yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- capability-registry-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- capability-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Module Registry ve Capability Entitlement Sözleşmesi development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- capability-registry-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- capability-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Module Registry ve Capability Entitlement Sözleşmesi evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- capability-registry-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Module Registry ve Capability Entitlement Sözleşmesi evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP ve Güvenlik Standartları",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: OWASP A01 access-control ve A03 injection threat modeli duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver risklerini kapsar.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: ASVS input validation ile dependency/SBOM kontrolü typed boundary öncesinde fail-closed çalışır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: negatif güvenlik denemesi reason code, redacted log ve denetim izi üretir; planlanan test actual evidence sayılmaz."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için OWASP ve Güvenlik Standartları kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: OWASP A01 access-control ve A03 injection threat modeli duplicate slug, permission escalation, expired/cross-tenant grant ve fail-open resolver risklerini kapsar. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: ASVS input validation ile dependency/SBOM kontrolü typed boundary öncesinde fail-closed çalışır. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: negatif güvenlik denemesi reason code, redacted log ve denetim izi üretir; planlanan test actual evidence sayılmaz.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: owasp kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core/Module/App Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: kernel/core/module contract bağı typed API üzerinden kurulur; app-core shell ve module loader capability kararını typed contract kapısından tüketir; doğrudan registry DB erişimi yasaktır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: dependency yönü authority owner'dan consumer'a akar; consumer internali veya veritabanı ters yönde import edilmez.",
+        "[DOC-APPLY:task-handoff] capability-registry-contract: Module Registry ve Capability Entitlement Sözleşmesi için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/integration):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Module Registry ve Capability Entitlement Sözleşmesi için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- capability-registry-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Module Registry ve Capability Entitlement Sözleşmesi için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: app-core shell ve module loader capability kararını typed contract kapısından tüketir; doğrudan registry DB erişimi yasaktır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: capability/contract kapısı dışından doğrudan DB, tablo veya internal module import'u ile tüketim yasaktır.",
+        "[DOC-APPLY:capability-registry-contract] capability-registry-contract: Register/list/health contract, fail-closed manifest schema ve capability/entitlement resolver.\n[DOC-APPLY:k-capability-registry-open-gaps] capability-registry-contract: Typed module manifest doğrulaması, benzersiz slug, capability/tenant entitlement çözümü ve platform healthz'den ayrı module readiness sonucu üreten Module Registry ve Capability Entitlement Sözleşmesi sözleşmesi."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "Görev-özel owner bağlamı (capability-registry-contract/moduleUsage):\nKapsam: typed module manifest registry'si ve tenant capability/entitlement kararı.\nKısıt: refs ve standardRefs çözülür; standard metni kopyalanmaz, platform ürün kodu yazılmaz ve gerçek evidence uydurulmaz.\nÇıktı: registered veya quarantined manifest, allow/deny reason+audit alanları ve ayrı module readiness sonucu.\n\n[DOC-APPLY:capability-registry-contract]\nKaynak: docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Register/list/health contract, fail-closed manifest schema ve capability/entitlement resolver.\n- Valid/duplicate/invalid/forbidden manifest, entitlement ve ayrı module-healthz test paketi.\n- Valid module manifest register olur; duplicate slug deterministik reddedilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-registry-contract]\n\n[DOC-APPLY:k-capability-registry-open-gaps]\nKaynak: docs/k-capability-registry-readiness-gap-2026-07-09.md\nGörev bağlamı: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Typed module manifest doğrulaması, benzersiz slug, capability/tenant entitlement çözümü ve platform healthz'den ayrı module readiness sonucu üreten Module Registry ve Capability Entitlement Sözleşmesi sözleşmesi.\n- Valid manifest register olur; duplicate slug, invalid schema ve forbidden permission diff deterministik hata ile reddedilir.\n- Capability/entitlement çözümü eksik, süresi dolmuş veya tenant-dışı bağlamda default-deny olur; module health ve typed registry output SDK consumer'ına ayrı contract sunar.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:k-capability-registry-open-gaps]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü ve Uyum",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: versioned manifest, tenant-scoped grant, PII içermeyen audit, retention/saklama, expiry/revoke ve rollback snapshot'ı",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: PII/KVKK-GDPR veri sınıfı owner tarafından doğrulanır; retention dolunca silme/anonimleştirme veya DSAR disposition'ı çalışır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: migration/expand-contract öncesi backup alınır; rollback sonrası restore ve reconciliation sonucu bağımsız kanıta bağlanır."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Veri Yaşam Döngüsü ve Uyum kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: versioned manifest, tenant-scoped grant, PII içermeyen audit, retention/saklama, expiry/revoke ve rollback snapshot'ı capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: PII/KVKK-GDPR veri sınıfı owner tarafından doğrulanır; retention dolunca silme/anonimleştirme veya DSAR disposition'ı çalışır. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: migration/expand-contract öncesi backup alınır; rollback sonrası restore ve reconciliation sonucu bağımsız kanıta bağlanır.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: dataLifecycle kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik ve Operasyonel Hazırlık",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: SLI/SLO ve error-budget metrik adı entitlement resolver p95 ve timeout değeri ölçülür; insan eşik kararı yokken sayı uydurulmaz ve timeout deny üretir yükümlülüğünü actual ölçümden üretir.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: structured log ve trace correlation id taşır; secret/PII redacted kalır ve tenant cardinality alarmı izlenir.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: alert runbook'u on-call sahibine şu failure bağlamını verir: invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Gözlemlenebilirlik ve Operasyonel Hazırlık kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: SLI/SLO ve error-budget metrik adı entitlement resolver p95 ve timeout değeri ölçülür; insan eşik kararı yokken sayı uydurulmaz ve timeout deny üretir yükümlülüğünü actual ölçümden üretir. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: structured log ve trace correlation id taşır; secret/PII redacted kalır ve tenant cardinality alarmı izlenir. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: alert runbook'u on-call sahibine şu failure bağlamını verir: invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: observability kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık ve Süreklilik",
+      "status": "filled",
+      "items": [
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: failure mode açıkça invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir; yeniden çalıştırma idempotency ile aynı sonucu korur.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: transient hata retry+bounded backoff kullanır; tükenen kayıt DLQ/dead-letter kuyruğunda correlation id ile karantinaya alınır.",
+        "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: circuit breaker açıldığında degrade davranışı fail-closed kalır; RTO/RPO ve restore doğrulaması insan handoff'unda karara bağlanır."
+      ],
+      "notes": "capability-registry-contract görev-özel yükümlülüğüdür; kanonik mühendislik kuralı standardRefs üzerinden çözülür ve actual evidence olmadan passed yapılmaz.",
+      "prompt": "capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi için Dayanıklılık ve Süreklilik kapsamını JSON görev sözleşmesinde uygula.\nKapsa: capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: failure mode açıkça invalid, duplicate, expired veya unhealthy manifest deterministik reject/deny/quarantine üretir; imzalı snapshot restore edilir; yeniden çalıştırma idempotency ile aynı sonucu korur. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: transient hata retry+bounded backoff kullanır; tükenen kayıt DLQ/dead-letter kuyruğunda correlation id ile karantinaya alınır. capability-registry-contract — Module Registry ve Capability Entitlement Sözleşmesi: circuit breaker açıldığında degrade davranışı fail-closed kalır; RTO/RPO ve restore doğrulaması insan handoff'unda karara bağlanır.\nKısıt: refs ve standardRefs kaynaklarını çöz; standard metnini kopyalama, ürün kodu yazma, traceability veya evidence uydurma.\nÇıktı: reliability kabul maddelerini test, beklenen kanıt türü ve rollback bağıyla güncelle; gerçek çalışma yoksa durum planlı/backlog kalsın.",
+      "provenance": "swarm",
+      "promptVersion": "owner-leaf-dimensions-v1"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "draft",
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
+    "allowedTargets": [
+      "archetype"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "authzRef": "authz-rbac-abac",
+    "urlPolicyRef": "url-policy",
+    "i18nRef": "i18n-standards"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "capability-registry-contract",
+    "granularity": "archetype",
+    "cluster": "platform-directive-owner"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-07-13"
+}

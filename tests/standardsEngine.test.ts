@@ -6,8 +6,8 @@ const node = (refs: Record<string, string>) =>
   TaskNodeSchema.parse({ id: "x", level: "micro_step", title: "x", slug: "x", standardRefs: refs });
 
 describe("standards motoru (ADR-0027)", () => {
-  it("15 standart yüklenir ve şemaya uyar", () => {
-    expect(STANDARDS.length).toBe(15);
+  it("36 standart yüklenir ve şemaya uyar", () => {
+    expect(STANDARDS.length).toBe(36);
     expect(STANDARDS.every((s) => s.rules.length >= 3)).toBe(true);
   });
 

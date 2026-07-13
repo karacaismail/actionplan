@@ -1,0 +1,354 @@
+{
+  "rules": [
+    {
+      "id": "decision-app-distribution-contract",
+      "sources": ["docs/app-distribution-contract.md"],
+      "selector": { "nodeIds": ["deploy-yap"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "deployment",
+        "deliverables": [
+          "ADR-D2 ile D2.1–D2.4 app manifest, izolasyon, entitlement, standalone packaging ve kernel_range kararlarını User/Admin-CPO onayına sunan decision packet."
+        ],
+        "acceptanceCriteria": [
+          "App'in ayrı paketlenebilir, lisanslanabilir ve deploy edilebilir sınırı ile app-to-app doğrudan import yasağı karar kaydında açıkça kabul edilmeden code-start verilmez.",
+          "Manifest şeması, capability gate, izolasyon CI kontrolleri ve kernel uyumluluk matrisi için insan owner ve approval_ref kaydedilmeden {{id}} blocked kalır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Karar öncesi app-to-app import, entitlement-yok erişim, geçersiz manifest/kernel_range ve standalone boot başarısızlığı için negatif test oracle'larını tanımla."
+          ],
+          "verification": [
+            "ADR-D2 ailesi için User/Admin-CPO approval_ref ve dağıtım WBS owner'ı gerçek karar kaydına çözülmeden PASS veya evidence üretme."
+          ],
+          "release-maintenance": [
+            "Onaysız manifest/marketplace/kernel MAJOR yayını fail-closed durur; karar değişirse compatibility ve rollback matrisi yeniden onaylanır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-app-distribution",
+            "desc": "Dağıtım sınırı onaylanmadan app packaging başlatmak lisans, izolasyon ve kernel uyumluluğunu birbirine bağlayan geri dönülmez drift üretir.",
+            "severity": "critical",
+            "mitigation": "ADR-D2 ailesini tek insan-onaylı decision packet olarak kilitle; approval_ref yokken {{id}} blocked kalsın."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-venture-core-boundary",
+      "sources": ["docs/archetype-venture-core-directive.md"],
+      "selector": { "nodeIds": ["s-pmo"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "featureDefs",
+        "deliverables": [
+          "Generic EVM venture-core spine, Arsam tenant/example sınırı, venture+dönem koordinatı ve maker-checker/snapshot invariants için CPO decision packet."
+        ],
+        "acceptanceCriteria": [
+          "CPO generic EVM ürün sınırını ve venture-core omurgasını kabul etmeden Arsam alanları ürün şemasına hardcode edilmez.",
+          "Venture+dönem koordinatı, immutable management snapshot, assumption/forecast as-of bağı ve maker-checker ayrımı için PMO owner zinciri onaylanmadan görev blocked kalır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Venture'sız mali kayıt, maker=checker, geçmiş snapshot mutasyonu, locked-period write ve cross-venture erişim için negatif oracle'ları karar öncesi tanımla."
+          ],
+          "verification": [
+            "CPO approval_ref, generic schema sınırı ve PMO WBS owner'ı gerçek karar kaydında yoksa EVM hazır veya uygulanmış sayma."
+          ],
+          "release-maintenance": [
+            "Ürün sınırı değişirse tenant örnekleri, venture invariants, snapshot/restatement ve dependent PMO akışları yeniden karar kapısından geçer."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-venture-tenant-product",
+            "desc": "Arsam tenant verisini generic EVM ürün sınırı sanmak satılabilir metamodeli tek müşteriye kilitler.",
+            "severity": "critical",
+            "mitigation": "CPO onaylı generic EVM boundary ve tenant-example ayrımını prerequisite yap; karar yokken {{id}} blocked kalsın."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-evidence-seal",
+      "sources": ["docs/k-evidence-seal-directive.md"],
+      "selector": { "nodeIds": ["l1-audit", "s-clm"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "security",
+        "deliverables": [
+          "ADR-E1 WORM, canonical hash-chain, RFC 3161 TSA, LTV ve legal evidence owner/approver sınırını karara bağlayan seal contract packet."
+        ],
+        "acceptanceCriteria": [
+          "User/Admin yetkili approver'ı, WORM/hash-chain/TSA/LTV sınırını ve k-storage/k-tenancy bağımlılıklarını onaylamadan evidence seal implementation başlatılmaz.",
+          "Audit log ile legal evidence store ayrımı, admin dahil UPDATE/DELETE yasağı ve AI autonomy=none approval_ref içinde açıkça kabul edilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Hash tamper, WORM UPDATE/DELETE, geçersiz TSA token, eksik LTV, cross-tenant ve AI evidence-write girişimleri için negatif testleri önce tanımla."
+          ],
+          "verification": [
+            "ADR-E1 approval_ref ve legal/security owner kaydı yoksa WORM/TSA/LTV maddelerini implemented veya evidence olarak gösterme."
+          ],
+          "release-maintenance": [
+            "TSA, trust root, retention veya WORM politikası değişirse insan/legal review ve zincir doğrulama/rollback drill'i yeniden zorunludur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-evidence-legal-authority",
+            "desc": "Yetkili insan ve hukuki trust sınırı belirlenmeden üretilen seal teknik hash olsa bile delil niteliği iddiasını karşılamayabilir.",
+            "severity": "critical",
+            "mitigation": "ADR-E1 approver/legal review kaydı olmadan release'i durdur; planı actual evidence'a çevirmeden blocked tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-kms-boundary",
+      "sources": ["docs/k-kms-directive.md"],
+      "selector": { "nodeIds": ["cc-security", "s-iam"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "securityOptimization",
+        "deliverables": [
+          "ADR-KMS1 backend, key rotation, tenant separation, secret_ref ve AI process-isolation kararını architecture/security owner onayına sunan packet."
+        ],
+        "acceptanceCriteria": [
+          "KMS backend, rotation/revocation ve break-glass owner'ı User/Admin tarafından onaylanmadan secret veya key implementation başlatılmaz.",
+          "Ham secret'ın config/log/audit/prompt içinde yasak olduğu ve AI'ın key material okuyamayacağı/değiştiremeyeceği fail-closed sınır kararda yer alır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Cross-tenant secret çözme, stale/revoked key, inline secret, log/prompt sızıntısı ve AI self-rotation girişimleri için negatif oracle tanımla."
+          ],
+          "verification": [
+            "ADR-KMS1 approval_ref, security owner ve seçilmiş backend/rotation kararı gerçek kayıtla doğrulanmadan PASS yazma."
+          ],
+          "release-maintenance": [
+            "Backend veya rotation policy değişiminde dual-key geçiş, restore/break-glass ve secret-leak taramaları yeniden insan onayı ister."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-kms-provider",
+            "desc": "KMS backend ve key lifecycle kararı olmadan secret yönetimi provider lock-in veya tenant-cross anahtar sızıntısı üretebilir.",
+            "severity": "critical",
+            "mitigation": "ADR-KMS1 ve named security owner yokken görevleri blocked tut; inline secret veya fallback key kabul etme."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-legal-hold-retention",
+      "sources": ["docs/k-legal-hold-retention-directive.md"],
+      "selector": { "nodeIds": ["cc-privacy", "s-clm"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "Jurisdiction, retention, legal hold, disposition ve erasure conflict owner'ını legal/compliance review ile karara bağlayan packet."
+        ],
+        "acceptanceCriteria": [
+          "User/Admin yetkili legal/compliance approver'ı ve treatment/hold override kararını kaydetmeden retention/disposition implementation başlatılmaz.",
+          "Aktif hold altında silme, immutable audit/financial evidence erasure ve AI tarafından hold kaldırma fail-closed yasak olarak onaylanır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Hold altında delete, retention dolmadan disposition, cross-tenant hold ve approval_ref'siz policy değişimi için negatif testleri tanımla."
+          ],
+          "verification": [
+            "Jurisdiction/legal basis/retention_ref ve human approval kaydı yoksa treatment değişimini uygulanmış sayma veya evidence üretme."
+          ],
+          "release-maintenance": [
+            "Hukuk, jurisdiction veya retention policy değiştiğinde hold/erasure/backup drill ve legal approval yeniden çalışır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-retention-conflict",
+            "desc": "Legal owner olmadan erasure ile hold/immutable kayıt çatışmasını çözmek hukuka aykırı silme veya gereksiz saklama doğurabilir.",
+            "severity": "critical",
+            "mitigation": "Legal/compliance approval_ref ve fail-closed hold override olmadan disposition'ı durdur."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-migration-bridge",
+      "sources": ["docs/k-migration-bridge-directive.md"],
+      "selector": { "nodeIds": ["archetype-storage-contract", "l1-import"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "ADR-M1 evidence-preserving, idempotent import, canonical dedup, dry-run ve rollback sınırını data-migration owner onayına sunan packet."
+        ],
+        "acceptanceCriteria": [
+          "Data-migration yetkilisi source-of-truth, identity/dedup ve evidence preservation kararını onaylamadan migration bridge apply çalışmaz.",
+          "Dry-run, restart-safe idempotency, reject quarantine ve dolu rollback/down-migration kapıları approval_ref içinde tanımlanır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Duplicate identity, yarım import restart, evidence/hash kaybı, cross-tenant row ve approval_ref'siz apply için negatif testleri tanımla."
+          ],
+          "verification": [
+            "ADR-M1 approval_ref ve data owner kaydı olmadan import sonucunu canonical, complete veya evidence-preserving ilan etme."
+          ],
+          "release-maintenance": [
+            "Kaynak şema/dedup kuralı değişirse dry-run diff, reconciliation, rollback ve insan onayı yeniden zorunludur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-migration-identity",
+            "desc": "Identity/dedup kararı olmadan migration aynı varlığı çoğaltabilir veya geçmiş evidence bağını koparabilir.",
+            "severity": "critical",
+            "mitigation": "ADR-M1 ve named data owner olmadan apply'ı engelle; dry-run/reconciliation/rollback packet'ini prerequisite yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-obligation-lifecycle",
+      "sources": ["docs/k-obligation-commitment-directive.md"],
+      "selector": { "nodeIds": ["s-bpm", "s-clm"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "eca",
+        "deliverables": [
+          "ADR-OBL1 obligation lifecycle, calendar/due-date, escalation, fulfillment ve CLM/workflow owner sınırını CPO-domain onayına sunan packet."
+        ],
+        "acceptanceCriteria": [
+          "CPO/CLM domain owner obligation durum makinesi, due-date calendar ve escalation davranışını onaylamadan otomasyon başlatılmaz.",
+          "AI'ın obligation yaratma/kapatma/erteleme kararı veremeyeceği ve approval_ref gerektiren geçişler açıkça kilitlenir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Geçersiz durum geçişi, timezone/calendar sapması, duplicate escalation, cross-tenant obligation ve AI approval bypass için negatif testleri tanımla."
+          ],
+          "verification": [
+            "ADR-OBL1 approval_ref ve domain owner yoksa workflow'u implemented veya obligation'ı fulfilled sayma."
+          ],
+          "release-maintenance": [
+            "Calendar, escalation veya lifecycle kararı değiştiğinde açık obligation migration/rollback ve insan review yeniden zorunludur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-obligation-semantics",
+            "desc": "Domain owner onayı olmayan obligation lifecycle yanlış yasal/iş taahhüdünü otomatik kapatabilir veya geciktirebilir.",
+            "severity": "high",
+            "mitigation": "ADR-OBL1 ve named CPO/CLM owner olmadan state-changing ECA'yı fail-closed tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-provider-adapter",
+      "sources": ["docs/k-provider-adapter-directive.md"],
+      "selector": { "nodeIds": ["dx-api-gateway", "s-payment-methods"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "integration",
+        "deliverables": [
+          "ADR-PA1 provider-agnostic port, capability negotiation, fallback/health, secret_ref ve mandatory KMS sınırını architecture/security onayına sunan packet."
+        ],
+        "acceptanceCriteria": [
+          "Architecture/security owner ortak port, provider binding, fallback ve KMS dependency kararını onaylamadan somut adapter entegrasyonu başlatılmaz.",
+          "App'in provider SDK'sını doğrudan import etmesi, inline secret, sessiz fallback ve AI'ın kendi binding'ini değiştirmesi fail-closed yasaktır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Eksik capability, unhealthy provider, forbidden direct import, inline secret, cross-tenant binding ve AI self-change için negatif oracle tanımla."
+          ],
+          "verification": [
+            "ADR-PA1 approval_ref, KMS predecessor ve provider owner kaydı yoksa adapter binding'i ready veya verified sayma."
+          ],
+          "release-maintenance": [
+            "Provider/fallback/secret policy değişiminde circuit-breaker, capability compatibility, secret rotation ve rollback yeniden onaylanır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-provider-lockin",
+            "desc": "Port ve KMS kararı olmadan somut provider entegrasyonu vendor lock-in, sessiz düşürme ve secret sızıntısı üretir.",
+            "severity": "critical",
+            "mitigation": "ADR-PA1 ve KMS approval_ref yokken adapter release'ini durdur; app direct import'u CI ile reddet."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-signature-trust",
+      "sources": ["docs/k-signature-trust-directive.md"],
+      "selector": { "nodeIds": ["s-clm"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "security",
+        "deliverables": [
+          "ADR-SIG1 SES/AES/QES, QTSP/ESHS, PAdES/XAdES/CAdES, RFC3161 ve LTV/LTA trust sınırını legal/compliance onayına sunan packet."
+        ],
+        "acceptanceCriteria": [
+          "Legal/compliance owner provider-agnostic trust ve jurisdiction/level kararını onaylamadan QES/send/release başlatılmaz.",
+          "QES yalnız nitelikli QTSP/ESHS ile, kanıt k-evidence'a append-only ve binary k-storage'a yazılacak biçimde approval_ref içinde kilitlenir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Niteliksiz provider ile QES, format mismatch, cross-tenant document/signer, missing evidence ve AI onaysız send/level seçimi için negatif testleri tanımla."
+          ],
+          "verification": [
+            "ADR-SIG1 approval_ref, legal review ve provider qualification kaydı yoksa imza akışını verified veya legally valid sayma."
+          ],
+          "release-maintenance": [
+            "Trust root, QTSP, jurisdiction veya format profili değiştiğinde legal review, LTV validation ve rollback drill'i yeniden çalışır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-signature-legal-level",
+            "desc": "Legal level ve qualified-provider kararı olmadan QES iddiası hukuken geçersiz veya yanlış güven seviyesinde olabilir.",
+            "severity": "critical",
+            "mitigation": "ADR-SIG1 legal approval_ref olmadan QES/send'i fail-closed reddet; provider qualification'ı runtime evidence'dan ayrı doğrula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-arsam-evm-requirements",
+      "sources": ["docs/reference/Arsam-Girisim-Yonetim-Gereksinim-Analizi.md"],
+      "selector": { "nodeIds": ["s-pmo"] },
+      "content": {
+        "humanDecisionBlocker": true,
+        "dimensionKey": "featureDefs",
+        "deliverables": [
+          "Generic EVM boundary, board/team transparency permissions, active_member, attribution window/model, capex threshold ve D9 volume kararlarını CPO onayına sunan requirement packet."
+        ],
+        "acceptanceCriteria": [
+          "Arsam değerleri tenant/example olarak kalır; CPO generic EVM schema ve iki-product-boundary kararını onaylamadan ürüne hardcode edilmez.",
+          "Permission, attribution, capex ve D9 volume girdileri insan owner/approval_ref ile tamamlanmadan PMO requirement baseline ready sayılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Cross-venture permission, maker=checker, snapshot mutation, unverified KPI, attribution-window boundary ve capex threshold edge case'lerini karar oracle'ı olarak tanımla."
+          ],
+          "verification": [
+            "CPO decision refs ve D9 hacim girdileri yoksa Arsam analizi implemented, validated veya generic ürün kanıtı sayılmaz."
+          ],
+          "release-maintenance": [
+            "Boundary/permission/attribution/capex kararları değişirse EVM NFR, KPI, workflow ve snapshot acceptance matrisi yeniden onaylanır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-decision-arsam-example-drift",
+            "desc": "Arsam örnek verilerini generic EVM kararı yerine kullanmak ürün sınırını ve kapasite varsayımlarını doğrulanmamış tenant değerlerine kilitler.",
+            "severity": "critical",
+            "mitigation": "CPO approval_ref ve D9 girdileri tamamlanmadan {{id}} requirement baseline'ını blocked tut."
+          }
+        ]
+      }
+    }
+  ]
+}

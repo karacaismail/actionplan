@@ -40,7 +40,7 @@ describe("DOC-NODE-REF-1 kanonik belgeler mevcut WBS düğümlerinden erişilebi
     });
   }
 
-  it("public node refs kanonik 485 düğümle eşleşir", () => {
+  it("public node refs kanonik 496 düğümle eşleşir", () => {
     const nodesDir = path.join(ROOT, "src/data/generated/nodes");
     const canonicalNodes = fs
       .readdirSync(nodesDir)

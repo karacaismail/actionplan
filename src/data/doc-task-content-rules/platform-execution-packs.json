@@ -103,6 +103,131 @@
       }
     },
     {
+      "id": "platform-pr01-blocker-report",
+      "sources": ["docs/platform-pr01-blocker-report-template-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "PR01 durma koşulunda branch, remote, workflow ve GitHub gözlemlerini; blocker türünü, remediation owner/ETA'sını ve blocker çözüldükten sonraki ilk komutu zorunlu alanlarla kaydeden blocker raporu hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Branch/remote/workflow/GitHub kanıtı, blocker nedeni, owner, ETA ve nextAttemptCommand alanlarından biri eksikse PR01 blocked kalır ve PR02 kapısı açılmaz.",
+          "Placeholder URL, uydurma PR/CI sonucu, secret değeri veya testleri silme/zayıflatma önerisi blocker çözümü sayılmaz; rapor eksik alan listesiyle reddedilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Eksik remote, belirsiz branch, workflow dosyası yokluğu, GitHub erişim reddi, owner/ETA yokluğu ve boş nextAttemptCommand için fail-closed blocker fixture'larını önce tanımla."
+          ],
+          "verification": [
+            "Rapor alanlarını salt-okunur Git/GitHub komut çıktıları ve exact queue/node writeback ref'leriyle doğrula; doküman beyanını veya NOT-RUN sonucunu evidence sayma."
+          ],
+          "release-maintenance": [
+            "Blocker çözülünce eski raporu tarihçede koru, ilk yeniden-deneme komutunu çalıştırılabilir tut ve remote/branch/workflow drift'inde stale blocker kaydını yeniden aç."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-pr01-evidence-intake",
+      "sources": ["docs/platform-pr01-evidence-intake-template-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "PR01 için remote, default branch, PR, CI, required-check/ruleset, test ve rollback kaynaklarını accept/reject sonucuyla sınıflandıran ve exact actionplan writeback hedeflerini gösteren evidence-intake paketi hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Gerçek remote, PR, CI run, test sonucu, branch-protection/required-check ve rollback referansları açılıp aynı repo/commit kapsamına çözülmeden intake accepted olamaz.",
+          "Skip edilmiş veya zayıflatılmış test, repo/branch/SHA uyuşmazlığı, placeholder kanıt ya da node/queue alanlarını elle yeşil gösteren patch reddedilir ve status ilerlemez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Tam geçerli paket, eksik zorunlu alan, yanlış repo/SHA, sahte CI linki, skipped test ve eksik rollback için accept/reject intake oracle'larını önce yaz."
+          ],
+          "verification": [
+            "PR/CI/SHA/test/ruleset kaynaklarını bağımsız aç ve kabul kararını exact node/queue patch'iyle karşılaştır; reddedilen paketi evidence veya verified durumuna dönüştürme."
+          ],
+          "release-maintenance": [
+            "Remote, default branch, required-check veya commit değiştiğinde eski kabulü stale yap, intake'i yeniden çalıştır ve eksik yeni kanıtta blocker/queue durumunu tekrar aç."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-pr01-remote-unblock-request",
+      "sources": ["docs/platform-pr01-remote-unblock-request-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "missing-remote blocker'ı için yetkili owner'dan canonical remote URL, default branch, repo erişimi, required-check/ruleset bilgisi ve secret değeri içermeyen evidence politikası isteyen PR01 unblock talep paketi hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Owner kimliği/yetkisi, canonical remote, default branch, workflow/ruleset beklentisi ve secretEvidencePolicy alanlarının tamamı gelmeden missing-remote blocker kapanmaz.",
+          "Secret değeri, belirsiz veya birden çok canonical remote, yetkisiz owner cevabı ya da mevcut repo kimliğiyle uyuşmayan branch bilgisi kabul edilmez ve actionplan remote mutation yapmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Eksik remote, yanlış default branch, yetersiz owner yetkisi, belirsiz ruleset ve secret-value içeren cevap fixture'larını fail-closed sonuçlarla tanımla."
+          ],
+          "verification": [
+            "Talep ve owner cevabını repo kimliği ile salt-okunur Git/GitHub gözlemlerine karşı doğrula; remote ekleme/değiştirme yapma ve insan beyanını tek başına verified sayma."
+          ],
+          "release-maintenance": [
+            "Owner, remote, default branch veya secret-evidence politikası değiştiğinde talebi yeniden yayınla, eski cevabı stale işaretle ve secret değerlerini tarihçeye kaydetme."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-pr01-remote-unblock-response-intake",
+      "sources": ["docs/platform-pr01-remote-unblock-response-intake-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "PR01 remote-unblock talebine dönen owner cevabını request ref'i, yetki kaynağı, zorunlu alanlar, accept/reject nedeni ve remote-verification runbook yönlendirmesiyle kaydeden response-intake kararı hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Cevap yalnız yetkili owner'dan gelir, request'teki remote/default-branch/permission/ruleset/secret-policy alanlarının 5/5'ini karşılar ve request ref'ine çözülürse accepted olur.",
+          "Eksik, yetkisiz, request ile uyuşmayan veya secret değeri taşıyan cevap rejected kalır; queue actionable olmaz, PR01 kapanmaz ve doğrulama runbook'u başlatılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Tam kabul, eksik alan, authority mismatch, request mismatch, secret-value sızıntısı ve stale response fixture'ları için accept/reject oracle'larını önce tanımla."
+          ],
+          "verification": [
+            "Owner cevabını kaynak request, yetki kaydı ve repo gözlemleriyle çapraz doğrula; kabulde runbook ref'i ile node/queue ref'lerini, redde status ilerlemediğini denetle."
+          ],
+          "release-maintenance": [
+            "Cevabı remote-verification çalışana kadar süreli tut; remote/branch/owner drift'inde accepted kararı düşür, missing-remote blocker'ı yeniden aç ve yeni cevap iste."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-pr01-remote-verification-report",
+      "sources": ["docs/platform-pr01-remote-verification-evidence-report-template-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "Kabul edilmiş owner cevabını Git remote, GitHub repo/default branch, workflow run ve branch-protection/ruleset çıktılarıyla sınayan; sonucu remote-verified, blocked veya rejected-output olarak kaydeden PR01 verification report hazırla."
+        ],
+        "acceptanceCriteria": [
+          "remote-verified yalnız ownerResponseRef, remote, repo kimliği, default branch, workflow erişimi ve required-check/ruleset sonuçlarının 6/6'sı aynı canonical repo için gerçek çıktıyla doğrulanırsa verilir.",
+          "Erişim blocker'ı, yanlış repo/branch, eksik workflow/ruleset veya parse edilemeyen/placeholder çıktı blocked ya da rejected-output kalır; PR01 ve PR02 durumu ilerlemez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "remote-verified, blocked ve rejected-output yollarına ek olarak yanlış repo, workflow yokluğu, permission reddi ve required-check eksikliği fixture'larını önce tanımla."
+          ],
+          "verification": [
+            "Raporun Git/GitHub komut çıktılarını owner cevabı ve canonical repo kimliğiyle bağımsız karşılaştır; local-only, NOT-RUN veya uydurma URL'yi verified sayma."
+          ],
+          "release-maintenance": [
+            "Remote, default branch, workflow veya ruleset drift'inde raporu yeniden üret, eski remote-verified sonucunu stale yap ve yeni gerçek çıktı gelene kadar ardıl kapıyı kapalı tut."
+          ]
+        }
+      }
+    },
+    {
       "id": "platform-pr04-event-outbox",
       "sources": ["docs/platform-pr04-event-outbox-agent-pack-2026-07-09.md"],
       "selector": { "nodeIds": ["scale-outbox", "scale-invariant"] },

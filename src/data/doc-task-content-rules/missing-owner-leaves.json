@@ -1,0 +1,410 @@
+{
+  "rules": [
+    {
+      "id": "archetype-storage-contract",
+      "sources": ["docs/archetype-storage-canonical-directive.md"],
+      "selector": { "nodeIds": ["archetype-storage-contract"] },
+      "content": {
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "Shared tablo + JSONB payload varsayılanını; tenant_id ve sistem kolonlarını; PII/KVKK-GDPR veri sınıfı ile retention/saklama takvimi ve silme/anonimleştirme disposition'ını; GIN ve sıcak alan generated-column indekslerini tanımlayan {{title}} kayıt sözleşmesi.",
+          "Storage-agnostik API'yi koruyan, motor-draft ve insan approval_ref onaylı expand-contract promotion/backfill/rollback akışı."
+        ],
+        "acceptanceCriteria": [
+          "Yeni ArcheType alanı şema migration'ı olmadan JSONB payload'a yazılır ve okunur; fiziksel tablo varsayılan değil ölçülmüş promotion istisnasıdır.",
+          "Serbest JSONB alanları GIN, sıcak alanlar generated column + B-tree kullanır; 100k+ satır filtre p95 bütçesi 300 ms'dir.",
+          "Promotion backfill'i veri kaybetmeden ve idempotent çalışır; promotion öncesi/sonrası generated API sözleşmesi aynı kalır.",
+          "JSONB ve fiziksel tablolar tenant_id + RLS taşır; en az 10 cross-tenant negatif vaka reddedilir.",
+          "approval_ref olmadan promotion apply reddedilir ve migration dolu downgrade taşır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "JSONB default, promotion eşiği, storage-agnostik API, tenant/RLS ve insan onayı sınırlarını tek canonical karar olarak sabitle."
+          ],
+          "test-plan": [
+            "Önce migration'sız JSONB alanı, GIN/generated-column p95, en az 10 tenant izolasyon vakası, approval_ref guard, idempotent backfill ve upgrade/downgrade testlerini kırmızı tanımla."
+          ],
+          "verification": [
+            "Dokümandaki test senaryolarını, check-core-contract tenant/resolver/audit/index/downgrade kapılarını ve k-schema+k-tenancy bağımlılıklarını gerçek çıktılarla doğrula; çalıştırılmamış sonucu evidence sayma."
+          ],
+          "release-maintenance": [
+            "Promotion yalnız dry-run, data-impact, immutable snapshot, rollback planı ve insan approval_ref sonrasında uygulanır; hata halinde dolu downgrade canonical JSONB durumunu korur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-archetype-storage-promotion",
+            "desc": "Hatalı promotion migration'ı veri kaybına veya API ile depolama modeli arasında ayrışmaya yol açabilir.",
+            "severity": "critical",
+            "mitigation": "Motor-draft + insan onayı, expand-contract, idempotent backfill, snapshot, dolu downgrade ve storage-agnostik contract testlerini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-app-core-shell",
+      "sources": ["docs/platform-cust01-customer-app-core-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["customer-app-core-shell"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "Customer slug, capability binding ve çakışmasız customer.* event namespace kaydı.",
+          "Capability ile görünür, capability yokken gizli kalan route/menu shell; CRUD/model/API/UI/seed davranışı kapsam dışıdır."
+        ],
+        "acceptanceCriteria": [
+          "Customer slug registry/capability sistemine deterministik bağlanır.",
+          "Capability olmadan Customer route ve menu görünmez; capability ile yalnız shell smoke çalışır.",
+          "customer.* namespace collision testi geçer.",
+          "Customer model, migration, resolver, list/detail/form, seed, OrderOps veya Inventory eklenmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "PR-01..PR-11 Foundation predecessor kanıtını, Customer app-core allowed-files sınırını ve domain CRUD non-goal'larını kaydet; eksik predecessor ile code-start verme."
+          ],
+          "test-plan": [
+            "Önce app-slug registry, capability-yok/gizli, capability-var/shell görünür, customer.* collision ve domain non-goal diff guard testlerini kırmızı tanımla."
+          ],
+          "verification": [
+            "Registry/capability/namespace test loglarını ve CRUD/model/API/UI/seed eklenmediğini gösteren diff note'u gerçek PR/CI/merge referanslarına karşı doğrula."
+          ],
+          "release-maintenance": [
+            "App-core registration geri alınabilir olmalı; rollback sonrası shell/capability smoke yeniden çalışmalı ve done kapısı kapanmadan CUST-02 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-cust01-boundary-creep",
+            "desc": "App-core işi domain CRUD'a genişleyebilir veya route/menu capability guard olmadan açılabilir.",
+            "severity": "high",
+            "mitigation": "Non-goal diff kontrolü, fail-closed capability testleri ve yalnız shell seviyesinde allowed-files kapsamı uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "tenant-context-contract",
+      "sources": ["docs/platform-pr02-tenancy-context-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["tenant-context-contract"] },
+      "content": {
+        "dimensionKey": "security",
+        "deliverables": [
+          "Request, job ve event girişlerini tek trusted TenantContext zarfına bağlayan context sözleşmesi.",
+          "RLS/schema-per-tenant/hibrit strateji gerekçesi ile missing/invalid/override/cross-tenant negatif test paketi."
+        ],
+        "acceptanceCriteria": [
+          "Eksik veya geçersiz tenant context fail-closed reddedilir.",
+          "Client-provided tenant_id trusted boundary'yi override edemez.",
+          "Tenant A, Tenant B fixture'ını okuyamaz, yazamaz veya güncelleyemez.",
+          "RLS, schema-per-tenant veya hibrit strateji gerekçelendirilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Trusted TenantContext kaynağını, request/job/event propagation sınırını ve seçilen tenant izolasyon stratejisini tanımla; PR-01 kanıtı yoksa blocker üret."
+          ],
+          "test-plan": [
+            "Missing tenant, invalid tenant, raw client override ve cross-tenant read/write-update testlerini development öncesi kırmızı tanımla; yalnız happy-path mock kabul etme."
+          ],
+          "verification": [
+            "Tenant strategy note ve cross-tenant negatif çıktılarını gerçek test/CI referanslarıyla doğrula; Authz/PDP, Customer, UI veya SDK diff'i bulunmadığını denetle."
+          ],
+          "release-maintenance": [
+            "Context wiring bağımsız revert edilebilir olmalı; rollback boyunca izolasyon guard'ları açık kalmalı ve PR-02 done olmadan PR-03 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr02-untrusted-tenant",
+            "desc": "Ham client tenant_id değerine güvenmek cross-tenant veri erişimine yol açabilir.",
+            "severity": "critical",
+            "mitigation": "Tek trusted context boundary, fail-closed validation ve gerçek read/write negatif izolasyon testlerini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy-context-contract",
+      "sources": ["docs/platform-pr03-authz-pdp-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["policy-context-contract"] },
+      "content": {
+        "dimensionKey": "security",
+        "deliverables": [
+          "Tenant-aware ActorContext, PolicyContext ve allow/deny/reason/policyRef/auditFields taşıyan deterministik PDP karar sözleşmesi.",
+          "Endpoint/resolver guard wiring ve deny-by-default negatif test paketi."
+        ],
+        "acceptanceCriteria": [
+          "Anonymous veya yetkisiz istek reddedilir; unknown permission default-deny olur.",
+          "Missing endpoint/resolver guard negatif testle yakalanır.",
+          "PDP sonucu deterministik ve audit-compatible alanlar taşır.",
+          "Actor tenant scope dışındaki permission'ı kullanamaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "ActorContext-TenantContext bağını, PolicyContext girdisini ve PDP decision alanlarını sabitle; PR-02 tenant izolasyon evidence yoksa blocker tut."
+          ],
+          "test-plan": [
+            "Anonymous, permission olmayan actor, unknown permission, missing guard ve tenant-scope bypass testlerini; PDP golden decision fixture'ını development öncesi tanımla."
+          ],
+          "verification": [
+            "Deny-by-default logunu, PDP golden fixture'ını ve audit-compatible deny trace'i gerçek test çıktısıyla doğrula; Customer/UI/event/ECA/audit implementation diff'ini reddet."
+          ],
+          "release-maintenance": [
+            "Policy wiring bağımsız revert edilirken deny-by-default korunmalı; rollback sonrası deny smoke çalışmalı ve PR-03 done olmadan PR-04 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr03-default-allow",
+            "desc": "Unknown permission veya korumasız resolver default-allow açığı yaratabilir.",
+            "severity": "critical",
+            "mitigation": "Default-deny karar sözleşmesini, missing-guard testini ve tenant-scope bypass negatifini merge kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "capability-registry-contract",
+      "sources": ["docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["capability-registry-contract"] },
+      "content": {
+        "dimensionKey": "moduleUsage",
+        "deliverables": [
+          "Register/list/health contract, fail-closed manifest schema ve capability/entitlement resolver.",
+          "Valid/duplicate/invalid/forbidden manifest, entitlement ve ayrı module-healthz test paketi."
+        ],
+        "acceptanceCriteria": [
+          "Valid module manifest register olur; duplicate slug deterministik reddedilir.",
+          "Invalid manifest ve forbidden permission diff reddedilir.",
+          "Capability/entitlement resolver fail-closed davranır.",
+          "Module healthz platform /healthz'den ayrıdır ve entitlement kararı audit-compatible alanlar taşır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Manifest kimliğini, registry yaşam döngüsünü, capability/entitlement karar girdisini ve module-health sınırını tanımla; marketplace runtime'ı non-goal tut."
+          ],
+          "test-plan": [
+            "Valid register, duplicate slug, invalid manifest, forbidden permission diff, fail-closed entitlement, capability-yok visibility ve ayrı module healthz testlerini önce kırmızı tanımla."
+          ],
+          "verification": [
+            "Manifest/duplicate/entitlement/module-health loglarını gerçek CI çıktısıyla doğrula; marketplace, Customer app-core, SDK generator veya dynamic plugin runtime diff'i olmadığını denetle."
+          ],
+          "release-maintenance": [
+            "Registry kaydı bağımsız quarantine/revert edilebilir olmalı; entitlement rollback sonrası fail-closed smoke çalışmalı ve PR-07 done olmadan PR-08 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr07-fail-open-entitlement",
+            "desc": "Hatalı veya duplicate manifest ile fail-open entitlement kararı yetkisiz yüzeyleri açabilir.",
+            "severity": "critical",
+            "mitigation": "Fail-closed resolver, deterministic duplicate rejection, forbidden-permission diff testi ve ayrı module healthz uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-migration-contract",
+      "sources": ["docs/platform-pr08-db-schema-migrations-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-migration-contract"] },
+      "content": {
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "DATABASE_URL tabanlı DB engine/session, SQLAlchemy 2.0/SQLModel base ve Alembic environment sözleşmesi; migration manifesti PII/KVKK-GDPR veri sınıfını, retention/saklama takvimini ve backup/restore disposition'ını korur.",
+          "Empty/existing DB upgrade/downgrade/idempotency, tenant schema/RLS ve rollback test paketi."
+        ],
+        "acceptanceCriteria": [
+          "DB bağlantısı DATABASE_URL kullanır ve eksikliğinde açık hata verir.",
+          "Alembic baseline empty DB üzerinde upgrade olur; upgrade/downgrade round-trip çalışır.",
+          "Existing DB migration yolu idempotenttir.",
+          "Tenant-aware tablo convention tenant_id + index ister; RLS veya schema-per-tenant stratejisi test edilir.",
+          "Rollback note bulunmayan destructive migration reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "DB boundary, model base, Alembic baseline, tenant convention ve destructive migration yasağını tanımla; Customer/domain schema'yı non-goal tut."
+          ],
+          "test-plan": [
+            "Absent DATABASE_URL, empty DB upgrade, downgrade round-trip, existing DB idempotency, tenant_id/index, RLS/schema strategy ve destructive-migration guard testlerini önce kırmızı yaz."
+          ],
+          "verification": [
+            "Upgrade/downgrade/connection/tenant-strategy loglarını ve snapshot/rollback note'u gerçek CI referanslarıyla doğrula; Prisma/Supabase/domain schema diff'ini reddet."
+          ],
+          "release-maintenance": [
+            "Production destructive migration çalıştırma; her migration dolu downgrade ve rollback note taşır, baseline bağımsız revert edilir ve PR-08 done olmadan PR-09 başlamaz."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr08-migration-loss",
+            "desc": "Eksik downgrade veya tenant convention migration sırasında veri kaybı ya da tenant sızıntısı yaratabilir.",
+            "severity": "critical",
+            "mitigation": "Empty/existing DB round-trip, tenant schema/RLS testleri, snapshot ve rollback-note guard zorunlu olsun."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sdk-public-contract",
+      "sources": ["docs/platform-pr10-sdk-public-contract-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["sdk-public-contract"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "Tek, dar ve sürümlü packages/sdk public contract kaynağı ile public export snapshot'ı.",
+          "Byte-stable codegen, generated-header/manual-edit guard ve forbidden-stack test paketi."
+        ],
+        "acceptanceCriteria": [
+          "Public contract tek, sürümlü ve snapshot/compatibility testlidir.",
+          "Aynı input byte-stable codegen çıktısı üretir.",
+          "Generated-header olmayan veya elle değiştirilmiş output reddedilir.",
+          "Forbidden stack SDK/codegen/template fixture yüzeyinde reddedilir.",
+          "Full generator CLI, app/module production template veya domain code eklenmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Public API sınırını, contract version'ı, internal/export ayrımını ve full generator/template/domain non-goal'larını sabitle; PR-09 predecessor kanıtını doğrula."
+          ],
+          "test-plan": [
+            "Public API snapshot, version compatibility, aynı input için byte-stable çift codegen, manual-edit ve forbidden-stack guard testlerini development öncesi kırmızı tanımla."
+          ],
+          "verification": [
+            "Public API snapshot, deterministic codegen, manual-edit ve forbidden-stack loglarını gerçek CI çıktısıyla doğrula; internal dosyaların public export edilmediğini denetle."
+          ],
+          "release-maintenance": [
+            "Contract/codegen değişikliği bağımsız revert edilebilir olmalı; deprecation/compatibility penceresi korunmalı ve PR-10 done olmadan PR-11 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr10-sdk-drift",
+            "desc": "Nondeterministic codegen veya gerekçesiz public API snapshot güncellemesi kırıcı SDK çıktısını gizleyebilir.",
+            "severity": "high",
+            "mitigation": "Byte-stable test, compatibility gerekçesi, dar export snapshot'ı ve manual-edit guard'ı merge kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "hello-platform-smoke",
+      "sources": ["docs/platform-pr11-hello-platform-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["hello-platform-smoke"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "API health/GraphQL/tenant, UI/storefront ve SDK public-path boot smoke test paketi.",
+          "Local full-stack boot kaydı ile PR/CI/commit/smoke/rollback referans şablonu; local, CI ve staging sonuçları ayrıdır."
+        ],
+        "acceptanceCriteria": [
+          "API boot, /healthz, GraphQL ping ve tenant-aware request smoke CI içinde çalışır.",
+          "Tenant context olmayan request fail-closed olur.",
+          "UI shell ve storefront/browser smoke CI içinde çalışır.",
+          "SDK public path minimal call veya fixture ile doğrulanır ve local full-stack boot logu tanımlıdır.",
+          "Customer CRUD/model/API/UI, OrderOps veya Inventory eklenmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "PR-01..PR-10 verified predecessor zincirini ve API/tenant/UI/SDK smoke kapsamını kaydet; Foundation complete iddiasını gerçek evidence gelene kadar kapalı tut."
+          ],
+          "test-plan": [
+            "API boot/health/GraphQL/tenant, UI shell/storefront browser, SDK public-path fixture ve local full-stack boot senaryolarını development öncesi kırmızı tanımla."
+          ],
+          "verification": [
+            "PR/CI/merge ve API/tenant/UI/SDK smoke loglarını doğrula; deploy/staging yoksa açık not-available gerekçesi iste ve local smoke'u remote evidence sayma."
+          ],
+          "release-maintenance": [
+            "PR-01..PR-10 tamamlanmadan Foundation release iddiası kurma; revert sonrası tüm smoke'ları yeniden çalıştır ve PR-11 done olmadan CUST-01 başlatma."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-pr11-local-as-remote",
+            "desc": "Local smoke'un remote CI veya staging kanıtı gibi sunulması yanlış Foundation-complete kararı doğurabilir.",
+            "severity": "high",
+            "mitigation": "Local, CI ve staging referanslarını ayrı tut; olmayan staging için açık gerekçe yaz ve URL uydurma."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sdk-app-core-template",
+      "sources": ["docs/platform-w2-01-sdk-app-core-template-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["sdk-app-core-template"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "packages/sdk/templates/app-core manifest ve route/menu/capability/event skeleton sözleşmesi.",
+          "Deterministic renderer/dry-run harness, snapshots, generated-header ve forbidden-stack kontrolleri."
+        ],
+        "acceptanceCriteria": [
+          "Template route/menu shell, capability binding ve event namespace skeleton üretir.",
+          "Aynı input byte-stable output üretir.",
+          "Generated-header/manual-edit guard uyumu korunur.",
+          "Forbidden-stack scan template ve generated fixture üzerinde çalışır.",
+          "Module template, full generator CLI veya Customer/OrderOps/Inventory code eklenmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Foundation+CUST predecessor zincirini, app-core template manifestini ve full CLI/module/domain non-goal'larını kaydet."
+          ],
+          "test-plan": [
+            "Manifest validation, route/menu/capability snapshot, event collision, byte-stable çift render, generated-header/manual-edit ve forbidden-stack testlerini önce kırmızı tanımla."
+          ],
+          "verification": [
+            "Manifest/snapshot/deterministic render/forbidden-stack/generated-header loglarını gerçek CI çıktısıyla doğrula ve domain non-goal diff note'u denetle."
+          ],
+          "release-maintenance": [
+            "Template ve renderer bağımsız revert edilebilir olmalı; rollback sonrası snapshot/smoke yeniden üretilmeli ve W2-01 done olmadan W2-02 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-w201-template-nondeterminism",
+            "desc": "Timestamp, random veya environment sıralaması deterministic üretimi bozabilir ya da template domain scaffold'a genişleyebilir.",
+            "severity": "high",
+            "mitigation": "Byte-stable çift-render testi, forbidden-stack scan ve domain non-goal diff kontrolünü merge kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sdk-module-template",
+      "sources": ["docs/platform-w2-02-sdk-module-template-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["sdk-module-template"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "packages/sdk/templates/module manifest, healthz, permissions ve module skeleton sözleşmesi.",
+          "Fail-closed manifest validator, deterministic renderer ve permission/healthz negatif test paketi."
+        ],
+        "acceptanceCriteria": [
+          "Manifest validation eksik id/name/permission alanlarını fail-closed reddeder.",
+          "Permission fixture capability/authz contract'a bağlıdır ve public-by-default değildir.",
+          "Healthz fixture tenant/domain state veya PII sızdırmaz.",
+          "Aynı input byte-stable output üretir.",
+          "Generator guardrails, marketplace runtime, OrderOps veya Inventory code eklenmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "W2-01 predecessor kanıtını, module manifest/healthz/permission/harness sınırını ve marketplace/generator/domain non-goal'larını kaydet."
+          ],
+          "test-plan": [
+            "Manifest validation/missing-field, healthz snapshot+sızıntı, permission capability/authz negatifi ve byte-stable çift-render testlerini önce kırmızı tanımla."
+          ],
+          "verification": [
+            "Manifest/snapshot/healthz/permission/deterministic-render loglarını gerçek CI çıktısıyla doğrula ve marketplace/generator/domain non-goal diff note'u denetle."
+          ],
+          "release-maintenance": [
+            "Template/renderer bağımsız revert edilebilir olmalı; permission fail-closed ve healthz privacy sınırı rollback boyunca korunmalı, W2-02 done olmadan W2-03 başlamamalıdır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-w202-public-permission",
+            "desc": "Allow-all permission fixture veya veri sızdıran healthz tenant izolasyonunu ve authorization sınırını bozabilir.",
+            "severity": "critical",
+            "mitigation": "Fail-closed manifest, public-by-default negatif testi, PII/state sızıntı testi ve capability/authz bağlantısını zorunlu tut."
+          }
+        ]
+      }
+    }
+  ]
+}

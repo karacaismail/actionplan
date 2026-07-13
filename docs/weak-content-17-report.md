@@ -4,7 +4,7 @@ Zayıflık = audit motorunun içerik-zenginliği skoru (concreteness 0.45 + comp
 
 ## Toplam sınıf dağılımı
 
-short-items kartı: 56 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 478 · missing-ref (kart): 0 · rollback-gap: 0 · semantic-warn: 0 · bilinçli N/A: 44
+short-items kartı: 56 · generic kartı: 0 · empty-but-not-na: 0 · missing-evidence (node): 489 · missing-ref (kart): 0 · rollback-gap: 0 · semantic-warn: 0 · bilinçli N/A: 44
 ölçülü-kısa kartı: 1
 
 Top-40 zayıf node ortalama skoru: **2.862**
@@ -22,10 +22,10 @@ Top-40 zayıf node ortalama skoru: **2.862**
 - module: 178 node, ort. 2.92
 - app: 28 node, ort. 2.89
 - micro_step: 36 node, ort. 2.96
-- archetype: 105 node, ort. 2.92
+- archetype: 113 node, ort. 2.93
 - component: 18 node, ort. 2.95
 - work_unit: 19 node, ort. 2.93
-- feature: 101 node, ort. 2.91
+- feature: 104 node, ort. 2.91
 
 En zayıf kümeler: atomic (2.86), aday (2.89), backend (2.89), landx (2.89), meta (2.89), vertical (2.89), dx (2.9), edu (2.9)
 

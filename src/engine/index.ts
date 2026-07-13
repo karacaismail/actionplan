@@ -42,6 +42,8 @@ export {
   deriveBlocks,
 } from "./resolve";
 export type { NodeIndex } from "./resolve";
+export { effectiveDirectiveApplications } from "./effectiveDirectives";
+export type { EffectiveDirectiveApplication } from "./effectiveDirectives";
 export {
   exportJSON,
   exportTask,
@@ -70,6 +72,7 @@ export {
   standardById,
   dimensionsByFamily,
   coverageByStandard,
+  effectiveStandardRefs,
   nodeStandards,
 } from "./standards";
 export type { StandardCoverage, NodeStandard } from "./standards";

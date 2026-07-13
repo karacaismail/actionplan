@@ -83,6 +83,18 @@ const SIGNAL_PATTERNS = {
   ],
 };
 
+const GLOBAL_NON_UI_GATE_PHRASES = [
+  /UI\/URL etkisi varsa ilgili ek kapı girdileri/gi,
+  /tek ekran görüntüsü/gi,
+];
+
+function sanitizeUiSignalText(value) {
+  return GLOBAL_NON_UI_GATE_PHRASES.reduce(
+    (text, phrase) => text.replace(phrase, ""),
+    String(value ?? ""),
+  );
+}
+
 function nodeText(node) {
   return [
     node.title ?? "",
@@ -90,7 +102,9 @@ function nodeText(node) {
     (node.tags ?? []).join(" "),
     (node.deliverables ?? []).join(" "),
     (node.acceptanceCriteria ?? []).join(" "),
-  ].join("\n");
+  ]
+    .map(sanitizeUiSignalText)
+    .join("\n");
 }
 
 /**

@@ -1,0 +1,282 @@
+{
+  "rules": [
+    {
+      "id": "portfolio-maturity-graduation-contract",
+      "sources": ["docs/core-enterprise-maturity-ladder.md"],
+      "selector": { "nodeIds": ["std-ci-gates", "s-pmo"] },
+      "content": {
+        "dimensionKey": "deployment",
+        "deliverables": [
+          "{{title}} için L1 Core, L2 Growth ve L3 Enterprise DoD durumunu; app-başı kapı sonucu, eksik kriter, release owner ve insan-onaylı graduation kaydıyla gösteren portföy maturity sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "L1, L2 ve L3 kriterleri birbirinin yerine geçmez; her kademe ayrı CI sonuçlarıyla hesaplanır ve daha üst kademe alt kademenin eksik kapısını maskeleyemez.",
+          "CI yalnız DoD kriterlerini doğrular; L1→L2, L2→L3 ve L3 enterprise-ready geçişleri gerçek release-owner approval_ref olmadan tamamlanmış gösterilmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce eksik tenant/RBAC/standalone, capability/PDP/SLO/restore ve L3 enterprise DoD durumlarında graduation'ın reddedildiğini test et."
+          ],
+          "verification": [
+            "Her kademe sonucu app, gate run, eksik kriter ve insan approval_ref kaynağına çözülmeden maturity seviyesi ilan etme."
+          ],
+          "release-maintenance": [
+            "Kademe kriteri veya enterprise DoD değiştiğinde portföyü yeniden hesapla; eski graduation imzasını değişen sözleşmeye taşıma."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-maturity-self-attestation",
+            "desc": "App'in kendi maturity seviyesini CI ve insan graduation kaydı olmadan beyan etmesi sahte enterprise-ready görünümü üretir.",
+            "severity": "critical",
+            "mitigation": "Kademe-başı ayrı gate sonucu ve release-owner approval_ref birlikte yoksa {{id}} görünümünü blocked/unverified tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "enterprise-readiness-master-gate",
+      "sources": ["docs/standards/14-enterprise-readiness-checklist.md"],
+      "selector": { "nodeIds": ["std-contracts", "std-ci-gates", "s-pmo"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "{{title}} için kanonik standardRefs, 18 enterprise DoD katmanı, L3 ek kriterleri, global-launch soruları, waiver ve hayalet-kapı durumlarını ID üzerinden birleştiren app-başı readiness gate paketi."
+        ],
+        "acceptanceCriteria": [
+          "Checklist satırı standardın prose'unu kopyalamaz; canonical JSON id, CI check, minimum maturity kademesi, owner, durum ve kanıt bağlantısına çözülür.",
+          "Zorunlu standart ref'i, çalışan check'i, gerçek app evidence'ı veya graduation onayı eksikken master sonuç PASS/enterprise-ready olamaz; N/A yalnız gerekçeli applicability veya onaylı waiver ile kabul edilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Dangling standard id, hayalet check, eksik evidence, süresi geçmiş waiver ve approval_ref'siz graduation için fail-closed master-gate testlerini önce yaz."
+          ],
+          "verification": [
+            "Her readiness satırını canonical JSON, çalışan gate, app evidence ve maturity kaynağına çapraz doğrula; doküman tablosunu runtime kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Standart kataloğu, DoD veya global-launch şartı değişince checklist fingerprint'ini ve app sonuçlarını yeniden üret."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-readiness-checklist-greenwash",
+            "desc": "Referans tablosunu yürütülmüş denetim sanmak eksik veya hayalet kapıları yeşil gösterebilir.",
+            "severity": "critical",
+            "mitigation": "Her satırda canonical owner + gerçek check/evidence bağı zorunlu olsun; çözülemeyen satır kırmızı kalsın."
+          }
+        ]
+      }
+    },
+    {
+      "id": "commerce-vibecoder-readiness-oracles",
+      "sources": ["docs/commerce-os-vibecoder-readiness-oracles.md"],
+      "selector": {
+        "nodeIds": ["s-commerce", "sdk-public-contract", "sdk-app-core-template", "std-ci-gates"]
+      },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "{{title}} için O1–O12 oracle sonuçlarını bounded-context DAG, 14 alanlı implementation packet, kernel→SDK→app-core sırası, contract-test eksenleri ve migration authority ile bağlayan vibecoder readiness kaydı."
+        ],
+        "acceptanceCriteria": [
+          "D7–D13 kararları, context kenarları, Cart-intent/Order-lifecycle ayrımı, provider sınırı ve edition sequencing kapalı değilse ilk implementation packet seçilemez.",
+          "Her packet 14 zorunlu alanı ve gerçek allowed-files/test-command bütçesini taşır; NOT-RUN oracle veya placeholder komut ready, test-passed ya da GA kanıtı sayılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "O1–O12 için beklenen kırmızı reason'ları ve 11 contract-test eksenini packet implementationından önce tanımla."
+          ],
+          "verification": [
+            "Context DAG, packet alanları, göreli linkler, allowed-files ve test komutlarını repo gerçeğine karşı doğrula; checklist işaretini evidence sayma."
+          ],
+          "release-maintenance": [
+            "Context, SDK veya migration authority değişince readiness oracle'larını yeniden çalıştır; eski READY kararını taşımadan ilk packet'i tekrar seç."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-vibecoder-premature-ready",
+            "desc": "Kararları ve packet bütçesi eksik bir vibecoder görevi yanlış bounded-context'e kod veya sahte test iddiası üretebilir.",
+            "severity": "critical",
+            "mitigation": "O1–O12 tam yeşil ve ilk packet deterministik seçilmiş değilse code-start NO-GO kalsın."
+          }
+        ]
+      }
+    },
+    {
+      "id": "phase6-isolation-resilience-probes",
+      "sources": ["docs/enterprise-saas-phase-6-unknown-unknown-probes.md"],
+      "selector": {
+        "nodeIds": ["tenant-context-contract", "scale-workers", "scale-multiregion"]
+      },
+      "content": {
+        "dimensionKey": "reliability",
+        "deliverables": [
+          "{{title}} için tenant leakage, noisy-neighbor, region/key loss, restore ve replay/idempotency probe'larını risk sırasıyla tanımlayan NOT-RUN drill packet'i."
+        ],
+        "acceptanceCriteria": [
+          "Her failure mode için probe fault injection, invariant, expected rejection/degraded result, telemetry, cleanup ve rollback adımlarını taşır; cross-tenant veri veya kontrol-plane kaçışı sıfır toleranslıdır.",
+          "Yüksek-risk probe gerçek implementation ortamında yeniden üretilebilir kanıt üretmeden requirement validated veya phase complete olmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Tenant kaçışı, kaynak açlığı, bölge/key kaybı ve duplicate replay fault'larını önce kırmızı/NOT-RUN olarak sırala."
+          ],
+          "verification": [
+            "Drill run id, fault, telemetry, recovery ve cleanup kaydını doğrula; probe tasarımını çalıştırılmış sonuç sayma."
+          ],
+          "release-maintenance": [
+            "Tenant, worker, region veya key topolojisi değişince ilgili probe'ları yeniden koş ve eski sonucu geçersizleştir."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-probe-isolation-not-run",
+            "desc": "Tasarlanmış fakat çalıştırılmamış izolasyon/recovery probe'u yüksek-risk davranışı doğrulanmış gibi gösterebilir.",
+            "severity": "critical",
+            "mitigation": "NOT-RUN/UNRESOLVED semantiğini koru; gerçek drill evidence yoksa validation gate'i kapalı tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "phase6-provider-security-probes",
+      "sources": ["docs/enterprise-saas-phase-6-unknown-unknown-probes.md"],
+      "selector": { "nodeIds": ["dx-api-gateway", "platform-migration-contract", "cc-security"] },
+      "content": {
+        "dimensionKey": "securityOptimization",
+        "deliverables": [
+          "{{title}} için provider outage/exit, restore failure, plugin exfiltration ve jurisdiction drift probe'larını secret/PII redaksiyonu, egress allowlist'i ve fail-closed yüzey sınırıyla çalıştıran drill handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Provider veya plugin kesintisi tenant verisini dışarı sızdırmaz; fallback sessizce authority değiştirmez ve export/restore yolu doğrulanmadan exit-ready denmez.",
+          "Residency, secret, backup ve support-access akışları jurisdiction dışına taşarsa probe rejected olur; high-risk sonuç unresolved iken release ilerlemez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Provider timeout/exit, bozuk restore, plugin exfiltration ve region drift fault'larını güvenli fixture ile önce tanımla."
+          ],
+          "verification": [
+            "Fault injection, redacted log, data-boundary assertion, restore/exit sonucu ve rollback kaydını bağımsız doğrula."
+          ],
+          "release-maintenance": [
+            "Provider, plugin, backup veya jurisdiction değişince probe fingerprint'ini ve exit/restore drill'ini yenile."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-probe-provider-data-boundary",
+            "desc": "Provider ve plugin failure drill'i olmadan fallback, export veya restore tenant/region sınırını ihlal edebilir.",
+            "severity": "critical",
+            "mitigation": "Data-boundary assertion ve gerçek exit/restore evidence olmadan provider readiness'i doğrulama."
+          }
+        ]
+      }
+    },
+    {
+      "id": "phase6-automation-data-integrity-probes",
+      "sources": ["docs/enterprise-saas-phase-6-unknown-unknown-probes.md"],
+      "selector": { "nodeIds": ["s-ai", "s-bpm", "s-bi", "l1-import"] },
+      "content": {
+        "dimensionKey": "aiAgents",
+        "deliverables": [
+          "{{title}} için AI silent failure, ECA runaway, KPI reconciliation, export/import round-trip ve metadata upgrade probe'larını bounded iteration ve mutation-check ile tanımlayan validation packet'i."
+        ],
+        "acceptanceCriteria": [
+          "AI/ECA probe'u sessiz success, limitsiz chain veya ruleset bypass kabul etmez; bounded retry/chain, kill-switch, audit ve insan escalation sonucu ölçülür.",
+          "KPI, export/import ve metadata upgrade probe'ları source-total, canonical identity, round-trip ve backward-compatibility farkını sıfır veya açıklanmış toleransla uzlaştırır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Silent AI error, runaway ECA, KPI mismatch, lossy round-trip ve incompatible metadata upgrade fault'larını önce NOT-RUN/kırmızı tanımla."
+          ],
+          "verification": [
+            "Mutation-check, bounded execution, reconciliation diff ve round-trip fingerprint'ini gerçek run kaydıyla doğrula."
+          ],
+          "release-maintenance": [
+            "Model, ruleset, KPI formülü, export şeması veya metadata sürümü değişince ilgili probe'u yeniden çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-probe-silent-automation-drift",
+            "desc": "AI/ECA veya veri dönüşümünün sessiz başarısı audit dışı mutasyon ve karar verisi drift'i üretebilir.",
+            "severity": "critical",
+            "mitigation": "Mutation-check, bounded execution ve reconciliation evidence yokken confirmed/validated sonucu verme."
+          }
+        ]
+      }
+    },
+    {
+      "id": "phase6-retention-legalhold-probe",
+      "sources": ["docs/enterprise-saas-phase-6-unknown-unknown-probes.md"],
+      "selector": { "nodeIds": ["l1-audit", "cc-privacy"] },
+      "content": {
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "{{title}} için deletion/legal-hold çatışmasını immutable audit, retention, backup ve erasure sınırlarıyla doğrulayan high-risk probe packet'i."
+        ],
+        "acceptanceCriteria": [
+          "Aktif legal hold altındaki kayıt silinmez; hold dışı erasure isteği ise yasal retention ve immutable evidence sınırını ihlal etmeden tamamlanır.",
+          "Backup/restore, audit ve downstream projection sonuçları aynı hold/erasure kararını korumadan probe confirmed olamaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Hold altında delete, hold kalkınca eksik erasure ve backup restore sonrası yeniden belirme negatiflerini önce tanımla."
+          ],
+          "verification": [
+            "Legal approval_ref, audit chain, primary/projection/backup sonucu ve erasure receipt kaydını birlikte doğrula."
+          ],
+          "release-maintenance": [
+            "Retention veya legal-hold politikası değişince delete/restore probe'unu legal owner onayıyla yeniden çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-probe-hold-erasure-conflict",
+            "desc": "Hold ve erasure akışını drill etmemek hukuka aykırı silme veya silinmiş verinin backup'tan geri dönmesi riskini taşır.",
+            "severity": "critical",
+            "mitigation": "Legal approval, end-to-end projection/backup assertion ve gerçek probe evidence yoksa validation'ı kapalı tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "md-json-standards-integration-remediation",
+      "sources": ["docs/json-standards-integration-gap-report-2026-07-13.md"],
+      "selector": {
+        "nodeIds": ["std-contracts", "std-ci-gates", "std-ui-surfacing", "golden-slice-ref"]
+      },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "{{title}} için MD kaynağını canonical standard JSON, task standardRefs, dimension items+prompt, task-page resolver ve CI coverage zincirinde tek sahibiyle gösteren entegrasyon parity kaydı."
+        ],
+        "acceptanceCriteria": [
+          "Her canlı yönerge ya source-specific task rule ile executable JSON içeriğine ya da canonical standard JSON id'sine bağlanır; yalnız Docs navigasyonu veya refs[] bağı uygulanmış sayılmaz.",
+          "Task sayfası ve raw JSON/agent prompt export'u aynı resolved standard rule/check/source içeriğini gösterir; app/module koruması effective projection ile korunur ve executable ref'ler raw JSON'a yazılır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Rule'suz task-materialize, çözülemeyen standard ref, item/prompt'suz application, UI/export parity drift ve sınıflandırılmamış doc için kırmızı testleri önce çalıştır."
+          ],
+          "verification": [
+            "Tracked doc sınıflandırması, rule-source parity, 496 task-page coverage, 36 standard load ve dry-run sıfır drift sonuçlarını birlikte doğrula."
+          ],
+          "release-maintenance": [
+            "Yeni MD veya standard JSON eklendiğinde sınıflandırma, rule/ref owner, page/export projection ve CI gate aynı değişiklikte güncellenir."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-md-json-reference-only-false-green",
+            "desc": "Belgeyi listelemek veya task'a linklemek, yönergenin JSON items/prompt ve görev sayfasına uygulandığına dair false-green üretebilir.",
+            "severity": "critical",
+            "mitigation": "Source→owner→raw JSON→page/export→gate zincirinin her halkasını test et; yalnız ref veya sidebar görünümünü yeterli sayma."
+          }
+        ]
+      }
+    }
+  ]
+}

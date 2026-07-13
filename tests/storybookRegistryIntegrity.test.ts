@@ -45,8 +45,8 @@ const violationsFor = (records: unknown[]) =>
   validateUiArtifactRoleRecords(records, knownNodeIds) as string[];
 
 describe("Storybook ui-artifact role registry integrity", () => {
-  it("canonical 29-record registry passes the Zod schema, duplicate guard, and node FK gate", () => {
-    expect(UiArtifactRolesFileSchema.parse(canonical).records).toHaveLength(29);
+  it("canonical 40-record registry passes the Zod schema, duplicate guard, and node FK gate", () => {
+    expect(UiArtifactRolesFileSchema.parse(canonical).records).toHaveLength(40);
     expect(violationsFor(canonical.records)).toEqual([]);
   });
 

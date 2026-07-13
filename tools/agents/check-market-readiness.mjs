@@ -6,7 +6,7 @@
  * (a) sözleşme dosyası mevcut + geçerli JSON; (b) id/family doğru, altı zorunlu kural id'si
  * (launch-gate-14, ip-geolocation, kill-switch, payment-matrix, support-language, moderation)
  * mevcut ve her kuralda rule/rationale dolu; (c) indeks kayıtları — engineering-standards-index
- * ve standards/00-standards-index id'yi, standards-applicability-matrix marketReadinessRef
+ * ve standards/00-standards-index id'yi, standards-applicability-matrix globalMarketReadinessRef
  * anahtarını içerir; (d) anlatı çapası — yönerge "global-market-readiness.json" metnini taşır.
  * v1 varlık+bütünlük denetimidir; pazar-başına evidence doğrulaması (14 soru cevabı, kill-switch
  * tatbikatı, ödeme matrisi kanıtı) veri doldukça dişlenir (bkz. docs/ci-conformance-gates.md).
@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ID = "global-market-readiness";
 const AILE = "governance";
-const REF_ANAHTARI = "marketReadinessRef";
+const REF_ANAHTARI = "globalMarketReadinessRef";
 const SOZLESME_YOLU = `src/data/standards/${ID}.json`;
 const ZORUNLU_KURALLAR = [
   "gmr-launch-gate-14",

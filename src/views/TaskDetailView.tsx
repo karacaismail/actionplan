@@ -1,6 +1,10 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
-import { TaskContractPanel } from "@/components/task-contract/TaskContractPanel";
+import { EffectiveDirectivePanel } from "@/components/task-contract/EffectiveDirectivePanel";
+import {
+  TaskContractPanel,
+  visibleTaskContent,
+} from "@/components/task-contract/TaskContractPanel";
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
 import {
   type TaskArtifactMode,
@@ -170,6 +174,7 @@ export function TaskDetailView() {
       <PlanningForm node={node} />
       <PhaseStepper node={node} />
       <TaskContractPanel node={node} />
+      <EffectiveDirectivePanel node={node} index={index} />
       <Dimensions node={node} />
       <StandardsRefsPanel node={node} />
       <EcaPanel node={node} />
@@ -406,7 +411,7 @@ export function Dimensions({ node }: { node: TaskNode }) {
                   <ul className="mt-2 list-disc pl-5 text-base">
                     {dim.items.map((item, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: statik gosterim listesi
-                      <li key={`${key}-${i}`}>{item}</li>
+                      <li key={`${key}-${i}`}>{visibleTaskContent(item)}</li>
                     ))}
                   </ul>
                 )}
@@ -420,13 +425,15 @@ export function Dimensions({ node }: { node: TaskNode }) {
                     </summary>
                     <div className="mt-1 flex items-start gap-2">
                       <pre className="flex-1 overflow-x-auto whitespace-pre-wrap rounded-md bg-secondary p-2 text-base">
-                        {dim.prompt}
+                        {visibleTaskContent(dim.prompt)}
                       </pre>
                       <Button
                         size="sm"
                         variant="ghost"
                         aria-label={t.actions.copyPrompt}
-                        onClick={() => navigator.clipboard?.writeText(dim.prompt)}
+                        onClick={() =>
+                          navigator.clipboard?.writeText(visibleTaskContent(dim.prompt))
+                        }
                       >
                         <Icon name="ph-copy" />
                       </Button>
@@ -442,21 +449,59 @@ export function Dimensions({ node }: { node: TaskNode }) {
   );
 }
 
-function StandardsRefsPanel({ node }: { node: TaskNode }) {
+export function StandardsRefsPanel({ node }: { node: TaskNode }) {
   const refs = nodeStandards(node);
   const waivers = node.waivers ?? [];
   if (refs.length === 0 && waivers.length === 0) return null;
   return (
-    <section className="flex flex-col gap-2">
+    <section data-testid="standards-refs-panel" className="flex flex-col gap-2">
       <h2 className="flex items-center gap-2 font-medium">
         <Icon name="ph-shield-check" className="text-primary" /> {t.detail.standards}
       </h2>
       {refs.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-3">
           {refs.map((r) => (
-            <Badge key={r.key} className="text-primary" color={hslVar("--primary")}>
-              {r.name}
-            </Badge>
+            <Card key={r.key} className="p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-medium">{r.name}</h3>
+                <Badge className="text-primary" color={hslVar("--primary")}>
+                  {r.id}
+                </Badge>
+              </div>
+              {r.summary && <p className="mt-2 text-base">{r.summary}</p>}
+              <p className="mt-2 break-all text-sm text-muted-foreground">
+                Canonical JSON: <code>{r.source}</code>
+              </p>
+              {r.rules.length > 0 && (
+                <ul className="mt-3 flex flex-col gap-3">
+                  {r.rules.map((rule) => (
+                    <li key={rule.id} className="rounded-md border border-border p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <code className="text-sm">{rule.id}</code>
+                        <Badge>{rule.severity}</Badge>
+                      </div>
+                      <p className="mt-2 text-base">{rule.rule}</p>
+                      {rule.rationale && (
+                        <p className="mt-2 text-sm text-muted-foreground">{rule.rationale}</p>
+                      )}
+                      {rule.check && (
+                        <p className="mt-2 text-sm">
+                          <span className="font-medium">Check: </span>
+                          <span>{rule.check}</span>
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {r.references.length > 0 && (
+                <ul className="mt-3 list-disc break-all pl-5 text-sm text-muted-foreground">
+                  {r.references.map((reference) => (
+                    <li key={reference}>{reference}</li>
+                  ))}
+                </ul>
+              )}
+            </Card>
           ))}
         </div>
       )}

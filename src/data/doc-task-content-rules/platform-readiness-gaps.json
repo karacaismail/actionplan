@@ -1,0 +1,692 @@
+{
+  "rules": [
+    {
+      "id": "be-sdk-readiness-open-gaps",
+      "sources": ["docs/be-sdk-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["sdk-public-contract"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "Tek bir versioned public-contract kaynağını dar SDK export yüzeyine bağlayan; aynı girdiden byte-stable typed client üreten ve generated output'u elle düzenlemeyi reddeden {{title}} handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Contract kaynağı ve codegen girdisi açıkça seçilir; aynı input iki koşumda byte-identical output üretir, generated dosya manual-edit guard'ı ve forbidden-stack taraması geçer.",
+          "Kernel W0.3-W0.10 ve capability-registry predecessor kanıtı yoksa SDK development başlamaz; public API snapshot ve backward-compatibility test sonucu gerçek CI çıktısı olmadan passed sayılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce nondeterministic output, contract drift, manual edit, forbidden dependency ve breaking public-export fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Codegen'i temiz checkout'ta iki kez çalıştır; output hash'lerini, public API snapshot'ını ve predecessor evidence bağlantılarını doğrula, NOT-RUN sonucu kanıt sayma."
+          ],
+          "release-maintenance": [
+            "Contract veya generator değişiminde semver/deprecation kaydı, yeniden üretim diff'i ve önceki generated pakete dönüş yolu olmadan SDK release verme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-be-sdk-contract-drift",
+            "desc": "Belirsiz contract kaynağı veya elle düzenlenen generated çıktı SDK tüketicilerini birbirinden ayırabilir.",
+            "severity": "high",
+            "mitigation": "Tek contract sahibi, byte-stable codegen, manual-edit guard, snapshot testi ve geri alınabilir package sürümü zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "k-bus-outbox-open-gaps",
+      "sources": ["docs/k-bus-event-outbox-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["scale-outbox", "scale-invariant"] },
+      "content": {
+        "dimensionKey": "reliability",
+        "deliverables": [
+          "Tenant, actor, type, version, correlation ve idempotency alanlı event envelope ile domain write + PostgreSQL transactional outbox atomikliğini, replay/retry/DLQ davranışını tanımlayan {{title}} sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Domain write ve outbox append aynı transaction'da birlikte commit/rollback olur; publish arızası sonrası replay iş etkisini kaybetmeden toparlar.",
+          "Duplicate delivery tek iş etkisi üretir; poison message bounded retry sonunda DLQ'ya gider ve tenant/actor/type/version/correlation alanı eksik envelope fail-closed reddedilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce transaction rollback, publish arızası, duplicate delivery, eksik envelope, replay ve retry/DLQ negatiflerini kırmızı yaz."
+          ],
+          "verification": [
+            "Atomic transaction, duplicate-once etkisi, replay ve DLQ sonuçlarını gerçek DB/test loguyla doğrula; seed idempotency açıklamasını event kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Envelope version veya retry politikası değişince backward compatibility, replay ve idempotency regresyonlarını yeniden çalıştır; önceki consumer sözleşmesine dönüş planını koru."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-k-bus-event-loss",
+            "desc": "Domain write ile event yayını ayrışırsa olay kaybı veya duplicate iş etkisi oluşabilir.",
+            "severity": "critical",
+            "mitigation": "Transactional outbox, idempotency key, bounded retry, DLQ ve replay testlerini release kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "k-capability-registry-open-gaps",
+      "sources": ["docs/k-capability-registry-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["capability-registry-contract"] },
+      "content": {
+        "dimensionKey": "moduleUsage",
+        "deliverables": [
+          "Typed module manifest doğrulaması, benzersiz slug, capability/tenant entitlement çözümü ve platform healthz'den ayrı module readiness sonucu üreten {{title}} sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Valid manifest register olur; duplicate slug, invalid schema ve forbidden permission diff deterministik hata ile reddedilir.",
+          "Capability/entitlement çözümü eksik, süresi dolmuş veya tenant-dışı bağlamda default-deny olur; module health ve typed registry output SDK consumer'ına ayrı contract sunar."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce duplicate slug, invalid manifest, permission escalation, missing/expired entitlement, cross-tenant resolution ve unhealthy module fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Registry, entitlement ve module-health testlerini gerçek çıktı ile doğrula; genel /healthz sonucunu registry readiness kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Manifest/capability sürümü değişince permission diff, revoke/quarantine ve önceki registry kaydına dönüş smoke'unu yeniden çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-capability-default-allow",
+            "desc": "Doğrulanmamış manifest veya fail-open entitlement çözümü yetkisiz modülü tenant yüzeyine açabilir.",
+            "severity": "critical",
+            "mitigation": "Schema doğrulama, uniqueness, permission diff ve tenant-scoped default-deny entitlement testlerini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "l1-audit-open-gaps",
+      "sources": ["docs/l1-audit-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["l1-audit"] },
+      "content": {
+        "dimensionKey": "security",
+        "deliverables": [
+          "Actor, tenant, action, resource, before/after hash ve correlation id taşıyan append-only AuditEvent; değiştirilemez compliance logundan türetilen ayrı activity projection ve meta-audit sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Audit append kabul edilirken update/delete reddedilir; hash-chain kırılması tamper testiyle bulunur ve actor/tenant envelope eksik kayıt yazılmaz.",
+          "Activity feed yalnız audit kaydından türetilir ve kaynağı mutate etmez; audit okuması ayrıca meta-audit olayı üretir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce mutation denemesi, hash tamper, eksik actor/tenant, activity-source mutation ve meta-audit yokluğu testlerini kırmızı yaz."
+          ],
+          "verification": [
+            "Append-only storage, tamper detection, envelope ve audit/activity ayrımını gerçek persistence/test çıktısıyla doğrula; container logunu audit trail sayma."
+          ],
+          "release-maintenance": [
+            "Audit şeması veya hash algoritması değişince chain doğrulama, geriye dönük okuma, retention ve restore drill'ini çalıştır; geçmiş kaydı rewrite etme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-audit-tamper",
+            "desc": "Mutable veya bağlamsız audit kaydı compliance geçmişini inkâr edilebilir ve tenantlar arası belirsiz hale getirir.",
+            "severity": "critical",
+            "mitigation": "Append-only writer, actor/tenant envelope, hash-chain tamper testi ve meta-audit kapısını uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "l1-workflow-eca-open-gaps",
+      "sources": ["docs/l1-workflow-eca-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["s-bpm"] },
+      "content": {
+        "dimensionKey": "eca",
+        "deliverables": [
+          "Tenant-scoped deterministic event-condition-action evaluator, versioned ruleset/disabled flag, state-transition contract ve yalnız allowlisted action çalıştıran {{title}} runtime handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Rule match/no-match deterministiktir, disabled rule sıfır action üretir ve idempotency key aynı olayı ikinci kez işlemez; chain depth 6'da loop-breaker devreye girer.",
+          "Serbest JS, SQL ve shell action reddedilir; system-locked/platform-owner/tenant-parametre katmanları ile step-up gereken action ayrımı fail-closed test edilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce disabled rule, invalid transition, duplicate event, depth-7 chain, tenant escape ve JS/SQL/shell action fixture'larını kırmızı yaz."
+          ],
+          "verification": [
+            "Evaluator, transition, allowlist, loop-breaker ve audit envelope sonuçlarını gerçek test/event loguyla doğrula; GitHub Actions workflow'unu ürün ECA kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Ruleset sürümünde canary, kill-switch, stuck-chain metriği ve önceki ruleset sürümüne deterministik dönüş yolu olmadan rollout yapma."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-eca-unbounded-execution",
+            "desc": "Serbest action veya sınırsız zincir tenant verisine zarar veren sonsuz/ayrıcalıklı otomasyon üretebilir.",
+            "severity": "critical",
+            "mitigation": "Action allowlist, depth 6 loop-breaker, idempotency, tenant scope ve step-up guard'larını negatif testlerle zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-authn-authz-open-gaps",
+      "sources": ["docs/platform-authn-authz-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["policy-context-contract"] },
+      "content": {
+        "dimensionKey": "security",
+        "deliverables": [
+          "Doğrulanmış kimlikten ActorContext üreten; tenant-aware PolicyContext ile default-deny PDP kararı, reason/policyRef/auditFields ve endpoint/resolver guard contract'ı sağlayan {{title}} handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Kimliksiz istek 401, kimliği olup izni olmayan istek 403 alır; allow kararı yalnız actor'ın doğrulanmış tenant scope'unda verilir.",
+          "Guard'sız endpoint/resolver contract testi merge'i bloklar; rol/izin matrisi allow/deny tablolarıyla doğrulanır ve PDP sonucu audit'e bağlanabilir deterministik format taşır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce invalid token/session, unauthenticated, forbidden, missing guard, policy mismatch ve cross-tenant allow fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "401/403/allow, tenant scope, guard coverage ve PDP decision envelope'ını gerçek API test çıktısıyla doğrula; public landing yorumunu auth kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Issuer/JWKS, rol matrisi veya policy sürümü değişince deny regresyonu, key rotation ve önceki policy bundle'a rollback smoke'u çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-authz-default-allow",
+            "desc": "Guard veya tenant bağlamı eksik bir resolver yetkisiz ve cross-tenant erişimi açabilir.",
+            "severity": "critical",
+            "mitigation": "Default-deny PDP, guard coverage, 401/403 ayrımı ve cross-tenant negatiflerini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-cicd-open-gaps",
+      "sources": ["docs/platform-cicd-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "dimensionKey": "deployment",
+        "deliverables": [
+          "Canonical remote/default branch, gerçek PR CI run'ı, required checks/ruleset, secret isim+scope varlığı ve deploy smoke/rollback komutunu aynı SHA'ya bağlayan CI/CD baseline kartı."
+        ],
+        "acceptanceCriteria": [
+          "Remote ve default branch gerçek GitHub çıktısıyla doğrulanır; checkout branch'i ile deploy trigger uyuşur ve PR üzerindeki backend/frontend bloklayıcı kontroller gerçek run URL'si üretir.",
+          "Required-check/review policy ve secret değerini açmadan isim/scope varlığı kanıtlanır; pyright non-blocking kalacaksa süreli/onaylı waiver, aksi halde bloklayıcı sonuç gerekir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce missing remote, master/main mismatch, başarısız required check, eksik ruleset/secret ve rollback smoke arızası için fail-closed oracle'ları yaz."
+          ],
+          "verification": [
+            "Remote, default branch, workflow run, SHA, ruleset ve deploy/rollback smoke'u canlı çıktılardan çapraz doğrula; yerel workflow dosyası varlığını remote PASS sayma."
+          ],
+          "release-maintenance": [
+            "Branch, required-check veya deploy secret kapsamı drift edince baseline'ı stale yapıp yeniden doğrula; son bilinen image/SHA'ya rollback yolunu koru."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-cicd-false-green",
+            "desc": "Yerel workflow varlığını remote CI kanıtı saymak korunmasız branch veya çalışmayan deploy'u hazır gösterebilir.",
+            "severity": "critical",
+            "mitigation": "Canlı remote/run/ruleset kanıtı, branch uyumu, süreli waiver ve smoke+rollback doğrulamasını release kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-app-core-readiness-open-gaps",
+      "sources": ["docs/platform-customer-app-core-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["customer-app-core-shell"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "Customer app slug, capability binding, capability-gated route/menu shell ve çakışmasız customer.* event namespace kaydını; domain CRUD'u dışarıda tutarak tanımlayan app-core sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Customer slug registry'ye deterministik bağlanır; capability yokken route/menu görünmez, capability varken yalnız shell smoke açılır.",
+          "customer.* namespace collision testi geçer; app-core diff'i Customer model, migration, resolver, list/detail/form veya seed davranışı içermez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce duplicate slug, missing capability, unauthorized route/menu, namespace collision ve CRUD boundary-creep diff fixture'larını kırmızı yaz."
+          ],
+          "verification": [
+            "Registry, capability, route/menu ve namespace testlerini gerçek PR/CI çıktısıyla doğrula; public Vitrin rotasını Customer app-core kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Registration geri alındığında route/menu ve namespace temizlenmeli; rollback sonrası capability-yok smoke'u yeniden geçmelidir."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-app-core-boundary",
+            "desc": "App-core kapsamının CRUD'a genişlemesi veya capability guard'sız shell, tekrar üretilebilir app sınırını bozar.",
+            "severity": "high",
+            "mitigation": "Allowed-files/non-goal diff guard, registry uniqueness ve fail-closed capability route testlerini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-e2e-evidence-open-gaps",
+      "sources": ["docs/platform-customer-e2e-evidence-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-ui", "platform-customer-graphql"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "Login → Customer create → read → cross-tenant denied zincirini UI/API/audit/outbox üzerinden aynı PR ve SHA'da doğrulayan {{title}} E2E planı ile gerçek kanıt oluştuğunda kullanılacak Evidence Patch eşlemesi."
+        ],
+        "acceptanceCriteria": [
+          "Browser ve API contract koşumları login/create/read/cross-tenant-denied akışını geçer; aynı Customer işlemi audit append ve outbox event referansına çözümlenir.",
+          "PR, commit, CI, test, deploy smoke ve rollback kaynağı gerçek ve aynı kapsamda değilse evidence[] veya status=done yazılmaz; public storefront smoke'u Customer E2E yerine geçmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce login failure, create validation, missing permission, cross-tenant read, audit yokluğu ve outbox yokluğu içeren E2E fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Browser trace, API log, audit/outbox record ve CI SHA paritesini doğrula; rapor şablonu ya da NOT-RUN komut kanıt değildir."
+          ],
+          "release-maintenance": [
+            "Customer contract, auth policy veya tenant fixture değişince E2E'yi yeniden çalıştır; başarısız canary'de release durumunu düşürüp rollback smoke'u bağla."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-e2e-evidence",
+            "desc": "Katman testlerinin birbirinden kopuk veya sahte evidence ile bağlanması cross-tenant açığını done gösterebilir.",
+            "severity": "critical",
+            "mitigation": "Tek SHA üzerinde UI/API/audit/outbox paritesi ve gerçek CI/deploy/rollback kaynaklarını zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-graphql-open-gaps",
+      "sources": ["docs/platform-customer-graphql-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-graphql"] },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "customer(id), customers, createCustomer ve updateCustomer resolver contract'larını tenant/authz guard, customer.created/customer.updated transactional outbox ve kritik mutation audit append'i ile birleştiren GraphQL handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Create/read/update başarı yolu typed contract'a uyar; unauthenticated, forbidden ve cross-tenant query/mutation fail-closed reddedilir.",
+          "Başarılı kritik mutation aynı transaction sonucuna bağlı doğru event ve immutable audit kaydı üretir; outbox veya audit append yoksa mutation test paketi geçmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce unauthorized/forbidden/cross-tenant, invalid input, missing guard, outbox failure ve audit failure resolver testlerini kırmızı yaz."
+          ],
+          "verification": [
+            "Resolver sonucunu tenant scope, PDP kararı, outbox envelope ve audit record ile gerçek API/DB çıktısında ilişkilendir; { ping } sonucunu Customer API kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Schema/event sürümünde backward compatibility, persisted consumer ve rollback smoke'unu çalıştır; breaking contract'ı semver/deprecation olmadan yayınlama."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-graphql-guard",
+            "desc": "Guard'sız resolver veya audit/outbox'tan kopuk mutation yetkisiz erişim ve izsiz veri değişimi üretir.",
+            "severity": "critical",
+            "mitigation": "Tenant/authz negatifleri ile transaction-bound audit+outbox testlerini GraphQL release kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-model-open-gaps",
+      "sources": ["docs/platform-customer-model-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-model"] },
+      "content": {
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "tenant_id ve gerekli indeksleri taşıyan Customer modelini; tenant_id+email uniqueness, reversible Alembic migration ve tenant-scope query convention ile tanımlayan model handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Customer tablosu tenant_id ve query/index stratejisini taşır; aynı tenant'ta duplicate email reddedilir, farklı tenantlarda izin verilen kimlik çakışması contract'a uygun davranır.",
+          "Migration temiz DB'de upgrade→downgrade→upgrade geçer; Tenant A sorgusu Tenant B kaydını okuyamaz veya değiştiremez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce field constraint, same-tenant duplicate, cross-tenant query/write ve upgrade/downgrade round-trip testlerini kırmızı tanımla."
+          ],
+          "verification": [
+            "Model metadata, migration SQL, indeksler ve tenant negatiflerini gerçek PostgreSQL test çıktısıyla doğrula; şema taslağını uygulanmış migration sayma."
+          ],
+          "release-maintenance": [
+            "Customer şeması değişince expand-contract, data backfill, downgrade ve tenant-index planını doğrula; snapshot olmadan destructive migration yayınlama."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-model-isolation",
+            "desc": "Tenant anahtarı/indeksi veya reversible migration eksikliği cross-tenant veri sızıntısı ve geri alınamaz şema değişimi doğurabilir.",
+            "severity": "critical",
+            "mitigation": "Composite uniqueness, tenant query guard, RLS/eşdeğer negatifleri ve upgrade/downgrade testlerini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-seed-open-gaps",
+      "sources": ["docs/platform-customer-seed-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-seed"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "Versioned golden fixture'dan tenant-aware ve idempotent Customer seed üreten; deterministik clean/rollback komutu ve E2E fixture tüketim sözleşmesi bulunan seed handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Aynı tenant fixture'ı iki kez çalıştırmak duplicate veya farklı sonuç üretmez; fixture güncel Customer model şemasına uyar.",
+          "Clean/rollback yalnız fixture'ın sahibi kayıtları deterministik kaldırır ve başka tenant verisine dokunmaz; E2E aynı golden fixture kimliklerini tüketir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce double-run, schema mismatch, partial failure, cross-tenant cleanup ve stale E2E fixture testlerini kırmızı yaz."
+          ],
+          "verification": [
+            "Seed hash'ini, iki koşum DB diff'ini, clean sonucunu ve E2E fixture bağını gerçek test çıktısıyla doğrula; Faz 0 placeholder mesajını Customer seed kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Model veya fixture sürümü değişince migration+seed compatibility ve clean drill'ini yeniden çalıştır; eski fixture için açık geçiş/rollback yolu tut."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-seed-nondeterminism",
+            "desc": "Nondeterministic veya tenant-scope dışı seed tekrarlı ortamları kirletip E2E sonuçlarını güvenilmez yapabilir.",
+            "severity": "high",
+            "mitigation": "Versioned golden fixture, idempotency, tenant-safe clean ve schema compatibility testlerini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "customer-ui-open-gaps",
+      "sources": ["docs/platform-customer-ui-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-ui"] },
+      "content": {
+        "dimensionKey": "wcag",
+        "deliverables": [
+          "Capability-gated Customer route tree ile canlı GraphQL contract'ına bağlı list, detail ve create/update form yüzeylerini; empty/loading/error ve erişilebilir validation durumlarıyla tanımlayan UI handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Route ve list/detail/form başarıyla açılır; empty/loading/error durumları deterministik test edilir ve capability/permission yokken yüzey fail-closed gizlenir veya reddedilir.",
+          "Her form kontrolü görünür label ve programatik hata ilişkisi taşır; keyboard/focus/ARIA kontrolleri ve canlı GraphQL error mapping browser testinde geçer."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce empty/loading/error, invalid form, missing capability, forbidden response, keyboard/focus ve ARIA association testlerini kırmızı yaz."
+          ],
+          "verification": [
+            "Component ve browser testlerini canlı Customer contract'ıyla doğrula; generic SurfaceRenderer veya public Vitrin görünümünü Customer UI kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "GraphQL/form şeması veya capability değişince visual/a11y/browser regresyonunu çalıştır; rollout arızasında route registration'ı geri alıp eski yüzeyi smoke et."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-customer-ui-contract",
+            "desc": "Mock/generic yüzeyin canlı contract veya permission guard olmadan yayınlanması erişilemez ve yetkisiz Customer deneyimi üretebilir.",
+            "severity": "high",
+            "mitigation": "Canlı contract, capability guard, state coverage ve keyboard/ARIA E2E kontrollerini release kapısı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-db-schema-open-gaps",
+      "sources": ["docs/platform-db-schema-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-migration-contract"] },
+      "content": {
+        "dimensionKey": "dataLifecycle",
+        "deliverables": [
+          "SQLAlchemy/SQLModel base ve Alembic environment'ını tenant-aware tablo/index/RLS-or-schema convention, expand-contract policy ve restore/downgrade drill'iyle birleştiren {{title}} handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Temiz PostgreSQL üzerinde tam upgrade→downgrade→upgrade round-trip geçer ve migration tekrar koşumu deterministik/idempotent sonuç verir.",
+          "Tenant-kapsamlı her tablo tenant_id+uygun indeks ve kararlaştırılmış RLS/schema stratejisini taşır; expand-contract ihlali ve tenant-scope dışı şema negatifleri reddedilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce empty DB upgrade, full downgrade, idempotent rerun, tenant index/RLS eksikliği, destructive migration ve restore fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Alembic history, generated SQL, tenant conventions ve round-trip sonucunu gerçek PostgreSQL test loguyla doğrula; compose DATABASE_URL varlığını migration kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Her migration için expand-contract aşaması, snapshot/restore sahibi, dolu downgrade ve canary metriği olmadan release verme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-platform-migration-rollback",
+            "desc": "Tenant convention veya downgrade yolu olmayan migration veri kaybına ve tenant izolasyonu ihlaline yol açabilir.",
+            "severity": "critical",
+            "mitigation": "Round-trip, RLS/index conformance, expand-contract ve gerçek restore drill'ini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "hello-platform-open-gaps",
+      "sources": ["docs/platform-hello-platform-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["hello-platform-smoke"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "API /healthz, GraphQL ping, tenant-aware request, UI shell/storefront ve local full-stack boot'u aynı build/SHA üzerinde çalıştıran; remote CI, deploy smoke ve rollback notuna bağlanan Hello Platform doğrulama paketi."
+        ],
+        "acceptanceCriteria": [
+          "Backend health/ping/tenant smoke ile UI shell/storefront browser smoke bloklayıcı CI içinde aynı commit için geçer; full-stack boot komutu temiz ortamda tekrarlanabilir log üretir.",
+          "Gerçek remote run, PR/SHA, deploy URL/smoke ve rollback/revert smoke olmadan done yazılmaz; mevcut local shell production-grade Hello Platform kanıtı sayılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce API down, GraphQL failure, missing/invalid tenant, UI boot failure, deploy smoke failure ve rollback failure oracle'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Health/ping/tenant/UI/full-stack sonuçlarını aynı SHA ve gerçek remote/deploy kaynaklarına bağla; yerel test dosyası varlığını PASS sayma."
+          ],
+          "release-maintenance": [
+            "Platform dependency veya boot contract değişince full smoke ve rollback drill'ini yeniden çalıştır; son doğrulanmış build'e dönüş yolunu koru."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-hello-platform-local-only",
+            "desc": "Kısmi local shell'in production boot kanıtı sayılması tenant, deploy veya rollback arızalarını gizleyebilir.",
+            "severity": "high",
+            "mitigation": "Aynı SHA üzerinde bloklayıcı CI, tenant smoke, deploy URL ve rollback smoke zincirini zorunlu tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-observability-open-gaps",
+      "sources": ["docs/platform-observability-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["cc-obs", "cc-obs-deep"] },
+      "content": {
+        "dimensionKey": "observability",
+        "deliverables": [
+          "Liveness /healthz ile dependency readiness /readyz ayrımını; low-cardinality metrics, request correlation/trace propagation, structured tenant/actor logları ve PII redaction ile tanımlayan {{title}} handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "/healthz süreç canlılığını, /readyz bağımlılık sağlığını ayrı sonuçlandırır; dependency arızasında liveness korunurken readiness fail olur ve metrics kontrolsüz cardinality üretmez.",
+          "Her request trace/correlation id taşır; structured log tenant/actor bağlamını içerirken PII/secret redaction testini geçer ve security event audit envelope'a bağlanır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce dependency-down readiness, missing trace, cardinality explosion, PII/secret leak ve audit-correlation yokluğu fixture'larını kırmızı yaz."
+          ],
+          "verification": [
+            "Endpoint, metric, trace ve redacted log sonuçlarını gerçek test/telemetry çıktısıyla doğrula; yalnız /healthz varlığını observability completion sayma."
+          ],
+          "release-maintenance": [
+            "Metric/log/trace şeması değişince dashboard/alert consumer uyumu, cardinality bütçesi ve telemetry-off rollback smoke'unu yeniden çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-observability-blindness",
+            "desc": "Readiness, correlation veya redaction eksikliği arızayı görünmez bırakabilir ya da PII'yi loglara sızdırabilir.",
+            "severity": "critical",
+            "mitigation": "Health/readiness ayrımı, cardinality guard, trace propagation, PII negatif testi ve audit correlation kapılarını uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-pr01-current-blocker-open-gap",
+      "sources": ["docs/platform-pr01-current-blocker-report-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "dimensionKey": "deployment",
+        "deliverables": [
+          "Tarihsel missing-remote gözlemini güncel checkout'ta yeniden sınayan; owner cevabı, canonical remote/default branch, PR/SHA, CI run ve required-check/ruleset sonucunu accept/reject/blocker olarak kaydeden PR01 unblock kartı."
+        ],
+        "acceptanceCriteria": [
+          "Remote/default branch bilgisi yetkili owner cevabına ve canlı Git/GitHub çıktısına uymadan blocker kapanmaz; 2026-07-09 komut çıktısı güncel kanıt olarak yeniden kullanılmaz.",
+          "PR URL, merge/commit SHA, aynı SHA için yeşil CI ve required-check/ruleset doğrulanmadan PR02 açılmaz; product-code diff yokluğu ayrıca denetlenir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce missing/stale remote, authority mismatch, default-branch mismatch, sahte CI URL'si, eksik ruleset ve product-code diff fixture'larını fail-closed tanımla."
+          ],
+          "verification": [
+            "Blocker durumunu güncel git remote/branch ve canlı GitHub repo/run/ruleset çıktısıyla yeniden hesapla; geçmiş raporu current PASS veya evidence olarak projekte etme."
+          ],
+          "release-maintenance": [
+            "Remote, default branch veya required check drift'inde önceki unblock kararını stale yapıp PR01 kapısını yeniden aç; blocker tarihçesini immutable tut."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-pr01-stale-blocker-evidence",
+            "desc": "Tarihsel missing-remote raporunu güncel gerçeklik veya PASS gibi kullanmak sıra kapılarını yanlış açabilir.",
+            "severity": "critical",
+            "mitigation": "Canlı yeniden doğrulama, authority intake, SHA-pariteli CI/ruleset ve stale-state invalidation uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-repo-reality-open-gaps",
+      "sources": ["docs/platform-repo-reality-audit-2026-07-09.md"],
+      "selector": { "nodeIds": ["std-ci-gates", "hello-platform-smoke"] },
+      "content": {
+        "dimensionKey": "testing",
+        "deliverables": [
+          "Güncel platform checkout'unda repo/branch/remote/workflow/package/test/infra yüzeylerini yeniden envanterleyen; her gözlemi next-actionable CI veya boot-smoke kapısına bağlayan {{title}} reality-audit kartı."
+        ],
+        "acceptanceCriteria": [
+          "Workspace, branch, remote, workflow dosyaları ve çalıştırılabilir test komutları mevcut checkout'tan yeniden okunur; tarihsel temiz-worktree sonucu implementation evidence değildir.",
+          "Remote/CI/ruleset eksikliği std-ci-gates'i, boot/tenant/deploy smoke eksikliği hello-platform-smoke'u blocked tutar; hiçbir audit satırı gerçek PR/test/deploy sonucunun yerine geçmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce wrong repo, dirty/stale checkout, missing remote, workflow drift, bozuk test command ve absent boot smoke fixture'larını fail-closed tanımla."
+          ],
+          "verification": [
+            "Envanteri canlı filesystem/git/package çıktılarıyla doğrula ve gözlem zamanını kaydet; 2026-07-09 PASS/temiz iddialarını bugüne taşımadan stale işaretle."
+          ],
+          "release-maintenance": [
+            "Repo yapısı, branch, workflow veya test script'i değişince reality audit'i yeniden üret; eski envanteri yalnız tarihçe olarak koru."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-repo-reality-staleness",
+            "desc": "Eski checkout envanteri üzerinden görev açmak yanlış path, komut ve CI varsayımlarına yol açabilir.",
+            "severity": "high",
+            "mitigation": "Timestamp'li canlı repo audit'i, stale invalidation ve her bulguyu yürütülebilir CI/smoke kapısına bağlama uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-tenancy-open-gaps",
+      "sources": ["docs/platform-tenancy-readiness-gap-2026-07-09.md"],
+      "selector": { "nodeIds": ["tenant-context-contract"] },
+      "content": {
+        "dimensionKey": "security",
+        "deliverables": [
+          "Güvenilir header/token/session kaynağından request, job ve event için immutable TenantContext üreten; raw override'ı reddeden, DB scope/RLS ve audit bağını tanımlayan {{title}} handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Missing veya invalid tenant bağlamı fail-closed reddedilir; doğrulanmamış raw tenant override kabul edilmez ve Tenant A, Tenant B verisini okuyamaz/yazamaz.",
+          "DB sorgusu tenant scope veya kararlaştırılmış RLS/schema izolasyonu olmadan çalışmaz; tenant karar kaynağı ve correlation alanı audit'e bağlanır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce missing/invalid tenant, spoofed override, cross-tenant read/write, unscoped query, background-job ve event-context kaybı testlerini kırmızı yaz."
+          ],
+          "verification": [
+            "Request/job/event propagation ile DB/RLS negatiflerini gerçek API/DB test çıktısıyla doğrula; PostgreSQL service varlığını tenancy kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "Tenant extraction veya isolation stratejisi değişince en az cross-tenant regresyon, audit correlation ve rollback smoke'unu yeniden çalıştır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-tenancy-escape",
+            "desc": "Spoof edilebilir veya DB'ye taşınmayan tenant context cross-tenant veri okuma/yazmaya yol açabilir.",
+            "severity": "critical",
+            "mitigation": "Trusted extraction, immutable context, raw-override deny, scoped query/RLS ve cross-tenant negatiflerini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "wave2-sdk-repeatability-open-gaps",
+      "sources": ["docs/wave2-sdk-repeatability-readiness-gap-2026-07-09.md"],
+      "selector": {
+        "nodeIds": [
+          "sdk-public-contract",
+          "sdk-app-core-template",
+          "sdk-module-template",
+          "s-sales",
+          "s-inventory"
+        ]
+      },
+      "content": {
+        "dimensionKey": "integration",
+        "deliverables": [
+          "{{title}} için Wave 2 predecessor zincirini, byte-stable SDK/template generation guard'larını ve Customer→OrderOps→Inventory tekrar üretilebilirlik/diff raporu sorumluluğunu açıkça gösteren yürütme sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Remote/CI, W0.3-W0.10 kernel, SDK public contract ve uçtan uca Customer evidence tamamlanmadan OrderOps/Inventory development veya Wave 2 done durumu açılmaz.",
+          "App-core/module template aynı inputta byte-stable output üretir; manual edit ve forbidden stack reddedilir, üç slice capability-gated route/menu ve tenant izolasyonu negatifini aynı public contract üzerinden geçer."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce eksik predecessor, nondeterministic generator, manual edit, forbidden stack, cross-tenant access, capability-yok görünürlük ve duplicate domain-logic diff fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "SDK/template hash'lerini ve Customer/OrderOps/Inventory contract+tenant+capability paritesini gerçek CI/test/diff çıktılarıyla doğrula; readiness raporunu implementation evidence sayma."
+          ],
+          "release-maintenance": [
+            "Template veya public contract değişince üç slice canary/regresyonu, semver/migration notu ve önceki generator/template sürümüne rollback drill'i olmadan Wave 2 release verme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-gap-wave2-copy-drift",
+            "desc": "Kernel/SDK kanıtı oluşmadan kopyalanan dikey dilimler generated template drift'i ve tekrarlanan domain kodu üretebilir.",
+            "severity": "critical",
+            "mitigation": "Exact predecessor, deterministic generator, manual-edit/forbidden-stack guard ve üç-slice diff+tenant+capability paritesini zorunlu tut."
+          }
+        ]
+      }
+    }
+  ]
+}

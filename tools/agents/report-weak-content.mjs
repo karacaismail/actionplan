@@ -273,7 +273,10 @@ for (const r of top40)
     `- **${r.id}** (${r.score.toFixed(2)}, ${r.weakestDimension}): ${r.suggestedActions.join("; ") || "içerik derinleştirme"}`,
   );
 md.push("");
-fs.writeFileSync(path.join(ROOT, "docs", "weak-content-17-report.md"), `${md.join("\n")}\n`);
+fs.writeFileSync(
+  path.join(ROOT, "docs", "weak-content-17-report.md"),
+  `${md.join("\n").trimEnd()}\n`,
+);
 
 console.log(`Zayıf içerik raporu — ${out.nodeCount} node tarandı.`);
 console.log(`Sınıflar: ${JSON.stringify(totals)}`);

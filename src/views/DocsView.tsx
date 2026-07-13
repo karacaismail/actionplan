@@ -1,5 +1,7 @@
 import { Markdown } from "@/components/markdown/Markdown";
 import { Button, Card, Icon } from "@/components/ui/primitives";
+import classifications from "@/data/doc-task-content-classification.json";
+import docsNavigation from "@/data/docs-navigation.json";
 import { downloadFile } from "@/engine";
 import { t } from "@/lib/strings";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -13,28 +15,48 @@ const MODULES = import.meta.glob("/docs/**/*.md", {
   eager: true,
 }) as Record<string, string>;
 
-interface DocEntry {
+export interface DocEntry {
+  docPath: string;
   slug: string;
   title: string;
   content: string;
 }
 
+const CLASSIFICATION_BY_PATH = new Map(
+  classifications.map((classification) => [classification.docPath, classification]),
+);
+const SIDEBAR_PATHS = new Set(docsNavigation.sidebar);
+
+export function isCatalogedDocPath(docPath: string): boolean {
+  return CLASSIFICATION_BY_PATH.has(docPath);
+}
+
+export function isSidebarDocPath(docPath: string): boolean {
+  return isCatalogedDocPath(docPath) && SIDEBAR_PATHS.has(docPath);
+}
+
 // Göreli yoldan tek-segment slug + ilk H1'den başlık çıkar. İç içe yollar "--" ile düzleşir;
 // böylece TanStack'in /docs/$docSlug rotası alt klasörlerde de kararlı kalır.
-const DOCS: DocEntry[] = Object.entries(MODULES)
+export const ALL_DOCS: DocEntry[] = Object.entries(MODULES)
   .map(([path, content]) => {
+    const docPath = path.replace(/^\//, "");
     const relativePath = path.replace(/^\/docs\//, "").replace(/\.md$/, "");
     const slug = relativePath.replaceAll("/", "--");
     const h1 = /^#\s+(.+)$/m.exec(content);
-    return { slug, title: h1 ? h1[1].trim() : slug, content };
+    return { docPath, slug, title: h1 ? h1[1].trim() : slug, content };
   })
+  .filter((doc) => isCatalogedDocPath(doc.docPath))
   .sort((a, b) => {
     if (a.slug === "README") return -1;
     if (b.slug === "README") return 1;
     return a.title.localeCompare(b.title, "tr");
   });
 
-const BY_SLUG = new Map(DOCS.map((d) => [d.slug, d]));
+// Docs sidebar yalnız kaynak indeksidir. Yönerge, standart, karar ve arşiv kaynakları
+// deep-link ile erişilebilir kalır; operasyonel içerikleri ilgili /task/<id> sayfasındadır.
+export const DOCS = ALL_DOCS.filter((doc) => isSidebarDocPath(doc.docPath));
+
+const BY_SLUG = new Map(ALL_DOCS.map((d) => [d.slug, d]));
 
 export function DocsView() {
   // /docs (paramsız) → README; /docs/$docSlug → ilgili belge.
@@ -42,7 +64,7 @@ export function DocsView() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const active = useMemo(
-    () => BY_SLUG.get(docSlug ?? "README") ?? BY_SLUG.get("README") ?? DOCS[0],
+    () => BY_SLUG.get(docSlug ?? "README") ?? BY_SLUG.get("README") ?? ALL_DOCS[0],
     [docSlug],
   );
 
@@ -65,8 +87,8 @@ export function DocsView() {
       JSON.stringify(
         {
           exportedAt: new Date().toISOString(),
-          count: DOCS.length,
-          docs: DOCS.map((d) => ({ slug: d.slug, title: d.title, markdown: d.content })),
+          count: ALL_DOCS.length,
+          docs: ALL_DOCS.map((d) => ({ slug: d.slug, title: d.title, markdown: d.content })),
         },
         null,
         2,
@@ -122,6 +144,11 @@ export function DocsView() {
             }
             className="tap-target w-full rounded-md border border-border bg-card px-2 py-2 text-base"
           >
+            {!DOCS.some((doc) => doc.slug === active.slug) && (
+              <option value={active.slug} disabled>
+                {active.title} — doğrudan kaynak
+              </option>
+            )}
             {DOCS.map((d) => (
               <option key={d.slug} value={d.slug}>
                 {d.title}

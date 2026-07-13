@@ -224,7 +224,7 @@ describe("JSON-STD-3b value-atom zaman tipleri", () => {
 // ---------------------------------------------------------------------------
 const YENI_IDLER = YENI_SOZLESMELER.map((y) => y.id);
 const REF_ANAHTARLARI = [
-  "marketReadinessRef",
+  "globalMarketReadinessRef",
   "financeModelRef",
   "identityDataRef",
   "searchQualityRef",
@@ -281,9 +281,12 @@ describe("JSON-STD-4 entegrasyon beşlisi", () => {
     }
   });
 
-  it("KARAR BEKLİYOR sınırı: task.ts standardRefs şemasına yeni ref anahtarları henüz EKLENMEZ (J4)", () => {
-    const icerik = oku("src/schemas/task.ts");
-    for (const ref of REF_ANAHTARLARI)
-      expect(icerik, `${ref} task.ts'e erken eklendi — J4 CPO kararı bekler`).not.toContain(ref);
+  it("J4 ref anahtarlarını task şeması ve makine applicability registry'sinde birlikte zorlar", () => {
+    const taskSchema = oku("src/schemas/task.ts");
+    const applicability = oku("src/data/standards-applicability.json");
+    for (const ref of REF_ANAHTARLARI) {
+      expect(taskSchema, `${ref} task.ts standardRefs şemasında eksik`).toContain(`${ref}:`);
+      expect(applicability, `${ref} applicability registry'sinde eksik`).toContain(`"${ref}"`);
+    }
   });
 });

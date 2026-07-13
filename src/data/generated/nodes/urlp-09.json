@@ -32,6 +32,7 @@
     "docs/url-policy-implementation-directive.md#urlp-09",
     "src/data/url-policy/implementation-program.json#URLP-09",
     "src/data/url-policy/registry.json",
+    "doc-apply:url-policy-implementation-contract: docs/url-policy-implementation-directive.md",
     "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
     "doc-apply:task-handoff: docs/task-to-code-contract.md",
     "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
@@ -76,7 +77,12 @@
         "URLP-09 acceptance criteria ile test komutları birebir eşlendi.",
         "[DOC-APPLY:url-policy-implementation-contract] Contract testi ve browser E2E önce kırmızı yazılır; hardcoded path, open redirect, slash/Unicode/encoding farkı, cross-tenant link, 404 refresh ve redirect cycle fixture'ları zorunludur.",
         "[DOC-APPLY:high-risk-dod] URLP-09 — Custom Domain ve TLS Control Plane riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
-        "[DOC-APPLY:ready-for-dev] URLP-09 — Custom Domain ve TLS Control Plane için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir."
+        "[DOC-APPLY:task-handoff] URLP-09 — Custom Domain ve TLS Control Plane kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] URLP-09 — Custom Domain ve TLS Control Plane için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] URLP-09 — Custom Domain ve TLS Control Plane acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] urlp-09 writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] urlp-09 acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] urlp-09 için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
       ],
       "passed": false,
       "notes": ""
@@ -114,7 +120,10 @@
       "criteria": [
         "URLP-09 exit kriteri, diff, test logu ve rollback drill kanıtıyla bağımsız reviewer tarafından doğrulandı.",
         "URLP-09 kanonik policy ve implementation-program parity kontrolü geçti.",
+        "[DOC-APPLY:url-policy-implementation-contract] urlp-09 canonical sonucu registry/shared package/backend/SDK/web/sitemap/export arasında differential testle karşılaştır; unknown host, tenant-token-path mismatch, PII sızıntısı, unsafe redirect ve deep-link refresh negatifleri ile gerçek staging çıktısı olmadan verified yazma.",
         "[DOC-APPLY:high-risk-dod] URLP-09 — Custom Domain ve TLS Control Plane kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] urlp-09 için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] urlp-09 code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
         "[DOC-APPLY:evidence-dod] URLP-09 — Custom Domain ve TLS Control Plane done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
         "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
         "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
@@ -128,7 +137,13 @@
       "criteria": [
         "URLP-09 canary/rollout sinyalleri ve runbook hazır.",
         "URLP-09 rollback tetikleyicileri ölçülebilir; evidence rollup güncellendi.",
+        "[DOC-APPLY:url-policy-implementation-contract] URLP-09 — Custom Domain ve TLS Control Plane rollout'unu shadow→compare-only→dual-read/generate→internal/tenant canary sırasıyla ve owner'lı kill switch üzerinden yönet; mismatch/consumer/traffic sıfırlanmadan eski policy'yi retire etme, rollback'te önceki generator/profile + cache purge + alias one-hop restore uygula.",
+        "[DOC-APPLY:high-risk-dod] urlp-09 risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] URLP-09 — Custom Domain ve TLS Control Plane teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] URLP-09 — Custom Domain ve TLS Control Plane repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
         "[DOC-APPLY:evidence-dod] URLP-09 — Custom Domain ve TLS Control Plane için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] URLP-09 — Custom Domain ve TLS Control Plane kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] URLP-09 — Custom Domain ve TLS Control Plane için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
         "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
       ],
       "passed": false,
@@ -149,9 +164,12 @@
     "URLP-09 kırmızı→yeşil test kanıtı, rollback drill notu ve evidence patch'i.",
     "URLP-09 için implementation-program allowedFiles/nonGoals sözleşmesine uyum raporu.",
     "[DOC-APPLY:url-policy-implementation-contract] URLP-09 — Custom Domain ve TLS Control Plane için merkezi URL registry/policy kararını route üretimi, tenant/locale bağlamı, canonical URL, redirect/migration ve gözlemlenebilir rollback adımlarına dönüştüren uygulama sözleşmesi.",
-    "[DOC-APPLY:task-handoff] URLP-09 — Custom Domain ve TLS Control Plane için micro_step seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı ve test komutu taslağı.",
+    "[DOC-APPLY:high-risk-dod] urlp-09 için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] URLP-09 — Custom Domain ve TLS Control Plane için micro_step seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] urlp-09 için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] urlp-09 için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] URLP-09 — Custom Domain ve TLS Control Plane için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
-    "[DOC-APPLY:waterfall-handoff] URLP-09 — Custom Domain ve TLS Control Plane için yedi waterfall fazının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:waterfall-handoff] URLP-09 — Custom Domain ve TLS Control Plane kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
     "[DOC-APPLY:enterprise-dod] URLP-09 — Custom Domain ve TLS Control Plane için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
   ],
   "acceptanceCriteria": [
@@ -161,7 +179,13 @@
     "[DOC-APPLY:url-policy-implementation-contract] Route veya link serbest path birleştirme yapmaz; merkezi typed registry aynı input için aynı canonical URL'yi üretir ve unknown tenant/locale/resource girdisi fail-closed sonuçlanır.",
     "[DOC-APPLY:url-policy-implementation-contract] Eski URL migration'ı redirect loop, open redirect, tenant escape, encoded-path ve deep-link refresh negatiflerini geçer; rollout metriği eşiği aşarsa kayıtlı owner önceki route tablosuna dönebilir.",
     "[DOC-APPLY:high-risk-dod] URLP-09 — Custom Domain ve TLS Control Plane yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] urlp-09 için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] urlp-09 handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] URLP-09 — Custom Domain ve TLS Control Plane için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
     "[DOC-APPLY:ready-for-dev] URLP-09 — Custom Domain ve TLS Control Plane development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] urlp-09 phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] URLP-09 — Custom Domain ve TLS Control Plane evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] urlp-09 yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
     "[DOC-APPLY:evidence-writeback-runbook] URLP-09 — Custom Domain ve TLS Control Plane evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
     "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
     "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
@@ -368,12 +392,13 @@
       "items": [
         "Custom Domain ve TLS Control Plane kapsamı, implementation-program phase contract ve kanonik URL policy exit kriteriyle sınırlandırılır.",
         "URLP-09 — Custom Domain ve TLS Control Plane girdileri, çıktıları, hata akışı ve kabul sözleşmesi phase exit criteria ile izlenir.",
-        "URLP-09 — Custom Domain ve TLS Control Plane için Özellik Tanımları kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-binding-service.py çıktısına bağlar; DNS verification fixture bulunmadan ilerleme yapılmaz."
+        "URLP-09 — Custom Domain ve TLS Control Plane için Özellik Tanımları kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-binding-service.py çıktısına bağlar; DNS verification fixture bulunmadan ilerleme yapılmaz.",
+        "[DOC-APPLY:waterfall-handoff] urlp-09: URLP-09 — Custom Domain ve TLS Control Plane kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "urlp-09 featureDefs kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
-      "prompt": "urlp-09 featureDefs değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-binding-service.py ile DNS verification fixture arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "prompt": "urlp-09 featureDefs değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-binding-service.py ile DNS verification fixture arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- URLP-09 — Custom Domain ve TLS Control Plane kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
       "provenance": "human",
-      "promptVersion": "urlp-wbs-v1",
+      "promptVersion": "doc-task-content-v2",
       "lastReviewed": "2026-07-13"
     },
     "security": {
@@ -518,12 +543,13 @@
       "items": [
         "Custom Domain ve TLS Control Plane için pozitif, negatif ve edge vektörleri development öncesi kırmızı test olarak tanımlanır.",
         "URLP-09 — Custom Domain ve TLS Control Plane unit, integration ve E2E testlerinde negatif fixture ile evidence üretir.",
-        "URLP-09 — Custom Domain ve TLS Control Plane için Testler ve QA kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-lifecycle-state-machine.py çıktısına bağlar; certificate lifecycle logu bulunmadan ilerleme yapılmaz."
+        "URLP-09 — Custom Domain ve TLS Control Plane için Testler ve QA kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-lifecycle-state-machine.py çıktısına bağlar; certificate lifecycle logu bulunmadan ilerleme yapılmaz.",
+        "[DOC-APPLY:high-risk-dod] urlp-09: urlp-09 için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] urlp-09: urlp-09 için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] urlp-09: urlp-09 için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] urlp-09: URLP-09 — Custom Domain ve TLS Control Plane için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] urlp-09: URLP-09 — Custom Domain ve TLS Control Plane için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
       ],
       "notes": "urlp-09 testing kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
-      "prompt": "urlp-09 testing değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-lifecycle-state-machine.py ile certificate lifecycle logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "prompt": "urlp-09 testing değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-lifecycle-state-machine.py ile certificate lifecycle logu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- urlp-09 için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- URLP-09 — Custom Domain ve TLS Control Plane yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- urlp-09 için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- urlp-09 için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- URLP-09 — Custom Domain ve TLS Control Plane development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- urlp-09 phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- urlp-09 için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- URLP-09 — Custom Domain ve TLS Control Plane evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- urlp-09 yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- URLP-09 — Custom Domain ve TLS Control Plane için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- URLP-09 — Custom Domain ve TLS Control Plane evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- URLP-09 — Custom Domain ve TLS Control Plane için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
       "provenance": "human",
-      "promptVersion": "urlp-wbs-v1",
+      "promptVersion": "doc-task-content-v2",
       "lastReviewed": "2026-07-13"
     },
     "owasp": {
@@ -548,12 +574,13 @@
       "items": [
         "Custom Domain ve TLS Control Plane k-route-policy sözleşmesine RouteRef/ResourceRef üzerinden bağlanır; katmanlar string URL üretmez.",
         "URLP-09 — Custom Domain ve TLS Control Plane kernel sözleşmesi, tipli API ve tek yönlü bağımlılık üzerinden entegre edilir.",
-        "URLP-09 — Custom Domain ve TLS Control Plane için Kernel/Core Entegrasyonu kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-binding-service.py çıktısına bağlar; DNS verification fixture bulunmadan ilerleme yapılmaz."
+        "URLP-09 — Custom Domain ve TLS Control Plane için Kernel/Core Entegrasyonu kararı, “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” kabul ölçütünü domain-binding-service.py çıktısına bağlar; DNS verification fixture bulunmadan ilerleme yapılmaz.",
+        "[DOC-APPLY:url-policy-implementation-contract] urlp-09: URLP-09 — Custom Domain ve TLS Control Plane için merkezi URL registry/policy kararını route üretimi, tenant/locale bağlamı, canonical URL, redirect/migration ve gözlemlenebilir rollback adımlarına dönüştüren uygulama sözleşmesi.\n[DOC-APPLY:task-handoff] urlp-09: URLP-09 — Custom Domain ve TLS Control Plane için micro_step seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "urlp-09 integration kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
-      "prompt": "urlp-09 integration değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-binding-service.py ile DNS verification fixture arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
+      "prompt": "urlp-09 integration değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: domain-binding-service.py ile DNS verification fixture arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.\n\n[DOC-APPLY:url-policy-implementation-contract]\nKaynak: docs/url-policy-implementation-directive.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- URLP-09 — Custom Domain ve TLS Control Plane için merkezi URL registry/policy kararını route üretimi, tenant/locale bağlamı, canonical URL, redirect/migration ve gözlemlenebilir rollback adımlarına dönüştüren uygulama sözleşmesi.\n- Route veya link serbest path birleştirme yapmaz; merkezi typed registry aynı input için aynı canonical URL'yi üretir ve unknown tenant/locale/resource girdisi fail-closed sonuçlanır.\n- Eski URL migration'ı redirect loop, open redirect, tenant escape, encoded-path ve deep-link refresh negatiflerini geçer; rollout metriği eşiği aşarsa kayıtlı owner önceki route tablosuna dönebilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:url-policy-implementation-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: urlp-09 — URLP-09 — Custom Domain ve TLS Control Plane\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- URLP-09 — Custom Domain ve TLS Control Plane için micro_step seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- urlp-09 handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- URLP-09 — Custom Domain ve TLS Control Plane için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "human",
-      "promptVersion": "urlp-wbs-v1",
+      "promptVersion": "doc-task-content-v2",
       "lastReviewed": "2026-07-13"
     },
     "moduleUsage": {
@@ -583,7 +610,7 @@
       "notes": "urlp-09 dataLifecycle kapsamı yalnız bu fazın acceptance, security-negative, rollback ve evidence sınırlarını açıklar; ortak mühendislik kuralları standardRefs üzerinden tüketilir.",
       "prompt": "urlp-09 dataLifecycle değerlendirmesinde “DNS proof, IDNA normalize, global uniqueness, ACME ve lifecycle state machine çalışır.” ölçütünü kapsa. Güvenlik sınırı: Domain ownership proof olmadan active olamaz.. Çıktı: custom-domain-drill.json ile takeover drill raporu arasındaki doğrulanabilir bağı, predecessor durumunu ve rollback sonucunu yaz; uygulanmamış runtime'ı kanıt gibi sunma.",
       "provenance": "human",
-      "promptVersion": "urlp-wbs-v1",
+      "promptVersion": "doc-task-content-v2",
       "lastReviewed": "2026-07-13"
     },
     "observability": {
@@ -695,7 +722,17 @@
     "i18nRef": "i18n-standards",
     "urlPolicyRef": "url-policy",
     "tenancyRef": "tenancy",
-    "privacyRef": "privacy"
+    "privacyRef": "privacy",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "c13nRef": "c13n",
+    "dataNormalizationRef": "data-normalization",
+    "c12nRef": "c12n",
+    "p13nRef": "p13n",
+    "globalMarketReadinessRef": "global-market-readiness"
   },
   "applicability": {},
   "waivers": [],

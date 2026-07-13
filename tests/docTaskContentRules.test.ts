@@ -114,6 +114,22 @@ describe("doc task content rule registry", () => {
         `${ruleId}: generic kernel example owner olamaz`,
       ).toEqual([]);
     }
+    const atomicOwner = nodes.get("atomic-type-contract");
+    expect(atomicOwner).toMatchObject({
+      parentId: "atomic-types",
+      level: "archetype",
+    });
+    expect(byId.get("catalog-atom-archetype-clm-derivation")?.selector.nodeIds).toEqual([
+      "atomic-type-contract",
+      "s-clm",
+    ]);
+    for (const ruleId of [
+      "catalog-atomic-tier-decision-contract",
+      "catalog-atomic-type-catalog-vectors",
+      "catalog-kernel-numeronym-map",
+    ]) {
+      expect(byId.get(ruleId)?.selector.nodeIds, ruleId).toEqual(["atomic-type-contract"]);
+    }
     expect(byId.has("kernel-contract")).toBe(false);
     expect(byId.get("core-contract-platform-customer")?.sources).toEqual([
       "docs/core-contract-pack.md",
