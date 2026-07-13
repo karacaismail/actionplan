@@ -45,14 +45,13 @@
 | BC-06 Fulfillment & Returns | sevkiyat + RMA/ters-lojistik | shipment, rma | audit, event bus |
 | BC-07 Payment & Adjustment | ödeme-orchestrasyonu + fee/adjustment | payment-intent, adjustment | ledger, provider port |
 
-## 3. Opsiyonel edition + advanced-network BC'ler
+## 3. Core dışı yüzeylerin kararı
 
-BC-map §3–4. `*` = provisional (feature/policy/config'e çökebilir; insan onayına tabi).
+[`ADR-0031`](./adr-0031-commerce-os-vibecoder-handoff-decisions.md) D11 sonucu bağlayıcıdır. Bu bölüm yeni module/BC yaratmaz.
 
-- **Grup B (edition):** BC-08 Marketplace & Trust · BC-09 B2B Procurement* · BC-10 Subscription & Membership · BC-11 Service/Booking/Rental* · BC-12 Channel/Omnichannel · BC-13 Promotions/Merch* · BC-14 Recommerce* · BC-19 Classifieds & Lead Exchange* (bu doküman seti içinde append-only numara konvansiyonuyla sıra-dışı — kimlik-kararlılığı, dış referans koruma değil; BC-map §3 notu).
-- **Grup C (advanced-network):** BC-15 Supplier Network* · BC-16 Auction/Crowdfunding* · BC-17 Settlement & Rev-Share* · BC-18 Cross-border/Compliance*.
-
-**Promotions/Merchandising zorunlu core değildir**; opsiyonel edition'dır (scope §3).
+- **KEEP PROVISIONAL:** Marketplace governance, Subscription, Auction ve Recommerce. Yalnız Marketplace/Subscription yakın dönem paket adayıdır; Auction/Recommerce core evidence'a kadar blocked'dır. Her biri owner + data authority + lifecycle authority + independent policy testini geçmeden module değildir.
+- **DEMOTE:** B2B, Service/Booking/Rental, Channel/Omnichannel, Promotions/Merchandising, Supplier, Settlement, Compliance ve Classifieds/Lead-Gen. Bunlar feature, workflow, policy, integration, reporting surface veya configuration pack olarak mevcut core/platform authority'lerini tüketir.
+- **Classifieds sınırı:** Commerce OS bağımsız listing/property authority'si kurmaz ve REOC Property Registry/Listing Supply authority'sini kopyalamaz.
 
 ## 4. Edition/Mode matrisi — her tenant her şeyi almaz
 
@@ -61,11 +60,14 @@ Edition = ticari ambalaj; Mode = runtime davranış; Tenant = izolasyon (ADR-003
 | Edition (aday) | Açılan BC seti | Tipik mode(lar) |
 |---|---|---|
 | Core | BC-01…BC-07 | B2C |
-| Marketplace | Core + BC-08 (+BC-17) | Marketplace |
-| Subscription | Core + BC-10 | Subscription |
-| Enterprise-B2B | Core + BC-09 (+BC-13) | B2B |
-| Advanced-Network | Core + BC-12/BC-15/BC-16/BC-18 | DTC/Omnichannel |
-| Classifieds/Lead-Gen* | Core + BC-19 (+BC-08 ops.) | Classifieds/Lead-Gen |
+| Marketplace* | Core + kanıtlanmış marketplace-governance capability/BC | Marketplace |
+| Subscription* | Core + kanıtlanmış subscription-contract capability/BC | Subscription |
+| Enterprise-B2B | Core + policy/workflow/configuration pack | B2B |
+| Channel/Omnichannel | Core + projection/integration/configuration pack | DTC/Omnichannel |
+| Classifieds/Lead-Gen | Core + Catalog/Offer/CRM/Entitlement workflow/configuration pack | Classifieds/Lead-Gen |
+| Auction/Recommerce* | Core + daha sonraki kanıtlanmış provisional capability/BC | Auction/Recommerce |
+
+`*` = core evidence ve module-terfi testleri kapanmadan satılamaz/açılamaz.
 
 Kompozisyon otoritesi mevcut edition düğümünden **tüketilir** ([`stack-editions.json`](../src/data/generated/nodes/stack-editions.json)); Commerce OS yeni edition motoru yazmaz.
 
@@ -81,17 +83,17 @@ Disposition sözlüğü: **KEEP/REUSE** (tüket/koru) · **RECLASSIFY** (seviye/
 | [`s-billing.json`](../src/data/generated/nodes/s-billing.json) | archetype | **RECLASSIFY/SPLIT** | Abonelik faturalama → BC-10; ledger yazımı platform ledger primitifine (REUSE). |
 | [`s-subscription-commerce.json`](../src/data/generated/nodes/s-subscription-commerce.json) | feature | **FOLD→BC-10** | Subscription & Membership içinde feature. |
 | [`s-dropshipping.json`](../src/data/generated/nodes/s-dropshipping.json) | feature | **FOLD** | → BC-15 Supplier / BC-06 Fulfillment (provider-destekli); stoksuz akış. |
-| [`s-social-commerce.json`](../src/data/generated/nodes/s-social-commerce.json) | feature | **FOLD→BC-12** | Channel/Omnichannel kanal feature'ı. |
+| [`s-social-commerce.json`](../src/data/generated/nodes/s-social-commerce.json) | feature | **FOLD** | Channel/Omnichannel projection/integration/configuration feature'ı; bağımsız BC değil. |
 | [`s-payment-methods.json`](../src/data/generated/nodes/s-payment-methods.json) | feature | **FOLD→BC-07** | Yerel ödeme yöntemleri = provider entegrasyonu (§7). |
-| [`s-channel-hub.json`](../src/data/generated/nodes/s-channel-hub.json) | module | **RECLASSIFY** | → BC-12 Channel/Omnichannel + extension/provider (kanal API). `stack-channel` ile **DUPLICATE** riski. |
-| [`stack-channel.json`](../src/data/generated/nodes/stack-channel.json) | module | **DUPLICATE** | `s-channel-hub` ile örtüşür → BC-12 altında konsolide (dedup, classification §5). |
-| [`s-product-feed.json`](../src/data/generated/nodes/s-product-feed.json) | module | **FOLD→BC-12** | Kanal feed derleyici (MAG channel-feed=FOLD); kendi otoritesi yok. |
+| [`s-channel-hub.json`](../src/data/generated/nodes/s-channel-hub.json) | module | **DEMOTE-CAND** | Channel projection/integration/configuration surface; `stack-channel` ile **DUPLICATE** riski. Gerçek node değişikliği ayrı insan-onaylı dalgadır. |
+| [`stack-channel.json`](../src/data/generated/nodes/stack-channel.json) | module | **DUPLICATE/DEMOTE-CAND** | `s-channel-hub` ile örtüşür; bağımsız Commerce OS BC authority'si yoktur. |
+| [`s-product-feed.json`](../src/data/generated/nodes/s-product-feed.json) | module | **FOLD** | Kanal feed derleyici; Catalog/extension runtime üzerinde integration feature'ı, kendi authority'si yok. |
 | [`s-inventory.json`](../src/data/generated/nodes/s-inventory.json) | archetype | **RECLASSIFY→BC-05** | Inventory & Availability domain modeli ([`archetype-inventory-stock-directive.md`](./archetype-inventory-stock-directive.md)). |
-| [`stack-service.json`](../src/data/generated/nodes/stack-service.json) | module | **RECLASSIFY (DEFER)** | → BC-11 Service/Booking/Rental* (provisional, lifecycle-otoriteye göre bölünür). |
+| [`stack-service.json`](../src/data/generated/nodes/stack-service.json) | module | **DEMOTE-CAND** | Service/Booking/Rental workflow/configuration pack; bağımsız Commerce OS authority'si kanıtlanmadı. |
 | [`stack-messaging.json`](../src/data/generated/nodes/stack-messaging.json) | module | **SPLIT** | Kanal-ticaret → BC-12; messaging-thread **yeniden-kullanılabilir archetype sözleşmesi** (REUSE archetype — platform primitifi **değil**, [`archetype-messaging-thread-directive.md`](./archetype-messaging-thread-directive.md)); WhatsApp API = provider. |
-| [`stack-compliance.json`](../src/data/generated/nodes/stack-compliance.json) | module | **RECLASSIFY (DEFER)** | → BC-18 Cross-border/Compliance* (policy/profile) + audit primitifi (REUSE). |
+| [`stack-compliance.json`](../src/data/generated/nodes/stack-compliance.json) | module | **DEMOTE-CAND** | Jurisdiction policy/configuration pack + audit/evidence primitifi (REUSE); regulated execution değil. |
 | [`stack-editions.json`](../src/data/generated/nodes/stack-editions.json) | module | **REUSE** | Edition kompozisyon otoritesi tüketilir (§4). |
-| [`s-classifieds.json`](../src/data/generated/nodes/s-classifieds.json) | module | **RECLASSIFY (DEFER)** | Classifieds/lead-gen **açık bir ticaret iş modelidir** (ilan/eşleştirme/contact-unlock ekonomisi) → BC-19 Classifieds & Lead Exchange* provisional edition adayı. Kaynak düğümdeki "e-ticaret DEĞİLDİR" yalnız *transaction'ın platform-dışı* olduğunu belirtir; UNRELATED **değildir**. |
+| [`s-classifieds.json`](../src/data/generated/nodes/s-classifieds.json) | module | **DEMOTE-CAND** | Classifieds/lead-gen ticari bir mode/pakettir; Catalog/Offer/generic CRM/Entitlement üzerinde workflow/policy/configuration olarak kalır. REOC Property/Listing authority'sini alamaz. |
 | [`stack-workspace.json`](../src/data/generated/nodes/stack-workspace.json) | module | **UNRELATED** | Verimlilik paketi (mail/takvim/drive); commerce değil. |
 | [`app-customer-revenue.json`](../src/data/generated/nodes/app-customer-revenue.json) | app | **UNRELATED (konteyner)** | Mevcut WBS app-kümesi; Commerce OS **ayrı yeni ada**dır, bu kümeyi kuşatmaz/geçersizleştirmez. |
 

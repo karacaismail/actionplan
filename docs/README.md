@@ -4,6 +4,20 @@ Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `doc
 
 **Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `doc-maintainer-operating-boundary.md` → `task-to-code-contract.md` → `kernel-sdk-app-delivery-sequence.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
 
+## Enterprise SaaS Requirement Program (2026-07-13)
+
+Bu program **docs-only candidate/decision çalışmasıdır**; requirement baseline, implementation veya enterprise-ready/GA kanıtı değildir. **D1–D13 insan kararları CLOSED** ([ADR-0031](adr-0031-commerce-os-vibecoder-handoff-decisions.md), insan-yetkili) ve Commerce OS handoff **instruction-ready / READY FOR VIBECODER INSTRUCTION**'dır. **Runtime evidence hâlâ pending:** 14/14 runtime probe NOT-RUN, build-enforced DAG check / saga / restore drill koşulmadı ve Türkiye counsel (D4) açık olduğundan **runtime/pilot/GA NO-GO** kalır; instruction-ready ≠ runtime-ready. Optional edition'lar (Classifieds/Recommerce) core evidence'a kadar blocked.
+
+Önerilen okuma sırası:
+
+1. [Yürütme yönergesi](enterprise-saas-waterfall-claude-multi-agent-directive.md) ve [preflight](enterprise-saas-requirement-program-preflight.md)
+2. [Kaynak normalizasyon matrisi](enterprise-saas-source-normalization-matrix.md), [constitution](enterprise-saas-requirement-constitution.md) ve [capability ontology](enterprise-saas-capability-ontology.md)
+3. [Ürün-family kompozisyonu](enterprise-saas-product-family-composition.md) ve [insan karar kuyruğu](enterprise-saas-human-decision-queue.md)
+4. [Faz 5 entegrasyon kararı](enterprise-saas-phase-5-integration-decision.md) — sekiz domain candidate belgesine buradan ilerlenir
+5. [Faz 6 unknown-unknown probes](enterprise-saas-phase-6-unknown-unknown-probes.md), [Faz 7 traceability readiness](enterprise-saas-phase-7-traceability-baseline.md) ve [Faz 8 control crosswalk](enterprise-saas-phase-8-control-crosswalk.md)
+6. [Faz 9 adversarial review](enterprise-saas-phase-9-adversarial-review.md) ve [Faz 10 insan karar denetimi](enterprise-saas-phase-10-human-decision-audit.md)
+7. [Faz 11 blocked-readiness raporu](enterprise-saas-phase-11-publish-readiness.md)
+
 ---
 
 ## 1. Kararlar (ADR — Architecture Decision Record)
@@ -230,12 +244,17 @@ Araştırma turunda eksik bulunan kernel / archetype / surface sözleşmelerini 
 
 - [adr-0030-commerce-operating-system-boundary.md](adr-0030-commerce-operating-system-boundary.md) — Bağımsız Commerce OS app/ürün-ailesi sınırı kararı (kaynak yetki).
 - [commerce-os-product-scope.md](commerce-os-product-scope.md) — Ürün kapsamı: tez, persona, minimum ticari dilim, non-goal, tüketilen primitifler.
-- [commerce-os-bounded-context-map.md](commerce-os-bounded-context-map.md) — 19 bounded-context haritası (core/edition/advanced; BC-19 Classifieds & Lead Exchange bu doküman seti içinde append-only numara konvansiyonuyla sıra-dışı) + döngüsüz bağımlılık grafiği.
+- [commerce-os-bounded-context-map.md](commerce-os-bounded-context-map.md) — Kabul edilmiş core 7 bounded-context authority haritası; provisional/demote kararları, neutral contract DAG'ı ve runtime event akışı.
 - [commerce-os-capability-classification.md](commerce-os-capability-classification.md) — Araştırma korpusu prefix + DRC/MAG davranış sınıflandırması ve item-level triyaj kapısı.
 - [commerce-os-kernel-sdk-gap-directive.md](commerce-os-kernel-sdk-gap-directive.md) — Yatay motorların REUSE/EXTEND/SDK-PORT/APP-BC/PROVIDER/DEFER gap analizi.
 - [commerce-os-stack-app-composition.md](commerce-os-stack-app-composition.md) — Aday app manifest profili + mevcut `s-*`/`stack-*` artefakt eşlemesi (öneri, mutasyon değil).
-- [commerce-os-test-first-parallel-handoff.md](commerce-os-test-first-parallel-handoff.md) — Test-önce P0–P8 paralel implementasyon handoff planı (yalnız insan geliştiriciler; AI yalnız salt-okunur audit/direktif incelemesi).
-- [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel→SDK→app-core→module→app teslim sırası + Commerce OS profili (addendum).
+- [commerce-os-test-first-parallel-handoff.md](commerce-os-test-first-parallel-handoff.md) — V0–V16 test-first vibecoder master handoff; temiz platform worktree, tek-writer dosya sahipliği ve Codex MASTER doğrulama kapıları.
+- [adr-0031-commerce-os-vibecoder-handoff-decisions.md](adr-0031-commerce-os-vibecoder-handoff-decisions.md) — Instruction-ready handoff kararları D7–D13 (ACCEPTED, insan-yetkili): contract paketleri/DAG, `CheckoutSubmitted` + Order tek-yazar saga, split authority'ler, provisional BC yönü, AI human-gate, pilot zarf.
+- [commerce-os-vibecoder-readiness-oracles.md](commerce-os-vibecoder-readiness-oracles.md) — Talimat-hazırlık RED oracle'ları (instruction-ready ≠ runtime-ready).
+- [commerce-os-contract-test-plan.md](commerce-os-contract-test-plan.md) — Test-önce contract-test planı (F1–F16 RED test aileleri; koşulmuş test değil).
+- [commerce-os-data-migration-contract.md](commerce-os-data-migration-contract.md) — D8/D9 data/migration authority + şema sınırı talimatı (şema implemente etmez).
+- [commerce-os-vibecoder-task-packets.md](commerce-os-vibecoder-task-packets.md) — V0…V16 vibecoder task-packet kataloğu (READY FOR VIBECODER INSTRUCTION; done/GA değil).
+- [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel→SDK→app-core→module→app teslim sırası + Commerce OS profili + ADR-0031 override (addendum).
 
 ---
 

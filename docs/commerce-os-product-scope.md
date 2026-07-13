@@ -1,6 +1,6 @@
 # Commerce Operating System — Ürün Kapsamı (Product Scope)
 
-**Durum:** DRAFT — 2026-07-13 · **Kaynak yetki:** [`adr-0030-commerce-operating-system-boundary.md`](./adr-0030-commerce-operating-system-boundary.md)
+**Durum:** ACCEPTED PRODUCT SCOPE — 2026-07-13 · **Kaynak yetki:** [`adr-0030-commerce-operating-system-boundary.md`](./adr-0030-commerce-operating-system-boundary.md) + [`adr-0031-commerce-os-vibecoder-handoff-decisions.md`](./adr-0031-commerce-os-vibecoder-handoff-decisions.md)
 **Kapsam:** Yalnız dokümantasyon. Bu dosya kod/şema/JSON üretmez; app/module düğümü açmaz ([`AGENTS.md`](../AGENTS.md) §0, §4.4).
 **Taksonomi:** `app`=ada, `module`/bounded-context=dağ, `archetype`=kaya, `feature`=taş ([`task-to-code-contract.md`](./task-to-code-contract.md) §1).
 
@@ -82,10 +82,12 @@ Stack kilidi değişmez: FastAPI + SQLAlchemy 2.0 + PostgreSQL ([`adr-K1-kernel-
 
 **Ayrım (ADR-0030):** Edition = ticari ambalaj; Mode = runtime davranış bileşimi; Tenant = izolasyon birimi. Karıştırılmaz.
 
-- **Edition (aday, sabit değil):** *Core*, *Marketplace*, *Subscription*, *Enterprise-B2B*, *Advanced-Network*, *Classifieds/Lead-Gen* (opsiyonel; ilan/eşleştirme/contact-unlock ekonomisi, BC-19). Aynı BC seti + pazara-çıkış paketi ([`stack-editions.json`](../src/data/generated/nodes/stack-editions.json)).
-- **Mode (aday):** B2C, B2B, Marketplace, Subscription, Rental, Auction, DTC/Omnichannel, **Classifieds/Lead-Gen** (ilan+lead eşleştirme; transaction platform-dışı olabilir ama ticaret iş modelidir, BC-map BC-19). Her mode bir capability bileşimidir ([`mode-profile-contract.md`](./mode-profile-contract.md)).
+- **İlk edition:** *Core* = yalnız BC-01…BC-07.
+- **Opsiyonel paket adayları:** *Marketplace* ve *Subscription* ancak ilgili provisional authority testini geçerse ayrı module/BC açabilir. *Enterprise-B2B*, *Channel/Omnichannel* ve *Classifieds/Lead-Gen* bağımsız BC değildir; mevcut authority'ler üzerinde entitlement + policy/workflow/integration/configuration paketidir. Classifieds paketi REOC Property Registry veya Listing Supply authority'sini kopyalayamaz.
+- **Daha sonraki, core tarafından bloklanan adaylar:** *Auction* ve *Recommerce*. Recommerce yalnız bağımsız asset/provenance owner, lifecycle ve policy kanıtıyla provisional module adayı kalır; ilk dilime girmez.
+- **Mode:** B2C, B2B, Marketplace, Subscription, Rental, Auction, DTC/Omnichannel ve Classifieds/Lead-Gen birer capability bileşimidir; mode kendi başına module/BC yaratmaz ([`mode-profile-contract.md`](./mode-profile-contract.md)).
 
-Kompozisyon kuralı: Bir tenant bir edition satın alır; edition BC setini açar; mode o BC'ler içindeki capability davranışını seçer. Hiçbir mode/edition platform primitifini bypass etmez.
+Kompozisyon kuralı: Bir tenant bir edition satın alır; edition yalnız kanıtlanmış BC ve capability'leri entitlement/policy ile açar; mode bu capability'lerin davranışını seçer. Hiçbir mode/edition platform primitifini bypass etmez veya yeni authority icat etmez.
 
 ---
 
