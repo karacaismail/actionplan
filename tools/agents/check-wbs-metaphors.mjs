@@ -91,6 +91,10 @@ function matchesAny(value, patterns) {
   return patterns.some((pattern) => pattern.test(value));
 }
 
+function isDocumentPathRef(value, pathParts) {
+  return pathParts.includes("refs") && /(?:^|\s)docs\/\S+\.md(?:#\S*)?$/.test(value);
+}
+
 function trackedFiles() {
   try {
     return execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
@@ -189,7 +193,7 @@ function checkGeneratedNodes() {
       }
     }
     scanStrings(node, (value, pathParts) => {
-      if (pathParts.includes("aliases")) return;
+      if (pathParts.includes("aliases") || isDocumentPathRef(value, pathParts)) return;
       if (matchesAny(value, NODE_TEXT_DRIFT_PATTERNS)) {
         fail(`node-text-drift: ${where}.${pathParts.join(".")} -> ${value.slice(0, 160)}`);
       }
@@ -224,7 +228,7 @@ function checkPublicNodes() {
       }
     }
     scanStrings(node, (value, pathParts) => {
-      if (pathParts.includes("aliases")) return;
+      if (pathParts.includes("aliases") || isDocumentPathRef(value, pathParts)) return;
       if (matchesAny(value, NODE_TEXT_DRIFT_PATTERNS)) {
         fail(`public-node-text-drift: ${node.id}.${pathParts.join(".")} -> ${value.slice(0, 160)}`);
       }

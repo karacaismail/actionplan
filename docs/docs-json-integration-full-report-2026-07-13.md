@@ -1,16 +1,47 @@
 # Docs Korpusu → JSON Yönerge/İçerik Entegrasyonu — Tam Kapsam Raporu
 
 **Tarih:** 2026-07-13
-**Durum:** AI-DRAFT (insan onayı bekliyor) · DIRECTIVE-ONLY — bu rapor kod yazdırmaz; doküman ve veri-katmanı entegrasyon planı verir.
+**Durum:** UYGULANDI — izlenen docs korpusu WBS'ten erişilebilir; 10 yeni sahiplik kararı insan onayı bekliyor. DIRECTIVE-ONLY — bu rapor platform ürün kodu yazdırmaz.
 **Soru (kullanıcı):** Pages'ta görünen `docs/` dokümanlarından (1) hangileri JSON yönergelerine aktarılmalı, (2) hangileri için yeni JSON + yeni sayfa gerekir, (3) hangileri mevcut JSON-tabanlı içerik sayfalarına (WBS düğümleri) entegre olmalı, (4) hangileri her yere / her feature'a / her sayfaya entegre olmalı?
 **İlişki:** `json-standards-integration-gap-report-2026-07-13.md` aynı sorunun **standartlar eksenini** bugün yanıtladı; bu rapor onu **yeniden yazmaz**, referans verir ve kalan eksenleri tamamlar: WBS düğüm ekseni (refs), archetype-contract registry ekseni, kernel-primitif düğüm ekseni, storybook/surface makine katmanı ekseni, medya ailesi ve "aktarılmayacaklar" sınırı. İkisi birlikte tam cevaptır.
 **Kaynaklar:** `AGENTS.md §2` (Altın Kural: kuralı kopyalama, referans ver), `adr-0027-engineering-standards.md`, `dimension-contract-17.md`, `standards-applicability-matrix.md`, `engineering-standards-index.md`, `icerik-kalite-sozlesmesi.md`, `core-enterprise-maturity-ladder.md`, `media-file-manager-maturity-codex-directive-2026-07-13.md`, `src/schemas/task.ts`, `src/data/*` kayıtları.
 
 ---
 
-## 1. Yöntem ve sayısal envanter (kanıt — ezber değil)
+## 0. Uygulama sonucu — güncel ve bağlayıcı durum
 
-Denetim 2026-07-13'te salt-okunur yapıldı: 225 `docs/*.md` dosyası tarandı; 485 WBS düğümünün (`src/data/generated/nodes/*.json`) tamamının `refs[]` alanı çıkarıldı; `src/data` altındaki makine katmanları listelendi. Pages sitesi bu repodan build edildiği için repo taraması site taramasına denktir.
+Bu tablo 2026-07-13 test-first refs dalgalarının sonundaki Git-tree gerçeğidir. Aşağıdaki
+§1-§9 bölümleri ilk 225-belge/117-orphan denetiminin tarihsel planlama baseline'ını korur;
+kapsam sayıları için bu bölüm üstündür.
+
+| Ölçüm | Değer |
+|---|---|
+| Git tarafından izlenen Markdown | 290 |
+| Doğrudan semantik WBS sahibi | 280 |
+| İnsan sahiplik kararı bekleyen | 10 |
+| Sınıfsız / erişilemeyen | 0 |
+| WBS düğümü | 485 |
+| Toplu katalog backstop bağı | 118 adet `catalog:` ref |
+| Bu uygulama dalgasında değişen düğüm seviyesi | 15 archetype + 12 feature; app/module 0 |
+
+`catalog:` bağı belgenin docs-hub üzerinden bulunmasını sağlar fakat semantik sahiplik iddiası
+kurmaz. `decision:` bağı ise doğru feature/archetype sahibinin bulunmadığını ve yeni app/module
+kararının insan yetkisinde kaldığını açıkça gösterir. Dinamik Vitest kapısı her izlenen Markdown'ın
+en az bir WBS `refs[]` bağından erişilmesini, catalog/decision sınıflarının ayrılmasını ve exact path
+sınırını zorlar; public aggregate `npm run gen:reindex` ile kanonik node refs'leriyle eşlenir.
+
+İnsan sahiplik kararı bekleyen 10 belge şunlardır: `archetype-venture-core-directive.md`,
+`drafts/k-kms-directive.md`, yedi kernel primitifi (`k-evidence-seal`, `k-kms`,
+`k-legal-hold-retention`, `k-migration-bridge`, `k-obligation-commitment`, `k-provider-adapter`,
+`k-signature-trust`) ve `reference/Arsam-Girisim-Yonetim-Gereksinim-Analizi.md`. Son belge için
+tek düğüm yeterli değildir: generic EVM, ayrı Arsam marketplace ürün sınırı ve venture-core
+archetype'ı insan changeset'iyle kararlaştırılmalıdır.
+
+---
+
+## 1. Tarihsel yöntem ve sayısal envanter (uygulama öncesi baseline)
+
+İlk denetim 2026-07-13'te salt-okunur yapıldı: o anda 225 `docs/*.md` dosyası tarandı; 485 WBS düğümünün (`src/data/generated/nodes/*.json`) tamamının `refs[]` alanı çıkarıldı; `src/data` altındaki makine katmanları listelendi. Bu paragraf tarihsel baseline'dır; güncel kapanış §0'dadır.
 
 Bu tablo envanterin sayısal özetini verir.
 
@@ -56,7 +87,7 @@ Gereken (her biri için): (a) `src/data/archetypes/<id>.json` sözleşme kaydı 
 
 ### 3.3 Kernel primitif directive'leri → düğümsüz 7 sözleşme
 
-Kanıt: aşağıdaki 7 kernel directive'inin **WBS düğümü yok** (id taraması: YOK) ve hiçbir düğüm referans vermiyor:
+Kanıt: aşağıdaki 7 kernel directive'inin semantik sahibi olacak **WBS module düğümü yoktur**. Güncel durumda belgeler kaybolmaz; `std-docs.refs[]` içindeki `decision:` bağlarıyla insan karar kuyruğundan erişilir:
 
 | Doküman | Önerilen düğüm | Not |
 |---|---|---|
@@ -68,7 +99,7 @@ Kanıt: aşağıdaki 7 kernel directive'inin **WBS düğümü yok** (id taramas�
 | `k-migration-bridge-directive.md` | `k-migration-bridge` (module) | expand-contract köprüsü |
 | `k-obligation-commitment-directive.md` | `k-obligation` (module) | CLM/agreement bağı |
 
-Gereken: insan-onaylı module-düğüm changeset paketi (tek PR'lık öneri dokümanı) + her düğümün `refs[]` bağı. Düğüm doğana kadar bu directive'ler yalnız Pages'ta görünen, WBS'ten ulaşılamayan sayfalardır — navigasyon kopukluğu budur.
+Gereken: insan-onaylı module-düğüm changeset paketi + her yeni düğümün doğrudan semantik `refs[]` bağı. Düğüm doğana kadar `decision:` sınıfı korunur; belge Pages ve WBS docs-hub'dan erişilebilir, fakat implemented/owned sayılmaz.
 
 ### 3.4 Medya ailesi (dünkü yönergeye delege)
 
@@ -135,9 +166,9 @@ Raporlar, denetimler, planlar ve örnek/not dosyaları **karar günlüğü/evide
 
 İki not: (1) Düğümlerden zaten referans alan rapor/plan dokümanları (ör. `wave2/3/4-*-readiness-gap`, `kernel-dokuman-gap`, `platform-repo-reality-audit`) doğaları gereği yine bu sınıftadır; ek iş gerektirmezler çünkü M1 bağları kurulmuş durumdadır. (2) Bu raporun kendisi de D sınıfına girer. Güncel-durum denetimleri ilgili düğümlere **evidence/refs** olarak bağlanabilir (mevcut desen: `platform-factory` ← reality-audit).
 
-## 7. Sayısal kapanış — 117 orphan'ın kova dağılımı
+## 7. Tarihsel sayısal kapanış — ilk 117 orphan'ın kova dağılımı
 
-Bu tablo hiçbir dokümanın sınıfsız kalmadığını kanıtlar; atama betikle doğrulandı (çift atama 0, atanmamış 0; 16+7+7+48+39 = 117).
+Bu tablo ilk denetimin planlama dağılımıdır; güncel refs kapanışı §0'da 290/280/10/0 olarak verilmiştir.
 
 | Kova | Adet | İçerik |
 |---|---|---|
