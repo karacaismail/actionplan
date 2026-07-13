@@ -17,18 +17,15 @@ const DOCS_HUB_SEMANTIC_REFS = new Set([
   "docs/standards/00-standards-index.md",
   "docs/standards/numeronym-siniflandirma.md",
 ]);
-const HUMAN_OWNER_DECISION_REFS = new Set([
-  "decision: docs/archetype-venture-core-directive.md",
-  "decision: docs/drafts/k-kms-directive.md",
-  "decision: docs/k-evidence-seal-directive.md",
-  "decision: docs/k-kms-directive.md",
-  "decision: docs/k-legal-hold-retention-directive.md",
-  "decision: docs/k-migration-bridge-directive.md",
-  "decision: docs/k-obligation-commitment-directive.md",
-  "decision: docs/k-provider-adapter-directive.md",
-  "decision: docs/k-signature-trust-directive.md",
-  "decision: docs/reference/Arsam-Girisim-Yonetim-Gereksinim-Analizi.md",
-]);
+const HUMAN_OWNER_DECISION_REFS = new Set<string>(
+  (
+    JSON.parse(
+      fs.readFileSync(path.join(ROOT, "src/data/doc-task-content-classification.json"), "utf8"),
+    ) as Array<{ decision: string; docPath: string }>
+  )
+    .filter((entry) => entry.decision === "human-decision")
+    .map((entry) => `decision: ${entry.docPath}`),
+);
 
 function trackedMarkdownDocs(): string[] {
   const output = execFileSync("git", ["ls-files", "docs/*.md", "docs/**/*.md"], {
@@ -64,7 +61,7 @@ describe("tracked docs WBS refs coverage", () => {
     expect(missing, `WBS refs[] kapsamı olmayan docs:\n${missing.join("\n")}`).toEqual([]);
   });
 
-  it("docs hub fallback bağlarını semantik sahiplikten catalog önekiyle ayırır", () => {
+  it("docs hub bağlarını semantic, catalog, decision ve materialized provenance olarak ayırır", () => {
     const docsHub = JSON.parse(fs.readFileSync(path.join(NODES_DIR, "std-docs.json"), "utf8")) as {
       refs?: string[];
     };
@@ -73,13 +70,11 @@ describe("tracked docs WBS refs coverage", () => {
         ref.includes("docs/") &&
         !DOCS_HUB_SEMANTIC_REFS.has(ref) &&
         !ref.startsWith("catalog: ") &&
-        !ref.startsWith("decision: "),
+        !ref.startsWith("decision: ") &&
+        !/^doc-apply:[a-z0-9-]+: docs\/.+\.md$/.test(ref),
     );
 
-    expect(
-      unclassified,
-      `catalog öneki olmayan fallback refs:\n${unclassified.join("\n")}`,
-    ).toEqual([]);
+    expect(unclassified, `provenance sınıfı olmayan refs:\n${unclassified.join("\n")}`).toEqual([]);
     expect(docsHub.refs).toEqual(expect.arrayContaining([...DOCS_HUB_SEMANTIC_REFS]));
     expect((docsHub.refs ?? []).filter((ref) => ref.startsWith("decision: ")).sort()).toEqual(
       [...HUMAN_OWNER_DECISION_REFS].sort(),

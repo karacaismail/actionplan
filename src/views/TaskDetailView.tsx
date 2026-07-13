@@ -1,5 +1,6 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
+import { TaskContractPanel } from "@/components/task-contract/TaskContractPanel";
 import { Badge, Button, Card, Icon, StatusBadge } from "@/components/ui/primitives";
 import {
   type TaskArtifactMode,
@@ -168,6 +169,7 @@ export function TaskDetailView() {
       <NextAction node={node} />
       <PlanningForm node={node} />
       <PhaseStepper node={node} />
+      <TaskContractPanel node={node} />
       <Dimensions node={node} />
       <StandardsRefsPanel node={node} />
       <EcaPanel node={node} />

@@ -1,0 +1,532 @@
+{
+  "rules": [
+    {
+      "id": "task-handoff",
+      "sources": ["docs/task-to-code-contract.md"],
+      "selector": {
+        "all": true
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için {{level}} seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı ve test komutu taslağı."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "ready-for-dev",
+      "sources": ["docs/ready-for-dev-gate.md"],
+      "selector": {
+        "all": true
+      },
+      "content": {
+        "acceptanceCriteria": [
+          "{{title}} development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "{{title}} için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir."
+          ],
+          "development": [
+            "{{title}} yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+          ]
+        }
+      }
+    },
+    {
+      "id": "evidence-dod",
+      "sources": ["docs/evidence-taxonomy.md"],
+      "selector": {
+        "all": true
+      },
+      "content": {
+        "phaseCriteria": {
+          "verification": [
+            "{{title}} done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz."
+          ],
+          "release-maintenance": [
+            "{{title}} için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "evidence-writeback-runbook",
+      "sources": ["docs/evidence-update-runbook.md"],
+      "selector": {
+        "all": true
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i."
+        ],
+        "acceptanceCriteria": [
+          "{{title}} evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+          "Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir."
+          ],
+          "verification": [
+            "İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-contract-platform-customer",
+      "sources": ["docs/core-contract-pack.md"],
+      "selector": {
+        "nodeIds": [
+          "customer",
+          "platform-customer-graphql",
+          "platform-customer-model",
+          "platform-customer-seed",
+          "platform-customer-ui"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için Core Contract Pack'in uygulanabilir maddelerini tenant guard, authz/PDP, audit/outbox, migration/rollback, health ve UI token eksenlerinde gösteren; uygulanmayan ekseni gerekçeli N/A yapan kontrol kartı.",
+          "{{id}} repoPath ve testCommand alanlarını core checklist maddelerine bağlayan; gerçek komut sonucu gelmeden evidence alanlarını missing/NOT-RUN tutan doğrulama taslağı."
+        ],
+        "acceptanceCriteria": [
+          "Customer modelinde tenant_id+indeks+geri alınabilir migration; GraphQL'de tenant/authz/audit/outbox; seed'de tenant-aware idempotency; UI'da permission-aware görünürlük ve paylaşılan token sözleşmesi açıkça ayrıştırılmıştır.",
+          "Cross-tenant ret, eksik permission, audit/outbox eksikliği, migration downgrade ve deterministik seed tekrar koşumu için ilgili katmanda negatif oracle vardır; doküman bağlantısı tek başına pass sayılmaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} kapsamını Core Contract Pack checklist'ine madde bazında bağla; node sorumluluğu dışındaki core maddesini sessizce sahiplenmek yerine gerekçeli N/A veya predecessor olarak işaretle."
+          ],
+          "test-plan": [
+            "Geliştirmeden önce ilgili node için cross-tenant, unauthenticated/forbidden, audit/outbox, migration downgrade, seed idempotency veya UI permission negatiflerinden uygulanabilir olanları kırmızı test olarak sabitle."
+          ],
+          "verification": [
+            "{{id}} için yalnız traceability.testCommand ile üretilmiş gerçek çıktı ve ilgili repoPath diff'i core maddesini doğrular; placeholder, docs-only metin veya plan runtime evidence değildir."
+          ],
+          "release-maintenance": [
+            "Core checklist'in uygulanabilir maddeleri, rollback/downgrade davranışı ve tenant izolasyon negatifleri yeşil olmadan Customer dilimini release-ready işaretleme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-core-contract-platform-customer",
+            "desc": "Customer katmanlarından birinin Core Contract Pack kontrolünü yalnız referansla geçmiş sayması tenant izolasyonu, audit veya rollback sınırını delerek sahte hazır olma üretebilir.",
+            "severity": "critical",
+            "mitigation": "Madde bazlı applicability, katman-özgü negatif test ve gerçek repo/test evidence olmadan release durumunu fail-closed tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "kernel-sdk-customer-delivery-sequence",
+      "sources": ["docs/kernel-sdk-app-delivery-sequence.md"],
+      "selector": {
+        "nodeIds": [
+          "customer",
+          "platform-customer-graphql",
+          "platform-customer-model",
+          "platform-customer-seed",
+          "platform-customer-ui"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için kernel → public SDK → Customer app-core → Customer module/archetype → app assembly sırasındaki exact predecessor, readiness kanıtı, izinli dosya yüzeyi ve no-go durumunu gösteren teslim kartı."
+        ],
+        "acceptanceCriteria": [
+          "{{id}} development başlangıcı için gereken kernel ve SDK sözleşmesi, Customer app-core predecessor'ı ve node'a özgü CUST aşaması ayrı ayrı tanımlıdır; eksik predecessor varken production kodu başlatılmaz.",
+          "App/assembly düğümü kod sahibi yapılmaz; Customer model, GraphQL, UI ve seed işi kendi archetype düğümünde, SDK/public port üzerinden ve başka app/module internals import etmeden yürütülür."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} predecessor zincirini kernel readiness, public SDK, Customer app-core ve ilgili CUST aşaması olarak kaynağa izlenebilir biçimde sabitle; implementation workspace ve allowed-files belirsizse dur."
+          ],
+          "test-plan": [
+            "Önce eksik predecessor, kernel internals importu, başka app/module doğrudan importu, generated SDK elle değişikliği ve docs-only evidence ile ilerleme için negatif oracle tanımla."
+          ],
+          "verification": [
+            "{{id}} yalnız exact predecessor evidence, node traceability komutu ve gerçek implementation diff'i mevcutsa sıra kapısını geçer; NOT-RUN komut veya boş evidence ile durum yükselmez."
+          ],
+          "release-maintenance": [
+            "Customer assembly/release değerlendirmesinden önce kernel/SDK uyumu, app-core bağı, capability sınırı ve node rollback/runbook zincirini yeniden doğrula."
+          ]
+        },
+        "risks": [
+          {
+            "id": "r-doc-kernel-sdk-customer-sequence",
+            "desc": "Kernel veya SDK hazır olmadan Customer katmanını başlatmak, app-core sınırını atlayıp kernel internals'a bağlanan ve tekrar üretilemeyen bir dikey dilim doğurabilir.",
+            "severity": "high",
+            "mitigation": "Exact predecessor evidence ve public SDK sözleşmesi yoksa development'ı durdur; her işi kendi archetype node'u ve CUST sırası içinde tut."
+          }
+        ]
+      }
+    },
+    {
+      "id": "standards-governance",
+      "sources": ["docs/engineering-standards-index.md"],
+      "selector": {
+        "nodeIds": ["std-docs"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için kanonik standard JSON sahiplerini, doküman indeksini ve standardRefs çözüm yollarını tek kaynaklı gezinme kataloğunda bağlayan drift-siz index çıktısı."
+        ],
+        "acceptanceCriteria": [
+          "İndeksteki her standard kimliği gerçek JSON sahibine ve açıklayıcı Markdown'a çözülür; prose görev boyutlarına kopyalanmaz.",
+          "Eksik, duplicate veya kırık standardRefs hedefi indeks kapısını kırmızı yapar; katalog referansı uygulanmış standard kanıtı sayılmaz."
+        ],
+        "phaseCriteria": {
+          "verification": [
+            "{{title}} standardRefs hedeflerinin çözüldüğünü ve indeks ile JSON registry arasında dangling/duplicate bağ olmadığını conformance kontrolüyle kanıtlar."
+          ]
+        }
+      }
+    },
+    {
+      "id": "waterfall-handoff",
+      "sources": ["docs/waterfall-developer-handoff.md"],
+      "selector": { "all": true },
+      "content": {
+        "deliverables": [
+          "{{title}} için yedi waterfall fazının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+        ],
+        "acceptanceCriteria": [
+          "Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+          "RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+          ],
+          "verification": [
+            "Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-product-code-boundary",
+      "sources": ["docs/platform-product-code-write-prohibition-directive.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde platform ürün kodu yazarlığını yalnız yetkili insana bırakan; AI için read-only audit/directive sınırı, app/module/main/production yasakları ve merkezi policy checker sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "AI app/module oluşturamaz, platform product dosyası yazamaz, main/merge/deploy yapamaz veya implementationStatus/evidence uyduramaz; ihlal checker'da fail-closed olur.",
+          "Docs/WBS yönergesi ile product implementation ayrımı path ve eylem bazında ölçülür; insan onayı ürün kodu yazma yetkisini otomatik olarak AI'a devretmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "App/module JSON mutasyonu, platform repo yazımı, status/evidence fabrikasyonu ve yetkisiz main/deploy denemeleri için kırmızı policy fixture'ları tanımla."
+          ],
+          "verification": [
+            "Merkezi checker yolu ve test sonucu olmadan write-policy PASS yazma; docs diff'i product runtime evidence değildir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "enterprise-dod",
+      "sources": ["docs/enterprise-dod.md"],
+      "selector": { "all": true },
+      "content": {
+        "deliverables": [
+          "{{title}} için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+        ],
+        "acceptanceCriteria": [
+          "Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+          "Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+        ],
+        "phaseCriteria": {
+          "verification": [
+            "{{id}} için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+          ],
+          "release-maintenance": [
+            "Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+          ]
+        }
+      }
+    },
+    {
+      "id": "standards-operating-layer",
+      "sources": ["docs/adr-0027-engineering-standards.md"],
+      "selector": {
+        "nodeIds": [
+          "std-contracts",
+          "std-ci-gates",
+          "std-schema-foundation",
+          "std-ui-surfacing",
+          "golden-slice-ref"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için tek-kaynak standard JSON, schema doğrulaması, bloklayıcı conformance gate, UI surfacing ve golden reference bağını ADR-0027 işletim katmanında gösteren çıktı."
+        ],
+        "acceptanceCriteria": [
+          "Standart prose görev içeriğine kopyalanmaz; standardRefs ile tek JSON sahibine bağlanır ve checker olmadan enforced sayılmaz.",
+          "Waiver süreli, sahipli ve kapanış kriterlidir; insan onayı olmadan veya süresi geçince standard kapısını gevşetemez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} rolünü schema, contract, gate, UI veya golden fixture olarak ayrıştır ve ADR-0027 dışındaki sorumluluğu gerekçeli N/A yap."
+          ],
+          "verification": [
+            "Schema/ref/gate/golden parity'sini ve waiver yaşam döngüsünü deterministik conformance testleriyle doğrula."
+          ]
+        }
+      }
+    },
+    {
+      "id": "standards-applicability-governance",
+      "sources": ["docs/standards-applicability-matrix.md"],
+      "selector": {
+        "nodeIds": ["std-schema-foundation", "std-ci-gates", "golden-slice-ref"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için WBS seviyesi, UI rolü ve risk eksenine göre applies/N-A kararını; standardRefs çözümünü ve varsa waiver bağını taşıyan applicability çıktısı."
+        ],
+        "acceptanceCriteria": [
+          "Uygulanmayan her standard için görev-özgü N/A gerekçesi vardır; N/A ile süreli waiver birbirine karıştırılmaz.",
+          "Uygulanan standardın JSON referansı çözülür ve ilgili checker coverage'ı vardır; katalog bağlantısı tek başına coverage değildir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{id}} level/surface/risk sinyallerini applicability kararına bağla ve default-everything yaklaşımını reddet."
+          ],
+          "verification": [
+            "Applies/N-A/waiver satırlarının standard registry ve gate coverage ile birebir tutarlı olduğunu fixture üzerinden doğrula."
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-contract-ci",
+      "sources": ["docs/core-contract-pack.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde check-core-contract için tenant guard, resolver permission, tenant_id/index, audit call, downgrade, logger, UI token ve negative-test kontrollerini giriş ve fail mesajlarıyla tanımlayan kapı."
+        ],
+        "acceptanceCriteria": [
+          "Her core checklist maddesi checker veya açık insan-review kontrolüne bağlanır; uygulanmayan kontrol gerekçeli N/A olur.",
+          "Cross-tenant, permission, audit, migration ve hardcoded-token ihlalleri ayrı kırmızı fixture üretir; belge varlığı PASS değildir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Önce tenant guard, resolver permission, audit call, downgrade ve UI token eksik fixture'larını kırmızı tanımla."
+          ],
+          "verification": [
+            "Gerçek checker yolu ve test çıktısını doğrula; core pack taslağını çalıştırılmış kapı kanıtı sayma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-sdk-delivery-ci",
+      "sources": ["docs/kernel-sdk-app-delivery-sequence.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde kernel→SDK→app-core→module→assembly predecessor sırasını, forbidden importu ve generated SDK elle değişikliğini bloklayan delivery-sequence kapı sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Eksik predecessor veya readiness evidence varken code-start reddedilir; app düğümü product kod sahibi yapılmaz.",
+          "Kernel internals, başka app/module importu ve generated SDK manual edit ayrı negatif fixture'larda fail-closed olur."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Sıra atlama, forbidden import ve generated artefact edit vakalarını development'tan önce kırmızı fixture olarak tanımla."
+          ],
+          "verification": [
+            "Kapıyı yalnız gerçek predecessor evidence ve checker çıktısıyla doğrula; handoff metnini runtime kanıtı sayma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-sdk-wbs-governance",
+      "sources": ["docs/kernel-sdk-app-delivery-sequence.md"],
+      "selector": { "nodeIds": ["k-wbs"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için app/module düzeyinin kod sahibi olmadığını ve gerçek teslimatın archetype→feature→component→work_unit→micro_step zincirinde predecessor/evidence ile ilerlediğini gösteren WBS yönetişim örneği."
+        ],
+        "acceptanceCriteria": [
+          "WBS örneği runtime kernel veya SDK implementasyonu iddia etmez; yalnız seviye→teslimat ve sıra semantiğini gösterir.",
+          "App/module'dan doğrudan code-start, eksik predecessor veya kanıtsız faz yükseltme örnekte açıkça yasaktır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Sekiz WBS seviyesinin doğru teslimat yorumunu ve kernel→SDK→app-core→module→assembly sırasını gezinme örneğine bağla."
+          ],
+          "verification": [
+            "Örnek zincirde protected app/module içeriği üretilmediğini ve code-start'ın izinli alt seviyeye indiğini denetle."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-execution-contract-ci",
+      "sources": ["docs/kernel-execution-contract-matrix.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde check-execution-contract için generated-CRUD mutation yasağı, typed-action zarfı, PDP çağrısı, negatif-test/evidence ve approval_ref kontrollerini tanımlayan taslak kapı sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Generated CRUD üzerinden state değişimi, zarfsız/PDP'siz typed action ve approval_ref'siz Draft→Applied ayrı kırmızı fixture'larda bloklanır.",
+          "ADR-X1 ve gerçek checker implementasyonu olmadan kapı PASS/implemented gösterilmez; kayıt NOT-RUN kalır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Call-path, zarf, PDP, yüksek-risk evidence ve AI approval ihlallerini birbirine karıştırmadan kırmızı checker fixture'ları yaz."
+          ],
+          "verification": [
+            "check-core-contract ve scale-invariant ile görev ayrımını, gerçek checker diff/test sonucu üzerinden doğrula."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-execution-contract-customer-mutation",
+      "sources": ["docs/kernel-execution-contract-matrix.md"],
+      "selector": { "nodeIds": ["platform-customer-graphql"] },
+      "content": {
+        "deliverables": [
+          "{{title}} mutation'ları için actor+tenant+policy+audit zarfı, PDP evaluate, idempotency/outbox, rollback ve approval_ref alanlarını typed-action call-path'inde gösteren tüketici sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Customer create/update generated CRUD ile doğrudan state değiştirmez; mutation typed action üzerinden PDP ve audit çağırır.",
+          "Eksik tenant/actor/policy, cross-tenant, duplicate delivery ve onaysız AI draft negatifleri yan etkisiz reddedilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Zarfsız mutation, PDP bypass, duplicate request, cross-tenant ve approval_ref'siz apply vakalarını önce kırmızı yaz."
+          ],
+          "verification": [
+            "Customer GraphQL call-path'ini gerçek test/audit/outbox işaretleriyle doğrula; eksik k-exec-context motorunu bu görevde yeniden yazma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-execution-contract-golden-proof",
+      "sources": ["docs/kernel-execution-contract-matrix.md"],
+      "selector": { "nodeIds": ["golden-slice-ref"] },
+      "content": {
+        "deliverables": [
+          "{{title}} fixture'ında typed mutation, read-only projection, permission-aware surface, negatif-test, rollback ve açılabilir evidence bağlarını birlikte gösteren call-path kanıt örneği."
+        ],
+        "acceptanceCriteria": [
+          "Fixture generated CRUD mutation, PDP bypass veya kanıtsız yüksek-risk action içermez; her yasak yol için negatif oracle taşır.",
+          "Kırmızı→yeşil, retry/idempotency, rollback ve audit/outbox kanıtı gerçek artefakta çözülmeden golden PASS sayılmaz."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Generated mutation, yetkisiz surface action, duplicate delivery ve rollback failure için koruyucu fixture'ları önce kırmızı yaz."
+          ],
+          "verification": [
+            "Golden fixture'ın yanlışı gerçekten reddettiğini mutation-check ve açılabilir evidence ile doğrula."
+          ]
+        }
+      }
+    },
+    {
+      "id": "execution-context-ci",
+      "sources": ["docs/execution-context-envelope-directive.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde check-envelope için eksik tenant/actor/policy/correlation, güvenilmeyen gateway header, zarf mutasyonu ve kısmi async propagation vakalarını bloklayan taslak kapı."
+        ],
+        "acceptanceCriteria": [
+          "Sync, job, event, webhook, import/export ve AI action yollarında aynı zorunlu alanlar denetlenir; kısmi zarf fail-closed olur.",
+          "ADR-X1, k-exec-context WBS sahibi ve gerçek checker olmadan kapı implemented/pass gösterilmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Eksik alan, header spoof, imza/bütünlük hatası, cross-tenant ve context propagation kaybı fixture'larını önce kırmızı tanımla."
+          ],
+          "verification": [
+            "Gerçek checker yolu ve test sonucu yoksa NOT-RUN tut; doküman zarf motoru kanıtı değildir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "execution-context-sync-consumer",
+      "sources": ["docs/execution-context-envelope-directive.md"],
+      "selector": { "nodeIds": ["platform-customer-graphql"] },
+      "content": {
+        "deliverables": [
+          "{{title}} request/mutation yolunda backend tarafından türetilip doğrulanan tenant, actor, policy, capability ve correlation alanlarını taşıyan ExecutionContext tüketici bağı."
+        ],
+        "acceptanceCriteria": [
+          "Client/gateway header tek başına bağlam otoritesi değildir; tenant ve actor backend kimlik/oturumundan doğrulanır.",
+          "Eksik veya çelişkili zarf yan etkisiz reddedilir; Customer resolver PDP, RLS ve audit girdisini aynı zarftan tüketir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Header spoof, eksik actor/policy, cross-tenant ve correlation kaybı negatiflerini Customer resolver testlerine ekle."
+          ],
+          "verification": [
+            "Resolver'ın zarfı tükettiğini ve kendi ad-hoc context'ini üretmediğini test/audit iziyle doğrula; motor implementasyonunu sahiplenme."
+          ]
+        }
+      }
+    },
+    {
+      "id": "execution-context-async-consumers",
+      "sources": ["docs/execution-context-envelope-directive.md"],
+      "selector": { "nodeIds": ["scale-workers-deep", "scale-projections"] },
+      "content": {
+        "deliverables": [
+          "{{title}} job/event tüketiminde imzalı ExecutionContext snapshot'ını tenant, actor, policy, correlation/causation ve idempotency alanlarıyla taşıyan async tüketici sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Job veya projection kısmi/bozuk bağlamla çalışmaz; context kaybında retry yan etki üretmeden fail-closed olur.",
+          "Actor/system/service ayrımı ve causation zinciri audit'e taşınır; consumer kendi tenant/policy değerini yeniden türetmez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Eksik context, bozuk imza, duplicate delivery, out-of-order ve cross-tenant async payload negatiflerini önce kırmızı yaz."
+          ],
+          "verification": [
+            "Retry/replay boyunca aynı context ve idempotency davranışını gerçek worker/projection fixture'ıyla doğrula."
+          ]
+        }
+      }
+    },
+    {
+      "id": "execution-context-ingress-consumers",
+      "sources": ["docs/execution-context-envelope-directive.md"],
+      "selector": { "nodeIds": ["l1-webhook-in", "l1-import", "l1-export"] },
+      "content": {
+        "deliverables": [
+          "{{title}} ingress/batch yolunda dış kimliği güvenilir tenant/actor/policy bağlamına çeviren, correlation/idempotency taşıyan ve ad-hoc context'i yasaklayan tüketici sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Webhook/import/export girdisi tenant veya actor alanını körlemesine kabul etmez; doğrulanamayan mapping yan etkisiz reddedilir.",
+          "Batch boyunca correlation/causation ve approval bağları korunur; farklı tenant satırlarının aynı context altında karışması engellenir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Spoof tenant, unknown actor, mixed-tenant batch, missing correlation ve retry idempotency negatiflerini önce kırmızı yaz."
+          ],
+          "verification": [
+            "Ingress mapping ve batch propagation'ı gerçek fixture/audit işaretleriyle doğrula; eksik canonical motoru local kopyayla doldurma."
+          ]
+        }
+      }
+    }
+  ]
+}

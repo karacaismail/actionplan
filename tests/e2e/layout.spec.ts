@@ -24,3 +24,23 @@ test("boyut kartları geniş ekranda yan yana (2 sütun grid)", async ({ page })
   // Yan yana: ikinci kart birincinin sağında (sol kenarı, birincinin ortasından sağda).
   expect(b1.x).toBeGreaterThan(b0.x + b0.width / 2);
 });
+
+test("görev sözleşmesi 390px ekranda taşmaz ve iç materialization markerı göstermez", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/task/s-clm", { waitUntil: "networkidle" });
+
+  const panel = page.getByTestId("task-contract-panel");
+  await expect(panel).toBeVisible();
+  await panel.scrollIntoViewIfNeeded();
+
+  const width = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: window.innerWidth,
+  }));
+  expect(width.document).toBeLessThanOrEqual(width.viewport);
+  await expect(page.locator("body")).not.toContainText("[DOC-APPLY:");
+  await expect(page.locator("body")).not.toContainText("doc-apply:");
+  await expect(panel.locator('a[href^="/docs/"]').first()).toBeVisible();
+});

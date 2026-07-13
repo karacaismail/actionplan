@@ -13,9 +13,17 @@ const GEN = path.resolve(__dirname, "..", "src", "data", "generated");
 const NODES = path.join(GEN, "nodes");
 const SCHEMA_VERSION = "1.0.0";
 
-const files = fs.readdirSync(NODES).filter((f) => f.endsWith(".json"));
+const files = fs
+  .readdirSync(NODES)
+  .filter((f) => f.endsWith(".json"))
+  .sort();
 const nodes = files.map((f) => JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8")));
 const byId = new Map(nodes.map((n) => [n.id, n]));
+const differs = (file, bytes) => !fs.existsSync(file) || fs.readFileSync(file, "utf8") !== bytes;
+const writeIfChanged = (file, bytes) => {
+  if (differs(file, bytes)) fs.writeFileSync(file, bytes);
+};
+let semanticChanged = false;
 
 // ağaç
 const childrenOf = new Map();
@@ -39,7 +47,10 @@ for (const r of roots.sort(cmp)) assign(r, String(++appIdx));
 
 // node dosyalarını (wbsCode değişmiş olabilir) geri yaz
 for (const n of nodes) {
-  fs.writeFileSync(path.join(NODES, `${n.id}.json`), `${JSON.stringify(n, null, 2)}\n`);
+  const file = path.join(NODES, `${n.id}.json`);
+  const bytes = `${JSON.stringify(n, null, 2)}\n`;
+  semanticChanged ||= differs(file, bytes);
+  writeIfChanged(file, bytes);
 }
 
 // navigation
@@ -88,9 +99,8 @@ for (const n of nodes) {
   if (dims.some((d) => d.status && d.status !== "skeleton")) filledExample++;
 }
 const prevMeta = JSON.parse(fs.readFileSync(path.join(GEN, "meta.json"), "utf8"));
-const meta = {
+const metaCore = {
   schemaVersion: SCHEMA_VERSION,
-  generatedAt: new Date().toISOString(),
   counts: { total: nodes.length, byLevel, byStatus, byCluster, filledExample },
   source: prevMeta.source ?? {
     contentSource: 0,
@@ -100,10 +110,6 @@ const meta = {
   },
 };
 
-fs.writeFileSync(path.join(GEN, "navigation.json"), `${JSON.stringify(navigation, null, 2)}\n`);
-fs.writeFileSync(path.join(GEN, "index.json"), `${JSON.stringify(index, null, 2)}\n`);
-fs.writeFileSync(path.join(GEN, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
-
 // Lazy veri: ağır tüm-düğüm aggregate'i statik asset olarak (public/data) yaz.
 // Runtime'da fetch ile çekilir → başlangıç JS paketine girmez.
 const PUB = path.resolve(__dirname, "..", "public", "data");
@@ -111,7 +117,37 @@ fs.mkdirSync(PUB, { recursive: true });
 const ordered = [...nodes].sort((a, b) =>
   (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }),
 );
-fs.writeFileSync(path.join(PUB, "nodes.json"), JSON.stringify(ordered));
+const navigationFile = path.join(GEN, "navigation.json");
+const indexFile = path.join(GEN, "index.json");
+const publicFile = path.join(PUB, "nodes.json");
+const navigationBytes = `${JSON.stringify(navigation, null, 2)}\n`;
+const indexBytes = `${JSON.stringify(index, null, 2)}\n`;
+const publicBytes = JSON.stringify(ordered);
+semanticChanged ||= differs(navigationFile, navigationBytes);
+semanticChanged ||= differs(indexFile, indexBytes);
+semanticChanged ||= differs(publicFile, publicBytes);
+const previousCore = {
+  schemaVersion: prevMeta.schemaVersion,
+  counts: prevMeta.counts,
+  source: prevMeta.source,
+};
+semanticChanged ||= JSON.stringify(previousCore) !== JSON.stringify(metaCore);
+
+const epoch = process.env.SOURCE_DATE_EPOCH;
+const nextGeneratedAt = epoch
+  ? new Date(Number(epoch) * 1000).toISOString()
+  : new Date().toISOString();
+const meta = {
+  schemaVersion: metaCore.schemaVersion,
+  generatedAt: semanticChanged ? nextGeneratedAt : prevMeta.generatedAt,
+  counts: metaCore.counts,
+  source: metaCore.source,
+};
+
+writeIfChanged(navigationFile, navigationBytes);
+writeIfChanged(indexFile, indexBytes);
+writeIfChanged(path.join(GEN, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
+writeIfChanged(publicFile, publicBytes);
 console.log(
   `[reindex] ${nodes.length} düğüm, ${filledExample} dolu örnek. index/navigation/meta + public/data/nodes.json güncellendi.`,
 );

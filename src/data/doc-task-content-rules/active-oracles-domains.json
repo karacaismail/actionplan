@@ -1,0 +1,135 @@
+{
+  "rules": [
+    {
+      "id": "geo-visualization-runtime-contract",
+      "sources": ["docs/adr-geo-visualization.md"],
+      "selector": { "nodeIds": ["geo-map-surface"] },
+      "content": {
+        "deliverables": [
+          "GeoMapSurface için MapLibre basemap + deck.gl veri katmanı, typed GeoJSON/MVT girişi, erişilebilir liste/tablo eşdeğeri ve lazy-loaded bundle sınırını birleştiren yüzey handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Koordinatlı ve hacimli gerçek harita deck.gl+MapLibre ile; iş grafiği veya düşük hacimli şematik görünüm ECharts ile çözülür ve iki motor birbirinin sorumluluğunu üstlenmez.",
+          "Ham 100K+ feature istemciye taşınmaz; tenant-izole MVT/bbox/zoom-LOD yolu, p95 tile <200 ms bütçesi, WebGL/reduce-data fallback'i ve konum maskelemesi testlerle doğrulanır."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "GeoJSON/MVT contract, tenant-scoped spatial query, lazy chunk, keyboard/screen-reader liste eşdeğeri, WebGL yokluğu ve hassas konum maskeleme testleri development öncesi yazılır."
+          ],
+          "verification": [
+            "Bundle analizi, tile latency ölçümü ve aynı veri kümesinin harita ile erişilebilir fallback paritesi gerçek test çıktılarıyla doğrulanır; koşulmayan ölçüm PASS sayılmaz."
+          ]
+        }
+      }
+    },
+    {
+      "id": "marketplace-module-security-runtime-contract",
+      "sources": ["docs/marketplace-module-security-directive.md"],
+      "selector": { "nodeIds": ["std-ci-gates"] },
+      "content": {
+        "deliverables": [
+          "Dış modül yaşam döngüsü için imza/yayıncı doğrulama, SBOM+provenance, permission diff, tenant entitlement, default-deny sandbox, quarantine ve deterministik revoke/rollback sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "İmzasız, bilinmeyen anahtarlı, blocked bağımlılıklı veya onaysız izin genişleten paket fail-closed reddedilir; şüpheli sürüm karantinadan yalnız insan approval_ref ile çıkabilir.",
+          "Modül action'ı motor-üretimi ExecutionContext taşır; network/file/process ve KMS secret erişimi whitelist dışındaysa, modül tablosu tenant_id+RLS taşımıyorsa veya cross-tenant erişim denenirse CI/runtime bloklar ve append-only audit üretir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Sahte imza, dependency poisoning, silent permission escalation, secret exfiltration, sandbox escape, RLS bypass, prompt injection ve quarantine bypass negatifleri önce yazılır."
+          ],
+          "release-maintenance": [
+            "Release kaydı SBOM, provenance, onaylı izin seti, tenant enablement, quarantine/revoke sahibi ve önceki sürüm+izin setine dönüş drill'ini içerir; AI install/approve/unquarantine yapamaz."
+          ]
+        }
+      }
+    },
+    {
+      "id": "url-policy-implementation-contract",
+      "sources": ["docs/url-policy-implementation-directive.md"],
+      "selector": {
+        "nodeIds": [
+          "urlp-00",
+          "urlp-01",
+          "urlp-02",
+          "urlp-03",
+          "urlp-04",
+          "urlp-05",
+          "urlp-06",
+          "urlp-07",
+          "urlp-08",
+          "urlp-09",
+          "urlp-10",
+          "urlp-11",
+          "urlp-12",
+          "urlp-13",
+          "urlp-14",
+          "urlp-15",
+          "urlp-16",
+          "urlp-program-work-unit"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için merkezi URL registry/policy kararını route üretimi, tenant/locale bağlamı, canonical URL, redirect/migration ve gözlemlenebilir rollback adımlarına dönüştüren uygulama sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Route veya link serbest path birleştirme yapmaz; merkezi typed registry aynı input için aynı canonical URL'yi üretir ve unknown tenant/locale/resource girdisi fail-closed sonuçlanır.",
+          "Eski URL migration'ı redirect loop, open redirect, tenant escape, encoded-path ve deep-link refresh negatiflerini geçer; rollout metriği eşiği aşarsa kayıtlı owner önceki route tablosuna dönebilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{id}} kapsamındaki URL sahibi, namespace, tenant/locale davranışı, canonical/alias kuralı, public/private erişim sınırı ve non-goal'lar tek registry kaydına bağlanır."
+          ],
+          "test-plan": [
+            "Contract testi ve browser E2E önce kırmızı yazılır; hardcoded path, open redirect, slash/Unicode/encoding farkı, cross-tenant link, 404 refresh ve redirect cycle fixture'ları zorunludur."
+          ]
+        }
+      }
+    },
+    {
+      "id": "pim-capability-coverage-contract",
+      "sources": ["docs/pim-ozellik-yonerge-kapsama.md"],
+      "selector": { "nodeIds": ["s-pim"] },
+      "content": {
+        "deliverables": [
+          "PIM-v2'nin 41 özelliğini kernel primitifi, ArcheType, Surface, priority ve gerçek VAR/KISMÎ/YENİ boşluk durumuna bağlayan uygulanabilir kapsam matrisi."
+        ],
+        "acceptanceCriteria": [
+          "41/41 özellik tekil satırda kernel, ArcheType ve Surface sahibine bağlanır; k-storage, k-mdm ve i14y gibi açık boşluklar mevcut primitive varmış gibi kapatılmaz.",
+          "VAR, KISMÎ ve YENİ kararları repo gerçeğine karşı doğrulanır; AI/enrichment, adapter, dedup, DAM ve category-scoped permission sınırları için insan-onay ve fail-closed kuralları korunur."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Her özellik outcome, priority, sahibi, bağımlılık, surface türü, gap ve non-goal alanlarına bölünür; katalog satırı tek başına implemented iddiası üretmez."
+          ],
+          "verification": [
+            "41 satır sayımı ve node/ref varlığı otomatik denetlenir; partial/new satırlar gerçek test ve runtime kanıtı gelmeden done veya covered-tam sayılmaz."
+          ]
+        }
+      }
+    },
+    {
+      "id": "pim-product-archetype-contract",
+      "sources": ["docs/pim-product-archetype-referans.md"],
+      "selector": { "nodeIds": ["s-pim"] },
+      "content": {
+        "deliverables": [
+          "Product, ProductVariant, ProductFamily, Attribute/EAV, Category/Taxonomy, Party/Brand ve Channel kavramlarını canonical atom/Fragment/ArcheType/Surface bileşimine eşleyen PIM model handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Money, Measure ve I18nText typed değerler olarak; varyant eksenleri ve EAV AttributeSet olarak; aile/kategori taksonomisi versioned tree relation olarak modellenir, serbest JSON/string kopyası açılmaz.",
+          "F1-F41 kapsam tablosunda Tam/Kısmî/Yeni-primitif durumu korunur; MDM dedup, kanal adapteri, görsel varyant, rank/analytics ve print servis boşlukları runtime kanıtı olmadan tamamlandı sayılmaz."
+        ],
+        "phaseCriteria": {
+          "db-schema": [
+            "Product kimliği, tenant scope, lifecycle, variant/family relation, typed attribute values, taxonomy refs ve channel projection canonical şema ile tanımlanır; EAV index ve migration/rollback yolu açık olur."
+          ],
+          "test-plan": [
+            "Variant inheritance, invalid typed value, taxonomy cycle, locale fallback, currency/unit mismatch, cross-tenant product ve publish-gate negatifleri önce yazılır."
+          ]
+        }
+      }
+    }
+  ]
+}

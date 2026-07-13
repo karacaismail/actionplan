@@ -1,0 +1,455 @@
+#!/usr/bin/env node
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
+const CLASSIFICATION = path.join(ROOT, "src/data/doc-task-content-classification.json");
+const REPORT = path.join(ROOT, "reports/doc-task-content-matrix.csv");
+const INLINE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const PHASES = [
+  "requirements",
+  "test-plan",
+  "db-schema",
+  "development",
+  "test-qa",
+  "verification",
+  "release-maintenance",
+];
+const APPLY = process.argv.includes("--apply");
+
+const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+const nodeFiles = fs
+  .readdirSync(NODE_DIR)
+  .filter((file) => file.endsWith(".json"))
+  .sort();
+const nodes = nodeFiles.map((file) => readJson(path.join(NODE_DIR, file)));
+const nodeById = new Map(nodes.map((node) => [node.id, node]));
+const rules = fs
+  .readdirSync(RULE_DIR)
+  .filter((file) => file.endsWith(".json"))
+  .sort()
+  .flatMap((file) => readJson(path.join(RULE_DIR, file)).rules ?? []);
+const classifications = readJson(CLASSIFICATION);
+const classificationByDoc = new Map(classifications.map((entry) => [entry.docPath, entry]));
+
+const duplicates = (values) => values.filter((value, index) => values.indexOf(value) !== index);
+const marker = (id) => `[DOC-APPLY:${id}]`;
+const knownRuleIds = new Set(rules.map((rule) => rule.id));
+const duplicateRuleIds = duplicates(rules.map((rule) => rule.id));
+if (duplicateRuleIds.length)
+  throw new Error(`Duplicate rule ids: ${[...new Set(duplicateRuleIds)].join(", ")}`);
+
+function validateSelector(selector, ruleId, location = "selector") {
+  if (!selector || typeof selector !== "object")
+    throw new Error(`${ruleId}.${location}: selector nesnesi zorunlu`);
+  const signals = [
+    selector.all === true,
+    Boolean(selector.nodeIds?.length),
+    Boolean(selector.anyTerms?.length),
+    selector.hasUiDelivery !== undefined,
+    Boolean(selector.uiArtifactRoles?.length),
+    Boolean(selector.riskSeverities?.length),
+    Boolean(selector.anyOf?.length),
+  ];
+  if (!signals.some(Boolean)) throw new Error(`${ruleId}.${location}: seçim sinyali yok`);
+  if (selector.anyOf && selector.anyOf.length === 0)
+    throw new Error(`${ruleId}.${location}.anyOf: boş olamaz`);
+  for (const level of selector.levels ?? []) {
+    if (!INLINE_LEVELS.has(level)) throw new Error(`${ruleId}: korunan selector level ${level}`);
+  }
+  const uiArtifactRoles = new Set([
+    "produces-ui",
+    "changes-ui-contract",
+    "governs-ui",
+    "consumes-ui",
+    "no-ui",
+  ]);
+  for (const role of selector.uiArtifactRoles ?? []) {
+    if (!uiArtifactRoles.has(role)) throw new Error(`${ruleId}: geçersiz uiArtifactRole ${role}`);
+  }
+  for (const nodeId of selector.nodeIds ?? []) {
+    const node = nodeById.get(nodeId);
+    if (!node) throw new Error(`${ruleId}: selector node yok: ${nodeId}`);
+    if (!INLINE_LEVELS.has(node.level))
+      throw new Error(`${ruleId}: selector korunan node seçiyor: ${nodeId}:${node.level}`);
+  }
+  for (const [index, branch] of (selector.anyOf ?? []).entries())
+    validateSelector(branch, ruleId, `${location}.anyOf[${index}]`);
+}
+
+const riskOwnerById = new Map();
+for (const rule of rules) {
+  validateSelector(rule.selector, rule.id);
+  if (!rule.sources?.length) throw new Error(`${rule.id}: source zorunlu`);
+  const duplicateSources = duplicates(rule.sources);
+  if (duplicateSources.length)
+    throw new Error(`${rule.id}: duplicate source ${duplicateSources[0]}`);
+  for (const source of rule.sources) {
+    if (!/^docs\/.+\.md$/.test(source) || !fs.existsSync(path.join(ROOT, source)))
+      throw new Error(`${rule.id}: source yok veya geçersiz: ${source}`);
+  }
+
+  const contentArrays = [
+    ["deliverables", rule.content?.deliverables ?? []],
+    ["acceptanceCriteria", rule.content?.acceptanceCriteria ?? []],
+    ...Object.entries(rule.content?.phaseCriteria ?? {}).map(([phase, items]) => [
+      `phaseCriteria.${phase}`,
+      items,
+    ]),
+  ];
+  for (const [field, items] of contentArrays) {
+    if (!Array.isArray(items)) throw new Error(`${rule.id}.${field}: array zorunlu`);
+    if (new Set(items).size !== items.length)
+      throw new Error(`${rule.id}.${field}: duplicate clause`);
+  }
+  for (const phase of Object.keys(rule.content?.phaseCriteria ?? {})) {
+    if (!PHASES.includes(phase)) throw new Error(`${rule.id}: geçersiz phase ${phase}`);
+  }
+  for (const risk of rule.content?.risks ?? []) {
+    const owner = riskOwnerById.get(risk.id);
+    if (owner) throw new Error(`Duplicate managed risk id ${risk.id}: ${owner}, ${rule.id}`);
+    riskOwnerById.set(risk.id, rule.id);
+  }
+}
+
+const render = (text, node) =>
+  text
+    .replaceAll("{{title}}", node.title)
+    .replaceAll("{{id}}", node.id)
+    .replaceAll("{{level}}", node.level);
+const marked = (rule, text, node) => `${marker(rule.id)} ${render(text, node)}`;
+const normalizeRef = (ref) => {
+  const match = String(ref).match(/\bdocs\/[^#\s]+\.md/);
+  return match?.[0] ?? null;
+};
+const normalizeSearch = (value) =>
+  String(value ?? "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("tr")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+const textCorpus = (node) =>
+  normalizeSearch([node.id, node.title, node.summary, ...(node.tags ?? [])].join(" "));
+const hasTerm = (corpus, term) => {
+  const normalizedTerm = normalizeSearch(term);
+  return normalizedTerm.length > 0 && ` ${corpus} `.includes(` ${normalizedTerm} `);
+};
+
+function matchesSelector(selector, node) {
+  if (selector.levels && !selector.levels.includes(node.level)) return false;
+  if (selector.nodeIds && !selector.nodeIds.includes(node.id)) return false;
+  if (selector.anyOf && !selector.anyOf.some((branch) => matchesSelector(branch, node)))
+    return false;
+  if (selector.anyTerms) {
+    const corpus = textCorpus(node);
+    if (!selector.anyTerms.some((term) => hasTerm(corpus, term))) return false;
+  }
+  if (
+    selector.hasUiDelivery !== undefined &&
+    (node.uiDelivery?.applies === true) !== selector.hasUiDelivery
+  )
+    return false;
+  if (selector.uiArtifactRoles && !selector.uiArtifactRoles.includes(node.uiArtifactRole))
+    return false;
+  if (
+    selector.riskSeverities &&
+    !(node.risks ?? []).some((risk) => selector.riskSeverities.includes(risk.severity))
+  )
+    return false;
+  return true;
+}
+
+function matches(rule, node) {
+  return INLINE_LEVELS.has(node.level) && matchesSelector(rule.selector, node);
+}
+
+const managedMarkerPattern = /^\[DOC-APPLY:[^\]]+\]/;
+const managedRefPattern = /^doc-apply:([^:]+): docs\/.+\.md$/;
+
+function assertManagedStructure(node) {
+  const serialized = JSON.stringify(node);
+  for (const ref of node.refs ?? []) {
+    if (!String(ref).startsWith("doc-apply:")) continue;
+    if (!String(ref).match(managedRefPattern))
+      throw new Error(`${node.id}: malformed managed ref ${ref}`);
+  }
+  if (!INLINE_LEVELS.has(node.level)) {
+    if (
+      serialized.includes("[DOC-APPLY:") ||
+      (node.refs ?? []).some((ref) => ref.startsWith("doc-apply:"))
+    )
+      throw new Error(`Korunan app/module managed içerik taşıyor: ${node.id}`);
+    return;
+  }
+  const forbiddenMarkerFields = [
+    ...(node.evidence ?? []),
+    node.rollback ?? "",
+    ...Object.values(node.dimensions ?? {}).flatMap((dimension) => dimension.items ?? []),
+    ...Object.values(node.phases ?? {}).map((phase) => phase.notes ?? ""),
+    ...(node.risks ?? []).map((risk) => risk.mitigation ?? ""),
+  ];
+  if (forbiddenMarkerFields.some((value) => String(value).includes("[DOC-APPLY:")))
+    throw new Error(`${node.id}: managed marker izin verilmeyen alanda`);
+  for (const risk of node.risks ?? []) {
+    const owner = riskOwnerById.get(risk.id);
+    if (owner && !managedMarkerPattern.test(String(risk.desc)))
+      throw new Error(`${node.id}: canonical risk id managed id ile çakışıyor: ${risk.id}`);
+  }
+}
+
+for (const node of nodes) assertManagedStructure(node);
+
+function cleanAllManaged(node) {
+  node.refs = (node.refs ?? []).filter((ref) => !String(ref).startsWith("doc-apply:"));
+  node.deliverables = (node.deliverables ?? []).filter(
+    (item) => !managedMarkerPattern.test(String(item)),
+  );
+  node.acceptanceCriteria = (node.acceptanceCriteria ?? []).filter(
+    (item) => !managedMarkerPattern.test(String(item)),
+  );
+  for (const phase of PHASES) {
+    const gate = node.phases?.[phase];
+    if (gate)
+      gate.criteria = (gate.criteria ?? []).filter(
+        (item) => !managedMarkerPattern.test(String(item)),
+      );
+  }
+  node.risks = (node.risks ?? []).filter((risk) => !managedMarkerPattern.test(String(risk.desc)));
+}
+
+for (const node of nodes) {
+  if (!INLINE_LEVELS.has(node.level)) continue;
+  cleanAllManaged(node);
+}
+
+function applyRule(rule, node) {
+  const content = rule.content ?? {};
+  for (const source of rule.sources) {
+    if (!node.refs.some((ref) => normalizeRef(ref) === source))
+      node.refs.push(`doc-apply:${rule.id}: ${source}`);
+  }
+  for (const field of ["deliverables", "acceptanceCriteria"]) {
+    for (const item of content[field] ?? []) node[field].push(marked(rule, item, node));
+  }
+  for (const [phase, items] of Object.entries(content.phaseCriteria ?? {})) {
+    if (!node.phases?.[phase]) throw new Error(`${rule.id}: eksik phase ${phase} (${node.id})`);
+    for (const item of items) node.phases[phase].criteria.push(marked(rule, item, node));
+  }
+  for (const risk of content.risks ?? []) {
+    node.risks.push({
+      ...risk,
+      desc: marked(rule, risk.desc, node),
+      mitigation: render(risk.mitigation, node),
+    });
+  }
+}
+
+// Selector'lar yalnız canonical alanları değil, başka source-specific kuralların eklediği riskleri
+// de okuyabilir. Hedef kümesini önce monoton bir fixed-point üzerinde kapat; ardından içeriği
+// registry sırasıyla tek kez uygula. Böylece high-risk gibi türetilmiş seçimler dosya/kural
+// sırasına bağlı kalmaz ve üretilen byte sırası deterministik olur.
+const selectionNodes = nodes.map((node) => structuredClone(node));
+const selectedPairs = new Set();
+let selectionProgress = true;
+while (selectionProgress) {
+  selectionProgress = false;
+  for (const rule of rules) {
+    for (const node of selectionNodes) {
+      const pair = `${rule.id}\u0000${node.id}`;
+      if (selectedPairs.has(pair) || !matches(rule, node)) continue;
+      applyRule(rule, node);
+      selectedPairs.add(pair);
+      selectionProgress = true;
+    }
+  }
+}
+
+const applications = [];
+for (const rule of rules) {
+  const targets = nodes.filter((node) => selectedPairs.has(`${rule.id}\u0000${node.id}`));
+  if (!targets.length) throw new Error(`${rule.id}: hedef seçilmedi`);
+  for (const node of targets) {
+    applyRule(rule, node);
+    applications.push({
+      ruleId: rule.id,
+      nodeId: node.id,
+      level: node.level,
+      sources: rule.sources,
+    });
+  }
+}
+
+function assertManagedPostflight(node) {
+  assertManagedStructure(node);
+  for (const match of JSON.stringify(node).matchAll(/\[DOC-APPLY:([^\]]+)\]/g)) {
+    if (!knownRuleIds.has(match[1])) throw new Error(`${node.id}: orphan marker ${match[1]}`);
+  }
+  for (const ref of node.refs ?? []) {
+    if (!String(ref).startsWith("doc-apply:")) continue;
+    const owner = String(ref).match(managedRefPattern)?.[1];
+    if (!owner || !knownRuleIds.has(owner))
+      throw new Error(`${node.id}: orphan managed ref ${ref}`);
+  }
+}
+
+for (const node of nodes) assertManagedPostflight(node);
+
+const changed = nodes.filter((node) => {
+  const before = fs.readFileSync(path.join(NODE_DIR, `${node.id}.json`), "utf8");
+  return before !== `${JSON.stringify(node, null, 2)}\n`;
+});
+
+const csv = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+
+function trackedDocs() {
+  const output = execFileSync("git", ["ls-files", "docs/*.md", "docs/**/*.md"], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  return [...new Set(output.trim().split("\n").filter(Boolean))].sort();
+}
+
+function standardOwners() {
+  const owners = new Map();
+  const dir = path.join(ROOT, "src/data/standards");
+  for (const file of fs.readdirSync(dir).filter((name) => name.endsWith(".json"))) {
+    const standard = readJson(path.join(dir, file));
+    for (const ref of standard.references ?? []) {
+      const doc = normalizeRef(ref);
+      if (!doc) continue;
+      const list = owners.get(doc) ?? [];
+      list.push(standard.id);
+      owners.set(doc, list);
+    }
+  }
+  return owners;
+}
+
+function validateClassifications() {
+  const tracked = trackedDocs();
+  const classified = classifications.map((entry) => entry.docPath);
+  if (new Set(classified).size !== classified.length)
+    throw new Error("Doc classification duplicate path içeriyor");
+  if (JSON.stringify(classified) !== JSON.stringify(tracked))
+    throw new Error("Doc classification tracked corpus ile birebir ve sıralı değil");
+  const sourceDocs = new Set(rules.flatMap((rule) => rule.sources));
+  const classNames = new Set([
+    "directive-contract",
+    "handoff-agent-pack",
+    "gap-audit",
+    "catalog-reference",
+    "engineering-standard",
+    "human-decision",
+  ]);
+  const decisions = new Set(["task-materialize", "reference-only", "human-decision"]);
+  for (const entry of classifications) {
+    if (!classNames.has(entry.documentClass))
+      throw new Error(`${entry.docPath}: geçersiz documentClass ${entry.documentClass}`);
+    if (!decisions.has(entry.decision))
+      throw new Error(`${entry.docPath}: geçersiz decision ${entry.decision}`);
+    if (String(entry.rationale ?? "").length < 30)
+      throw new Error(`${entry.docPath}: classification rationale kısa`);
+    if ((entry.decision === "task-materialize") !== sourceDocs.has(entry.docPath))
+      throw new Error(`${entry.docPath}: rule-source/classification decision parity bozuk`);
+  }
+}
+
+validateClassifications();
+
+function buildMatrix() {
+  const standards = standardOwners();
+  const materializedTargets = new Map();
+  const materializedRules = new Map();
+  for (const app of applications) {
+    for (const source of app.sources) {
+      materializedTargets.set(source, [...(materializedTargets.get(source) ?? []), app.nodeId]);
+      materializedRules.set(source, [...(materializedRules.get(source) ?? []), app.ruleId]);
+    }
+  }
+  const rows = [
+    [
+      "doc_path",
+      "document_class",
+      "materialization_decision",
+      "decision_rationale",
+      "disposition",
+      "standard_ids",
+      "semantic_owner_node_ids",
+      "materialized_target_node_ids",
+      "materialized_rule_ids",
+      "human_decision",
+    ],
+  ];
+  for (const doc of trackedDocs()) {
+    const classification = classificationByDoc.get(doc);
+    if (!classification) throw new Error(`${doc}: classification yok`);
+    const semantic = [];
+    let decision = false;
+    let catalog = false;
+    for (const node of nodes) {
+      for (const ref of node.refs ?? []) {
+        if (normalizeRef(ref) !== doc) continue;
+        const value = String(ref);
+        if (value.startsWith("doc-apply:")) continue;
+        if (value.startsWith("decision:")) decision = true;
+        else if (value.startsWith("catalog:")) catalog = true;
+        else semantic.push(node.id);
+      }
+    }
+    const std = [...new Set(standards.get(doc) ?? [])].sort();
+    const targets = [...new Set(materializedTargets.get(doc) ?? [])].sort();
+    const ruleIds = [...new Set(materializedRules.get(doc) ?? [])].sort();
+    const semanticOwners = [...new Set(semantic)].sort();
+    if ((classification.decision === "human-decision") !== decision)
+      throw new Error(`${doc}: human-decision ref/classification parity bozuk`);
+    if ((classification.decision === "task-materialize") !== targets.length > 0)
+      throw new Error(`${doc}: materialized target/classification parity bozuk`);
+    const lanes = [];
+    if (std.length) lanes.push("standard-ref");
+    if (targets.length) lanes.push("task-materialized");
+    if (semanticOwners.length) lanes.push("task-ref");
+    if (catalog) lanes.push("catalog");
+    if (decision) lanes.push("human-decision");
+    if (!lanes.length) lanes.push("docs-only");
+    rows.push([
+      doc,
+      classification.documentClass,
+      classification.decision,
+      classification.rationale,
+      lanes.join("+"),
+      std.join("|"),
+      semanticOwners.join("|"),
+      targets.join("|"),
+      ruleIds.join("|"),
+      decision ? "yes" : "no",
+    ]);
+  }
+  return `${rows.map((row) => row.map(csv).join(",")).join("\n")}\n`;
+}
+
+const expectedMatrix = buildMatrix();
+const currentMatrix = fs.existsSync(REPORT) ? fs.readFileSync(REPORT, "utf8") : "";
+const matrixChanged = currentMatrix !== expectedMatrix;
+
+console.log(
+  `[doc-task-content] ${rules.length} rule · ${applications.length} application · ${changed.length} changed node · matrix ${matrixChanged ? "DRIFT" : "OK"}`,
+);
+if (!APPLY) {
+  if (changed.length || matrixChanged) {
+    console.error(
+      `DRIFT: node tools/materialize-doc-task-content.mjs --apply (${changed.length} node, matrix=${matrixChanged ? "stale" : "ok"})`,
+    );
+    process.exit(1);
+  }
+  console.log("SONUÇ: YEŞİL — canonical task content registry ve matrix eşleşiyor.");
+  process.exit(0);
+}
+
+for (const node of changed)
+  fs.writeFileSync(path.join(NODE_DIR, `${node.id}.json`), `${JSON.stringify(node, null, 2)}\n`);
+fs.writeFileSync(REPORT, expectedMatrix);
+console.log(`APPLY: ${changed.length} node yazıldı; ${path.relative(ROOT, REPORT)} güncellendi.`);

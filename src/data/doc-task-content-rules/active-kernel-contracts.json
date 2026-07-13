@@ -1,0 +1,328 @@
+{
+  "rules": [
+    {
+      "id": "actor-party-runtime-contract",
+      "sources": ["docs/actor-party-contract.md"],
+      "selector": {
+        "nodeIds": [
+          "cc-identity-models",
+          "customer",
+          "s-ats",
+          "s-clm",
+          "s-hrms",
+          "s-marketplace",
+          "s-pim",
+          "s-procurement",
+          "s-sales"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "{{title}} kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.",
+          "Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} içindeki her actor alanı için Party/RoleBinding kaynağı, gerekli rol, tenant/channel/app bağlamı ve yerel-model non-goal'ı kaydedilir."
+          ],
+          "test-plan": [
+            "Çoklu rol, temporal çözüm, bağlam daraltma, cross-tenant erişim ve consumer üzerinden onaysız rol mutasyonu negatifleri önce yazılır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "atomic-type-runtime-contract",
+      "sources": ["docs/atomic-types-directive.md"],
+      "selector": {
+        "nodeIds": [
+          "customer",
+          "product",
+          "s-accounting",
+          "s-billing",
+          "s-commerce",
+          "s-inventory",
+          "s-pim"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i."
+        ],
+        "acceptanceCriteria": [
+          "Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.",
+          "{{title}} yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} alanları için değer tipi ile Fragment/ArcheType sorumlulukları ve consumer index/sorgu ihtiyacı açıkça ayrılır."
+          ],
+          "test-plan": [
+            "Her tip için geçerli/geçersiz parse, serialize round-trip, locale/currency/unit uyuşmazlığı ve şema sürüm uyumu testleri development öncesi yazılır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "atomic-type-selection-guide",
+      "sources": ["docs/atomik-tip-gelistirici-yonergesi.md"],
+      "selector": { "nodeIds": ["std-contracts", "golden-slice-ref"] },
+      "content": {
+        "deliverables": [
+          "Bir gereksinimin atom, Fragment veya ArcheType olarak modellenmesini karar ağacı, örnek fixture ve anti-pattern kontrolleriyle gösteren geliştirici handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Tek değer+doğrulama atom; birlikte yaşayan alan kümesi Fragment; kimlik/lifecycle/permission taşıyan model ArcheType seçilir ve her seçim gerekçesi kaydedilir.",
+          "Para, ölçü, tarih, adres veya i18n değerini serbest string/JSON ile yeniden modelleyen fixture'ların tamamı conformance kapısında reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Modelleme kararı için kimlik, lifecycle, tekrar-kullanım, cross-field invariant ve storage ihtiyaçları decision table'da cevaplanır."
+          ],
+          "verification": [
+            "Golden fixture'lar doğru atom/Fragment/ArcheType registry kaydına çözülür; anti-pattern fixture'ları beklenen kural kimliğiyle kırmızı olur."
+          ]
+        }
+      }
+    },
+    {
+      "id": "capability-entitlement-runtime-contract",
+      "sources": ["docs/capability-entitlement-contract.md"],
+      "selector": {
+        "nodeIds": [
+          "s-billing",
+          "s-commerce",
+          "s-marketplace",
+          "s-membership",
+          "s-pim",
+          "s-studio",
+          "s-subscription-commerce"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi."
+        ],
+        "acceptanceCriteria": [
+          "Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.",
+          "{{title}} grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Unknown key, expired entitlement, cross-tenant grant, duplicate event ve onaysız AI mutation negatifleri önce yazılır."
+          ],
+          "verification": [
+            "Plan→entitlement→capability→PDP zinciri aynı fixture'da beklenen allow/deny ve audit referansını üretir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "computation-derivation-runtime-contract",
+      "sources": ["docs/computation-derivation-contract.md"],
+      "selector": {
+        "nodeIds": [
+          "cc-fx-ledger",
+          "product",
+          "s-accounting",
+          "s-billing",
+          "s-demand-planning",
+          "s-fpa",
+          "s-inventory",
+          "s-mrp",
+          "s-pim",
+          "s-revenue-recognition"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
+          "{{title}} türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir."
+          ],
+          "test-plan": [
+            "DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-replay-projection-contract",
+      "sources": ["docs/event-replay-projection-contract.md"],
+      "selector": { "nodeIds": ["scale-projections", "scale-streaming"] },
+      "content": {
+        "deliverables": [
+          "Versioned event envelope girdisi, idempotent consumer, projection checkpoint ve controlled replay/repair akışını kapsayan event-consumer handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Aynı event tekrar teslimde tek iş etkisi üretir; projection checkpoint monoton ilerler ve out-of-order/unknown-version olayları sessizce uygulanmaz.",
+          "Replay başlangıç/bitiş aralığı, tenant scope, dry-run diff ve insan approval_ref taşır; canlı consumer ile çift yazma oluşturmadan geri alınabilir."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Duplicate, out-of-order, poison event, timeout-after-commit, checkpoint crash ve replay sırasında yeni event gelişi testleri önce yazılır."
+          ],
+          "release-maintenance": [
+            "Replay/repair runbook'u kill switch, lag metriği, checkpoint snapshot, rollback ve owner içerir; NOT-RUN drill pass sayılmaz."
+          ]
+        }
+      }
+    },
+    {
+      "id": "fragment-runtime-contract",
+      "sources": ["docs/fragments-directive.md"],
+      "selector": {
+        "nodeIds": ["customer", "product", "s-clm", "s-commerce", "s-hrms", "s-pim"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff."
+        ],
+        "acceptanceCriteria": [
+          "Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.",
+          "Cross-field invariant ihlali ve unknown field consumer validation'da reddedilir; {{title}} registry/recursive fragment motoru veya app-özel kopya tanım üretmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} için Atom/Fragment/ArcheType sınırı ile embedding, optionality, version pin ve index ihtiyacı beyan edilir."
+          ],
+          "verification": [
+            "Registry fixture'ları canonical parse/serialize round-trip ve en az bir negatif cross-field assertion ile doğrulanır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "kernel-storage-dam-contract",
+      "sources": ["docs/k-storage-dam-directive.md"],
+      "selector": { "nodeIds": ["product", "s-cms", "s-dms", "s-drive", "s-pim"] },
+      "content": {
+        "deliverables": [
+          "{{title}} binary/medya alanlarını merkezi AssetRef, signed upload/download, scan status, rendition lineage ve retention/legal-hold kararlarına bağlayan; doğrudan provider/S3 istemcisi üretmeyen consumer handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Binary DB satırına gömülmez; pre-signed URL tenant/actor/purpose/TTL kapsamlıdır ve başka tenant'ın asset key'i en az 10 negatif senaryoda reddedilir.",
+          "{{title}} upload scan tamamlanmadan publish etmez; checksum, original→rendition lineage ve retention/legal-hold kararı fiziksel silme isteği öncesi merkezi servisten doğrulanır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} asset alanı, amaç, görünürlük, rendition ihtiyacı, retention sınıfı ve provider-neutral AssetRef bağıyla tanımlanır."
+          ],
+          "test-plan": [
+            "Expired URL, path traversal, MIME spoof, malware, cross-tenant key, duplicate upload, retention ve provider swap testleri önce yazılır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "mode-profile-runtime-contract",
+      "sources": ["docs/mode-profile-contract.md"],
+      "selector": {
+        "nodeIds": ["s-commerce", "s-marketplace", "s-studio", "s-subscription-commerce"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.",
+          "Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{title}} mode adı için kod içi if/switch yazmaz; merkezi versioned config ve capability/PDP bağlarını tüketir."
+          ],
+          "test-plan": [
+            "Preview, missing field, cross-tenant profile, onaysız publish, capability deny ve rollback veri-paritesi testleri önce yazılır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "panel-tier-runtime-contract",
+      "sources": ["docs/panel-tier-contract.md"],
+      "selector": { "nodeIds": ["platform-customer-ui"] },
+      "content": {
+        "deliverables": [
+          "Customer UI route'larını merkezi ops/developer-admin/tenant-admin/counterparty panel-tier sözleşmesine, capability/PDP veri kapsamına ve Master Component bileşimine bağlayan consumer handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Her route tam bir panel tier'a aittir; tenant-admin ops/developer yüzeyini, counterparty ise davet scope'u dışındaki alanı göremez veya çağıramaz.",
+          "Paylaşılan bileşen davranışı Master Component'ten gelir; permission-denied, empty/loading/error ve long-content state'leri panel bazında story+E2E ile doğrulanır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Tier başına actor, route namespace, capability, PDP policy, data scope ve non-goal matrisi development öncesi tamamlanır."
+          ],
+          "verification": [
+            "Cross-tier erişim negatifleri, route ownership ve state story matrisi gerçek test/preview referanslarıyla doğrulanır."
+          ]
+        }
+      }
+    },
+    {
+      "id": "pdp-policy-runtime-contract",
+      "sources": ["docs/pdp-policy-contract.md"],
+      "selector": {
+        "nodeIds": [
+          "cc-security",
+          "customer",
+          "product",
+          "s-clm",
+          "s-hrms",
+          "s-iam",
+          "s-marketplace",
+          "s-pim"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} action/resource girişlerini merkezi PDP'nin actor, tenant, relationship ve attribute bağlamına; allow/deny reason, policyRef ve auditFields çıktısına bağlayan consumer guard matrisi."
+        ],
+        "acceptanceCriteria": [
+          "Unknown action/resource/policy ve eksik tenant/actor bağlamı default-deny olur; client-provided allow kararı güvenilir PDP sonucunu override edemez.",
+          "{{title}} yerel allow/policy motoru üretmez; aynı versioned PDP kararını reason+policyRef ile tüketir, audit eder ve cross-tenant ilişki erişimini reddeder."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Allow, explicit deny, unknown input, stale policy, relationship escape, attribute spoof ve cross-tenant negatifleri önce yazılır."
+          ],
+          "verification": [
+            "Resolver/typed-action guard'ları PDP kararını tüketir; korumasız entrypoint sayısı sıfır ve deny audit izi eksiksizdir."
+          ]
+        }
+      }
+    },
+    {
+      "id": "workflow-runtime-contract",
+      "sources": ["docs/workflow-directive.md"],
+      "selector": { "nodeIds": ["s-bpm"] },
+      "content": {
+        "deliverables": [
+          "Versioned workflow definition, typed state/transition, approval/timer/retry/compensation adımları ve ECA bağlarını içeren birinci-sınıf workflow handoff'u."
+        ],
+        "acceptanceCriteria": [
+          "Tanımsız state/transition ve approval_ref eksik insan-onaylı adım fail-closed olur; aynı command retry'da ikinci transition veya yan etki oluşmaz.",
+          "Timer/retry/compensation ve audit izi deterministic replay ile doğrulanır; AI yalnız draft workflow önerir ve running instance'ı doğrudan değiştiremez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "Invalid transition, duplicate command, timeout, retry exhaustion, compensation failure, onaysız approval ve version migration testleri önce yazılır."
+          ],
+          "release-maintenance": [
+            "Definition değişimi running instance'lar için migration/compatibility ve rollback planı taşır; geçmiş transition/audit silinmez."
+          ]
+        }
+      }
+    }
+  ]
+}

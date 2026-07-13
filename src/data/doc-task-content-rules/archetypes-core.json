@@ -1,0 +1,480 @@
+{
+  "rules": [
+    {
+      "id": "clm-lifecycle",
+      "sources": ["docs/archetype-agreement-lifecycle-negotiation-directive.md"],
+      "selector": {
+        "nodeIds": ["s-clm"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için taraf, madde, yükümlülük, imza, kanıt ve ek referanslarını birleştiren agreement graph ile draft→review→negotiation→approval→signature→active→renewal|termination→archived yaşam döngüsü ve sürümlü redline workspace'i."
+        ],
+        "acceptanceCriteria": [
+          "Geçersiz agreement durum geçişleri reddedilir; negotiation, approval ve signature geçişleri approval_ref ile insan onayı ve PDP playbook kontrolü olmadan ilerlemez.",
+          "Counterparty veya AI kaynaklı redline pending başlar; accepted olması için approval_ref, playbook uygunluğu ve finance/legal stance eşiği birlikte sağlanır.",
+          "İki müzakere sürümünün madde bazlı diff'i aynı girdiler için deterministik üretilir ve her durum/redline kararı append-only audit'e yazılır.",
+          "Başka tenant'a ait agreement, round, redline veya tipli referansa erişim en az 10 negatif senaryoda reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Agreement graph sahipliği ile k-signature, k-obligation, k-evidence, k-computation ve document-composition'a devredilen sorumluluklar açıkça ayrılır.",
+            "Redline, negotiation round, fallback clause, stance ve battlecard kararlarında AI önerir, insan onaylar, motor uygular sınırı korunur."
+          ],
+          "test-plan": [
+            "Önce başarısız testlerle geçerli/geçersiz durum geçişleri, onaysız redline kabulü, stance eşiği, deterministik diff ve AI'ın imzaya gönderme reddi kapsanır.",
+            "Tenant izolasyonu için en az 10 negatif vaka ile signature, obligation ve computation bağlantıları sandbox/stub entegrasyonlarıyla sınanır."
+          ],
+          "db-schema": [
+            "agreement, agreement_party, clause, payment, negotiation_round ve redline şemaları tenant_id, approval_ref, sürüm ve tipli referans alanlarıyla tanımlanır; cross-tenant referanslar fail-closed olur.",
+            "Alembic downgrade yolu ve durum/redline kararlarının append-only audit izi şema sözleşmesinin parçasıdır."
+          ],
+          "verification": [
+            "Agreement oluşturma→müzakere turu→redline/diff→onay eşikleri→imzaya gönderme→active→obligation besleme akışı doğrulanabilir test sonuçlarıyla kontrol edilir.",
+            "check-core-contract kapısı tenant guard, resolver koruması, audit çağrısı ve gerekli indeksleri denetler."
+          ],
+          "release-maintenance": [
+            "Geri alma yeni agreement/redline sürümü ve migration downgrade üzerinden yapılır; yayımlanmış karar ve audit geçmişi silinmez veya üzerine yazılmaz."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-clm-unauthorized-redline",
+            "desc": "Onaysız veya playbook dışı bir redline'ın kabul edilmesi hukuki ve finansal yükümlülüğü sessizce değiştirebilir.",
+            "severity": "critical",
+            "mitigation": "Redline kabulünü approval_ref + PDP playbook + finance/legal stance eşiğine bağla; doğrudan clause/status güncellemesini reddet ve kararı append-only audit'e yaz."
+          }
+        ]
+      }
+    },
+    {
+      "id": "document-composition",
+      "sources": ["docs/archetype-document-composition-directive.md"],
+      "selector": {
+        "nodeIds": ["s-dms"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için clause library, variable binding ve assembly rule kullanan; DOCX/PDF/HTML çıktısını sürümlü, checksum'lı ve yayımdan sonra değişmez üreten doküman kompozisyon akışı."
+        ],
+        "acceptanceCriteria": [
+          "Aynı template, değişken kümesi ve locale aynı montajı ve checksum'ı üretir; zorunlu değişken eksikse MissingVariableError döner.",
+          "clause_class=prohibited olan madde hiçbir çıktıya monte edilmez ve koşullu maddeler priority sırasıyla deterministik seçilir.",
+          "publish_document sonrasında rendered_document değiştirilemez; güncelleme yeni document_version, variable_snapshot ve clause_snapshot üretir.",
+          "Başka tenant'ın template, clause, çıktı veya AssetRef'ine erişim en az 10 negatif testte reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Template, clause, variable binding, assembly rule ve rendered document sınırları tanımlanır; imza, agreement ve binary saklama sırasıyla k-signature, archetype-agreement ve k-storage'a devredilir.",
+            "Yapılandırılmış editör serbest WYSIWYG/keyfi HTML yerine template, clause ve variable sınırlarını uygular."
+          ],
+          "test-plan": [
+            "Test-önce senaryoları montaj determinizmi, prohibited clause reddi, locale fallback, version diff, yayımlanmış çıktı değişmezliği ve AI publish reddini kapsar.",
+            "DOCX/PDF/HTML render ile k-storage AssetRef ve k-signature'a imzaya hazır çıktı bağlantısı sandbox entegrasyonuyla sınanır."
+          ],
+          "db-schema": [
+            "document_template, clause, variable_binding, assembly_rule ve rendered_document şemaları template_version, document_version, checksum, variable_snapshot, clause_snapshot ve tenant_id alanlarını taşır.",
+            "Render binary'si tabloya gömülmez; k-storage AssetRef kullanılır ve Alembic downgrade yolu test edilebilir kalır."
+          ],
+          "verification": [
+            "Template tanımla→clause bağla→değişken eşle→assemble/render→publish→imzaya hazırla akışı aynı girdide aynı checksum ve sürüm kayıtlarıyla doğrulanır.",
+            "check-core-contract tenant guard, resolver koruması, audit çağrısı ve indeks gereksinimlerini denetler."
+          ],
+          "release-maintenance": [
+            "Hatalı template veya clause değişikliği önceki rendered_document'ı değiştirmez; düzeltme yeni sürümle yayımlanır ve migration downgrade yolu korunur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-document-snapshot-drift",
+            "desc": "Clause veya template sürümü snapshot'a sabitlenmezse imzalanan belgenin sonradan farklı görünmesi mümkün olur.",
+            "severity": "critical",
+            "mitigation": "Her çıktıda template_version, clause_snapshot, variable_snapshot ve checksum sakla; publish sonrası mutasyonu reddet ve değişikliği yeni sürüme zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "media-maturity",
+      "sources": ["docs/media-file-manager-maturity-codex-directive-2026-07-13.md"],
+      "selector": {
+        "nodeIds": ["s-dms"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için güvenli upload, asset yaşam döngüsü, tenant kota rezervasyonu, rendition/metadata yönetimi, asset_usage bütünlüğü ve backup/restore hükümlerini birleştiren media ve file-manager maturity sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Asset initiated→uploading→scanning→ready|quarantined|failed→soft_deleted→purged durumlarıyla ilerler; scanning veya quarantined içerik servis edilemez.",
+          "Upload doğrulaması uzantı yerine allowlist ve magic-byte kontrolü uygular; SVG sanitize/rasterize veya ayrı origin+CSP olmadan aktif içerik olarak sunulmaz.",
+          "Kullanımdaki asset asset_usage kaydı nedeniyle purge edilemez; override yalnız insan onayıyla ve audit'li uygulanır.",
+          "Eşzamanlı upload'larda kota atomik rezervasyonla korunur; iki isteğin aynı kotayı kullanılabilir görerek limiti aşması engellenir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "File-manager, media-manager, processing engine ve k-storage sorumlulukları ayrılır; s-dms yalnız sahip olduğu archetype kapsamını taşır ve yeni app/module owner varsaymaz.",
+            "Purge kapsamı binary, rendition, metadata, arama indeksi ve CDN invalidation'ı içerir; legal hold aktifken purge engellenir."
+          ],
+          "test-plan": [
+            "SVG/polyglot dosya, magic-byte uyumsuzluğu, piksel/decompression bombası ve tarama tamamlanmadan servis denemesi negatif testlerle reddedilir.",
+            "Kota yarışı, asset_usage purge koruması, bulk kısmi-başarı/idempotency ve tenant izolasyonu entegrasyon testleriyle kapsanır."
+          ],
+          "db-schema": [
+            "Asset sürümü, lifecycle durumu, checksum, captured_at, focal point, rendition ilişkisi, asset_usage, tenant quota/reservation ve access-log alanları tenant-scoped tanımlanır.",
+            "Metadata PostgreSQL ile binary object storage yedeği için ortak tutarlılık noktası ve tombstone yeniden-silme kuralı beyan edilir."
+          ],
+          "verification": [
+            "Upload başarı hedefi en az %99.5, presign p95 en fazla 150 ms, liste p95 en fazla 300 ms ve rendition'ların %95'i en fazla 5 dakikada tamamlanacak şekilde ölçüm planı hazırlanır.",
+            "Restore tatbikatı asset, rendition ve metadata örneklemini kapsayacak; hedef RTO en fazla 4 saat ve RPO en fazla 24 saat olarak doğrulanacaktır."
+          ],
+          "release-maintenance": [
+            "Provider değişimi checksum doğrulamalı toplu taşıma ve URL sürekliliği runbook'u ile yapılır; metadata/binary restore tutarlılığı ve CDN invalidation adımları geri alma planında yer alır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-media-active-content-window",
+            "desc": "SVG, polyglot veya taraması bitmemiş içerik servis edilirse XSS, malware dağıtımı ve worker kaynak tüketimi oluşabilir.",
+            "severity": "critical",
+            "mitigation": "Magic-byte+allowlist doğrulaması, scanning durumunda servis yasağı, AV karantinası, SVG sanitize/rasterize ve piksel/decompression limitlerini birlikte uygula."
+          }
+        ]
+      }
+    },
+    {
+      "id": "archetype-eav",
+      "sources": ["docs/archetype-eav-directive.md"],
+      "selector": { "nodeIds": ["s-pim"] },
+      "content": {
+        "deliverables": [
+          "{{title}} dinamik ürün özniteliklerini, WBS'te henüz modellenmemiş merkezi k-fieldtypes / AttributeSet-EAV sahibinin gelecekteki public contract'ına bağlayan consumer projection (tüketici izdüşümü); s-pim içinde yerel EAV primitive, registry veya reusable value engine üretmez."
+        ],
+        "acceptanceCriteria": [
+          "s-pim yalnız product/family/variant ile attribute definition/value referanslarını ve PIM'e özgü binding kurallarını sahiplenir; k-fieldtypes owner, public contract ve predecessor evidence yoksa development NO-GO kalır.",
+          "Tip uyuşmazlığı, locale çözümü, Money/Measure uyumu, runtime attribute, tenant izolasyonu ve filtre bütçesi consumer contract oracle'ları olarak tanımlıdır; bu oracle'lar merkezi EAV motorunun mevcut veya uygulanmış olduğu iddiasını üretmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "PIM'e özgü attribute definition, binding ve publish/completeness sorumluluklarını merkezi k-fieldtypes storage, type registry ve validation motorundan ayır; eksik merkezi owner'ı açık blocker olarak kaydet."
+          ],
+          "test-plan": [
+            "Merkezi public contract'a karşı typed-value, locale, inheritance, invalid value, tenant-cross ve performans consumer testlerini önce kırmızı tasarla; yerel EAV engine fixture'ı kurma."
+          ],
+          "db-schema": [
+            "Yalnız PIM product/family/variant kayıtlarının merkezi attribute/value kimliklerine referanslarını tanımla; generic value_type registry, reusable EAV store veya merkezi indeks motorunu s-pim şemasında çoğaltma."
+          ],
+          "verification": [
+            "k-fieldtypes owner, public contract ve gerçek predecessor evidence yoksa sonucu NOT-RUN/blocker tut; mevcut olduğunda yalnız consumer mapping ve contract-test uyumunu doğrula."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-eav-local-engine-fork",
+            "desc": "Merkezi k-fieldtypes sahibi modellenmeden EAV motorunu s-pim içinde kurmak, diğer tüketicilerden ayrışan yerel primitive ve schema drift üretir.",
+            "severity": "high",
+            "mitigation": "Merkezi owner ve public contract evidence gelene kadar code-start'ı durdur; s-pim kapsamını consumer mapping ve contract oracle'larıyla sınırla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "archetype-tree-relation",
+      "sources": ["docs/archetype-tree-relation-directive.md"],
+      "selector": { "nodeIds": ["s-pim"] },
+      "content": {
+        "deliverables": [
+          "{{title}} Category, ProductFamily ve Taxonomy bağlarını, WBS'te henüz modellenmemiş merkezi k-archetype-relation sahibinin gelecekteki public tree/dag/temporal contract'ına bağlayan consumer projection (tüketici izdüşümü); s-pim içinde yerel relation registry veya generic graph engine üretmez."
+        ],
+        "acceptanceCriteria": [
+          "s-pim yalnız Category/ProductFamily/Taxonomy ilişki kullanımını, re-parent isteğini ve görünüm beklentisini sahiplenir; k-archetype-relation owner ve public contract evidence yoksa development NO-GO kalır.",
+          "Cycle, subtree, temporal effective-edge, tenant-cross ve atomic re-parent davranışları consumer contract oracle'larıdır; generic RelationKind, ltree storage veya reusable traversal motorunun PIM tarafından uygulandığı iddia edilmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "PIM'e özgü tree/dag kullanımını merkezi relation schema, cycle guard, temporal çözüm ve storage motorundan ayır; eksik k-archetype-relation owner'ını açık predecessor blocker olarak kaydet."
+          ],
+          "test-plan": [
+            "Cycle reject, subtree/ancestor sonucu, temporal as-of, tenant-cross ve re-parent rollback consumer contract testlerini önce kırmızı tasarla; yerel graph engine fixture'ı kurma."
+          ],
+          "db-schema": [
+            "Yalnız PIM kayıtlarının merkezi relation kimliği ve version referanslarını tanımla; generic RelationKind registry, ltree path/depth store veya temporal-edge motorunu s-pim şemasında çoğaltma."
+          ],
+          "verification": [
+            "k-archetype-relation owner, public contract ve gerçek predecessor evidence yoksa sonucu NOT-RUN/blocker tut; mevcut olduğunda consumer projection ve contract-test uyumunu doğrula."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-tree-local-engine-fork",
+            "desc": "Merkezi k-archetype-relation sahibi modellenmeden graph motorunu s-pim içinde kurmak, farklı cycle, temporal ve storage semantiği taşıyan yerel fork üretir.",
+            "severity": "high",
+            "mitigation": "Merkezi owner ve public contract evidence gelene kadar code-start'ı durdur; PIM'i yalnız relation consumer mapping'iyle sınırla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ledger-double-entry",
+      "sources": ["docs/archetype-ledger-directive.md"],
+      "selector": { "nodeIds": ["s-accounting"] },
+      "content": {
+        "deliverables": [
+          "{{title}} chart-of-accounts, journal, period ve reversal kullanımını, WBS'te henüz modellenmemiş ortak archetype-ledger sahibinin gelecekteki typed-action/query contract'ına bağlayan consumer projection (tüketici izdüşümü); paylaşılan ledger engine s-accounting içinde yerel olarak kurulmaz."
+        ],
+        "acceptanceCriteria": [
+          "s-accounting yalnız muhasebe politikası, mapping, raporlama projection'ı ve ledger command/query tüketimini sahiplenir; archetype-ledger owner ve public contract evidence yoksa development NO-GO kalır.",
+          "Borç=alacak, currency uyumu, closed-period reject, append-only kayıt ve approval_ref'li reversal davranışları consumer contract oracle'larıdır; ortak journal/period motorunun Accounting içinde uygulanmış olduğu iddia edilmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Accounting'e özgü hesap-planı politikası ve raporlama projection'ını ortak ledger persistence, posting, period-lock ve reversal motorundan ayır; eksik archetype-ledger owner'ını açık predecessor blocker yap."
+          ],
+          "test-plan": [
+            "Unbalanced posting, currency mismatch, closed period, duplicate request, forbidden update/delete, reversal ve tenant-cross consumer contract testlerini önce kırmızı tasarla; yerel shared-ledger engine kurma."
+          ],
+          "db-schema": [
+            "Yalnız Accounting'e özgü mapping ve merkezi ledger kayıtlarına referans/projection alanlarını tanımla; ortak account/journal/period persistence şemasını s-accounting altında çoğaltma."
+          ],
+          "verification": [
+            "archetype-ledger owner, Money contract, scale-invariant zarfı ve gerçek predecessor evidence yoksa sonucu NOT-RUN/blocker tut; mevcut olduğunda yalnız consumer mapping ve contract-test uyumunu doğrula."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-ledger-local-engine-fork",
+            "desc": "Ortak archetype-ledger sahibi modellenmeden ledger motorunu s-accounting içine gömmek, MRP ve HRMS için yeniden-uygulama ve mali invariant drift'i üretir.",
+            "severity": "critical",
+            "mitigation": "Ortak owner ve public contract evidence gelene kadar code-start'ı durdur; s-accounting kapsamını mapping, projection ve typed contract tüketimiyle sınırla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "financial-state-model",
+      "sources": ["docs/financial-state-model-contract.md"],
+      "selector": { "nodeIds": ["s-accounting"] },
+      "content": {
+        "deliverables": [
+          "{{title}} içinde planned, forecast, committed, accrued, actual ve cash durumlarını kaynak, geçiş, confidence ve raporlama kullanımına göre ayıran mali durum modeli."
+        ],
+        "acceptanceCriteria": [
+          "Commitment actual'a devredildiğinde aynı tutar iki kez sayılmaz; runway yalnız cash durumundan hesaplanır ve etiketsiz mali görünüm render edilmez.",
+          "Forecast gerçekleşmiş durumu değiştirmez; accrual/period close-reopen ve restatement yalnız insan approval_ref'iyle yürür."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Altı finansal durumun owner, source, allowed transition, confidence ve raporlama formüllerini ledger kaydından ayrı tanımla."
+          ],
+          "test-plan": [
+            "Commitment→actual çift-sayım, onaysız accrual, mutabakatsız cash, runway=cash, forecast salt-okunur ve period transition negatiflerini yaz."
+          ],
+          "db-schema": [
+            "Financial state, source state ve geçiş referanslarını açık alanlarla sakla; expand-contract ve downgrade geçmiş görünümü korusun."
+          ],
+          "verification": [
+            "Runway=cash, variance=actual+accrued vs planned ve commitment→actual tekil devrini durum etiketli fixture'larla doğrula."
+          ],
+          "release-maintenance": [
+            "Mali görünüm düzeltmesini overwrite yerine restatement/yeni sürümle yap; önceki dönem ve yayımlanmış görünümü koru."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-financial-state-double-count",
+            "desc": "Committed, accrued ve actual durumlarının karışması çift sayım veya yanlış runway üretebilir.",
+            "severity": "critical",
+            "mitigation": "Durum etiketini, tekil geçişi ve runway=cash invariantını negatif testlerle zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "org-employment",
+      "sources": ["docs/archetype-org-employment-directive.md"],
+      "selector": {
+        "nodeIds": ["s-hrms"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için department, position, employment, as-of salary/cost parameters, headcount plan ve finance-onaylı aylık karşılık taslaklarını birleştiren işgücü maliyeti modeli."
+        ],
+        "acceptanceCriteria": [
+          "İstihdam kaydı açıldığında maaş ve maaş-dışı bileşenlerle aylık toplam işveren maliyeti deterministik türetilir; contractor'a çalışan SGK çarpanı uygulanmaz.",
+          "As-of parametre değişikliği geçmiş ay sonucunu değiştirmez ve çakışan valid_range reddedilir.",
+          "Kıdem ve izin karşılıkları aylık fiş taslağı üretir; finance approval olmadan ledger'a post edilemez ve aynı ay retry ikinci taslak üretmez.",
+          "Maaş alanları team_member/assistant rollerine API, liste, rapor ve export yüzeylerinde maskelenir; komşu tenant sorgusu sıfır satır döndürür."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Department roll-up, position, employment ve as-of salary/employer-cost parameter sınırları ile kişi ana verisinin PartyRef üzerinden kalması tanımlanır.",
+            "Headcount planının source=headcount_plan bütçe satırı üretmesi ve manuel bütçe satırlarını ezmemesi zorunlu tutulur."
+          ],
+          "test-plan": [
+            "As-of geçmiş değişmezliği, valid_range çakışması, contractor maliyeti, gün-orantı kararı, kıdem/izin formülleri ve accrual retry idempotency test-önce kapsanır.",
+            "Maaş alanı için API/liste/rapor/export negatif ABAC testleri ve cross-tenant sıfır-satır testi çalıştırılır."
+          ],
+          "db-schema": [
+            "department, position, employment, salary_param, employer_cost_factor ve headcount_plan tenant_id ile tanımlanır; parametreler çakışmayan valid_range ve as-of sürüm zinciri taşır.",
+            "Accrual taslağı ledger referansı ve approval durumuyla idempotent bağlanır; doğrudan posted mali kayıt üretmez."
+          ],
+          "verification": [
+            "Pozisyon→parametre→employment→aylık maliyet→accrual draft→finance approval→ledger akışı, geçmiş ayın değişmediği yeniden üretim kontrolüyle doğrulanır.",
+            "Maaş maskeleme matrisi tüm veri çıkış yüzeylerinde negatif test sonuçlarıyla kontrol edilir."
+          ],
+          "release-maintenance": [
+            "Parametre düzeltmesi geçmiş kaydı overwrite etmez; yeni as-of pencere açar ve önceki ay sonuçları aynı parametre sürümüyle yeniden üretilebilir kalır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-org-salary-leak-retroactive",
+            "desc": "Maaş alanı yetki sınırının aşılması veya as-of parametrenin geçmişi değiştirmesi kişisel veri sızıntısı ve hatalı mali rapor üretir.",
+            "severity": "critical",
+            "mitigation": "Alan-düzeyi ABAC/masking'i tüm export yüzeylerinde test et; çakışmayan valid_range ve append-only parametre sürümleriyle geçmişi koru."
+          }
+        ]
+      }
+    },
+    {
+      "id": "budget-plan",
+      "sources": ["docs/archetype-budget-plan-directive.md"],
+      "selector": {
+        "nodeIds": ["s-fpa"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı."
+        ],
+        "acceptanceCriteria": [
+          "Aynı dönem için ikinci active plan reddedilir; revizyon yeni sürüm açar ve superseded plan değişmez kalır.",
+          "actual_amount, variance ve forecast yalnız feed'den deterministik türetilir; doğrudan yazma reddedilir.",
+          "Purchase fişe bağlandığında soft actual hard actual'a devredilir ve toplam değişmeyerek çifte sayım oluşmaz.",
+          "Capex eşik üstü satır CEO step-up olmadan active olamaz; headcount yeniden üretimi manuel satırları ezmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Budget plan/version, budget line, purchase bridge ve ledger actual feed sınırları ile soft/hard actual gösterimi tanımlanır.",
+            "Capex threshold, belge zorunluluğu ve hard-block kararları açık veri/insan kararı olarak kilitlenir."
+          ],
+          "test-plan": [
+            "Sürüm tekilliği, türetilmiş alanlara doğrudan yazma, soft→hard actual çift-sayım, FX kuru, capex step-up ve tenant/yetki negatif testleri önce kırmızı yazılır.",
+            "Plan→purchase→soft actual→finance posting→hard actual→variance alert yolculuğu uçtan uca sınanır."
+          ],
+          "db-schema": [
+            "budget_plan, budget_line ve purchase_record şemaları tenant, period, version, source ve Money alanlarını taşır; active plan tekilliği ve superseded değişmezliği zorlanır.",
+            "Actual feed source_ref ile ledger/purchase kaydına bağlanır; actual/variance/forecast için serbest yazılabilir kolon yolu açılmaz."
+          ],
+          "verification": [
+            "Aynı feed girdisi aynı actual/variance/forecast sonucunu üretir; purchase→ledger dönüşümünde toplamın değişmediği kontrol edilir.",
+            "E2 plan×0.9 uyarısı ve E3 plan aşımı eskalasyonu doğru owner, finance ve CPO hedeflerine yönlendirilir."
+          ],
+          "release-maintenance": [
+            "Bütçe düzeltmesi active planı overwrite etmez; yeni version açılır, eski kurul dönemi ve superseded plan yeniden üretilebilir kalır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-budget-soft-hard-double-count",
+            "desc": "Purchase soft actual ile ledger hard actual aynı anda toplamda tutulursa bütçe sapması ve forecast iki kez gerçekleşme sayar.",
+            "severity": "high",
+            "mitigation": "Purchase→ledger source_ref bağını tekil tut, soft actual'ı hard actual devrinde düşür ve toplam-değişmezlik testini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "decision-grade-data",
+      "sources": ["docs/decision-grade-data-contract.md"],
+      "selector": {
+        "nodeIds": ["s-data-catalog"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için source→validation→approval→reconciliation→period lock→computation→KPI→report→immutable snapshot zincirini ve formula/input lineage'ını taşıyan karar-verisi zarfı."
+        ],
+        "acceptanceCriteria": [
+          "Kaynak zarfı eksik mali kayıt reddedilir; unverified kayıt KPI veya rapor hattına giremez.",
+          "Locked döneme doğrudan yazım reddedilir; restatement eski snapshot hash'ini değiştirmeden yeni rapor sürümü ve fark notu üretir.",
+          "Aynı input_lineage, formula_version ve as_of aynı sonucu üretir; formula sürümü değişse de eski dönem eski sürümle yeniden üretilebilir.",
+          "Ekran ve export aynı management_snapshot kaynağını kullanır; mutabakat farkı confidence düşürür ve gerekçesiz kurul snapshot'ına giremez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Her veri sınıfı için provenance, bitemporal zaman, validation, maker-checker, reconciliation, period-lock ve lineage halkalarının uygulanabilirliği veya gerekçeli waiver'ı tanımlanır.",
+            "Analytics dil, pazar, para, saat dilimi, veri bölgesi ve çeviri sürümünü ayrı boyutlar olarak taşır; event adları çevrilmez."
+          ],
+          "test-plan": [
+            "Kaynak zarfı eksikliği, unverified KPI sızıntısı, maker=checker, locked-period yazımı ve çevrilmiş/UI metninden türetilmiş event key negatif testleri yazılır.",
+            "Restatement hash sabitliği, formula determinism, çelişen kaynak hiyerarşisi, reconciliation confidence ve export=screen aynılığı sınanır."
+          ],
+          "db-schema": [
+            "Karar-verisi zarfı source_kind/ref, entered_by/at, evidence_ref, effective_time, transaction_time, verification/reconciliation state, formula_ref/version, input_lineage, computed_at ve as_of alanlarını taşır.",
+            "Snapshot payload hash'li, sürümlü ve değişmezdir; restates_ref eski kaydı silmeden yeni sürüme bağlanır."
+          ],
+          "verification": [
+            "Conformance kontrolü her mali kaydın zorunlu zarf alanlarını ve her KPI'nın formula_version+input_lineage bağına sahip olduğunu tarar.",
+            "Kasıtlı reconciliation farkı dashboard confidence göstergesini düşürür; aynı snapshot ekran ve export'ta aynı rakamı verir."
+          ],
+          "release-maintenance": [
+            "Formül veya kaynak düzeltmesi eski snapshot'ı değiştirmez; yeni formula/report sürümü ve restatement zinciriyle yayımlanır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-decision-grade-plausible-wrong-data",
+            "desc": "Kaynağı, mutabakatı veya formül sürümü görünmeyen doğru-görünen yanlış veri yönetim kararlarını güvenilir görünüm altında yanıltır.",
+            "severity": "critical",
+            "mitigation": "Unverified/unreconciled veriyi etiketle veya KPI'dan dışla; source envelope, formula lineage, period lock ve immutable snapshot zincirini conformance testiyle zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "scale-invariant",
+      "sources": ["docs/scale-invariant-directive.md"],
+      "selector": {
+        "nodeIds": ["scale-invariant"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için financial, order ve inventory etiketli tüm mutasyonları transactional outbox, tenant-scoped idempotency ve tamper-evident audit hash-chain ile saran zorunlu WritePolicy/CI kapısı."
+        ],
+        "acceptanceCriteria": [
+          "financial, order ve inventory kapsamlarının her birinde en az bir referans handler scaled_write taşır ve zarfı eksik handler CI'da reddedilir.",
+          "Aynı financial istek ve worker retry tekrarlandığında tek yan etki ile tek outbox olayı oluşur; eşzamanlı özdeş istekler aynı result_ref'e döner.",
+          "Etiketli her handler consistency=strong|eventual değerini açıkça taşır; sessiz eventual kabul edilmez.",
+          "Audit kaydı değiştirme veya silme simülasyonu hash-chain doğrulamasında yakalanır; koruma kapatma yalnız geçerli insan-onaylı ve süreli waiver ile mümkündür."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "WritePolicy write_scope, idempotency_required, outbox_required, rate_limit_scope, consistency ve waiver_ref alanlarını default-on koruma olarak tanımlar.",
+            "Okuma akışları kapsam dışı kalır; financial/order/inventory mutasyonları etiketsiz veya serbest kod yoluyla çalışamaz."
+          ],
+          "test-plan": [
+            "Çift tahsilat+worker retry, N eşzamanlı idempotency yarışı ve audit hash bozulması önce başarısız sonra geçen bloklayıcı testlerle kapsanır.",
+            "Zarfı eksik etiketli handler, boş consistency ve geçersiz waiver için CI negatif vakaları eklenir."
+          ],
+          "db-schema": [
+            "platform_idempotency tenant_id+idempotency_key tekilliği, request_hash ve result_ref taşır; outbox domain kaydıyla aynı transaction'da yazılır.",
+            "platform_audit_log prev_hash/entry_hash ile append-only tutulur ve UPDATE/DELETE yetkisi kaldırılır; migration downgrade yolu tanımlanır."
+          ],
+          "verification": [
+            "check-scale-invariant etiketli handler'larda scaled_write, consistency, AuditLogger ve geçerli waiver bağlantısını tarayıp ihlalde non-zero çıkar.",
+            "Kasıtlı audit mutasyonu ve silme denemesi doğrulayıcıda zincir kopması olarak raporlanır."
+          ],
+          "release-maintenance": [
+            "Koruma değişikliği default-on davranışı geriletmez; geçici waiver süre dolunca otomatik geçersiz sayılır ve outbox/idempotency/audit kayıtları rollback sırasında korunur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-scale-dual-write-replay",
+            "desc": "Outbox veya idempotency zarfının atlanması çift tahsilat, çift stok düşümü ya da domain kaydı yazılıp olayın kaybolmasıyla sonuçlanabilir.",
+            "severity": "critical",
+            "mitigation": "Koruma zarfını default-on ve CI-zorunlu yap; domain+outbox aynı transaction, tenant-scoped idempotency ve hash-chain audit testlerini bloklayıcı çalıştır."
+          }
+        ]
+      }
+    }
+  ]
+}

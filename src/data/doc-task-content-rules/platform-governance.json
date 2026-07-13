@@ -1,0 +1,343 @@
+{
+  "rules": [
+    {
+      "id": "ai-governance",
+      "sources": ["docs/ai-governance-master.md"],
+      "selector": {
+        "nodeIds": ["s-ai-governance"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} ({{id}}) için beş yetki seviyesini, autonomy değerlerini, forbiddenTargets kapsamını, zorunlu insan step-up noktalarını ve kill-switch koşullarını tek kontrol matrisinde birleştir.",
+          "PR önerisi ile production/main değişikliğini ayıran fail-closed devir kaydını; karar sahibi, durma nedeni ve beklenen insan kanıtı alanlarıyla hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Yetki matrisi 5/5 seviyeyi kapsar; seviye 4 PR tavanı ile seviye 5 main push yasağı ayrı satırlarda ve çelişkisizdir.",
+          "app ve module hedeflerinin autonomy=none olduğu ve forbiddenTargets ihlalinin reddedildiği en az iki negatif senaryo tanımlıdır.",
+          "Kill-switch, insan step-up, test zayıflatma yasağı ve main/production sınırı için owner ve fail-closed sonuç açıkça tanımlıdır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{id}} yetki sınırlarını görev türü, hedef seviye, izinli eylem, yasak hedef, insan onayı ve durma koşulu sütunlarıyla kaynak belgelere izlenebilir biçimde kaydet."
+          ],
+          "test-plan": [
+            "Yetkisiz main push, app/module otomasyonu, test zayıflatma, ruleset bypass ve kill-switch bypass için fail-closed negatif oracle'ları testten önce yaz."
+          ],
+          "db-schema": [
+            "Yeni ürün şeması üretme; görev sözleşmesinin mevcut agentPolicy/autonomy/forbiddenTargets alanlarına eşlenmesini ve alan dışı yetki yükseltmenin reddedilmesini doğrula."
+          ],
+          "verification": [
+            "Matrisi 5 yetki seviyesi, forbiddenTargets, kill-switch, step-up ve insan merge sınırına karşı satır satır denetle; gerçek PR/CI kanıtı yoksa sonucu NOT-RUN bırak."
+          ],
+          "release-maintenance": [
+            "Kill-switch, insan step-up sahibi, periyodik kural gözden geçirme tarihi ve yetki değişikliğinde yeniden doğrulanacak negatif kontrolleri devir kaydına ekle."
+          ]
+        },
+        "risks": [
+          {
+            "id": "ai-authority-creep",
+            "desc": "Ajanın görev kapsamını genişletmesi veya kırmızı testi gevşeterek yetkisiz bir tamamlanma iddiası üretmesi.",
+            "severity": "critical",
+            "mitigation": "Autonomy/forbiddenTargets matrisi ve negatif oracle'lar fail-closed çalışır; seviye yükseltme, merge ve üretim değişikliği yalnız kayıtlı insan onayıyla ilerler."
+          }
+        ]
+      }
+    },
+    {
+      "id": "deployment-runbook",
+      "sources": ["docs/deploy-separation-runbooks.md"],
+      "selector": {
+        "nodeIds": ["deploy-yap"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için docs-viewer publish, local generated product run ve Hetzner production deploy akışlarını tetikleyici, aktör, insan onayı, bloklayıcı kapı, healthcheck ve rollback alanlarıyla üç ayrı runbook olarak hazırla.",
+          "Her deploy hedefi için kanıt bekleme kaydı hazırla; gerçek PR/CI/test/deploy referansı gelene kadar evidence ve durum alanlarını NOT-RUN olarak bırak."
+        ],
+        "acceptanceCriteria": [
+          "3/3 yürütme hedefi ayrı satırlarda tanımlıdır; GitHub Pages yalnız docs-viewer yayınıdır, local akış production değildir ve yalnız Hetzner akışı product production olarak işaretlidir.",
+          "Production negatif oracle'ları migration başarısızlığında deploy durdurma, health/smoke başarısızlığında önceki sürüme dönüş ve canary hata oranı %0.1'i aştığında otomatik rollback koşullarını kapsar."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Üç deploy hedefinin ortamını, production statüsünü, yetkili aktörünü, W4-05 önkoşulunu ve canlı deploy/infrastructure provisioning non-goal'ını ayrı gereksinimler olarak kaydet."
+          ],
+          "test-plan": [
+            "Önce docs-deploy=product-deploy karışıklığı, yetkisiz AI deploy, migration failure, health/smoke failure ve rollback failure negatiflerini yaz."
+          ],
+          "db-schema": [
+            "Migration runbook'unda expand ve contract adımlarını ayrı release'lere böl; dolu downgrade yolu ile rollback kararını tanımla, ancak bu görevde migration veya ürün şeması değiştirme."
+          ],
+          "verification": [
+            "Üç deploy hedefinin runbook, owner, approval, healthcheck ve rollback alanlarını doğrula; placeholder veya çalıştırılmamış kaydı verified sayma."
+          ],
+          "release-maintenance": [
+            "Her runbook için review takvimi, rollback sahibi, son deploy/drill tarihi ve eskiyen kanıtı yeniden NOT-RUN'a çevirme kuralını kaydet."
+          ]
+        },
+        "risks": [
+          {
+            "id": "deploy-evidence-confusion",
+            "desc": "Docs Pages yayınının product production deploy'u sayılması veya planlanmış bir drill'in çalıştırılmış kanıt gibi geri yazılması.",
+            "severity": "critical",
+            "mitigation": "Üç hedefin production statüsünü ayrı tut; yalnız gerçek pipeline/drill referansları evidence durumunu yükseltsin ve diğer tüm kayıtlar NOT-RUN kalsın."
+          }
+        ]
+      }
+    },
+    {
+      "id": "operations-runbook-drills",
+      "sources": ["docs/platform-w4-06-operations-runbook-drills-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["deploy-yap"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için incident, rollback, migration ve tenant-support runbook dosyaları ile her biri için owner, review date, predecessor, risk-register bağı ve NOT-RUN drill logu."
+        ],
+        "acceptanceCriteria": [
+          "4/4 runbook ve 4/4 drill log hedefi ayrı listelenir; owner, review date, önkoşul, adım, beklenen sonuç ve durma koşulu eksiksizdir.",
+          "W4-05 predecessor kanıtı ve gerçek drill çıktısı yoksa durum NOT-RUN kalır; planlanan senaryo çalıştırılmış evidence sayılmaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Incident, rollback, migration ve tenant-support drill kapsamını W4-05 predecessor ve risk-register satırına bağla; canlı product deploy bu görevde non-goal kalsın."
+          ],
+          "test-plan": [
+            "Her drill için success, stop, escalation ve rollback oracle'ını çalıştırmadan önce tanımla; docs-only planı PASS yapan negatif fixture ekle."
+          ],
+          "verification": [
+            "Runbook, drill log, owner/review date ve gerçek zaman damgalı çıktı olmadan hiçbir drill'i verified işaretleme."
+          ],
+          "release-maintenance": [
+            "Son drill tarihi, sonraki tetikleyici, stale evidence düşürme ve runbook review takvimini owner ile kaydet."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-customer-handoff",
+      "sources": ["docs/platform-customer-pr-execution-handoff-2026-07-09.md"],
+      "selector": {
+        "nodeIds": [
+          "customer",
+          "platform-customer-graphql",
+          "platform-customer-model",
+          "platform-customer-seed",
+          "platform-customer-ui"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} ({{id}}) için CUST-01..CUST-06 sırasındaki ilgili aşamayı, exact predecessor'ı, izinli dosya yüzeyini, non-goal'ı, test komutunu ve beklenen evidence alanlarını gösteren yürütme kartı hazırla.",
+          "Customer model, GraphQL, UI, seed ve uçtan uca akış arasında tenant isolation, authz, audit append, outbox event ve gözlemlenebilirlik sorumluluklarını tek bir katmanlar-arası sözleşme matrisinde bağla.",
+          "CUST-06 tamamlanmadan Wave 2'yi açmayan, gerçek PR/CI/test referansları gelene kadar placeholder ve NOT-RUN durumunu koruyan evidence writeback taslağı üret."
+        ],
+        "acceptanceCriteria": [
+          "Selector'daki 5/5 node kimliği model, GraphQL, UI, seed veya üst Customer handoff sorumluluğuna ve CUST-01..CUST-06 zincirindeki exact predecessor'a eşlenmiştir.",
+          "Model, GraphQL, UI, seed ve e2e katmanlarının her biri için en az bir pozitif ve bir negatif oracle vardır; modelde tenant_id+email benzersizliği, GraphQL/e2e'de cross-tenant ret ve UI'da yetkisiz görünürlük reddi açıkça ölçülür.",
+          "CUST-06 kapısı create/list/detail/update smoke ile authz ve cross-tenant negatiflerini zorunlu tutar; tüm gerçek PR, CI, test ve rapor referansları dolmadan Wave 2 durumu ilerlemez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "{{id}} kapsamını CUST aşaması, predecessor evidence, tenant_id, capability/authz, audit, outbox, allowed-files ve non-goal alanlarıyla kaynaklara izlenebilir biçimde sabitle."
+          ],
+          "test-plan": [
+            "Geliştirmeden önce tenant içi başarı, cross-tenant ret, unauthenticated/forbidden ret, audit append, customer.created/customer.updated outbox ve deterministic seed tekrar çalıştırma oracle'larını ilgili katmana dağıt."
+          ],
+          "db-schema": [
+            "Customer modelinde tenant_id zorunluluğu, tenant_id+email benzersizliği, reversible upgrade/downgrade ve invalid/cross-tenant fixture beklentisini tanımla; UI veya seed aşamasının şema kapsamını büyütmesini yasakla."
+          ],
+          "verification": [
+            "CUST-01..CUST-06 predecessor zincirini ve 5/5 seçili node eşlemesini denetle; PR/CI/test/e2e çıktısı yalnız gerçek referansla verified olur, handoff dokümanı runtime kanıtı sayılmaz."
+          ],
+          "release-maintenance": [
+            "CUST-06 evidence paketi, rollback notu, contract/event uyumluluğu ve seed idempotency tekrar kontrolü tamamlanmadan Customer dalgasını veya Wave 2'yi release-ready olarak işaretleme."
+          ]
+        },
+        "risks": [
+          {
+            "id": "customer-sequence-or-isolation-bypass",
+            "desc": "Predecessor zinciri atlanarak Customer katmanlarının ayrışması, tenant izolasyonunun zayıflaması veya docs-only handoff'un runtime evidence sayılması.",
+            "severity": "critical",
+            "mitigation": "CUST aşamalarını fail-closed predecessor kapılarıyla sırala; cross-tenant negatifleri her veri yüzeyinde zorunlu kıl ve yalnız gerçek PR/CI/test referanslarıyla durum ilerlet."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-customer-model",
+      "sources": ["docs/platform-cust02-customer-model-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-model"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için CUST-02 allowed-files sınırında tenant-aware SQLAlchemy/SQLModel modeli, reversible Alembic migration ve invalid/cross-tenant fixture paketi."
+        ],
+        "acceptanceCriteria": [
+          "Customer modelinde tenant_id zorunlu ve indekslidir; tenant_id+email tekilliği DB seviyesinde zorlanır.",
+          "Upgrade/downgrade, invalid email/duplicate ve en az 10 cross-tenant erişim testi gerçek CUST-02 komutuyla çalışmadan evidence PASS olmaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "CUST-01 predecessor evidence, model/migration allowed-files ve GraphQL/UI/seed non-goal'larını development öncesi sabitle."
+          ],
+          "test-plan": [
+            "Model ve migration kodundan önce tenant_id, email tekilliği, invalid fixture, cross-tenant ve downgrade testlerini kırmızı yaz."
+          ],
+          "db-schema": [
+            "Customer tablo/indeks/constraint ve geri alınabilir migration'ı yalnız CUST-02 dosya yüzeyinde tanımla."
+          ],
+          "verification": [
+            "CUST-02 testCommand ve gerçek diff olmadan model/migration durumunu verified yapma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-customer-graphql",
+      "sources": ["docs/platform-cust03-customer-graphql-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-graphql"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için CUST-03 allowed-files içinde list/detail/create/update GraphQL sözleşmesi, tenant/authz guard, audit append ve customer.created/updated outbox olayları."
+        ],
+        "acceptanceCriteria": [
+          "Her resolver tenant ve permission kontrolü taşır; unauthenticated, forbidden ve cross-tenant vakalar yan etkisiz reddedilir.",
+          "Create/update tam bir audit kaydı ve transaction-bound outbox olayı üretir; retry duplicate event veya mutation oluşturmaz."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "CUST-02 model evidence, GraphQL allowed-files, event schema ve UI/seed non-goal'larını sabitle."
+          ],
+          "test-plan": [
+            "Query/mutation happy path'ten önce unauthenticated, forbidden, cross-tenant, audit/outbox eksikliği ve retry negatiflerini kırmızı yaz."
+          ],
+          "verification": [
+            "CUST-03 testCommand, audit satırı ve outbox fixture'ı gerçek çıktıya çözülmeden verified yazma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-customer-ui",
+      "sources": ["docs/platform-cust04-customer-ui-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-ui"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için CUST-04 allowed-files içinde route, list, detail ve form ekranları; TanStack Query bağı, paylaşılan tokenlar ve canonical Storybook durumları."
+        ],
+        "acceptanceCriteria": [
+          "Liste/detail/form happy, empty, loading, error, validation, permission ve long-content durumları klavye/axe testleriyle kapsanır.",
+          "Yetkisiz eylem görünmez ve mutation backend'de yeniden doğrulanır; UI model/GraphQL/seed şemasını genişletmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "CUST-03 GraphQL evidence, route/screen allowed-files, master-component kararı ve backend/seed non-goal'larını sabitle."
+          ],
+          "test-plan": [
+            "Story state, interaction, keyboard, axe, permission ve responsive senaryolarını UI kodundan önce kırmızı yaz."
+          ],
+          "verification": [
+            "CUST-04 unit/e2e, Storybook URL ve a11y sonucu gerçek artefakta çözülmeden UI'yı verified yapma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-customer-seed",
+      "sources": ["docs/platform-cust05-customer-seed-agent-pack-2026-07-09.md"],
+      "selector": { "nodeIds": ["platform-customer-seed"] },
+      "content": {
+        "deliverables": [
+          "{{title}} için CUST-05 allowed-files içinde tenant-aware, deterministic ve tekrar çalıştırılabilir Customer seed/fixture paketi ile güvenli cleanup sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Aynı seed iki kez çalıştığında duplicate Customer üretmez ve tenantlar arası veri karıştırmaz.",
+          "Fixture sabit ve geçerli kimliklerle model/GraphQL/UI senaryolarını besler; cleanup başka tenant veya production verisini silmez."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "CUST-04 predecessor evidence, seed/fixture allowed-files, deterministic anahtar ve model/GraphQL/UI non-goal'larını sabitle."
+          ],
+          "test-plan": [
+            "İlk koşum, ikinci idempotent koşum, iki tenant izolasyonu, invalid fixture ve güvenli cleanup testlerini önce kırmızı yaz."
+          ],
+          "verification": [
+            "CUST-05 testCommand ve iki koşum sonucu gerçek çıktıya çözülmeden seed evidence PASS yazma."
+          ]
+        }
+      }
+    },
+    {
+      "id": "platform-customer-e2e",
+      "sources": ["docs/platform-cust06-customer-e2e-evidence-agent-pack-2026-07-09.md"],
+      "selector": {
+        "nodeIds": [
+          "customer",
+          "platform-customer-graphql",
+          "platform-customer-ui",
+          "platform-customer-seed"
+        ]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için CUST-06 create/list/detail/update dikey akışı, authz/cross-tenant negatifleri, audit/outbox/seed idempotency sonuçları ve açılabilir evidence writeback paketi."
+        ],
+        "acceptanceCriteria": [
+          "Customer create→list→detail→update smoke aynı tenantta geçer; unauthenticated, forbidden ve cross-tenant erişimler reddedilir.",
+          "Gerçek API/UI testleri, audit/outbox kayıtları ve rapor referansları dolmadan CUST-06 veya Wave 2 durumu ilerlemez."
+        ],
+        "phaseCriteria": {
+          "test-plan": [
+            "CUST-02..05 predecessor kanıtları geldikten sonra e2e happy path, authz, cross-tenant, audit/outbox ve seed retry oracle'larını çalıştır."
+          ],
+          "verification": [
+            "Evidence alanlarını yalnız gerçek PR/CI/test/report işaretleriyle doldur; handoff veya placeholder'ı runtime kanıtı sayma."
+          ],
+          "release-maintenance": [
+            "CUST-06 rollback notu, stale evidence düşürme ve Wave 2 açma karar sahibini kaydet."
+          ]
+        }
+      }
+    },
+    {
+      "id": "governance-gates",
+      "sources": ["docs/ci-conformance-gates.md"],
+      "selector": {
+        "nodeIds": ["std-ci-gates"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için yedi ADR-0026/ADR-0027 standart kapısını checker yolu, giriş sözleşmesi, bloklayıcı sonuç ve sorumlu ile gösteren CI conformance matrisi hazırla."
+        ],
+        "acceptanceCriteria": [
+          "Yedi standart/yönetişim kapısının 7/7'sinde checker yolu, denetlenen sözleşme, yeşil koşul ve bloklayıcı kırmızı sonuç doludur; belge bağlantısı tek başına gate-pass sayılmaz.",
+          "Her checker için deterministik giriş fixture'ı, anlaşılır fail mesajı, exit-code semantiği ve workflow'daki bloklayıcı sırası tanımlıdır."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Her gate satırında authority source, checker owner, input contract, blocking semantics, workflow sırası ve gereken evidence sınıfını kaydet."
+          ],
+          "test-plan": [
+            "Önce eksik checker, bozuk input, sahte exit 0, anlaşılmaz fail mesajı ve workflow'da atlanan gate için negatif oracle'ları tanımla."
+          ],
+          "db-schema": [
+            "Yeni ürün şeması üretme; gate girdilerini mevcut makine-okunur standard/ref sözleşmelerine eşle ve checker'a özel fixture üret."
+          ],
+          "verification": [
+            "7/7 gate'in checker yolu, exit-code davranışı, workflow sırası ve kırmızı/yeşil fixture sonucunu sayısal olarak denetle."
+          ],
+          "release-maintenance": [
+            "Checker veya kaynak sözleşme değiştiğinde gate matrisini yeniden bağla, stale evidence'i düşür ve workflow required-check listesini yeniden doğrula."
+          ]
+        },
+        "risks": [
+          {
+            "id": "green-docs-false-readiness",
+            "desc": "Belge bağlantısı veya eksik checker'ın yeşil conformance sonucu gibi yorumlanması ve deploy'un gerçek bloklayıcı kapı olmadan ilerlemesi.",
+            "severity": "critical",
+            "mitigation": "Her gate'i gerçek checker, kırmızı fixture, exit-code ve workflow required-check kanıtına bağla; eksik satırı fail-closed tut."
+          }
+        ]
+      }
+    }
+  ]
+}

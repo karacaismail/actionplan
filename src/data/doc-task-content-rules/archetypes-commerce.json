@@ -1,0 +1,281 @@
+{
+  "rules": [
+    {
+      "id": "inventory-stock",
+      "sources": ["docs/archetype-inventory-stock-directive.md"],
+      "selector": {
+        "nodeIds": ["s-inventory"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için warehouse, stock item, lot, serial, reservation ve append-only stock movement kayıtlarını; bakiye türetimi, transfer ve reversal kurallarıyla birleştiren stok metamodeli."
+        ],
+        "acceptanceCriteria": [
+          "quantity_on_hand doğrudan yazılamaz; yalnız stock_movement toplamından türetilir ve her hareket sonrası giriş-çıkış eşitliği doğrulanır.",
+          "stock_movement UPDATE veya DELETE edilemez; hatalı hareket orijinali koruyan reversed_movement_id bağlı yeni kayıtla düzeltilir.",
+          "İki eşzamanlı istek son birimi rezerve etmeye çalıştığında yalnız biri başarılı olur ve aktif rezervasyon toplamı mevcut bakiyeyi aşamaz.",
+          "Aynı source_ref/reason/occurred_at worker retry'ında ikinci hareket oluşmaz; başka tenant deposuna erişim en az 10 negatif vakada reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Depo, stok kalemi, lot, seri, rezervasyon ve hareket sahipliği tanımlanır; miktarlar çıplak number yerine Measure atomu kullanır.",
+            "Negatif stok politikası deny|allow|allow-with-approval olarak açık beyan edilir; varsayılan deny ve adjustment insan onaylıdır."
+          ],
+          "test-plan": [
+            "Negatif stok, bakiye türetimi, append-only/reversal, çift rezervasyon, eşzamanlı yarış, atomik transfer, lot/seri ve expiry release senaryoları test-önce yazılır.",
+            "Worker retry idempotency, approval_ref'siz adjustment ve en az 10 cross-tenant negatif vaka bloklayıcı entegrasyon testidir."
+          ],
+          "db-schema": [
+            "warehouse, stock_item, lot, serial, reservation ve stock_movement tabloları tenant_id, Measure alanları, source_ref ve gerekli tekillik/indekslerle tanımlanır.",
+            "stock_movement için UPDATE/DELETE yetkisi kaldırılır; transfer iki hareketi ortak transfer_pair_id ile tek transaction'da üretir ve downgrade yolu tanımlıdır."
+          ],
+          "verification": [
+            "Sipariş→rezervasyon→movement referans akışında bakiye yalnız bir kez değişir; concurrent son-birim testi oversell üretmez.",
+            "Append-only DB bariyeri, reversal net etkisi, RLS ve scale-invariant idempotency sonucu doğrulanır."
+          ],
+          "release-maintenance": [
+            "Stok düzeltmesi geçmiş movement'ı değiştirmez; reversal ile uygulanır ve migration rollback'inde lot/seri/rezerve bakiye izlenebilirliği korunur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-inventory-oversell-double-count",
+            "desc": "Eşzamanlı rezervasyon veya worker retry aynı stoğu iki kez ayırıp bakiyeyi yanlış düşürebilir.",
+            "severity": "critical",
+            "mitigation": "Satır kilidi/atomik rezervasyon, tenant-scoped idempotency ve append-only movement türetimini concurrency ve retry testleriyle zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "marketplace-listing",
+      "sources": ["docs/archetype-listing-directive.md"],
+      "selector": {
+        "nodeIds": ["s-marketplace"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için category/EAV doğrulamalı listing yaşam döngüsü, append-only fiyat geçmişi, insan moderasyonu, ödeme-onaylı doping ve idempotent marketplace olay akışı."
+        ],
+        "acceptanceCriteria": [
+          "Listing seçilen kategoriye ait öznitelik formunu kullanır; tanımsız öznitelik veya yanlış atomik tip kayıt öncesi reddedilir.",
+          "Durum makinesi dışı geçişler reddedilir ve published durumu yalnız insan moderatör onayıyla oluşur.",
+          "Her fiyat değişikliği aynı transaction'da sıralı append-only price_record üretir; geçmiş UPDATE veya DELETE edilemez.",
+          "Doping yalnız ödeme onayından sonra boost verir, filtre dışı ilanı sonuç kümesine eklemez ve süresi bitince etkisi düşer.",
+          "listing.published, price_changed ve doping.purchased olayları tekrar teslimde çift kayıt üretmeden outbox'tan yayınlanır; komşu tenant sonuçta sıfır ilan görür."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Listing, price history, doping order, category/EAV ve moderation sınırları tanımlanır; owner ana verisi ilana kopyalanmaz.",
+            "Doping'in yalnız sıralama sinyali olduğu, filtre/tenant/yetki kapsamını genişletemediği açık non-goal olarak korunur."
+          ],
+          "test-plan": [
+            "İzinli/yasak durum geçişleri ve rol matrisi; atomik EAV reddi; üç fiyat değişimi; doping payment/expiry/refund ve filtre-dışı negatif vaka test-önce kapsanır.",
+            "Komşu tenant liste/detay/arama/harita erişimi ile üç outbox olayının retry idempotency'si entegrasyon ve E2E testlerinde doğrulanır."
+          ],
+          "db-schema": [
+            "listing, price_record ve doping_order tenant_id, lifecycle status, active_range ve event idempotency alanlarıyla tanımlanır; price_record append-only tutulur.",
+            "Kategori öznitelikleri EAV/tipli atom referanslarıyla saklanır; kategori başına ayrı kolon/tablo üretimi yapılmaz."
+          ],
+          "verification": [
+            "İlan ver→moderasyon→publish→fiyat değiştir→doping satın al→active_range bitişi yolculuğu beklenen durumlar, price history ve outbox kayıtlarıyla kontrol edilir.",
+            "Arama sonucu doping boost'u uygularken filtre ve tenant kümesinin değişmediği negatif sorgularla doğrulanır."
+          ],
+          "release-maintenance": [
+            "Listing veya doping değişikliği mevcut price history ve yayın olaylarını silmez; geri alma typed lifecycle transition ve yeni append kaydıyla yapılır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-listing-boost-boundary",
+            "desc": "Doping kuralı filtre veya tenant sınırını aşarsa ödeme yapan ilan yetkisiz sonuçlara enjekte edilebilir.",
+            "severity": "high",
+            "mitigation": "Önce filtre+tenant aday kümesini oluştur, boost'u yalnız bu kümenin sıralamasında uygula ve filtre-dışı/komşu-tenant negatif testlerini bloklayıcı yap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "messaging-thread",
+      "sources": ["docs/archetype-messaging-thread-directive.md"],
+      "selector": {
+        "nodeIds": ["s-conversational"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için channel/member, thread, message revision, reaction, thread-cursor read receipt ve idempotent mention bildirimlerinden oluşan tenant-izole mesajlaşma metamodeli."
+        ],
+        "acceptanceCriteria": [
+          "message.body her değişiklikten önce eski gövdeyi message_revision'a yazar; geçmişsiz değişim reddedilir.",
+          "Soft-delete mesajı normal kullanıcıdan gizler fakat satır ve revision geçmişini audit/moderatör erişimi için fiziksel olarak korur.",
+          "Read receipt thread başına üye imleciyle yalnız ileri gider ve N üye×M mesaj yerine N kayıt ölçeğinde çalışır.",
+          "Mention worker retry aynı bildirim olayını ikinci kez üretmez; everyone/here yalnız yetkili admin veya owner tarafından kullanılabilir.",
+          "Başka tenant veya channel_member olmayan aktör erişimi en az 10 negatif vakada reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Channel üyeliği, thread durumu, message/revision, reaction, read receipt ve mention sahipliği ayrılır; fiziksel mesaj silme kapsam dışıdır.",
+            "Gerçek-zamanlı fanout primitifinin mevcut olmadığı açık tutulur; app-özel WebSocket sunucusu sessiz varsayılmaz."
+          ],
+          "test-plan": [
+            "Revision zorunluluğu, soft-delete görünürlük matrisi, read cursor geriye-gidiş reddi, reaction tekilliği, mention retry ve moderation approval negatif testleri yazılır.",
+            "En az 10 cross-tenant ve üyelik dışı erişim vakası ile N-üye cursor performans testi çalıştırılır."
+          ],
+          "db-schema": [
+            "channel, channel_member, thread, message, message_revision, reaction, read_receipt ve mention tenant_id ile tanımlanır; reaction ve mention idempotency tekillikleri zorlanır.",
+            "message soft-delete alanı ve revision zinciri fiziksel geçmişi korur; read_receipt last_read_message_id thread+member kapsamında tekildir."
+          ],
+          "verification": [
+            "Channel→thread→message→edit→revision→read cursor→mention akışı aynı retry'da tek bildirim ve eksiksiz geçmiş üretecek şekilde doğrulanır.",
+            "Normal kullanıcı ile moderatör/audit rolünün soft-delete görünürlük farkı ve RLS/üyelik bariyerleri kontrol edilir."
+          ],
+          "release-maintenance": [
+            "Mesaj düzeltmesi revision ekler ve silme soft-delete kullanır; rollback geçmiş mesaj/revision satırlarını silmez, thread state'i typed transition ile geri alınır."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-messaging-history-leak",
+            "desc": "Üyelik/RLS kontrolü gevşerse mesajlar tenant dışına sızabilir; fiziksel silme veya revision atlama denetim geçmişini yok edebilir.",
+            "severity": "critical",
+            "mitigation": "Tenant+channel_member çift bariyerini her join'de doğrula, soft-delete ve zorunlu revision zincirini DB/entegrasyon negatif testleriyle koru."
+          }
+        ]
+      }
+    },
+    {
+      "id": "order-line",
+      "sources": ["docs/archetype-order-line-item-directive.md"],
+      "selector": {
+        "nodeIds": ["s-sales"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için order, order_line ve fulfillment kayıtlarını total invariantı, inventory guard, typed lifecycle action ve scale-invariant yazma zarfıyla birleştiren sipariş metamodeli."
+        ],
+        "acceptanceCriteria": [
+          "order.total her zaman order_line.line_total toplamına eşittir; uyuşmazlık tanım anında reddedilir.",
+          "Confirmed, fulfilled veya closed sipariş satırına doğrudan UPDATE/DELETE reddedilir; değişiklik yalnız onaylı amend_order typed action ile yapılır.",
+          "draft→confirmed geçişi inventory yeterlilik kontrolü olmadan ilerlemez ve fulfillment toplamı order_line.quantity değerini aşamaz.",
+          "Order ile line Money para birimi uyuşmazlığı CurrencyMismatchError üretir; boş sipariş confirmed olamaz.",
+          "Confirm, amend ve cancel yazmaları order etiketli outbox+idempotency+audit zarfını taşır; başka tenant erişimi en az 10 negatif vakada reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Order header, line item, fulfillment ve lifecycle sınırları tanımlanır; fiyat/vergi türetimi ve stok sahipliği ilgili computation/inventory katmanlarında kalır.",
+            "Onay/kapatma/iptal yalnız approval_ref taşıyan insan onaylı typed action ile yürür; AI draft dışında mutasyon yapamaz."
+          ],
+          "test-plan": [
+            "Total uyuşmazlığı, confirmed satır UPDATE/DELETE, stok-yetersiz onay, durum sırası, partial shipment aşımı, currency mismatch, boş order ve AI approval negatif testleri yazılır.",
+            "En az 10 cross-tenant vaka ile confirm/amend/cancel idempotency ve outbox tek-etki davranışı entegrasyon testinde kapsanır."
+          ],
+          "db-schema": [
+            "order, order_line ve fulfillment tenant_id, Money/Measure, order_number tekilliği, lifecycle status ve typed-action audit referanslarıyla tanımlanır.",
+            "Confirmed sonrası line mutasyonunu engelleyen DB/servis bariyeri ve Alembic downgrade yolu eklenir."
+          ],
+          "verification": [
+            "Order oluştur→line ekle→inventory guard→confirm→partial fulfillment→close akışı total ve shipped_quantity invariantlarıyla doğrulanır.",
+            "check-scale-invariant confirm_order, amend_order ve cancel_order handler'larında zarfın eksiksiz olduğunu kontrol eder."
+          ],
+          "release-maintenance": [
+            "Onaylı sipariş düzeltmesi satır overwrite yerine audit'li amend/cancel/compensation action üretir; geçmiş order sürümü ve outbox izi korunur."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-order-total-stock-drift",
+            "desc": "Satır toplamı, sipariş toplamı ve inventory rezervasyonu ayrışırsa fazla satış veya yanlış tahsilat oluşabilir.",
+            "severity": "critical",
+            "mitigation": "Total=sum(lines), inventory guard, partial-shipment sınırı ve order scale-invariant zarfını typed action testleriyle atomik olarak zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "pim-taxonomy",
+      "sources": ["docs/archetype-taxonomy-directive.md"],
+      "selector": {
+        "nodeIds": ["s-pim"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için ETIM/UNSPSC/GPC/GS1 taxonomy registry, versioned node ağacı, product binding ve node+ancestor suggested-attribute çözümünü birleştiren sınıflandırma grafiği."
+        ],
+        "acceptanceCriteria": [
+          "Geçerli GTIN/GLN GS1 mod-10 kontrolünden geçer; bozuk kontrol hanesi ve code_pattern dışı taxonomy node kodu yazma anında reddedilir.",
+          "Aynı ürün ETIM, UNSPSC ve GPC düğümlerine birlikte bağlanabilir; taxonomy döngüsü ve AI'ın approval_ref'siz bind_node denemesi reddedilir.",
+          "Node+ancestor suggested attributes deterministik birleşir; öneri zorunlu validation sayılmaz ve tenant dışı taxonomy/product bağı reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "Taxonomy registry, node, version ve product binding sahipliği ayrılır; ProductFamily/Variant motoru bu kuralın non-goal'ıdır.",
+            "Suggested attribute öneri olarak kalır; zorunlu validation ile karıştırılmaz ve AI yalnız approval_ref bekleyen draft taxonomy binding önerir."
+          ],
+          "test-plan": [
+            "GTIN/GLN checksum, code pattern, multi-standard binding, tree cycle, suggested-attribute inheritance, AI approval ve en az 10 tenant negatif vaka test-önce kapsanır."
+          ],
+          "db-schema": [
+            "taxonomy, taxonomy_node ve product_taxonomy tenant_id, version, code_pattern, node_code tekilliği ve ltree path/GiST ile tanımlanır."
+          ],
+          "verification": [
+            "Ürün taxonomy düğümüne bağlandığında node+ancestor suggested attributes doğru birleşir; checksum, cycle guard ve tenant sınırı gerçek fixture ile doğrulanır.",
+            "check-core-contract ve dependency kontrolleri tenant guard, resolver koruması, checksum computation referansı, cycle guard ve indeksleri denetler."
+          ],
+          "release-maintenance": [
+            "Taxonomy sürüm geçişi eski sözlüğü ve ürün bağlarını silmez; deprecated olarak korur, yeni version binding'iyle ilerler ve downgrade test edilir."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-pim-taxonomy-integrity",
+            "desc": "Bozuk checksum, cycle veya tenant dışı taxonomy bağı ürünü yanlış sınıflandırıp katalog bütünlüğünü bozabilir.",
+            "severity": "high",
+            "mitigation": "Checksum/code-pattern, cycle guard, tenant kapsamı ve insan onaylı binding'i negatif testlerle zorla."
+          }
+        ]
+      }
+    },
+    {
+      "id": "pim-variant-family",
+      "sources": ["docs/archetype-variant-attribute-family-directive.md"],
+      "selector": {
+        "nodeIds": ["s-pim"]
+      },
+      "content": {
+        "deliverables": [
+          "{{title}} için ProductFamily, AttributeTemplate, Attribute/Option ve Variant kayıtlarını family→product→variant nearest-wins mirası ve en fazla üç eksenli deterministik SKU üretimiyle bağlayan varyant sözleşmesi."
+        ],
+        "acceptanceCriteria": [
+          "Öznitelik değeri variant→product→family nearest-wins sırasıyla çözülür; override üst değeri silmez ve çözüm kaynağı izlenebilir kalır.",
+          "Varyant ekseni en fazla üçtür; dördüncü eksen reddedilir, 3×4 kombinasyonu tam 12 SKU üretir ve aynı tenant içinde SKU tekildir.",
+          "Required öznitelik çözümsüzse publish engellenir; runtime öznitelik migration gerektirmeden eklenir ve tenant dışı family/variant erişimi reddedilir."
+        ],
+        "phaseCriteria": {
+          "requirements": [
+            "ProductFamily, template, attribute, option ve variant sahipliğini taxonomy binding'den ayır; AI yalnız approval_ref bekleyen family/axis taslağı önersin."
+          ],
+          "test-plan": [
+            "Nearest-wins, override, family yayılımı, max-3 axis, 3×4=12 SKU, required publish gate, runtime attribute, locale label ve tenant izolasyonu testlerini önce kırmızı yaz."
+          ],
+          "db-schema": [
+            "Family/AttributeTemplate/Attribute/Option/Variant şemaları tenant-scoped code/SKU tekilliği, tipli runtime değerler ve filtrelenen alanlar için uygun GIN/materialized indeks taşır."
+          ],
+          "verification": [
+            "Family template değişikliğinin ürün override'ını ezmediğini, tam varyant kümesini deterministik ürettiğini ve required publish gate'i doğru blokladığını fixture ile doğrula."
+          ],
+          "release-maintenance": [
+            "Family/attribute değişikliğini geçmiş override ve SKU kimliğini bozmadan yeni sürümle uygula; migration downgrade ve yeniden-üretim farkını kanıtla."
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-pim-variant-cartesian",
+            "desc": "Sınırsız veya kararsız varyant ekseni kartezyen SKU patlaması, duplicate SKU ve kayıp override üretebilir.",
+            "severity": "high",
+            "mitigation": "Üç eksen tavanını, deterministik kombinasyon sayısını, tenant SKU tekilliğini ve nearest-wins kaynağını contract testleriyle zorla."
+          }
+        ]
+      }
+    }
+  ]
+}
