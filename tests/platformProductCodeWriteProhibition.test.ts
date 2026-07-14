@@ -350,3 +350,69 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
       expect(gate).toContain(token);
   });
 });
+
+describe("PWB-7 aktif platform handoff yetkisi", () => {
+  const activeHandoffDocs = [
+    "docs/meta-framework-implementation-development-plan.md",
+    "docs/kernel-sdk-app-delivery-sequence.md",
+    "docs/deploy-separation-runbooks.md",
+    "docs/platform-implementation-execution-queue-2026-07-09.md",
+    "docs/platform-kdp01-archetype-storage-agent-pack-2026-07-14.md",
+    "docs/platform-initial-11-pr-execution-handoff-2026-07-09.md",
+    "docs/platform-customer-pr-execution-handoff-2026-07-09.md",
+    "docs/platform-wave2-repeatability-pr-handoff-2026-07-09.md",
+    "docs/platform-wave3-enterprise-pr-handoff-2026-07-09.md",
+    "docs/platform-wave4-portfolio-pr-handoff-2026-07-09.md",
+    "docs/platform-pr01-implementation-dispatch-2026-07-09.md",
+  ];
+
+  it.each(activeHandoffDocs)("%s açık ve fail-closed authority lock taşır", (file) => {
+    const content = read(file);
+    for (const token of [
+      "AUTHORITY-LOCK",
+      "Codex → PM → uzman ajanlar → Claude workers/slaves",
+      "human-developer-only",
+      "read-only-audit",
+    ])
+      expect(content).toContain(token);
+  });
+
+  it.each([
+    "reports/platform-implementation-execution-queue-2026-07-09.json",
+    "reports/kernel-data-plane-readiness-queue-2026-07-14.json",
+  ])("%s yürütme yetkisini makine-okunur kilitler", (file) => {
+    const queue = readJson(file);
+    expect(queue.authority).toEqual({
+      chain: [
+        "codex-master",
+        "pm-successor-coordinator",
+        "specialist-agents",
+        "claude-workers-slaves",
+      ],
+      finalAuthority: "codex",
+      coordinationAuthority: "pm",
+      aiAccess: "read-only-audit",
+      executor: "human-developer-only",
+      claudeInvocation: "codex-only-bounded-firstParty-max-fail-closed",
+    });
+  });
+
+  it("aktif handoff belgeleri modele platform PR veya kod yazarlığı vermez", () => {
+    const content = activeHandoffDocs.map((file) => read(file)).join("\n");
+    for (const forbidden of [
+      /Implementation coding agent/i,
+      /Kod ajani veya vibecoder/i,
+      /implementation operatör(?:ü|üne)?/i,
+      /AI ajan[^.\n]{0,100}(?:PR açar|PR açabilir|hazırlık PR)/i,
+      /Geliştirici\s*\/\s*AI ajan/i,
+    ])
+      expect(content).not.toMatch(forbidden);
+  });
+
+  it("CI kapısı tarih bağımsız platform agent pack keşfi ve aktif handoff taraması yapar", () => {
+    const gate = read("tools/agents/check-platform-write-boundary.mjs");
+    expect(gate).toContain("\\d{4}-\\d{2}-\\d{2}");
+    expect(gate).toContain("activeHandoffDocs");
+    expect(gate).toContain("activeQueuePaths");
+  });
+});

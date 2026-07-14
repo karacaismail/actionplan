@@ -1,5 +1,10 @@
 # PR-01 Implementation Dispatch — 2026-07-09
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 Durum: docs-only dispatch handoff
 Next actionable item: `PR-01`
 Agent pack: `docs/platform-pr01-ci-baseline-agent-pack-2026-07-09.md`
@@ -7,7 +12,10 @@ Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Branch: `task/platform-cicd-ci-baseline`
 WBS node'ları: `platform-cicd`, `platform-factory`
 
-Bu belge product code üretmez. Amaç, 37 parçalık execution queue hazırlandıktan sonra implementation operatörünün sıradaki tek açılabilir işi yanlış sıraya sapmadan başlatması için tek sayfalık dispatch sözleşmesi vermektir.
+Bu belge product code üretmez. Amaç, 37 parçalık execution queue hazırlandıktan sonra
+insan geliştiricinin sıradaki tek açılabilir işi yanlış sıraya sapmadan başlatması için
+tek sayfalık dispatch sözleşmesi vermektir. AI aktörleri bu belgeyi yalnız
+`read-only-audit` kapsamında kullanır.
 
 ## Queue Gerçeği
 
@@ -89,7 +97,7 @@ PR-01 yalnız CI/remote/default-branch baseline kapsamındadır:
 Stop koşulu actionplan'da `done` veya `verified` anlamına gelmez; yalnız PR-01'in neden açılamadığını belgeler.
 Stop koşulu oluşursa operatör `docs/platform-pr01-blocker-report-template-2026-07-09.md` içindeki alanlarla blocker paketi döner; remote, PR URL veya CI URL uydurmaz.
 Mevcut gözlemdeki remote boşluğu `docs/platform-pr01-current-blocker-report-2026-07-09.md` içinde komut çıktılarıyla kayıtlıdır.
-Remote unblock owner girdisi gelmeden implementation operatörü remote eklemez, PR açmaz ve CI evidence uydurmaz.
+Remote unblock owner girdisi gelmeden insan geliştirici remote eklemez, PR açmaz ve CI evidence uydurmaz.
 Owner girdisi geldikten sonra da gerçek PR/CI evidence oluşmadan actionplan queue ilerlemez.
 Remote verification geçse bile PR URL, merge SHA ve CI run URL oluşmadan PR-01 `verified` yapılmaz.
 Remote verification raporu yalnız PR-01 CI baseline çalışmasına geçiş önkoşuludur; PR-01 completion evidence değildir.

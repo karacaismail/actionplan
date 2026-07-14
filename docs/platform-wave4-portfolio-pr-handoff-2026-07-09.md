@@ -1,5 +1,10 @@
 # Platform Wave 4 Portfolio PR Handoff — 2026-07-09
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 Durum: docs-only implementation handoff
 Kapsam: `/Users/karaca/DEV/mimari/platform`
 Kaynak readiness kaydı: `docs/wave4-portfolio-scale-readiness-gap-2026-07-09.md`

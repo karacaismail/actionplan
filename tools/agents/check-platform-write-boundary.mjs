@@ -28,6 +28,23 @@ const requiredFiles = [
   "docs/storybook-implementation.md",
   "docs/storybook-master-component-integration-directive.md",
 ];
+const activeHandoffDocs = [
+  "docs/meta-framework-implementation-development-plan.md",
+  "docs/kernel-sdk-app-delivery-sequence.md",
+  "docs/deploy-separation-runbooks.md",
+  "docs/platform-implementation-execution-queue-2026-07-09.md",
+  "docs/platform-kdp01-archetype-storage-agent-pack-2026-07-14.md",
+  "docs/platform-initial-11-pr-execution-handoff-2026-07-09.md",
+  "docs/platform-customer-pr-execution-handoff-2026-07-09.md",
+  "docs/platform-wave2-repeatability-pr-handoff-2026-07-09.md",
+  "docs/platform-wave3-enterprise-pr-handoff-2026-07-09.md",
+  "docs/platform-wave4-portfolio-pr-handoff-2026-07-09.md",
+  "docs/platform-pr01-implementation-dispatch-2026-07-09.md",
+];
+const activeQueuePaths = [
+  "reports/platform-implementation-execution-queue-2026-07-09.json",
+  "reports/kernel-data-plane-readiness-queue-2026-07-14.json",
+];
 const directiveName = "platform-product-code-write-prohibition-directive.md";
 const directive = read(`docs/${directiveName}`);
 
@@ -219,10 +236,44 @@ for (const file of modelRunnerPaths) {
     if (!content.includes(token)) errors.push(`${file}: model komut karantinası eksik (${token})`);
 }
 
-const packPattern = /^platform-.*-agent-pack-2026-07-09\.md$/;
+const authorityTokens = [
+  "AUTHORITY-LOCK",
+  "Codex → PM → uzman ajanlar → Claude workers/slaves",
+  "human-developer-only",
+  "read-only-audit",
+];
+for (const file of activeHandoffDocs) {
+  const content = read(file);
+  for (const token of authorityTokens)
+    if (!content.includes(token)) errors.push(`${file}: aktif handoff yetkisi eksik (${token})`);
+  for (const forbidden of [
+    /Implementation coding agent/i,
+    /Kod ajani veya vibecoder/i,
+    /implementation operatör(?:ü|üne)?/i,
+    /AI ajan[^.\n]{0,100}(?:PR açar|PR açabilir|hazırlık PR)/i,
+    /Geliştirici\s*\/\s*AI ajan/i,
+  ])
+    if (forbidden.test(content)) errors.push(`${file}: aktif model yürütme yetkisi ${forbidden}`);
+}
+
+const expectedQueueAuthority = {
+  chain: ["codex-master", "pm-successor-coordinator", "specialist-agents", "claude-workers-slaves"],
+  finalAuthority: "codex",
+  coordinationAuthority: "pm",
+  aiAccess: "read-only-audit",
+  executor: "human-developer-only",
+  claudeInvocation: "codex-only-bounded-firstParty-max-fail-closed",
+};
+for (const file of activeQueuePaths) {
+  const actual = readJson(file).authority;
+  if (JSON.stringify(actual) !== JSON.stringify(expectedQueueAuthority))
+    errors.push(`${file}: makine-okunur yürütme yetkisi geçersiz`);
+}
+
+const packPattern = /^platform-.*-agent-pack-\d{4}-\d{2}-\d{2}\.md$/;
 const packFiles = fs.readdirSync(path.join(root, "docs")).filter((file) => packPattern.test(file));
-if (packFiles.length !== 37)
-  errors.push(`platform handoff pack sayısı 37 değil: ${packFiles.length}`);
+if (packFiles.length !== 38)
+  errors.push(`platform handoff pack sayısı 38 değil: ${packFiles.length}`);
 for (const file of packFiles) {
   const relative = `docs/${file}`;
   const content = read(relative);

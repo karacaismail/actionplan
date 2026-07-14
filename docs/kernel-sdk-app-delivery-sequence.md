@@ -1,5 +1,10 @@
 # Kernel -> SDK -> App-Core -> App-Modules -> App Delivery Sequence
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 Tarih: 2026-07-08
 Durum: Kanonik, baglayici
 Kapsam: actionplan handoff dokumanlari, implementation workspace yonlendirmesi, vibecoding/vobecoding ajan sozlesmeleri.
@@ -110,7 +115,8 @@ App assembly asamasinda yeni is mantigi yazilmaz. Eksik is mantigi varsa ilgili 
 
 ## AI/Vibecoding Kural Seti
 
-Kod ajani veya vibecoder su sinirlari asamaz:
+İnsan platform geliştiricisi şu sınırları aşamaz; AI aktörleri bu bölümü yalnız
+`read-only-audit` ve handoff kontrolü için kullanır:
 
 - Kernel hazir degilse SDK veya app-core kodu uretmez; eksik readiness patch onerir.
 - SDK hazir degilse app-core production kodu uretmez.
