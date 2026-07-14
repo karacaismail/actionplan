@@ -1,86 +1,67 @@
-# Dosya 5 — Durum Raporu ve Sırada Ne Var
+# Dosya 5 — 2026-07-01 Tarihsel Durum Raporu
 
-**Tarih:** 2026-07-01 · **Kapsam:** Bu turda paralel ajan filosuyla üretilen tüm artefaktların envanteri + yeni bulgular + bu ortamın sınırı + önceliklendirilmiş sıradaki adımlar.
+> **ARCHIVED-HUMAN-HANDOFF** — bu belge güncel yürütme planı değildir.
+> Yetki zinciri: `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır.
 
-**Bu dosya nedir:** "Neler yapıldı, eksik ne kaldı, sırada ne var?" sorusunun tek-yerde cevabı.
-**Ne yapar:** Üretileni sayar, boşluğu adlandırır, sırayı aktör-açık verir.
-**Ne yapmaz:** Yeni sözleşme yazmaz; mevcut duruma ayna tutar.
+Bu dosya 2026-07-01 tarihindeki planlama/sözleşme çıktılarını kaydeder. Eski swarm, model,
+sunucu ve sonraki-adım talimatları kaldırılmıştır. Güncel kararlar gerçek repo, kanonik JSON ve
+CI kanıtına dayanır.
 
----
+## 1. Tarihsel artefakt özeti
 
-## 1. Bu turda ne üretildi — 35 yeni artefakt
+O turda şu anlatı katmanları hazırlanmıştı:
 
-Sade özet: geçen tur 5 *planlama* dokümanı vardı ama asıl ADR/sözleşme/standart dosyaları yoktu. Bu turda 14 paralel doküman-ajanı bunları üretti: 35 dosya, ~5500 satır. Tablodan önce not: hepsi Türkçe, emoji yok, aktör-açık, stack yasaklarına uygun, tablolar açıklamalı ve şemalarda mock veri yok — doğrulandı.
+| Küme | Tarihsel kapsam |
+|---|---|
+| ADR taslakları | kernel kimliği, Actor/Party, Capability, Mode-Profile, Computation, PDP |
+| Primitif sözleşmeleri | actor, entitlement, mode, derivation ve policy karar zarfları |
+| Çatı yönergeleri | AI governance, Surface v2, scale invariant |
+| Numeronym kaynakları | sınıflandırma, audit ve standard taslakları |
 
-| Küme | Dosyalar | Sayı |
-|---|---|---|
-| ADR taslakları | `docs/adr-K1-kernel-kimlik`, `adr-A1-actor-party`, `adr-A2-capability`, `adr-A3-mode-profile`, `adr-A4-computation`, `adr-P1-pdp` | 6 |
-| Primitif sözleşmeleri | `docs/actor-party-contract`, `capability-entitlement-contract`, `mode-profile-contract`, `computation-derivation-contract`, `pdp-policy-contract` | 5 |
-| Çatı yönergeleri | `docs/ai-governance-master`, `surface-v2-directive`, `scale-invariant-directive` | 3 |
-| Numeronym meta | `docs/standards/numeronym-siniflandirma`, `00-standards-index` | 2 |
-| Denetim | `docs/standards/enterprise-standards-audit-2026-07-01` | 1 |
-| Standart sözleşmeleri | `docs/standards/01…14` (i18n-g11n, a11y, authn-iam, rbac-abac, c13n, normalization, api-interop, o11y, customization-p13n, business-model, security-edge, devops, testing, readiness-checklist) | 14 |
-| **Toplam** | | **31 dosya** (+ önceki 5 plan = 36) |
+Bu sayımlar yalnız tarihsel doküman üretimini gösterir; schema, runtime, deployment veya ürün
+hazırlığı kanıtı değildir.
 
-Not: "13 standart" hedeflemiştim; ajanlar 14 numaralı dosya (readiness-checklist) dahil 14 standart-dosyası + 3 meta üretti. Toplam yeni dosya 35 (yukarıdaki 31 + numaralandırmada birleşenler).
+## 2. Tarihsel gap'lerin bugünkü yorumu
 
----
+- Anlatı standardının bulunması makine-okunur JSON ve CI enforcement anlamına gelmez.
+- ADR taslağının bulunması kararın kilitli veya runtime'ın implemented olduğu anlamına gelmez.
+- Platform path'i yazılmış olması gerçek branch, PR, test veya deployment evidence değildir.
+- Seed/jeneratör kaynağı güncel kanonik node'ları güvenle yeniden üretebildiğini ayrıca
+  kanıtlamalıdır.
 
-## 2. Kümülatif durum — portföyün neresindeyiz
+Güncel kernel sonucu `NO-GO`dur: 41 kernel düğümünün runtime evidence alanı boştur ve veri
+düzlemi zinciri implementation kanıtı taşımamaktadır. Kanonik ayrıntı:
+`docs/kernel-readiness-gap-analysis-2026-07-14.md`.
 
-Sade özet: **planlama ve sözleşme katmanı artık büyük ölçüde tam.** Eksik olan, bu katmanın iki alt-çıktısı (makine-okur JSON kontratları) ve asıl ürün kodu — ki kod bu ortamda üretilemez (aşağıda §4).
+## 3. Güncel yetki ve yürütme ayrımı
 
-- **Tamamlanan (bu + önceki tur):** 5 plan dokümanı + 6 ADR + 5 primitif sözleşmesi + 3 çatı yönergesi + 17 standart/meta dosyası. Yani "ne yapılacak, hangi sözleşmeye göre, hangi standartla, hangi ajan modeliyle" sorularının hepsi yazılı.
-- **Kısmi:** Standart *anlatı* dokümanları (docs/standards/*.md) hazır; ama bunların makine-okur ikizleri (`src/data/standards/*.json`) henüz yok — CI'ın `check-standards-coverage` kapısı bunları arıyor.
-- **Başlamamış:** Platform monorepo'sunda gerçek kod (5 primitif + dikey dilim). Bu, plan-01 Dalga 1+'in işi ve sizin Hetzner swarm'ınızda koşulur.
+| Rol | Yetki |
+|---|---|
+| Codex | kapsam, öncelik, rollback, Git/PR ve nihai teslim kararı |
+| PM | Codex sonrasında sıra, bağımlılık ve evidence koordinasyonu |
+| Uzman ajanlar | salt-okunur alan bulgusu ve acceptance önerisi |
+| Claude worker/slave | yalnız Codex'in sınırlı çağrısında ara çıktı |
+| İnsan geliştirici | onaylanmış handoff'u platform reposunda test-first uygular |
 
----
+AI aktörleri platformda branch, commit, PR, test, migration veya ürün kodu yazmaz. Provider
+ve hesap doğrulaması sağlanmayan Claude çağrısı fail-closed durur.
 
-## 3. Yeni bulgular — bu tur ortaya çıkanlar
+## 4. Güvenli devam sırası
 
-Denetim ajanı, önceki C1-C6'ya ek iki şey buldu. Sade özet: biri yeni bir çelişki (C7), diğeri standart dosyalarının makine-ikizinin eksikliği. Tablodan önce not: ikisi de "başlamadan düzeltilecek" kalemler.
+1. Actionplan'da kanonik docs/JSON/task-page tutarlılığını test-first düzelt.
+2. Base execution queue'daki predecessor evidence'i doğrula.
+3. Kernel veri düzlemi için yalnız bir sonraki insan geliştirici packet'ini aç.
+4. İnsan geliştirici kırmızı test → implement → test → PR/CI/evidence sırasını izler.
+5. Codex kanıtı bağımsız doğrulamadan status veya completion ilerlemez.
 
-| Bulgu | Ne | Risk | Çözüm | Sahip |
-|---|---|---|---|---|
-| **C7** | `check-i18n` ve `check-core-contract` kapıları dokümanlarda adı geçiyor ama `tools/agents/`'da yok ve `deploy.yml`'de koşmuyor | Standart "beyan edilmiş" ama CI zorlaması yok — sahte güvence | İki kapıyı yaz veya doküman referanslarını "planlanan" olarak işaretle | Ajan PR → İnsan |
-| **JSON boşluğu** | Yeni standartların (sso, mfa, oidc, g11n, c12n, c13n, i14y, iac, edge-security) makine-kontratı (`src/data/standards/*.json`) yok; yalnız anlatı var | `check-standards-coverage` yeni ref'leri çözemez | Her yeni standart için JSON kontrat + `StandardRefsSchema` genişletme (plan-02 PROMPT 3'ün JSON ayağı) | Ajan PR → İnsan |
+Bugünkü ilk kernel artışı hâlâ `KDP-01` ArcheType storage sözleşmesidir; fakat yalnız base
+queue sırası, insan queue-order kararı, tenancy/schema portları ve temiz worktree kanıtı
+sağlanınca code-start değerlendirilebilir.
 
-Önceki C1-C6 doğrulandı (özellikle **C1** `AGENTS.md:82` Prisma, **C3** `surface.ts` wcag "2.2-AAA", **C4** surface i18n yok, **C6** 5 primitif şemada yok).
+## 5. Rollback sınırı
 
----
-
-## 4. Bu ortamın sınırı — neyi buradan yapamam
-
-Aktör-açık ve dürüst olmak gerekirse: Cowork'teki bu oturum yalnız `actionplan` deposuna (plan+sözleşme katmanı) bağlı. Gerçek ürün kodu iki ayrı yerde: `platform` monorepo'su ve `atonota/kernel` — **ikisi de bu ortama bağlı değil.** Bu yüzden:
-
-- **Yapabildiğim (ve yaptığım):** ADR, sözleşme, standart, plan, denetim — yani *kod için sözleşme katmanı*.
-- **Buradan yapamadığım:** 5 primitifin FastAPI/SQLAlchemy kodu, dikey dilim, migration'lar. Bunları *sizin Hetzner kutunuzdaki* `run-swarm.mjs` + Claude Code ajanları `platform` repo'suna yazar (plan-04 akışı). Ben o repoyu göremediğim için oraya kod üretemem.
-- **Sizin elinizle yapılacak:** `AGENTS.md:82` düzeltmesi (canon; ajan dokunamaz) ve 6 ADR'ı "Taslak"tan "Kilitli"ye çevirmek (karar sizin).
-
-Yani "50+ ajanla kod yaz" adımı teknik olarak burada değil, orkestrasyonu plan-04'te yazılı olan sizin sunucunuzda gerçekleşir. Ben burada o filonun çalışacağı **tüm sözleşme zeminini** hazırladım.
-
----
-
-## 5. Sırada ne var — önceliklendirilmiş, aktör-açık
-
-Sade özet: önce insan-eli iki küçük iş, sonra sözleşme katmanının makine-ikizleri, sonra Hetzner'de kod dalgaları. Sıra kritik; atlanırsa ajanlar bayat/eksik zemine kod üretir.
-
-**Adım 0 — İnsan, hemen (kod yok, ~1 saat).**
-Siz `AGENTS.md:82`'yi düzeltin (Prisma → FastAPI+SQLAlchemy) ve 6 ADR'ı inceleyip "Kilitli"ye çevirin. Bu iki iş tüm zinciri açar.
-
-**Adım 1 — Ajan PR → İnsan onay (bu ortamda yapılabilir, ~1 gün).**
-Bir sonraki turda ben veya bir ajan: (a) C3/C4 için `surface.ts` şema düzeltmesi + testi, (b) C7 için eksik CI kapılarını yaz (`check-i18n`, `check-core-contract`) veya referansları temizle, (c) yeni standartların makine-kontratlarını (`src/data/standards/*.json`) + `StandardRefsSchema` genişletmesini üret. Hepsi küçük PR'lar, insan merge eder.
-
-**Adım 2 — Hetzner swarm, plan-01 Dalga 1 (kod; ~3-5 hafta).**
-*OpenClaw* dört worktree'de dört primitif ajanını (party/capability/computation + sırada mode) koşar; *ajanlar* test-önce kod yazar, PR açar; *n8n* size bildirir; *insan* merge eder; PDP en son entegre olur. (plan-01 §Dalga 1 promptu + plan-04 §7 akışı.)
-
-**Adım 3 — Dalga 2 dikey dilim (kod; ~4-6 hafta).**
-Commerce "B2C→B2B mod anahtarı" uçtan uca; beş primitifin birlikte çalıştığının kanıtı (plan-01 §Dalga 2).
-
-**Adım 4 — Dalga 3 + Dalga 4 paralel (kod; ~4-8 hafta).**
-Standart uygulaması (plan-02 prompt zinciri) ve ops kası (scale-invariant + DR + secrets) eşzamanlı; birbirinden bağımsız (plan-01 §5).
-
-**Adım 5 — Dalga 5+ portföy (kod; app başına ~4-10 hafta).**
-16 uygulamayı §3 sırasıyla (Commerce → PIM/MRP/Accounting → CRM/PMS → Fleetx/Teams → Social/Drive/Email → IBYS/HRMS → CMS/Kariyer/QMS) L1→L2→L3 merdiveninden geçir; bağımsız app'ler paralel.
-
-Tek cümlelik sıradaki adım: **Adım 0'ı siz yapın (AGENTS.md + ADR kilidi); ardından "Adım 1'i başlat" deyin, ben makine-kontratlarını ve şema düzeltmelerini bu ortamda üreteyim — kod dalgaları ise Hetzner swarm'ında başlar.**
+Bu arşiv dosyalarının geri alınması yalnız doküman tarihini geri getirir; runtime rollback
+değildir. Platform rollback'i insan geliştiricinin PR kapsamı, migration downgrade, deploy
+runbook'u ve gözlemlenmiş evidence ile ayrı planlanır.
