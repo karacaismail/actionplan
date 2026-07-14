@@ -61,6 +61,12 @@ const commerceMaterializedRuleTargets = {
     nodeIds: ["s-commerce", "sdk-public-contract", "sdk-app-core-template", "std-ci-gates"],
   },
 };
+const legacySeedPaths = [
+  "tools/agents/seed-edu.mjs",
+  "tools/agents/seed-egitim.mjs",
+  "tools/agents/seed-kararlar.mjs",
+  "tools/agents/seed-sus.mjs",
+];
 const activeQueuePaths = [
   "reports/platform-implementation-execution-queue-2026-07-09.json",
   "reports/kernel-data-plane-readiness-queue-2026-07-14.json",
@@ -361,6 +367,23 @@ for (const [id, contract] of Object.entries(commerceMaterializedRuleTargets)) {
     if (JSON.stringify(publicNodes.get(nodeId)) !== JSON.stringify(canonical))
       errors.push(`${nodeId}: public/data/nodes.json canonical parity kaybı`);
   }
+}
+
+for (const file of legacySeedPaths) {
+  const source = read(file);
+  for (const token of [
+    "ARCHIVED-LEGACY-MUTATOR",
+    "FAIL-CLOSED",
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "read-only-audit",
+    "human-developer-only",
+    "process.exit(2)",
+  ])
+    if (!source.includes(token))
+      errors.push(`${file}: legacy seed karantina tokenı eksik (${token})`);
+  for (const forbidden of ["seed-docs-lib.mjs", "apply(", "writeFileSync", "const CONTENT"])
+    if (source.includes(forbidden))
+      errors.push(`${file}: legacy canonical mutator izi (${forbidden})`);
 }
 
 const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];
