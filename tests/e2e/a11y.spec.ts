@@ -51,6 +51,9 @@ test.describe("Erişilebilirlik (axe-core)", () => {
 
   for (const route of ["/table", "/execution", "/audit", "/gantt", "/workload", "/reports"]) {
     test(`${route} WCAG A/AA ihlali içermez`, async ({ page }) => {
+      // /execution renders the largest analytics table; axe needs more than the
+      // global 30s budget on shared GitHub runners. The assertion stays intact.
+      if (route === "/execution") test.setTimeout(60_000);
       await page.goto(route, { waitUntil: "networkidle" });
       const sonuc = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
       const ihlaller = bloklayiciIhlaller(sonuc.violations);
