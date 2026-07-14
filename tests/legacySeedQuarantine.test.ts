@@ -176,9 +176,10 @@ describe("legacy canonical seed karantinası", () => {
   });
 });
 
-// --- Q1 paylaşılan mutator ailesi ------------------------------------------------------
-// 8 shared-mutator tüketici + helper + public agents:seed rotası fail-closed olmalı.
-// Kalan 20 doğrudan yazıcı Q2/Q3 için exact pending allowlist; bu testte ASLA spawn edilmez.
+// --- Q1 shared + Q2 wholesale arşiv ailesi ---------------------------------------------
+// 8 shared-mutator tüketici + 11 Q2 wholesale arşiv stub + helper + public agents:seed
+// rotası fail-closed olmalı. Kalan 9 doğrudan yazıcı Q3 için exact pending allowlist;
+// bu testte ASLA spawn edilmez.
 const GUARD_PATH = "tools/agents/legacy-seed-quarantine.mjs";
 const HELPER_PATH = "tools/agents/seed-docs-lib.mjs";
 const Q1_GATE_PATH = "tools/agents/check-legacy-seed-quarantine.mjs";
@@ -192,27 +193,30 @@ const sharedEntrypoints = [
   "tools/agents/seed-meta.mjs",
   "tools/agents/seed-sus.mjs",
 ] as const;
-const pendingDirectWriters = [
+// Q2: wholesale arşive alınan 11 doğrudan yazıcı — tek koşulsuz guard'ı import eden stub.
+const guardedQ2 = [
   "tools/agents/seed-aday.mjs",
-  "tools/agents/seed-backend.mjs",
-  "tools/agents/seed-content-collaboration.mjs",
   "tools/agents/seed-core-operations.mjs",
   "tools/agents/seed-crosscut.mjs",
-  "tools/agents/seed-customer-revenue.mjs",
-  "tools/agents/seed-data-intelligence.mjs",
-  "tools/agents/seed-dx-atomic.mjs",
-  "tools/agents/seed-finance.mjs",
   "tools/agents/seed-frontend.mjs",
-  "tools/agents/seed-hr.mjs",
   "tools/agents/seed-kernel.mjs",
   "tools/agents/seed-kernel-deep.mjs",
   "tools/agents/seed-layer0.mjs",
   "tools/agents/seed-layer1.mjs",
   "tools/agents/seed-platform-horizontal.mjs",
   "tools/agents/seed-scale.mjs",
+  "tools/seed-pilot-traceability.mjs",
+] as const;
+const pendingDirectWriters = [
+  "tools/agents/seed-backend.mjs",
+  "tools/agents/seed-content-collaboration.mjs",
+  "tools/agents/seed-customer-revenue.mjs",
+  "tools/agents/seed-data-intelligence.mjs",
+  "tools/agents/seed-dx-atomic.mjs",
+  "tools/agents/seed-finance.mjs",
+  "tools/agents/seed-hr.mjs",
   "tools/agents/seed-supply-chain.mjs",
   "tools/agents/seed-vertical.mjs",
-  "tools/seed-pilot-traceability.mjs",
 ] as const;
 
 describe("Q1 legacy seed karantinası — statik kapsam", () => {
@@ -225,12 +229,18 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
     expect(result.status).toBe(0);
   });
 
-  it("korpus 29 = 8 shared + 20 pending + helper; kesişim yok", () => {
+  it("korpus 29 = 8 shared + 11 Q2 + 9 pending + helper; kesişim yok", () => {
     expect(sharedEntrypoints).toHaveLength(8);
-    expect(pendingDirectWriters).toHaveLength(20);
-    const all = new Set([...sharedEntrypoints, ...pendingDirectWriters, HELPER_PATH]);
+    expect(guardedQ2).toHaveLength(11);
+    expect(pendingDirectWriters).toHaveLength(9);
+    const all = new Set([...sharedEntrypoints, ...guardedQ2, ...pendingDirectWriters, HELPER_PATH]);
     expect(all.size).toBe(29);
-    for (const seedPath of [...sharedEntrypoints, ...pendingDirectWriters, HELPER_PATH])
+    for (const seedPath of [
+      ...sharedEntrypoints,
+      ...guardedQ2,
+      ...pendingDirectWriters,
+      HELPER_PATH,
+    ])
       expect(fs.existsSync(path.join(ROOT, seedPath))).toBe(true);
   });
 
@@ -272,6 +282,36 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
     }
   });
 
+  it("11 Q2 wholesale arşiv stub tek koşulsuz guard'ı import eder, writer izi taşımaz", () => {
+    for (const seedPath of guardedQ2) {
+      const source = read(seedPath);
+      const specifier = seedPath.startsWith("tools/agents/")
+        ? "./legacy-seed-quarantine.mjs"
+        : "./agents/legacy-seed-quarantine.mjs";
+      expect(source).toContain(`import "${specifier}"`);
+      expect(source).toContain("ARCHIVED-LEGACY-MUTATOR");
+      expect(source).toContain("FAIL-CLOSED");
+      for (const forbidden of [
+        "writeFileSync",
+        "readFileSync",
+        "node:fs",
+        "NODES",
+        "const CONTENT",
+        "apply(",
+        "featureDefs",
+      ])
+        expect(source).not.toContain(forbidden);
+      for (const bypass of [
+        "ALLOW_LEGACY_SEED",
+        "SEED_APPLY",
+        "process.env",
+        "process.argv",
+        "--force",
+      ])
+        expect(source).not.toContain(bypass);
+    }
+  });
+
   it("public agents:seed rotası guard'a gider, seed-kernel'e gitmez", () => {
     const pkg = JSON.parse(read("package.json"));
     const agentsSeed = pkg.scripts["agents:seed"] as string;
@@ -288,7 +328,7 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
 
 describe("Q1 legacy seed karantinası — davranış (statik kanıttan SONRA)", () => {
   const fuzzEnv = { ...process.env, ALLOW_LEGACY_SEED: "1", SEED_APPLY: "1", CI: "false" };
-  const guardTargets: string[] = [GUARD_PATH, HELPER_PATH, ...sharedEntrypoints];
+  const guardTargets: string[] = [GUARD_PATH, HELPER_PATH, ...sharedEntrypoints, ...guardedQ2];
 
   const staticGateGreen = () => {
     const gate = spawnSync(process.execPath, [path.join(ROOT, Q1_GATE_PATH)], {
