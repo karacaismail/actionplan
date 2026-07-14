@@ -360,10 +360,11 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
     expect(governance).not.toContain("plan-04-paralel-ajan-orkestrasyon-2026-07-01.md` §1");
   });
 
-  it("CI kapısı 38 tarih-bağımsız platform handoff paketini ve iki sabit QA runner'ını tarar", () => {
+  it("CI kapısı tarih-bağımsız 38 platform handoff paketini ve iki sabit QA runner'ını tarar", () => {
     const gate = read("tools/agents/check-platform-write-boundary.mjs");
     for (const token of [
       "platform-.*-agent-pack-\\d{4}-\\d{2}-\\d{2}",
+      "packFiles.length !== 38",
       "AUTHORITY-LOCK",
       "Human Developer Execution Packet",
       "tools/test-loop.mjs",
