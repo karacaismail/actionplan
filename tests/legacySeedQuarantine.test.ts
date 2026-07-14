@@ -176,13 +176,13 @@ describe("legacy canonical seed karantinası", () => {
   });
 });
 
-// --- Q1 shared + Q2 wholesale arşiv ailesi ---------------------------------------------
-// 8 shared-mutator tüketici + 11 Q2 wholesale arşiv stub + helper + public agents:seed
-// rotası fail-closed olmalı. Kalan 9 doğrudan yazıcı Q3 için exact pending allowlist;
-// bu testte ASLA spawn edilmez.
+// --- Q3 tam quarantine: shared + Q2 + Q3 wholesale arşiv ailesi -------------------------
+// 8 shared-mutator tüketici + 11 Q2 wholesale arşiv stub + 9 Q3 wholesale arşiv stub +
+// helper + public agents:seed rotası fail-closed olmalı. Q3 ile pending=0: bekleyen doğrudan
+// yazıcı KALMAZ. Statik kapı YEŞİL olana kadar hiçbir Q3 hedefi spawn/import EDİLMEZ.
 const GUARD_PATH = "tools/agents/legacy-seed-quarantine.mjs";
 const HELPER_PATH = "tools/agents/seed-docs-lib.mjs";
-const Q1_GATE_PATH = "tools/agents/check-legacy-seed-quarantine.mjs";
+const Q3_GATE_PATH = "tools/agents/check-legacy-seed-quarantine.mjs";
 const sharedEntrypoints = [
   "tools/agents/seed-build.mjs",
   "tools/agents/seed-edu.mjs",
@@ -207,7 +207,8 @@ const guardedQ2 = [
   "tools/agents/seed-scale.mjs",
   "tools/seed-pilot-traceability.mjs",
 ] as const;
-const pendingDirectWriters = [
+// Q3: wholesale arşive alınan son 9 doğrudan yazıcı — tek koşulsuz guard'ı import eden stub.
+const guardedQ3 = [
   "tools/agents/seed-backend.mjs",
   "tools/agents/seed-content-collaboration.mjs",
   "tools/agents/seed-customer-revenue.mjs",
@@ -218,10 +219,12 @@ const pendingDirectWriters = [
   "tools/agents/seed-supply-chain.mjs",
   "tools/agents/seed-vertical.mjs",
 ] as const;
+// Q3 sonrası pending set BOŞ: bekleyen doğrudan yazıcı kalmaz (pending=0).
+const pendingDirectWriters = [] as const;
 
-describe("Q1 legacy seed karantinası — statik kapsam", () => {
+describe("Q3 legacy seed tam karantinası — statik kapsam (29 dosya, pending=0)", () => {
   it("statik kapı (check-legacy-seed-quarantine) yeşil çıkar", () => {
-    const result = spawnSync(process.execPath, [path.join(ROOT, Q1_GATE_PATH)], {
+    const result = spawnSync(process.execPath, [path.join(ROOT, Q3_GATE_PATH)], {
       cwd: ROOT,
       encoding: "utf8",
     });
@@ -229,18 +232,14 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
     expect(result.status).toBe(0);
   });
 
-  it("korpus 29 = 8 shared + 11 Q2 + 9 pending + helper; kesişim yok", () => {
+  it("korpus 29 = 8 shared + 11 Q2 + 9 Q3 + helper; pending=0; kesişim yok", () => {
     expect(sharedEntrypoints).toHaveLength(8);
     expect(guardedQ2).toHaveLength(11);
-    expect(pendingDirectWriters).toHaveLength(9);
-    const all = new Set([...sharedEntrypoints, ...guardedQ2, ...pendingDirectWriters, HELPER_PATH]);
+    expect(guardedQ3).toHaveLength(9);
+    expect(pendingDirectWriters).toHaveLength(0);
+    const all = new Set([...sharedEntrypoints, ...guardedQ2, ...guardedQ3, HELPER_PATH]);
     expect(all.size).toBe(29);
-    for (const seedPath of [
-      ...sharedEntrypoints,
-      ...guardedQ2,
-      ...pendingDirectWriters,
-      HELPER_PATH,
-    ])
+    for (const seedPath of [...sharedEntrypoints, ...guardedQ2, ...guardedQ3, HELPER_PATH])
       expect(fs.existsSync(path.join(ROOT, seedPath))).toBe(true);
   });
 
@@ -312,6 +311,33 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
     }
   });
 
+  it("9 Q3 wholesale arşiv stub tek koşulsuz guard'ı import eder, writer izi taşımaz", () => {
+    for (const seedPath of guardedQ3) {
+      const source = read(seedPath);
+      expect(source).toContain('import "./legacy-seed-quarantine.mjs"');
+      expect(source).toContain("ARCHIVED-LEGACY-MUTATOR");
+      expect(source).toContain("FAIL-CLOSED");
+      for (const forbidden of [
+        "writeFileSync",
+        "readFileSync",
+        "node:fs",
+        "NODES",
+        "const CONTENT",
+        "apply(",
+        "featureDefs",
+      ])
+        expect(source).not.toContain(forbidden);
+      for (const bypass of [
+        "ALLOW_LEGACY_SEED",
+        "SEED_APPLY",
+        "process.env",
+        "process.argv",
+        "--force",
+      ])
+        expect(source).not.toContain(bypass);
+    }
+  });
+
   it("public agents:seed rotası guard'a gider, seed-kernel'e gitmez", () => {
     const pkg = JSON.parse(read("package.json"));
     const agentsSeed = pkg.scripts["agents:seed"] as string;
@@ -326,19 +352,26 @@ describe("Q1 legacy seed karantinası — statik kapsam", () => {
   });
 });
 
-describe("Q1 legacy seed karantinası — davranış (statik kanıttan SONRA)", () => {
+describe("Q3 legacy seed tam karantinası — davranış (statik kanıttan SONRA)", () => {
   const fuzzEnv = { ...process.env, ALLOW_LEGACY_SEED: "1", SEED_APPLY: "1", CI: "false" };
-  const guardTargets: string[] = [GUARD_PATH, HELPER_PATH, ...sharedEntrypoints, ...guardedQ2];
+  const guardTargets: string[] = [
+    GUARD_PATH,
+    HELPER_PATH,
+    ...sharedEntrypoints,
+    ...guardedQ2,
+    ...guardedQ3,
+  ];
 
   const staticGateGreen = () => {
-    const gate = spawnSync(process.execPath, [path.join(ROOT, Q1_GATE_PATH)], {
+    const gate = spawnSync(process.execPath, [path.join(ROOT, Q3_GATE_PATH)], {
       cwd: ROOT,
       encoding: "utf8",
     });
     return gate.status === 0;
   };
 
-  // Fail-safe: statik kapı yeşil değilse hiçbir probu çalıştırma; pending 20 ASLA spawn edilmez.
+  // Fail-safe: statik kapı yeşil değilse hiçbir probu çalıştırma; pending set (pending=0) ASLA
+  // spawn edilmez ve kapsam dışı hiçbir hedef koşturulmaz.
   const assertProbeSafe = (target: string) => {
     if (!staticGateGreen())
       throw new Error("UNSAFE-TEST-STOP: statik kapı yeşil değil, davranış probu çalıştırılamaz");
