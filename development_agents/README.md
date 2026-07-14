@@ -3,10 +3,11 @@
 Bu klasör, geliştirme işini planlayan ve denetleyen roller için `DIRECTIVE-ONLY` yetenek sözleşmesidir; kanonik repo kuralları [AGENTS.md](../AGENTS.md) ve [platform yazma yasağı](../docs/platform-product-code-write-prohibition-directive.md) altındadır.
 
 ## Yetki hiyerarşisi
+- Operasyonel sıra: **Codex → PM → uzman ajanlar → Claude workers/slaves**.
 - **Codex = MASTER:** kapsamı, önceliği, worker görevini, rollback'i ve teslim onayını belirleyen nihai denetçidir.
-- **PM = bağlı orkestra şefi:** akışı, bağımlılıkları, riskleri ve evidence paketini koordine eder; Codex adına karar vermez.
-- Uzman ajanlar yalnız açık, dar alt görevde worker/danışmandır; çıktıları doğrulanmamış ara üründür.
-- Claude yalnız Codex'in sınırlı review/implement göreviyle, `claude.ai / firstParty / max` doğrulanınca çalışır; koşul yoksa fail-closed durur.
+- **PM = Codex sonrasındaki ardıl koordinasyon yetkilisi:** akışı, bağımlılıkları, riskleri ve evidence paketini koordine eder; Codex adına nihai karar vermez.
+- Uzman ajanlar PM üzerinden Codex'e bağlıdır; yalnız açık, dar alt görevde danışmandır ve çıktıları doğrulanmamış ara üründür.
+- **Claude = worker/slave:** yalnız Codex'in sınırlı review/implement göreviyle, `claude.ai / firstParty / max` doğrulanınca çalışır; PM/uzmanlar çağıramaz, koşul yoksa fail-closed durur.
 
 ## Çalışma protokolü
 - Akış test-first ilerler: kırmızı beklenti, tek yazar uygulaması, yeşil doğrulama, bağımsız Codex denetimi.

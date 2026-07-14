@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const DIR = path.join(ROOT, "development_agents");
+const rootAgents = fs.readFileSync(path.join(ROOT, "AGENTS.md"), "utf8");
 const profiles = {
   ai_behavior: ["prompt injection", "rol ihlali", "tool"],
   backend: ["schema", "data flow", "server-side"],
@@ -59,7 +60,7 @@ describe("development agent profile catalog", () => {
     const rollback = read("rollback.md");
     for (const token of [
       "Codex = MASTER",
-      "PM = bağlı orkestra şefi",
+      "PM = Codex sonrasındaki ardıl koordinasyon yetkilisi",
       "test-first",
       "tek yazar",
       "human-developer-only",
@@ -72,5 +73,27 @@ describe("development agent profile catalog", () => {
     expect(readme).toContain("human-developer/operator-only");
     expect(rollback).toContain("Nihai rollback kararını Codex verir");
     expect(rollback).toContain("human-developer/operator-only");
+  });
+
+  it("enforces the Codex to PM to specialists to Claude authority chain", () => {
+    const readme = read("README.md");
+    for (const token of [
+      "Codex → PM → uzman ajanlar → Claude workers/slaves",
+      "Codex = MASTER",
+      "PM = Codex sonrasındaki ardıl koordinasyon yetkilisi",
+      "Claude = worker/slave",
+      "claude.ai / firstParty / max",
+    ]) {
+      expect(`${rootAgents}\n${readme}`).toContain(token);
+    }
+
+    for (const name of Object.keys(profiles).filter((name) => name !== "project_manager")) {
+      const content = read(`${name}.md`);
+      expect(content).toContain("PM üzerinden Codex'e bağlı");
+      expect(content).not.toContain("PM/Codex");
+    }
+
+    expect(rootAgents).toContain("src/data/generated/meta.json");
+    expect(rootAgents).not.toContain("(485 düğüm)");
   });
 });
