@@ -1,35 +1,45 @@
 #!/usr/bin/env node
 // Test döngüsü çalıştırıcısı — sıfır bağımlılık, ESM.
-// Kullanım: node tools/test-loop.mjs "npm test"
-// Verilen komutu en fazla 6 kez dener; ilk başarıda exit 0,
+// Kullanım: node tools/test-loop.mjs unit
+// İzinli sabit görevi en fazla 6 kez dener; ilk başarıda exit 0,
 // 6 denemede de başarısızsa son çıktıyı özetleyip exit 1 döner.
 
 import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const MAKS_DENEME = 6;
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const TASK_ALLOWLIST = Object.freeze({
+  typecheck: {
+    executable: process.execPath,
+    args: [path.join(ROOT, "node_modules", "typescript", "bin", "tsc"), "--noEmit"],
+  },
+  unit: {
+    executable: process.execPath,
+    args: [path.join(ROOT, "node_modules", "vitest", "vitest.mjs"), "run", "--run"],
+  },
+});
 const MODEL_COMMAND_DENYLIST =
   /(^|[\s;&|()])(?:claude|codex|aider|anthropic|bedrock|vertex|foundry)(?=$|[\s;&|()=-])|ANTHROPIC_API_KEY|api\.anthropic\.com/i;
+const taskKey = process.argv[2];
+const task = TASK_ALLOWLIST[taskKey];
 
-// argv[2..] tek bir komut dizgesi olarak alınır (tırnak içinde gelebilir).
-const komut = process.argv.slice(2).join(" ").trim();
-
-if (!komut) {
-  console.error('Kullanım: node tools/test-loop.mjs "<komut>"');
-  console.error('Örnek:    node tools/test-loop.mjs "npm test"');
-  process.exit(2);
-}
-if (MODEL_COMMAND_DENYLIST.test(komut)) {
-  console.error("[FAIL-CLOSED] Model/provider commands are not valid test-loop input.");
+if (process.argv.length !== 3 || MODEL_COMMAND_DENYLIST.test(taskKey ?? "") || !task) {
+  console.error(
+    `[FAIL-CLOSED] Unknown QA task. Allowed tasks: ${Object.keys(TASK_ALLOWLIST).join(", ")}.`,
+  );
   process.exit(2);
 }
 
-// Komutu kabuk üzerinden çalıştırır; çıktıyı hem aktarır hem de yakalar.
+// Sabit executable + argv ile çalıştırır; kabuk, cwd ve ek argüman kullanıcıdan alınmaz.
 function calistir(deneme) {
   return new Promise((resolve) => {
-    console.log(`\n=== Deneme ${deneme}/${MAKS_DENEME}: ${komut} ===`);
+    console.log(`\n=== Deneme ${deneme}/${MAKS_DENEME}: ${taskKey} ===`);
 
-    const cocuk = spawn(komut, {
-      shell: true,
+    const cocuk = spawn(task.executable, task.args, {
+      cwd: ROOT,
+      shell: false,
       stdio: ["inherit", "pipe", "pipe"],
     });
 

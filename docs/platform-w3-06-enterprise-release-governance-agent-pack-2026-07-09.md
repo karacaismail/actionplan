@@ -1,13 +1,18 @@
 # W3-06 Enterprise Release + Governance Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W3-06`
 Branch: `task/enterprise-release-governance`
 WBS node'ları: `std-ci-gates`, `deploy-yap`, `build-risk-defteri`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W3-05`
 
-Bu belge product code üretmez. Amaç, W3-05 Enterprise Observability Gates kanıtı kapandıktan sonra açılacak W3-06 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W3-05 Enterprise Observability Gates kanıtı kapandıktan sonra açılacak W3-06 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -20,7 +25,7 @@ W3-06 yalnız şu kanıtlar geldikten sonra başlar:
 - W3-04 reliability gates verified evidence
 - W3-05 observability gates verified evidence
 
-Bu kanıtlar yoksa W3-06 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ W3-06 şunları yapmaz:
 - Deploy/rollback evidence olmadan release-ready iddiası yazmaz.
 - Actionplan evidence/status alanlarını gerçek PR/CI/deploy/test kanıtı olmadan ilerletmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-05 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-05 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W3-06 Enterprise Release + Governance.
@@ -127,7 +132,7 @@ curl -fsS <production-url>/healthz
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

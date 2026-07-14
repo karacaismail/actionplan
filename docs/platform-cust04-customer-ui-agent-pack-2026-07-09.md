@@ -1,13 +1,18 @@
 # CUST-04 Customer UI Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-04`
 Branch: `task/platform-customer-ui`
 WBS node'u: `platform-customer-ui`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-03`
 
-Bu belge product code üretmez. Amaç, CUST-03 Customer GraphQL/API kanıtı kapandıktan sonra açılacak CUST-04 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, CUST-03 Customer GraphQL/API kanıtı kapandıktan sonra açılacak CUST-04 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ CUST-04 yalnız şu kanıtlar geldikten sonra başlar:
 - CUST-03 Customer GraphQL/API + authz/audit/event verified evidence
 - `platform-customer-ui` actionplan writeback'i
 
-Bu kanıtlar yoksa CUST-04 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -42,9 +47,9 @@ CUST-04 şunları yapmaz:
 - Capability-hidden navigation testini zayıflatmaz.
 - Generic SurfaceRenderer/Vitrin smoke'u Customer UI done kanıtı gibi sunmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-03 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-03 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-04 Customer UI.
@@ -111,7 +116,7 @@ pnpm --filter @platform/web run e2e -- customer.spec.ts
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

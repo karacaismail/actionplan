@@ -1,12 +1,17 @@
 # PR-01 CI Baseline Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-01`
 Branch: `task/platform-cicd-ci-baseline`
 WBS node'ları: `platform-cicd`, `platform-factory`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 
-Bu belge product code üretmez. Amaç, execution queue'da tek `next-actionable` item olan PR-01'i implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, execution queue'da tek `next-actionable` item olan PR-01'i yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Amaç
 
@@ -29,9 +34,9 @@ PR-01 şunları yapmaz:
 - Uzak GitHub repo URL'si uydurmaz.
 - `main` veya `master` branch'e doğrudan product code push etmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde kullanır:
 
 ```text
 Görev: PR-01 CI Baseline.
@@ -82,7 +87,7 @@ gh api repos/<owner>/<repo>/branches/<default-branch>/protection
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

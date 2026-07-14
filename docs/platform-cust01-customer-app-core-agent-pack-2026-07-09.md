@@ -1,13 +1,18 @@
 # CUST-01 Customer App-Core Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-01`
 Branch: `task/platform-customer-app-core`
 WBS node'ları: `platform-factory`, `k-capability`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-11`
 
-Bu belge product code üretmez. Amaç, PR-11 Hello Platform Boot Smoke kanıtı kapandıktan sonra açılacak CUST-01 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-11 Hello Platform Boot Smoke kanıtı kapandıktan sonra açılacak CUST-01 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -18,7 +23,7 @@ CUST-01 yalnız şu kanıtlar geldikten sonra başlar:
 - Tenant, authz, event/outbox, ECA, audit, capability, DB, observability ve SDK evidence writeback'leri
 - `platform-factory`, `k-capability`, `be-sdk` ve `dx-cli` actionplan writeback'leri
 
-Bu kanıtlar yoksa CUST-01 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -41,9 +46,9 @@ CUST-01 şunları yapmaz:
 - OrderOps, Inventory veya Wave 2 repeatability işine geçmez.
 - Capability gate testlerini zayıflatıp route/menu erişimini public yapmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-11 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-11 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-01 Customer App-Core.
@@ -109,7 +114,7 @@ pnpm --filter @platform/web run test -- customer-route
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

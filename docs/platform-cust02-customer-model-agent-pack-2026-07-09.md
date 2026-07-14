@@ -1,13 +1,18 @@
 # CUST-02 Customer Model Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-02`
 Branch: `task/platform-customer-model`
 WBS node'u: `platform-customer-model`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-01`
 
-Bu belge product code üretmez. Amaç, CUST-01 Customer App-Core kanıtı kapandıktan sonra açılacak CUST-02 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, CUST-01 Customer App-Core kanıtı kapandıktan sonra açılacak CUST-02 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ CUST-02 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-02 tenant context ve PR-03 authz/PDP evidence
 - `platform-factory`, `k-capability` ve `platform-customer-model` actionplan writeback'leri
 
-Bu kanıtlar yoksa CUST-02 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -42,9 +47,9 @@ CUST-02 şunları yapmaz:
 - OrderOps, Inventory veya başka domain model üretmez.
 - Irreversible/destructive migration veya rollback note olmayan migration eklemez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-01 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-01 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-02 Customer Model.
@@ -109,7 +114,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_customer_model.py tests
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

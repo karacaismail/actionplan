@@ -1,30 +1,50 @@
 #!/usr/bin/env node
 /**
- * qa-agent (3a, self-healing QA — güvenli mod) — bir komutu maks 6 kez çalıştırır;
+ * qa-agent (3a, self-healing QA — güvenli mod) — izinli bir görevi maks 6 kez çalıştırır;
  * her başarısızlıkta çıktıyı OKUR, hataları SINIFLANDIRIR (tsc / vitest / axe) ve
  * düzeltme ÖNERİSİ üretir. Otonom kod düzeltme YOK (3b ayrı/riskli). Düzelmezse raporlar.
  *
- * Kullanım: node tools/qa-agent.mjs "npm run typecheck && npm test"
+ * Kullanım: node tools/qa-agent.mjs typecheck
  */
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const MAX = 6;
-const cmd = process.argv.slice(2).join(" ") || "npm run typecheck && npm test";
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const TASK_ALLOWLIST = Object.freeze({
+  typecheck: {
+    executable: process.execPath,
+    args: [path.join(ROOT, "node_modules", "typescript", "bin", "tsc"), "--noEmit"],
+  },
+  unit: {
+    executable: process.execPath,
+    args: [path.join(ROOT, "node_modules", "vitest", "vitest.mjs"), "run", "--run"],
+  },
+});
 const MODEL_COMMAND_DENYLIST =
   /(^|[\s;&|()])(?:claude|codex|aider|anthropic|bedrock|vertex|foundry)(?=$|[\s;&|()=-])|ANTHROPIC_API_KEY|api\.anthropic\.com/i;
+const taskKey = process.argv[2] ?? "typecheck";
+const task = TASK_ALLOWLIST[taskKey];
 
-if (MODEL_COMMAND_DENYLIST.test(cmd)) {
-  console.error("[FAIL-CLOSED] Model/provider commands are not valid qa-agent input.");
+if (process.argv.length > 3 || MODEL_COMMAND_DENYLIST.test(taskKey) || !task) {
+  console.error(
+    `[FAIL-CLOSED] Unknown QA task. Allowed tasks: ${Object.keys(TASK_ALLOWLIST).join(", ")}.`,
+  );
   process.exit(2);
 }
 
 function run() {
-  try {
-    execSync(cmd, { stdio: "pipe", encoding: "utf8" });
-    return { ok: true, out: "" };
-  } catch (e) {
-    return { ok: false, out: `${e.stdout ?? ""}\n${e.stderr ?? ""}` };
-  }
+  const result = spawnSync(task.executable, task.args, {
+    cwd: ROOT,
+    shell: false,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  return {
+    ok: result.status === 0,
+    out: `${result.stdout ?? ""}\n${result.stderr ?? result.error?.message ?? ""}`,
+  };
 }
 
 function suggestTs(code) {

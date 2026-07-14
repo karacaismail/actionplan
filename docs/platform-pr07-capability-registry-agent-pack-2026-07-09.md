@@ -1,13 +1,18 @@
 # PR-07 Capability Registry Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-07`
 Branch: `task/k-capability-registry`
 WBS node'u: `k-capability`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-06`
 
-Bu belge product code üretmez. Amaç, PR-06 Audit Envelope kanıtı kapandıktan sonra açılacak PR-07 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-06 Audit Envelope kanıtı kapandıktan sonra açılacak PR-07 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -21,7 +26,7 @@ PR-07 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-06 append-only audit + tamper detection verified evidence
 - `l1-audit` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-07 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -45,9 +50,9 @@ PR-07 şunları yapmaz:
 - Billing/pricing/plan management ürünü yazmaz.
 - Module code execution veya dynamic plugin runtime açmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-06 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-06 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-07 Capability Registry.
@@ -114,7 +119,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_module_manifest.py test
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

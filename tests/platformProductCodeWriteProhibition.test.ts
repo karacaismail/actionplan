@@ -297,18 +297,41 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
   });
 
   it.each(["tools/test-loop.mjs", "tools/qa-agent.mjs"])(
-    "%s model/provider komutunu fail-closed reddeder",
+    "%s yalnız sabit QA görevlerini çalıştırır",
     (file) => {
       const source = read(file);
-      expect(source).toContain("MODEL_COMMAND_DENYLIST");
-      expect(source).toContain("FAIL-CLOSED");
-      const blocked = spawnSync(process.execPath, [path.join(ROOT, file), "claude -p audit"], {
+      for (const token of ["TASK_ALLOWLIST", "MODEL_COMMAND_DENYLIST", "FAIL-CLOSED"])
+        expect(source).toContain(token);
+      for (const forbidden of ["shell: true", "execSync(cmd)", 'process.argv.slice(2).join(" ")'])
+        expect(source).not.toContain(forbidden);
+
+      for (const payload of [
+        'TOOL=printf; "$TOOL" bypass',
+        "bash -lc 'printf bypass'",
+        'node -e "process.exit(0)"',
+        "npm --version",
+        "git --version",
+        "gh --version",
+        "git -C ../platform status --short",
+        "claude -p audit",
+      ]) {
+        const blocked = spawnSync(process.execPath, [path.join(ROOT, file), payload], {
+          cwd: ROOT,
+          encoding: "utf8",
+        });
+        expect(blocked.status, `${file} accepted ${payload}`).toBe(2);
+        expect(blocked.stderr).toContain("FAIL-CLOSED");
+        expect(`${blocked.stdout}\n${blocked.stderr}`).not.toContain("bypass\n");
+      }
+
+      const allowed = spawnSync(process.execPath, [path.join(ROOT, file), "typecheck"], {
         cwd: ROOT,
         encoding: "utf8",
+        timeout: 30_000,
       });
-      expect(blocked.status).toBe(2);
-      expect(blocked.stderr).toContain("FAIL-CLOSED");
+      expect(allowed.status).toBe(0);
     },
+    60_000,
   );
 
   it("swarm önizlemesi boş veya bilinmeyen shard'ı başarı saymaz", () => {
@@ -346,6 +369,8 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
       "tools/test-loop.mjs",
       "tools/qa-agent.mjs",
       "MODEL_COMMAND_DENYLIST",
+      "TASK_ALLOWLIST",
+      "shell: false",
     ])
       expect(gate).toContain(token);
   });

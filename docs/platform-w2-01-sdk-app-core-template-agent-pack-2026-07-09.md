@@ -1,13 +1,18 @@
 # W2-01 SDK App-Core Template Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W2-01`
 Branch: `task/sdk-app-core-template`
 WBS node'ları: `be-sdk`, `dx-cli`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-06`
 
-Bu belge product code üretmez. Amaç, Customer CUST-06 evidence writeback kanıtı kapandıktan sonra açılacak W2-01 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, Customer CUST-06 evidence writeback kanıtı kapandıktan sonra açılacak W2-01 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ W2-01 yalnız şu kanıtlar geldikten sonra başlar:
 - CUST-06 Customer e2e/evidence writeback PR URL, CI run URL, merge commit SHA ve test logları
 - `be-sdk`, `dx-cli`, `customer`, `platform-customer-*` actionplan writeback'leri
 
-Bu kanıtlar yoksa W2-01 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ W2-01 şunları yapmaz:
 - Public SDK contract'ı geriye dönük uyumluluk gerekçesi olmadan genişletmez.
 - Generated output'u elle düzenlenebilir bırakmaz veya nondeterministic timestamp/random içermez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-06 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-06 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W2-01 SDK App-Core Template.
@@ -120,7 +125,7 @@ pnpm --filter @platform/sdk run test -- forbidden-stack
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 
