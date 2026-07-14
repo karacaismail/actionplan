@@ -1,13 +1,18 @@
 # W3-03 Enterprise Accessibility Gates Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W3-03`
 Branch: `task/enterprise-a11y-gates`
 WBS node'ları: `build-enterprise-readiness`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W3-02`
 
-Bu belge product code üretmez. Amaç, W3-02 Enterprise Performance Gates kanıtı kapandıktan sonra açılacak W3-03 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W3-02 Enterprise Performance Gates kanıtı kapandıktan sonra açılacak W3-03 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -18,7 +23,7 @@ W3-03 yalnız şu kanıtlar geldikten sonra başlar:
 - W3-02 performance gates verified evidence
 - Customer, OrderOps ve Inventory web e2e smoke evidence
 
-Bu kanıtlar yoksa W3-03 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -40,9 +45,9 @@ W3-03 şunları yapmaz:
 - Customer/OrderOps/Inventory business davranışını değiştirmez.
 - Actionplan evidence/status alanlarını gerçek PR/CI/test kanıtı olmadan ilerletmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-02 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-02 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W3-03 Enterprise Accessibility Gates.
@@ -107,7 +112,7 @@ pnpm --filter @platform/web run e2e -- a11y-enterprise.spec.ts
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

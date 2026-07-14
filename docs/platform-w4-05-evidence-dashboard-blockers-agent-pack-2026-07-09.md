@@ -1,13 +1,18 @@
 # W4-05 Evidence Dashboard Blockers Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W4-05`
 Branch: `task/evidence-dashboard-blockers`
 WBS node'ları: `dx-workflow`, `build-enterprise-readiness`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W4-04`
 
-Bu belge product code üretmez. Amaç, W4-04 Portfolio Regression Matrix kanıtı kapandıktan sonra açılacak W4-05 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W4-04 Portfolio Regression Matrix kanıtı kapandıktan sonra açılacak W4-05 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ W4-05 yalnız şu kanıtlar geldikten sonra başlar:
 - W4-03 module marketplace guardrails verified
 - W4-04 portfolio regression matrix verified
 
-Bu kanıtlar yoksa W4-05 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -40,9 +45,9 @@ W4-05 şunları yapmaz:
 - Kanıtsız item'ları `done`, `verified` veya `complete` yapmaz.
 - Dashboard görsel tasarımını genişletmez; yalnız evidence completeness ve blocker davranışı kanıtlanır.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W4-04 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W4-04 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W4-05 Evidence Dashboard Blockers.
@@ -109,7 +114,7 @@ pnpm --filter @platform/web run e2e -- evidence-dashboard.spec.ts
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 
