@@ -1,13 +1,18 @@
 # W3-01 Enterprise Security Gates Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W3-01`
 Branch: `task/enterprise-security-gates`
 WBS node'ları: `cc-security`, `k-authz`, `k-tenancy`, `l1-audit`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W2-06`
 
-Bu belge product code üretmez. Amaç, W2-06 SDK Repeatability Diff Report kanıtı kapandıktan sonra açılacak W3-01 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W2-06 SDK Repeatability Diff Report kanıtı kapandıktan sonra açılacak W3-01 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ W3-01 yalnız şu kanıtlar geldikten sonra başlar:
 - Customer, OrderOps ve Inventory PR/CI/test/e2e evidence writeback'leri
 - `packages/sdk/docs/repeatability-report.md` ve copy-code threshold report evidence
 
-Bu kanıtlar yoksa W3-01 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ W3-01 şunları yapmaz:
 - Secret scan sonucunu gerçek tarama olmadan "temiz" yazmaz.
 - Actionplan evidence/status alanlarını gerçek PR/CI/test kanıtı olmadan ilerletmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W2-06 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W2-06 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W3-01 Enterprise Security Gates.
@@ -121,7 +126,7 @@ node tools/agents/check-secrets.mjs
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

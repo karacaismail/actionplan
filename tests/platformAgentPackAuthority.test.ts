@@ -25,9 +25,37 @@ const PACKS = [
   "docs/platform-pr10-sdk-public-contract-agent-pack-2026-07-09.md",
   "docs/platform-pr11-hello-platform-agent-pack-2026-07-09.md",
   "docs/platform-w2-01-sdk-app-core-template-agent-pack-2026-07-09.md",
+  "docs/platform-w2-02-sdk-module-template-agent-pack-2026-07-09.md",
+  "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+  "docs/platform-w2-04-orderops-vertical-slice-agent-pack-2026-07-09.md",
+  "docs/platform-w2-05-inventory-vertical-slice-agent-pack-2026-07-09.md",
+  "docs/platform-w2-06-sdk-repeatability-diff-report-agent-pack-2026-07-09.md",
+  "docs/platform-w3-01-enterprise-security-gates-agent-pack-2026-07-09.md",
+  "docs/platform-w3-02-enterprise-performance-gates-agent-pack-2026-07-09.md",
+  "docs/platform-w3-03-enterprise-accessibility-gates-agent-pack-2026-07-09.md",
+  "docs/platform-w3-04-enterprise-reliability-gates-agent-pack-2026-07-09.md",
+  "docs/platform-w3-05-enterprise-observability-gates-agent-pack-2026-07-09.md",
+  "docs/platform-w3-06-enterprise-release-governance-agent-pack-2026-07-09.md",
+  "docs/platform-w3-07-enterprise-dod-evidence-pack-agent-pack-2026-07-09.md",
+  "docs/platform-w4-01-ready-to-code-queue-export-agent-pack-2026-07-09.md",
+  "docs/platform-w4-02-app-factory-release-train-agent-pack-2026-07-09.md",
+  "docs/platform-w4-03-module-marketplace-guardrails-agent-pack-2026-07-09.md",
+  "docs/platform-w4-04-portfolio-regression-matrix-agent-pack-2026-07-09.md",
+  "docs/platform-w4-05-evidence-dashboard-blockers-agent-pack-2026-07-09.md",
+  "docs/platform-w4-06-operations-runbook-drills-agent-pack-2026-07-09.md",
+  "docs/platform-w4-07-portfolio-scale-exit-report-agent-pack-2026-07-09.md",
 ] as const;
 
 describe("legacy platform execution paketleri yetki kilidi", () => {
+  it("37 legacy pack tam ve deterministik olarak kapsanır", () => {
+    const discovered = fs
+      .readdirSync(path.join(ROOT, "docs"))
+      .filter((file) => /^platform-.*-agent-pack-2026-07-09\.md$/.test(file))
+      .map((file) => `docs/${file}`)
+      .sort();
+    expect(discovered).toEqual([...PACKS].sort());
+  });
+
   it.each(PACKS)("%s yalnız insan geliştirici handoff'u olarak kalır", (file) => {
     const content = read(file);
     const firstSection = content.indexOf("\n## ");
