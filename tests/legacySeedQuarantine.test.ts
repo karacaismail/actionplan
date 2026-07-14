@@ -352,6 +352,50 @@ describe("Q3 legacy seed tam karantinası — statik kapsam (29 dosya, pending=0
   });
 });
 
+// --- Q4 final-state doküman invariantı: docs/next-30-days-plan.md -----------------------
+// Q2 ile seed-platform-horizontal arşiv stub'a alındı, Q3 ile pending=0 oldu. Plan artık onu
+// "pending doğrudan yazıcı" olarak tanımlayan STALE iddiayı taşıyamaz; kararlı bir final markör
+// ile 29 dosya · 28 entrypoint + 1 helper · fail-closed · pending=0 son durumunu bildirmelidir.
+// Stale ifade dönerse VEYA bir markör eksikse hem statik kapı hem bu test fail-closed kırılır.
+const PLAN_PATH = "docs/next-30-days-plan.md";
+const planStalePhrases = ["pending doğrudan yazıcıdır"] as const;
+const planFinalMarkers = [
+  "LEGACY-SEED-QUARANTINE-FINAL",
+  "29 dosya",
+  "28 entrypoint + 1 helper",
+  "fail-closed",
+  "pending=0",
+] as const;
+
+describe("Q4 final-state doküman karantinası — next-30-days-plan.md", () => {
+  it("plan stale 'pending doğrudan yazıcı' iddiasını taşımaz", () => {
+    const plan = read(PLAN_PATH);
+    for (const stale of planStalePhrases) expect(plan).not.toContain(stale);
+  });
+
+  it("plan kararlı final markörle 29 dosya · 28 entrypoint + 1 helper · fail-closed · pending=0 bildirir", () => {
+    const plan = read(PLAN_PATH);
+    for (const marker of planFinalMarkers) expect(plan).toContain(marker);
+  });
+
+  it("statik kapı doküman invariantını fail-closed uygular (stale/eksik markör = KIRMIZI)", () => {
+    const result = spawnSync(process.execPath, [path.join(ROOT, Q3_GATE_PATH)], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    const plan = read(PLAN_PATH);
+    const staleClean = planStalePhrases.every((stale) => !plan.includes(stale));
+    const markersPresent = planFinalMarkers.every((marker) => plan.includes(marker));
+    if (staleClean && markersPresent) {
+      expect(result.status).toBe(0);
+      expect(result.stdout + result.stderr).toContain("SONUÇ: YEŞİL");
+    } else {
+      expect(result.status).not.toBe(0);
+      expect(result.stdout + result.stderr).toContain("SONUÇ: KIRMIZI");
+    }
+  });
+});
+
 describe("Q3 legacy seed tam karantinası — davranış (statik kanıttan SONRA)", () => {
   const fuzzEnv = { ...process.env, ALLOW_LEGACY_SEED: "1", SEED_APPLY: "1", CI: "false" };
   const guardTargets: string[] = [
