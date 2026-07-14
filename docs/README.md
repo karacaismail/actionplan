@@ -1,12 +1,16 @@
 # actionplan — Doküman Dizini
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır.
+
 Bu klasördeki tüm kanonik dokümanların tek-bakışta haritası. (GitHub `docs/` klasörünü açınca bu sayfayı gösterir.) Amaç: hiçbir doküman "fark edilmemiş" kalmasın.
 
 **Okuma sırası önerisi (yeni gelen):** `developer-guide.md` → `doc-maintainer-operating-boundary.md` → `task-to-code-contract.md` → `kernel-sdk-app-delivery-sequence.md` → `engineering-standards-index.md` → ilgili plan/sözleşme.
 
 ## Enterprise SaaS Requirement Program (2026-07-13)
 
-Bu program **docs-only candidate/decision çalışmasıdır**; requirement baseline, implementation veya enterprise-ready/GA kanıtı değildir. **D1–D13 insan kararları CLOSED** ([ADR-0031](adr-0031-commerce-os-vibecoder-handoff-decisions.md), insan-yetkili) ve Commerce OS handoff **instruction-ready / READY FOR VIBECODER INSTRUCTION**'dır. **Runtime evidence hâlâ pending:** 14/14 runtime probe NOT-RUN, build-enforced DAG check / saga / restore drill koşulmadı ve Türkiye counsel (D4) açık olduğundan **runtime/pilot/GA NO-GO** kalır; instruction-ready ≠ runtime-ready. Optional edition'lar (Classifieds/Recommerce) core evidence'a kadar blocked.
+Bu program **docs-only candidate/decision çalışmasıdır**; requirement baseline, implementation veya enterprise-ready/GA kanıtı değildir. **D1–D13 insan kararları CLOSED** ([ADR-0031](adr-0031-commerce-os-vibecoder-handoff-decisions.md), insan-yetkili) ve Commerce OS kaynakları yalnız **human-developer handoff** durumundadır. **Runtime evidence hâlâ pending:** 14/14 runtime probe NOT-RUN, build-enforced DAG check / saga / restore drill koşulmadı ve Türkiye counsel (D4) açık olduğundan **runtime/pilot/GA NO-GO** kalır; handoff-ready ≠ runtime-ready. Optional edition'lar (Classifieds/Recommerce) core evidence'a kadar blocked.
 
 Önerilen okuma sırası:
 
@@ -253,12 +257,12 @@ Araştırma turunda eksik bulunan kernel / archetype / surface sözleşmelerini 
 - [commerce-os-capability-classification.md](commerce-os-capability-classification.md) — Araştırma korpusu prefix + DRC/MAG davranış sınıflandırması ve item-level triyaj kapısı.
 - [commerce-os-kernel-sdk-gap-directive.md](commerce-os-kernel-sdk-gap-directive.md) — Yatay motorların REUSE/EXTEND/SDK-PORT/APP-BC/PROVIDER/DEFER gap analizi.
 - [commerce-os-stack-app-composition.md](commerce-os-stack-app-composition.md) — Aday app manifest profili + mevcut `s-*`/`stack-*` artefakt eşlemesi (öneri, mutasyon değil).
-- [commerce-os-test-first-parallel-handoff.md](commerce-os-test-first-parallel-handoff.md) — V0–V16 test-first vibecoder master handoff; temiz platform worktree, tek-writer dosya sahipliği ve Codex MASTER doğrulama kapıları.
+- [commerce-os-test-first-parallel-handoff.md](commerce-os-test-first-parallel-handoff.md) — V0–V16 test-first insan geliştirici master handoff; temiz platform worktree, tek-writer dosya sahipliği ve Codex MASTER doğrulama kapıları.
 - [adr-0031-commerce-os-vibecoder-handoff-decisions.md](adr-0031-commerce-os-vibecoder-handoff-decisions.md) — Instruction-ready handoff kararları D7–D13 (ACCEPTED, insan-yetkili): contract paketleri/DAG, `CheckoutSubmitted` + Order tek-yazar saga, split authority'ler, provisional BC yönü, AI human-gate, pilot zarf.
 - [commerce-os-vibecoder-readiness-oracles.md](commerce-os-vibecoder-readiness-oracles.md) — Talimat-hazırlık RED oracle'ları (instruction-ready ≠ runtime-ready).
 - [commerce-os-contract-test-plan.md](commerce-os-contract-test-plan.md) — Test-önce contract-test planı (F1–F16 RED test aileleri; koşulmuş test değil).
 - [commerce-os-data-migration-contract.md](commerce-os-data-migration-contract.md) — D8/D9 data/migration authority + şema sınırı talimatı (şema implemente etmez).
-- [commerce-os-vibecoder-task-packets.md](commerce-os-vibecoder-task-packets.md) — V0…V16 vibecoder task-packet kataloğu (READY FOR VIBECODER INSTRUCTION; done/GA değil).
+- [commerce-os-vibecoder-task-packets.md](commerce-os-vibecoder-task-packets.md) — V0…V16 insan geliştirici task-packet kataloğu (legacy filename retained for traceability; done/GA değil).
 - [kernel-sdk-app-delivery-sequence.md](kernel-sdk-app-delivery-sequence.md) — Kernel→SDK→app-core→module→app teslim sırası + Commerce OS profili + ADR-0031 override (addendum).
 
 ---
