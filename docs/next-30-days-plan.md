@@ -206,7 +206,7 @@ Kim: human-developer-only (Codex nihai karar merciidir; AI erişimi read-only-au
 
 - Feature katmanı gerçek platform servisleri için doldurulur (API Gateway, Auth Service, Observability, Feature Flags vb.).
 - Her feature/taş için en az 1 archetype girilir (iskelet değil, gerçek içerik).
-- İçerik kaynak-sahipli materializer ve gözden geçirilmiş migration ile üretilir; legacy `seed-platform-horizontal.mjs` çalıştırılmaz (Q2/Q3 karantina kapsamında pending doğrudan yazıcıdır).
+- İçerik yalnız kaynak-sahipli, gözden geçirilmiş materializer/migration ile üretilir; legacy `seed-platform-horizontal.mjs` HİÇBİR koşulda çalıştırılmaz. `LEGACY-SEED-QUARANTINE-FINAL`: legacy seed ailesi tamamen karantinadadır — `29 dosya` (`28 entrypoint + 1 helper`) `fail-closed` arşiv stub'ıdır ve `pending=0` (bekleyen doğrudan yazıcı kalmadı; `seed-platform-horizontal.mjs` de bu arşiv kapsamındadır). Üretim yetkisi human-developer-only'dir; hiçbir AI/model kanonik veri yazamaz, commit atamaz, PR açamaz.
 
 İnsan onayı: değişiklik insan geliştirici tarafından hazırlanır ve teknik olarak doğrulanır; AI ajanı bu adımda kod yazmaz, commit/PR authority taşımaz.
 

@@ -12,7 +12,9 @@
  *
  * Kırılma nedenleri (invariant): yeni seed dosyası, helper writer reintroduction,
  * güvensiz agents:seed rotası, eksik guarded path, blanket bypass token, Q3 arşiv stub'ında
- * geri gelen writer/data/fs izi.
+ * geri gelen writer/data/fs izi, docs/next-30-days-plan.md'de dönen stale "pending doğrudan
+ * yazıcı" iddiası veya eksik final markör (29 dosya · 28 entrypoint + 1 helper · fail-closed ·
+ * pending=0).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -191,6 +193,31 @@ for (const file of GUARDED_Q3) {
   for (const bypass of BYPASS_TOKENS)
     if (source.includes(bypass))
       errors.push(`${file}: Q3 arşiv stub blanket bypass tokenı taşıyor (${bypass})`);
+}
+
+// --- 4d) Q4 final-state doküman invariantı (docs/next-30-days-plan.md) ------------------
+// Q2 ile seed-platform-horizontal arşiv stub'a alındı, Q3 ile pending=0 oldu. Plan artık onu
+// "pending doğrudan yazıcı" olarak tanımlayan STALE iddiayı taşıyamaz; kararlı bir final markör
+// ile 29 dosya · 28 entrypoint + 1 helper · fail-closed · pending=0 son durumunu bildirmelidir.
+// Stale ifade geri gelirse VEYA herhangi bir final markör eksikse kapı fail-closed kırılır.
+const PLAN = "docs/next-30-days-plan.md";
+const PLAN_STALE_PHRASES = ["pending doğrudan yazıcıdır"];
+const PLAN_FINAL_MARKERS = [
+  "LEGACY-SEED-QUARANTINE-FINAL",
+  "29 dosya",
+  "28 entrypoint + 1 helper",
+  "fail-closed",
+  "pending=0",
+];
+if (!exists(PLAN)) errors.push(`final plan dokümanı yok: ${PLAN}`);
+else {
+  const plan = read(PLAN);
+  for (const stale of PLAN_STALE_PHRASES)
+    if (plan.includes(stale))
+      errors.push(`plan stale seed karantina iddiası taşıyor (fail-closed): "${stale}"`);
+  for (const marker of PLAN_FINAL_MARKERS)
+    if (!plan.includes(marker))
+      errors.push(`plan final karantina markörü eksik (fail-closed): "${marker}"`);
 }
 
 // --- 5) Public agents:seed rotası + qa scripti -----------------------------------------
