@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -189,5 +190,85 @@ describe("PWB-4 bloklayıcı CI kapısı", () => {
     ]) {
       expect(gate).toContain(token);
     }
+  });
+});
+
+describe("PWB-5 kalıcı ajan yetkisi ve Claude fail-closed kapısı", () => {
+  it("eski swarm runner doğrudan Claude veya alt-ajan çalıştıramaz", () => {
+    const relative = "tools/agents/run-swarm.mjs";
+    const runner = read(relative);
+    expect(runner).toContain("DIRECT_EXECUTION_DISABLED");
+    for (const forbidden of [
+      "node:child_process",
+      "spawn(",
+      "acceptEdits",
+      "dangerously-skip-permissions",
+      "CLAUDE_BIN",
+    ]) {
+      expect(runner).not.toContain(forbidden);
+    }
+    for (const required of [
+      "FAIL-CLOSED",
+      "Codex",
+      "claude_review",
+      "claude_implement",
+      "claude.ai",
+      "firstParty",
+      "max",
+    ]) {
+      expect(runner).toContain(required);
+    }
+
+    const dry = spawnSync(process.execPath, [path.join(ROOT, relative), "--dry-run", "kernel"], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    expect(dry.status).toBe(0);
+    expect(dry.stdout).toContain("handoff preview");
+    expect(dry.stdout).not.toContain("claude -p");
+
+    const blocked = spawnSync(process.execPath, [path.join(ROOT, relative), "kernel"], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    expect(blocked.status).toBe(2);
+    expect(blocked.stderr).toContain("FAIL-CLOSED");
+  });
+
+  it("aktif authority belgeleri Codex-PM-specialist-Claude sırasını korur", () => {
+    const agents = read("AGENTS.md");
+    const claude = read("CLAUDE.md");
+    const governance = read("docs/ai-governance-master.md");
+    const historical = read("docs/enterprise-saas-waterfall-claude-multi-agent-directive.md");
+    for (const token of [
+      "Codex → PM → uzman ajanlar → Claude workers/slaves",
+      "Codex = MASTER",
+      "PM = Codex sonrasındaki ardıl koordinasyon yetkilisi",
+      "Claude = worker/slave",
+    ]) {
+      expect(`${agents}\n${claude}\n${governance}`).toContain(token);
+    }
+    for (const token of ["claude.ai", "firstParty", "max", "fail-closed", "alt görev devredemez"])
+      expect(claude).toContain(token);
+    expect(historical).toContain("SUPERSEDED-AUTHORITY");
+    expect(historical).toContain("Claude alt-ajan veya Task/sub-agent başlatamaz");
+    const template = read("tools/agents/prompt-template.md");
+    expect(template).toContain("ARCHIVED-HANDOFF");
+    expect(template).toContain("READ-ONLY");
+    expect(template).not.toContain("GÖREVİN bunu");
+    const roadmap = read("docs/roadmap-pm-paritesi.md");
+    expect(roadmap).toContain("Codex → PM → uzman ajanlar → Claude workers/slaves");
+    expect(roadmap).not.toContain("claude -p");
+    for (const file of ["docs/developer-guide.md", "docs/task-export-contract.md"])
+      expect(read(file)).toContain("Codex → PM → uzman ajanlar → Claude workers/slaves");
+    expect(read("docs/developer-guide.md")).not.toMatch(/claude\s+"/i);
+    for (const file of [
+      "docs/vibecoding-prompt-playbook.md",
+      "plan-01-vibecoding-eylem-faz-faz-2026-07-01.md",
+      "plan-04-paralel-ajan-orkestrasyon-2026-07-01.md",
+    ])
+      expect(read(file)).toContain("SUPERSEDED-AUTHORITY");
+    expect(read("tools/agents/README.md")).not.toContain("--dangerously-skip-permissions");
+    expect(read("tools/agents/check-platform-write-boundary.mjs")).toContain("run-swarm.mjs");
   });
 });

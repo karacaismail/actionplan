@@ -1,5 +1,9 @@
 # Dosya 4 — Paralel-Ajan Orkestrasyon Rehberi
 
+> **SUPERSEDED-AUTHORITY:** Bu tarihsel worktree/swarm modeli yürütülemez. Güncel sıra
+> `Codex → PM → uzman ajanlar → Claude workers/slaves`; yalnız Codex sınırlı worker çağrısı
+> yapar, PM/uzman/Claude Git veya alt-ajan işlemi yapamaz. `run-swarm.mjs` fail-closed'dur.
+
 **Tarih:** 2026-07-01 · **Bağlam:** `plan-01`'deki dalgaları güvenli, paralel ve insan-onaylı koşmak için. · **Dayanak:** mevcut `tools/agents/run-swarm.mjs` (27 küme, öncelik P1-P4, eşzamanlılık 3, provenance).
 
 **Bu rehber nedir:** Birden çok geliştirme ajanını aynı anda, çakışmadan ve enterprise-güvenli çalıştırma kılavuzu.

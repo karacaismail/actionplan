@@ -1,5 +1,9 @@
 # Dosya 1 — Vibecoding Faz-Faz Eylem Planı
 
+> **SUPERSEDED-AUTHORITY:** Bu tarihsel plan doğrudan Claude/ajan çalıştırma yetkisi vermez.
+> Güncel sıra `Codex → PM → uzman ajanlar → Claude workers/slaves`; platform uygulaması
+> `human-developer-only`, Claude çağrısı yalnız Codex üzerinden fail-closed'dur.
+
 **Tarih:** 2026-07-01 · **Önkoşul:** `plan-00-kontrol-sentez` okundu. · **İlgili:** standart promptları `plan-02`, yeni yönergeler `plan-03`, ajan orkestrasyonu `plan-04`.
 
 **Bu plan nedir:** 16 uygulamalık portföyü, kernel primitiflerinden başlayarak, dalga-dalga ve her dalgada Claude Code'a verilebilir tam promptla inşa etme planı.
@@ -314,4 +318,3 @@ Sade özet: ilk üç dalga **seri** (birbirine bağlı), sonraki dalgalar **büy
 Kritik yol: **D0 → D1 → D2** zorunlu seridir (primitif kanıtı bu zincirdedir). D3 ve D4, D2 ile *paralel* başlayabilir (D0 bittiği an). D5+ ancak D2+D3+D4 tabanı hazırken açılır ama içinde app'ler sonuna kadar paralel gider.
 
 Ajan sayısı önerisi (tek geliştirici + ajan filosu): D1'de 4-5, D3'te 3-4, D5+'ta app başına 1-2, toplam eşzamanlı 3'lük `run-swarm` concurrency ile sıraya alınır (donanım sınırı; bkz. `plan-04`). Paralel ajanların çakışmaması için her ajan **ayrı git worktree/branch** kullanır — orkestrasyon detayları `plan-04`'te.
-

@@ -13,6 +13,9 @@ Raw JSON tam veri taşıyan kanonik girdidir. Diğer dört artifact aynı veriyi
 
 ## Aktör Sınırı
 
+Yetki zinciri **Codex → PM → uzman ajanlar → Claude workers/slaves** biçimindedir. Export önce
+PM'nin evidence paketine, sonra Codex'in kararına gider; yalnız Codex sınırlı worker çağrısı yapar.
+
 Bu sözleşmedeki Agent Prompt, Developer Brief ve Vobecoder Card çıktıları `DIRECTIVE-ONLY` insan handoff'udur. Codex, Claude, Cursor ve diğer AI ajanları bu artifact'leri platformda uygulamaz; erişimleri `read-only-audit`, ürün kodu yazarı `human-developer-only`dır.
 
 AI'nın görevi export sözleşmesini, alan açıklamalarını, yasakları, kabul ölçütlerini ve kanıt beklentisini çelişkisiz hale getirmektir. Platform branch'i, kodu, testi, migration'ı ve PR'ı yalnız insan geliştirici üretir. Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`.
@@ -88,7 +91,7 @@ Yapılmayacaklar: başka tenant modüllerine dokunulmaz, migration dışı DDL �
 
 ### Ne zaman kullanılır
 
-Bir görev Codex, Claude, Aider veya Cursor'a verildiğinde AI'nın platformu değiştirmeden insan geliştirici için uygulanabilir directive üretmesini sağlar. AI platform path'lerini yalnız okur; yazılabilir dosya listesi olarak yorumlayamaz.
+Bir görev PM üzerinden Codex'e verildiğinde, Codex'in yetkilendirdiği dar uzman/worker çıktısının platformu değiştirmeden insan geliştirici directive'i üretmesini sağlar. Platform path'leri yalnız okunur; yazılabilir dosya listesi değildir.
 
 ### İçerik şablonu
 

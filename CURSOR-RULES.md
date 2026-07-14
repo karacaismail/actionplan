@@ -6,6 +6,10 @@ kurallardır. Platform erişimi `read-only-audit`, ürün kodu yazarı
 `docs/platform-product-code-write-prohibition-directive.md`.
 Türkçe cevap ver; teknik terimi ilk geçtiği yerde kısaca açıkla.
 
+Yetki zinciri `Codex → PM → uzman ajanlar → Claude workers/slaves` biçimindedir. Cursor/Windsurf
+uzman çıktısını PM üzerinden Codex'e verir; nihai karar veremez, Claude çağıramaz ve Git/PR
+işlemi yapamaz.
+
 Cursor/Windsurf platformda ürün kodu, test, migration, Storybook/config dosyası yazmaz;
 branch, commit, push veya PR oluşturmaz. Çıktı yalnız actionplan içinde insan geliştiriciye
 verilecek `DIRECTIVE-ONLY` handoff'tur.

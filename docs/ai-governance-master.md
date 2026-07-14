@@ -13,23 +13,23 @@ Ne yapmaz: Yeni kural icat etmez; mevcut sözleşmeleri birleştirir. Çelişki 
 
 AI ajan davranışının güvenlik sınırlarını tek doğruluk kaynağında toplamak. Bugüne dek bu kurallar ECA yönergesi, task-export sözleşmesi ve orkestrasyon planına dağılmıştı; bu belge onları birleştirir ve diğer tüm dokümanların referans vereceği çatıyı kurar. Temel varsayım: maliyet bir kısıt değildir, güvenlik kısıttır.
 
-## 2. Kapsam
+## 2. Kapsam ve yetki zinciri
 
-Bu belge `actionplan` reposundaki AI mutasyonlarını yönetir; `platform`/`projector` repolarının ürün kodunu değil. Aktör-açık ayrım her yerde korunur: *sistem* (engine/ECA) kuralı uygular, *kullanıcı/insan* onaylar ve merge eder, *AI-ajan* teşhis/öneri/branch/PR üretir, *CI/CD* konformans kapılarını koşar. Bu dört aktör hiçbir yerde birbirinin yerine geçmez. Merge = tek insan-onay noktası.
+Bu belge `actionplan` reposundaki AI mutasyonlarını yönetir; `platform`/`projector` ürün kodunu değil. Operasyonel sıra **Codex → PM → uzman ajanlar → Claude workers/slaves** biçimindedir. **Codex = MASTER**, **PM = Codex sonrasındaki ardıl koordinasyon yetkilisi**, **Claude = worker/slave**dır. Kullanıcı/Admin açıkça yetkilendirirse Actionplan branch/commit/push/PR teslimini yalnız Codex yapar; PM, uzman ve Claude Git işlemi yapamaz. Platform ürünü ve platform Git teslimatı `human-developer-only` kalır.
 
 ## 3. Beş yetki seviyesi
 
-En kritik ayrım budur; "self-healing" gibi ifadeler çoğu yerde belirsiz kullanılır, oysa beş farklı seviye vardır. Aşağıdaki tablo her seviyenin ne olduğunu, repo autonomy karşılığını ve bu projedeki izin durumunu gösterir; bu proje ajanları en fazla dördüncü seviyeye (PR açan) çıkar.
+Bu seviyeler TaskNode autonomy verisini açıklar; rol, tool veya Git yetkisi vermez. Actionplan'da seviye 3-4 teslimini yalnız açık Kullanıcı/Admin yetkisiyle Codex yapabilir.
 
 | Seviye | Sistem ne yapar | Autonomy karşılığı | Bu projede |
 |---|---|---|---|
 | 1 | Sadece teşhis — sorunu bulur, hiçbir şeyi değiştirmez | (rapor) | İzinli |
 | 2 | Öneri verir — düzeltmeyi metin/yorum olarak önerir | `suggest` | İzinli |
-| 3 | Kodu değiştirir — bir *branch*'te dosya düzenler | `draft` | İzinli (yalnız branch) |
-| 4 | PR açar — inceleme için PR oluşturur | `apply-gated` | İzinli (tavan) |
+| 3 | Actionplan changeset'i üretir | `draft` | Worker ara çıktısı; Git yalnız yetkili Codex |
+| 4 | Actionplan PR teslimi | `apply-gated` | Yalnız yetkili Codex; platformda yasak |
 | 5 | Main'e doğrudan push — insansız üretime yazar | — | **YASAK** |
 
-Aktör-açık kural: *AI-ajan* seviye 1-4 yapar; *CI/CD* konformans kapılarını koşar; *insan* PR'ı inceler ve merge eder. Ajan asla merge etmez, asla `main`'e push etmez.
+Aktör-açık kural: PM sıralar, uzman/Claude yalnız ara çıktı verir, Codex diff ve kapıları doğrular. Nihai kapsam/rollback/teslim kararı Codex'tedir; platform merge ve kod yazımı insandadır.
 
 ## 4. Autonomy enum eşlemesi
 
@@ -59,7 +59,7 @@ Bu yasaklar görev içeriğinden bağımsızdır ve hiçbir koşulda geçersiz k
 
 "Self-healing" (kendini iyileştiren) metaforu "kod kendini üretime düzeltir" izlenimi verir; gerçek karşılığı bu değildir. Aşağıda metafor ile gerçek akış karşılaştırılır.
 
-Gerçek akış: *AI-ajan* kırık testi görür (teşhis, seviye 1) → düzeltmeyi bir branch'te uygular (seviye 3) → PR açar (seviye 4) → *insan* inceler ve merge eder. Kod kendini üretime düzeltmez. Ajan seviye 3-4'te düzeltme üretir, ama uygulaması daima insan-onaylıdır. Testi "kod geçsin diye" zayıflatmak **yasaktır** — bu self-healing değil, gate'i kandırıp standardı düşürmektir. Ajan `main`'e asla doğrudan yazamaz (seviye 5 yasak).
+Gerçek Actionplan akışı: uzman/Claude kırık sözleşmeyi teşhis eder → PM evidence paketler → Codex gerekirse changeset'i uygular, test eder ve açık Kullanıcı/Admin yetkisiyle PR'a taşır. Gerçek platform akışı insan geliştiricide kalır. Testi "kod geçsin diye" zayıflatmak yasaktır; hiçbir AI `main`'e doğrudan yazamaz.
 
 ## 7. Test dosyası değiştirme politikası
 
@@ -128,7 +128,7 @@ Aşağıdaki desenler yasaktır; her biri bu yönergenin bir maddesini çiğner.
 
 Bir AI mutasyonu ancak aşağıdakiler sağlanınca tamamlanmış sayılır.
 
-- Değişiklik feature branch'te; PR açık; ajan `main`'e dokunmadı.
+- Actionplan değişikliği yetkiliyse Codex feature branch/PR'da; PM/uzman/Claude Git'e dokunmadı.
 - İlgili konformans kapıları (§12) yerelde ve CI'da yeşil.
 - `agentPolicy` sınırları (§4, §5, §10) ihlal edilmedi; `app`/`module` = `none`.
 - Evidence kaydı üretildi (`task-export-contract` Mode-3); kanıtsız "done" yok.

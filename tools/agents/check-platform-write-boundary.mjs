@@ -146,8 +146,47 @@ for (const forbidden of [
   /AI ajanı[^.\n]{0,80}PR açar/i,
   /implementation ajan operatörü[^.\n]{0,100}(uygular|kullanır)/i,
   /coding ajanı[^.\n]{0,100}(uygular|yazar|üretir)/i,
+  /claude\s+"/i,
 ])
   if (forbidden.test(activeText)) errors.push(`aktif belgede AI coding çelişkisi: ${forbidden}`);
+
+const swarmRunnerPath = "tools/agents/run-swarm.mjs";
+const swarmRunner = read(swarmRunnerPath);
+for (const token of [
+  "DIRECT_EXECUTION_DISABLED",
+  "FAIL-CLOSED",
+  "Codex",
+  "claude_review",
+  "claude_implement",
+  "claude.ai",
+  "firstParty",
+  "max",
+])
+  if (!swarmRunner.includes(token))
+    errors.push(`${swarmRunnerPath}: fail-closed token eksik (${token})`);
+for (const forbidden of ["node:child_process", "spawn(", "acceptEdits", "CLAUDE_BIN"])
+  if (swarmRunner.includes(forbidden))
+    errors.push(`${swarmRunnerPath}: doğrudan worker çalıştırma izi (${forbidden})`);
+
+const swarmTemplatePath = "tools/agents/prompt-template.md";
+const swarmTemplate = read(swarmTemplatePath);
+for (const token of ["ARCHIVED-HANDOFF", "READ-ONLY", "Codex", "PM", "fail-closed"])
+  if (!swarmTemplate.includes(token))
+    errors.push(`${swarmTemplatePath}: arşiv yetki tokenı eksik (${token})`);
+for (const forbidden of ["GÖREVİN bunu", "node JSON dosyalarını düzenle", "Her writer ayrı"])
+  if (swarmTemplate.includes(forbidden))
+    errors.push(`${swarmTemplatePath}: yürütülebilir eski worker talimatı (${forbidden})`);
+
+const workerEntryText = [
+  "tools/agents/README.md",
+  "docs/roadmap-pm-paritesi.md",
+  "docs/enterprise-saas-waterfall-claude-multi-agent-directive.md",
+]
+  .map((file) => read(file))
+  .join("\n");
+for (const forbidden of [/claude\s+-p/i, /Task\/sub-agent mekanizmasını kullanabilir/i])
+  if (forbidden.test(workerEntryText))
+    errors.push(`aktif worker girişinde doğrudan Claude yolu: ${forbidden}`);
 
 console.log(
   `[platform-write-boundary] actor=${policy.aiActors?.length ?? 0} · yasak=${policy.prohibitedActions?.length ?? 0} · giriş=${requiredFiles.length} · ihlal=${errors.length}`,

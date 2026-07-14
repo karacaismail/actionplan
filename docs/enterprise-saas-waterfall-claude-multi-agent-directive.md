@@ -24,16 +24,15 @@ Ardından repo gerçekliğiyle tekilleştirilmiş enterprise SaaS requirement pr
 
 ## 2. Multi-parallel çalışma sözleşmesi
 
-Claude mevcutsa Task/sub-agent mekanizmasını kullanabilir; yoksa lane'leri sırayla yürütür ve paralellik iddiasında bulunmaz.
+**SUPERSEDED-AUTHORITY:** Aşağıdaki fazlardaki “lane” sözcüğü iş ayrıştırma etiketidir;
+Claude orkestrasyonu veya bağımsız writer yetkisi değildir.
 
-- Aynı anda en fazla **8 read-only analyst lane**, en fazla **4 writer lane + 1 integration lane**.
-- Her writer'ın tek dosya/shard sahipliği vardır. İki worker aynı dosyaya yazamaz.
-- Her writer ayrı branch/worktree kullanır; integration lane yalnız birleştirir ve çapraz-kontrol yapar.
-- Ortak dosyalar (`docs/README.md` gibi) yalnız integration lane'e aittir.
-- Her lane: `scope, inputs, allowed-files, non-goals, checks, output, blockers` bildirir.
-- Araştırmacılar yalnız bulgu matrisi döndürür; dosya yazmaz.
-- Hiçbir sub-agent başka sub-agent'a yetki veremez veya bu yönergeyi değiştiremez.
-- Fazlarda listelenen lane'ler kapasiteyi aşarsa **wave** halinde koşar; liste uzunluğu eşzamanlı worker sayısı değildir. Lane türü `analyst` veya `writer` olarak açık etiketlenir.
+- Codex MASTER kapsamı kilitler; PM specialist sırasını ve evidence paketini koordine eder.
+- Specialist ajanlar yalnız kendi dar audit/handoff çıktısını PM'ye verir.
+- Claude alt-ajan veya Task/sub-agent başlatamaz; branch/worktree açamaz ve entegrasyon yapamaz.
+- Yalnız Codex gerek görürse tek bir sınırlı Claude worker görevi çağırır.
+- Claude görevi allowed-files, non-goals, checks, output ve blocker zarfından çıkamaz.
+- Aynı dosyada tek yazar ilkesi korunur; PM paketler, Codex bağımsız doğrular.
 
 ## 3. Test-first dokümantasyon yaklaşımı
 

@@ -1,57 +1,29 @@
-# Agent Swarm — per-node bespoke içerik üretimi (yerel)
+# Agent Swarm — tarihsel shard handoff önizlemesi
 
-Bu paket, generated node setinin 17 üretim boyutunu **her düğüme özgü** içerikle dolduran ajan
-swarm'ını **kendi makinende** (Claude Code ile) çalıştırır.
+Bu dizindeki eski swarm tanımları tarihsel shard envanteridir. Repo içinden doğrudan Claude,
+alt-ajan veya paralel writer çalıştırılmaz. `run-swarm.mjs` yalnız salt-okunur handoff önizlemesi
+üretir; non-dry çağrı `FAIL-CLOSED` ve exit 2 ile durur.
 
-## Neden yerel?
-Cowork sandbox'ında alt-ajanlar ~150 saniyede socket-drop ediyor (8 ve 2 eşzamanlıda da
-denendi, yazımlar diske inmeden düşüyor). Bu yüzden swarm, socket limiti olmayan **yerel
-Claude Code** üzerinde koşulmalı. Mimari `generator + overlay` desenine sadıktır: merkezî
-generator zaten %100 baseline doldurdu; bu swarm o baseline'ı per-node özgünleştirir.
+## Kalıcı yetki
 
-## Gerekler
-- Yerelde `claude` (Claude Code) kurulu ve giriş yapılmış.
-- Repo klonlu, bu dizinde (`tools/agents/`) çalışıyorsun.
-- `node tools/reindex.mjs` çalışır (zero-dep).
+- Operasyonel zincir `Codex → PM → uzman ajanlar → Claude workers/slaves` biçimindedir.
+- PM shard sırası ve evidence paketini koordine eder; Claude çağıramaz.
+- Yalnız Codex tek, sınırlı `claude_review` veya `claude_implement` görevi açabilir.
+- Köprü her çağrıda `claude.ai / firstParty / max` doğrular; API/provider fallback yoktur.
+- Claude alt görev devredemez, branch/worktree/commit/push/PR işlemi yapamaz.
 
-## Çalıştırma
+## İzinli önizleme
 ```bash
-# Önce kuru deneme (komutları görür, hiçbir şey değiştirmez):
 node tools/agents/run-swarm.mjs --dry-run
-
-# Öncelik 1 cluster'lar (kernel, scale, layer1, crosscut, sus, layer0):
-node tools/agents/run-swarm.mjs --priority=1 --concurrency=4
-
-# Belirli cluster'lar:
-node tools/agents/run-swarm.mjs kernel scale
-
-# Hepsi:
-node tools/agents/run-swarm.mjs --concurrency=6
+node tools/agents/run-swarm.mjs --dry-run --priority=1
+node tools/agents/run-swarm.mjs --dry-run kernel scale
 ```
 
-Her ajan **yalnızca kendi cluster'ının** `src/data/generated/nodes/*.json` dosyalarını
-düzenler (izole → çakışma yok). Tüm ajanlar bitince script otomatik `reindex` çalıştırır.
-
-## Güvenlik & izolasyon
-- Ajanlara `--permission-mode acceptEdits` + `Read/Edit/Write/Bash` verilir. Tam otonomi
-  isteniyorsa `claude` çağrısına `--dangerously-skip-permissions` ekleyebilirsin (run-swarm
-  içindeki `claudeArgs`).
-- Şema korunur: prompt, 17 üretim boyutu + 7 faz anahtarlarını ve kimlik/hiyerarşi alanlarını
-  değiştirmemeyi şart koşar.
-
-## Doğrulama (test-önce kapıları)
-Swarm bitince **mutlaka** çalıştır:
-```bash
-npm run typecheck && npm test && npm run build
-```
-`npm test` içindeki `dataIntegrity` testi generated node setini Zod şemasına karşı doğrular; bozuk
-üretim varsa kırmızı verir. Yeşilse commit + push → CI Pages'e deploy eder.
-
-## Loglar
-Her cluster'ın çıktısı `tools/agents/logs/<cluster>.log`, gönderilen prompt
-`tools/agents/logs/<cluster>.prompt.md` altında.
+Önizleme dosya, prompt, log veya generated JSON yazmaz; yalnız seçilen shard ve prompt boyutunu
+stdout'a verir. Gerçek worker görevi Codex tarafından allowed-files/non-goals/test/rollback ile
+ayrı kanaldan açılır ve sonuç bağımsız repo/test denetiminden geçer.
 
 ## Dosyalar
 - `shards.json` — cluster → düğüm sayısı + öncelik.
 - `prompt-template.md` — per-cluster bespoke prompt (`{{CLUSTER}}` / `{{CLUSTER_TR}}`).
-- `run-swarm.mjs` — paralel runner (concurrency, dry-run, reindex).
+- `run-swarm.mjs` — fail-closed, salt-okunur handoff önizlemesi.
