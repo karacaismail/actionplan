@@ -5,6 +5,10 @@ Bu doküman **yapı ve mantık** aktarır; kod ve ekran çizimi içermez. Her fa
 sırasına uyar. Amaç: Jira/ClickUp'ın PM (görünüm + dilimleme + raporlama) boşluğunu kapatmak, ama asıl
 enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 
+Yetki zinciri **Codex → PM → uzman ajanlar → Claude workers/slaves** biçimindedir. Otomasyon
+Claude çağıramaz; yalnız Codex'in `claude.ai / firstParty / max` doğrulamalı, sınırlı worker çağrısı
+geçerlidir. Aşağıdaki uzak-ufuk ajan köprüsü bu fail-closed sözleşmeye tabidir.
+
 ## 0. İlkeler (tüm fazlarda geçerli)
 
 - **Test-önce**: her faz birim + (gerekliyse) e2e/axe test planıyla başlar; testler kırmızıyken geliştirme yok.
@@ -273,7 +277,7 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 **Amaç:** Sistemin rakipsiz olduğu AI-üretim/denetim döngüsünü ürünleştirmek. Burada Jira/ClickUp paritesi değil, **fark yaratma** hedeflenir.
 
 ### 7A — AI ajan köprüsü
-- Her görevin 17 üretim boyutu **prompt bloğu** → bir vibecoding ajanına (yerel `claude -p` / harici) gönderilir; çıktı **draft** olarak ArcheType admin akışına girer: `prompt→draft→validation→diff→data-impact→dry-run→preview→approval→apply`.
+- Her görevin 17 üretim boyutu **prompt bloğu** önce PM evidence zarfına, ardından gerekirse Codex'in tek sınırlı worker çağrısına gider; çıktı **draft** olarak `validation→diff→data-impact→dry-run→preview→approval` akışına girer.
 - Güvenlik sınırı (mevcut `evaluateAgentPolicy`): AI yalnız ArcheType taslağı/öneri; app/module üretemez, ruleset override edemez, doğrudan prod write yok. Köprü bu kapıdan geçer.
 - Test-önce: `agentBridge.test.ts` — istek/yanıt sözleşmesi, policy reddi, draft→diff üretimi (gerçek model çağrısı mock'lanır).
 
@@ -290,10 +294,10 @@ enerjiyi sistemin rakipsiz olduğu **AI-üretim/denetim döngüsüne** vermek.
 - Test-önce: sözleşme düzenleme → conformance test + migration-policy kapısı.
 
 ### Otomasyon senaryoları (openclaw + n8n)
-Cowork içi alt-ajanlar oturum-içi yoldur; **ürün/CI yolunda** ajan koşumu kullanıcının Hetzner (Debian/AMD EPYC) kutusunda otomatikleşir:
-- **n8n akışı:** zamanlanmış tetik → repo'dan `audit.json` çek → skor<eşik düğümleri seç → `claude -p` shard partisi (yerel swarm) → quality-lint + content-gate → geçenleri PR olarak GitHub'a aç (private repo) → CI yeşilse merge önerisi.
-- **openclaw:** ajan koşumlarını orkestre/izole et (shard başına süreç, socket-drop yok), n8n'e durum/sonuç webhook'u.
-- Güvenlik: PR-modu (doğrudan main'e yazma yok), test dosyalarına dokunmama, maliyet/oran sınırı — mevcut "güvenli 3b" ilkeleriyle hizalı (yalnız kullanıcı açıkça isterse).
+Otomasyon yalnız audit seçimi ve insan/Codex handoff kuyruğu üretir; model veya worker çağıramaz:
+- **n8n akışı:** zamanlanmış tetik → `audit.json` çek → skor<eşik düğümleri seç → PM inceleme kuyruğu ve evidence zarfı üret.
+- **openclaw:** yalnız job durumunu ve webhook teslimini izler; Claude/alt-ajan, Git veya PR işlemi başlatmaz.
+- Güvenlik: fail-closed, salt-okunur kaynak, insan/Codex onayı, maliyet/oran sınırı ve audit log.
 
 ---
 

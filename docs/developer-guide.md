@@ -3,6 +3,9 @@
 Bu rehber, actionplan'a bağlantı alan her geliştirici için tek kanonik başlangıç noktasıdır.
 "Şimdi ne yapılır?" sorusunu adım adım yanıtlar.
 
+AI yetki zinciri **Codex → PM → uzman ajanlar → Claude workers/slaves** biçimindedir. PM
+akışı koordine eder; yalnız Codex sınırlı Claude worker çağrısı yapar ve nihai teslim kararını verir.
+
 ---
 
 ## 1. Buradan Başla
@@ -20,7 +23,7 @@ Gerçek uygulama kodu burada değil, ayrı implementation reposunda yaşar ve ya
 | QA / Güvenlik inceleyici | Acceptance criteria doğrulama, CI kapı sonuçları, güvenlik sınırları |
 | Product / PM | Mileston takibi, öncelik değerlendirmesi, faz kapısı onayı |
 | Dokümantasyon bakım ajanı (Codex/actionplan) | Eksik veya çelişkili dokümantasyonu düzelt, handoff'u yeterli hale getir; ürün/platform kodu yazma |
-| AI directive operatörü (Claude/Cursor/Aider) | Platformu salt-okunur denetlet; actionplan içinde `DIRECTIVE-ONLY` insan handoff'u üret; ürün kodu/branch/commit/PR üretme |
+| Uzman/Claude worker | Dar bulguyu PM üzerinden Codex'e verir; platform salt-okunur, Git/PR yasak |
 
 ### Dokümantasyon bakım rolü
 
@@ -61,6 +64,10 @@ Görev bulma sırası ile platformun teknik doğum sırası karıştırılmaz. P
 
 Bu sıranın ayrıntısı `docs/kernel-sdk-app-delivery-sequence.md` içindedir. App düğümü kod yazma yeri değildir; app-core module ve app module'leri implementation reposunda, task-to-code sözleşmesinin izin verdiği archetype ve alt seviyelerde kodlanır.
 
+Implementation checkout kökleri, izinli workspace ve doğrulama komutlarının kanonik kaynağı
+`docs/implementation-workspace-manifest.md` belgesidir. Bu referans AI'ya yazma yetkisi vermez;
+platform yürütücüsü yine yalnız insan geliştiricidir.
+
 Meta-framework vizyonunu gerçek yazılıma çevirecek wave/PR/evidence kuyruğu `docs/meta-framework-implementation-development-plan.md` içindedir. Bu kuyruk actionplan içinde kod yazma izni vermez; implementation geliştiricisinin `platform` reposunda hangi sırayla PR açacağını ve hangi kanıtla kapatacağını tanımlar.
 
 ---
@@ -80,34 +87,27 @@ Waterfall handoff kapısı yeşil olan bir görev seç (bkz. Adım 2). Görev JS
 Görev detay ekranındaki export butonlarını kullan:
 
 - Developer Brief: insan geliştirici için kapsam, acceptance criteria, traceability, risk ve evidence özeti.
-- Agent Prompt: Claude / Cursor / Aider'a verilecek `DIRECTIVE-ONLY`, read-only-audit ve insan handoff sözleşmesi.
+- Agent Prompt: PM üzerinden Codex'e verilecek `DIRECTIVE-ONLY`, read-only-audit ve insan handoff sözleşmesi.
 - Vobecoder Card: kısa, tek ekranlık yapıştırılabilir görev kartı.
 - Evidence Patch: iş bitince actionplan'a geri yazılacak kanıt taslağı.
 - Raw JSON: TaskNode'un tam verisi.
 
 `repoPath` veya `testCommand` eksikse kod yazmaya başlama. Bu durumda Evidence Patch veya plan düzenlemesiyle traceability tamamlanır.
 
-### Adım 3 — AI'dan `DIRECTIVE-ONLY` handoff al
+### Adım 3 — Yetkili `DIRECTIVE-ONLY` handoff al
 
-Agent Prompt veya Developer Brief'i actionplan bağlamında Claude/Cursor/Aider'a ver. AI,
-`implementation-workspace-manifest.md` içindeki platformu yalnız salt-okunur denetler ve
-insan geliştirici için test-first implementation directive'i üretir.
+Uzman ajan bulguyu hazırlar, PM kapsam/evidence zarfını paketler ve Codex'e verir. Yalnız Codex
+gerek görürse `claude_review` veya `claude_implement` ile tek sınırlı worker görevi açar;
+`claude.ai / firstParty / max` doğrulanmazsa fail-closed durur. Worker platformu salt-okunur
+denetler ve insan geliştirici için test-first directive üretir.
 
 ```bash
 cd /Users/karaca/DEV/mimari/actionplan
 # AI burada yalnız directive/handoff dosyası yazar; platforma geçmez.
 ```
 
-Komut şablonu:
-
-```
-claude "DIRECTIVE-ONLY. Platformu yalnız read-only-audit et.
-Platform dosyası, test, migration, Storybook/config, branch, commit veya PR üretme.
-task/<task-id> için insan geliştiricinin uygulayacağı kırmızı test planı, minimum
-implementation sırası, güvenlik negatifleri, rollback ve evidence handoff'u yaz."
-```
-
-AI hiçbir branch'e push etmez ve PR açmaz. Platform ürün kodunu yalnız insan geliştirici yazar.
+Doğrudan CLI/model/provider komutu yoktur. PM, uzman ve Claude branch/push/PR yapmaz; platform
+ürün kodunu yalnız insan geliştirici yazar, Actionplan teslimini Codex bağımsız doğrular.
 
 ### Adım 4 — İnsan geliştirici test-önce kodlar
 

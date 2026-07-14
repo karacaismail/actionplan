@@ -17,10 +17,12 @@ Kısa hüküm: Codex, Claude, Cursor ve diğer AI ajanları **proje geliştirmez
 
 | Rol | Ne yapar | Ne yapmaz |
 |---|---|---|
-| AI directive ajanı (Codex/Claude/Cursor/Aider/Windsurf) | Dokümantasyon, sözleşme, gap raporu, export açıklaması, acceptance criteria, risk, rollback, referans ve handoff içeriğini actionplan içinde iyileştirir | Platform, kernel, SDK, app-core, module, app, test, migration veya Storybook kodu yazmaz; branch/commit/PR oluşturmaz |
+| Codex MASTER/doc-maintainer | Kapsamı kilitler, Actionplan changeset'ini doğrular; Kullanıcı/Admin açıkça yetkilendirirse Actionplan Git/PR teslimini yapar | Nihai kararı PM/uzman/Claude'a devretmez; platform ürün kodu veya platform Git teslimatı yapmaz |
+| Agent PM | Uzman sırası, bağımlılık, risk ve evidence paketini koordine eder | Nihai karar vermez; Claude çağıramaz veya Git işlemi yapamaz |
+| Uzman ajan / Claude worker | Yalnız dar audit, test beklentisi veya izinli Actionplan ara çıktısı üretir ve PM üzerinden Codex'e verir | Kapsam genişletmez; alt görev devretmez; branch/commit/push/PR/merge yapmaz |
 | İnsan geliştirici | actionplan görevini yorumlar, implementation reposunda branch açar, kod/test/PR üretir | actionplan dokümanını code-start kanıtı olmadan done saymaz |
 | AI implementation danışmanı | Platformu salt-okunur inceler; insan geliştirici için `DIRECTIVE-ONLY` uygulama sırası ve review checklist'i üretir | Platform dosyası değiştirmez veya uygulama yaptığını iddia etmez |
-| Product / PM | Kapsam, öncelik, faz kapısı ve kabul kararını verir | Eksik evidence ile işi tamamlanmış saymaz |
+| Human Product / PM | Ürün kapsamı, öncelik ve insan-onay kapısını verir | Eksik evidence ile işi tamamlanmış saymaz |
 
 ---
 
@@ -31,7 +33,7 @@ Codex/actionplan doc-maintainer aşağıdaki işleri yapmaz:
 - `platform`, `projector` veya başka implementation reposunda ürün kodu yazmak.
 - Kernel, SDK, app-core, module veya app scaffold etmek.
 - Alembic migration, SQLAlchemy model, Strawberry resolver, React surface, SDK generator veya test implementation üretmek.
-- Dokümanlardaki Agent Prompt'u uygulayıp kod diff'i çıkarmak; branch, commit veya PR açmak.
+- Dokümanlardaki Agent Prompt'u uygulayıp platform kod diff'i çıkarmak; platform branch/commit/PR açmak.
 - `implementation-workspace-manifest.md` içindeki path'e geçip yazma işlemi yapmak.
 - "Devam et" talimatını implementation izni olarak yorumlamak.
 
@@ -49,6 +51,7 @@ Codex/actionplan doc-maintainer aşağıdaki işleri yapabilir:
 - Handoff için `repoPath`, `testCommand`, evidence, risk, rollback, acceptance criteria ve non-goal beklentilerini netleştirmek.
 - Doküman sitesi, index ve rapor bağlantılarını güncellemek.
 - Repo gerçekliğini doğrulamak için salt-okunur denetim yapmak.
+- Açık Kullanıcı/Admin yetkisi varsa yalnız Codex'in Actionplan worktree/branch/commit/push/PR teslimini yapması.
 
 actionplan repo tooling'i veya doküman viewer davranışı değiştirilecekse bu ayrı ve açık bir repo bakım talebi sayılır; ürün/platform implementation anlamına gelmez.
 
@@ -80,7 +83,7 @@ actionplan'ın çıktısı geliştiriciye şu seviyede teslim edilir:
 - Hangi risk ve rollback bilgisi PR'a taşınacak?
 - Hangi export artifact'i insan geliştirici tarafından uygulanacak?
 
-Bu bilgiler yeterliyse yalnız insan geliştirici ayrı repo/branch'te çalışabilir. AI'nın görevi burada biter; kod üretimi `human-developer-only`dır.
+Bu bilgiler yeterliyse yalnız insan geliştirici ayrı implementation repo/branch'inde çalışabilir. AI'nın platform görevi burada biter; ürün kodu `human-developer-only`dır.
 
 ---
 
