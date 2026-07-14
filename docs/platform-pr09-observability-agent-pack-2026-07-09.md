@@ -1,13 +1,18 @@
 # PR-09 Observability Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-09`
 Branch: `task/platform-observability`
 WBS node'u: `platform-observability`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-08`
 
-Bu belge product code üretmez. Amaç, PR-08 DB Schema/Migrations kanıtı kapandıktan sonra açılacak PR-09 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-08 DB Schema/Migrations kanıtı kapandıktan sonra açılacak PR-09 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -23,7 +28,7 @@ PR-09 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-08 DB/Alembic migration + rollback verified evidence
 - `platform-db-schema` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-09 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -47,9 +52,9 @@ PR-09 şunları yapmaz:
 - Tam OpenTelemetry deployment, collector operasyonu veya production scrape topology'si bitirmez.
 - Logging içine PII, secret, token veya yüksek kardinalite label eklemez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-08 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-08 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-09 Observability.
@@ -117,7 +122,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_health_ready.py tests/t
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 
