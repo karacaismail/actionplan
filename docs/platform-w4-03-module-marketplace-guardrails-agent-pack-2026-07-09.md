@@ -1,13 +1,18 @@
 # W4-03 Module Marketplace Guardrails Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W4-03`
 Branch: `task/module-marketplace-guardrails`
 WBS node'ları: `dx-marketplace`, `std-ci-gates`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W4-02`
 
-Bu belge product code üretmez. Amaç, W4-02 App Factory Release Train kanıtı kapandıktan sonra açılacak W4-03 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W4-02 App Factory Release Train kanıtı kapandıktan sonra açılacak W4-03 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -18,7 +23,7 @@ W4-03 yalnız şu kanıtlar geldikten sonra başlar:
 - W4-02 app factory release train verified
 - Customer/OrderOps/Inventory manifest, capability/entitlement list ve compose config smoke evidence actionplan'a geri yazıldı
 
-Bu kanıtlar yoksa W4-03 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -42,9 +47,9 @@ W4-03 şunları yapmaz:
 - Operations runbook drill veya portfolio exit report üretmez.
 - Actionplan evidence/status alanlarını gerçek PR/CI/test kanıtı olmadan ilerletmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W4-02 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W4-02 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W4-03 Module Marketplace Guardrails.
@@ -122,7 +127,7 @@ pnpm --filter @platform/marketplace run test -- module-security permission-diff 
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

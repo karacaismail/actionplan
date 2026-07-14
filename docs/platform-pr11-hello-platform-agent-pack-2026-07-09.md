@@ -1,13 +1,18 @@
 # PR-11 Hello Platform Boot Smoke Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-11`
 Branch: `task/platform-factory-hello-platform`
 WBS node'u: `platform-factory`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-10`
 
-Bu belge product code üretmez. Amaç, PR-10 SDK Public Contract kanıtı kapandıktan sonra açılacak PR-11 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-10 SDK Public Contract kanıtı kapandıktan sonra açılacak PR-11 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -25,7 +30,7 @@ PR-11 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-10 SDK public contract + deterministic codegen verified evidence
 - `be-sdk` ve `dx-cli` actionplan writeback'leri
 
-Bu kanıtlar yoksa PR-11 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -49,9 +54,9 @@ PR-11 şunları yapmaz:
 - Remote/deploy URL uydurmaz veya local smoke'u remote CI evidence yerine koymaz.
 - PR-01..PR-10 evidence eksikken Foundation complete iddiası yazmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-10 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-10 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-11 Hello Platform Boot Smoke.
@@ -128,7 +133,7 @@ pnpm --filter @platform/web run e2e -- hello-platform.spec.ts
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

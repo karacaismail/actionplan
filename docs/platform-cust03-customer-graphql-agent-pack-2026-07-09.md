@@ -1,13 +1,18 @@
 # CUST-03 Customer GraphQL/API Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-03`
 Branch: `task/platform-customer-graphql`
 WBS node'u: `platform-customer-graphql`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-02`
 
-Bu belge product code üretmez. Amaç, CUST-02 Customer Model kanıtı kapandıktan sonra açılacak CUST-03 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, CUST-02 Customer Model kanıtı kapandıktan sonra açılacak CUST-03 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -19,7 +24,7 @@ CUST-03 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-03 authz/PDP, PR-04 event/outbox, PR-06 audit envelope ve PR-09 observability evidence
 - `platform-customer-model` ve `platform-customer-graphql` actionplan writeback'leri
 
-Bu kanıtlar yoksa CUST-03 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ CUST-03 şunları yapmaz:
 - Authz, audit veya event/outbox temel katmanlarını yeniden tasarlamaz.
 - Tenant guard veya permission negative testlerini zayıflatmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-02 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-02 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-03 Customer GraphQL/API.
@@ -112,7 +117,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_customer_graphql.py tes
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

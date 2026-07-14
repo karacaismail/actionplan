@@ -1,13 +1,18 @@
 # PR-02 Tenancy Context Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-02`
 Branch: `task/platform-tenancy-context`
 WBS node'ları: `platform-tenancy`, `k-tenancy`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-01`
 
-Bu belge product code üretmez. Amaç, PR-01 remote/CI baseline kanıtı kapandıktan sonra açılacak PR-02 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-01 remote/CI baseline kanıtı kapandıktan sonra açılacak PR-02 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -20,7 +25,7 @@ PR-02 yalnız şu kanıtlar geldikten sonra başlar:
 - Branch protection / required checks evidence
 - `platform-cicd` ve `platform-factory` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-02 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -42,9 +47,9 @@ PR-02 şunları yapmaz:
 - DB migration mimarisini PR-08 kapsamı dışında büyütmez.
 - Tenant testlerini sadece mock başarı senaryosuyla yeşile boyamaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-01 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-01 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-02 Tenancy Context.
@@ -105,7 +110,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_tenant_context.py tests
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

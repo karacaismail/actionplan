@@ -94,6 +94,64 @@ Makine-okunur ek kuyruk: `reports/kernel-data-plane-readiness-queue-2026-07-14.j
 - Generated mutasyon yolunun bulunmadığını kanıtlayan contract testi.
 - Gerçek PR, merge SHA, CI URL, test logu ve rollback drill olmadan `verified` yok.
 
+## Repo-Geneli Gap Uygulaması
+
+Tam envanter `reports/kernel-gap-inventory-2026-07-14.json` içinde, canlı node verisine
+bağlı test ise `tests/kernelGapInventory.test.ts` içindedir. Bu uygulama runtime kodu veya
+module parent değiştirmez; yanlış readiness beyanını engelleyen plan kapısı ekler.
+
+| Audit shard | Kapsam | Düğüm | Durum |
+|---|---|---:|---|
+| KGA-01 | tenancy/identity/contract/schema/authz/party/capability/PDP | 8 | gap-confirmed, code-start NO-GO |
+| KGA-02 | actor/mode/SSO/control-plane/granularity/WBS | 9 | KGA-01'e bağlı |
+| KGA-03 | fieldtypes/storage/computation/flags/graph/sequence | 8 | veri düzlemi yok |
+| KGA-04 | bus/worker/agent/plugin/module/search/MDM/gateway | 8 | runtime yok |
+| KGA-05 | surface/consumer/terminology/KPI/calendar/panels | 8 | cycle kararı bekliyor |
+
+Beş shard'ın birleşimi tam olarak 41 benzersiz `k-*` düğümdür; dağılım 38 module + 3
+feature ve 787 SP'dir. Her shard PM tarafından koordine edilir, uzman bulguları PM üzerinden
+Codex'e gelir; Claude yalnız Codex'in sınırlı worker çağrısıdır. Nihai kabul Codex'tedir.
+
+## Öncelikli Yapısal Boşluklar
+
+1. 38 kernel module parent'ın yalnız 6'sında herhangi bir child vardır; 32'si code-bearing
+   child kararı olmadan yürütülemez. Parent değişikliği insan-onaylı WBS ledger'ı bekler.
+2. 17 kernel düğümünde `docs/` yolu içeren ref yoktur. Standart metni kopyalanmaz; doğru
+   task-specific kanonik kaynak bağlanır.
+3. Yalnız `k-tenancy`, `k-authz`, `k-bus`, `k-capability`, `k-policy-pdp` traceability taşır;
+   beşinin de implementation durumu `not-started`, 41 düğümün evidence alanı boştur.
+4. `k-surface`, `be-sdk` ve `stack-editions` için hem bekleme hem bloklama semantiği taşır.
+   Kernel → SDK sırası çözülmeden KDP-02 lineer kritik yola alınmaz.
+5. KMS, legal-hold, provider-adapter, signature-trust, evidence-seal, migration-bridge ve
+   obligation direktiflerinin açık kernel owner module'u yoktur. Envanter bunları aday olarak
+   kaydeder; kendiliğinden node üretmez.
+6. `qa:exec` 0 done/0 development ve `qa:ready` 0 development ile yeşildir. Bu yapısal
+   tutarlılık kanıtıdır; kernel code-start veya runtime readiness kanıtı değildir.
+
+## Base Queue Semantik Denetimi
+
+`PR-01..PR-11` sırası ve durumları değiştirilmedi; yalnız PR-01 next-actionable kalır.
+
+- PR-05 ECA'yı yalnız `l1-workflow`, PR-06 audit'i yalnız `l1-audit` ile eşler; kernel
+  primitive owner kararı eksiktir.
+- PR-07'nin goal'ü module registry/manifest iken tek WBS owner'ı `k-capability`dır;
+  `k-mod-l` sorumluluğu eksiktir. Ayrı PR mı, çift-owner mı olacağı insan kararıdır.
+- PR-10 veri düzlemi tamamlanmadan ancak SDK scaffold/port guard kanıtlayabilir; SDK-ready
+  diyemez. PR-11 boot smoke walking skeleton'dır; app-buildable çıkışı değildir.
+
+## Uygulama Sırası
+
+1. KGA-01..05 envanterini ve bekleyen karar ledger'ını sabit tut.
+2. İnsan/Admin code-bearing child, owner ve dependency kararlarını tek tek kabul etsin.
+3. Her kabul için önce kırmızı semantic test, sonra tek child'a ait docs/JSON handoff'u yaz.
+4. Base queue'da PR-01 kanıtı kapanmadan PR-02 veya KDP işi açma.
+5. Platformu temiz sibling worktree'de insan geliştirici uygulasın; gerçek PR/CI/test/evidence
+   actionplan'a geri yazılmadan `implemented/verified/done` üretme.
+
+Doğrulama kapısı node/SP/status/phase/evidence gerçekliğini, 41 düğümün shard birleşimini,
+32/17/5 yapısal sayımlarını, base queue değişmezliğini, PR-07 mismatch'ini ve kalıcı yetki
+zincirini test eder. Herhangi biri drift ederse envanter testi kırmızı olur.
+
 ## Rollback
 
 Plan değişikliği geri alınırsa yeni refs/requirements notu ve KDP ek kuyruğu revert edilir; eski

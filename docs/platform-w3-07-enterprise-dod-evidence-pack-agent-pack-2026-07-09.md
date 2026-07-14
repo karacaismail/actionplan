@@ -1,13 +1,18 @@
 # W3-07 Enterprise DoD Evidence Pack Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `W3-07`
 Branch: `task/enterprise-dod-evidence-pack`
 WBS node'ları: `build-enterprise-readiness`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-W3-06`
 
-Bu belge product code üretmez. Amaç, W3-06 Enterprise Release + Governance kanıtı kapandıktan sonra açılacak W3-07 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, W3-06 Enterprise Release + Governance kanıtı kapandıktan sonra açılacak W3-07 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -21,7 +26,7 @@ W3-07 yalnız şu kanıtlar geldikten sonra başlar:
 - W3-05 observability gates verified evidence
 - W3-06 release/governance verified evidence
 
-Bu kanıtlar yoksa W3-07 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ W3-07 şunları yapmaz:
 - Evidence linklerini local placeholder veya sözlü beyanla doldurmaz.
 - Actionplan evidence/status alanlarını gerçek PR/CI/deploy/test kanıtı olmadan ilerletmez.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-06 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız W3-06 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: W3-07 Enterprise DoD Evidence Pack.
@@ -116,7 +121,7 @@ pnpm --filter @platform/web run e2e -- customer.spec.ts order.spec.ts inventory.
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 
