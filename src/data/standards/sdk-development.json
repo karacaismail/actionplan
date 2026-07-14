@@ -1,0 +1,65 @@
+{
+  "id": "sdk-development",
+  "name": "App ve Module SDK-Only Geliştirme Standardı",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0032"],
+  "summary": "App assembly/app-core ve tüm gerçek app module'lerinin yalnız sürümlü public SDK, deterministik template ve generator sözleşmesiyle geliştirilmesini zorlar.",
+  "appliesTo": ["app", "module"],
+  "rules": [
+    {
+      "id": "sdk-only-lineage",
+      "rule": "Her app ve app module developmentMethod=sdk-only taşır; sdkContractRef, sdkRange, templateRef, generatorContractRef ve predecessorEvidenceRefs boş olamaz.",
+      "rationale": "Elle ve birbirinden farklı scaffold üretimini engeller; kernel -> SDK -> app-core -> module -> assembly zincirini kanıtlar.",
+      "severity": "must",
+      "check": "check-sdk-lineage + check-module-sdk-contracts"
+    },
+    {
+      "id": "sdk-app-core-first",
+      "rule": "Her app tam olarak bir zorunlu app-core module ile başlar; app-core SDK ile üretilmeden diğer app module development başlayamaz.",
+      "rationale": "App namespace, capability, event, route ve manifest sınırını diğer module'lerden önce kilitler.",
+      "severity": "must",
+      "check": "check-app-module-graph"
+    },
+    {
+      "id": "sdk-deterministic-output",
+      "rule": "App ve module generator çıktısı deterministic=true, generatedHeaderRequired=true ve manualEditAllowed=false taşır; aynı input byte-stable çıktı üretir.",
+      "rationale": "Generated kaynak drift'ini, rastgele üretimi ve elle düzenlenen scaffold'ı önler.",
+      "severity": "must",
+      "check": "SDK deterministic render ve generated-output guard testleri"
+    },
+    {
+      "id": "sdk-public-ports-only",
+      "rule": "Her app/module publicPortsOnly=true, directAppImportsAllowed=false, kernelInternalsAllowed=false ve crossContextWritesAllowed=false taşır; entegrasyon yalnız versioned public API/event/connector sözleşmesidir.",
+      "rationale": "App bağımsızlığı, tek-yazar veri otoritesi ve çevrimsiz dependency grafını korur.",
+      "severity": "must",
+      "check": "check-sdk-lineage + check-app-module-graph"
+    },
+    {
+      "id": "sdk-compatibility-negative-tests",
+      "rule": "Her app/module SDK version compatibility, missing capability, unauthorized access, tenant isolation, event-version ve generator manual-edit negatif testlerini test-plan fazında tanımlar.",
+      "rationale": "SDK sözleşmesini yalnız referans değil, kırılabilir davranış kapısı haline getirir.",
+      "severity": "must",
+      "check": "check-module-sdk-contracts + implementation CI"
+    }
+  ],
+  "banned": [
+    "manual-scaffold",
+    "direct-app-import",
+    "kernel-internals-import",
+    "cross-context-write",
+    "generated-manual-edit"
+  ],
+  "allowed": [
+    "versioned-public-sdk",
+    "neutral-integration-contract",
+    "generated-app-core",
+    "generated-module-template"
+  ],
+  "references": [
+    "docs/adr-0032-enterprise-sdk-app-identity.md",
+    "docs/app-enterprise-definition-contract.md",
+    "docs/kernel-sdk-app-delivery-sequence.md",
+    "docs/core-contract-pack.md"
+  ]
+}

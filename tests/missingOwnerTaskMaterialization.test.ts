@@ -107,12 +107,20 @@ describe("previously unmodeled directive owners", () => {
       ).toBe(true);
       expect(node.deliverables?.length, expected.nodeId).toBeGreaterThan(0);
       expect(node.acceptanceCriteria?.length, expected.nodeId).toBeGreaterThanOrEqual(2);
-      expect(node.phases?.["test-plan"]?.criteria?.length, expected.nodeId).toBeGreaterThan(0);
-      expect(node.phases?.verification?.criteria?.length, expected.nodeId).toBeGreaterThan(0);
-      expect(
-        node.phases?.["release-maintenance"]?.criteria?.length,
-        expected.nodeId,
-      ).toBeGreaterThan(0);
+      for (const phase of [
+        "requirements",
+        "test-plan",
+        "db-schema",
+        "development",
+        "test-qa",
+        "verification",
+        "release-maintenance",
+      ])
+        expect(
+          node.phases?.[phase]?.criteria?.length,
+          `${expected.nodeId}.${phase}`,
+        ).toBeGreaterThan(0);
+      expect(node.risks?.length, `${expected.nodeId}: task-specific risks`).toBeGreaterThan(0);
       expect(Object.keys(node.dimensions ?? {}), expected.nodeId).toHaveLength(17);
       expect(node.evidence, `${expected.nodeId}: planned evidence is not actual evidence`).toEqual(
         [],

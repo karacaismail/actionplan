@@ -1,7 +1,7 @@
 import { Card, Icon, ProgressBar } from "@/components/ui/primitives";
 import { STATUS_LABEL } from "@/lib/format";
 import { t } from "@/lib/strings";
-import { LEVEL_META, type WbsLevel } from "@/schemas";
+import { type ArtifactKind, LEVEL_META, type WbsLevel } from "@/schemas";
 import { useTaskStore } from "@/store/taskStore";
 import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo } from "react";
@@ -28,6 +28,13 @@ const STATUS_COLOR: Record<string, string> = {
   todo: "#94a3b8",
   backlog: "#64748b",
 };
+
+/** WBS kök seviyesi ürün kimliği değildir; katalog yalnız satılabilir app artefaktlarını gösterir. */
+export function selectSellableApps<T extends { artifactKind?: ArtifactKind }>(
+  nodes: readonly T[],
+): T[] {
+  return nodes.filter((node) => node.artifactKind === "sellable-app");
+}
 
 export function DashboardView() {
   const meta = useTaskStore((s) => s.meta);
@@ -86,7 +93,7 @@ export function DashboardView() {
     };
   }, [meta]);
 
-  const apps = useMemo(() => tree.filter((n) => n.level === "app"), [tree]);
+  const apps = useMemo(() => selectSellableApps(tree), [tree]);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">

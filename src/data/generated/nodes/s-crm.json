@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-crm",
-  "wbsCode": "14.2.1",
-  "level": "archetype",
+  "wbsCode": "8",
+  "level": "app",
   "title": "CRM",
   "slug": "s-crm",
-  "summary": "Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir.",
-  "parentId": "m-crm-sales",
+  "summary": "Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM enterprise app'i. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir.",
+  "parentId": null,
   "order": 1,
   "icon": "ph-address-book",
   "tags": [
@@ -21,13 +21,17 @@
     "iletişim",
     "skor",
     "owasp",
-    "tenant"
+    "tenant",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "l1-party"
   ],
   "blocks": [
-    "dist-membership",
+    "s-membership",
     "dist-realestate",
     "dist-sahibinden",
     "edition-salescrm",
@@ -42,6 +46,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-crm",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-crm",
+    "delivery-module: s-crm-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
     "doc-apply:task-handoff: docs/task-to-code-contract.md",
     "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
@@ -68,6 +80,7 @@
         "CRM çekirdek varlıkları (lead, hesap, iletişim, etkinlik) ve ilişkileri tanımlandı",
         "Lead skorlama ve görüşme zekâsı yetenek kapsamı onaylandı",
         "Rakip muadili (Salesforce/HubSpot) özellik paritesi taban çizgisi belirlendi",
+        "[CRITERION:s-crm-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:task-handoff] CRM kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
         "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
         "[DOC-APPLY:waterfall-handoff] CRM için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
@@ -81,6 +94,7 @@
         "Lead yönetimi taşları için kabul testleri yazıldı (test-önce)",
         "Skorlama bileşeni için doğruluk ve sınır değer test seti tanımlandı",
         "Erişilebilirlik ve tenant izolasyon test kapsamı belirlendi",
+        "[CRITERION:s-crm-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:high-risk-dod] CRM riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
         "[DOC-APPLY:task-handoff] CRM kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
         "[DOC-APPLY:ready-for-dev] CRM için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
@@ -97,7 +111,8 @@
       "criteria": [
         "Lead/hesap/iletişim/etkinlik tabloları tenant_id + RLS ile tasarlandı",
         "Skor alanı ve skor geçmişi (history) için şema kuruldu",
-        "İndeks ve kısıt (constraint) planı performansa göre belirlendi"
+        "İndeks ve kısıt (constraint) planı performansa göre belirlendi",
+        "[CRITERION:s-crm-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": "Şema, lead skorlama dikey dilimini destekleyecek şekilde hazır."
@@ -108,6 +123,7 @@
         "Lead yönetimi taşı uçtan uca teslim edilir",
         "Skorlama kuralları ve doğrulayıcılar entegre edilir",
         "Kod gözden geçirme ve lint kapıları geçilir",
+        "[CRITERION:s-crm-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] CRM yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -118,7 +134,8 @@
       "criteria": [
         "Skorlama doğruluk testleri yeşil",
         "Lead yönetimi kullanıcı yolculuğu e2e geçer",
-        "Cross-tenant negatif testleri geçer"
+        "Cross-tenant negatif testleri geçer",
+        "[CRITERION:s-crm-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": "Skorlama testleri geçti; yolculuk e2e sürüyor."
@@ -128,6 +145,7 @@
       "criteria": [
         "OWASP/LLM güvenlik gözden geçirmesi tamamlanır",
         "WCAG 2.2 AAA denetimi geçer",
+        "[CRITERION:s-crm-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:high-risk-dod] CRM kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
         "[DOC-APPLY:task-handoff] s-crm için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
         "[DOC-APPLY:ready-for-dev] s-crm code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
@@ -144,6 +162,7 @@
       "criteria": [
         "Kademeli açılış ve geri-alma prosedürü doğrulanır",
         "İzleme ve uyarılar devrede",
+        "[CRITERION:s-crm-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:high-risk-dod] s-crm risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
         "[DOC-APPLY:task-handoff] CRM teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
         "[DOC-APPLY:ready-for-dev] CRM repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
@@ -160,8 +179,12 @@
     "CRM çekirdek varlık modeli ve API'leri",
     "Lead skorlama bileşeni ve doğrulama katmanı",
     "Görüşme zekâsı için olay/etkinlik kayıt altyapısı",
+    "[APP-CONTRACT] CRM bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-crm-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-crm/s-crm-core SDK-only enterprise task handoff",
     "[DOC-APPLY:high-risk-dod] s-crm için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
-    "[DOC-APPLY:task-handoff] CRM için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] CRM için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-crm için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-crm için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] CRM için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -172,6 +195,11 @@
     "Lead yönetimi uçtan uca çalışır ve skorla zenginleştirilir",
     "Skor açıklanabilir ve denetlenebilir biçimde üretilir",
     "Tüm CRM sorguları tenant kapsamlıdır",
+    "[APP-CONTRACT] CRM MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-crm yalnız s-crm/s-crm-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:high-risk-dod] CRM yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
     "[DOC-APPLY:high-risk-dod] s-crm için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
     "[DOC-APPLY:task-handoff] s-crm handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
@@ -192,7 +220,7 @@
       "id": "r-scrm-1",
       "desc": "Rakip parite beklentisi kapsamı şişirebilir (scope creep)",
       "severity": "medium",
-      "mitigation": "Özellikler taş/molekül seviyesinde önceliklendirilir; MVP paritesi net tanımlanır."
+      "mitigation": "Özellikler taş/molekül seviyesinde önceliklendirilir; enterprise baseline, tam kapsam acceptance ve release kanıtı net tanımlanır."
     },
     {
       "id": "r-scrm-2",
@@ -225,12 +253,13 @@
         "Kapsam sınırı: lead/hesap/iletişim/etkinlik ve lead skorlama bu birimin işlevidir; teklif-satış kapanışı m-crm-sales'e, kampanya gönderimi s-marketing'e bırakılır",
         "Girdi/çıktı sözleşmesi: içe aktarma girdisi (e-posta, telefon, alan adı) ve çıktı olarak skorlanmış lead + müşteri 360 görünümü üretir; alan şeması sürümlenir",
         "Durum akışı: lead yaşam döngüsü yeni→temas→nitelikli→kazanıldı/kaybedildi geçişleriyle yönetilir, geçiş kuralları tanımlıdır",
-        "Hata yolu: geçersiz içe/dışa aktarım satırı reddedilir, kısmi başarı raporlanır ve kayıt atomik olmayan biçimde bozulmaz",
-        "Kabul ölçütü: skor açıklanabilir katkı dökümüyle üretilir ve her CRM sorgusu tenant kapsamlıdır"
+        "Hata yolu: geçersiz içe/dışa aktarım satırı reddedilir, kısmi başarı raporlanır ve kayıt atomik olmayan biçimde bozulmaz\nKabul ölçütü: skor açıklanabilir katkı dökümüyle üretilir ve her CRM sorgusu tenant kapsamlıdır",
+        "[DOC-APPLY:waterfall-handoff] s-crm: CRM kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "Lead skorlama bu ArcheType'ın ayırt edici AI yeteneğidir.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "human"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-crm — CRM\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- CRM kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -239,11 +268,10 @@
       "items": [
         "Tüm CRM tablolarında tenant_id RLS zorunlu",
         "İletişim verisine erişim rol ve portföy bazlı (least-privilege)",
-        "Lead girdileri (e-posta, telefon, alan adı) sunucuda doğrulanır",
-        "[DOC-APPLY:waterfall-handoff] s-crm: CRM kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+        "Lead girdileri (e-posta, telefon, alan adı) sunucuda doğrulanır"
       ],
       "notes": "Kişisel veri minimizasyonu ve maskeleme uygulanır.",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-crm — CRM\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- CRM kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "human",
       "promptVersion": "doc-task-content-v2"
     },
@@ -393,10 +421,10 @@
         "Hesap/kişi için Layer 1 party (l1-party) modeliyle eşlenir",
         "Kullanıcı arayüzü kabuğu için kernel surface (k-surface) tüketilir",
         "Kazanılan lead, Satış ArcheType'ına (s-sales) devredilir",
-        "[DOC-APPLY:task-handoff] s-crm: CRM için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:task-handoff] s-crm: CRM için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "Party verisi yeniden uygulanmaz; çekirdekten gelir.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-crm — CRM\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- CRM için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-crm handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- CRM için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-crm — \"CRM\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM ArcheType'ı. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir. Etiketler: core-operations, crm, archetype, ai-native, lead, skorlama.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-crm — CRM\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- CRM için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-crm handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- CRM için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "human",
       "promptVersion": "doc-task-content-v2"
     },
@@ -521,82 +549,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-crm-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-crm"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-crm-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-crm"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-crm-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-crm"
         }
       },
       "maxChainDepth": 6,
@@ -752,29 +704,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-crm-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-crm"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-crm-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-crm"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-crm-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-crm"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -787,18 +806,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -855,6 +868,282 @@
     "oidcRef": "oidc",
     "mfaRef": "mfa",
     "authzRef": "authz-rbac-abac",
-    "identityDataRef": "identity-data"
+    "identityDataRef": "identity-data",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-crm",
+    "canonicalName": "CRM",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "core-operations"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-crm.operate",
+        "s-crm.administer",
+        "s-crm.report-audit",
+        "m-crm-sales.lead-management",
+        "m-crm-sales.opportunity-pipeline",
+        "m-crm-sales.lead-scoring"
+      ]
+    },
+    "valueProposition": "Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM enterprise app'i. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir.",
+    "targetOrganizations": [
+      "Gelir, satış, ticaret ve müşteri operasyonu yürüten kuruluşlar"
+    ],
+    "buyerRoles": [
+      "Chief Revenue Officer",
+      "Commerce or Sales Director",
+      "Customer Data and Security Owner"
+    ],
+    "userRoles": [
+      "Sales or Commerce Specialist",
+      "Merchant or Seller",
+      "Customer Service Agent",
+      "Revenue Auditor"
+    ],
+    "businessOutcomes": [
+      "CRM: Salesforce, HubSpot, Pipedrive, Odoo CRM muadili AI-yerel CRM enterprise app'i. Lead skorlama ve görüşme zekâsı (conversation intelligence) çekirdek yetenekleridir.",
+      "CRM ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "CRM hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "CRM ve Satış Modülü yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "Salesforce yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "HubSpot yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "CRM tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "CRM ve Satış Modülü talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "CRM yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "CRM service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "CRM kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-crm.operate",
+      "s-crm.administer",
+      "s-crm.report-audit",
+      "m-crm-sales.lead-management",
+      "m-crm-sales.opportunity-pipeline",
+      "m-crm-sales.lead-scoring"
+    ],
+    "appCoreModuleId": "s-crm-core",
+    "requiredModuleIds": [
+      "s-crm-core",
+      "m-crm-sales"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "customer-commerce-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-crm.operate",
+        "s-crm.administer",
+        "s-crm.report-audit",
+        "m-crm-sales.lead-management",
+        "m-crm-sales.opportunity-pipeline",
+        "m-crm-sales.lead-scoring"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-crm.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-crm:sdk-semver-compatibility",
+        "planned-test:s-crm:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-crm:forbidden-import-boundaries",
+        "planned-test:s-crm:kernel-internals-deny",
+        "planned-test:s-crm:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "high",
+      "owners": {
+        "product": "CRM Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "CRM Data Owner",
+        "ux": "CRM UX Owner",
+        "qa": "CRM QA Owner",
+        "operations": "CRM Service Owner",
+        "compliance": "CRM Compliance Owner",
+        "release": "CRM Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft high-impact baseline: monthly SLO >= 99.9%; critical journeys >= 99.95%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "customer-commerce-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "ai-governance"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-crm-requirements-evidence",
+            "criterionId": "s-crm-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-crm/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-test-plan-evidence",
+            "criterionId": "s-crm-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-crm/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-db-schema-evidence",
+            "criterionId": "s-crm-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-crm/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-development-evidence",
+            "criterionId": "s-crm-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-crm/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-test-qa-evidence",
+            "criterionId": "s-crm-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-crm/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-verification-evidence",
+            "criterionId": "s-crm-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-crm/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-crm-release-maintenance-evidence",
+            "criterionId": "s-crm-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-crm/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-crm",
+    "moduleRef": "s-crm-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

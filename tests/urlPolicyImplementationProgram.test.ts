@@ -7,6 +7,19 @@ import { describe, expect, it } from "vitest";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROGRAM_PATH = path.join(ROOT, "src/data/url-policy/implementation-program.json");
 const ids = Array.from({ length: 17 }, (_, index) => `URLP-${String(index).padStart(2, "0")}`);
+const EXPORT_DATA_DIR = path.join(ROOT, "src/engine");
+const EXPORT_DATA_SOURCE_FILES = [
+  "exportData.ts",
+  ...fs
+    .readdirSync(EXPORT_DATA_DIR)
+    .filter((file) => /^exportData.+\.ts$/.test(file))
+    .sort((left, right) => left.localeCompare(right)),
+];
+
+const readExportDataSourceFamily = () =>
+  EXPORT_DATA_SOURCE_FILES.map((file) =>
+    fs.readFileSync(path.join(EXPORT_DATA_DIR, file), "utf8"),
+  ).join("\n");
 
 const phase = (index: number) => ({
   phaseId: ids[index],
@@ -191,9 +204,10 @@ describe("URLP-IMPLEMENTATION-2 gerçek program", () => {
     expect(platform?.roots?.urlPolicy).toBe("packages/url-policy");
     expect(platform?.roots?.sdk).toBe("packages/sdk");
     expect(platform?.roots?.urlPolicy).not.toBe(platform?.roots?.sdk);
-    const exportSource = fs.readFileSync(path.join(ROOT, "src/engine/exportData.ts"), "utf8");
-    expect(exportSource).toContain("- URL policy root:");
-    expect(exportSource).toContain("PRIMARY_WORKSPACE.roots.urlPolicy");
+    expect(EXPORT_DATA_SOURCE_FILES.length).toBeGreaterThan(1);
+    const exportSourceFamily = readExportDataSourceFamily();
+    expect(exportSourceFamily).toContain("- URL policy root:");
+    expect(exportSourceFamily).toContain("PRIMARY_WORKSPACE.roots.urlPolicy");
   });
 
   it("fazlar geniş wildcard veya sahte evidence ile kapsamı gevşetmez", () => {

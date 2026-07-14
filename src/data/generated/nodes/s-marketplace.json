@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-marketplace",
-  "wbsCode": "15.8",
-  "level": "archetype",
+  "wbsCode": "87",
+  "level": "app",
   "title": "Marketplace Management",
   "slug": "s-marketplace",
   "summary": "Mirakl, Webkul muadili. TR TradeHub damarı",
-  "parentId": "app-customer-revenue",
+  "parentId": null,
   "order": 8,
   "icon": "ph-storefront",
   "tags": [
@@ -21,7 +21,11 @@
     "ödeme",
     "yönlendirme",
     "onayı",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "s-commerce",
@@ -41,6 +45,14 @@
   "refs": [
     "kaynak-korpus: s-marketplace",
     "docs/archetype-listing-directive.md",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-marketplace",
+    "delivery-module: s-marketplace-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:actor-party-runtime-contract: docs/actor-party-contract.md",
     "doc-apply:capability-entitlement-runtime-contract: docs/capability-entitlement-contract.md",
     "doc-apply:mode-profile-runtime-contract: docs/mode-profile-contract.md",
@@ -82,6 +94,7 @@
       "criteria": [
         "Marketplace Management kapsamı + kampanya paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-marketplace-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:actor-party-runtime-contract] Marketplace Management içindeki her actor alanı için Party/RoleBinding kaynağı, gerekli rol, tenant/channel/app bağlamı ve yerel-model non-goal'ı kaydedilir.",
         "[DOC-APPLY:mode-profile-runtime-contract] Marketplace Management mode adı için kod içi if/switch yazmaz; merkezi versioned config ve capability/PDP bağlarını tüketir.",
         "[DOC-APPLY:marketplace-listing] Listing, price history, doping order, category/EAV ve moderation sınırları tanımlanır; owner ana verisi ilana kopyalanmaz.",
@@ -99,6 +112,7 @@
       "criteria": [
         "kampanya için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-marketplace-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:actor-party-runtime-contract] Çoklu rol, temporal çözüm, bağlam daraltma, cross-tenant erişim ve consumer üzerinden onaysız rol mutasyonu negatifleri önce yazılır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Unknown key, expired entitlement, cross-tenant grant, duplicate event ve onaysız AI mutation negatifleri önce yazılır.",
         "[DOC-APPLY:mode-profile-runtime-contract] Preview, missing field, cross-tenant profile, onaysız publish, capability deny ve rollback veri-paritesi testleri önce yazılır.",
@@ -131,6 +145,7 @@
       "criteria": [
         "kampanya Zod sözleşmesi + expand-contract göç",
         "KVKK + KVKK izin veri sınıflandırması",
+        "[CRITERION:s-marketplace-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner.",
         "[DOC-APPLY:marketplace-listing] listing, price_record ve doping_order tenant_id, lifecycle status, active_range ve event idempotency alanlarıyla tanımlanır; price_record append-only tutulur.",
         "[DOC-APPLY:marketplace-listing] Kategori öznitelikleri EAV/tipli atom referanslarıyla saklanır; kategori başına ayrı kolon/tablo üretimi yapılmaz."
       ],
@@ -142,6 +157,7 @@
       "criteria": [
         "Marketplace Management engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-marketplace-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Marketplace Management yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -151,7 +167,8 @@
       "status": "pending",
       "criteria": [
         "kampanya e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-marketplace-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -160,6 +177,7 @@
       "status": "pending",
       "criteria": [
         "Marketplace Management DoD + kanıt (evidence)",
+        "[CRITERION:s-marketplace-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:actor-party-runtime-contract] PartyRef/RoleBinding fixture'larında çoklu rol, temporal çözüm, tenant sınırı ve insan-onaylı audit bağı gerçek test referanslarıyla doğrulanır; çalıştırılmamış veya kanıtsız kontrol NOT-RUN kalır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Plan→entitlement→capability→PDP zinciri aynı fixture'da beklenen allow/deny ve audit referansını üretir.",
         "[DOC-APPLY:mode-profile-runtime-contract] Aynı versioned profil için preview diff, missing field, capability/PDP deny, cross-tenant erişim, onaylı publish ve rollback veri-paritesi gerçek test referanslarıyla doğrulanır; doğrudan config mutasyonu kapıyı kırmızı tutar.",
@@ -192,6 +210,7 @@
       "criteria": [
         "Marketplace Management CI→Pages dağıtımı",
         "kampanya runbook + geri-alma",
+        "[CRITERION:s-marketplace-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:actor-party-runtime-contract] Rol şeması, ilişki türü veya çözüm kuralı değişiminde temporal ve cross-tenant regresyonları, rol-cache invalidation'ı, revoke davranışı ve Alembic downgrade yolu yeniden çalıştırılır; append-only rol geçmişi silinmez.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Capability key, plan eşlemesi veya entitlement policy sürümü değişiminde default-deny, expiry, cross-tenant ve revoke regresyonları çalıştırılır; karar cache'i invalidated edilir ve eski grant'ler rollback sırasında sessizce genişletilmez.",
         "[DOC-APPLY:mode-profile-runtime-contract] Profil şeması, sürümü veya capability bileşimi değişiminde consumer etkisi, preview/migration dry-run'ı, rollback paritesi ve cache invalidation doğrulanır; önceki sürümler ile devre dışı bırakılan veriler korunur.",
@@ -222,6 +241,10 @@
   "deliverables": [
     "Marketplace Management uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Marketplace Management bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-marketplace-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-marketplace/s-marketplace-core SDK-only enterprise task handoff",
     "[DOC-APPLY:actor-party-runtime-contract] Marketplace Management aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Marketplace Management giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.",
     "[DOC-APPLY:mode-profile-runtime-contract] Marketplace Management capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.",
@@ -234,7 +257,7 @@
     "[DOC-APPLY:commerce-kernel-sdk-gap-disposition] Marketplace Management için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.",
     "[DOC-APPLY:high-risk-dod] s-marketplace için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
     "[DOC-APPLY:market-readiness] s-marketplace için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.",
-    "[DOC-APPLY:task-handoff] Marketplace Management için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Marketplace Management için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-marketplace için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-marketplace için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Marketplace Management için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -248,6 +271,11 @@
   "acceptanceCriteria": [
     "Marketplace Management için kampanya işlevsel kabulü karşılandı",
     "KVKK + KVKK izin + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Marketplace Management MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-marketplace yalnız s-marketplace/s-marketplace-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:actor-party-runtime-contract] Marketplace Management kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.",
     "[DOC-APPLY:actor-party-runtime-contract] Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.",
@@ -531,10 +559,10 @@
         "Komisyon kayıtları finance ArcheType'ına olay olarak akar; ürün verisi PIM'den okunur",
         "Satıcı sipariş olayı sipariş yönlendirme akışını tetikler, bağımlılık yönü commerce'tendir",
         "Dış pazaryerleri (Trendyol, Hepsiburada) channel-hub üzerinden senkronize edilir",
-        "[DOC-APPLY:actor-party-runtime-contract] s-marketplace: Marketplace Management aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-marketplace: Marketplace Management giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:mode-profile-runtime-contract] s-marketplace: Marketplace Management capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:catalog-commerce-stack-composition] s-marketplace: Marketplace Management için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition] s-marketplace: Marketplace Management için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n[DOC-APPLY:task-handoff] s-marketplace: Marketplace Management için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:commerce-os-contract-package-dag] s-marketplace: Marketplace Management için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
+        "[DOC-APPLY:actor-party-runtime-contract] s-marketplace: Marketplace Management aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-marketplace: Marketplace Management giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:mode-profile-runtime-contract] s-marketplace: Marketplace Management capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:catalog-commerce-stack-composition] s-marketplace: Marketplace Management için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition] s-marketplace: Marketplace Management için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n[DOC-APPLY:task-handoff] s-marketplace: Marketplace Management için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:commerce-os-contract-package-dag] s-marketplace: Marketplace Management için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
       ],
       "notes": "Marketplace commerce/payment/party çekirdeğini tüketir; komisyonu finance'a olayla iletir.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/kaya; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack, satıcı, sipariş, payout.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:actor-party-runtime-contract]\nKaynak: docs/actor-party-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n- Marketplace Management kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.\n- Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:actor-party-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Marketplace Management grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition]\nKaynak: docs/commerce-os-kernel-sdk-gap-directive.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n- Tenancy, identity/authz/PDP, audit, event/outbox, ledger, storage, search, capability/entitlement, mode/workflow ve provider-adapter davranışları Commerce içinde kopyalanmaz; mevcut sözleşme/port tüketimi açıkça gösterilir.\n- Acting-context SDK, payment/tax provider portu, out-of-process health, offline sync/conflict, signed mandate, generic availability veya experimentation boşluğu insan/layer kararı olmadan yeni primitive ya da implemented capability yapılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-kernel-sdk-gap-disposition]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-marketplace handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Marketplace Management için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-marketplace — \"Marketplace Management\" (ArcheType/kaya; küme: Müşteri & Gelir). Özet: Mirakl, Webkul muadili. TR TradeHub damarı Etiketler: customer-revenue, marketplace, stack, satıcı, sipariş, payout.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:actor-party-runtime-contract]\nKaynak: docs/actor-party-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n- Marketplace Management kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.\n- Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:actor-party-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Marketplace Management grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition]\nKaynak: docs/commerce-os-kernel-sdk-gap-directive.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n- Tenancy, identity/authz/PDP, audit, event/outbox, ledger, storage, search, capability/entitlement, mode/workflow ve provider-adapter davranışları Commerce içinde kopyalanmaz; mevcut sözleşme/port tüketimi açıkça gösterilir.\n- Acting-context SDK, payment/tax provider portu, out-of-process health, offline sync/conflict, signed mandate, generic availability veya experimentation boşluğu insan/layer kararı olmadan yeni primitive ya da implemented capability yapılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-kernel-sdk-gap-disposition]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-marketplace handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Marketplace Management için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-marketplace — Marketplace Management\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Marketplace Management için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -660,82 +688,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-marketplace-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-marketplace"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-marketplace-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-marketplace"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-marketplace-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-marketplace"
         }
       },
       "maxChainDepth": 6,
@@ -891,29 +843,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-marketplace-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-marketplace"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-marketplace-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-marketplace"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-marketplace-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-marketplace"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -926,18 +945,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -980,7 +993,302 @@
     "c12nRef": "c12n",
     "p13nRef": "p13n",
     "financeModelRef": "finance-money-model",
-    "globalMarketReadinessRef": "global-market-readiness"
+    "globalMarketReadinessRef": "global-market-readiness",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "i14yRef": "i14y"
   },
-  "uiArtifactRole": "consumes-ui"
+  "uiArtifactRole": "consumes-ui",
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-marketplace",
+    "canonicalName": "Marketplace Management",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "customer-revenue"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-marketplace.operate",
+        "s-marketplace.administer",
+        "s-marketplace.report-audit"
+      ]
+    },
+    "valueProposition": "Mirakl, Webkul muadili. TR TradeHub damarı",
+    "targetOrganizations": [
+      "Kurumsal finans, muhasebe ve düzenlenmiş ödeme operasyonları"
+    ],
+    "buyerRoles": [
+      "CFO",
+      "Financial Controller",
+      "Finance Transformation and Compliance Lead"
+    ],
+    "userRoles": [
+      "Accountant",
+      "Finance Operations Specialist",
+      "Approver",
+      "Internal or External Auditor"
+    ],
+    "businessOutcomes": [
+      "Marketplace Management: Mirakl, Webkul muadili. TR TradeHub damarı",
+      "Marketplace Management ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Marketplace Management hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Mirakl yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "TR TradeHub damarı yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "marketplace yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Marketplace Management tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Mirakl talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Marketplace Management yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Marketplace Management service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Marketplace Management kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-marketplace.operate",
+      "s-marketplace.administer",
+      "s-marketplace.report-audit"
+    ],
+    "appCoreModuleId": "s-marketplace-core",
+    "requiredModuleIds": [
+      "s-marketplace-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [
+      {
+        "providerAppId": "s-commerce",
+        "contractRef": "app-contract:s-commerce:public-api:v1",
+        "versionRange": ">=1.0.0 <2.0.0",
+        "transport": "event-and-api",
+        "consumedCapabilityIds": [
+          "s-commerce.operate"
+        ],
+        "subscribedEventTypes": [
+          "s-commerce.lifecycle.changed.v1"
+        ]
+      },
+      {
+        "providerAppId": "s-ecommerce-models",
+        "contractRef": "app-contract:s-ecommerce-models:public-api:v1",
+        "versionRange": ">=1.0.0 <2.0.0",
+        "transport": "event-and-api",
+        "consumedCapabilityIds": [
+          "s-ecommerce-models.operate"
+        ],
+        "subscribedEventTypes": [
+          "s-ecommerce-models.lifecycle.changed.v1"
+        ]
+      }
+    ],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "financial-records",
+      "customer-commerce-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-marketplace.operate",
+        "s-marketplace.administer",
+        "s-marketplace.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-marketplace.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1",
+        "s-commerce.lifecycle.changed.v1",
+        "s-ecommerce-models.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-marketplace:sdk-semver-compatibility",
+        "planned-test:s-marketplace:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-marketplace:forbidden-import-boundaries",
+        "planned-test:s-marketplace:kernel-internals-deny",
+        "planned-test:s-marketplace:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "medium",
+      "owners": {
+        "product": "Marketplace Management Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Marketplace Management Data Owner",
+        "ux": "Marketplace Management UX Owner",
+        "qa": "Marketplace Management QA Owner",
+        "operations": "Marketplace Management Service Owner",
+        "compliance": "Marketplace Management Compliance Owner",
+        "release": "Marketplace Management Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft enterprise baseline: monthly SLO >= 99.9%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "financial-records, customer-commerce-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "financial-state-model",
+        "decision-grade-data",
+        "wcag-2.2-aaa"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-marketplace-requirements-evidence",
+            "criterionId": "s-marketplace-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-marketplace/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-test-plan-evidence",
+            "criterionId": "s-marketplace-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-marketplace/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-db-schema-evidence",
+            "criterionId": "s-marketplace-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-marketplace/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-development-evidence",
+            "criterionId": "s-marketplace-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-marketplace/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-test-qa-evidence",
+            "criterionId": "s-marketplace-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-marketplace/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-verification-evidence",
+            "criterionId": "s-marketplace-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-marketplace/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-marketplace-release-maintenance-evidence",
+            "criterionId": "s-marketplace-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-marketplace/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-marketplace",
+    "moduleRef": "s-marketplace-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
+  }
 }

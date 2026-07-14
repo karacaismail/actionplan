@@ -42,4 +42,33 @@ describe("browser-storage kalıcılık (override)", () => {
     const merged = applyOverrides([node("a")], { c: node("c") });
     expect(merged.map((n) => n.id).sort()).toEqual(["a", "c"]);
   });
+
+  it("eski override yeni kanonik app/module teslimat alanlarını düşüremez", () => {
+    const appDefinition = { contract: "canonical-app" } as unknown as TaskNode["appDefinition"];
+    const moduleDefinition = {
+      contract: "canonical-module",
+    } as unknown as TaskNode["moduleDefinition"];
+    const deliveryContext = {
+      contract: "canonical-delivery",
+    } as unknown as TaskNode["deliveryContext"];
+    const base = {
+      ...node("a", { status: "todo" }),
+      artifactKind: "sellable-app",
+      canonicalId: "canonical-a",
+      appDefinition,
+      moduleDefinition,
+      deliveryContext,
+    } as unknown as TaskNode;
+    const staleOverride = node("a", { status: "done", owner: "alice" });
+
+    const [merged] = applyOverrides([base], { a: staleOverride });
+
+    expect(merged.status).toBe("done");
+    expect(merged.owner).toBe("alice");
+    expect(merged.artifactKind).toBe("sellable-app");
+    expect(merged.canonicalId).toBe("canonical-a");
+    expect(merged.appDefinition).toBe(appDefinition);
+    expect(merged.moduleDefinition).toBe(moduleDefinition);
+    expect(merged.deliveryContext).toBe(deliveryContext);
+  });
 });

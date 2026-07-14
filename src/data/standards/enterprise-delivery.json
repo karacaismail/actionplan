@@ -1,0 +1,54 @@
+{
+  "id": "enterprise-delivery",
+  "name": "Enterprise App ve Module Teslim Standardı",
+  "version": "1.0.0",
+  "family": "governance",
+  "basedOnAdr": ["adr-0032"],
+  "summary": "Her bağımsız app ve app module tanımını MVP kapsamından çıkarıp ölçülebilir enterprise waterfall, operasyon ve kanıt sözleşmesine bağlar.",
+  "appliesTo": ["app", "module"],
+  "rules": [
+    {
+      "id": "enterprise-target-only",
+      "rule": "Her app ve module deliveryGrade=enterprise-waterfall, targetGrade=enterprise ve mvpAllowed=false taşır; MVP, POC veya daha sonra enterprise'a tamamlama hedef kapsamı olamaz.",
+      "rationale": "Tanım aşamasında eksiltilmiş ürün sınırı bırakılmasını ve readiness iddiasının scope küçültülerek geçirilmesini engeller.",
+      "severity": "must",
+      "check": "check-enterprise-app-waterfall + noMvpProductPolicy testleri"
+    },
+    {
+      "id": "enterprise-seven-phase-contract",
+      "rule": "Her app ve module requirements -> test-plan -> db-schema -> development -> test-qa -> verification -> release-maintenance fazlarının her biri için giriş, çıktı, owner, acceptance, test, beklenen kanıt ve rollback tanımlar; önceki faz geçmeden sonraki faz aktif olamaz.",
+      "rationale": "Enterprise waterfall sırasını makine-okunur ve denetlenebilir hale getirir.",
+      "severity": "must",
+      "check": "check-enterprise-app-waterfall"
+    },
+    {
+      "id": "enterprise-trace-chain",
+      "rule": "Her requirementId bir acceptanceCriterionId, testCaseId ve evidenceExpectationId zincirine bağlanır; gerçek evidenceArtifactId yalnız çalıştırılmış ve bağımsız doğrulanmış kanıt geldiğinde yazılır.",
+      "rationale": "Planlanan kanıtın gerçek implementasyon kanıtı gibi sunulmasını engeller.",
+      "severity": "must",
+      "check": "check-enterprise-evidence"
+    },
+    {
+      "id": "enterprise-nfr-budgets",
+      "rule": "Her app availability, p95/p99 latency, throughput/scale, RTO, RPO, retention, tenant isolation, privacy, accessibility ve maliyet bütçelerini sayısal hedef veya insan-onaylı decision blocker olarak taşır.",
+      "rationale": "Enterprise-grade iddiasını ölçülebilir kalite ve day-2 operasyon bütçelerine bağlar.",
+      "severity": "must",
+      "check": "check-app-definitions + check-enterprise-app-waterfall"
+    },
+    {
+      "id": "enterprise-release-operations",
+      "rule": "Release-maintenance kapanışı standalone deploy, semver/compatibility, SBOM/provenance, rollout, rollback, runbook, on-call, incident, vulnerability, upgrade ve EOL kanıtı olmadan geçemez.",
+      "rationale": "Kod teslimini işletilebilir ve sürdürülebilir ürün tesliminden ayırır.",
+      "severity": "must",
+      "check": "check-enterprise-evidence + release review"
+    }
+  ],
+  "banned": ["mvp-scope", "poc-readiness", "evidence-without-artifact", "phase-skip"],
+  "allowed": ["requirements-backlog-with-explicit-blockers", "planned-evidence-without-pass-claim"],
+  "references": [
+    "docs/adr-0032-enterprise-sdk-app-identity.md",
+    "docs/app-enterprise-definition-contract.md",
+    "docs/enterprise-dod.md",
+    "docs/waterfall-developer-handoff.md"
+  ]
+}

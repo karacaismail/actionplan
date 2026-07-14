@@ -4,9 +4,16 @@ export type NodeIndex = Map<string, TaskNode>;
 
 export function indexById(nodes: TaskNode[]): NodeIndex {
   const index: NodeIndex = new Map();
-  for (const n of nodes) {
-    index.set(n.id, n);
-    for (const alias of n.aliases ?? []) index.set(alias, n);
+  // Gerçek kimlikleri önce kaydet; alias çözümü dizi sırasına bağlı olmasın.
+  for (const node of nodes) index.set(node.id, node);
+  for (const node of nodes)
+    if (node.artifactKind !== "legacy-alias")
+      for (const alias of node.aliases ?? []) index.set(alias, node);
+  // Fiziksel tombstone public veride kalsa bile eski URL canonical app'e gider.
+  for (const node of nodes) {
+    if (node.artifactKind !== "legacy-alias" || !node.canonicalId) continue;
+    const canonical = index.get(node.canonicalId);
+    if (canonical) index.set(node.id, canonical);
   }
   return index;
 }

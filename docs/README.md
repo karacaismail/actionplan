@@ -26,6 +26,7 @@ Mimari kararların kayıt defteri. (Not: 25 numaralı ADR ayrıca WBS'te `app-ka
 
 - [adr-0026-tech-profiles.md](adr-0026-tech-profiles.md) — Frontend stack'in makine-okunur, şema-bağlı, headless-kilitli tek-kaynak tanımı (tech-profiles).
 - [adr-0027-engineering-standards.md](adr-0027-engineering-standards.md) — Mühendislik standardı işletim katmanı: sözleşme + referans (standardRefs) + applicability + waivers + CI kapıları.
+- [adr-0032-enterprise-sdk-app-identity.md](adr-0032-enterprise-sdk-app-identity.md) — 121 canonical app, app-core/module SDK-only sınırı, portfolio/foundation ayrımı ve enterprise-only ürün kimliği kararı.
 - [adr-geo-visualization.md](adr-geo-visualization.md) — Coğrafi görselleştirme sınırı: deck.gl + MapLibre (iş grafikleri ECharts'ta kalır).
 
 ## 2. Kanonik Sözleşmeler (bağlayıcı kurallar)
@@ -39,6 +40,7 @@ Projedeki "doğru"yu tanımlayan, çelişen her şeyi geçersiz kılan bağlayı
 - [implementation-workspace-manifest.md](implementation-workspace-manifest.md) — Görev exportlarının yönleneceği implementation checkout'u, repo kökleri, komutlar ve yasak stack sınırı.
 - [core-contract-pack.md](core-contract-pack.md) — Çekirdek sözleşme paketi v1 (kapsamlı temel sözleşmeler).
 - [app-distribution-contract.md](app-distribution-contract.md) — Uygulama dağıtım sözleşmesi: global app'in izole/SDK sınırı, paylaşım ve dağıtım kuralları.
+- [app-enterprise-definition-contract.md](app-enterprise-definition-contract.md) — `appDefinition`, `moduleDefinition` ve `deliveryContext` için bağlayıcı JSON + seven-phase waterfall + SDK sözleşmesi.
 - [icerik-kalite-sozlesmesi.md](icerik-kalite-sozlesmesi.md) — İçerik kalitesi tanımı ("Definition of Deep"): bir boyut ne zaman "yeterli".
 - [wbs-field-semantics.md](wbs-field-semantics.md) — WBS ilişki alanlarının (dependsOn/blocks/related) anlam sözleşmesi.
 - [ready-for-dev-gate.md](ready-for-dev-gate.md) — Definition of Ready: development fazına geçiş kapısı (10/10).

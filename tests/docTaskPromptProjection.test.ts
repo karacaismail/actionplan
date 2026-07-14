@@ -3,10 +3,19 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+const NODE_DIR = path.resolve(
+  process.env.DOC_TASK_CONTENT_NODE_DIR ?? path.join(ROOT, "src/data/generated/nodes"),
+);
 const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
 const STANDARD_DIR = path.join(ROOT, "src/data/standards");
 const EXECUTABLE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const TYPED_DIRECT_KINDS = new Set(["sellable-app", "app-core-module", "app-module"]);
+const ROLLUP_KINDS = new Set([
+  "legacy-alias",
+  "portfolio-facet",
+  "governance",
+  "platform-foundation",
+]);
 const MANAGED_MARKER = /\[DOC-APPLY:[^\]]+\]/;
 const MANAGED_REF = /^doc-apply:([^:]+): (docs\/.+\.md)$/;
 
@@ -14,15 +23,22 @@ type Dimension = { items?: string[]; prompt?: string };
 type Node = {
   id: string;
   level: string;
+  artifactKind?: string;
   title: string;
   refs?: string[];
   evidence?: string[];
   dimensions?: Record<string, Dimension>;
+  appDefinition?: unknown;
+  moduleDefinition?: unknown;
+  deliveryContext?: unknown;
+  source?: { cluster?: string };
 };
 type Rule = {
   id: string;
   sources: string[];
+  selector?: { nodeIds?: string[] };
   content?: {
+    humanDecisionBlocker?: boolean;
     deliverables?: string[];
     acceptanceCriteria?: string[];
     phaseCriteria?: Record<string, string[]>;
@@ -50,6 +66,20 @@ const classifications = readJson<Classification[]>(
   path.join(ROOT, "src/data/doc-task-content-classification.json"),
 );
 const ruleById = new Map(rules.map((rule) => [rule.id, rule]));
+const humanDecisionOwnerIds = new Set(
+  rules
+    .filter((rule) => rule.content?.humanDecisionBlocker === true)
+    .flatMap((rule) => rule.selector?.nodeIds ?? []),
+);
+const isExecutableDirectiveOwner = (node: Node) =>
+  EXECUTABLE_LEVELS.has(node.level) && node.source?.cluster === "platform-directive-owner";
+const isExplicitHumanDecisionOwner = (node: Node) => humanDecisionOwnerIds.has(node.id);
+const isExplicitDirectMaterializationTarget = (node: Node) =>
+  isExecutableDirectiveOwner(node) || isExplicitHumanDecisionOwner(node);
+const isDirectMaterializationTarget = (node: Node) =>
+  isExplicitDirectMaterializationTarget(node) ||
+  (!ROLLUP_KINDS.has(node.artifactKind ?? "") &&
+    (TYPED_DIRECT_KINDS.has(node.artifactKind ?? "") || EXECUTABLE_LEVELS.has(node.level)));
 
 const render = (text: string, node: Node) =>
   text
@@ -98,9 +128,9 @@ function collectStandardRuleProse(value: unknown, out: string[] = []): string[] 
 }
 
 describe("document directives are projected into JSON task dimensions and prompts", () => {
-  it("gives every executable JSON task at least one valid, source-owned doc application", () => {
+  it("gives every direct typed/task JSON owner at least one valid, source-owned doc application", () => {
     const failures: string[] = [];
-    const executableNodes = nodes.filter((node) => EXECUTABLE_LEVELS.has(node.level));
+    const executableNodes = nodes.filter(isDirectMaterializationTarget);
 
     for (const node of executableNodes) {
       const applications = managedApplications(node);
@@ -122,7 +152,7 @@ describe("document directives are projected into JSON task dimensions and prompt
   it("puts every applied rule's substantive directive into an existing dimension item and its prompt", () => {
     const failures: string[] = [];
 
-    for (const node of nodes.filter((candidate) => EXECUTABLE_LEVELS.has(candidate.level))) {
+    for (const node of nodes.filter(isDirectMaterializationTarget)) {
       for (const application of managedApplications(node)) {
         const rule = ruleById.get(application.ruleId);
         if (!rule) continue;
@@ -157,7 +187,7 @@ describe("document directives are projected into JSON task dimensions and prompt
     ).toBe(0);
   });
 
-  it("keeps actual evidence and protected app/module JSON free of managed directive projection", () => {
+  it("keeps actual evidence, roll-ups and typed contract fields free of managed directive projection", () => {
     for (const node of nodes) {
       expect(
         (node.evidence ?? []).some(
@@ -166,10 +196,23 @@ describe("document directives are projected into JSON task dimensions and prompt
         `${node.id}: actual evidence cannot be synthesized from a directive`,
       ).toBe(false);
 
-      if (node.level === "app" || node.level === "module") {
+      if (
+        ROLLUP_KINDS.has(node.artifactKind ?? "") &&
+        !isExplicitDirectMaterializationTarget(node)
+      ) {
         const serialized = JSON.stringify(node);
-        expect(managedApplications(node), `${node.id}: protected level`).toEqual([]);
-        expect(serialized.includes("[DOC-APPLY:"), `${node.id}: protected level`).toBe(false);
+        expect(managedApplications(node), `${node.id}: protected roll-up`).toEqual([]);
+        expect(serialized.includes("[DOC-APPLY:"), `${node.id}: protected roll-up`).toBe(false);
+      }
+
+      if (TYPED_DIRECT_KINDS.has(node.artifactKind ?? "")) {
+        const typedContract = JSON.stringify({
+          appDefinition: node.appDefinition,
+          moduleDefinition: node.moduleDefinition,
+          deliveryContext: node.deliveryContext,
+        });
+        expect(typedContract.includes("[DOC-APPLY:"), `${node.id}: typed contract`).toBe(false);
+        expect(typedContract.includes("doc-apply:"), `${node.id}: typed contract`).toBe(false);
       }
     }
   });

@@ -34,6 +34,10 @@ function requireText(file, text, label = text) {
   if (!content.includes(text)) fail(`${file}: eksik ${label}`);
 }
 
+function requireContent(scope, content, text, label = text) {
+  if (!content.includes(text)) fail(`${scope}: eksik ${label}`);
+}
+
 function forbidPattern(file, pattern, label) {
   const content = read(file);
   if (pattern.test(content)) fail(`${file}: eski/celiskili ifade kaldi: ${label}`);
@@ -112,8 +116,24 @@ if (!primary) {
     );
 }
 
-requireText("src/engine/exportData.ts", "- SDK root:", "agent prompt SDK root");
-requireText("src/engine/exportData.ts", "- URL policy root:", "agent prompt URL policy root");
+const exportDataSource = fs
+  .readdirSync(rel("src", "engine"))
+  .filter((file) => /^exportData.*\.ts$/.test(file))
+  .sort()
+  .map((file) => read(path.join("src", "engine", file)))
+  .join("\n");
+requireContent(
+  "src/engine/exportData*.ts",
+  exportDataSource,
+  "- SDK root:",
+  "agent prompt SDK root",
+);
+requireContent(
+  "src/engine/exportData*.ts",
+  exportDataSource,
+  "- URL policy root:",
+  "agent prompt URL policy root",
+);
 requireText("tools/agents/check-vibecoding-ready.mjs", '"sdk"', "vibecoding root sdk check");
 requireText(
   "tools/agents/check-core-contract.mjs",

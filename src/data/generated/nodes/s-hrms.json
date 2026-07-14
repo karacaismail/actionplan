@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-hrms",
-  "wbsCode": "18.1",
-  "level": "archetype",
+  "wbsCode": "11",
+  "level": "app",
   "title": "HRMS Stack (TR)",
   "slug": "s-hrms",
   "summary": "Odoo HR, SAP HCM, Frappe HRMS, Logo HR muadili. Effective-dating ana disiplin.",
-  "parentId": "app-hr",
+  "parentId": null,
   "order": 1,
   "icon": "ph-users-four",
   "tags": [
@@ -22,13 +22,17 @@
     "effective",
     "maaş",
     "onay",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "cc-tr"
   ],
   "blocks": [
-    "dist-clinic",
+    "s-clinic",
     "s-isg",
     "stack-editions"
   ],
@@ -44,6 +48,14 @@
   "refs": [
     "kaynak-korpus: s-hrms",
     "docs/archetype-org-employment-directive.md",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-hrms",
+    "delivery-module: s-hrms-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:actor-party-runtime-contract: docs/actor-party-contract.md",
     "doc-apply:fragment-runtime-contract: docs/fragments-directive.md",
     "doc-apply:pdp-policy-runtime-contract: docs/pdp-policy-contract.md",
@@ -73,6 +85,7 @@
       "criteria": [
         "HRMS Stack (TR) kapsamı + izin talebi paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-hrms-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:actor-party-runtime-contract] HRMS Stack (TR) içindeki her actor alanı için Party/RoleBinding kaynağı, gerekli rol, tenant/channel/app bağlamı ve yerel-model non-goal'ı kaydedilir.",
         "[DOC-APPLY:fragment-runtime-contract] HRMS Stack (TR) için Atom/Fragment/ArcheType sınırı ile embedding, optionality, version pin ve index ihtiyacı beyan edilir.",
         "[DOC-APPLY:org-employment] Department roll-up, position, employment ve as-of salary/employer-cost parameter sınırları ile kişi ana verisinin PartyRef üzerinden kalması tanımlanır.",
@@ -89,6 +102,7 @@
       "criteria": [
         "izin talebi için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-hrms-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:actor-party-runtime-contract] Çoklu rol, temporal çözüm, bağlam daraltma, cross-tenant erişim ve consumer üzerinden onaysız rol mutasyonu negatifleri önce yazılır.",
         "[DOC-APPLY:fragment-runtime-contract] Version pin, optional/required alan, unknown field, cross-field invariant, recursive cycle reddi, canonical round-trip ve consumer index ihtiyacı için pozitif/negatif fixture'lar development öncesi yazılır.",
         "[DOC-APPLY:pdp-policy-runtime-contract] Allow, explicit deny, unknown input, stale policy, relationship escape, attribute spoof ve cross-tenant negatifleri önce yazılır.",
@@ -110,6 +124,7 @@
       "criteria": [
         "izin talebi Zod sözleşmesi + expand-contract göç",
         "SGK + KVKK veri sınıflandırması",
+        "[CRITERION:s-hrms-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner.",
         "[DOC-APPLY:org-employment] department, position, employment, salary_param, employer_cost_factor ve headcount_plan tenant_id ile tanımlanır; parametreler çakışmayan valid_range ve as-of sürüm zinciri taşır.",
         "[DOC-APPLY:org-employment] Accrual taslağı ledger referansı ve approval durumuyla idempotent bağlanır; doğrudan posted mali kayıt üretmez."
       ],
@@ -121,6 +136,7 @@
       "criteria": [
         "HRMS Stack (TR) engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-hrms-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] HRMS Stack (TR) yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -130,7 +146,8 @@
       "status": "pending",
       "criteria": [
         "izin talebi e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-hrms-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -139,6 +156,7 @@
       "status": "pending",
       "criteria": [
         "HRMS Stack (TR) DoD + kanıt (evidence)",
+        "[CRITERION:s-hrms-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:actor-party-runtime-contract] PartyRef/RoleBinding fixture'larında çoklu rol, temporal çözüm, tenant sınırı ve insan-onaylı audit bağı gerçek test referanslarıyla doğrulanır; çalıştırılmamış veya kanıtsız kontrol NOT-RUN kalır.",
         "[DOC-APPLY:fragment-runtime-contract] Registry fixture'ları canonical parse/serialize round-trip ve en az bir negatif cross-field assertion ile doğrulanır.",
         "[DOC-APPLY:pdp-policy-runtime-contract] Resolver/typed-action guard'ları PDP kararını tüketir; korumasız entrypoint sayısı sıfır ve deny audit izi eksiksizdir.",
@@ -160,6 +178,7 @@
       "criteria": [
         "HRMS Stack (TR) CI→Pages dağıtımı",
         "izin talebi runbook + geri-alma",
+        "[CRITERION:s-hrms-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:actor-party-runtime-contract] Rol şeması, ilişki türü veya çözüm kuralı değişiminde temporal ve cross-tenant regresyonları, rol-cache invalidation'ı, revoke davranışı ve Alembic downgrade yolu yeniden çalıştırılır; append-only rol geçmişi silinmez.",
         "[DOC-APPLY:fragment-runtime-contract] Fragment alanı veya sürümü değişiminde consumer uyumluluk matrisi, migration dry-run'ı, unknown-field/cross-field regresyonları ve rollback yolu doğrulanır; mevcut embedded değerler sessizce değiştirilmez.",
         "[DOC-APPLY:pdp-policy-runtime-contract] Policy, action, resource veya karar sürümü değişiminde default-deny, unknown/stale input, relationship/attribute escape ve cross-tenant regresyonları çalıştırılır; decision cache invalidated edilir, policyRef/audit geçmişi ve rollback paketi korunur.",
@@ -179,12 +198,16 @@
   "deliverables": [
     "HRMS Stack (TR) uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] HRMS Stack (TR) bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-hrms-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-hrms/s-hrms-core SDK-only enterprise task handoff",
     "[DOC-APPLY:actor-party-runtime-contract] HRMS Stack (TR) aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.",
     "[DOC-APPLY:fragment-runtime-contract] HRMS Stack (TR) alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.",
     "[DOC-APPLY:pdp-policy-runtime-contract] HRMS Stack (TR) action/resource girişlerini merkezi PDP'nin actor, tenant, relationship ve attribute bağlamına; allow/deny reason, policyRef ve auditFields çıktısına bağlayan consumer guard matrisi.",
     "[DOC-APPLY:org-employment] HRMS Stack (TR) için department, position, employment, as-of salary/cost parameters, headcount plan ve finance-onaylı aylık karşılık taslaklarını birleştiren işgücü maliyeti modeli.",
     "[DOC-APPLY:high-risk-dod] s-hrms için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
-    "[DOC-APPLY:task-handoff] HRMS Stack (TR) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] HRMS Stack (TR) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-hrms için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-hrms için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] HRMS Stack (TR) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -194,6 +217,11 @@
   "acceptanceCriteria": [
     "HRMS Stack (TR) için izin talebi işlevsel kabulü karşılandı",
     "SGK + KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] HRMS Stack (TR) MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-hrms yalnız s-hrms/s-hrms-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:actor-party-runtime-contract] HRMS Stack (TR) kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.",
     "[DOC-APPLY:actor-party-runtime-contract] Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.",
     "[DOC-APPLY:fragment-runtime-contract] Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.",
@@ -426,10 +454,10 @@
         "İzin/devam, scheduling yüzeyiyle eşlenir; takvim ve vardiya verisi tek kaynaktan okunur",
         "SGK/e-bildirge gönderimi cc-tr uyum modülü ve dış servis sözleşmesi üzerinden yapılır",
         "Özlük belgeleri dms/file modülüne delege edilir; bağımlılık yönü tek taraflıdır, çekirdek HRMS'e bağımlı değildir",
-        "[DOC-APPLY:actor-party-runtime-contract] s-hrms: HRMS Stack (TR) aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n[DOC-APPLY:fragment-runtime-contract] s-hrms: HRMS Stack (TR) alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n[DOC-APPLY:task-handoff] s-hrms: HRMS Stack (TR) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:actor-party-runtime-contract] s-hrms: HRMS Stack (TR) aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n[DOC-APPLY:fragment-runtime-contract] s-hrms: HRMS Stack (TR) alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n[DOC-APPLY:task-handoff] s-hrms: HRMS Stack (TR) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "Çalışan kimliği party'den, bordro s-payroll'a olayla; belgeler dms'e delege edilir.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-hrms — \"HRMS Stack (TR)\" (ArcheType/kaya; küme: İnsan Kaynakları). Özet: Odoo HR, SAP HCM, Frappe HRMS, Logo HR muadili. Effective-dating ana disiplin. Etiketler: hrms, payroll, tr-uyum, sgk, izin, özlük.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:actor-party-runtime-contract]\nKaynak: docs/actor-party-contract.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n- HRMS Stack (TR) kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.\n- Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:actor-party-runtime-contract]\n\n[DOC-APPLY:fragment-runtime-contract]\nKaynak: docs/fragments-directive.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n- Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.\n- Cross-field invariant ihlali ve unknown field consumer validation'da reddedilir; HRMS Stack (TR) registry/recursive fragment motoru veya app-özel kopya tanım üretmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:fragment-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-hrms handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- HRMS Stack (TR) için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-hrms — \"HRMS Stack (TR)\" (ArcheType/kaya; küme: İnsan Kaynakları). Özet: Odoo HR, SAP HCM, Frappe HRMS, Logo HR muadili. Effective-dating ana disiplin. Etiketler: hrms, payroll, tr-uyum, sgk, izin, özlük.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:actor-party-runtime-contract]\nKaynak: docs/actor-party-contract.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) aktörlerini merkezi PartyRef, temporal RoleBinding ve PartyRelation üzerinden tüketen; yerel Customer/Supplier/Employee kimlik kopyalarını yasaklayan consumer handoff'u.\n- HRMS Stack (TR) kişi/kurum kaydını yeniden tanımlamaz; merkezi party_id ve bağlama-zamana göre çözülen role binding kullanır, aynı party'nin çoklu rolünü veri kaybı olmadan gösterir.\n- Cross-tenant party/role erişimi reddedilir; consumer AI ile bind/revoke yapamaz ve insan-onaylı merkezi rol değişimini append-only audit referansıyla tüketir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:actor-party-runtime-contract]\n\n[DOC-APPLY:fragment-runtime-contract]\nKaynak: docs/fragments-directive.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n- Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.\n- Cross-field invariant ihlali ve unknown field consumer validation'da reddedilir; HRMS Stack (TR) registry/recursive fragment motoru veya app-özel kopya tanım üretmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:fragment-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-hrms — HRMS Stack (TR)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- HRMS Stack (TR) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-hrms handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- HRMS Stack (TR) için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -554,82 +582,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-hrms-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-hrms"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-hrms-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-hrms"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-hrms-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-hrms"
         }
       },
       "maxChainDepth": 6,
@@ -785,29 +737,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-hrms-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-hrms"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-hrms-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-hrms"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-hrms-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-hrms"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -820,18 +839,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -870,6 +883,273 @@
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
     "i18nRef": "i18n-standards",
-    "financeModelRef": "finance-money-model"
+    "financeModelRef": "finance-money-model",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-hrms",
+    "canonicalName": "HRMS Stack (TR)",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "hr"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-hrms.operate",
+        "s-hrms.administer",
+        "s-hrms.report-audit"
+      ]
+    },
+    "valueProposition": "Odoo HR, SAP HCM, Frappe HRMS, Logo HR muadili. Effective-dating ana disiplin.",
+    "targetOrganizations": [
+      "Kurumsal finans, muhasebe ve düzenlenmiş ödeme operasyonları"
+    ],
+    "buyerRoles": [
+      "CFO",
+      "Financial Controller",
+      "Finance Transformation and Compliance Lead"
+    ],
+    "userRoles": [
+      "Accountant",
+      "Finance Operations Specialist",
+      "Approver",
+      "Internal or External Auditor"
+    ],
+    "businessOutcomes": [
+      "HRMS Stack (TR): Odoo HR, SAP HCM, Frappe HRMS, Logo HR muadili. Effective-dating ana disiplin.",
+      "HRMS Stack (TR) ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "HRMS Stack (TR) hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Odoo HR yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "SAP HCM yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "Frappe HRMS yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "HRMS Stack (TR) tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Odoo HR talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "HRMS Stack (TR) yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "HRMS Stack (TR) service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "HRMS Stack (TR) kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-hrms.operate",
+      "s-hrms.administer",
+      "s-hrms.report-audit"
+    ],
+    "appCoreModuleId": "s-hrms-core",
+    "requiredModuleIds": [
+      "s-hrms-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "financial-records",
+      "workforce-and-candidate-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-hrms.operate",
+        "s-hrms.administer",
+        "s-hrms.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-hrms.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-hrms:sdk-semver-compatibility",
+        "planned-test:s-hrms:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-hrms:forbidden-import-boundaries",
+        "planned-test:s-hrms:kernel-internals-deny",
+        "planned-test:s-hrms:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "critical",
+      "owners": {
+        "product": "HRMS Stack (TR) Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "HRMS Stack (TR) Data Owner",
+        "ux": "HRMS Stack (TR) UX Owner",
+        "qa": "HRMS Stack (TR) QA Owner",
+        "operations": "HRMS Stack (TR) Service Owner",
+        "compliance": "HRMS Stack (TR) Compliance Owner",
+        "release": "HRMS Stack (TR) Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft regulated baseline: monthly SLO >= 99.95%; critical journeys >= 99.99%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft regulated baseline: RTO <= 30 minutes",
+        "rpo": "Draft regulated baseline: RPO <= 5 minutes",
+        "retention": "financial-records, workforce-and-candidate-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "privacy-retention"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-hrms-requirements-evidence",
+            "criterionId": "s-hrms-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-hrms/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-test-plan-evidence",
+            "criterionId": "s-hrms-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-hrms/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-db-schema-evidence",
+            "criterionId": "s-hrms-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-hrms/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-development-evidence",
+            "criterionId": "s-hrms-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-hrms/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-test-qa-evidence",
+            "criterionId": "s-hrms-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-hrms/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-verification-evidence",
+            "criterionId": "s-hrms-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-hrms/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-hrms-release-maintenance-evidence",
+            "criterionId": "s-hrms-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-hrms/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-hrms",
+    "moduleRef": "s-hrms-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

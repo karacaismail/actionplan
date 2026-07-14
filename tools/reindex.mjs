@@ -55,9 +55,9 @@ for (const n of nodes) {
 
 // navigation
 function navOf(node) {
-  const kids = (childrenOf.get(node.id) || []).sort((a, b) =>
-    (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }),
-  );
+  const kids = (childrenOf.get(node.id) || [])
+    .filter((child) => child.artifactKind !== "legacy-alias")
+    .sort((a, b) => (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }));
   return {
     id: node.id,
     title: node.title,
@@ -68,6 +68,7 @@ function navOf(node) {
   };
 }
 const navigation = roots
+  .filter((node) => node.artifactKind !== "legacy-alias")
   .sort((a, b) => (a.wbsCode || "").localeCompare(b.wbsCode || "", undefined, { numeric: true }))
   .map(navOf);
 
@@ -77,6 +78,7 @@ const index = nodes
     id: n.id,
     title: n.title,
     level: n.level,
+    artifactKind: n.artifactKind || "audit-pending",
     wbsCode: n.wbsCode,
     parentId: n.parentId,
     status: n.status,
@@ -89,10 +91,13 @@ const index = nodes
 const byLevel = {};
 const byStatus = {};
 const byCluster = {};
+const byArtifactKind = {};
 let filledExample = 0;
 for (const n of nodes) {
   byLevel[n.level] = (byLevel[n.level] || 0) + 1;
   byStatus[n.status] = (byStatus[n.status] || 0) + 1;
+  const artifactKind = n.artifactKind || "audit-pending";
+  byArtifactKind[artifactKind] = (byArtifactKind[artifactKind] || 0) + 1;
   const c = n.source?.cluster || "meta";
   byCluster[c] = (byCluster[c] || 0) + 1;
   const dims = Object.values(n.dimensions || {});
@@ -101,7 +106,7 @@ for (const n of nodes) {
 const prevMeta = JSON.parse(fs.readFileSync(path.join(GEN, "meta.json"), "utf8"));
 const metaCore = {
   schemaVersion: SCHEMA_VERSION,
-  counts: { total: nodes.length, byLevel, byStatus, byCluster, filledExample },
+  counts: { total: nodes.length, byLevel, byStatus, byCluster, byArtifactKind, filledExample },
   source: prevMeta.source ?? {
     contentSource: 0,
     oldatas: 0,

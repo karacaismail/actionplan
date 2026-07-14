@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "id": "fe-eng-standards",
-  "wbsCode": "7.2",
+  "wbsCode": "74.2",
   "level": "module",
   "title": "Muhendislik Standardi Isletim Katmani (ADR-0027)",
   "slug": "fe-eng-standards",
@@ -437,6 +437,31 @@
       "requiresApproval": false
     },
     {
+      "id": "eca-fe-eng-standards-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "ADR-0001: Repo Konumu — bağımsız private repo AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
       "id": "eca-fe-eng-standards-ai-app-module-deny",
       "event": "ai.generation.requested",
       "when": [
@@ -458,7 +483,7 @@
         "type": "deny",
         "params": {
           "reason": "ai-cannot-generate-app-or-module",
-          "node": "adr-0001"
+          "node": "fe-eng-standards"
         }
       },
       "maxChainDepth": 6,
@@ -486,7 +511,7 @@
         "type": "deny",
         "params": {
           "reason": "ai-cannot-update-app-or-module",
-          "node": "adr-0001"
+          "node": "fe-eng-standards"
         }
       },
       "maxChainDepth": 6,
@@ -506,43 +531,17 @@
         "type": "deny",
         "params": {
           "reason": "ai-cannot-override-rulesets",
-          "node": "adr-0001"
+          "node": "fe-eng-standards"
         }
       },
       "maxChainDepth": 6,
       "requiresApproval": false
-    },
-    {
-      "id": "eca-fe-eng-standards-risk-quarantine",
-      "event": "ai.risk.scored",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "riskScore",
-          "op": "gte",
-          "value": 80
-        }
-      ],
-      "then": {
-        "type": "create-task",
-        "params": {
-          "title": "ADR-0001: Repo Konumu — bağımsız private repo AI risk incelemesi",
-          "priority": "critical"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": true
     }
   ],
   "agentPolicy": {
     "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "allowedTargets": [],
     "forbiddenTargets": [
@@ -550,8 +549,7 @@
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -564,18 +562,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -611,11 +603,20 @@
     "dataApiContractRef": "data-api-contract",
     "stateContractRef": "",
     "testingStandardRef": "testing-strategy",
-    "qualityGateRef": "",
+    "qualityGateRef": "quality-gates",
     "observabilityRef": "observability",
     "releasePolicyRef": "release-versioning",
-    "aiGovernanceRef": "ai-governance"
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "i14yRef": "i14y"
   },
   "applicability": {},
-  "waivers": []
+  "waivers": [],
+  "artifactKind": "platform-foundation",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Kernel/SDK/platform foundation; app-owned runtime delivery context uygulanmaz."
+  }
 }

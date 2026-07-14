@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-fpa",
-  "wbsCode": "16.4",
-  "level": "archetype",
+  "wbsCode": "40",
+  "level": "app",
   "title": "Budgeting & Forecast (FP&A)",
   "slug": "s-fpa",
   "summary": "Anaplan, Planful muadili. What-if modelleme",
-  "parentId": "app-finance",
+  "parentId": null,
   "order": 4,
   "icon": "ph-chart-bar",
   "tags": [
@@ -21,7 +21,11 @@
     "tahmin",
     "hesabı",
     "rolling",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "scale-timeseries",
@@ -38,6 +42,14 @@
   "refs": [
     "kaynak-korpus: s-fpa",
     "docs/archetype-budget-plan-directive.md",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-fpa",
+    "delivery-module: s-fpa-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
     "doc-apply:budget-plan: docs/archetype-budget-plan-directive.md",
     "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
@@ -65,6 +77,7 @@
       "criteria": [
         "Budgeting & Forecast (FP&A) kapsamı + mizan paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-fpa-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Budgeting & Forecast (FP&A) için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:budget-plan] Budget plan/version, budget line, purchase bridge ve ledger actual feed sınırları ile soft/hard actual gösterimi tanımlanır.",
         "[DOC-APPLY:budget-plan] Capex threshold, belge zorunluluğu ve hard-block kararları açık veri/insan kararı olarak kilitlenir.",
@@ -80,6 +93,7 @@
       "criteria": [
         "mizan için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-fpa-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
         "[DOC-APPLY:budget-plan] Sürüm tekilliği, türetilmiş alanlara doğrudan yazma, soft→hard actual çift-sayım, FX kuru, capex step-up ve tenant/yetki negatif testleri önce kırmızı yazılır.",
         "[DOC-APPLY:budget-plan] Plan→purchase→soft actual→finance posting→hard actual→variance alert yolculuğu uçtan uca sınanır.",
@@ -99,6 +113,7 @@
       "criteria": [
         "mizan Zod sözleşmesi + expand-contract göç",
         "GİB e-fatura + KVKK veri sınıflandırması",
+        "[CRITERION:s-fpa-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner.",
         "[DOC-APPLY:budget-plan] budget_plan, budget_line ve purchase_record şemaları tenant, period, version, source ve Money alanlarını taşır; active plan tekilliği ve superseded değişmezliği zorlanır.",
         "[DOC-APPLY:budget-plan] Actual feed source_ref ile ledger/purchase kaydına bağlanır; actual/variance/forecast için serbest yazılabilir kolon yolu açılmaz."
       ],
@@ -110,6 +125,7 @@
       "criteria": [
         "Budgeting & Forecast (FP&A) engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-fpa-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Budgeting & Forecast (FP&A) yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -119,7 +135,8 @@
       "status": "pending",
       "criteria": [
         "mizan e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-fpa-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -128,6 +145,7 @@
       "status": "pending",
       "criteria": [
         "Budgeting & Forecast (FP&A) DoD + kanıt (evidence)",
+        "[CRITERION:s-fpa-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
         "[DOC-APPLY:budget-plan] Aynı feed girdisi aynı actual/variance/forecast sonucunu üretir; purchase→ledger dönüşümünde toplamın değişmediği kontrol edilir.",
         "[DOC-APPLY:budget-plan] E2 plan×0.9 uyarısı ve E3 plan aşımı eskalasyonu doğru owner, finance ve CPO hedeflerine yönlendirilir.",
@@ -147,6 +165,7 @@
       "criteria": [
         "Budgeting & Forecast (FP&A) CI→Pages dağıtımı",
         "mizan runbook + geri-alma",
+        "[CRITERION:s-fpa-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
         "[DOC-APPLY:budget-plan] Bütçe düzeltmesi active planı overwrite etmez; yeni version açılır, eski kurul dönemi ve superseded plan yeniden üretilebilir kalır.",
         "[DOC-APPLY:high-risk-dod] s-fpa risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
@@ -164,10 +183,14 @@
   "deliverables": [
     "Budgeting & Forecast (FP&A) uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Budgeting & Forecast (FP&A) bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-fpa-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-fpa/s-fpa-core SDK-only enterprise task handoff",
     "[DOC-APPLY:computation-derivation-runtime-contract] Budgeting & Forecast (FP&A) türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
     "[DOC-APPLY:budget-plan] Budgeting & Forecast (FP&A) için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı.",
     "[DOC-APPLY:high-risk-dod] s-fpa için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
-    "[DOC-APPLY:task-handoff] Budgeting & Forecast (FP&A) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Budgeting & Forecast (FP&A) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-fpa için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-fpa için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Budgeting & Forecast (FP&A) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -177,6 +200,11 @@
   "acceptanceCriteria": [
     "Budgeting & Forecast (FP&A) için mizan işlevsel kabulü karşılandı",
     "GİB e-fatura + KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Budgeting & Forecast (FP&A) MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-fpa yalnız s-fpa/s-fpa-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Budgeting & Forecast (FP&A) türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.",
     "[DOC-APPLY:budget-plan] Aynı dönem için ikinci active plan reddedilir; revizyon yeni sürüm açar ve superseded plan değişmez kalır.",
@@ -230,12 +258,13 @@
         "Kapsam sınırı: FP&A yalnız bütçe/tahmin/senaryo/varyans planlama katmanı — driver-based budget, senaryo (what-if), rolling forecast ve actual-vs-budget variance üretir; gerçek ledger yevmiyesi, banka hareketi veya ERP kaydı oluşturmaz (gerçekleşen veri salt-okuma olarak Accounting'den gelir)",
         "Girdi/çıktı sözleşmesi: girdi = { tenantId, period (YYYY-MM), scenarioId, department, currency, driverValues[] }; çıktı = { budgetLines[], forecastLines[], variance[] (actual−budget, % ve tutar) } — tüm alanlar Zod ile doğrulanır, para birimi ve dönem zorunlu",
         "Durum akışı (state machine): draft → review → approved/locked → forecast-revision; locked bütçe append-only'dir, revizyon yeni sürüm açar, eski sürüm değişmez korunur",
-        "Sürücü-temelli planlama: driver değeri × oran → bütçe satırı saf (pure) fonksiyonla türetilir; senaryo bir driver override kümesidir, ana bütçeyi bozmadan yeni türetim üretir",
-        "Hata yolları ve kabul kriterleri: geçersiz dönem/negatif olması gereken driver → 400 + alan hatası; kilitli bütçeye yazma → deny + audit; onaysız approve denemesi → reddedilir. Kabul: variance tutarı actual−budget ile birebir eşleşir, locked sürüm değiştirilemez, her durum geçişi izlenir"
+        "Sürücü-temelli planlama: driver değeri × oran → bütçe satırı saf (pure) fonksiyonla türetilir; senaryo bir driver override kümesidir, ana bütçeyi bozmadan yeni türetim üretir\nHata yolları ve kabul kriterleri: geçersiz dönem/negatif olması gereken driver → 400 + alan hatası; kilitli bütçeye yazma → deny + audit; onaysız approve denemesi → reddedilir. Kabul: variance tutarı actual−budget ile birebir eşleşir, locked sürüm değiştirilemez, her durum geçişi izlenir",
+        "[DOC-APPLY:budget-plan] s-fpa: Budgeting & Forecast (FP&A) için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı.\n[DOC-APPLY:waterfall-handoff] s-fpa: Budgeting & Forecast (FP&A) kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "kapsam/işlev sınırı, girdi-çıktı sözleşmesi, durum makinesi ve hata yolları netleştirildi.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "swarm"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:budget-plan]\nKaynak: docs/archetype-budget-plan-directive.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı.\n- Aynı dönem için ikinci active plan reddedilir; revizyon yeni sürüm açar ve superseded plan değişmez kalır.\n- actual_amount, variance ve forecast yalnız feed'den deterministik türetilir; doğrudan yazma reddedilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:budget-plan]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -245,8 +274,7 @@
         "Tenant izolasyonu: her bütçe/forecast/senaryo satırı tenant_id taşır ve PostgreSQL RLS ile filtrelenir; çapraz-tenant sorgu policy düzeyinde imkânsız, uygulama katmanı tenant'ı ezemez",
         "Least-privilege rol matrisi: hazırlayan (draft yazar), gözden geçiren (review), onaylayan (approve/lock) ve salt-okur ayrı roller; onay yetkisi olmayan approve/lock çağrısı deny edilir",
         "Gizli senaryo koruması: hassas M&A/işten çıkarma senaryoları alan-düzeyi erişim + at-rest şifreleme ile maskelenir; secret/anahtarlar KMS'te, koda gömülmez",
-        "Onay/deny izi: her approve, lock ve senaryo revizyonu actor + timestamp + before/after ile audit'e yazılır; yetkisiz revizyon denemesi deny + kayıt",
-        "Locked budget append-only audit evidence: kilitli bütçe fiziksel olarak değişmez, revizyon yeni sürüm satırı ekler; audit kaydı append-only saklanır ve DoD kanıtı (evidence) olarak sunulur"
+        "Onay/deny izi: her approve, lock ve senaryo revizyonu actor + timestamp + before/after ile audit'e yazılır; yetkisiz revizyon denemesi deny + kayıt\nLocked budget append-only audit evidence: kilitli bütçe fiziksel olarak değişmez, revizyon yeni sürüm satırı ekler; audit kaydı append-only saklanır ve DoD kanıtı (evidence) olarak sunulur"
       ],
       "notes": "RLS tenant izolasyonu, least-privilege, gizli senaryo maskeleme/secret, onay-deny ve append-only audit evidence eklendi.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -260,8 +288,7 @@
         "Kod sağlığı ekseni: lint + typecheck + Zod sözleşme (contract) kapıları CI'de yeşil olmadan merge yok; bütçe/varyans hesap fonksiyonları %100 tipli, any yasak",
         "Katman ayrıştırma: driver model, scenario engine ve variance adapter ayrı modüller — engine UI'dan, adapter engine'den bağımsız; bütçe hesabı saf (pure) fonksiyonlarla, yan-etkisiz",
         "Calculation budget/eşik: senaryo türetimi ve variance hesabı için hesap süresi/karmaşıklık eşiği tanımlı; eşik aşan hesap batch'e alınır, döngüsel karmaşıklık (cyclomatic) fonksiyon başına sınırlanır",
-        "Artımlı hesap: senaryo bir driver override kümesidir; değişmeyen satırlar yeniden hesaplanmaz, yalnız etkilenen sürücü zinciri türetilir (memoization)",
-        "Batch/toplu sınırı: çok-boyutlu bütçe küpü toplaması sayfa/parça (chunk) sınırıyla işlenir; ölü kod ve kullanılmayan senaryo dalları ağaç sarsımıyla (tree-shaking) elenir"
+        "Artımlı hesap: senaryo bir driver override kümesidir; değişmeyen satırlar yeniden hesaplanmaz, yalnız etkilenen sürücü zinciri türetilir (memoization)\nBatch/toplu sınırı: çok-boyutlu bütçe küpü toplaması sayfa/parça (chunk) sınırıyla işlenir; ölü kod ve kullanılmayan senaryo dalları ağaç sarsımıyla (tree-shaking) elenir"
       ],
       "notes": "kod sağlığı ekseni, lint/typecheck/contract gate, katman ayrıştırma, pure functions ve calculation budget/karmaşıklık sınırı eklendi.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -275,8 +302,7 @@
         "Sertleştirme ekseni: bağımlılık zinciri SBOM ile envanterlenir, SCA taraması (dependency scan) CI'de zorunlu; bilinen açık taşıyan paket merge'i bloke eder",
         "İmzalı varsayımlar: senaryo varsayımları (assumptions) ve driver rule sürümü imzalanır (signed); imza doğrulanmadan hesap motoru varsayımı kabul etmez, kural sürümü audit'e bağlanır",
         "Yüzey/egress daraltma: FP&A servisinin dış çıkış (egress) uçları allowlist ile sınırlı; gereksiz endpoint kapatılır, hesap worker'ı yalnız gerekli iç servislere erişir",
-        "Rate-limit + secret yönetimi: bütçe/senaryo yazma uçlarına kiracı-başı rate-limit; secret'lar KMS'te tutulur, düzenli rotasyon (rotation) uygulanır, koda gömülü sır yasak",
-        "Rollback sertleştirme: kilitli bütçe append-only olduğundan geri-alma yeni sürüm/feature-flag ile yapılır, geçmiş plan bozulmaz; gerçekleşen veri salt-okuma kaynaktan gelir, FP&A onu değiştiremez"
+        "Rate-limit + secret yönetimi: bütçe/senaryo yazma uçlarına kiracı-başı rate-limit; secret'lar KMS'te tutulur, düzenli rotasyon (rotation) uygulanır, koda gömülü sır yasak\nRollback sertleştirme: kilitli bütçe append-only olduğundan geri-alma yeni sürüm/feature-flag ile yapılır, geçmiş plan bozulmaz; gerçekleşen veri salt-okuma kaynaktan gelir, FP&A onu değiştiremez"
       ],
       "notes": "sertleştirme ekseni, SBOM/SCA, imzalı varsayım/kural sürümü, egress daraltma, rate-limit, secret rotation/KMS ve rollback sertleştirme eklendi.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -290,8 +316,7 @@
         "Bütçe küpü özet projeksiyondan; büyük boyutta önbellek",
         "Senaryo karşılaştırma anlık — Budgeting & Forecast (FP&A) eşzamanlılık tavanı yük testiyle belirlenir; hedef p95 400ms korunur",
         "Rolling forecast zamanlanmış yenilenir",
-        "soğuk başlangıç bütçesi Budgeting & Forecast (FP&A) için 500 ms; init profili sürüm karşılaştırmalıdır",
-        "sayfalama penceresi Budgeting & Forecast (FP&A) listelerinde sabit maliyetlidir; ofset büyümesi imleçle engellenir"
+        "soğuk başlangıç bütçesi Budgeting & Forecast (FP&A) için 500 ms; init profili sürüm karşılaştırmalıdır\nsayfalama penceresi Budgeting & Forecast (FP&A) listelerinde sabit maliyetlidir; ofset büyümesi imleçle engellenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -305,8 +330,7 @@
         "Mobilde bütçe onayı ve varyans uyarısı",
         "iOS/Android'de senaryo özeti görüntüleme",
         "Dar ekranda KPI/varyans kartı — cihaz geri dönüşünde Budgeting & Forecast (FP&A) kaydırma konumu korunur",
-        "Budgeting & Forecast (FP&A) derin-bağlantı (deep link) girişleri durum kaybı olmadan açılır; senaryo testi vardır",
-        "Budgeting & Forecast (FP&A) responsive kırılımları cihazda testlidir; offline taslak kaybolmaz (senkron kanıtı)"
+        "Budgeting & Forecast (FP&A) derin-bağlantı (deep link) girişleri durum kaybı olmadan açılır; senaryo testi vardır\nBudgeting & Forecast (FP&A) responsive kırılımları cihazda testlidir; offline taslak kaybolmaz (senkron kanıtı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -320,8 +344,7 @@
         "Bütçe/varyans tabloları klavye+okuyucu erişimli; tutarlar metinle",
         "Olumlu/olumsuz varyans renk dışında işaretle; kontrast 7:1",
         "Senaryo seçimi erişilebilir — Budgeting & Forecast (FP&A) durum rozetleri metin eşdeğerlidir (renk-bağımsız, kontrastlı)",
-        "büyütme %200'de Budgeting & Forecast (FP&A) yerleşimi kırılmadan çalışır; taşma testi koşulur",
-        "sayfa başlığı Budgeting & Forecast (FP&A) görünüm değişiminde güncellenir (ekran okuyucu bağlamı)"
+        "büyütme %200'de Budgeting & Forecast (FP&A) yerleşimi kırılmadan çalışır; taşma testi koşulur\nsayfa başlığı Budgeting & Forecast (FP&A) görünüm değişiminde güncellenir (ekran okuyucu bağlamı)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -335,8 +358,7 @@
         "Hesap worker sağlığı: senaryo/variance hesap worker'ı liveness (canlılık), readiness (hazır olma) ve startup probe taşır; readiness geçmeden trafiğe girmez, uzun senaryo koşusu deploy'da drenajla (graceful drain) korunur",
         "Rollback/replay stratejisi: bütçe/forecast olayları event olarak saklandığından deploy hatası sonrası okuma-modeli event replay ile yeniden kurulur; kilitli bütçe append-only olduğundan geri-alma veri kaybı yaratmaz",
         "Config/secret ayrımı: DB bağlantısı, KMS anahtar referansı ve driver oranları ortam config'inden okunur; secret'lar imaja gömülmez, secret store'dan enjekte edilir",
-        "HPA + kaynak limiti: hesap worker'ı CPU/kuyruk derinliğine göre yatay ölçeklenir (HPA); CPU/bellek request/limit tanımlı, ağır senaryo koşusu ayrı worker havuzunda izole",
-        "Shared hosting sınırı: WordPress sınıfı shared hosting'de yalnız temel bütçe + tek senaryo çalışır (arka plan worker/HPA yok); tam FP&A yükü K8s/Swarm gerektirir, bu sınır dağıtım notunda açıkça belirtilir"
+        "HPA + kaynak limiti: hesap worker'ı CPU/kuyruk derinliğine göre yatay ölçeklenir (HPA); CPU/bellek request/limit tanımlı, ağır senaryo koşusu ayrı worker havuzunda izole\nShared hosting sınırı: WordPress sınıfı shared hosting'de yalnız temel bütçe + tek senaryo çalışır (arka plan worker/HPA yok); tam FP&A yükü K8s/Swarm gerektirir, bu sınır dağıtım notunda açıkça belirtilir"
       ],
       "notes": "worker liveness/readiness probe, rollback/replay, config-secret ayrımı, HPA/kaynak limiti ve shared hosting sınırı eklendi.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -349,11 +371,10 @@
       "items": [
         "Backend ECA ruleset AI app/module mutasyon ve ruleset override denemesini deny eder",
         "Olay: gerçekleşen veri geldi → varyansı yeniden hesapla + eşik aşımında uyar (idempotent, zincir ≤6)",
-        "Olay: forecast dönemi geldi → rolling forecast taslağı üret (loop-breaker)",
-        "[DOC-APPLY:computation-derivation-runtime-contract] s-fpa: Budgeting & Forecast (FP&A) türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:budget-plan] s-fpa: Budgeting & Forecast (FP&A) için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı.\n[DOC-APPLY:high-risk-dod] s-fpa: s-fpa için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] s-fpa: Budgeting & Forecast (FP&A) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] s-fpa: s-fpa için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-fpa: s-fpa için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-fpa: Budgeting & Forecast (FP&A) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] s-fpa: Budgeting & Forecast (FP&A) kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] s-fpa: Budgeting & Forecast (FP&A) için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+        "Olay: forecast dönemi geldi → rolling forecast taslağı üret (loop-breaker)"
       ],
       "notes": "",
-      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Budgeting & Forecast (FP&A) türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:budget-plan]\nKaynak: docs/archetype-budget-plan-directive.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için sürümlü budget plan/line modeli, purchase ve ledger actual feed'i, soft/hard actual ayrımı, variance/forecast türetimi ve capex step-up akışı.\n- Aynı dönem için ikinci active plan reddedilir; revizyon yeni sürüm açar ve superseded plan değişmez kalır.\n- actual_amount, variance ve forecast yalnız feed'den deterministik türetilir; doğrudan yazma reddedilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:budget-plan]\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Budgeting & Forecast (FP&A) yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- s-fpa için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-fpa handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Budgeting & Forecast (FP&A) için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Budgeting & Forecast (FP&A) development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-fpa phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Budgeting & Forecast (FP&A) evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-fpa yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Budgeting & Forecast (FP&A) evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "prompt": "\"ECA Kuralları\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: backend/engine tarafında çalışan ruleset (UI yalnız güvenli yönetim yüzeyi, serbest JS/SQL/shell yok). AI app/module üretim-güncelleme denemesinde deny; ArcheType prod update için geçmiş veri koruma, snapshot, rollback, compatibility, append-only/expand-contract; döngü kırıcı maks 6, idempotency, tenant isolation, action allowlist, step-up; ruleset yetki katmanları (system kilitli / platform owner / tenant yalnız güvenli parametre).",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -378,12 +399,13 @@
         "Unit: sürücü-temelli bütçe türetimi ve variance (actual−budget, %) saf fonksiyonları için birim testleri; sınır değerler (sıfır driver, negatif variance, çoklu para birimi) kapsanır",
         "Contract: girdi/çıktı Zod sözleşmesi (period, scenarioId, driverValue, department, currency) ve yayılan olaylar için sözleşme testleri; şema kırıcı değişiklik testte yakalanır",
         "Integration: scenario engine + variance adapter + salt-okuma gerçekleşen veri kaynağının birlikte doğru variance ürettiği entegrasyon testi",
-        "E2E + negatif senaryolar: bütçe→review→approve/lock→forecast-revision uçtan uca akışı; negatifler = yetkisiz onay denemesi (deny), kilitli bütçeyi değiştirme denemesi (reddedilir), hatalı/eksik driver (400) ayrı test edilir",
-        "Fixture/evidence + testing-loop sınırı: tekrarlanabilir fixture ve variance beklenen-değer setleriyle koşum; testing-loop QA en çok 6 tur, düzelmezse otomatik düzeltilmeyip rapor edilir (evidence eklenir)"
+        "E2E + negatif senaryolar: bütçe→review→approve/lock→forecast-revision uçtan uca akışı; negatifler = yetkisiz onay denemesi (deny), kilitli bütçeyi değiştirme denemesi (reddedilir), hatalı/eksik driver (400) ayrı test edilir\nFixture/evidence + testing-loop sınırı: tekrarlanabilir fixture ve variance beklenen-değer setleriyle koşum; testing-loop QA en çok 6 tur, düzelmezse otomatik düzeltilmeyip rapor edilir (evidence eklenir)",
+        "[DOC-APPLY:high-risk-dod] s-fpa: s-fpa için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] s-fpa: s-fpa için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-fpa: s-fpa için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-fpa: Budgeting & Forecast (FP&A) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] s-fpa: Budgeting & Forecast (FP&A) için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
       ],
       "notes": "unit/contract/integration/e2e ayrımı, yetkisiz onay-kilitli bütçe-hatalı driver negatif senaryoları, fixture/evidence ve testing-loop 6-tur sınırı eklendi.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
-      "provenance": "swarm"
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Budgeting & Forecast (FP&A) yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- s-fpa için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Budgeting & Forecast (FP&A) development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-fpa phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-fpa için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Budgeting & Forecast (FP&A) evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-fpa yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Budgeting & Forecast (FP&A) evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "owasp": {
       "key": "owasp",
@@ -393,8 +415,7 @@
         "A01 Access Control: bütçe görünürlüğü RLS + rol matrisiyle sınırlı; approve/lock yalnız yetkili rolde, çapraz-tenant erişim policy düzeyinde engelli (ASVS erişim kontrolü)",
         "A04 Insecure Design: durum makinesi (draft→review→approved/locked→forecast-revision) tasarımla zorunlu; kilitli bütçe append-only, iş kuralı bypass edilemez",
         "A08 Integrity: bütçe sürümleme, kilit ve imzalı senaryo varsayımları/kural sürümü ile bütünlük; append-only audit trail (denetim izi) her değişikliği zincirler",
-        "A09 Logging: bütçe/senaryo/onay kararları correlation-id ile yapısal loglanır; yetkisiz onay ve kilitli bütçe değişim denemeleri güvenlik olayı olarak izlenir (NIST/SBOM envanteri ile)",
-        "Input validation: period (YYYY-MM), scenarioId, driverValue (aralık/işaret), department ve currency sunucu tarafında doğrulanır; AI forecast açıklaması varsa sub_prompt güvenilmez sayılır ve prompt injection izolasyonu uygulanır (LLM Top 10)"
+        "A09 Logging: bütçe/senaryo/onay kararları correlation-id ile yapısal loglanır; yetkisiz onay ve kilitli bütçe değişim denemeleri güvenlik olayı olarak izlenir (NIST/SBOM envanteri ile)\nInput validation: period (YYYY-MM), scenarioId, driverValue (aralık/işaret), department ve currency sunucu tarafında doğrulanır; AI forecast açıklaması varsa sub_prompt güvenilmez sayılır ve prompt injection izolasyonu uygulanır (LLM Top 10)"
       ],
       "notes": "A01/A04/A08/A09 bağlamı, ASVS/NIST/SBOM, alan doğrulama (period/scenario/driver/department/currency), append-only denetim izi ve AI forecast prompt injection izolasyonu eklendi.",
       "prompt": "\"OWASP & Standartlar\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: OWASP Top 10:2025 ilgili maddeleri (+ AI yüzeyi varsa LLM Top 10: prompt injection, güvensiz çıktı), bu görevin tehdit yüzeyi.",
@@ -408,12 +429,13 @@
         "FP&A, Accounting (gerçekleşen) ve Treasury (nakit tahmini) ile entegre",
         "İK/PMO kaynak planı bütçeye girer — sözleşme testi Budgeting & Forecast (FP&A) örnek-yük setiyle her sürümde koşar (contract)",
         "Konsolide veriden grup bütçesi — Budgeting & Forecast (FP&A) tüketici kayıt defteri (registry) sözleşme sürümüyle tutulur (contract)",
-        "Budgeting & Forecast (FP&A) bağımlılık grafiği üretimde döngüsüzdür; yeni kenar mimari incelemesinden geçer",
-        "Budgeting & Forecast (FP&A) idempotency anahtarı üretici tarafında sözleşmeyle belirlenir"
+        "Budgeting & Forecast (FP&A) bağımlılık grafiği üretimde döngüsüzdür; yeni kenar mimari incelemesinden geçer\nBudgeting & Forecast (FP&A) idempotency anahtarı üretici tarafında sözleşmeyle belirlenir",
+        "[DOC-APPLY:computation-derivation-runtime-contract] s-fpa: Budgeting & Forecast (FP&A) türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-fpa: Budgeting & Forecast (FP&A) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.",
-      "provenance": "swarm"
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-fpa — \"Budgeting & Forecast (FP&A)\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Anaplan, Planful muadili. What-if modelleme Etiketler: finance, fpa, stack, bütçe, senaryo, varyans.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Budgeting & Forecast (FP&A) türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-fpa — Budgeting & Forecast (FP&A)\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Budgeting & Forecast (FP&A) için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-fpa handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Budgeting & Forecast (FP&A) için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "moduleUsage": {
       "key": "moduleUsage",
@@ -536,82 +558,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-fpa-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-fpa"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-fpa-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-fpa"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-fpa-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-fpa"
         }
       },
       "maxChainDepth": 6,
@@ -767,29 +713,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-fpa-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-fpa"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-fpa-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-fpa"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-fpa-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-fpa"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -802,18 +815,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -853,6 +860,273 @@
     "qualityGateRef": "quality-gates",
     "i18nRef": "i18n-standards",
     "financeModelRef": "finance-money-model",
-    "decisionGradeRef": "decision-grade-data"
+    "decisionGradeRef": "decision-grade-data",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-fpa",
+    "canonicalName": "Budgeting & Forecast (FP&A)",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "finance"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-fpa.operate",
+        "s-fpa.administer",
+        "s-fpa.report-audit"
+      ]
+    },
+    "valueProposition": "Anaplan, Planful muadili. What-if modelleme",
+    "targetOrganizations": [
+      "Kurumsal finans, muhasebe ve düzenlenmiş ödeme operasyonları"
+    ],
+    "buyerRoles": [
+      "CFO",
+      "Financial Controller",
+      "Finance Transformation and Compliance Lead"
+    ],
+    "userRoles": [
+      "Accountant",
+      "Finance Operations Specialist",
+      "Approver",
+      "Internal or External Auditor"
+    ],
+    "businessOutcomes": [
+      "Budgeting & Forecast (FP&A): Anaplan, Planful muadili. What-if modelleme",
+      "Budgeting & Forecast (FP&A) ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Budgeting & Forecast (FP&A) hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Anaplan yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "What-if modelleme yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "bütçe yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Budgeting & Forecast (FP&A) tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Anaplan talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Budgeting & Forecast (FP&A) yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Budgeting & Forecast (FP&A) service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Budgeting & Forecast (FP&A) kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-fpa.operate",
+      "s-fpa.administer",
+      "s-fpa.report-audit"
+    ],
+    "appCoreModuleId": "s-fpa-core",
+    "requiredModuleIds": [
+      "s-fpa-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "financial-records",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-fpa.operate",
+        "s-fpa.administer",
+        "s-fpa.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-fpa.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-fpa:sdk-semver-compatibility",
+        "planned-test:s-fpa:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-fpa:forbidden-import-boundaries",
+        "planned-test:s-fpa:kernel-internals-deny",
+        "planned-test:s-fpa:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "critical",
+      "owners": {
+        "product": "Budgeting & Forecast (FP&A) Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Budgeting & Forecast (FP&A) Data Owner",
+        "ux": "Budgeting & Forecast (FP&A) UX Owner",
+        "qa": "Budgeting & Forecast (FP&A) QA Owner",
+        "operations": "Budgeting & Forecast (FP&A) Service Owner",
+        "compliance": "Budgeting & Forecast (FP&A) Compliance Owner",
+        "release": "Budgeting & Forecast (FP&A) Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft regulated baseline: monthly SLO >= 99.95%; critical journeys >= 99.99%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft regulated baseline: RTO <= 30 minutes",
+        "rpo": "Draft regulated baseline: RPO <= 5 minutes",
+        "retention": "financial-records, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "financial-state-model",
+        "decision-grade-data"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-fpa-requirements-evidence",
+            "criterionId": "s-fpa-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-fpa/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-test-plan-evidence",
+            "criterionId": "s-fpa-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-fpa/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-db-schema-evidence",
+            "criterionId": "s-fpa-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-fpa/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-development-evidence",
+            "criterionId": "s-fpa-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-fpa/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-test-qa-evidence",
+            "criterionId": "s-fpa-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-fpa/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-verification-evidence",
+            "criterionId": "s-fpa-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-fpa/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-fpa-release-maintenance-evidence",
+            "criterionId": "s-fpa-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-fpa/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-fpa",
+    "moduleRef": "s-fpa-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

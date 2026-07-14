@@ -53,13 +53,31 @@ export function hasOverrides(): boolean {
   return Object.keys(loadOverrides()).length > 0;
 }
 
+/**
+ * Yerel kayıt, düzenlenebilir görev alanlarını tabanın üzerine taşır; katalog kimliği ve
+ * SDK/enterprise sözleşmeleri ise her zaman güncel JSON-as-DB tabanından gelir. Böylece
+ * yeni şema alanlarını bilmeyen eski localStorage kayıtları kanonik içeriği silemez.
+ */
+function mergePersistedOverride(base: TaskNode, override: TaskNode): TaskNode {
+  return {
+    ...base,
+    ...override,
+    artifactKind: base.artifactKind,
+    canonicalId: base.canonicalId,
+    appDefinition: base.appDefinition,
+    moduleDefinition: base.moduleDefinition,
+    deliveryContext: base.deliveryContext,
+  };
+}
+
 /** Taban düğümlerin üzerine yerel override'ları bindirir (id eşleşmesi). */
 export function applyOverrides(base: TaskNode[], overrides: Record<string, TaskNode>): TaskNode[] {
   if (Object.keys(overrides).length === 0) return base;
   const seen = new Set<string>();
   const merged = base.map((n) => {
     seen.add(n.id);
-    return overrides[n.id] ?? n;
+    const override = overrides[n.id];
+    return override ? mergePersistedOverride(n, override) : n;
   });
   for (const [id, n] of Object.entries(overrides)) if (!seen.has(id)) merged.push(n);
   return merged;

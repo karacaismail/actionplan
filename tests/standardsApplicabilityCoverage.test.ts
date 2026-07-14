@@ -11,7 +11,14 @@ const MATRIX_PATH = path.join(ROOT, "src/data/standards-applicability.json");
 const NODES_DIR = path.join(ROOT, "src/data/generated/nodes");
 
 const EXPECTED_LEVEL_REFS = {
-  app: ["architectureRef", "releasePolicyRef", "aiGovernanceRef", "i18nRef"],
+  app: [
+    "architectureRef",
+    "releasePolicyRef",
+    "aiGovernanceRef",
+    "i18nRef",
+    "enterpriseDeliveryRef",
+    "sdkDevelopmentRef",
+  ],
   module: [
     "architectureRef",
     "qualityGateRef",
@@ -21,6 +28,8 @@ const EXPECTED_LEVEL_REFS = {
     "releasePolicyRef",
     "aiGovernanceRef",
     "i18nRef",
+    "enterpriseDeliveryRef",
+    "sdkDevelopmentRef",
   ],
   archetype: [
     "architectureRef",
@@ -73,6 +82,8 @@ const CANONICAL_REF_VALUES: Record<string, string> = {
   releasePolicyRef: "release-versioning",
   aiGovernanceRef: "ai-governance",
   i18nRef: "i18n-standards",
+  enterpriseDeliveryRef: "enterprise-delivery",
+  sdkDevelopmentRef: "sdk-development",
 };
 
 interface StandardsApplicabilityMatrix {

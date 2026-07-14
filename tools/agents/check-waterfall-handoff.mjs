@@ -13,7 +13,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
+const NODES = path.resolve(
+  process.env.WATERFALL_NODE_DIR ?? path.join(ROOT, "src", "data", "generated", "nodes"),
+);
+const IDENTITY_REGISTRY = path.join(ROOT, "src", "data", "app-catalog-decisions.json");
+const identityRegistry = JSON.parse(fs.readFileSync(IDENTITY_REGISTRY, "utf8"));
+const IDENTITY_BASELINE_DATE = identityRegistry.sourceSnapshot?.identityBaselineDate;
+if (!/^\d{4}-\d{2}-\d{2}$/.test(IDENTITY_BASELINE_DATE ?? ""))
+  throw new Error(
+    "src/data/app-catalog-decisions.json.sourceSnapshot.identityBaselineDate zorunlu ISO tarihtir",
+  );
 
 const LEVELS = new Set([
   "app",
@@ -73,6 +82,7 @@ const stats = {
   evidenceEmpty: 0,
   repoPathEmpty: 0,
   testCommandEmpty: 0,
+  historicalBaselineOnly: 0,
 };
 
 function hasText(value) {
@@ -95,9 +105,37 @@ for (const n of nodes) {
   if (!hasList(n.risks)) fails.push(`risks-yok: ${n.id}`);
   if (!hasText(n.rollback)) fails.push(`rollback-yok: ${n.id}`);
 
-  if (!n.schedule?.start || !n.schedule?.end) fails.push(`schedule-start-end-yok: ${n.id}`);
-  if (!n.schedule?.baselineStart || !n.schedule?.baselineEnd)
+  const schedule = n.schedule ?? {};
+  const hasCurrentStart = hasText(schedule.start);
+  const hasCurrentEnd = hasText(schedule.end);
+  const hasBaselineStart = hasText(schedule.baselineStart);
+  const hasBaselineEnd = hasText(schedule.baselineEnd);
+  const isHistoricalTypedBaseline =
+    Boolean(n.appDefinition || n.moduleDefinition) &&
+    n.status === "backlog" &&
+    n.progress === 0 &&
+    schedule.start === null &&
+    schedule.end === null &&
+    schedule.actualStart === null &&
+    schedule.actualEnd === null &&
+    hasBaselineStart &&
+    hasBaselineEnd &&
+    schedule.baselineEnd < IDENTITY_BASELINE_DATE;
+
+  if (hasCurrentStart !== hasCurrentEnd) {
+    fails.push(`schedule-current-pair-bozuk: ${n.id}`);
+  } else if (!hasCurrentStart && !isHistoricalTypedBaseline) {
+    fails.push(`schedule-current-yok: ${n.id}`);
+  } else if (isHistoricalTypedBaseline) {
+    stats.historicalBaselineOnly++;
+  } else if (schedule.start > schedule.end) {
+    fails.push(`schedule-current-sira-bozuk: ${n.id}`);
+  }
+  if (!hasBaselineStart || !hasBaselineEnd) {
     fails.push(`schedule-baseline-yok: ${n.id}`);
+  } else if (schedule.baselineStart > schedule.baselineEnd) {
+    fails.push(`schedule-baseline-sira-bozuk: ${n.id}`);
+  }
 
   for (const dep of n.dependsOn ?? []) {
     if (!ids.has(dep)) fails.push(`dependsOn-dangling: ${n.id} -> ${dep}`);
@@ -167,7 +205,7 @@ for (const n of nodes) {
 }
 
 console.log(
-  `[waterfall-handoff] ${stats.nodes} düğüm · evidence boş: ${stats.evidenceEmpty} · repoPath boş: ${stats.repoPathEmpty} · testCommand boş: ${stats.testCommandEmpty} · ihlal: ${fails.length}`,
+  `[waterfall-handoff] ${stats.nodes} düğüm · tarihsel baseline-only: ${stats.historicalBaselineOnly} · evidence boş: ${stats.evidenceEmpty} · repoPath boş: ${stats.repoPathEmpty} · testCommand boş: ${stats.testCommandEmpty} · ihlal: ${fails.length}`,
 );
 console.log(
   "Not: evidence/repoPath/testCommand boşluğu requirements/backlog aşamasında blocker değildir; development/done için ayrı kapılar zorlar.",

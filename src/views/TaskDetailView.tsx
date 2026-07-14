@@ -1,6 +1,7 @@
 import { EcaPanel } from "@/components/eca/EcaPanel";
 import { WorkflowPanel } from "@/components/eca/WorkflowPanel";
 import { EffectiveDirectivePanel } from "@/components/task-contract/EffectiveDirectivePanel";
+import { EnterpriseDeliveryPanel } from "@/components/task-contract/EnterpriseDeliveryPanel";
 import {
   TaskContractPanel,
   visibleTaskContent,
@@ -174,6 +175,7 @@ export function TaskDetailView() {
       <PlanningForm node={node} />
       <PhaseStepper node={node} />
       <TaskContractPanel node={node} />
+      <EnterpriseDeliveryPanel node={node} />
       <EffectiveDirectivePanel node={node} index={index} />
       <Dimensions node={node} />
       <StandardsRefsPanel node={node} />

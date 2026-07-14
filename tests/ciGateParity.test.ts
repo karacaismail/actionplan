@@ -16,6 +16,7 @@ const releaseGates = [
   "qa:finance-model",
   "qa:storybook-registry",
   "qa:atom",
+  "qa:pages-app-smoke",
 ];
 
 describe("local and Pages release gate parity", () => {
@@ -32,5 +33,11 @@ describe("local and Pages release gate parity", () => {
     expect(pkg.scripts["qa:ui-delivery"]).toContain("check-ui-delivery.mjs");
     expect(pkg.scripts["qa:ui-delivery"]).toContain("uiDeliveryGovernance.test.ts");
     expect(pkg.scripts["qa:ui-delivery"]).toContain("docAppliedUiRoleIsolation.test.ts");
+  });
+
+  it("configure, upload and deploy stay fail-closed outside main", () => {
+    const mainOnly = "if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'";
+
+    expect(deploy.split(mainOnly)).toHaveLength(4);
   });
 });

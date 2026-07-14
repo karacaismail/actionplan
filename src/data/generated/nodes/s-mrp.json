@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-mrp",
-  "wbsCode": "14.6",
-  "level": "archetype",
+  "wbsCode": "67",
+  "level": "app",
   "title": "MRP / Manufacturing Stack",
   "slug": "s-mrp",
   "summary": "SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan.",
-  "parentId": "app-core-operations",
+  "parentId": null,
   "order": 6,
   "icon": "ph-factory",
   "tags": [
@@ -21,7 +21,11 @@
     "kapasite",
     "malzeme",
     "talep",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "s-accounting"
@@ -33,6 +37,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-mrp",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-mrp",
+    "delivery-module: s-mrp-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
     "doc-apply:archetype-runtime-conformance-residual: docs/gap-2026-07-02-02-archetype.md",
     "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
@@ -60,6 +72,7 @@
       "criteria": [
         "MRP / Manufacturing Stack kapsamı + lead paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-mrp-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] MRP / Manufacturing Stack için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:task-handoff] MRP / Manufacturing Stack kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
         "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
@@ -73,6 +86,7 @@
       "criteria": [
         "lead için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-mrp-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
         "[DOC-APPLY:archetype-runtime-conformance-residual] Önce s-mrp için atom/fragment parity, typed-action guard, state transition, relation/cycle, tenant isolation ve migration rollback testlerini kırmızı tanımla; yalnız happy-path fixture kabul etme.",
         "[DOC-APPLY:high-risk-dod] MRP / Manufacturing Stack riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
@@ -90,7 +104,8 @@
       "status": "pending",
       "criteria": [
         "lead Zod sözleşmesi + expand-contract göç",
-        "KVKK veri sınıflandırması"
+        "KVKK veri sınıflandırması",
+        "[CRITERION:s-mrp-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -100,6 +115,7 @@
       "criteria": [
         "MRP / Manufacturing Stack engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-mrp-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] MRP / Manufacturing Stack yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -109,7 +125,8 @@
       "status": "pending",
       "criteria": [
         "lead e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-mrp-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -118,6 +135,7 @@
       "status": "pending",
       "criteria": [
         "MRP / Manufacturing Stack DoD + kanıt (evidence)",
+        "[CRITERION:s-mrp-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
         "[DOC-APPLY:archetype-runtime-conformance-residual] Canonical directive, fixture, schema, gate ve platform implementation'ı arasında alan/lifecycle/authority paritesini doğrula; tarihsel gap veya oluşturulmuş fixture tek başına runtime kanıtı değildir.",
         "[DOC-APPLY:high-risk-dod] MRP / Manufacturing Stack kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
@@ -136,6 +154,7 @@
       "criteria": [
         "MRP / Manufacturing Stack CI→Pages dağıtımı",
         "lead runbook + geri-alma",
+        "[CRITERION:s-mrp-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
         "[DOC-APPLY:archetype-runtime-conformance-residual] Archetype, atom/fragment, lifecycle veya relation sürümü değiştiğinde compatibility, backfill/downgrade ve consumer conformance sonuçlarını yeniden üret; yayımlanmış kayıt/audit geçmişini overwrite etme.",
         "[DOC-APPLY:high-risk-dod] s-mrp risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
@@ -153,10 +172,14 @@
   "deliverables": [
     "MRP / Manufacturing Stack uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] MRP / Manufacturing Stack bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-mrp-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-mrp/s-mrp-core SDK-only enterprise task handoff",
     "[DOC-APPLY:computation-derivation-runtime-contract] MRP / Manufacturing Stack türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
     "[DOC-APPLY:archetype-runtime-conformance-residual] MRP / Manufacturing Stack için ilgili canonical archetype directive'ini gerçek fixture, typed action/lifecycle, atom/fragment kullanımı, tenant guard, migration/downgrade ve implementation evidence ile kapatan conformance paketi.",
     "[DOC-APPLY:high-risk-dod] s-mrp için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
-    "[DOC-APPLY:task-handoff] MRP / Manufacturing Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] MRP / Manufacturing Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-mrp için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-mrp için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] MRP / Manufacturing Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -166,6 +189,11 @@
   "acceptanceCriteria": [
     "MRP / Manufacturing Stack için lead işlevsel kabulü karşılandı",
     "KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] MRP / Manufacturing Stack MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-mrp yalnız s-mrp/s-mrp-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
     "[DOC-APPLY:computation-derivation-runtime-contract] MRP / Manufacturing Stack türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.",
     "[DOC-APPLY:archetype-runtime-conformance-residual] s-mrp fixture'ı kanonik atom/fragment türlerini kullanır, lifecycle-yönetimli alanı generated CRUD/PATCH ile doğrudan yazmaz ve relation hedefleri/otoriteleri dangling veya çift-yazar bırakmaz.",
@@ -217,12 +245,13 @@
         "MRP/Üretim ArcheType'ı: ürün ağacı (BOM), üretim emri, malzeme ihtiyaç planlama, kapasite",
         "Üretim emri yaşam döngüsü ve yarı-mamul takibi",
         "Tedarik/üretim önerileri talep+stok+temin süresinden hesaplanır",
-        "MRP / Manufacturing Stack kabul sınırı: girdi/çıktı örneği, durum akışı ve hata yolu aynı sözleşme senaryosunda izlenir",
-        "MRP / Manufacturing Stack kabul sınırı: girdi/çıktı örneği, durum akışı ve hata yolu aynı sözleşme senaryosunda izlenir"
+        "MRP / Manufacturing Stack kabul sınırı: girdi/çıktı örneği, durum akışı ve hata yolu aynı sözleşme senaryosunda izlenir\nMRP / Manufacturing Stack kabul sınırı: girdi/çıktı örneği, durum akışı ve hata yolu aynı sözleşme senaryosunda izlenir",
+        "[DOC-APPLY:waterfall-handoff] s-mrp: MRP / Manufacturing Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "swarm"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -232,8 +261,7 @@
         "Üretim verisi tenant_id RLS; reçete (BOM) gizliliği rol bazlı",
         "Üretim emri değişikliği onay+iz; başlamış emir kısıtlı düzenlenir",
         "Maliyet/reçete bilgisi maskeli; dışa aktarım denetlenir",
-        "MRP / Manufacturing Stack veri sahipliği alan-bazlı yetkiyle ayrışır; toplu dışa aktarım onaylıdır",
-        "MRP / Manufacturing Stack veri erişimi prszs: tenant/PII maskeleme, least-privilege rol matrisi ve audit deny izi birlikte tutulur"
+        "MRP / Manufacturing Stack veri sahipliği alan-bazlı yetkiyle ayrışır; toplu dışa aktarım onaylıdır\nMRP / Manufacturing Stack veri erişimi prszs: tenant/PII maskeleme, least-privilege rol matrisi ve audit deny izi birlikte tutulur"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -247,8 +275,7 @@
         "MRP hesabı toplu/zamanlanmış; çok seviyeli BOM açılımı verimli",
         "Üretim emri durum makinesi; her geçiş tek sorumluluk",
         "Kapasite planı önbellekli; girdi değişiminde yeniden hesap",
-        "MRP / Manufacturing Stack kod sağlığı: modüler engine ayrımı, tip strictliği ve complexity eşiği 13 lint kapısında izlenir",
-        "MRP / Manufacturing Stack kod sağlığı: modüler engine ayrımı, tip strictliği ve complexity eşiği 11 lint kapısında izlenir"
+        "MRP / Manufacturing Stack kod sağlığı: modüler engine ayrımı, tip strictliği ve complexity eşiği 13 lint kapısında izlenir\nMRP / Manufacturing Stack kod sağlığı: modüler engine ayrımı, tip strictliği ve complexity eşiği 11 lint kapısında izlenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -262,8 +289,7 @@
         "MRP çalıştırması idempotent; tekrar koşuda çift emir oluşmaz",
         "Reçete değişikliği sürümlü + onaylı; aktif emirler eski sürümle korunur",
         "Maliyet manipülasyonu eşik+iz ile engellenir",
-        "MRP / Manufacturing Stack sertleştirme: secret rotasyonu, egress allowlist ve SBOM taraması rate-limit 75/dk ile birlikte kapıda izlenir",
-        "MRP / Manufacturing Stack sertleştirme: secret rotasyonu, egress allowlist ve SBOM taraması rate-limit 150/dk ile birlikte kapıda izlenir"
+        "MRP / Manufacturing Stack sertleştirme: secret rotasyonu, egress allowlist ve SBOM taraması rate-limit 75/dk ile birlikte kapıda izlenir\nMRP / Manufacturing Stack sertleştirme: secret rotasyonu, egress allowlist ve SBOM taraması rate-limit 150/dk ile birlikte kapıda izlenir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -277,8 +303,7 @@
         "Çok seviyeli BOM açılımı için bellek-içi graf + budama",
         "MRP koşusu büyük veri için parçalı/asenkron",
         "Kapasite sorgusu özet okuma-modelinden",
-        "ölçek testi MRP / Manufacturing Stack için hedef-yükün 2 katında koşulur; kırılma noktası bilinir",
-        "MRP / Manufacturing Stack toplu okumaları N+1 taramasından geçer; yük testi eşiği p95 400ms CI'dadır"
+        "ölçek testi MRP / Manufacturing Stack için hedef-yükün 2 katında koşulur; kırılma noktası bilinir\nMRP / Manufacturing Stack toplu okumaları N+1 taramasından geçer; yük testi eşiği p95 400ms CI'dadır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Performans Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: bileşik indeks, önbellek, imleç sayfalama, N+1 önleme, ölçülebilir hedef (p95 gecikme).",
@@ -291,11 +316,10 @@
       "items": [
         "Atölye terminalinde üretim emri ilerlemesi mobil giriş",
         "iOS/Android offline üretim kaydı + senkron",
-        "Malzeme eksikliği uyarısı mobil bildirim",
-        "[DOC-APPLY:high-risk-dod] s-mrp: s-mrp için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] s-mrp: s-mrp için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-mrp: s-mrp için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-mrp: MRP / Manufacturing Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] s-mrp: MRP / Manufacturing Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] s-mrp: MRP / Manufacturing Stack için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+        "Malzeme eksikliği uyarısı mobil bildirim"
       ],
       "notes": "",
-      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- MRP / Manufacturing Stack yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- s-mrp için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- MRP / Manufacturing Stack development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-mrp phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- MRP / Manufacturing Stack evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-mrp yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- MRP / Manufacturing Stack evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -307,8 +331,7 @@
         "BOM ağacı klavye+okuyucu erişimli (aria-tree)",
         "Emir durumu renk dışında metin+ikonla; kontrast 7:1",
         "Üretim kaydı formu etiketli ve hata bildirimli",
-        "MRP / Manufacturing Stack hata özetleri odak yönetimiyle ilişkilidir; ilk hataya atlama sağlanır",
-        "MRP / Manufacturing Stack form etiketleri aria ile eşlenir; hata duyurusu ekran okuyucuda testlidir"
+        "MRP / Manufacturing Stack hata özetleri odak yönetimiyle ilişkilidir; ilk hataya atlama sağlanır\nMRP / Manufacturing Stack form etiketleri aria ile eşlenir; hata duyurusu ekran okuyucuda testlidir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -322,8 +345,7 @@
         "MRP koşusu ayrı worker/CronJob; çevrimiçi yolu yavaşlatmaz",
         "Üretim olayları outbox ile stok/satınalma servislerine",
         "Shared hosting'de basit BOM + manuel planlama",
-        "MRP / Manufacturing Stack yapılandırma değişikliği sürümlenir; acil geri alma tek komuttur",
-        "kanarya dilimi MRP / Manufacturing Stack için trafik yüzdesiyle açılır; hata eşiğinde otomatik geri çekilir"
+        "MRP / Manufacturing Stack yapılandırma değişikliği sürümlenir; acil geri alma tek komuttur\nkanarya dilimi MRP / Manufacturing Stack için trafik yüzdesiyle açılır; hata eşiğinde otomatik geri çekilir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Dağıtım\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: Docker Swarm servisi, Kubernetes (HPA + liveness/readiness probe + kaynak limiti), WordPress sınıfı shared hosting kısıtı/uyumu.",
@@ -363,12 +385,13 @@
         "Çok seviyeli BOM açılım doğruluk testi",
         "MRP idempotency testi (tekrar koşu çift emir üretmez)",
         "Üretim emri yaşam döngüsü kullanıcı yolculuğu; en çok 6 tur",
-        "hata enjeksiyonu MRP / Manufacturing Stack kritik bağımlılığında senaryolaştırılır (timeout/5xx)",
-        "MRP / Manufacturing Stack e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
+        "hata enjeksiyonu MRP / Manufacturing Stack kritik bağımlılığında senaryolaştırılır (timeout/5xx)\nMRP / Manufacturing Stack e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)",
+        "[DOC-APPLY:high-risk-dod] s-mrp: s-mrp için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] s-mrp: s-mrp için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-mrp: s-mrp için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-mrp: MRP / Manufacturing Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] s-mrp: MRP / Manufacturing Stack için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
-      "provenance": "swarm"
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- MRP / Manufacturing Stack yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- s-mrp için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- MRP / Manufacturing Stack development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-mrp phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-mrp için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- MRP / Manufacturing Stack evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-mrp yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- MRP / Manufacturing Stack evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "owasp": {
       "key": "owasp",
@@ -391,10 +414,10 @@
         "MRP, Inventory (malzeme), Purchase (tedarik) ve Sales (talep) ile entegre",
         "Maliyet Finance'a aktarılır — MRP / Manufacturing Stack olay şeması sürümlüdür; bilinmeyen alan toleransı tüketici testinde doğrulanır",
         "Kapasite/iş emri saha (FSM) app'ine bağlanabilir; entegrasyon MRP / Manufacturing Stack (s-mrp) için kernel/core modül sözleşmesi, olay bus, bağımlılık yönü ve tipli API/arayüz bağı tanımlanır",
-        "[DOC-APPLY:computation-derivation-runtime-contract] s-mrp: MRP / Manufacturing Stack türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-mrp: MRP / Manufacturing Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:computation-derivation-runtime-contract] s-mrp: MRP / Manufacturing Stack türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-mrp: MRP / Manufacturing Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- MRP / Manufacturing Stack türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-mrp handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- MRP / Manufacturing Stack için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-mrp — \"MRP / Manufacturing Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan. Etiketler: mrp, manufacturing, bom, üretim, emri, maliyet.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- MRP / Manufacturing Stack türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-mrp — MRP / Manufacturing Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- MRP / Manufacturing Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-mrp handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- MRP / Manufacturing Stack için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -520,82 +543,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-mrp-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-mrp"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-mrp-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-mrp"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-mrp-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-mrp"
         }
       },
       "maxChainDepth": 6,
@@ -751,29 +698,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-mrp-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-mrp"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-mrp-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-mrp"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-mrp-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-mrp"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -786,18 +800,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -834,6 +842,286 @@
     "architectureRef": "architecture",
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
-    "i18nRef": "i18n-standards"
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-mrp",
+    "canonicalName": "MRP / Manufacturing Stack",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "core-operations"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-mrp.operate",
+        "s-mrp.administer",
+        "s-mrp.report-audit"
+      ]
+    },
+    "valueProposition": "SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan.",
+    "targetOrganizations": [
+      "Tedarik zinciri, üretim, saha ve lojistik operasyonları"
+    ],
+    "buyerRoles": [
+      "COO",
+      "Supply Chain Director",
+      "Operations Technology Owner"
+    ],
+    "userRoles": [
+      "Planner",
+      "Warehouse or Field Operator",
+      "Supplier Coordinator",
+      "Operations Auditor"
+    ],
+    "businessOutcomes": [
+      "MRP / Manufacturing Stack: SAP PP, Odoo Manufacturing muadili. Bağımlı talep + regenerative plan.",
+      "MRP / Manufacturing Stack ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "MRP / Manufacturing Stack hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "SAP PP yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "Bağımlı talep yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "regenerative plan yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "MRP / Manufacturing Stack tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "SAP PP talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "MRP / Manufacturing Stack yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "MRP / Manufacturing Stack service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "MRP / Manufacturing Stack kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-mrp.operate",
+      "s-mrp.administer",
+      "s-mrp.report-audit"
+    ],
+    "appCoreModuleId": "s-mrp-core",
+    "requiredModuleIds": [
+      "s-mrp-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [
+      {
+        "providerAppId": "s-accounting",
+        "contractRef": "app-contract:s-accounting:public-api:v1",
+        "versionRange": ">=1.0.0 <2.0.0",
+        "transport": "event-and-api",
+        "consumedCapabilityIds": [
+          "s-accounting.operate"
+        ],
+        "subscribedEventTypes": [
+          "s-accounting.lifecycle.changed.v1"
+        ]
+      }
+    ],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "property-and-asset-data",
+      "operational-telemetry-and-asset-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-mrp.operate",
+        "s-mrp.administer",
+        "s-mrp.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-mrp.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1",
+        "s-accounting.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-mrp:sdk-semver-compatibility",
+        "planned-test:s-mrp:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-mrp:forbidden-import-boundaries",
+        "planned-test:s-mrp:kernel-internals-deny",
+        "planned-test:s-mrp:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "medium",
+      "owners": {
+        "product": "MRP / Manufacturing Stack Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "MRP / Manufacturing Stack Data Owner",
+        "ux": "MRP / Manufacturing Stack UX Owner",
+        "qa": "MRP / Manufacturing Stack QA Owner",
+        "operations": "MRP / Manufacturing Stack Service Owner",
+        "compliance": "MRP / Manufacturing Stack Compliance Owner",
+        "release": "MRP / Manufacturing Stack Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft enterprise baseline: monthly SLO >= 99.9%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "property-and-asset-data, operational-telemetry-and-asset-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-mrp-requirements-evidence",
+            "criterionId": "s-mrp-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-mrp/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-test-plan-evidence",
+            "criterionId": "s-mrp-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-mrp/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-db-schema-evidence",
+            "criterionId": "s-mrp-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-mrp/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-development-evidence",
+            "criterionId": "s-mrp-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-mrp/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-test-qa-evidence",
+            "criterionId": "s-mrp-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-mrp/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-verification-evidence",
+            "criterionId": "s-mrp-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-mrp/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-mrp-release-maintenance-evidence",
+            "criterionId": "s-mrp-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-mrp/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-mrp",
+    "moduleRef": "s-mrp-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

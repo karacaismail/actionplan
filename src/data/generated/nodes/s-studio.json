@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-studio",
-  "wbsCode": "13.8",
-  "level": "archetype",
+  "wbsCode": "86",
+  "level": "app",
   "title": "Low-code Studio",
   "slug": "s-studio",
   "summary": "Frappe, LandX/atonota muadili. Kod yazmadan modül üretme — DİFERANSİYATÖR",
-  "parentId": "app-platform-horizontal",
+  "parentId": null,
   "order": 8,
   "icon": "ph-magic-wand",
   "tags": [
@@ -20,7 +20,11 @@
     "önizleme",
     "module",
     "prod",
-    "ruleset"
+    "ruleset",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "sus-actions"
@@ -40,6 +44,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-studio",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-studio",
+    "delivery-module: s-studio-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:capability-entitlement-runtime-contract: docs/capability-entitlement-contract.md",
     "doc-apply:mode-profile-runtime-contract: docs/mode-profile-contract.md",
     "doc-apply:task-handoff: docs/task-to-code-contract.md",
@@ -67,6 +79,7 @@
       "criteria": [
         "Low-code Studio kapsamı + Studio tanımı paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-studio-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:mode-profile-runtime-contract] Low-code Studio mode adı için kod içi if/switch yazmaz; merkezi versioned config ve capability/PDP bağlarını tüketir.",
         "[DOC-APPLY:task-handoff] Low-code Studio kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
         "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
@@ -80,6 +93,7 @@
       "criteria": [
         "Studio tanımı için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-studio-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Unknown key, expired entitlement, cross-tenant grant, duplicate event ve onaysız AI mutation negatifleri önce yazılır.",
         "[DOC-APPLY:mode-profile-runtime-contract] Preview, missing field, cross-tenant profile, onaysız publish, capability deny ve rollback veri-paritesi testleri önce yazılır.",
         "[DOC-APPLY:task-handoff] Low-code Studio kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
@@ -96,7 +110,8 @@
       "status": "pending",
       "criteria": [
         "Studio tanımı Zod sözleşmesi + expand-contract göç",
-        "erişim yönetimi veri sınıflandırması"
+        "erişim yönetimi veri sınıflandırması",
+        "[CRITERION:s-studio-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -106,6 +121,7 @@
       "criteria": [
         "Low-code Studio engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-studio-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Low-code Studio yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -115,7 +131,8 @@
       "status": "pending",
       "criteria": [
         "Studio tanımı e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-studio-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -124,6 +141,7 @@
       "status": "pending",
       "criteria": [
         "Low-code Studio DoD + kanıt (evidence)",
+        "[CRITERION:s-studio-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Plan→entitlement→capability→PDP zinciri aynı fixture'da beklenen allow/deny ve audit referansını üretir.",
         "[DOC-APPLY:mode-profile-runtime-contract] Aynı versioned profil için preview diff, missing field, capability/PDP deny, cross-tenant erişim, onaylı publish ve rollback veri-paritesi gerçek test referanslarıyla doğrulanır; doğrudan config mutasyonu kapıyı kırmızı tutar.",
         "[DOC-APPLY:task-handoff] s-studio için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
@@ -141,6 +159,7 @@
       "criteria": [
         "Low-code Studio CI→Pages dağıtımı",
         "Studio tanımı runbook + geri-alma",
+        "[CRITERION:s-studio-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Capability key, plan eşlemesi veya entitlement policy sürümü değişiminde default-deny, expiry, cross-tenant ve revoke regresyonları çalıştırılır; karar cache'i invalidated edilir ve eski grant'ler rollback sırasında sessizce genişletilmez.",
         "[DOC-APPLY:mode-profile-runtime-contract] Profil şeması, sürümü veya capability bileşimi değişiminde consumer etkisi, preview/migration dry-run'ı, rollback paritesi ve cache invalidation doğrulanır; önceki sürümler ile devre dışı bırakılan veriler korunur.",
         "[DOC-APPLY:task-handoff] Low-code Studio teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
@@ -157,9 +176,13 @@
   "deliverables": [
     "Low-code Studio uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Low-code Studio bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-studio-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-studio/s-studio-core SDK-only enterprise task handoff",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Low-code Studio giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.",
     "[DOC-APPLY:mode-profile-runtime-contract] Low-code Studio capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.",
-    "[DOC-APPLY:task-handoff] Low-code Studio için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Low-code Studio için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-studio için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-studio için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Low-code Studio için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -169,6 +192,11 @@
   "acceptanceCriteria": [
     "Low-code Studio için Studio tanımı işlevsel kabulü karşılandı",
     "erişim yönetimi + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Low-code Studio MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-studio yalnız s-studio/s-studio-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Low-code Studio grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.",
     "[DOC-APPLY:mode-profile-runtime-contract] Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.",
@@ -372,10 +400,10 @@
         "Studio, kernel (ArcheType), bpm (akış), iam (yetki) ile entegre",
         "Builder stack'i kullanır — olay şeması Low-code Studio sözleşmesinde sürümlüdür; tüketici uyumu veriyolu testiyle kanıtlanır",
         "Üretilen UI Surface sözleşmesiyle — sözleşme örnek-yükleri Low-code Studio için fixture olarak sürümlenir; drift testte yakalanır",
-        "[DOC-APPLY:capability-entitlement-runtime-contract] s-studio: Low-code Studio giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:mode-profile-runtime-contract] s-studio: Low-code Studio capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:task-handoff] s-studio: Low-code Studio için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:capability-entitlement-runtime-contract] s-studio: Low-code Studio giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:mode-profile-runtime-contract] s-studio: Low-code Studio capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:task-handoff] s-studio: Low-code Studio için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-studio — \"Low-code Studio\" (ArcheType/kaya; küme: Platform & Yatay). Özet: Frappe, LandX/atonota muadili. Kod yazmadan modül üretme — DİFERANSİYATÖR Etiketler: platform-horizontal, studio, stack, üretilen, archetype, tasarım.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Low-code Studio grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-studio handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Low-code Studio için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-studio — \"Low-code Studio\" (ArcheType/kaya; küme: Platform & Yatay). Özet: Frappe, LandX/atonota muadili. Kod yazmadan modül üretme — DİFERANSİYATÖR Etiketler: platform-horizontal, studio, stack, üretilen, archetype, tasarım.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Low-code Studio grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-studio — Low-code Studio\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Low-code Studio için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-studio handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Low-code Studio için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -500,82 +528,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-studio-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-studio"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-studio-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-studio"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-studio-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-studio"
         }
       },
       "maxChainDepth": 6,
@@ -731,29 +683,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-studio-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-studio"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-studio-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-studio"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-studio-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-studio"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -766,18 +785,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -815,7 +828,272 @@
     "architectureRef": "architecture",
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
-    "i18nRef": "i18n-standards"
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
   },
-  "uiArtifactRole": "consumes-ui"
+  "uiArtifactRole": "consumes-ui",
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-studio",
+    "canonicalName": "Low-code Studio",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "platform-horizontal"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-studio.operate",
+        "s-studio.administer",
+        "s-studio.report-audit"
+      ]
+    },
+    "valueProposition": "Frappe, LandX/atonota muadili. Kod yazmadan modül üretme — DİFERANSİYATÖR",
+    "targetOrganizations": [
+      "Low-code Studio operasyonunu kurumsal ölçekte yürüten kuruluşlar"
+    ],
+    "buyerRoles": [
+      "Low-code Studio Business Owner",
+      "Enterprise IT and Security Owner",
+      "Compliance Owner"
+    ],
+    "userRoles": [
+      "Low-code Studio Specialist",
+      "Tenant Administrator",
+      "Operator",
+      "Auditor"
+    ],
+    "businessOutcomes": [
+      "Low-code Studio: Frappe, LandX/atonota muadili. Kod yazmadan modül üretme — DİFERANSİYATÖR",
+      "Low-code Studio ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Low-code Studio hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Frappe yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "Kod yazmadan modül üretme yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "DİFERANSİYATÖR yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Low-code Studio tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Frappe talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Low-code Studio yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Low-code Studio service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Low-code Studio kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-studio.operate",
+      "s-studio.administer",
+      "s-studio.report-audit"
+    ],
+    "appCoreModuleId": "s-studio-core",
+    "requiredModuleIds": [
+      "s-studio-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-studio.operate",
+        "s-studio.administer",
+        "s-studio.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-studio.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-studio:sdk-semver-compatibility",
+        "planned-test:s-studio:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-studio:forbidden-import-boundaries",
+        "planned-test:s-studio:kernel-internals-deny",
+        "planned-test:s-studio:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "medium",
+      "owners": {
+        "product": "Low-code Studio Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Low-code Studio Data Owner",
+        "ux": "Low-code Studio UX Owner",
+        "qa": "Low-code Studio QA Owner",
+        "operations": "Low-code Studio Service Owner",
+        "compliance": "Low-code Studio Compliance Owner",
+        "release": "Low-code Studio Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft enterprise baseline: monthly SLO >= 99.9%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "wcag-2.2-aaa"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-studio-requirements-evidence",
+            "criterionId": "s-studio-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-studio/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-test-plan-evidence",
+            "criterionId": "s-studio-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-studio/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-db-schema-evidence",
+            "criterionId": "s-studio-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-studio/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-development-evidence",
+            "criterionId": "s-studio-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-studio/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-test-qa-evidence",
+            "criterionId": "s-studio-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-studio/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-verification-evidence",
+            "criterionId": "s-studio-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-studio/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-studio-release-maintenance-evidence",
+            "criterionId": "s-studio-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-studio/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-studio",
+    "moduleRef": "s-studio-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
+  }
 }

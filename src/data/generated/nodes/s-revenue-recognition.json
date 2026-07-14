@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-revenue-recognition",
-  "wbsCode": "16.10",
-  "level": "archetype",
+  "wbsCode": "102",
+  "level": "app",
   "title": "Revenue Recognition",
   "slug": "s-revenue-recognition",
   "summary": "Chargebee, Zuora muadili. ASC 606 / IFRS 15",
-  "parentId": "app-finance",
+  "parentId": null,
   "order": 10,
   "icon": "ph-chart-line",
   "tags": [
@@ -21,7 +21,11 @@
     "performans",
     "bazlı",
     "dağıtımı",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "scale-projections"
@@ -38,6 +42,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-revenue-recognition",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-revenue-recognition",
+    "delivery-module: s-revenue-recognition-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
     "doc-apply:task-handoff: docs/task-to-code-contract.md",
     "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
@@ -63,6 +75,7 @@
       "criteria": [
         "Revenue Recognition kapsamı + KDV beyanı paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-revenue-recognition-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Revenue Recognition için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:task-handoff] Revenue Recognition kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
         "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
@@ -76,6 +89,7 @@
       "criteria": [
         "KDV beyanı için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-revenue-recognition-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
         "[DOC-APPLY:task-handoff] Revenue Recognition kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
         "[DOC-APPLY:ready-for-dev] Revenue Recognition için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
@@ -91,7 +105,8 @@
       "status": "pending",
       "criteria": [
         "KDV beyanı Zod sözleşmesi + expand-contract göç",
-        "GİB e-fatura + KVKK veri sınıflandırması"
+        "GİB e-fatura + KVKK veri sınıflandırması",
+        "[CRITERION:s-revenue-recognition-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -101,6 +116,7 @@
       "criteria": [
         "Revenue Recognition engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-revenue-recognition-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Revenue Recognition yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -110,7 +126,8 @@
       "status": "pending",
       "criteria": [
         "KDV beyanı e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-revenue-recognition-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -119,6 +136,7 @@
       "status": "pending",
       "criteria": [
         "Revenue Recognition DoD + kanıt (evidence)",
+        "[CRITERION:s-revenue-recognition-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
         "[DOC-APPLY:task-handoff] s-revenue-recognition için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
         "[DOC-APPLY:ready-for-dev] s-revenue-recognition code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
@@ -135,6 +153,7 @@
       "criteria": [
         "Revenue Recognition CI→Pages dağıtımı",
         "KDV beyanı runbook + geri-alma",
+        "[CRITERION:s-revenue-recognition-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
         "[DOC-APPLY:task-handoff] Revenue Recognition teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
         "[DOC-APPLY:ready-for-dev] Revenue Recognition repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
@@ -150,8 +169,12 @@
   "deliverables": [
     "Revenue Recognition uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Revenue Recognition bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-revenue-recognition-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-revenue-recognition/s-revenue-recognition-core SDK-only enterprise task handoff",
     "[DOC-APPLY:computation-derivation-runtime-contract] Revenue Recognition türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
-    "[DOC-APPLY:task-handoff] Revenue Recognition için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Revenue Recognition için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-revenue-recognition için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-revenue-recognition için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Revenue Recognition için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -161,6 +184,11 @@
   "acceptanceCriteria": [
     "Revenue Recognition için KDV beyanı işlevsel kabulü karşılandı",
     "GİB e-fatura + KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Revenue Recognition MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-revenue-recognition yalnız s-revenue-recognition/s-revenue-recognition-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Revenue Recognition türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.",
     "[DOC-APPLY:task-handoff] s-revenue-recognition handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
@@ -202,12 +230,13 @@
         "Gelir Tanıma ArcheType'ı: ASC 606 / IFRS 15 uyumlu performans yükümlülüğü ve gelir dağıtımı",
         "Sözleşme bazlı gelir programı, ertelenmiş gelir ve tahakkuk",
         "Çok-eleman düzenleme (bundle) ve değişiklik (modification) yönetimi",
-        "Revenue Recognition veri ömrü ve boşluk-durumu (empty-state) davranışı tanımlıdır",
-        "Revenue Recognition kapsam değişikliği sürüm kaydına işlenir; durum akışı etkisi beyanlıdır"
+        "Revenue Recognition veri ömrü ve boşluk-durumu (empty-state) davranışı tanımlıdır\nRevenue Recognition kapsam değişikliği sürüm kaydına işlenir; durum akışı etkisi beyanlıdır",
+        "[DOC-APPLY:waterfall-handoff] s-revenue-recognition: Revenue Recognition kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "swarm"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -217,11 +246,10 @@
         "Gelir/sözleşme verisi tenant_id RLS; tanıma kuralı değişimi onaylı",
         "Gelir programı dönem kilidiyle korunur; değişmez izli",
         "Ertelenmiş gelir hesabı denetlenebilir",
-        "Sözleşme/gelir PII alanları en-az-ayrıcalık (least-privilege) rolüyle erişilir; hassas tutarlar maskelenir, saklamada şifrelenir; yetkisiz tanıma değişikliği varsayılan olarak deny edilir ve denetim izine (audit trail) yazılır",
-        "[DOC-APPLY:ready-for-dev] s-revenue-recognition: s-revenue-recognition için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-revenue-recognition: s-revenue-recognition için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-revenue-recognition: Revenue Recognition için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] s-revenue-recognition: Revenue Recognition kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] s-revenue-recognition: Revenue Recognition için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+        "Sözleşme/gelir PII alanları en-az-ayrıcalık (least-privilege) rolüyle erişilir; hassas tutarlar maskelenir, saklamada şifrelenir; yetkisiz tanıma değişikliği varsayılan olarak deny edilir ve denetim izine (audit trail) yazılır"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-revenue-recognition için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Revenue Recognition development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-revenue-recognition phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-revenue-recognition için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Revenue Recognition evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-revenue-recognition yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Revenue Recognition evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -233,8 +261,7 @@
         "Gelir dağıtımı (allocation) saf hesap; performans yükümlülüğü bazlı",
         "Gelir programı türetilir; değişiklikte yeniden değerlendirme",
         "Bundle ayrıştırma kural tablosundan",
-        "Revenue Recognition tip kapsamı strict'tir; any sayısı eşiklidir ve kapıda zorlanır",
-        "isimlendirme/dizin sözleşmesi Revenue Recognition modülünde lint ile doğrulanır"
+        "Revenue Recognition tip kapsamı strict'tir; any sayısı eşiklidir ve kapıda zorlanır\nisimlendirme/dizin sözleşmesi Revenue Recognition modülünde lint ile doğrulanır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -248,8 +275,7 @@
         "Tanıma kuralı sürümlü; geçmiş tanıma dokunulmaz",
         "Sözleşme değişikliği (modification) izli ve onaylı",
         "Gelir koşusu idempotent — geçici ayrıcalık Revenue Recognition için süreli verilir; otomatik geri alınır (privilege)",
-        "CSP başlıkları Revenue Recognition yüzeyinde zorunludur; bağımlılık taraması eşiklidir",
-        "Revenue Recognition imaj imzası doğrulanır (signed); ayrıcalık düşürme sertleştirme listesindedir"
+        "CSP başlıkları Revenue Recognition yüzeyinde zorunludur; bağımlılık taraması eşiklidir\nRevenue Recognition imaj imzası doğrulanır (signed); ayrıcalık düşürme sertleştirme listesindedir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -343,12 +369,13 @@
         "Gelir dağıtımı (ASC606/IFRS15) çok-senaryo doğruluk testi",
         "Sözleşme değişikliği yeniden-değerlendirme testi",
         "Sözleşme→program→tanıma kullanıcı yolculuğu; en çok 6 tur",
-        "sınır-değer üretimi Revenue Recognition unit testlerinde tablo-tabanlıdır; negatif girdiler ayrı settedir",
-        "Revenue Recognition e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)"
+        "sınır-değer üretimi Revenue Recognition unit testlerinde tablo-tabanlıdır; negatif girdiler ayrı settedir\nRevenue Recognition e2e yolculuğu Playwright'ta; kırmızı→yeşil kanıtı PR'a bağlanır (testing-strategy sözleşmesi)",
+        "[DOC-APPLY:ready-for-dev] s-revenue-recognition: s-revenue-recognition için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] s-revenue-recognition: s-revenue-recognition için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] s-revenue-recognition: Revenue Recognition için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] s-revenue-recognition: Revenue Recognition için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam finance kümesi swarm turunda.",
-      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.",
-      "provenance": "swarm"
+      "prompt": "\"Testler & QA\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: unit + e2e + kullanıcı yolculuğu + AI-destekli Playwright + testing-loop (maks 6 tekrar, düzelmezse raporla) + autonomous QA ajanı.\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-revenue-recognition için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Revenue Recognition development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- s-revenue-recognition phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-revenue-recognition için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Revenue Recognition evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- s-revenue-recognition yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Revenue Recognition evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "owasp": {
       "key": "owasp",
@@ -372,10 +399,10 @@
         "Revenue-recognition, Billing (sözleşme/fatura) ve Accounting (gelir kaydı) ile entegre",
         "Abonelik analitiğine gelir verisi sağlar",
         "Konsolidasyona grup geliri — Revenue Recognition dış sistem eşlemesi anti-corruption katmanındadır; sözleşme örnekleri olay fixture'ıdır",
-        "[DOC-APPLY:computation-derivation-runtime-contract] s-revenue-recognition: Revenue Recognition türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-revenue-recognition: Revenue Recognition için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:computation-derivation-runtime-contract] s-revenue-recognition: Revenue Recognition türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-revenue-recognition: Revenue Recognition için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Revenue Recognition türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-revenue-recognition handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Revenue Recognition için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-revenue-recognition — \"Revenue Recognition\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: Chargebee, Zuora muadili. ASC 606 / IFRS 15 Etiketler: finance, revenue-recognition, stack, gelir, tanıma, dönem.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Revenue Recognition türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-revenue-recognition — Revenue Recognition\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Revenue Recognition için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-revenue-recognition handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Revenue Recognition için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -500,82 +527,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-revenue-recognition-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-revenue-recognition"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-revenue-recognition-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-revenue-recognition"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-revenue-recognition-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-revenue-recognition"
         }
       },
       "maxChainDepth": 6,
@@ -731,29 +682,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-revenue-recognition-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-revenue-recognition"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-revenue-recognition-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-revenue-recognition"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-revenue-recognition-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-revenue-recognition"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -766,18 +784,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -816,6 +828,273 @@
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
     "i18nRef": "i18n-standards",
-    "financeModelRef": "finance-money-model"
+    "financeModelRef": "finance-money-model",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-revenue-recognition",
+    "canonicalName": "Revenue Recognition",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "finance"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-revenue-recognition.operate",
+        "s-revenue-recognition.administer",
+        "s-revenue-recognition.report-audit"
+      ]
+    },
+    "valueProposition": "Chargebee, Zuora muadili. ASC 606 / IFRS 15",
+    "targetOrganizations": [
+      "Kurumsal finans, muhasebe ve düzenlenmiş ödeme operasyonları"
+    ],
+    "buyerRoles": [
+      "CFO",
+      "Financial Controller",
+      "Finance Transformation and Compliance Lead"
+    ],
+    "userRoles": [
+      "Accountant",
+      "Finance Operations Specialist",
+      "Approver",
+      "Internal or External Auditor"
+    ],
+    "businessOutcomes": [
+      "Revenue Recognition: Chargebee, Zuora muadili. ASC 606 / IFRS 15",
+      "Revenue Recognition ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Revenue Recognition hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Chargebee yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "ASC 606 / IFRS 15 yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "revenue-recognition yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Revenue Recognition tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Chargebee talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Revenue Recognition yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Revenue Recognition service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Revenue Recognition kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-revenue-recognition.operate",
+      "s-revenue-recognition.administer",
+      "s-revenue-recognition.report-audit"
+    ],
+    "appCoreModuleId": "s-revenue-recognition-core",
+    "requiredModuleIds": [
+      "s-revenue-recognition-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "financial-records",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-revenue-recognition.operate",
+        "s-revenue-recognition.administer",
+        "s-revenue-recognition.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-revenue-recognition.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-revenue-recognition:sdk-semver-compatibility",
+        "planned-test:s-revenue-recognition:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-revenue-recognition:forbidden-import-boundaries",
+        "planned-test:s-revenue-recognition:kernel-internals-deny",
+        "planned-test:s-revenue-recognition:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "critical",
+      "owners": {
+        "product": "Revenue Recognition Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Revenue Recognition Data Owner",
+        "ux": "Revenue Recognition UX Owner",
+        "qa": "Revenue Recognition QA Owner",
+        "operations": "Revenue Recognition Service Owner",
+        "compliance": "Revenue Recognition Compliance Owner",
+        "release": "Revenue Recognition Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft regulated baseline: monthly SLO >= 99.95%; critical journeys >= 99.99%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft regulated baseline: RTO <= 30 minutes",
+        "rpo": "Draft regulated baseline: RPO <= 5 minutes",
+        "retention": "financial-records, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "financial-state-model",
+        "decision-grade-data"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-revenue-recognition-requirements-evidence",
+            "criterionId": "s-revenue-recognition-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-test-plan-evidence",
+            "criterionId": "s-revenue-recognition-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-db-schema-evidence",
+            "criterionId": "s-revenue-recognition-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-development-evidence",
+            "criterionId": "s-revenue-recognition-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-test-qa-evidence",
+            "criterionId": "s-revenue-recognition-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-verification-evidence",
+            "criterionId": "s-revenue-recognition-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-revenue-recognition-release-maintenance-evidence",
+            "criterionId": "s-revenue-recognition-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-revenue-recognition/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-revenue-recognition",
+    "moduleRef": "s-revenue-recognition-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

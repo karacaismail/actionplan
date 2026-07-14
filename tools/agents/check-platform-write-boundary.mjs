@@ -99,7 +99,18 @@ for (const token of [
 ])
   if (!directive.includes(token)) errors.push(`directive token eksik: ${token}`);
 
-const exportSource = read("src/engine/exportData.ts");
+// Export implementation is deliberately split to keep the public facade below the
+// short-code ceiling. Enforce the policy across the complete exportData module family,
+// not only the facade file.
+const exportFiles = [
+  "src/engine/exportData.ts",
+  ...fs
+    .readdirSync(path.join(root, "src", "engine"))
+    .filter((file) => /^exportData.+\.ts$/.test(file))
+    .sort()
+    .map((file) => path.join("src", "engine", file)),
+];
+const exportSource = exportFiles.map((file) => read(file)).join("\n");
 for (const token of [
   "DIRECTIVE-ONLY",
   "Do not modify the platform workspace",

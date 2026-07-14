@@ -47,7 +47,6 @@ const changes = [];
 for (const file of files) {
   const filePath = path.join(NODES_DIR, file);
   const node = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  if (node.level === "app" || node.level === "module") continue;
   const refs = { ...(node.standardRefs ?? {}) };
   const before = JSON.stringify(refs);
 

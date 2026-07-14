@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-inventory",
-  "wbsCode": "14.5",
-  "level": "archetype",
+  "wbsCode": "56",
+  "level": "app",
   "title": "Inventory / Stock",
   "slug": "s-inventory",
   "summary": "Odoo Inventory muadili. AI: auto reorder.",
-  "parentId": "app-core-operations",
+  "parentId": null,
   "order": 5,
   "icon": "ph-package",
   "tags": [
@@ -22,11 +22,15 @@
     "transfer",
     "aşırı",
     "bazlı",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [],
   "blocks": [
-    "dist-restaurant"
+    "s-restaurant"
   ],
   "related": [
     "s-commerce",
@@ -45,6 +49,14 @@
     "docs/commerce-os-data-migration-contract.md",
     "docs/commerce-os-product-scope.md",
     "docs/commerce-os-stack-app-composition.md",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-inventory",
+    "delivery-module: s-inventory-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:atomic-type-runtime-contract: docs/atomic-types-directive.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
     "doc-apply:inventory-stock: docs/archetype-inventory-stock-directive.md",
@@ -91,6 +103,7 @@
       "criteria": [
         "Inventory / Stock kapsamı + müşteri kartı paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-inventory-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Inventory / Stock alanları için değer tipi ile Fragment/ArcheType sorumlulukları ve consumer index/sorgu ihtiyacı açıkça ayrılır.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Inventory / Stock için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:inventory-stock] Depo, stok kalemi, lot, seri, rezervasyon ve hareket sahipliği tanımlanır; miktarlar çıplak number yerine Measure atomu kullanır.",
@@ -109,6 +122,7 @@
       "criteria": [
         "müşteri kartı için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-inventory-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Her tip için geçerli/geçersiz parse, serialize round-trip, locale/currency/unit uyuşmazlığı ve şema sürüm uyumu testleri development öncesi yazılır.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
         "[DOC-APPLY:inventory-stock] Negatif stok, bakiye türetimi, append-only/reversal, çift rezervasyon, eşzamanlı yarış, atomik transfer, lot/seri ve expiry release senaryoları test-önce yazılır.",
@@ -145,6 +159,7 @@
       "criteria": [
         "müşteri kartı Zod sözleşmesi + expand-contract göç",
         "KVKK veri sınıflandırması",
+        "[CRITERION:s-inventory-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner.",
         "[DOC-APPLY:inventory-stock] warehouse, stock_item, lot, serial, reservation ve stock_movement tabloları tenant_id, Measure alanları, source_ref ve gerekli tekillik/indekslerle tanımlanır.",
         "[DOC-APPLY:inventory-stock] stock_movement için UPDATE/DELETE yetkisi kaldırılır; transfer iki hareketi ortak transfer_pair_id ile tek transaction'da üretir ve downgrade yolu tanımlıdır.",
         "[DOC-APPLY:commerce-data-migration-boundary] Expand, dual-read/write, idempotent backfill, verify ve contract adımlarının sahibi, rollback yolu ve geriye-uyumluluk penceresi kaydedilir."
@@ -157,6 +172,7 @@
       "criteria": [
         "Inventory / Stock engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-inventory-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:commerce-contract-red-families] Yalnız RED gözlemi, gerçek test komutu ve owner sınırı tamamlanan slice insan geliştiriciye açılır; cross-context write görülürse çalışma durur.",
         "[DOC-APPLY:commerce-vibecoder-packets] İnsan geliştirici yalnız kendi paketinin allowed-files alanında çalışır; başka BC store'una yazma, ikinci Order writer veya örtük rollback görülürse paket durdurulur.",
         "[DOC-APPLY:ready-for-dev] Inventory / Stock yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
@@ -168,7 +184,8 @@
       "status": "pending",
       "criteria": [
         "müşteri kartı e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-inventory-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -177,6 +194,7 @@
       "status": "pending",
       "criteria": [
         "Inventory / Stock DoD + kanıt (evidence)",
+        "[CRITERION:s-inventory-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Tüketilen her atom için canonical parse→serialize→parse özdeşliği, invalid corpus, locale/currency/unit ayrımı ve registry sürüm uyumu gerçek test referanslarıyla doğrulanır; float veya serbest JSON adapter'ı bulunursa kapı kırmızı kalır.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
         "[DOC-APPLY:inventory-stock] Sipariş→rezervasyon→movement referans akışında bakiye yalnız bir kez değişir; concurrent son-birim testi oversell üretmez.",
@@ -213,6 +231,7 @@
       "criteria": [
         "Inventory / Stock CI→Pages dağıtımı",
         "müşteri kartı runbook + geri-alma",
+        "[CRITERION:s-inventory-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Registry sürümü, precision veya rounding değişiminde consumer uyumluluğu, migration dry-run'ı, round-trip regresyonu ve downgrade yolu doğrulanır; eski değerler sessizce yeniden yorumlanmaz.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
         "[DOC-APPLY:inventory-stock] Stok düzeltmesi geçmiş movement'ı değiştirmez; reversal ile uygulanır ve migration rollback'inde lot/seri/rezerve bakiye izlenebilirliği korunur.",
@@ -247,6 +266,10 @@
   "deliverables": [
     "Inventory / Stock uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Inventory / Stock bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-inventory-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-inventory/s-inventory-core SDK-only enterprise task handoff",
     "[DOC-APPLY:atomic-type-runtime-contract] Inventory / Stock alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Inventory / Stock türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
     "[DOC-APPLY:inventory-stock] Inventory / Stock için warehouse, stock item, lot, serial, reservation ve append-only stock movement kayıtlarını; bakiye türetimi, transfer ve reversal kurallarıyla birleştiren stok metamodeli.",
@@ -259,7 +282,7 @@
     "[DOC-APPLY:commerce-data-migration-boundary] Commerce export envelope/domain payload sahipliğini, versiyonlu manifesti, round-trip eşdeğerliğini ve expand→migrate→contract yaşam döngüsünü kapsayan migration-resilience handoff'u hazırla.",
     "[DOC-APPLY:commerce-test-first-handoff] V0-V16 Commerce paketlerini Kernel→SDK→app-core→contract→core BC→integration→web/ops→evidence sırasına bağlayan, tek-yazar allowed-files ve stop-gate içeren dispatch planı hazırla.",
     "[DOC-APPLY:commerce-vibecoder-packets] Inventory V8, Order V10 ve entegre çekirdek V12 dahil V0-V16 paketlerinin objective, inputs, allowed-files, non-goal, RED tests, acceptance ve stop-condition alanlarını yürütme kartlarına böl.",
-    "[DOC-APPLY:task-handoff] Inventory / Stock için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Inventory / Stock için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-inventory için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-inventory için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Inventory / Stock için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -277,6 +300,11 @@
   "acceptanceCriteria": [
     "Inventory / Stock için müşteri kartı işlevsel kabulü karşılandı",
     "KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Inventory / Stock MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-inventory yalnız s-inventory/s-inventory-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:atomic-type-runtime-contract] Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.",
     "[DOC-APPLY:atomic-type-runtime-contract] Inventory / Stock yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
@@ -556,10 +584,10 @@
         "Inventory, Sales (rezervasyon) ve Purchase (mal kabul) ile entegre",
         "MRP üretim emirleri için stok tüketimini bildirir",
         "Stok değerleme Finance'a aktarılır — Inventory / Stock tüketici sürüm matrisi CI'da koşar; kırık sürüm erken uyarı üretir",
-        "[DOC-APPLY:atomic-type-runtime-contract] s-inventory: Inventory / Stock alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:computation-derivation-runtime-contract] s-inventory: Inventory / Stock türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-inventory: Inventory / Stock için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:wave2-sdk-repeatability-open-gaps] s-inventory: Inventory / Stock için Wave 2 predecessor zincirini, byte-stable SDK/template generation guard'larını ve Customer→OrderOps→Inventory tekrar üretilebilirlik/diff raporu sorumluluğunu açıkça gösteren yürütme sözleşmesi.\n[DOC-APPLY:commerce-os-contract-package-dag] s-inventory: Inventory / Stock için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
+        "[DOC-APPLY:atomic-type-runtime-contract] s-inventory: Inventory / Stock alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:computation-derivation-runtime-contract] s-inventory: Inventory / Stock türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-inventory: Inventory / Stock için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:wave2-sdk-repeatability-open-gaps] s-inventory: Inventory / Stock için Wave 2 predecessor zincirini, byte-stable SDK/template generation guard'larını ve Customer→OrderOps→Inventory tekrar üretilebilirlik/diff raporu sorumluluğunu açıkça gösteren yürütme sözleşmesi.\n[DOC-APPLY:commerce-os-contract-package-dag] s-inventory: Inventory / Stock için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
       ],
       "notes": "Sözleşmeli bağ: Inventory, Sales (rezervasyon), Purchase (mal kabul), MRP (üretim tüketimi) ve Finance (değerleme) ile tipli/sürümlü API ve Zod-doğrulanmış olay şeması üzerinden bağlanır; doğrudan tabloya erişim RLS ile kapalıdır. Olay veriyolu: stok hareketi ve eşik-altı olayları outbox ile veriyoluna yayınlanır, satınalma/bildirim/analitik aboneleri idempotent tüketir. Bağımlılık yönü: tek yönlüdür — tüketiciler Inventory'ye bağımlıdır, Inventory tüketicinin şemasına bağlı değildir; kırıcı arayüz değişikliği expand-contract migration ile yönetilir.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-inventory — \"Inventory / Stock\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Odoo Inventory muadili. AI: auto reorder. Etiketler: core-operations, inventory, stack, ai-native, stok, sayım.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Inventory / Stock yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Inventory / Stock türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-inventory handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Inventory / Stock için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:wave2-sdk-repeatability-open-gaps]\nKaynak: docs/wave2-sdk-repeatability-readiness-gap-2026-07-09.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için Wave 2 predecessor zincirini, byte-stable SDK/template generation guard'larını ve Customer→OrderOps→Inventory tekrar üretilebilirlik/diff raporu sorumluluğunu açıkça gösteren yürütme sözleşmesi.\n- Remote/CI, W0.3-W0.10 kernel, SDK public contract ve uçtan uca Customer evidence tamamlanmadan OrderOps/Inventory development veya Wave 2 done durumu açılmaz.\n- App-core/module template aynı inputta byte-stable output üretir; manual edit ve forbidden stack reddedilir, üç slice capability-gated route/menu ve tenant izolasyonu negatifini aynı public contract üzerinden geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:wave2-sdk-repeatability-open-gaps]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-inventory — \"Inventory / Stock\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Odoo Inventory muadili. AI: auto reorder. Etiketler: core-operations, inventory, stack, ai-native, stok, sayım.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Inventory / Stock yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Inventory / Stock türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-inventory handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Inventory / Stock için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:wave2-sdk-repeatability-open-gaps]\nKaynak: docs/wave2-sdk-repeatability-readiness-gap-2026-07-09.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için Wave 2 predecessor zincirini, byte-stable SDK/template generation guard'larını ve Customer→OrderOps→Inventory tekrar üretilebilirlik/diff raporu sorumluluğunu açıkça gösteren yürütme sözleşmesi.\n- Remote/CI, W0.3-W0.10 kernel, SDK public contract ve uçtan uca Customer evidence tamamlanmadan OrderOps/Inventory development veya Wave 2 done durumu açılmaz.\n- App-core/module template aynı inputta byte-stable output üretir; manual edit ve forbidden stack reddedilir, üç slice capability-gated route/menu ve tenant izolasyonu negatifini aynı public contract üzerinden geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:wave2-sdk-repeatability-open-gaps]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-inventory — Inventory / Stock\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Inventory / Stock için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -687,82 +715,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-inventory-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-inventory"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-inventory-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-inventory"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-inventory-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-inventory"
         }
       },
       "maxChainDepth": 6,
@@ -918,29 +870,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-inventory-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-inventory"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-inventory-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-inventory"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-inventory-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-inventory"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -953,18 +972,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -981,8 +994,8 @@
   },
   "milestone": "Çekirdek Operasyon",
   "schedule": {
-    "start": "2026-07-01",
-    "end": "2026-07-13",
+    "start": null,
+    "end": null,
     "actualStart": null,
     "actualEnd": null,
     "baselineStart": "2026-07-01",
@@ -1008,7 +1021,11 @@
     "uxStandardRef": "ux-interaction",
     "stateContractRef": "state-management",
     "a11yRef": "a11y",
-    "g11nRef": "g11n"
+    "g11nRef": "g11n",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
   },
   "traceability": {
     "repoPath": [
@@ -1093,5 +1110,267 @@
       "maxStories": 120,
       "justification": "Altı state, iki viewport, üç locale ve iki theme için 72 planlı kombinasyonu kapsar."
     }
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-inventory",
+    "canonicalName": "Inventory / Stock",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "core-operations"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-inventory.operate",
+        "s-inventory.administer",
+        "s-inventory.report-audit"
+      ]
+    },
+    "valueProposition": "Odoo Inventory muadili. AI: auto reorder.",
+    "targetOrganizations": [
+      "Tedarik zinciri, üretim, saha ve lojistik operasyonları"
+    ],
+    "buyerRoles": [
+      "COO",
+      "Supply Chain Director",
+      "Operations Technology Owner"
+    ],
+    "userRoles": [
+      "Planner",
+      "Warehouse or Field Operator",
+      "Supplier Coordinator",
+      "Operations Auditor"
+    ],
+    "businessOutcomes": [
+      "Inventory / Stock: Odoo Inventory muadili. AI: auto reorder.",
+      "Inventory / Stock ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Inventory / Stock hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "auto reorder yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "inventory yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "ai-native yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Inventory / Stock tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "auto reorder talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Inventory / Stock yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Inventory / Stock service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Inventory / Stock kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-inventory.operate",
+      "s-inventory.administer",
+      "s-inventory.report-audit"
+    ],
+    "appCoreModuleId": "s-inventory-core",
+    "requiredModuleIds": [
+      "s-inventory-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "operational-telemetry-and-asset-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-inventory.operate",
+        "s-inventory.administer",
+        "s-inventory.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-inventory.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-inventory:sdk-semver-compatibility",
+        "planned-test:s-inventory:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-inventory:forbidden-import-boundaries",
+        "planned-test:s-inventory:kernel-internals-deny",
+        "planned-test:s-inventory:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "high",
+      "owners": {
+        "product": "Inventory / Stock Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Inventory / Stock Data Owner",
+        "ux": "Inventory / Stock UX Owner",
+        "qa": "Inventory / Stock QA Owner",
+        "operations": "Inventory / Stock Service Owner",
+        "compliance": "Inventory / Stock Compliance Owner",
+        "release": "Inventory / Stock Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft high-impact baseline: monthly SLO >= 99.9%; critical journeys >= 99.95%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "operational-telemetry-and-asset-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "ai-governance"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-inventory-requirements-evidence",
+            "criterionId": "s-inventory-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-inventory/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-test-plan-evidence",
+            "criterionId": "s-inventory-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-inventory/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-db-schema-evidence",
+            "criterionId": "s-inventory-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-inventory/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-development-evidence",
+            "criterionId": "s-inventory-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-inventory/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-test-qa-evidence",
+            "criterionId": "s-inventory-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-inventory/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-verification-evidence",
+            "criterionId": "s-inventory-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-inventory/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-inventory-release-maintenance-evidence",
+            "criterionId": "s-inventory-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-inventory/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-inventory",
+    "moduleRef": "s-inventory-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

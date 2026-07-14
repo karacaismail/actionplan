@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "id": "dist-clinic",
-  "wbsCode": "23.28",
+  "wbsCode": "138.6",
   "level": "module",
   "title": "Sağlık / Klinik Distribution",
   "slug": "dist-clinic",
@@ -38,7 +38,9 @@
     "dist-veteriner"
   ],
   "refs": [
-    "kaynak-korpus: dist-clinic"
+    "kaynak-korpus: dist-clinic",
+    "canonical-app: s-clinic",
+    "identity-contract: src/data/app-catalog-decisions.json"
   ],
   "criticalPath": false,
   "status": "backlog",
@@ -444,6 +446,31 @@
       "requiresApproval": false
     },
     {
+      "id": "eca-dist-clinic-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Sağlık / Klinik Distribution AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
       "id": "eca-dist-clinic-ai-app-module-deny",
       "event": "ai.generation.requested",
       "when": [
@@ -518,38 +545,12 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": false
-    },
-    {
-      "id": "eca-dist-clinic-risk-quarantine",
-      "event": "ai.risk.scored",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "riskScore",
-          "op": "gte",
-          "value": 80
-        }
-      ],
-      "then": {
-        "type": "create-task",
-        "params": {
-          "title": "Sağlık / Klinik Distribution AI risk incelemesi",
-          "priority": "critical"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": true
     }
   ],
   "agentPolicy": {
     "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "allowedTargets": [],
     "forbiddenTargets": [
@@ -557,8 +558,7 @@
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -571,18 +571,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -615,6 +609,19 @@
     "codingStandardRef": "coding-standards",
     "dataApiContractRef": "data-api-contract",
     "aiGovernanceRef": "ai-governance",
-    "releasePolicyRef": "release-versioning"
+    "releasePolicyRef": "release-versioning",
+    "architectureRef": "architecture",
+    "qualityGateRef": "quality-gates",
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "financeModelRef": "finance-money-model"
+  },
+  "artifactKind": "legacy-alias",
+  "canonicalId": "s-clinic",
+  "aliases": [],
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Legacy alias; canonical app s-clinic üzerinden çözülür."
   }
 }

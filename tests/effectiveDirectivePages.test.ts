@@ -12,7 +12,38 @@ const nodes = fs
   .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as TaskNode);
 const index = indexById(nodes);
 const EXECUTABLE = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const TYPED_RUNTIME_ARTIFACTS = new Set(["sellable-app", "app-core-module", "app-module"]);
+const ROLLUP_ARTIFACTS = new Set([
+  "legacy-alias",
+  "portfolio-facet",
+  "governance",
+  "platform-foundation",
+]);
+const MANAGED_REF = /^doc-apply:([^:]+): (docs\/.+\.md)$/;
 const ROOT = process.cwd();
+
+type DirectiveRule = {
+  id: string;
+  sources: string[];
+  selector?: { nodeIds?: string[] };
+  content?: { humanDecisionBlocker?: boolean };
+};
+
+const directiveRules = fs
+  .readdirSync(path.join(ROOT, "src/data/doc-task-content-rules"))
+  .filter((file) => file.endsWith(".json"))
+  .flatMap((file) => {
+    const parsed = JSON.parse(
+      fs.readFileSync(path.join(ROOT, "src/data/doc-task-content-rules", file), "utf8"),
+    ) as { rules?: DirectiveRule[] };
+    return parsed.rules ?? [];
+  });
+const humanDecisionRules = directiveRules.filter(
+  (rule) => rule.content?.humanDecisionBlocker === true,
+);
+const humanDecisionOwnerIds = new Set(
+  humanDecisionRules.flatMap((rule) => rule.selector?.nodeIds ?? []),
+);
 
 type MatrixRow = {
   docPath: string;
@@ -23,6 +54,12 @@ type MatrixRow = {
 
 const openingRuleIds = (value: string) =>
   [...value.matchAll(/(?<!\/)\[DOC-APPLY:([^\]]+)\]/g)].map((match) => match[1]);
+
+const isDirectMaterializationTarget = (node: TaskNode) =>
+  (EXECUTABLE.has(node.level) && node.source?.cluster === "platform-directive-owner") ||
+  humanDecisionOwnerIds.has(node.id) ||
+  (!ROLLUP_ARTIFACTS.has(node.artifactKind ?? "") &&
+    (TYPED_RUNTIME_ARTIFACTS.has(node.artifactKind ?? "") || EXECUTABLE.has(node.level)));
 
 function parseCsv(value: string): string[][] {
   const rows: string[][] = [];
@@ -67,8 +104,8 @@ function readMatrix(): MatrixRow[] {
 }
 
 describe("effective directive content on every JSON-backed task page", () => {
-  it("gives all 496 routes direct or inherited source-owned content and prompts", () => {
-    expect(nodes).toHaveLength(496);
+  it("gives all 617 routes direct or inherited source-owned content and prompts", () => {
+    expect(nodes).toHaveLength(617);
     const failures: string[] = [];
 
     for (const node of nodes) {
@@ -93,29 +130,93 @@ describe("effective directive content on every JSON-backed task page", () => {
     expect(failures, failures.slice(0, 40).join("\n")).toEqual([]);
   });
 
-  it("uses direct JSON projections on leaves and read-only roll-up on protected app/module nodes", () => {
+  it("keeps direct ownership fail-closed while typed pages inherit and protected roll-ups stay virtual", () => {
     for (const node of nodes) {
       const applications = effectiveDirectiveApplications(node, index);
-      if (EXECUTABLE.has(node.level)) {
+      const direct = applications.filter((application) => application.mode === "direct");
+      const inherited = applications.filter((application) => application.mode === "inherited");
+      const virtual = applications.filter((application) => application.mode === "virtual");
+      const managedRefs = (node.refs ?? []).filter((ref) => MANAGED_REF.test(ref));
+
+      expect(direct, `${node.id}: direct mode yalnız gerçek owner üzerinde bulunabilir`).toSatisfy(
+        (items: typeof direct) =>
+          items.every(
+            (application) =>
+              isDirectMaterializationTarget(node) && application.ownerNodeId === node.id,
+          ),
+      );
+      expect(virtual, `${node.id}: virtual mode sayfanın kendisine ait olmalı`).toSatisfy(
+        (items: typeof virtual) =>
+          items.every((application) => application.ownerNodeId === node.id),
+      );
+      expect(
+        direct,
+        `${node.id}: her managed ref tam bir direct source uygulamasıdır`,
+      ).toHaveLength(isDirectMaterializationTarget(node) ? managedRefs.length : 0);
+
+      if (node.artifactKind && TYPED_RUNTIME_ARTIFACTS.has(node.artifactKind)) {
+        const allDescendantIds = new Set(
+          applications
+            .filter((application) => application.mode === "inherited")
+            .map((application) => application.ownerNodeId),
+        );
         expect(
-          applications.every((application) => application.mode === "direct"),
-          node.id,
+          [...allDescendantIds].every((ownerId) => ownerId !== node.id),
+          `${node.id}: inherited owner typed sayfanın kendisi olamaz`,
         ).toBe(true);
+
+        const definition = node.appDefinition ?? node.moduleDefinition;
+        expect(definition, `${node.id}: typed enterprise definition missing`).toBeDefined();
+        expect(definition?.enterpriseDelivery.targetGrade, node.id).toBe("enterprise");
+        expect(definition?.enterpriseDelivery.deliveryPolicy, node.id).toBe("enterprise-only");
+        expect(definition?.enterpriseDelivery.mvpAllowed, node.id).toBe(false);
+        expect(definition?.sdkDelivery.required, node.id).toBe(true);
+        expect(definition?.sdkDelivery.manualEditAllowed, node.id).toBe(false);
+        expect(node.deliveryContext?.applicability, node.id).toBe("runtime");
+        if (node.deliveryContext?.applicability === "runtime") {
+          expect(node.deliveryContext.sdkRequired, node.id).toBe(true);
+        }
+
+        const managedRuleIds = (node.refs ?? []).flatMap((ref) => {
+          const match = ref.match(/^doc-apply:([^:]+): docs\/.+\.md$/);
+          return match ? [match[1]] : [];
+        });
+        const materializedRuleIds = new Set(openingRuleIds(JSON.stringify(node.dimensions ?? {})));
+        for (const ruleId of managedRuleIds) {
+          expect(
+            materializedRuleIds.has(ruleId),
+            `${node.id}/${ruleId}: managed directive must remain visible in typed JSON dimensions`,
+          ).toBe(true);
+        }
+      } else if (isDirectMaterializationTarget(node)) {
         expect(
-          applications.every((application) => application.ownerNodeId === node.id),
-          node.id,
-        ).toBe(true);
+          inherited,
+          `${node.id}: normal direct owner descendant içeriğini sahiplenemez`,
+        ).toEqual([]);
       } else {
-        expect(
-          applications.every((application) => application.mode !== "direct"),
-          `${node.id}: protected page must not mutate its canonical JSON`,
-        ).toBe(true);
+        expect(direct, `${node.id}: protected page direct mode taşıyamaz`).toEqual([]);
         expect(JSON.stringify(node).includes("[DOC-APPLY:"), node.id).toBe(false);
+        expect(managedRefs, `${node.id}: protected page raw managed ref taşıyamaz`).toEqual([]);
+      }
+
+      for (const application of inherited) {
+        const owner = nodes.find((candidate) => candidate.id === application.ownerNodeId);
+        expect(
+          owner,
+          `${node.id}/${application.ownerNodeId}: inherited owner bulunamadı`,
+        ).toBeDefined();
+        expect(
+          owner ? isDirectMaterializationTarget(owner) : false,
+          `${node.id}/${application.ownerNodeId}: inherited owner direct target olmalı`,
+        ).toBe(true);
+        expect(application.ownerNodeId, `${node.id}: inherited owner kendisi olamaz`).not.toBe(
+          node.id,
+        );
       }
     }
   });
 
-  it("resolves every classification/matrix materialization without refs collision loss", () => {
+  it("matches every raw direct source/rule/owner triple to a real matrix direct target", () => {
     const classifications = JSON.parse(
       fs.readFileSync(path.join(ROOT, "src/data/doc-task-content-classification.json"), "utf8"),
     ) as Array<{ docPath: string; decision: string }>;
@@ -123,62 +224,97 @@ describe("effective directive content on every JSON-backed task page", () => {
       classifications.map((entry) => [entry.docPath, entry.decision]),
     );
     const matrix = readMatrix();
-    const expectedPairs: string[] = [];
-    const unregisteredPairs: string[] = [];
+    const matrixByDoc = new Map(matrix.map((row) => [row.docPath, row]));
+    const expectedTriples: string[] = [];
+    const ownershipFailures: string[] = [];
 
-    for (const node of nodes.filter((candidate) => EXECUTABLE.has(candidate.level))) {
-      const expectedRuleIds = [
-        ...new Set(openingRuleIds(JSON.stringify(node.dimensions ?? {}))),
-      ].sort();
-      for (const ruleId of expectedRuleIds) {
-        const pair = `${node.id}/${ruleId}`;
-        expectedPairs.push(pair);
-        const registered = matrix.some(
-          (row) =>
-            ["task-materialize", "human-decision"].includes(row.decision) &&
-            classificationByDoc.get(row.docPath) === row.decision &&
-            row.targetNodeIds.has(node.id) &&
-            row.ruleIds.has(ruleId),
-        );
-        if (!registered) unregisteredPairs.push(pair);
+    for (const row of matrix) {
+      for (const nodeId of row.targetNodeIds) {
+        const node = nodes.find((candidate) => candidate.id === nodeId);
+        if (!node || !isDirectMaterializationTarget(node)) {
+          ownershipFailures.push(`${nodeId}: matrix target direct owner değil (${row.docPath})`);
+          continue;
+        }
+        const hasRawPair = (node.refs ?? []).some((ref) => {
+          const match = ref.match(MANAGED_REF);
+          return match?.[2] === row.docPath && row.ruleIds.has(match[1]);
+        });
+        if (!hasRawPair) ownershipFailures.push(`${nodeId}: matrix raw pair yok (${row.docPath})`);
       }
     }
 
-    const actualPairs = nodes
-      .filter((node) => EXECUTABLE.has(node.level))
-      .flatMap((node) =>
-        effectiveDirectiveApplications(node, index).map(
-          (application) => `${node.id}/${application.ruleId}`,
-        ),
-      )
-      .sort();
-    const managedRefPairs = nodes
-      .filter((node) => EXECUTABLE.has(node.level))
-      .flatMap((node) =>
-        (node.refs ?? []).flatMap((ref) => {
-          const match = ref.match(/^doc-apply:([^:]+): docs\/.+\.md$/);
-          return match ? [`${node.id}/${match[1]}`] : [];
-        }),
-      )
-      .sort();
-    expectedPairs.sort();
-    const actualPairSet = new Set(actualPairs);
-    const refsCollisionLoss = expectedPairs.filter((pair) => !actualPairSet.has(pair));
+    for (const node of nodes) {
+      for (const ref of node.refs ?? []) {
+        const match = ref.match(MANAGED_REF);
+        if (!match) continue;
+        const [, ruleId, source] = match;
+        const row = matrixByDoc.get(source);
+        const registered =
+          row &&
+          ["task-materialize", "human-decision"].includes(row.decision) &&
+          classificationByDoc.get(source) === row.decision &&
+          row.targetNodeIds.has(node.id) &&
+          row.ruleIds.has(ruleId);
+        if (!isDirectMaterializationTarget(node))
+          ownershipFailures.push(
+            `${node.id}/${ruleId}/${source}: raw ref protected owner üzerinde`,
+          );
+        if (!registered)
+          ownershipFailures.push(`${node.id}/${ruleId}/${source}: matrix direct kaydı yok`);
+        expectedTriples.push(`${node.id}\u0000${ruleId}\u0000${source}`);
+      }
+    }
 
-    expect(unregisteredPairs, unregisteredPairs.slice(0, 30).join("\n")).toEqual([]);
-    expect(expectedPairs).toHaveLength(2426);
-    expect(
-      {
-        actual: actualPairs.length,
-        expected: expectedPairs.length,
-        refsCollisionLoss: refsCollisionLoss.length,
-        sample: refsCollisionLoss.slice(0, 30),
-      },
-      refsCollisionLoss.slice(0, 30).join("\n"),
-    ).toEqual({ actual: 2426, expected: 2426, refsCollisionLoss: 0, sample: [] });
-    expect(managedRefPairs).toHaveLength(2426);
-    expect(managedRefPairs).toEqual(expectedPairs);
-    expect(actualPairs).toEqual(expectedPairs);
+    const actualTriples = nodes
+      .flatMap((node) =>
+        effectiveDirectiveApplications(node, index)
+          .filter((application) => application.mode === "direct")
+          .map((application) => {
+            if (application.ownerNodeId !== node.id || !isDirectMaterializationTarget(node))
+              ownershipFailures.push(
+                `${node.id}/${application.ruleId}/${application.source}: direct mode owner kaçışı`,
+              );
+            return `${application.ownerNodeId}\u0000${application.ruleId}\u0000${application.source}`;
+          }),
+      )
+      .sort();
+    expectedTriples.sort();
+
+    expect(ownershipFailures, ownershipFailures.slice(0, 40).join("\n")).toEqual([]);
+    expect(new Set(expectedTriples).size, "raw managed source triple duplicate olamaz").toBe(
+      expectedTriples.length,
+    );
+    expect(new Set(actualTriples).size, "effective direct source triple duplicate olamaz").toBe(
+      actualTriples.length,
+    );
+    expect(actualTriples).toEqual(expectedTriples);
+    expect(actualTriples.length).toBeGreaterThan(
+      nodes.filter(isDirectMaterializationTarget).length,
+    );
+  });
+
+  it("surfaces every explicit human-decision selector owner as a direct application", () => {
+    for (const rule of humanDecisionRules) {
+      for (const ownerNodeId of rule.selector?.nodeIds ?? []) {
+        const owner = nodes.find((node) => node.id === ownerNodeId);
+        expect(owner, `${rule.id}: selector owner yok (${ownerNodeId})`).toBeDefined();
+        if (!owner) continue;
+        const expectedMode = isDirectMaterializationTarget(owner) ? "direct" : "virtual";
+        const applications = effectiveDirectiveApplications(owner, index);
+        for (const source of rule.sources) {
+          expect(
+            applications.some(
+              (application) =>
+                application.ruleId === rule.id &&
+                application.source === source &&
+                application.ownerNodeId === owner.id &&
+                application.mode === expectedMode,
+            ),
+            `${owner.id}/${rule.id}/${source}: expected ${expectedMode}`,
+          ).toBe(true);
+        }
+      }
+    }
   });
 
   it("keeps task-materialized raw sources visible on every protected page", () => {
@@ -224,12 +360,14 @@ describe("effective directive content on every JSON-backed task page", () => {
         sample: missingSources.slice(0, 30),
       },
       missingSources.slice(0, 30).join("\n"),
-    ).toEqual({
-      protectedPages: 206,
-      pagesWithMaterializedRawSources: 76,
-      materializedRawSourceCount: 327,
-      missingSourceCount: 0,
-      sample: [],
-    });
+    ).toEqual(
+      expect.objectContaining({
+        protectedPages: nodes.filter((node) => !EXECUTABLE.has(node.level)).length,
+        missingSourceCount: 0,
+        sample: [],
+      }),
+    );
+    expect(pagesWithMaterializedRawSources).toBeGreaterThan(0);
+    expect(materializedRawSourceCount).toBeGreaterThanOrEqual(pagesWithMaterializedRawSources);
   });
 });

@@ -5,9 +5,21 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
-const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+const NODE_DIR = path.resolve(
+  process.env.DOC_TASK_CONTENT_NODE_DIR ?? path.join(ROOT, "src/data/generated/nodes"),
+);
 const CLASSIFICATION = path.join(ROOT, "src/data/doc-task-content-classification.json");
+const REPORT = path.resolve(
+  process.env.DOC_TASK_CONTENT_REPORT ?? path.join(ROOT, "reports/doc-task-content-matrix.csv"),
+);
 const INLINE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const TYPED_DIRECT_KINDS = new Set(["sellable-app", "app-core-module", "app-module"]);
+const ROLLUP_KINDS = new Set([
+  "legacy-alias",
+  "portfolio-facet",
+  "governance",
+  "platform-foundation",
+]);
 
 type Rule = {
   id: string;
@@ -29,6 +41,30 @@ const rules: Rule[] = fs
   .filter((file) => file.endsWith(".json"))
   .sort()
   .flatMap((file) => JSON.parse(fs.readFileSync(path.join(RULE_DIR, file), "utf8")).rules);
+const humanDecisionOwnerIds = new Set(
+  rules
+    .filter((rule) => rule.content.humanDecisionBlocker === true)
+    .flatMap((rule) => rule.selector.nodeIds ?? []),
+);
+const isExecutableDirectiveOwner = (node: {
+  level: string;
+  source?: { cluster?: string };
+}) => INLINE_LEVELS.has(node.level) && node.source?.cluster === "platform-directive-owner";
+const isExplicitHumanDecisionOwner = (node: { id: string }) => humanDecisionOwnerIds.has(node.id);
+const isExplicitDirectMaterializationTarget = (node: {
+  id: string;
+  level: string;
+  source?: { cluster?: string };
+}) => isExecutableDirectiveOwner(node) || isExplicitHumanDecisionOwner(node);
+const isDirectMaterializationTarget = (node: {
+  id: string;
+  level: string;
+  artifactKind?: string;
+  source?: { cluster?: string };
+}) =>
+  isExplicitDirectMaterializationTarget(node) ||
+  (!ROLLUP_KINDS.has(node.artifactKind ?? "") &&
+    (TYPED_DIRECT_KINDS.has(node.artifactKind ?? "") || INLINE_LEVELS.has(node.level)));
 const nodes = new Map(
   fs
     .readdirSync(NODE_DIR)
@@ -61,7 +97,7 @@ describe("doc task content rule registry", () => {
     }
   });
 
-  it("explicit targets exist and never select protected app/module nodes", () => {
+  it("routes explicit owners to direct typed/task content or protected roll-up lanes", () => {
     for (const rule of rules) {
       for (const level of rule.selector.levels ?? []) {
         expect(INLINE_LEVELS.has(level), `${rule.id} -> ${level}`).toBe(true);
@@ -69,9 +105,68 @@ describe("doc task content rule registry", () => {
       for (const nodeId of rule.selector.nodeIds ?? []) {
         const node = nodes.get(nodeId);
         expect(node, `${rule.id} -> ${nodeId}`).toBeDefined();
-        expect(INLINE_LEVELS.has(node.level), `${rule.id} -> ${nodeId}:${node.level}`).toBe(true);
+        expect(
+          isDirectMaterializationTarget(node) || ROLLUP_KINDS.has(node.artifactKind ?? ""),
+          `${rule.id} -> ${nodeId}:${node.level}:${node.artifactKind}`,
+        ).toBe(true);
       }
     }
+  });
+
+  it("keeps dedicated platform directive owners executable across artifact classifications", () => {
+    const directiveOwners = [...nodes.values()].filter(
+      (node) => node.source?.cluster === "platform-directive-owner",
+    );
+
+    expect(directiveOwners).toHaveLength(10);
+    expect(directiveOwners.every(isDirectMaterializationTarget)).toBe(true);
+    expect(
+      directiveOwners
+        .filter((node) => ROLLUP_KINDS.has(node.artifactKind ?? ""))
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual([
+      "platform-migration-contract",
+      "policy-context-contract",
+      "sdk-app-core-template",
+      "sdk-module-template",
+      "sdk-public-contract",
+    ]);
+  });
+
+  it("treats explicit human-decision nodeIds as direct owners without reopening generic roll-ups", () => {
+    const decisionRules = rules.filter((rule) => rule.content.humanDecisionBlocker === true);
+    expect(decisionRules).toHaveLength(10);
+    for (const rule of decisionRules) {
+      expect(rule.selector.nodeIds?.length, `${rule.id}: explicit nodeIds`).toBeGreaterThan(0);
+      expect(rule.selector.all, `${rule.id}: no broad all selector`).toBeUndefined();
+      expect(rule.selector.levels, `${rule.id}: no broad level selector`).toBeUndefined();
+      expect(rule.selector.anyTerms, `${rule.id}: no lexical selector`).toBeUndefined();
+    }
+
+    const promotedFoundationOwners = [...nodes.values()]
+      .filter(
+        (node) => node.artifactKind === "platform-foundation" && isExplicitHumanDecisionOwner(node),
+      )
+      .map((node) => node.id)
+      .sort();
+    expect(promotedFoundationOwners).toEqual([
+      "cc-privacy",
+      "cc-security",
+      "l1-audit",
+      "l1-import",
+    ]);
+    expect(
+      promotedFoundationOwners.every((id) => isDirectMaterializationTarget(nodes.get(id)!)),
+    ).toBe(true);
+
+    const genericFoundation = [...nodes.values()].filter(
+      (node) =>
+        node.artifactKind === "platform-foundation" && !isExplicitDirectMaterializationTarget(node),
+    );
+    expect(genericFoundation.length).toBeGreaterThan(0);
+    expect(genericFoundation.some((node) => node.id === "k-wbs")).toBe(true);
+    expect(genericFoundation.every((node) => !isDirectMaterializationTarget(node))).toBe(true);
   });
 
   it("uses explicit semantic applicability instead of keyword-only fan-out", () => {
@@ -227,21 +322,23 @@ describe("doc task content rule registry", () => {
       .trim()
       .split("\n")
       .filter(Boolean);
-    const report = fs.readFileSync(path.join(ROOT, "reports/doc-task-content-matrix.csv"), "utf8");
+    const report = fs.readFileSync(REPORT, "utf8");
     const rows = report.trim().split("\n");
     expect(rows).toHaveLength(new Set(tracked).size + 1);
     expect(rows[0]).toContain("document_class");
     expect(rows[0]).toContain("materialization_decision");
     expect(rows[0]).toContain("decision_rationale");
     expect(rows[0]).toContain("materialized_target_node_ids");
+    expect(rows[0]).toContain("rollup_not_applicable_node_ids");
     expect(rows[0]).toContain("materialized_rule_ids");
+    expect(rows[0]).toContain("rollup_not_applicable_rule_ids");
     expect(rows.filter((row) => row.endsWith('"yes"'))).toHaveLength(
       classifications.filter((entry) => entry.decision === "human-decision").length,
     );
     expect(rows.filter((row) => row.includes('"docs-only"'))).toEqual([]);
     for (const source of new Set(rules.flatMap((rule) => rule.sources))) {
       const row = rows.find((item) => item.startsWith(`\"${source}\",`));
-      expect(row, source).toContain("task-materialized");
+      expect(row, source).toMatch(/task-materialized|task-rollup-n-a/);
     }
   });
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "id": "dx-workflow",
-  "wbsCode": "22.1",
+  "wbsCode": "136.1",
   "level": "module",
   "title": "Geliştirici İş Akışı — Uçtan Uca (gap'ler kapalı)",
   "slug": "dx-workflow",
@@ -476,6 +476,31 @@
       "requiresApproval": false
     },
     {
+      "id": "eca-dx-workflow-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Geliştirici İş Akışı — Uçtan Uca (gap'ler kapalı) AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
       "id": "eca-dx-workflow-ai-app-module-deny",
       "event": "ai.generation.requested",
       "when": [
@@ -550,38 +575,12 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": false
-    },
-    {
-      "id": "eca-dx-workflow-risk-quarantine",
-      "event": "ai.risk.scored",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "riskScore",
-          "op": "gte",
-          "value": 80
-        }
-      ],
-      "then": {
-        "type": "create-task",
-        "params": {
-          "title": "Geliştirici İş Akışı — Uçtan Uca (gap'ler kapalı) AI risk incelemesi",
-          "priority": "critical"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": true
     }
   ],
   "agentPolicy": {
     "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "allowedTargets": [],
     "forbiddenTargets": [
@@ -589,8 +588,7 @@
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -603,18 +601,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -647,7 +639,15 @@
     "releasePolicyRef": "release-versioning",
     "codingStandardRef": "coding-standards",
     "dataApiContractRef": "data-api-contract",
-    "aiGovernanceRef": "ai-governance"
+    "aiGovernanceRef": "ai-governance",
+    "architectureRef": "architecture",
+    "qualityGateRef": "quality-gates",
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "i14yRef": "i14y",
+    "edgeSecurityRef": "edge-security",
+    "iacRef": "iac"
   },
   "traceability": {
     "repoPath": [
@@ -717,5 +717,10 @@
     "staleEvidenceBlockerStatus": "missing",
     "dashboardSmokeStatus": "missing",
     "implementationWorkspace": "/Users/karaca/DEV/mimari/platform"
+  },
+  "artifactKind": "platform-foundation",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Kernel/SDK/platform foundation; app-owned runtime delivery context uygulanmaz."
   }
 }

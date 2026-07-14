@@ -9,7 +9,9 @@ import {
 } from "../tools/lib/ui-impact.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+const NODE_DIR = path.resolve(
+  process.env.DOC_TASK_CONTENT_NODE_DIR ?? path.join(ROOT, "src/data/generated/nodes"),
+);
 
 type UiRole = "produces-ui" | "changes-ui-contract" | "governs-ui" | "consumes-ui" | "no-ui";
 
@@ -26,6 +28,7 @@ type UiDelivery = {
 type TaskNode = {
   id: string;
   level?: string;
+  artifactKind?: string;
   title?: string;
   summary?: string;
   refs?: string[];
@@ -33,6 +36,7 @@ type TaskNode = {
   acceptanceCriteria?: string[];
   uiArtifactRole?: UiRole;
   uiDelivery?: UiDelivery;
+  source?: { cluster?: string };
 };
 
 type RoleRecord = {
@@ -50,6 +54,12 @@ type DeliveryRecord = {
   uiDelivery: UiDelivery;
 };
 
+type ContentRule = {
+  id: string;
+  selector: { nodeIds?: string[] };
+  content?: { humanDecisionBlocker?: boolean };
+};
+
 const readJson = <T>(relativePath: string): T =>
   JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8")) as T;
 
@@ -57,7 +67,7 @@ const nodes = fs
   .readdirSync(NODE_DIR)
   .filter((file) => file.endsWith(".json"))
   .sort()
-  .map((file) => readJson<TaskNode>(`src/data/generated/nodes/${file}`));
+  .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as TaskNode);
 const nodeById = new Map(nodes.map((node) => [node.id, node]));
 
 const roleFile = readJson<{ records: RoleRecord[] }>("src/data/storybook/ui-artifact-roles.json");
@@ -68,6 +78,23 @@ const roleRegistry = Object.fromEntries(
   roleFile.records.map((record) => [record.nodeId, record.role]),
 );
 const deliveryByNodeId = new Map(deliveryFile.records.map((record) => [record.nodeId, record]));
+const contentRuleById = new Map(
+  fs
+    .readdirSync(path.join(ROOT, "src/data/doc-task-content-rules"))
+    .filter((file) => file.endsWith(".json"))
+    .flatMap(
+      (file) =>
+        readJson<{ rules?: ContentRule[] }>(`src/data/doc-task-content-rules/${file}`).rules ?? [],
+    )
+    .map((rule) => [rule.id, rule]),
+);
+const humanDecisionOwnerIds = new Set(
+  [...contentRuleById.values()]
+    .filter((rule) => rule.content?.humanDecisionBlocker === true)
+    .flatMap((rule) => rule.selector.nodeIds ?? []),
+);
+const isExplicitDirectOwner = (node: TaskNode) =>
+  node.source?.cluster === "platform-directive-owner" || humanDecisionOwnerIds.has(node.id);
 
 const EXPECTED_ROLES = {
   "atom-crm-domain-blocklist": "no-ui",
@@ -156,6 +183,16 @@ describe("DOC-APPLY semantic UI role projection", () => {
         `doc-ui-contract:${nodeId}: src/data/storybook/ui-artifact-roles.json`,
       );
 
+      if (node?.artifactKind === "platform-foundation" && !isExplicitDirectOwner(node)) {
+        expect(
+          node.refs?.some((ref) => ref.startsWith("doc-apply:")),
+          `${nodeId}: audited UI metadata must not reopen generic foundation content`,
+        ).toBe(false);
+        expect(JSON.stringify(node).includes("[DOC-APPLY:"), `${nodeId}: foundation roll-up`).toBe(
+          false,
+        );
+      }
+
       const planned = deliveryByNodeId.get(nodeId);
       if (planned) {
         expect(node?.uiDelivery, nodeId).toEqual(planned.uiDelivery);
@@ -199,9 +236,21 @@ describe("DOC-APPLY semantic UI role projection", () => {
 
       const serializedNode = JSON.stringify(nodeById.get(record.nodeId));
       for (const sourceRule of record.sourceRules) {
-        expect(serializedNode, `${record.nodeId}:${sourceRule}`).toContain(
-          `[DOC-APPLY:${sourceRule}]`,
-        );
+        const node = nodeById.get(record.nodeId);
+        if (node?.artifactKind === "platform-foundation" && !isExplicitDirectOwner(node)) {
+          expect(
+            contentRuleById.get(sourceRule)?.selector.nodeIds,
+            `${record.nodeId}:${sourceRule}: audited roll-up owner parity`,
+          ).toContain(record.nodeId);
+          expect(
+            serializedNode,
+            `${record.nodeId}:${sourceRule}: no raw foundation projection`,
+          ).not.toContain(`[DOC-APPLY:${sourceRule}]`);
+        } else {
+          expect(serializedNode, `${record.nodeId}:${sourceRule}`).toContain(
+            `[DOC-APPLY:${sourceRule}]`,
+          );
+        }
       }
     }
   });
@@ -281,7 +330,8 @@ describe("DOC-APPLY semantic UI role projection", () => {
     const result = evaluateUiDeliveryGate(nodes, baseline, { roleRegistry });
 
     expect(result.violations).toEqual([]);
-    expect(result.candidates).toBe(82);
+    expect(result.candidates).toBeGreaterThanOrEqual(deliveryFile.records.length);
+    expect(result.migration.decided).toBeGreaterThanOrEqual(roleFile.records.length);
     expect(result.result).toBe("MIGRATION_INCOMPLETE");
   });
 

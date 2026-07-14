@@ -9,13 +9,24 @@ import {
 } from "./lib/doc-task-dimension-projection.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
+const NODE_DIR = path.resolve(
+  process.env.DOC_TASK_CONTENT_NODE_DIR ?? path.join(ROOT, "src/data/generated/nodes"),
+);
 const RULE_DIR = path.join(ROOT, "src/data/doc-task-content-rules");
 const CLASSIFICATION = path.join(ROOT, "src/data/doc-task-content-classification.json");
 const UI_ROLE_REGISTRY = path.join(ROOT, "src/data/storybook/ui-artifact-roles.json");
 const UI_DELIVERY_REGISTRY = path.join(ROOT, "src/data/doc-task-ui-deliveries.json");
-const REPORT = path.join(ROOT, "reports/doc-task-content-matrix.csv");
+const REPORT = path.resolve(
+  process.env.DOC_TASK_CONTENT_REPORT ?? path.join(ROOT, "reports/doc-task-content-matrix.csv"),
+);
 const INLINE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const TYPED_DIRECT_KINDS = new Set(["sellable-app", "app-core-module", "app-module"]);
+const ROLLUP_KINDS = new Set([
+  "legacy-alias",
+  "portfolio-facet",
+  "governance",
+  "platform-foundation",
+]);
 const PHASES = [
   "requirements",
   "test-plan",
@@ -39,10 +50,14 @@ const rules = fs
   .filter((file) => file.endsWith(".json"))
   .sort()
   .flatMap((file) => readJson(path.join(RULE_DIR, file)).rules ?? []);
-const humanDecisionRuleSources = new Set(
-  rules
-    .filter((rule) => rule.content?.humanDecisionBlocker === true)
-    .flatMap((rule) => rule.sources ?? []),
+const humanDecisionRules = rules.filter((rule) => rule.content?.humanDecisionBlocker === true);
+for (const rule of humanDecisionRules) {
+  if (!Array.isArray(rule.selector?.nodeIds) || rule.selector.nodeIds.length === 0)
+    throw new Error(`${rule.id}: humanDecisionBlocker explicit selector.nodeIds zorunlu`);
+}
+const humanDecisionRuleSources = new Set(humanDecisionRules.flatMap((rule) => rule.sources ?? []));
+const humanDecisionDirectOwnerIds = new Set(
+  humanDecisionRules.flatMap((rule) => rule.selector.nodeIds),
 );
 const classifications = readJson(CLASSIFICATION);
 const classificationByDoc = new Map(classifications.map((entry) => [entry.docPath, entry]));
@@ -65,6 +80,18 @@ const knownRuleIds = new Set(rules.map((rule) => rule.id));
 const duplicateRuleIds = duplicates(rules.map((rule) => rule.id));
 if (duplicateRuleIds.length)
   throw new Error(`Duplicate rule ids: ${[...new Set(duplicateRuleIds)].join(", ")}`);
+
+const isExecutableDirectiveOwner = (node) =>
+  INLINE_LEVELS.has(node.level) && node.source?.cluster === "platform-directive-owner";
+const isExplicitHumanDecisionOwner = (node) => humanDecisionDirectOwnerIds.has(node.id);
+const isExplicitDirectMaterializationTarget = (node) =>
+  isExecutableDirectiveOwner(node) || isExplicitHumanDecisionOwner(node);
+const isDirectMaterializationTarget = (node) =>
+  isExplicitDirectMaterializationTarget(node) ||
+  (!ROLLUP_KINDS.has(node.artifactKind) &&
+    (TYPED_DIRECT_KINDS.has(node.artifactKind) || INLINE_LEVELS.has(node.level)));
+const isRollupTarget = (node) =>
+  ROLLUP_KINDS.has(node.artifactKind) && !isExplicitDirectMaterializationTarget(node);
 
 function validateSelector(selector, ruleId, location = "selector") {
   if (!selector || typeof selector !== "object")
@@ -90,8 +117,10 @@ function validateSelector(selector, ruleId, location = "selector") {
   for (const nodeId of selector.nodeIds ?? []) {
     const node = nodeById.get(nodeId);
     if (!node) throw new Error(`${ruleId}: selector node yok: ${nodeId}`);
-    if (!INLINE_LEVELS.has(node.level))
-      throw new Error(`${ruleId}: selector korunan node seçiyor: ${nodeId}:${node.level}`);
+    if (!isDirectMaterializationTarget(node) && !isRollupTarget(node))
+      throw new Error(
+        `${ruleId}: selector doğrudan veya roll-up owner seçmiyor: ${nodeId}:${node.level}:${node.artifactKind}`,
+      );
   }
   for (const [index, branch] of (selector.anyOf ?? []).entries())
     validateSelector(branch, ruleId, `${location}.anyOf[${index}]`);
@@ -139,8 +168,10 @@ if (new Set(uiDeliveryRecords.map((record) => record.nodeId)).size !== uiDeliver
 for (const record of uiRoleRecords) {
   const node = nodeById.get(record.nodeId);
   if (!node) throw new Error(`ui-artifact-role node yok: ${record.nodeId}`);
-  if (!INLINE_LEVELS.has(node.level))
-    throw new Error(`ui-artifact-role korunan node seçiyor: ${record.nodeId}:${node.level}`);
+  if (!isDirectMaterializationTarget(node) && !isRollupTarget(node))
+    throw new Error(
+      `ui-artifact-role doğrudan veya roll-up owner seçmiyor: ${record.nodeId}:${node.level}:${node.artifactKind}`,
+    );
   if (!UI_ROLES.has(record.role))
     throw new Error(`ui-artifact-role geçersiz: ${record.nodeId}:${record.role}`);
   if (String(record.reason ?? "").trim().length < 40)
@@ -240,7 +271,7 @@ function matchesSelector(selector, node) {
 }
 
 function matches(rule, node) {
-  return INLINE_LEVELS.has(node.level) && matchesSelector(rule.selector, node);
+  return isDirectMaterializationTarget(node) && matchesSelector(rule.selector, node);
 }
 
 const managedMarkerPattern = /^\[DOC-APPLY:[^\]]+\]/;
@@ -250,8 +281,17 @@ const managedUiRefPattern =
 const managedUiDeliveryRefPattern =
   /^doc-ui-delivery:([^:]+): src\/data\/doc-task-ui-deliveries\.json$/;
 
-function assertManagedStructure(node) {
+function assertManagedStructure(node, { allowRollupCleanup = false } = {}) {
   const serialized = JSON.stringify(node);
+  if (TYPED_DIRECT_KINDS.has(node.artifactKind)) {
+    const typedContract = JSON.stringify({
+      appDefinition: node.appDefinition,
+      moduleDefinition: node.moduleDefinition,
+      deliveryContext: node.deliveryContext,
+    });
+    if (typedContract.includes("[DOC-APPLY:") || typedContract.includes("doc-apply:"))
+      throw new Error(`${node.id}: generic DOC-APPLY typed enterprise contract alanına sızdı`);
+  }
   for (const ref of node.refs ?? []) {
     if (String(ref).startsWith("doc-apply:") && !String(ref).match(managedRefPattern))
       throw new Error(`${node.id}: malformed managed ref ${ref}`);
@@ -263,17 +303,13 @@ function assertManagedStructure(node) {
     )
       throw new Error(`${node.id}: malformed managed UI delivery ref ${ref}`);
   }
-  if (!INLINE_LEVELS.has(node.level)) {
+  if (!isDirectMaterializationTarget(node)) {
     if (
       serialized.includes("[DOC-APPLY:") ||
-      (node.refs ?? []).some(
-        (ref) =>
-          ref.startsWith("doc-apply:") ||
-          ref.startsWith("doc-ui-contract:") ||
-          ref.startsWith("doc-ui-delivery:"),
-      )
+      (node.refs ?? []).some((ref) => ref.startsWith("doc-apply:"))
     )
-      throw new Error(`Korunan app/module managed içerik taşıyor: ${node.id}`);
+      if (!allowRollupCleanup)
+        throw new Error(`Roll-up/N/A node generic DOC-APPLY içerik taşıyor: ${node.id}`);
     return;
   }
   const forbiddenMarkerFields = [
@@ -291,7 +327,7 @@ function assertManagedStructure(node) {
   }
 }
 
-for (const node of nodes) assertManagedStructure(node);
+for (const node of nodes) assertManagedStructure(node, { allowRollupCleanup: true });
 
 function cleanAllManaged(node) {
   cleanManagedDimensionProjection(node);
@@ -321,9 +357,21 @@ function cleanAllManaged(node) {
   node.risks = (node.risks ?? []).filter((risk) => !managedMarkerPattern.test(String(risk.desc)));
 }
 
+function reserveTypedDirectiveDimensionCapacity(node) {
+  if (!TYPED_DIRECT_KINDS.has(node.artifactKind)) return;
+  for (const dimension of Object.values(node.dimensions ?? {})) {
+    const items = dimension.items ?? [];
+    if (items.length < 5) continue;
+    // Typed app/module definitions may arrive with five or six source items per card. Preserve
+    // every clause byte-for-byte while reserving one deterministic slot for the source-owned
+    // DOC-APPLY projection; subsequent rules coalesce into that single managed item.
+    dimension.items = [...items.slice(0, 3), items.slice(3).join("\n")];
+  }
+}
+
 for (const node of nodes) {
-  if (!INLINE_LEVELS.has(node.level)) continue;
   cleanAllManaged(node);
+  reserveTypedDirectiveDimensionCapacity(node);
 }
 
 function applyRule(rule, node, { projectDimension = true } = {}) {
@@ -370,12 +418,26 @@ while (selectionProgress) {
 }
 
 const applications = [];
+const rollupApplications = [];
+const rollupPairs = new Set();
 for (const rule of rules) {
   const targets = nodes.filter((node) => selectedPairs.has(`${rule.id}\u0000${node.id}`));
-  if (!targets.length) throw new Error(`${rule.id}: hedef seçilmedi`);
+  const rollups = nodes.filter(
+    (node) => isRollupTarget(node) && matchesSelector(rule.selector, node),
+  );
+  if (!targets.length && !rollups.length) throw new Error(`${rule.id}: owner seçilmedi`);
   for (const node of targets) {
     applyRule(rule, node);
     applications.push({
+      ruleId: rule.id,
+      nodeId: node.id,
+      level: node.level,
+      sources: rule.sources,
+    });
+  }
+  for (const node of rollups) {
+    rollupPairs.add(`${rule.id}\u0000${node.id}`);
+    rollupApplications.push({
       ruleId: rule.id,
       nodeId: node.id,
       level: node.level,
@@ -390,8 +452,9 @@ for (const record of uiRoleRecords) {
   const deliveryRecord = uiDeliveryByNodeId.get(record.nodeId);
   if (deliveryRecord) {
     for (const ruleId of deliveryRecord.sourceRules) {
-      if (!selectedPairs.has(`${ruleId}\u0000${node.id}`))
-        throw new Error(`${node.id}: uiDelivery source rule node'a uygulanmamış: ${ruleId}`);
+      const pair = `${ruleId}\u0000${node.id}`;
+      if (!selectedPairs.has(pair) && !rollupPairs.has(pair))
+        throw new Error(`${node.id}: uiDelivery source rule owner parity bozuk: ${ruleId}`);
     }
     node.uiDelivery = structuredClone(deliveryRecord.uiDelivery);
     node.refs.push(`doc-ui-delivery:${node.id}: src/data/doc-task-ui-deliveries.json`);
@@ -502,10 +565,18 @@ function buildMatrix() {
   const standards = standardOwners();
   const materializedTargets = new Map();
   const materializedRules = new Map();
+  const rollupTargets = new Map();
+  const rollupRules = new Map();
   for (const app of applications) {
     for (const source of app.sources) {
       materializedTargets.set(source, [...(materializedTargets.get(source) ?? []), app.nodeId]);
       materializedRules.set(source, [...(materializedRules.get(source) ?? []), app.ruleId]);
+    }
+  }
+  for (const app of rollupApplications) {
+    for (const source of app.sources) {
+      rollupTargets.set(source, [...(rollupTargets.get(source) ?? []), app.nodeId]);
+      rollupRules.set(source, [...(rollupRules.get(source) ?? []), app.ruleId]);
     }
   }
   const rows = [
@@ -518,7 +589,9 @@ function buildMatrix() {
       "standard_ids",
       "semantic_owner_node_ids",
       "materialized_target_node_ids",
+      "rollup_not_applicable_node_ids",
       "materialized_rule_ids",
+      "rollup_not_applicable_rule_ids",
       "human_decision",
     ],
   ];
@@ -526,35 +599,38 @@ function buildMatrix() {
     const classification = classificationByDoc.get(doc);
     if (!classification) throw new Error(`${doc}: classification yok`);
     const semantic = [];
-    let decision = false;
+    let decisionRef = false;
     let catalog = false;
     for (const node of nodes) {
       for (const ref of node.refs ?? []) {
         if (normalizeRef(ref) !== doc) continue;
         const value = String(ref);
         if (value.startsWith("doc-apply:")) continue;
-        if (value.startsWith("decision:")) decision = true;
+        if (value.startsWith("decision:")) decisionRef = true;
         else if (value.startsWith("catalog:")) catalog = true;
         else semantic.push(node.id);
       }
     }
     const std = [...new Set(standards.get(doc) ?? [])].sort();
     const targets = [...new Set(materializedTargets.get(doc) ?? [])].sort();
+    const rollups = [...new Set(rollupTargets.get(doc) ?? [])].sort();
     const ruleIds = [...new Set(materializedRules.get(doc) ?? [])].sort();
+    const rollupRuleIds = [...new Set(rollupRules.get(doc) ?? [])].sort();
     const semanticOwners = [...new Set(semantic)].sort();
-    if ((classification.decision === "human-decision") !== decision)
-      throw new Error(`${doc}: human-decision ref/classification parity bozuk`);
+    const humanDecision = classification.decision === "human-decision";
     if (
       ["task-materialize", "human-decision"].includes(classification.decision) !==
-      targets.length > 0
+      targets.length + rollups.length > 0
     )
       throw new Error(`${doc}: materialized target/classification parity bozuk`);
     const lanes = [];
     if (std.length) lanes.push("standard-ref");
     if (targets.length) lanes.push("task-materialized");
+    if (rollups.length) lanes.push("task-rollup-n-a");
     if (semanticOwners.length) lanes.push("task-ref");
     if (catalog) lanes.push("catalog");
-    if (decision) lanes.push("human-decision");
+    if (decisionRef) lanes.push("decision-ref");
+    if (humanDecision) lanes.push("human-decision");
     if (!lanes.length) lanes.push("docs-only");
     rows.push([
       doc,
@@ -565,8 +641,10 @@ function buildMatrix() {
       std.join("|"),
       semanticOwners.join("|"),
       targets.join("|"),
+      rollups.join("|"),
       ruleIds.join("|"),
-      decision ? "yes" : "no",
+      rollupRuleIds.join("|"),
+      humanDecision ? "yes" : "no",
     ]);
   }
   return `${rows.map((row) => row.map(csv).join(",")).join("\n")}\n`;
@@ -577,7 +655,7 @@ const currentMatrix = fs.existsSync(REPORT) ? fs.readFileSync(REPORT, "utf8") : 
 const matrixChanged = currentMatrix !== expectedMatrix;
 
 console.log(
-  `[doc-task-content] ${rules.length} rule · ${applications.length} application · ${changed.length} changed node · matrix ${matrixChanged ? "DRIFT" : "OK"}`,
+  `[doc-task-content] ${rules.length} rule · ${applications.length} direct application · ${rollupApplications.length} roll-up/N/A · ${changed.length} changed node · matrix ${matrixChanged ? "DRIFT" : "OK"}`,
 );
 if (!APPLY) {
   if (changed.length || matrixChanged) {

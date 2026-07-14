@@ -43,6 +43,18 @@ jobs:
       - name: Lint (biome)
         run: npm run lint
 
+      # App kimliği kapısı (BLOKLAYICI). Katalog karar registry'si bütün generated node
+      # snapshot'ını kapsar; canonical app/legacy alias/portfolio/foundation ayrımı kabul
+      # edilmiş kimlik kararlarıyla aynı kalır.
+      - name: App kimliği kapısı (registry + canonical alias)
+        run: npm run qa:app-identity
+
+      # Enterprise app/module sözleşme kapıları (BLOKLAYICI). Materyalizasyon byte-drift'i,
+      # typed app tanımı, SDK-only app-core/module grafı ve planlanan/gerçek kanıt ayrımı
+      # genel kapılardan ve build'den önce fail-closed doğrulanır.
+      - name: App sözleşme kapıları (drift + contract + graph + evidence)
+        run: npm run qa:app-contracts
+
       # Platform ürün-kodu yazma sınırı (BLOKLAYICI). Actionplan yalnız directive/handoff
       # üretir; AI aktörlerinin platform implementation dosyalarına yazma yetkisi yoktur.
       - name: Platform yazma sınırı kapısı (AI read-only)
@@ -234,20 +246,27 @@ jobs:
           BASE_PATH: /actionplan/
         run: npm run build
 
-      # Pages adımları yalnız gerçek dağıtımda (push); PR'da kapılar doğrulanır ama deploy ETMEZ.
+      # Pages artefakt kapısı (BLOKLAYICI). Production build'in /actionplan/ base-path'ini,
+      # app/app-core/legacy-alias derin URL index'lerini ve public nodes JSON içindeki typed
+      # enterprise + SDK-only sözleşmelerini upload/deploy öncesinde fail-closed doğrular.
+      - name: Pages app sözleşmesi smoke (base + deep routes + public JSON)
+        run: npm run qa:pages-app-smoke
+
+      # Pages adımları yalnız main ref'inde gerçek dağıtımda çalışır; PR ve feature-ref
+      # workflow_dispatch kapıları doğrular ama artefakt yüklemez veya deploy ETMEZ.
       - name: Pages yapılandırması
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Pages artefaktını yükle
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
     needs: build
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

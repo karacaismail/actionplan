@@ -2,6 +2,9 @@ import { z } from "zod";
 import { TaskNodeSchema, WbsLevelSchema } from "./task";
 
 export * from "./task";
+export * from "./app-definition";
+export * from "./module-definition";
+export * from "./delivery-context";
 export * from "./atom";
 export * from "./archetype";
 export * from "./ruleset";
@@ -44,6 +47,8 @@ export const DatasetMetaSchema = z.object({
     byLevel: z.record(z.string(), z.number()),
     byStatus: z.record(z.string(), z.number()),
     byCluster: z.record(z.string(), z.number()),
+    /** WBS seviyesinden bağımsız ticari/teknik artefakt dağılımı. */
+    byArtifactKind: z.record(z.string(), z.number()).optional(),
     filledExample: z.number(),
   }),
   source: z.object({

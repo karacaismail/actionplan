@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "id": "build-enterprise",
-  "wbsCode": "8.2.1",
+  "wbsCode": "83.2.1",
   "level": "module",
   "title": "Faz 6 — Enterprise Multi-Product Operasyonu",
   "slug": "build-enterprise",
@@ -450,6 +450,31 @@
       "requiresApproval": false
     },
     {
+      "id": "eca-build-enterprise-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Faz 6 — Enterprise Multi-Product Operasyonu AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
       "id": "eca-build-enterprise-ai-app-module-deny",
       "event": "ai.generation.requested",
       "when": [
@@ -524,38 +549,12 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": false
-    },
-    {
-      "id": "eca-build-enterprise-risk-quarantine",
-      "event": "ai.risk.scored",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "riskScore",
-          "op": "gte",
-          "value": 80
-        }
-      ],
-      "then": {
-        "type": "create-task",
-        "params": {
-          "title": "Faz 6 — Enterprise Multi-Product Operasyonu AI risk incelemesi",
-          "priority": "critical"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": true
     }
   ],
   "agentPolicy": {
     "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "allowedTargets": [],
     "forbiddenTargets": [
@@ -563,8 +562,7 @@
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -577,18 +575,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -622,7 +614,18 @@
     "codingStandardRef": "coding-standards",
     "dataApiContractRef": "data-api-contract",
     "aiGovernanceRef": "ai-governance",
-    "releasePolicyRef": "release-versioning"
+    "releasePolicyRef": "release-versioning",
+    "architectureRef": "architecture",
+    "qualityGateRef": "quality-gates",
+    "i18nRef": "i18n-standards",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "financeModelRef": "finance-money-model"
   },
   "traceability": {
     "repoPath": [
@@ -640,5 +643,10 @@
     "wave3Pr": "W3-07",
     "wave3PrBranch": "task/enterprise-dod-evidence-pack",
     "wave3PrHandoffRef": "docs/platform-wave3-enterprise-pr-handoff-2026-07-09.md"
+  },
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
   }
 }

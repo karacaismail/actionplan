@@ -1,6 +1,9 @@
 import uiStrings from "@/data/strings.json";
 import { z } from "zod";
+import { AppDefinitionSchema } from "./app-definition";
 import { AtomDefinitionSchema } from "./atom";
+import { DeliveryContextSchema } from "./delivery-context";
+import { ModuleDefinitionSchema } from "./module-definition";
 import { UiArtifactRoleSchema } from "./storybook-registry";
 import { UiDeliverySchema } from "./ui-delivery";
 
@@ -26,6 +29,21 @@ export const WBS_LEVELS = [
 ] as const;
 export const WbsLevelSchema = z.enum(WBS_LEVELS);
 export type WbsLevel = z.infer<typeof WbsLevelSchema>;
+
+/** WBS derinliğinden bağımsız ürün/plan artefakt kimliği. */
+export const ARTIFACT_KINDS = [
+  "sellable-app",
+  "app-core-module",
+  "app-module",
+  "platform-foundation",
+  "portfolio-facet",
+  "governance",
+  "delivery-task",
+  "legacy-alias",
+  "audit-pending",
+] as const;
+export const ArtifactKindSchema = z.enum(ARTIFACT_KINDS);
+export type ArtifactKind = z.infer<typeof ArtifactKindSchema>;
 
 // Etiketler tek kaynaktan: src/data/strings.json (içerik JSON'da, kodda değil)
 export const LEVEL_META: Record<WbsLevel, { tr: string; metaphor: string; depth: number }> = {
@@ -405,6 +423,10 @@ export const StandardRefsSchema = z.object({
   searchQualityRef: z.string().optional(),
   /** Karar, KPI ve rapor verisinin doğruluk/provenance sözleşmesi. */
   decisionGradeRef: z.string().optional(),
+  /** App/module için enterprise-only waterfall ve day-2 teslim standardı. */
+  enterpriseDeliveryRef: z.string().optional(),
+  /** App assembly, app-core ve app module için SDK-only geliştirme standardı. */
+  sdkDevelopmentRef: z.string().optional(),
 });
 export type StandardRefs = z.infer<typeof StandardRefsSchema>;
 
@@ -439,10 +461,14 @@ export const TaskNodeSchema = z
       .regex(/^[a-z0-9][a-z0-9-]*$/, "id küçük-harf kebab-case olmalı"),
     wbsCode: z.string().default(""),
     level: WbsLevelSchema,
+    /** Ticari/teknik artefakt kimliği WBS seviyesinden bağımsızdır; rollout boyunca opsiyoneldir. */
+    artifactKind: ArtifactKindSchema.optional(),
     title: z.string().min(1),
     slug: z.string().min(1),
     /** Eski task URL/ID değerleri; canonical id değişse bile eski linkler çözülür. */
     aliases: z.array(z.string()).default([]),
+    /** Legacy alias düğümünün yöneldiği kanonik task kimliği. */
+    canonicalId: z.string().optional(),
     summary: z.string().default(""),
     parentId: z.string().nullable().default(null),
     order: z.number().default(0),
@@ -502,6 +528,13 @@ export const TaskNodeSchema = z
     /** WBS micro-step veya atomik değer tipi için tam, makine-okunur atom sözleşmesi. */
     atomDefinition: AtomDefinitionSchema.optional(),
 
+    /** Bağımsız, satılabilir app'in enterprise + SDK-only sözleşmesi. */
+    appDefinition: AppDefinitionSchema.optional(),
+    /** App-core veya app module'ünün enterprise + SDK-only sözleşmesi. */
+    moduleDefinition: ModuleDefinitionSchema.optional(),
+    /** Runtime teslimatını app/module/SDK zincirine bağlar; rollout boyunca opsiyoneldir. */
+    deliveryContext: DeliveryContextSchema.optional(),
+
     // Mühendislik standardı bağı (ADR-0027) — düğüm tek-kaynak sözleşmelere REFERANS verir.
     standardRefs: StandardRefsSchema.default({}),
     /** Boyut uygulanabilirliği (dimKey → {applies, reason}). Boş = tüm boyutlar uygulanır. */
@@ -531,6 +564,47 @@ export const TaskNodeSchema = z
   })
   .strict()
   .superRefine((node, ctx) => {
+    if (node.artifactKind === "legacy-alias" && !node.canonicalId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["canonicalId"],
+        message: "artifactKind=legacy-alias düğümü boş olmayan canonicalId taşımalı",
+      });
+    }
+    if (node.artifactKind !== "legacy-alias" && node.canonicalId !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["canonicalId"],
+        message: "canonicalId yalnız artifactKind=legacy-alias düğümünde kullanılabilir",
+      });
+    }
+    if (node.appDefinition && (node.level !== "app" || node.artifactKind !== "sellable-app")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["appDefinition"],
+        message:
+          "appDefinition yalnız artifactKind=sellable-app ve level=app düğümünde kullanılabilir",
+      });
+    }
+    if (
+      node.moduleDefinition &&
+      (node.level !== "module" ||
+        (node.artifactKind !== "app-core-module" && node.artifactKind !== "app-module"))
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["moduleDefinition"],
+        message:
+          "moduleDefinition yalnız artifactKind=app-core-module/app-module ve level=module düğümünde kullanılabilir",
+      });
+    }
+    if (node.moduleDefinition && node.artifactKind !== node.moduleDefinition.artifactKind) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["moduleDefinition", "artifactKind"],
+        message: "TaskNode artifactKind ile moduleDefinition artifactKind aynı olmalı",
+      });
+    }
     if (node.atomDefinition?.kind === "task-micro-step" && node.level !== "micro_step") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-billing",
-  "wbsCode": "16.3",
-  "level": "archetype",
+  "wbsCode": "30",
+  "level": "app",
   "title": "Billing + Subscription — SaaS satış altyapısı",
   "slug": "s-billing",
   "summary": "15 SaaS ürünü SaaS olarak satılacak: abonelik, trial, prorate, dunning, fatura, vergi otomasyonu.",
-  "parentId": "app-finance",
+  "parentId": null,
   "order": 3,
   "icon": "ph-receipt",
   "tags": [
@@ -24,7 +24,11 @@
     "fiyat",
     "kullanım",
     "tahsilat",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "cc-tr",
@@ -34,7 +38,7 @@
   "blocks": [
     "build-enterprise",
     "cc-fx-ledger",
-    "dist-clinic",
+    "s-clinic",
     "dist-site",
     "edu-u21",
     "s-ecommerce-models",
@@ -56,6 +60,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-billing",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-billing",
+    "delivery-module: s-billing-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:atomic-type-runtime-contract: docs/atomic-types-directive.md",
     "doc-apply:capability-entitlement-runtime-contract: docs/capability-entitlement-contract.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
@@ -89,6 +101,7 @@
       "criteria": [
         "Billing + Subscription — SaaS satış altyapısı kapsamı + mizan paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-billing-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Billing + Subscription — SaaS satış altyapısı alanları için değer tipi ile Fragment/ArcheType sorumlulukları ve consumer index/sorgu ihtiyacı açıkça ayrılır.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Billing + Subscription — SaaS satış altyapısı için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:market-readiness] Billing + Subscription — SaaS satış altyapısı launch kapsamı desteklenen ülke/locale/currency kombinasyonlarını ve bilinçli kapsam dışlarını listeler.",
@@ -104,6 +117,7 @@
       "criteria": [
         "mizan için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-billing-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Her tip için geçerli/geçersiz parse, serialize round-trip, locale/currency/unit uyuşmazlığı ve şema sürüm uyumu testleri development öncesi yazılır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Unknown key, expired entitlement, cross-tenant grant, duplicate event ve onaysız AI mutation negatifleri önce yazılır.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
@@ -127,7 +141,8 @@
       "status": "pending",
       "criteria": [
         "mizan Zod sözleşmesi + expand-contract göç",
-        "GİB e-fatura + KVKK veri sınıflandırması"
+        "GİB e-fatura + KVKK veri sınıflandırması",
+        "[CRITERION:s-billing-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -137,6 +152,7 @@
       "criteria": [
         "Billing + Subscription — SaaS satış altyapısı engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-billing-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Billing + Subscription — SaaS satış altyapısı yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -146,7 +162,8 @@
       "status": "pending",
       "criteria": [
         "mizan e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-billing-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -155,6 +172,7 @@
       "status": "pending",
       "criteria": [
         "Billing + Subscription — SaaS satış altyapısı DoD + kanıt (evidence)",
+        "[CRITERION:s-billing-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Tüketilen her atom için canonical parse→serialize→parse özdeşliği, invalid corpus, locale/currency/unit ayrımı ve registry sürüm uyumu gerçek test referanslarıyla doğrulanır; float veya serbest JSON adapter'ı bulunursa kapı kırmızı kalır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Plan→entitlement→capability→PDP zinciri aynı fixture'da beklenen allow/deny ve audit referansını üretir.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
@@ -179,6 +197,7 @@
       "criteria": [
         "Billing + Subscription — SaaS satış altyapısı CI→Pages dağıtımı",
         "mizan runbook + geri-alma",
+        "[CRITERION:s-billing-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Registry sürümü, precision veya rounding değişiminde consumer uyumluluğu, migration dry-run'ı, round-trip regresyonu ve downgrade yolu doğrulanır; eski değerler sessizce yeniden yorumlanmaz.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Capability key, plan eşlemesi veya entitlement policy sürümü değişiminde default-deny, expiry, cross-tenant ve revoke regresyonları çalıştırılır; karar cache'i invalidated edilir ve eski grant'ler rollback sırasında sessizce genişletilmez.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
@@ -202,6 +221,10 @@
   "deliverables": [
     "Billing + Subscription — SaaS satış altyapısı uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Billing + Subscription — SaaS satış altyapısı bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-billing-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-billing/s-billing-core SDK-only enterprise task handoff",
     "[DOC-APPLY:atomic-type-runtime-contract] Billing + Subscription — SaaS satış altyapısı alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Billing + Subscription — SaaS satış altyapısı giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Billing + Subscription — SaaS satış altyapısı türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
@@ -210,7 +233,7 @@
     "[DOC-APPLY:kernel-capability-gap-remediation] Billing + Subscription — SaaS satış altyapısı için tarihsel kernel gap'ini güncel repo gerçeğine karşı yeniden doğrulayan; tek otorite, mevcut primitive/port tüketimi, dış-provider sınırı, versioned failure semantiği ve insan-onaylı eksik contract changeset'ini ayıran remediation paketi.",
     "[DOC-APPLY:high-risk-dod] s-billing için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
     "[DOC-APPLY:market-readiness] s-billing için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.",
-    "[DOC-APPLY:task-handoff] Billing + Subscription — SaaS satış altyapısı için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Billing + Subscription — SaaS satış altyapısı için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-billing için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-billing için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Billing + Subscription — SaaS satış altyapısı için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -221,6 +244,11 @@
   "acceptanceCriteria": [
     "Billing + Subscription — SaaS satış altyapısı için mizan işlevsel kabulü karşılandı",
     "GİB e-fatura + KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Billing + Subscription — SaaS satış altyapısı MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-billing yalnız s-billing/s-billing-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:atomic-type-runtime-contract] Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.",
     "[DOC-APPLY:atomic-type-runtime-contract] Billing + Subscription — SaaS satış altyapısı yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.",
@@ -451,10 +479,10 @@
         "Billing, Payment (tahsilat) ve Revenue Recognition (gelir) ile entegre",
         "Abone CRM müşteri kaydıyla ilişkili",
         "Fatura muhasebe ledger'ına yansır — Billing + Subscription — SaaS satış altyapısı eşzamanlı sürüm çalışması (N ve N+1) geçiş penceresinde desteklenir",
-        "[DOC-APPLY:atomic-type-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:computation-derivation-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:catalog-commerce-stack-composition] s-billing: Billing + Subscription — SaaS satış altyapısı için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:kernel-capability-gap-remediation] s-billing: Billing + Subscription — SaaS satış altyapısı için tarihsel kernel gap'ini güncel repo gerçeğine karşı yeniden doğrulayan; tek otorite, mevcut primitive/port tüketimi, dış-provider sınırı, versioned failure semantiği ve insan-onaylı eksik contract changeset'ini ayıran remediation paketi.\n[DOC-APPLY:task-handoff] s-billing: Billing + Subscription — SaaS satış altyapısı için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:atomic-type-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:computation-derivation-runtime-contract] s-billing: Billing + Subscription — SaaS satış altyapısı türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:catalog-commerce-stack-composition] s-billing: Billing + Subscription — SaaS satış altyapısı için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:kernel-capability-gap-remediation] s-billing: Billing + Subscription — SaaS satış altyapısı için tarihsel kernel gap'ini güncel repo gerçeğine karşı yeniden doğrulayan; tek otorite, mevcut primitive/port tüketimi, dış-provider sınırı, versioned failure semantiği ve insan-onaylı eksik contract changeset'ini ayıran remediation paketi.\n[DOC-APPLY:task-handoff] s-billing: Billing + Subscription — SaaS satış altyapısı için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "Kernel sözleşmesi üzerinden bağ: Payment/Revenue Recognition/Accounting modülleriyle tipli API ve olay veriyolu (event bus) üzerinden entegre olur; bağımlılık yönü tek taraflı — Billing tüketicilere sürümlü sözleşme sunar, onların şemasına bağlanmaz.",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-billing — \"Billing + Subscription — SaaS satış altyapısı\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: 15 SaaS ürünü SaaS olarak satılacak: abonelik, trial, prorate, dunning, fatura, vergi otomasyonu. Etiketler: stack, billing, subscription, saas, tax, invoicing.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Billing + Subscription — SaaS satış altyapısı yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Billing + Subscription — SaaS satış altyapısı grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Billing + Subscription — SaaS satış altyapısı türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:kernel-capability-gap-remediation]\nKaynak: docs/gap-2026-07-02-01-kernel.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için tarihsel kernel gap'ini güncel repo gerçeğine karşı yeniden doğrulayan; tek otorite, mevcut primitive/port tüketimi, dış-provider sınırı, versioned failure semantiği ve insan-onaylı eksik contract changeset'ini ayıran remediation paketi.\n- Metering/tenant-lifecycle/payment veya realtime/media/geo/webhook/DR/communication/public-API sorumluluğu mevcut kernel sözleşmesi, SDK portu, business archetype ve provider arasında tek sahibi olacak biçimde sınıflandırılır; app/module içinde kopyalanmaz ve yeni primitive otomatik icat edilmez.\n- İlgili akış cross-tenant, duplicate/replay, invalid signature/state, provider/dependency failure, region/key loss, compatibility ve rollback negatiflerinden uygulanabilir olanları fail-closed veya belgeli degraded-mode sonucu ile geçmeden implementation'a açılmaz; tarihsel 'var/yok' beyanı canlı audit ve gerçek telemetry/recovery kanıtı yerine geçmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:kernel-capability-gap-remediation]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-billing handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Billing + Subscription — SaaS satış altyapısı için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-billing — \"Billing + Subscription — SaaS satış altyapısı\" (ArcheType/kaya; küme: Finans & Muhasebe). Özet: 15 SaaS ürünü SaaS olarak satılacak: abonelik, trial, prorate, dunning, fatura, vergi otomasyonu. Etiketler: stack, billing, subscription, saas, tax, invoicing.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Billing + Subscription — SaaS satış altyapısı yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Billing + Subscription — SaaS satış altyapısı grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Billing + Subscription — SaaS satış altyapısı türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:kernel-capability-gap-remediation]\nKaynak: docs/gap-2026-07-02-01-kernel.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için tarihsel kernel gap'ini güncel repo gerçeğine karşı yeniden doğrulayan; tek otorite, mevcut primitive/port tüketimi, dış-provider sınırı, versioned failure semantiği ve insan-onaylı eksik contract changeset'ini ayıran remediation paketi.\n- Metering/tenant-lifecycle/payment veya realtime/media/geo/webhook/DR/communication/public-API sorumluluğu mevcut kernel sözleşmesi, SDK portu, business archetype ve provider arasında tek sahibi olacak biçimde sınıflandırılır; app/module içinde kopyalanmaz ve yeni primitive otomatik icat edilmez.\n- İlgili akış cross-tenant, duplicate/replay, invalid signature/state, provider/dependency failure, region/key loss, compatibility ve rollback negatiflerinden uygulanabilir olanları fail-closed veya belgeli degraded-mode sonucu ile geçmeden implementation'a açılmaz; tarihsel 'var/yok' beyanı canlı audit ve gerçek telemetry/recovery kanıtı yerine geçmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:kernel-capability-gap-remediation]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-billing — Billing + Subscription — SaaS satış altyapısı\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Billing + Subscription — SaaS satış altyapısı için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-billing handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Billing + Subscription — SaaS satış altyapısı için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -581,82 +609,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-billing-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-billing"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-billing-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-billing"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-billing-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-billing"
         }
       },
       "maxChainDepth": 6,
@@ -812,29 +764,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-billing-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-billing"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-billing-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-billing"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-billing-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-billing"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -847,18 +866,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -898,6 +911,273 @@
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
     "i18nRef": "i18n-standards",
-    "financeModelRef": "finance-money-model"
+    "financeModelRef": "finance-money-model",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-billing",
+    "canonicalName": "Billing + Subscription — SaaS satış altyapısı",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "finance"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-billing.operate",
+        "s-billing.administer",
+        "s-billing.report-audit"
+      ]
+    },
+    "valueProposition": "15 SaaS ürünü SaaS olarak satılacak: abonelik, trial, prorate, dunning, fatura, vergi otomasyonu.",
+    "targetOrganizations": [
+      "Kurumsal finans, muhasebe ve düzenlenmiş ödeme operasyonları"
+    ],
+    "buyerRoles": [
+      "CFO",
+      "Financial Controller",
+      "Finance Transformation and Compliance Lead"
+    ],
+    "userRoles": [
+      "Accountant",
+      "Finance Operations Specialist",
+      "Approver",
+      "Internal or External Auditor"
+    ],
+    "businessOutcomes": [
+      "Billing + Subscription — SaaS satış altyapısı: 15 SaaS ürünü SaaS olarak satılacak: abonelik, trial, prorate, dunning, fatura, vergi otomasyonu.",
+      "Billing + Subscription — SaaS satış altyapısı ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Billing + Subscription — SaaS satış altyapısı hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "15 SaaS ürünü SaaS olarak satılacak yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "abonelik yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "trial yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Billing + Subscription — SaaS satış altyapısı tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "15 SaaS ürünü SaaS olarak satılacak talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Billing + Subscription — SaaS satış altyapısı yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Billing + Subscription — SaaS satış altyapısı service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Billing + Subscription — SaaS satış altyapısı kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-billing.operate",
+      "s-billing.administer",
+      "s-billing.report-audit"
+    ],
+    "appCoreModuleId": "s-billing-core",
+    "requiredModuleIds": [
+      "s-billing-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "financial-records",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-billing.operate",
+        "s-billing.administer",
+        "s-billing.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-billing.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-billing:sdk-semver-compatibility",
+        "planned-test:s-billing:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-billing:forbidden-import-boundaries",
+        "planned-test:s-billing:kernel-internals-deny",
+        "planned-test:s-billing:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "critical",
+      "owners": {
+        "product": "Billing + Subscription — SaaS satış altyapısı Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Billing + Subscription — SaaS satış altyapısı Data Owner",
+        "ux": "Billing + Subscription — SaaS satış altyapısı UX Owner",
+        "qa": "Billing + Subscription — SaaS satış altyapısı QA Owner",
+        "operations": "Billing + Subscription — SaaS satış altyapısı Service Owner",
+        "compliance": "Billing + Subscription — SaaS satış altyapısı Compliance Owner",
+        "release": "Billing + Subscription — SaaS satış altyapısı Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft regulated baseline: monthly SLO >= 99.95%; critical journeys >= 99.99%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft regulated baseline: RTO <= 30 minutes",
+        "rpo": "Draft regulated baseline: RPO <= 5 minutes",
+        "retention": "financial-records, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "financial-state-model",
+        "decision-grade-data"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-billing-requirements-evidence",
+            "criterionId": "s-billing-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-billing/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-test-plan-evidence",
+            "criterionId": "s-billing-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-billing/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-db-schema-evidence",
+            "criterionId": "s-billing-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-billing/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-development-evidence",
+            "criterionId": "s-billing-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-billing/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-test-qa-evidence",
+            "criterionId": "s-billing-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-billing/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-verification-evidence",
+            "criterionId": "s-billing-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-billing/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-billing-release-maintenance-evidence",
+            "criterionId": "s-billing-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-billing/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-billing",
+    "moduleRef": "s-billing-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

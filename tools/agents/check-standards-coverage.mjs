@@ -61,6 +61,8 @@ const REF_KEY_TO_STANDARD = {
   identityDataRef: "identity-data",
   searchQualityRef: "search-quality",
   decisionGradeRef: "decision-grade-data",
+  enterpriseDeliveryRef: "enterprise-delivery",
+  sdkDevelopmentRef: "sdk-development",
 };
 
 // Riskli düğümde boş tenancy/privacy ref POLİTİKASI (tur 3): WARN, FAIL değil.

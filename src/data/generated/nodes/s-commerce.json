@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-commerce",
-  "wbsCode": "14.4",
-  "level": "archetype",
+  "wbsCode": "41",
+  "level": "app",
   "title": "Commerce Stack",
   "slug": "s-commerce",
   "summary": "Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez.",
-  "parentId": "app-core-operations",
+  "parentId": null,
   "order": 4,
   "icon": "ph-shopping-cart",
   "tags": [
@@ -22,7 +22,11 @@
     "kupon",
     "stok",
     "okuma",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [],
   "blocks": [
@@ -47,6 +51,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-commerce",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-commerce",
+    "delivery-module: s-commerce-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:atomic-type-runtime-contract: docs/atomic-types-directive.md",
     "doc-apply:capability-entitlement-runtime-contract: docs/capability-entitlement-contract.md",
     "doc-apply:fragment-runtime-contract: docs/fragments-directive.md",
@@ -95,6 +107,7 @@
       "criteria": [
         "Commerce Stack kapsamı + lead paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-commerce-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Commerce Stack alanları için değer tipi ile Fragment/ArcheType sorumlulukları ve consumer index/sorgu ihtiyacı açıkça ayrılır.",
         "[DOC-APPLY:fragment-runtime-contract] Commerce Stack için Atom/Fragment/ArcheType sınırı ile embedding, optionality, version pin ve index ihtiyacı beyan edilir.",
         "[DOC-APPLY:mode-profile-runtime-contract] Commerce Stack mode adı için kod içi if/switch yazmaz; merkezi versioned config ve capability/PDP bağlarını tüketir.",
@@ -113,6 +126,7 @@
       "criteria": [
         "lead için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-commerce-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Her tip için geçerli/geçersiz parse, serialize round-trip, locale/currency/unit uyuşmazlığı ve şema sürüm uyumu testleri development öncesi yazılır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Unknown key, expired entitlement, cross-tenant grant, duplicate event ve onaysız AI mutation negatifleri önce yazılır.",
         "[DOC-APPLY:fragment-runtime-contract] Version pin, optional/required alan, unknown field, cross-field invariant, recursive cycle reddi, canonical round-trip ve consumer index ihtiyacı için pozitif/negatif fixture'lar development öncesi yazılır.",
@@ -149,7 +163,8 @@
       "status": "pending",
       "criteria": [
         "lead Zod sözleşmesi + expand-contract göç",
-        "KVKK veri sınıflandırması"
+        "KVKK veri sınıflandırması",
+        "[CRITERION:s-commerce-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -159,6 +174,7 @@
       "criteria": [
         "Commerce Stack engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-commerce-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Commerce Stack yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -168,7 +184,8 @@
       "status": "pending",
       "criteria": [
         "lead e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-commerce-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -177,6 +194,7 @@
       "status": "pending",
       "criteria": [
         "Commerce Stack DoD + kanıt (evidence)",
+        "[CRITERION:s-commerce-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Tüketilen her atom için canonical parse→serialize→parse özdeşliği, invalid corpus, locale/currency/unit ayrımı ve registry sürüm uyumu gerçek test referanslarıyla doğrulanır; float veya serbest JSON adapter'ı bulunursa kapı kırmızı kalır.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Plan→entitlement→capability→PDP zinciri aynı fixture'da beklenen allow/deny ve audit referansını üretir.",
         "[DOC-APPLY:fragment-runtime-contract] Registry fixture'ları canonical parse/serialize round-trip ve en az bir negatif cross-field assertion ile doğrulanır.",
@@ -214,6 +232,7 @@
       "criteria": [
         "Commerce Stack CI→Pages dağıtımı",
         "lead runbook + geri-alma",
+        "[CRITERION:s-commerce-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:atomic-type-runtime-contract] Registry sürümü, precision veya rounding değişiminde consumer uyumluluğu, migration dry-run'ı, round-trip regresyonu ve downgrade yolu doğrulanır; eski değerler sessizce yeniden yorumlanmaz.",
         "[DOC-APPLY:capability-entitlement-runtime-contract] Capability key, plan eşlemesi veya entitlement policy sürümü değişiminde default-deny, expiry, cross-tenant ve revoke regresyonları çalıştırılır; karar cache'i invalidated edilir ve eski grant'ler rollback sırasında sessizce genişletilmez.",
         "[DOC-APPLY:fragment-runtime-contract] Fragment alanı veya sürümü değişiminde consumer uyumluluk matrisi, migration dry-run'ı, unknown-field/cross-field regresyonları ve rollback yolu doğrulanır; mevcut embedded değerler sessizce değiştirilmez.",
@@ -250,6 +269,10 @@
   "deliverables": [
     "Commerce Stack uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Commerce Stack bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-commerce-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-commerce/s-commerce-core SDK-only enterprise task handoff",
     "[DOC-APPLY:atomic-type-runtime-contract] Commerce Stack alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Commerce Stack giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.",
     "[DOC-APPLY:fragment-runtime-contract] Commerce Stack alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.",
@@ -267,7 +290,7 @@
     "[DOC-APPLY:high-risk-dod] s-commerce için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
     "[DOC-APPLY:market-readiness] s-commerce için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.",
     "[DOC-APPLY:business-model-transition] Tenant business_model_config değişimini preview→validate→publish→rollback akışı, missing_fields raporu, capability/PDP bağı ve config-driven surface tüketimiyle tanımla.",
-    "[DOC-APPLY:task-handoff] Commerce Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Commerce Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-commerce için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-commerce için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Commerce Stack için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -282,6 +305,11 @@
   "acceptanceCriteria": [
     "Commerce Stack için lead işlevsel kabulü karşılandı",
     "KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Commerce Stack MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-commerce yalnız s-commerce/s-commerce-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:atomic-type-runtime-contract] Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.",
     "[DOC-APPLY:atomic-type-runtime-contract] Commerce Stack yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.",
     "[DOC-APPLY:capability-entitlement-runtime-contract] Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.",
@@ -413,12 +441,13 @@
         "Commerce Stack: vitrin, sepet, sipariş, kampanya ve katalog yeteneklerini birleştiren ArcheType",
         "Çok-kanallı satış (web/mobil/pazar yeri) tek sipariş havuzunda",
         "Kampanya/kupon ve fiyatlandırma kuralları katalog üzerinde",
-        "Commerce Stack eşzamanlı düzenleme çakışma kuralı senaryolaştırılmıştır",
-        "komşu modülle sınır anlaşması Commerce Stack için yazılıdır; ihlal sözleşme testinde yakalanır"
+        "Commerce Stack eşzamanlı düzenleme çakışma kuralı senaryolaştırılmıştır\nkomşu modülle sınır anlaşması Commerce Stack için yazılıdır; ihlal sözleşme testinde yakalanır",
+        "[DOC-APPLY:catalog-commerce-capability-triage] s-commerce: Commerce Stack için kaynak-provenance ailesini, item-level disposition'ı, duplicate anahtarını ve module-promotion sonucu gösteren capability triyaj tablosu.\n[DOC-APPLY:catalog-commerce-product-scope] s-commerce: Commerce Stack için tez, hedef kullanıcı, minimum ticari dilim, non-goal, edition/mode/tenant ayrımı, tüketilen platform capability'leri ve provider sınırını bir scope card'da birleştir.\n[DOC-APPLY:catalog-enterprise-strategy-commercial-candidates] s-commerce: Commerce Stack için ICP, edition, subscription+metered pricing, entitlement, canonical usage/cost authority, pilot economics ve legal gate candidate'larını owner/evidence alanlarıyla kaydet.\n[DOC-APPLY:enterprise-requirement-residual-validation] s-commerce: Commerce Stack için çözüm/vendor adı yerine falsifiable outcome taşıyan; provenance, confidence, stakeholder, data/lifecycle authority, NFR/risk, validation owner ve baseline change-control alanlarını mevcut TaskNode sözleşmesine eşleyen residual-validation paketi.\n[DOC-APPLY:market-readiness] s-commerce: s-commerce için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.\n[DOC-APPLY:business-model-transition] s-commerce: Tenant business_model_config değişimini preview→validate→publish→rollback akışı, missing_fields raporu, capability/PDP bağı ve config-driven surface tüketimiyle tanımla.\n[DOC-APPLY:waterfall-handoff] s-commerce: Commerce Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "swarm"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:catalog-commerce-capability-triage]\nKaynak: docs/commerce-os-capability-classification.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için kaynak-provenance ailesini, item-level disposition'ı, duplicate anahtarını ve module-promotion sonucu gösteren capability triyaj tablosu.\n- Her DRC/MAG veya cross-model öğe tek tek REUSE, EXTEND-CONTRACT, NEW-BUSINESS-BC, FEATURE, POLICY/CONFIG, INTEGRATION ya da REJECT olarak gerekçelendirilir; kaynak listesi backlog sayılmaz.\n- Module terfisi yalnız tek data authority, bağımsız lifecycle, yayımlanan event, cross-context write yokluğu ve satılabilir değer ölçütlerinin tümü geçince insan onayıyla önerilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-capability-triage]\n\n[DOC-APPLY:catalog-commerce-product-scope]\nKaynak: docs/commerce-os-product-scope.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için tez, hedef kullanıcı, minimum ticari dilim, non-goal, edition/mode/tenant ayrımı, tüketilen platform capability'leri ve provider sınırını bir scope card'da birleştir.\n- Minimum ticari dilim yalnız onaylı core yetenekleri taşır; edition yeni BC/module doğurmaz ve mode/tenant ile eşitlenmez.\n- Identity, tenancy, entitlement, PDP, audit, event, provider adapter ve benzeri platform otoriteleri Commerce OS içinde yeniden yazılmaz; lisanslı yürütme dış sağlayıcı sınırında kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-product-scope]\n\n[DOC-APPLY:catalog-enterprise-strategy-commercial-candidates]\nKaynak: docs/enterprise-saas-phase-5a-strategy-commercial-candidates.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için ICP, edition, subscription+metered pricing, entitlement, canonical usage/cost authority, pilot economics ve legal gate candidate'larını owner/evidence alanlarıyla kaydet.\n- ICP ve willingness-to-pay gerçek discovery kanıtı olmadan doğrulanmış sayılmaz; edition yeni BC üretmez ve entitlement/PDP platform authority'sinde kalır.\n- Usage provider faturasından değil idempotent platform ledger/metering kaydından uzlaştırılır; D6 maliyet ve marj hedefleri kayıtlı pilot zarfı olmadan PASS olmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-enterprise-strategy-commercial-candidates]\n\n[DOC-APPLY:enterprise-requirement-residual-validation]\nKaynak: docs/enterprise-saas-requirements-unknown-unknowns-gap-2026-07-13.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için çözüm/vendor adı yerine falsifiable outcome taşıyan; provenance, confidence, stakeholder, data/lifecycle authority, NFR/risk, validation owner ve baseline change-control alanlarını mevcut TaskNode sözleşmesine eşleyen residual-validation paketi.\n- Capability adayı canonicalConcept+owner+dataAuthority+lifecycleAuthority+consumer+outcome tuple'ı ile tekilleştirilmeden ve insan-onaylı boundary kararıyla product family/scopeClass'a bağlanmadan backlog/node olarak ilerlemez.\n- D1-D6 karar kapanışı discovery, counsel, authority, provider exit/failover, restore/exit/a11y/security veya ölçülmüş SLO/COGS kanıtı yerine geçmez; açık residual validation sonucu uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-requirement-residual-validation]\n\n[DOC-APPLY:market-readiness]\nKaynak: docs/global-market-readiness-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-commerce için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.\n- Commerce Stack için hedef pazarın ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları explicit uygulanabilirlik veya owner'lı gerekçeli N/A taşır; vergi, kimlik/adres ve erişilebilirlik kuralları kendi kanonik sahiplerine ref verir.\n- s-commerce hedef pazarında ödeme başarısızlıkları, locale-bazlı moderasyon, IP geolocation sınırı, crawler/dil seçimi ve destek taahhüdü uygulanır veya owner'lı gerekçeli N/A olur; eksik/unknown karar launch için NO-GO'dur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:market-readiness]\n\n[DOC-APPLY:business-model-transition]\nKaynak: docs/standards/10-business-model-switching-standard.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant business_model_config değişimini preview→validate→publish→rollback akışı, missing_fields raporu, capability/PDP bağı ve config-driven surface tüketimiyle tanımla.\n- missing_fields boş değilken veya insan approval_ref yokken publish ApprovalRequiredError ile reddedilir; AI yalnız preview/validate taslağı üretebilir.\n- Geçiş öncesi/sonrası sipariş ve fatura sayıları eşittir, kapatılan surface verisi silinmeden arşivlenir ve rollback önceki config'e veri kaybı olmadan döner.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:business-model-transition]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -428,8 +457,7 @@
         "Sepet/sipariş tenant_id RLS; misafir sepeti oturuma bağlı, PII minimal",
         "Kupon kötüye kullanımı oran-sınırı + tekrar kontrolüyle engellenir",
         "Ödeme adımı PCI kapsamı dışına itilir (sağlayıcı token)",
-        "Commerce Stack erişim kararları önbelleğe alınmaz; yetki değişimi anında etkilidir",
-        "Commerce Stack satır-düzeyi erişim RLS ile tenant'a kilitlidir; deny kararı audit izine düşer"
+        "Commerce Stack erişim kararları önbelleğe alınmaz; yetki değişimi anında etkilidir\nCommerce Stack satır-düzeyi erişim RLS ile tenant'a kilitlidir; deny kararı audit izine düşer"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
@@ -442,11 +470,10 @@
       "items": [
         "Sepet hesabı saf ve önbelleklenebilir; kampanya kuralları kural tablosundan",
         "Katalog okuması okuma-modelinden; yazma nadir, okuma yoğun",
-        "Vitrin bileşenleri tembel yüklenir — Commerce Stack kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)",
-        "[DOC-APPLY:catalog-commerce-capability-triage] s-commerce: Commerce Stack için kaynak-provenance ailesini, item-level disposition'ı, duplicate anahtarını ve module-promotion sonucu gösteren capability triyaj tablosu.\n[DOC-APPLY:catalog-commerce-product-scope] s-commerce: Commerce Stack için tez, hedef kullanıcı, minimum ticari dilim, non-goal, edition/mode/tenant ayrımı, tüketilen platform capability'leri ve provider sınırını bir scope card'da birleştir.\n[DOC-APPLY:catalog-enterprise-strategy-commercial-candidates] s-commerce: Commerce Stack için ICP, edition, subscription+metered pricing, entitlement, canonical usage/cost authority, pilot economics ve legal gate candidate'larını owner/evidence alanlarıyla kaydet.\n[DOC-APPLY:enterprise-requirement-residual-validation] s-commerce: Commerce Stack için çözüm/vendor adı yerine falsifiable outcome taşıyan; provenance, confidence, stakeholder, data/lifecycle authority, NFR/risk, validation owner ve baseline change-control alanlarını mevcut TaskNode sözleşmesine eşleyen residual-validation paketi.\n[DOC-APPLY:ui-delivery] s-commerce: Commerce Stack UI etkisi için canonical story/fixture, state matrisi ve master-component yeniden kullanım kararı.\n[DOC-APPLY:storybook-governance] s-commerce: Commerce Stack için story sahibi, canonical fixture, master-component karar kaydı, review durumu ve visual/a11y evidence bağlarını taşıyan Storybook yönetişim kaydı.\n[DOC-APPLY:market-readiness] s-commerce: s-commerce için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.\n[DOC-APPLY:business-model-transition] s-commerce: Tenant business_model_config değişimini preview→validate→publish→rollback akışı, missing_fields raporu, capability/PDP bağı ve config-driven surface tüketimiyle tanımla.\n[DOC-APPLY:waterfall-handoff] s-commerce: Commerce Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+        "Vitrin bileşenleri tembel yüklenir — Commerce Stack kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)"
       ],
       "notes": "",
-      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.\n\n[DOC-APPLY:catalog-commerce-capability-triage]\nKaynak: docs/commerce-os-capability-classification.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için kaynak-provenance ailesini, item-level disposition'ı, duplicate anahtarını ve module-promotion sonucu gösteren capability triyaj tablosu.\n- Her DRC/MAG veya cross-model öğe tek tek REUSE, EXTEND-CONTRACT, NEW-BUSINESS-BC, FEATURE, POLICY/CONFIG, INTEGRATION ya da REJECT olarak gerekçelendirilir; kaynak listesi backlog sayılmaz.\n- Module terfisi yalnız tek data authority, bağımsız lifecycle, yayımlanan event, cross-context write yokluğu ve satılabilir değer ölçütlerinin tümü geçince insan onayıyla önerilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-capability-triage]\n\n[DOC-APPLY:catalog-commerce-product-scope]\nKaynak: docs/commerce-os-product-scope.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için tez, hedef kullanıcı, minimum ticari dilim, non-goal, edition/mode/tenant ayrımı, tüketilen platform capability'leri ve provider sınırını bir scope card'da birleştir.\n- Minimum ticari dilim yalnız onaylı core yetenekleri taşır; edition yeni BC/module doğurmaz ve mode/tenant ile eşitlenmez.\n- Identity, tenancy, entitlement, PDP, audit, event, provider adapter ve benzeri platform otoriteleri Commerce OS içinde yeniden yazılmaz; lisanslı yürütme dış sağlayıcı sınırında kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-product-scope]\n\n[DOC-APPLY:catalog-enterprise-strategy-commercial-candidates]\nKaynak: docs/enterprise-saas-phase-5a-strategy-commercial-candidates.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için ICP, edition, subscription+metered pricing, entitlement, canonical usage/cost authority, pilot economics ve legal gate candidate'larını owner/evidence alanlarıyla kaydet.\n- ICP ve willingness-to-pay gerçek discovery kanıtı olmadan doğrulanmış sayılmaz; edition yeni BC üretmez ve entitlement/PDP platform authority'sinde kalır.\n- Usage provider faturasından değil idempotent platform ledger/metering kaydından uzlaştırılır; D6 maliyet ve marj hedefleri kayıtlı pilot zarfı olmadan PASS olmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-enterprise-strategy-commercial-candidates]\n\n[DOC-APPLY:enterprise-requirement-residual-validation]\nKaynak: docs/enterprise-saas-requirements-unknown-unknowns-gap-2026-07-13.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için çözüm/vendor adı yerine falsifiable outcome taşıyan; provenance, confidence, stakeholder, data/lifecycle authority, NFR/risk, validation owner ve baseline change-control alanlarını mevcut TaskNode sözleşmesine eşleyen residual-validation paketi.\n- Capability adayı canonicalConcept+owner+dataAuthority+lifecycleAuthority+consumer+outcome tuple'ı ile tekilleştirilmeden ve insan-onaylı boundary kararıyla product family/scopeClass'a bağlanmadan backlog/node olarak ilerlemez.\n- D1-D6 karar kapanışı discovery, counsel, authority, provider exit/failover, restore/exit/a11y/security veya ölçülmüş SLO/COGS kanıtı yerine geçmez; açık residual validation sonucu uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-requirement-residual-validation]\n\n[DOC-APPLY:ui-delivery]\nKaynak: docs/storybook-master-component-integration-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack UI etkisi için canonical story/fixture, state matrisi ve master-component yeniden kullanım kararı.\n- Commerce Stack happy/empty/loading/error/permission/long-content durumlarını Storybook sözleşmesiyle kapsar; klavye/focus, screen-reader, axe/WCAG erişilebilirlik ve görsel regresyon kanıtı tanımlıdır.\n- s-commerce UI işi master/pattern/surface-composition/local sınıflarından tam birini, owner/reviewer'ı ve gerçek component export'unu tüketen story planını taşır; Storybook interaction testi Surface E2E kanıtının yerine geçmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ui-delivery]\n\n[DOC-APPLY:storybook-governance]\nKaynak: docs/storybook-governance-pack.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için story sahibi, canonical fixture, master-component karar kaydı, review durumu ve visual/a11y evidence bağlarını taşıyan Storybook yönetişim kaydı.\n- s-commerce story'si sahip ve review tarihi taşır; duplicate component kararı master reuse, extend veya gerekçeli new olarak kaydedilir.\n- Story kataloğu ile üretim bileşeni arasında drift, sahipsiz fixture veya kanıtsız visual-pass varsa UI teslimatı kapanmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:storybook-governance]\n\n[DOC-APPLY:market-readiness]\nKaynak: docs/global-market-readiness-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- s-commerce için hedef pazar matrisi: ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları; her satırda owner, uygulanabilirlik/gerekçeli N/A, kaynak sözleşme ve launch sorusu bağı.\n- Commerce Stack için hedef pazarın ödeme, moderasyon, coğrafya-politika, dağıtım/SEO ve destek operasyonu kararları explicit uygulanabilirlik veya owner'lı gerekçeli N/A taşır; vergi, kimlik/adres ve erişilebilirlik kuralları kendi kanonik sahiplerine ref verir.\n- s-commerce hedef pazarında ödeme başarısızlıkları, locale-bazlı moderasyon, IP geolocation sınırı, crawler/dil seçimi ve destek taahhüdü uygulanır veya owner'lı gerekçeli N/A olur; eksik/unknown karar launch için NO-GO'dur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:market-readiness]\n\n[DOC-APPLY:business-model-transition]\nKaynak: docs/standards/10-business-model-switching-standard.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant business_model_config değişimini preview→validate→publish→rollback akışı, missing_fields raporu, capability/PDP bağı ve config-driven surface tüketimiyle tanımla.\n- missing_fields boş değilken veya insan approval_ref yokken publish ApprovalRequiredError ile reddedilir; AI yalnız preview/validate taslağı üretebilir.\n- Geçiş öncesi/sonrası sipariş ve fatura sayıları eşittir, kapatılan surface verisi silinmeden arşivlenir ve rollback önceki config'e veri kaybı olmadan döner.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:business-model-transition]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -488,8 +515,7 @@
         "Mobil-öncelikli vitrin/sepet; PWA ile çevrimdışı tarama",
         "iOS/Android tek-dokunuş ödeme cüzdan entegrasyonu",
         "Push ile sepet hatırlatma — Commerce Stack yatay/dikey yönelim değişiminde form durumu korunur",
-        "WebView köprüsü (bridge) Commerce Stack yerel yeteneklerine sözleşmeli erişir; cihaz izin akışı testlidir",
-        "Commerce Stack mobil formları otomatik-doldurma (autofill) ipuçlarıyla uyumludur"
+        "WebView köprüsü (bridge) Commerce Stack yerel yeteneklerine sözleşmeli erişir; cihaz izin akışı testlidir\nCommerce Stack mobil formları otomatik-doldurma (autofill) ipuçlarıyla uyumludur"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -503,12 +529,13 @@
         "Vitrin/sepet klavye+okuyucu erişimli; fiyat ve stok metinle",
         "Kampanya rozetleri renk dışında metinle de; kontrast 7:1",
         "Ödeme akışı odak sırası ve hata bildirimi erişilebilir",
-        "erişilebilir ad hesaplaması Commerce Stack bileşenlerinde test edilir (accessible name)",
-        "kontrast belirteçleri Commerce Stack temasında 7:1 üstüdür; WCAG denetim raporu sürümlüdür"
+        "erişilebilir ad hesaplaması Commerce Stack bileşenlerinde test edilir (accessible name)\nkontrast belirteçleri Commerce Stack temasında 7:1 üstüdür; WCAG denetim raporu sürümlüdür",
+        "[DOC-APPLY:ui-delivery] s-commerce: Commerce Stack UI etkisi için canonical story/fixture, state matrisi ve master-component yeniden kullanım kararı.\n[DOC-APPLY:storybook-governance] s-commerce: Commerce Stack için story sahibi, canonical fixture, master-component karar kaydı, review durumu ve visual/a11y evidence bağlarını taşıyan Storybook yönetişim kaydı."
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam core-operations kümesi swarm turunda.",
-      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
-      "provenance": "swarm"
+      "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.\n\n[DOC-APPLY:ui-delivery]\nKaynak: docs/storybook-master-component-integration-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack UI etkisi için canonical story/fixture, state matrisi ve master-component yeniden kullanım kararı.\n- Commerce Stack happy/empty/loading/error/permission/long-content durumlarını Storybook sözleşmesiyle kapsar; klavye/focus, screen-reader, axe/WCAG erişilebilirlik ve görsel regresyon kanıtı tanımlıdır.\n- s-commerce UI işi master/pattern/surface-composition/local sınıflarından tam birini, owner/reviewer'ı ve gerçek component export'unu tüketen story planını taşır; Storybook interaction testi Surface E2E kanıtının yerine geçmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ui-delivery]\n\n[DOC-APPLY:storybook-governance]\nKaynak: docs/storybook-governance-pack.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için story sahibi, canonical fixture, master-component karar kaydı, review durumu ve visual/a11y evidence bağlarını taşıyan Storybook yönetişim kaydı.\n- s-commerce story'si sahip ve review tarihi taşır; duplicate component kararı master reuse, extend veya gerekçeli new olarak kaydedilir.\n- Story kataloğu ile üretim bileşeni arasında drift, sahipsiz fixture veya kanıtsız visual-pass varsa UI teslimatı kapanmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:storybook-governance]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "deployment": {
       "key": "deployment",
@@ -589,10 +616,10 @@
         "Sipariş durum değişiklikleri order event bus'ına yayınlanır; envanter rezervasyon ve tahsilat aboneleri olayları dinler — bağımlılık yönü Commerce → abone modül (tek yönlü)",
         "Katalog PIM'den, müşteri CRM'den okunur; bu bağımlılıklar sürümlü contract ile kilitlenir, kırıcı değişiklik migration ile yönetilir",
         "Ödeme sağlayıcı entegrasyonu payment intent soyutlamasının ardında durur; webhook imzalı olay olarak bus'a girer ve idempotency anahtarıyla işlenir",
-        "[DOC-APPLY:atomic-type-runtime-contract] s-commerce: Commerce Stack alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-commerce: Commerce Stack giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:fragment-runtime-contract] s-commerce: Commerce Stack alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n[DOC-APPLY:mode-profile-runtime-contract] s-commerce: Commerce Stack capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:catalog-commerce-stack-composition] s-commerce: Commerce Stack için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition] s-commerce: Commerce Stack için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n[DOC-APPLY:task-handoff] s-commerce: Commerce Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:commerce-os-contract-package-dag] s-commerce: Commerce Stack için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
+        "[DOC-APPLY:atomic-type-runtime-contract] s-commerce: Commerce Stack alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n[DOC-APPLY:capability-entitlement-runtime-contract] s-commerce: Commerce Stack giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n[DOC-APPLY:fragment-runtime-contract] s-commerce: Commerce Stack alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n[DOC-APPLY:mode-profile-runtime-contract] s-commerce: Commerce Stack capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n[DOC-APPLY:catalog-commerce-stack-composition] s-commerce: Commerce Stack için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition] s-commerce: Commerce Stack için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n[DOC-APPLY:task-handoff] s-commerce: Commerce Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:commerce-os-contract-package-dag] s-commerce: Commerce Stack için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Commerce Stack yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Commerce Stack grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:fragment-runtime-contract]\nKaynak: docs/fragments-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n- Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.\n- Cross-field invariant ihlali ve unknown field consumer validation'da reddedilir; Commerce Stack registry/recursive fragment motoru veya app-özel kopya tanım üretmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:fragment-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition]\nKaynak: docs/commerce-os-kernel-sdk-gap-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n- Tenancy, identity/authz/PDP, audit, event/outbox, ledger, storage, search, capability/entitlement, mode/workflow ve provider-adapter davranışları Commerce içinde kopyalanmaz; mevcut sözleşme/port tüketimi açıkça gösterilir.\n- Acting-context SDK, payment/tax provider portu, out-of-process health, offline sync/conflict, signed mandate, generic availability veya experimentation boşluğu insan/layer kararı olmadan yeni primitive ya da implemented capability yapılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-kernel-sdk-gap-disposition]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-commerce handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Commerce Stack için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-commerce — \"Commerce Stack\" (ArcheType/kaya; küme: Çekirdek Operasyon). Özet: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez. Etiketler: commerce, ecommerce, shopify, cart, sepet, kampanya.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:atomic-type-runtime-contract]\nKaynak: docs/atomic-types-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack alanlarını Money, Measure, I18nText, AttributeSet ve diğer kanonik atomik tiplere eşleyen; app-özel primitive/adapter üretmeyen consumer type-map'i.\n- Her atomik tip aynı girdide deterministik canonical değer üretir; float para, birimsiz ölçü ve locale beyansız çok-dilli metin şema doğrulamasında reddedilir.\n- Commerce Stack yeni atomik tip motoru veya app-özel kolon/serbest JSON kopyası açmaz; yalnız versioned registry tipini tüketir ve round-trip/invalid-input uyum testlerini geçer.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:atomic-type-runtime-contract]\n\n[DOC-APPLY:capability-entitlement-runtime-contract]\nKaynak: docs/capability-entitlement-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack giriş noktalarını merkezi capability key, tenant entitlement, plan/license kaynağı ve PDP kararına bağlayan; yerel feature-flag/grant motoru üretmeyen consumer matrisi.\n- Bilinmeyen capability ve entitlement eksikliği default-deny olur; aynı capability farklı tenantlarda birbirinin hakkını açamaz.\n- Commerce Stack grant/revoke uygulamaz; insan-onaylı merkezi effective-capabilities sonucunu tüketir ve backend ile UI aynı deny kararını audit referansıyla gösterir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:capability-entitlement-runtime-contract]\n\n[DOC-APPLY:fragment-runtime-contract]\nKaynak: docs/fragments-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack alan kümelerini merkezi versioned FragmentRef, typed fields ve cross-field rules üzerinden tüketen; yerel Address/PersonName/ContactPoint kopyası üretmeyen handoff.\n- Fragment bağımsız entity kimliği veya lifecycle üretmez; aynı versioned tanım tüm ArcheType tüketicilerinde aynı parse/validation sonucunu verir.\n- Cross-field invariant ihlali ve unknown field consumer validation'da reddedilir; Commerce Stack registry/recursive fragment motoru veya app-özel kopya tanım üretmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:fragment-runtime-contract]\n\n[DOC-APPLY:mode-profile-runtime-contract]\nKaynak: docs/mode-profile-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack capability, policy, navigation, form ve computation bileşimini merkezi versioned ModeProfileRef üzerinden tüketen; yerel mode engine üretmeyen consumer sözleşmesi.\n- Mode değişimi önce side-effect-free preview ve missing-fields diff üretir; onaysız veya eksik profil publish edilmez.\n- Profile geçişi veriyi silmez, kapatılan capability'yi görünür/çalışır bırakmaz ve rollback önceki versioned bileşimi deterministik geri getirir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:mode-profile-runtime-contract]\n\n[DOC-APPLY:catalog-commerce-stack-composition]\nKaynak: docs/commerce-os-stack-app-composition.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için mevcut s-* kaydının aday manifest rolünü, core/edition/mode konumunu, platform tüketimini, provider portunu ve gelecekteki insan-onaylı node disposition'ını açıklayan kompozisyon fragment'i.\n- Mevcut archetype kayıtları app/module olarak yeniden adlandırılmaz; her biri yalnız onaylı item-level disposition ve mevcut WBS seviyesinde görev içeriği taşır.\n- Başka app internali veya business BC doğrudan import edilmez; iletişim kernel contract, public SDK, API veya event üzerinden kurulur.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:catalog-commerce-stack-composition]\n\n[DOC-APPLY:commerce-kernel-sdk-gap-disposition]\nKaynak: docs/commerce-os-kernel-sdk-gap-directive.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için her yatay ihtiyacı REUSE, EXTEND-CONTRACT, SDK-PORT, APP-BC, PROVIDER veya DEFER-HUMAN disposition'ına; tek owner, allowed-files, non-goal ve stop-gate ile bağlayan Commerce kernel/SDK tüketim kaydı.\n- Tenancy, identity/authz/PDP, audit, event/outbox, ledger, storage, search, capability/entitlement, mode/workflow ve provider-adapter davranışları Commerce içinde kopyalanmaz; mevcut sözleşme/port tüketimi açıkça gösterilir.\n- Acting-context SDK, payment/tax provider portu, out-of-process health, offline sync/conflict, signed mandate, generic availability veya experimentation boşluğu insan/layer kararı olmadan yeni primitive ya da implemented capability yapılmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-kernel-sdk-gap-disposition]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-commerce handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Commerce Stack için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:commerce-os-contract-package-dag]\nKaynak: docs/adr-0031-commerce-os-vibecoder-handoff-decisions.md\nGörev bağlamı: s-commerce — Commerce Stack\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Commerce Stack için business-BC internallerini içe aktarmayan neutral/versioned commerce integration-contract package ve public SDK port bağımlılık kaydı; producer/consumer yönleri ile compile-time DAG görünümü.\n- İki business BC birbirini doğrudan import etmez; ikisi de business BC bağımlılığı olmayan neutral versioned contract package ve public SDK portuna bağımlıdır.\n- Design-time paket grafiği DAG'dır; runtime event geri bildirimi veya async taşıma compile-time cycle'ı meşrulaştırmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:commerce-os-contract-package-dag]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -719,82 +746,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-commerce-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-commerce"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-commerce-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-commerce"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-commerce-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-commerce"
         }
       },
       "maxChainDepth": 6,
@@ -950,29 +901,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-commerce-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-commerce"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-commerce-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-commerce"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-commerce-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-commerce"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -985,18 +1003,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -1042,7 +1054,11 @@
     "stateContractRef": "state-management",
     "a11yRef": "a11y",
     "g11nRef": "g11n",
-    "searchQualityRef": "search-quality"
+    "searchQualityRef": "search-quality",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
   },
   "uiArtifactRole": "changes-ui-contract",
   "uiDelivery": {
@@ -1065,5 +1081,267 @@
     "reviewStatus": "planned",
     "riskClass": "medium",
     "ownerRef": "crm-ekibi"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-commerce",
+    "canonicalName": "Commerce Stack",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "core-operations"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-commerce.operate",
+        "s-commerce.administer",
+        "s-commerce.report-audit"
+      ]
+    },
+    "valueProposition": "Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez.",
+    "targetOrganizations": [
+      "Tedarik zinciri, üretim, saha ve lojistik operasyonları"
+    ],
+    "buyerRoles": [
+      "COO",
+      "Supply Chain Director",
+      "Operations Technology Owner"
+    ],
+    "userRoles": [
+      "Planner",
+      "Warehouse or Field Operator",
+      "Supplier Coordinator",
+      "Operations Auditor"
+    ],
+    "businessOutcomes": [
+      "Commerce Stack: Shopify, WooCommerce, Odoo Sale, Medusa muadili. 5 üründe merkez.",
+      "Commerce Stack ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Commerce Stack hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Shopify yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "WooCommerce yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "Odoo Sale yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Commerce Stack tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Shopify talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Commerce Stack yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Commerce Stack service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Commerce Stack kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-commerce.operate",
+      "s-commerce.administer",
+      "s-commerce.report-audit"
+    ],
+    "appCoreModuleId": "s-commerce-core",
+    "requiredModuleIds": [
+      "s-commerce-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "customer-commerce-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-commerce.operate",
+        "s-commerce.administer",
+        "s-commerce.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-commerce.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-commerce:sdk-semver-compatibility",
+        "planned-test:s-commerce:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-commerce:forbidden-import-boundaries",
+        "planned-test:s-commerce:kernel-internals-deny",
+        "planned-test:s-commerce:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "high",
+      "owners": {
+        "product": "Commerce Stack Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Commerce Stack Data Owner",
+        "ux": "Commerce Stack UX Owner",
+        "qa": "Commerce Stack QA Owner",
+        "operations": "Commerce Stack Service Owner",
+        "compliance": "Commerce Stack Compliance Owner",
+        "release": "Commerce Stack Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft high-impact baseline: monthly SLO >= 99.9%; critical journeys >= 99.95%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "customer-commerce-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence",
+        "wcag-2.2-aaa"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-commerce-requirements-evidence",
+            "criterionId": "s-commerce-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-commerce/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-test-plan-evidence",
+            "criterionId": "s-commerce-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-commerce/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-db-schema-evidence",
+            "criterionId": "s-commerce-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-commerce/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-development-evidence",
+            "criterionId": "s-commerce-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-commerce/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-test-qa-evidence",
+            "criterionId": "s-commerce-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-commerce/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-verification-evidence",
+            "criterionId": "s-commerce-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-commerce/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-commerce-release-maintenance-evidence",
+            "criterionId": "s-commerce-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-commerce/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-commerce",
+    "moduleRef": "s-commerce-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

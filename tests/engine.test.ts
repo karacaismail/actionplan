@@ -518,6 +518,29 @@ describe("resolve", () => {
     expect(index.get("app-backend-x-tas")).toBe(nodes[0]);
   });
 
+  it("legacy-alias tombstone sıralamadan bağımsız biçimde canonical app'e çözer", () => {
+    const canonical = node({
+      id: "s-clinic",
+      level: "app",
+      artifactKind: "sellable-app",
+      title: "Clinic",
+      slug: "s-clinic",
+      aliases: ["dist-clinic"],
+    });
+    const legacy = node({
+      id: "dist-clinic",
+      level: "module",
+      artifactKind: "legacy-alias",
+      canonicalId: "s-clinic",
+      title: "Legacy Clinic Distribution",
+      slug: "dist-clinic",
+    });
+
+    const index = indexById([canonical, legacy]);
+    expect(index.get("dist-clinic")).toBe(canonical);
+    expect(index.get("s-clinic")).toBe(canonical);
+  });
+
   it("breadcrumb zincirini kökten kurar", () => {
     const nodes = [
       node({ id: "app1", level: "app", title: "App", slug: "app1" }),

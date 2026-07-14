@@ -20,6 +20,9 @@ const requireText = (file, text, label = text) => {
   const content = read(file);
   if (!content.includes(text)) failures.push(`${file}: eksik ${label}`);
 };
+const requireContent = (scope, content, text, label = text) => {
+  if (!content.includes(text)) failures.push(`${scope}: eksik ${label}`);
+};
 const forbidText = (file, text, label = text) => {
   const content = read(file);
   if (content.includes(text)) failures.push(`${file}: eski/yanlis ifade kaldi: ${label}`);
@@ -83,6 +86,12 @@ if (primary) {
   }
 }
 
+const exportDataSource = fs
+  .readdirSync(rel("src", "engine"))
+  .filter((file) => /^exportData.*\.ts$/.test(file))
+  .sort()
+  .map((file) => read("src", "engine", file))
+  .join("\n");
 for (const symbol of [
   "exportDeveloperBrief",
   "exportAgentPrompt",
@@ -90,11 +99,26 @@ for (const symbol of [
   "exportVobecoderCard",
   "exportTaskArtifact",
 ]) {
-  requireText("src/engine/exportData.ts", `export function ${symbol}`, symbol);
+  requireContent(
+    "src/engine/exportData*.ts",
+    exportDataSource,
+    `export function ${symbol}`,
+    symbol,
+  );
   requireText("src/engine/index.ts", symbol, `engine index ${symbol}`);
 }
-requireText("src/engine/exportData.ts", "NO-GO for code-start", "code-start NO-GO");
-requireText("src/engine/exportData.ts", "Do not use forbidden stack", "forbidden stack prompt");
+requireContent(
+  "src/engine/exportData*.ts",
+  exportDataSource,
+  "NO-GO for code-start",
+  "code-start NO-GO",
+);
+requireContent(
+  "src/engine/exportData*.ts",
+  exportDataSource,
+  "Do not use forbidden stack",
+  "forbidden stack prompt",
+);
 
 for (const mode of [
   "developer-brief",

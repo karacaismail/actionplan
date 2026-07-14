@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "s-demand-planning",
-  "wbsCode": "17.1",
-  "level": "archetype",
+  "wbsCode": "9",
+  "level": "app",
   "title": "Demand Planning / S&OP",
   "slug": "s-demand-planning",
   "summary": "Talep tahmini + üretim planlama",
-  "parentId": "app-supply-chain",
+  "parentId": null,
   "order": 1,
   "icon": "ph-trend-up",
   "tags": [
@@ -21,7 +21,11 @@
     "dengeleme",
     "override",
     "tahmini",
-    "archetype"
+    "archetype",
+    "app",
+    "sellable-app",
+    "enterprise",
+    "sdk-only"
   ],
   "dependsOn": [
     "scale-timeseries",
@@ -44,6 +48,14 @@
   ],
   "refs": [
     "kaynak-korpus: s-demand-planning",
+    "identity-contract: src/data/app-catalog-decisions.json",
+    "app-contract: docs/app-enterprise-definition-contract.md",
+    "decision: docs/adr-0032-enterprise-sdk-app-identity.md",
+    "standard: enterprise-delivery",
+    "standard: sdk-development",
+    "delivery-app: s-demand-planning",
+    "delivery-module: s-demand-planning-core",
+    "delivery-contract: docs/app-enterprise-definition-contract.md",
     "doc-apply:computation-derivation-runtime-contract: docs/computation-derivation-contract.md",
     "doc-apply:task-handoff: docs/task-to-code-contract.md",
     "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
@@ -69,6 +81,7 @@
       "criteria": [
         "Demand Planning / S&OP kapsamı + sevkiyat paydaş onayı",
         "Kabul kriterleri taslağı",
+        "[CRITERION:s-demand-planning-requirements-gate] requirements baseline and approved scope gate must be independently verified by app requirements baseline and approved scope owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Demand Planning / S&OP için computation_ref, typed source alanları, output tipi, rounding/precision, freshness ve provenance görüntüleme gereksinimi kaydedilir.",
         "[DOC-APPLY:task-handoff] Demand Planning / S&OP kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
         "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
@@ -82,6 +95,7 @@
       "criteria": [
         "sevkiyat için test stratejisi (unit/e2e/a11y)",
         "Testing-loop (maks 6) tanımı",
+        "[CRITERION:s-demand-planning-test-plan-gate] test-first verification matrix gate must be independently verified by app test-first verification matrix owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] DAG cycle, rounding boundary, stale source, replay determinism, unit/currency mismatch ve unauthorized formula update testleri önce yazılır.",
         "[DOC-APPLY:task-handoff] Demand Planning / S&OP kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
         "[DOC-APPLY:ready-for-dev] Demand Planning / S&OP için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
@@ -97,7 +111,8 @@
       "status": "pending",
       "criteria": [
         "sevkiyat Zod sözleşmesi + expand-contract göç",
-        "KVKK veri sınıflandırması"
+        "KVKK veri sınıflandırması",
+        "[CRITERION:s-demand-planning-db-schema-gate] data ownership and reversible schema contract gate must be independently verified by app data ownership and reversible schema contract owner."
       ],
       "passed": false,
       "notes": ""
@@ -107,6 +122,7 @@
       "criteria": [
         "Demand Planning / S&OP engine/UI ayrımı",
         "Lint/tip kapıları yeşil",
+        "[CRITERION:s-demand-planning-development-gate] SDK-generated implementation and compatibility checks gate must be independently verified by app SDK-generated implementation and compatibility checks owner.",
         "[DOC-APPLY:ready-for-dev] Demand Planning / S&OP yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
       ],
       "passed": false,
@@ -116,7 +132,8 @@
       "status": "pending",
       "criteria": [
         "sevkiyat e2e + axe AAA 0 ihlal",
-        "Kapsam eşiği"
+        "Kapsam eşiği",
+        "[CRITERION:s-demand-planning-test-qa-gate] functional, security, accessibility and performance QA gate must be independently verified by app functional, security, accessibility and performance QA owner."
       ],
       "passed": false,
       "notes": ""
@@ -125,6 +142,7 @@
       "status": "pending",
       "criteria": [
         "Demand Planning / S&OP DoD + kanıt (evidence)",
+        "[CRITERION:s-demand-planning-verification-gate] independent acceptance and evidence verification gate must be independently verified by app independent acceptance and evidence verification owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input tekrarında typed output ile provenance hash'i eşleşir; cycle, stale source, unit/currency uyuşmazlığı ve onaysız formül güncellemesi gerçek fixture/test referanslarıyla reddedilir, aksi durumda sonuç NOT-RUN kalır.",
         "[DOC-APPLY:task-handoff] s-demand-planning için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
         "[DOC-APPLY:ready-for-dev] s-demand-planning code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
@@ -141,6 +159,7 @@
       "criteria": [
         "Demand Planning / S&OP CI→Pages dağıtımı",
         "sevkiyat runbook + geri-alma",
+        "[CRITERION:s-demand-planning-release-maintenance-gate] release, rollback, observability and day-2 operations gate must be independently verified by app release, rollback, observability and day-2 operations owner.",
         "[DOC-APPLY:computation-derivation-runtime-contract] Formül sürümü, precision veya input DAG değişiminde etkilenen consumer listesi çıkarılır; backfill/recompute dry-run'ı, eski-yeni çıktı paritesi ve rollback doğrulanır, önceki provenance ile kaynak değerler üzerine yazılmaz.",
         "[DOC-APPLY:task-handoff] Demand Planning / S&OP teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
         "[DOC-APPLY:ready-for-dev] Demand Planning / S&OP repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
@@ -156,8 +175,12 @@
   "deliverables": [
     "Demand Planning / S&OP uygulaması",
     "Testler + dokümantasyon",
+    "[APP-CONTRACT] Demand Planning / S&OP bağımsız enterprise app baseline ve manifesti",
+    "[APP-CONTRACT] s-demand-planning-core SDK-generated zorunlu app-core module",
+    "[APP-CONTRACT] Yedi waterfall fazı için beklenen kanıt, owner, rollback ve day-2 işletim paketi",
+    "[DELIVERY-CONTEXT] s-demand-planning/s-demand-planning-core SDK-only enterprise task handoff",
     "[DOC-APPLY:computation-derivation-runtime-contract] Demand Planning / S&OP türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.",
-    "[DOC-APPLY:task-handoff] Demand Planning / S&OP için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:task-handoff] Demand Planning / S&OP için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
     "[DOC-APPLY:ready-for-dev] s-demand-planning için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
     "[DOC-APPLY:evidence-dod] s-demand-planning için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
     "[DOC-APPLY:evidence-writeback-runbook] Demand Planning / S&OP için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
@@ -167,6 +190,11 @@
   "acceptanceCriteria": [
     "Demand Planning / S&OP için sevkiyat işlevsel kabulü karşılandı",
     "KVKK + AAA erişilebilirlik kapıları geçti",
+    "[APP-CONTRACT] Demand Planning / S&OP MVP olarak kapanamaz; yedi enterprise waterfall kapısının her biri kendi doğrulanmış kanıtıyla geçer.",
+    "[APP-CONTRACT] App assembly ve tüm app module'leri yalnız public SDK sözleşmesiyle, deterministik generator ve compatibility/negative testleriyle üretilir.",
+    "[APP-CONTRACT] Planlanan evidence actual evidence sayılmaz; verified/done durumu yalnız açılabilir bağımsız kanıtla mümkündür.",
+    "[DELIVERY-CONTEXT] s-demand-planning yalnız s-demand-planning/s-demand-planning-core public SDK contract sınırında gerçekleştirilir; MVP veya kernel-internal kısa yol kabul edilmez.",
+    "Planlanan kanıt actual evidence değildir; gerçek test/CI/deploy doğrulaması olmadan implemented, verified veya done sonucu yazılamaz.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.",
     "[DOC-APPLY:computation-derivation-runtime-contract] Demand Planning / S&OP türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.",
     "[DOC-APPLY:task-handoff] s-demand-planning handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
@@ -208,12 +236,13 @@
         "Kapsam/işlev sınırı: birim SKU×dönem talep tahmini (demand forecast), senaryo planlama ve güvenlik stoğu (safety stock) hedefi üretir; satınalma siparişi açmaz ve stok hareketi yazmaz — bu eylemler tedarik/WMS modüllerine bırakılır (net sınır)",
         "Girdi/çıktı sözleşmesi: girdi = geçmiş satış (historical sales) + açık siparişler + stok seviyesi; çıktı = sürümlü SKU×dönem tahmin serisi + doğruluk metriği (forecast accuracy, MAPE/bias) + onaylı S&OP planı (model/version)",
         "Durum/akış makinesi: taslak tahmin → senaryo karşılaştırma → S&OP mutabakatı → onaylı plan; her geçiş sürümlenir ve önceki sürüm geri çağrılabilir kalır",
-        "Kabul sözleşmesi (override): planlamacı manuel override yalnız gerekçe + onay ile plana yansıtabilir; onaysız override reddedilir ve iz bırakır",
-        "Hata yolu hedefi: eksik/bozuk geçmiş satış veya negatif stok girdisinde tahmin reddedilir, hata kodu ve neden döndürülür; son onaylı plan korunur (fail-closed)"
+        "Kabul sözleşmesi (override): planlamacı manuel override yalnız gerekçe + onay ile plana yansıtabilir; onaysız override reddedilir ve iz bırakır\nHata yolu hedefi: eksik/bozuk geçmiş satış veya negatif stok girdisinde tahmin reddedilir, hata kodu ve neden döndürülür; son onaylı plan korunur (fail-closed)",
+        "[DOC-APPLY:waterfall-handoff] s-demand-planning: Demand Planning / S&OP kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
       ],
       "notes": "",
-      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.",
-      "provenance": "swarm"
+      "prompt": "\"Özellik Tanımları\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: net işlevsel kapsam, girdi/çıktı sözleşmesi, durum makinesi, hata yolları.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "swarm",
+      "promptVersion": "doc-task-content-v2"
     },
     "security": {
       "key": "security",
@@ -222,11 +251,10 @@
       "items": [
         "Tahmin/satış verisi tenant_id RLS; rol bazlı erişim",
         "Tahmin varsayımları sürümlü ve izli",
-        "Hassas satış verisi maskeli — Demand Planning / S&OP yetki denetimi negatif senaryolarla her sürümde koşulur (deny kanıtı)",
-        "[DOC-APPLY:waterfall-handoff] s-demand-planning: Demand Planning / S&OP kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+        "Hassas satış verisi maskeli — Demand Planning / S&OP yetki denetimi negatif senaryolarla her sürümde koşulur (deny kanıtı)"
       ],
       "notes": "",
-      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "prompt": "\"Güvenlik Önlemleri\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tenant izolasyonu (PostgreSQL RLS), PII sınıflandırma, rol bazlı erişim (least-privilege), değişmez audit kanıtı.",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -238,8 +266,7 @@
         "Tahmin modeli (istatistik+ML); senaryo türetimi artımlı",
         "Talep-tedarik dengeleme saf hesap — ortak yardımcılar Demand Planning / S&OP için tek pakette toplanır; kopya-blok taraması CI hattındadır",
         "Tahmin doğruluğu projeksiyondan — ortak yardımcılar Demand Planning / S&OP için tek pakette toplanır; kopya-blok taraması CI hattındadır",
-        "Demand Planning / S&OP hata yönetimi tek desenle (Result/istisna) yapılır; karışık kullanım yasaktır",
-        "Demand Planning / S&OP kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)"
+        "Demand Planning / S&OP hata yönetimi tek desenle (Result/istisna) yapılır; karışık kullanım yasaktır\nDemand Planning / S&OP kod-inceleme eşiği: değişiklik 400 satırı aşarsa bölünür (modüler sınır)"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
       "prompt": "\"Kod Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: tip güvenliği, ölü kod elemesi, modülerlik, kod bölme, döngüsel karmaşıklık sınırı.",
@@ -253,8 +280,7 @@
         "Tahmin override izli; manuel ayar gerekçeli",
         "Model sürümlü; drift izlenir — derleme zinciri Demand Planning / S&OP için sabitlenmiş imajla koşar; dış indirme yasak",
         "S&OP onay akışı — Demand Planning / S&OP webhook imza doğrulaması zorunludur; imzasız istek reddedilir",
-        "geçici ayrıcalık Demand Planning / S&OP için süreli verilir; otomatik geri alınır (privilege)",
-        "Demand Planning / S&OP yönetici eylemleri ikinci kanal onayına bağlıdır; oturum yükseltme kayıtlıdır"
+        "geçici ayrıcalık Demand Planning / S&OP için süreli verilir; otomatik geri alınır (privilege)\nDemand Planning / S&OP yönetici eylemleri ikinci kanal onayına bağlıdır; oturum yükseltme kayıtlıdır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
       "prompt": "\"Güvenlik Optimizasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: secret rotasyonu, sıkı CSP, rate-limit, en az ayrıcalık sertleştirme, bağımlılık taraması.",
@@ -281,8 +307,7 @@
         "Mobilde tahmin/S&OP özeti ve onay — düşük bant genişliğinde Demand Planning / S&OP kritik akışı ölçülü gecikmeyle doğrulanır",
         "iOS/Android push ile tahmin sapması uyarısı",
         "Dar ekranda KPI/doğruluk kartı — pil/veri tasarrufu modunda Demand Planning / S&OP davranışı tanımlıdır; arka plan senkron kısıtlanır",
-        "Demand Planning / S&OP sürüm güncellemesi (OTA/store) eski önbelleği güvenli geçersiz kılar",
-        "Demand Planning / S&OP kamera/dosya erişimi izin-öncesi açıklama ekranıyla test edilir"
+        "Demand Planning / S&OP sürüm güncellemesi (OTA/store) eski önbelleği güvenli geçersiz kılar\nDemand Planning / S&OP kamera/dosya erişimi izin-öncesi açıklama ekranıyla test edilir"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
       "prompt": "\"Mobil Uygulama Uyumu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: iOS/Android (PWA veya Capacitor), Chrome extension yüzeyi, dokunma hedefi ≥44px, offline davranışı.",
@@ -296,8 +321,7 @@
         "Tahmin grafiklerine veri tablosu alternatifi",
         "Sapma renk dışında ok+metinle; kontrast 7:1",
         "Senaryo seçimi klavye erişimli — odak tuzağı taraması Demand Planning / S&OP modal/çekmece akışında ayrıca koşulur",
-        "başlık hiyerarşisi Demand Planning / S&OP sayfasında atlamasızdır; landmark bölgeleri tanımlıdır",
-        "erişilebilirlik regresyonu Demand Planning / S&OP için PR kapısında axe ile taranır"
+        "başlık hiyerarşisi Demand Planning / S&OP sayfasında atlamasızdır; landmark bölgeleri tanımlıdır\nerişilebilirlik regresyonu Demand Planning / S&OP için PR kapısında axe ile taranır"
       ],
       "notes": "Güçlendirme dalgası W1: ölçü/eşik maddeleri eklendi; derin bağlam supply-chain kümesi swarm turunda.",
       "prompt": "\"WCAG 2.2 AAA\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kontrast ≥7:1, tam klavye erişimi, ARIA rolleri/etiketleri, görünür odak sırası.",
@@ -381,10 +405,10 @@
         "Demand Planning, sales (geçmiş talep), inventory (stok), procurement (tedarik) ile entegre",
         "Tahmin predictive/analytics ile — sözleşme örnek-yükleri Demand Planning / S&OP için fixture olarak sürümlenir; drift testte yakalanır",
         "Üretim mrp'ye besler — olay sırası garantisi Demand Planning / S&OP için anahtar-bazlı bölümleme ile sağlanır",
-        "[DOC-APPLY:computation-derivation-runtime-contract] s-demand-planning: Demand Planning / S&OP türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-demand-planning: Demand Planning / S&OP için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+        "[DOC-APPLY:computation-derivation-runtime-contract] s-demand-planning: Demand Planning / S&OP türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n[DOC-APPLY:task-handoff] s-demand-planning: Demand Planning / S&OP için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
       ],
       "notes": "",
-      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Demand Planning / S&OP türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-demand-planning handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Demand Planning / S&OP için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "prompt": "\"Kernel/Core Entegrasyonu\" boyutunu bu görev için üret.\nBağlam: s-demand-planning — \"Demand Planning / S&OP\" (ArcheType/kaya; küme: Tedarik Zinciri). Özet: Talep tahmini + üretim planlama Etiketler: supply-chain, demand-planning, stack, tahmin, talep, satış.\nÇıktı: 3-5 madde, Türkçe, somut ve uygulanabilir. Generic ifade kullanma; her maddeyi bu görevin gerçek işleviyle ilişkilendir.\nGüvenlik sınırı: AI maliyeti önemsizdir; güvenlik önceliklidir. AI app/module üretemez, app/module güncelleyemez, ruleset override edemez.\nKapsa: kernel/core/modüllerle entegrasyon: gerekli mi, hangi sözleşme/olay üzerinden, bağımlılık yönü.\n\n[DOC-APPLY:computation-derivation-runtime-contract]\nKaynak: docs/computation-derivation-contract.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP türetilmiş alanlarını merkezi computation_ref, typed input/output, precision/rounding ve provenance çıktısına bağlayan; yerel formül motoru üretmeyen consumer handoff'u.\n- Aynı versioned input aynı output ve provenance hash'ini üretir; döngü, eksik bağımlılık, currency/unit uyuşmazlığı ve serbest kod ifadesi reddedilir.\n- Demand Planning / S&OP türetilmiş alanı doğrudan overwrite etmez; merkezi sonuç ve provenance tüketilir, kaynak değişiminde etkilenen DAG recompute isteği idempotent gönderilir.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:computation-derivation-runtime-contract]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: s-demand-planning — Demand Planning / S&OP\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Demand Planning / S&OP için app seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- s-demand-planning handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Demand Planning / S&OP için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
       "provenance": "swarm",
       "promptVersion": "doc-task-content-v2"
     },
@@ -509,82 +533,6 @@
         "params": {
           "field": "status",
           "value": "done"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-demand-planning-ai-app-module-deny",
-      "event": "ai.generation.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-generate-app-or-module",
-          "node": "s-demand-planning"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-demand-planning-ai-app-module-update-deny",
-      "event": "ai.update.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        },
-        {
-          "field": "targetLevel",
-          "op": "in",
-          "value": [
-            "app",
-            "module"
-          ]
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-update-app-or-module",
-          "node": "s-demand-planning"
-        }
-      },
-      "maxChainDepth": 6,
-      "requiresApproval": false
-    },
-    {
-      "id": "eca-s-demand-planning-ruleset-override-deny",
-      "event": "ai.ruleset.override.requested",
-      "when": [
-        {
-          "field": "actor",
-          "op": "eq",
-          "value": "ai"
-        }
-      ],
-      "then": {
-        "type": "deny",
-        "params": {
-          "reason": "ai-cannot-override-rulesets",
-          "node": "s-demand-planning"
         }
       },
       "maxChainDepth": 6,
@@ -740,29 +688,96 @@
       },
       "maxChainDepth": 6,
       "requiresApproval": true
+    },
+    {
+      "id": "eca-s-demand-planning-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "s-demand-planning"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-demand-planning-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "s-demand-planning"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-s-demand-planning-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "s-demand-planning"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
     }
   ],
   "agentPolicy": {
-    "autonomy": "draft",
+    "autonomy": "none",
     "capabilities": [
-      "read",
-      "suggest-changeset",
-      "archetype-draft",
-      "archetype-prod-update-proposal"
+      "read"
     ],
-    "allowedTargets": [
-      "archetype"
-    ],
+    "allowedTargets": [],
     "forbiddenTargets": [
       "app",
       "module"
     ],
     "allowedActions": [
-      "read",
-      "suggest-changeset",
-      "generate-archetype-draft",
-      "update-archetype-draft",
-      "propose-archetype-prod-update"
+      "read"
     ],
     "forbiddenActions": [
       "generate-app",
@@ -775,18 +790,12 @@
       "rewrite-history",
       "direct-prod-write"
     ],
-    "stepUp": [
-      "propose-archetype-prod-update",
-      "delete-field",
-      "change-permission",
-      "disable-protection",
-      "migrate-data"
-    ],
+    "stepUp": [],
     "rulesetBoundary": {
       "enforced": true,
       "canOverride": false,
       "backendOnly": true,
-      "version": "ai-archetype-eca-v1"
+      "version": "ai-app-module-deny-v1"
     },
     "prodDataPolicy": {
       "preserveHistory": true,
@@ -824,6 +833,271 @@
     "shortCodeRef": "short-code",
     "qualityGateRef": "quality-gates",
     "i18nRef": "i18n-standards",
-    "decisionGradeRef": "decision-grade-data"
+    "decisionGradeRef": "decision-grade-data",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "globalMarketReadinessRef": "global-market-readiness",
+    "i14yRef": "i14y"
+  },
+  "artifactKind": "sellable-app",
+  "aliases": [],
+  "appDefinition": {
+    "artifactKind": "sellable-app",
+    "commercialUnit": "independent-app",
+    "productSlug": "s-demand-planning",
+    "canonicalName": "Demand Planning / S&OP",
+    "classification": {
+      "primaryCategory": "productized-solution",
+      "portfolioRefs": [
+        "supply-chain"
+      ],
+      "sectorProfiles": [],
+      "distributionProfiles": [],
+      "stackProfiles": [],
+      "editionProfiles": []
+    },
+    "commercialModel": {
+      "licensingModel": "enterprise-subscription",
+      "entitlementModel": "capability-based-entitlements",
+      "packagingModel": "independently-deployable-versioned-app",
+      "salesMotion": "enterprise-contract-and-tenant-provisioning",
+      "supportModel": "enterprise-sla-with-release-maintenance",
+      "entitlementIds": [
+        "s-demand-planning.operate",
+        "s-demand-planning.administer",
+        "s-demand-planning.report-audit"
+      ]
+    },
+    "valueProposition": "Talep tahmini + üretim planlama",
+    "targetOrganizations": [
+      "Tedarik zinciri, üretim, saha ve lojistik operasyonları"
+    ],
+    "buyerRoles": [
+      "COO",
+      "Supply Chain Director",
+      "Operations Technology Owner"
+    ],
+    "userRoles": [
+      "Planner",
+      "Warehouse or Field Operator",
+      "Supplier Coordinator",
+      "Operations Auditor"
+    ],
+    "businessOutcomes": [
+      "Demand Planning / S&OP: Talep tahmini + üretim planlama",
+      "Demand Planning / S&OP ana operasyonları tenant sınırı, yetki politikası ve denetlenebilir yaşam döngüsüyle yönetilir.",
+      "Demand Planning / S&OP hizmet sonuçları ölçülebilir KPI, NFR/SLO bütçesi ve açılabilir audit kanıtıyla izlenir.",
+      "Talep tahmini yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "üretim planlama yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur.",
+      "demand-planning yeteneği doğrulama, yetkilendirme, hata/istisna ve geri alma akışlarıyla uçtan uca sunulur."
+    ],
+    "coreJourneys": [
+      "Demand Planning / S&OP tenant kurulumu → entitlement aktivasyonu → rol/yetki ataması → güvenli ilk kullanım",
+      "Talep tahmini talebi → doğrulama/approval → domain işlemi → outbox/audit → kullanıcı geri bildirimi",
+      "Demand Planning / S&OP yönetimi → yapılandırma → raporlama/export → retention ve denetim",
+      "Demand Planning / S&OP service owner → SLO/alert → incident triage → rollback/recovery → post-incident evidence"
+    ],
+    "nonGoals": [
+      "Demand Planning / S&OP kapsamı dışında kalan uygulamaların iş verisini doğrudan sahiplenmek",
+      "SDK sözleşmesini atlayarak kernel internallerine veya başka app koduna bağlanmak",
+      "MVP, demo veya doğrulanmamış release'i enterprise-ready olarak sunmak"
+    ],
+    "capabilityIds": [
+      "s-demand-planning.operate",
+      "s-demand-planning.administer",
+      "s-demand-planning.report-audit"
+    ],
+    "appCoreModuleId": "s-demand-planning-core",
+    "requiredModuleIds": [
+      "s-demand-planning-core"
+    ],
+    "optionalModuleIds": [],
+    "externalAppContracts": [],
+    "jurisdictions": [
+      "tenant-configured",
+      "jurisdiction-policy-enforced"
+    ],
+    "dataClasses": [
+      "operational-telemetry-and-asset-data",
+      "tenant-business-data",
+      "audit-metadata",
+      "configuration-data"
+    ],
+    "manifest": {
+      "appVersion": "1.0.0",
+      "kernelRange": ">=1.0.0 <2.0.0",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "kernelPrimitiveIds": [
+        "k-tenancy",
+        "k-authz",
+        "k-capability",
+        "k-bus",
+        "k-policy-pdp"
+      ],
+      "requiredCapabilityIds": [
+        "s-demand-planning.operate",
+        "s-demand-planning.administer",
+        "s-demand-planning.report-audit"
+      ],
+      "optionalCapabilityIds": [],
+      "publishedEventTypes": [
+        "s-demand-planning.lifecycle.changed.v1"
+      ],
+      "subscribedEventTypes": [
+        "tenant.lifecycle.changed.v1"
+      ],
+      "locales": [
+        "tr-TR",
+        "en-US"
+      ],
+      "residencyClass": "jurisdiction-bound",
+      "deploymentProfiles": [
+        "single-tenant",
+        "multi-tenant"
+      ]
+    },
+    "sdkDelivery": {
+      "required": true,
+      "sdkContractRef": "sdk-public-contract",
+      "sdkRange": ">=1.0.0 <2.0.0",
+      "templateRef": "sdk-app-core-template",
+      "generatorContractRef": "docs/platform-w2-03-sdk-generator-guardrails-agent-pack-2026-07-09.md",
+      "deterministic": true,
+      "generatedHeaderRequired": true,
+      "manualEditAllowed": false,
+      "publicPortsOnly": true,
+      "kernelInternalsAllowed": false,
+      "directAppImportsAllowed": false,
+      "compatibilityTestRefs": [
+        "planned-test:s-demand-planning:sdk-semver-compatibility",
+        "planned-test:s-demand-planning:deterministic-generation-diff"
+      ],
+      "negativeTestRefs": [
+        "planned-test:s-demand-planning:forbidden-import-boundaries",
+        "planned-test:s-demand-planning:kernel-internals-deny",
+        "planned-test:s-demand-planning:cross-context-write-deny"
+      ],
+      "templateKind": "app-core-and-assembly"
+    },
+    "enterpriseDelivery": {
+      "targetGrade": "enterprise",
+      "deliveryPolicy": "enterprise-only",
+      "mvpAllowed": false,
+      "baselineVersion": "1.0.0",
+      "baselineStatus": "draft",
+      "approvalRef": "docs/adr-0032-enterprise-sdk-app-identity.md",
+      "riskTier": "high",
+      "owners": {
+        "product": "Demand Planning / S&OP Product Owner",
+        "architecture": "Enterprise Application Architect",
+        "security": "Application Security Owner",
+        "data": "Demand Planning / S&OP Data Owner",
+        "ux": "Demand Planning / S&OP UX Owner",
+        "qa": "Demand Planning / S&OP QA Owner",
+        "operations": "Demand Planning / S&OP Service Owner",
+        "compliance": "Demand Planning / S&OP Compliance Owner",
+        "release": "Demand Planning / S&OP Release Owner"
+      },
+      "nfrBudgets": {
+        "availability": "Draft high-impact baseline: monthly SLO >= 99.9%; critical journeys >= 99.95%",
+        "latency": "Draft transactional baseline: interactive API p95 <= 400 ms and p99 <= 1000 ms at approved load",
+        "throughput": "Draft baseline: sustain approved peak x2 without breaching latency or error budgets",
+        "scalability": "Draft baseline: horizontal scale verification at approved peak x2",
+        "rto": "Draft baseline: RTO <= 60 minutes",
+        "rpo": "Draft baseline: RPO <= 15 minutes",
+        "retention": "operational-telemetry-and-asset-data, tenant-business-data, audit-metadata, configuration-data sınıfları için jurisdiction policy, legal hold, deletion ve restore kanıtı zorunludur",
+        "cost": "FinOps budget and per-tenant cost guardrail must be approved before development"
+      },
+      "controlRefs": [
+        "enterprise-delivery",
+        "sdk-development",
+        "quality-gates",
+        "testing-strategy",
+        "release-versioning",
+        "tenant-isolation",
+        "authorization-pdp",
+        "audit-evidence"
+      ],
+      "evidence": {
+        "expected": [
+          {
+            "id": "s-demand-planning-requirements-evidence",
+            "criterionId": "s-demand-planning-requirements-gate",
+            "phase": "requirements",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-demand-planning/requirements/**",
+            "owner": "app requirements baseline and approved scope owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-test-plan-evidence",
+            "criterionId": "s-demand-planning-test-plan-gate",
+            "phase": "test-plan",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-demand-planning/test-plan/**",
+            "owner": "app test-first verification matrix owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-db-schema-evidence",
+            "criterionId": "s-demand-planning-db-schema-gate",
+            "phase": "db-schema",
+            "kind": "test-report",
+            "locatorPattern": "evidence/apps/s-demand-planning/db-schema/**",
+            "owner": "app data ownership and reversible schema contract owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-development-evidence",
+            "criterionId": "s-demand-planning-development-gate",
+            "phase": "development",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-demand-planning/development/**",
+            "owner": "app SDK-generated implementation and compatibility checks owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-test-qa-evidence",
+            "criterionId": "s-demand-planning-test-qa-gate",
+            "phase": "test-qa",
+            "kind": "ci-run",
+            "locatorPattern": "evidence/apps/s-demand-planning/test-qa/**",
+            "owner": "app functional, security, accessibility and performance QA owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-verification-evidence",
+            "criterionId": "s-demand-planning-verification-gate",
+            "phase": "verification",
+            "kind": "approval",
+            "locatorPattern": "evidence/apps/s-demand-planning/verification/**",
+            "owner": "app independent acceptance and evidence verification owner",
+            "required": true
+          },
+          {
+            "id": "s-demand-planning-release-maintenance-evidence",
+            "criterionId": "s-demand-planning-release-maintenance-gate",
+            "phase": "release-maintenance",
+            "kind": "deploy-log",
+            "locatorPattern": "evidence/apps/s-demand-planning/release-maintenance/**",
+            "owner": "app release, rollback, observability and day-2 operations owner",
+            "required": true
+          }
+        ],
+        "actual": []
+      }
+    }
+  },
+  "deliveryContext": {
+    "applicability": "runtime",
+    "appRef": "s-demand-planning",
+    "moduleRef": "s-demand-planning-core",
+    "sdkRequired": true,
+    "sdkContractRef": "sdk-public-contract",
+    "contractRefs": [
+      "docs/app-enterprise-definition-contract.md",
+      "enterprise-delivery",
+      "sdk-development"
+    ]
   }
 }

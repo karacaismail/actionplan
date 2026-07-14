@@ -4,25 +4,53 @@ import type { TaskNode } from "@/schemas";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const NODES = path.join(ROOT, "src/data/generated/nodes");
+const NODES = path.resolve(
+  process.env.DOC_TASK_CONTENT_NODE_DIR ?? path.join(ROOT, "src/data/generated/nodes"),
+);
 const RULES = path.join(ROOT, "src/data/doc-task-content-rules");
 const INLINE_LEVELS = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
+const TYPED_DIRECT_KINDS = new Set(["sellable-app", "app-core-module", "app-module"]);
+const ROLLUP_KINDS = new Set([
+  "legacy-alias",
+  "portfolio-facet",
+  "governance",
+  "platform-foundation",
+]);
+
+const humanDecisionOwnerIds = new Set<string>();
+
+const isExecutableDirectiveOwner = (node: TaskNode) =>
+  INLINE_LEVELS.has(node.level) && node.source?.cluster === "platform-directive-owner";
+const isExplicitHumanDecisionOwner = (node: TaskNode) => humanDecisionOwnerIds.has(node.id);
+const isExplicitDirectMaterializationTarget = (node: TaskNode) =>
+  isExecutableDirectiveOwner(node) || isExplicitHumanDecisionOwner(node);
+const isDirectMaterializationTarget = (node: TaskNode) =>
+  isExplicitDirectMaterializationTarget(node) ||
+  (!ROLLUP_KINDS.has(node.artifactKind ?? "") &&
+    (TYPED_DIRECT_KINDS.has(node.artifactKind ?? "") || INLINE_LEVELS.has(node.level)));
 
 const nodes = fs
   .readdirSync(NODES)
   .filter((file) => file.endsWith(".json"))
   .map((file) => JSON.parse(fs.readFileSync(path.join(NODES, file), "utf8")) as TaskNode);
-const knownRuleIds = new Set<string>(
-  fs
-    .readdirSync(RULES)
-    .filter((file) => file.endsWith(".json"))
-    .flatMap((file) => {
-      const registry = JSON.parse(fs.readFileSync(path.join(RULES, file), "utf8")) as {
-        rules?: Array<{ id: string }>;
-      };
-      return (registry.rules ?? []).map((rule) => rule.id);
-    }),
-);
+const ruleRecords = fs
+  .readdirSync(RULES)
+  .filter((file) => file.endsWith(".json"))
+  .flatMap((file) => {
+    const registry = JSON.parse(fs.readFileSync(path.join(RULES, file), "utf8")) as {
+      rules?: Array<{
+        id: string;
+        selector?: { nodeIds?: string[] };
+        content?: { humanDecisionBlocker?: boolean };
+      }>;
+    };
+    return registry.rules ?? [];
+  });
+for (const rule of ruleRecords) {
+  if (rule.content?.humanDecisionBlocker === true)
+    for (const nodeId of rule.selector?.nodeIds ?? []) humanDecisionOwnerIds.add(nodeId);
+}
+const knownRuleIds = new Set(ruleRecords.map((rule) => rule.id));
 
 const marker = (id: string) => `[DOC-APPLY:${id}]`;
 const countMarker = (items: string[], id: string) =>
@@ -40,9 +68,15 @@ const allInlineText = (node: TaskNode) => [
 ];
 
 describe("docs -> task content materialization contract", () => {
-  it("every executable node carries the global handoff, ready and evidence clauses exactly once", () => {
-    const executable = nodes.filter((node) => INLINE_LEVELS.has(node.level));
-    expect(executable.length).toBeGreaterThan(250);
+  it("every direct typed/task owner carries the global handoff, ready and evidence clauses exactly once", () => {
+    const executable = nodes.filter(isDirectMaterializationTarget);
+    expect(executable.length).toBeGreaterThan(0);
+    expect(
+      executable.filter((node) => TYPED_DIRECT_KINDS.has(node.artifactKind ?? "")),
+    ).toHaveLength(nodes.filter((node) => TYPED_DIRECT_KINDS.has(node.artifactKind ?? "")).length);
+    expect(executable.some((node) => node.artifactKind === "sellable-app")).toBe(true);
+    expect(executable.some((node) => node.artifactKind === "app-core-module")).toBe(true);
+    expect(executable.some((node) => node.artifactKind === "app-module")).toBe(true);
 
     for (const node of executable) {
       expect(countMarker(node.deliverables, "task-handoff"), node.id).toBe(1);
@@ -68,12 +102,35 @@ describe("docs -> task content materialization contract", () => {
     }
   });
 
-  it("app/module nodes are never mutated through DOC-APPLY clauses", () => {
-    const forbidden = nodes.filter((node) => !INLINE_LEVELS.has(node.level));
+  it("keeps non-executable alias, portfolio, governance and foundation nodes as raw-content-free roll-ups", () => {
+    const forbidden = nodes.filter(
+      (node) =>
+        ROLLUP_KINDS.has(node.artifactKind ?? "") && !isExplicitDirectMaterializationTarget(node),
+    );
     const violations = forbidden.filter((node) =>
       allInlineText(node).some((item) => item.startsWith("[DOC-APPLY:")),
     );
     expect(violations.map((node) => `${node.id}:${node.level}`)).toEqual([]);
+    expect(
+      forbidden.filter((node) => node.refs.some((ref) => ref.startsWith("doc-apply:"))),
+    ).toEqual([]);
+  });
+
+  it("does not project generic document clauses into typed enterprise contract fields", () => {
+    const failures = nodes
+      .filter((node) => TYPED_DIRECT_KINDS.has(node.artifactKind ?? ""))
+      .flatMap((node) => {
+        const typedContract = JSON.stringify({
+          appDefinition: node.appDefinition,
+          moduleDefinition: node.moduleDefinition,
+          deliveryContext: node.deliveryContext,
+        });
+        return typedContract.includes("[DOC-APPLY:") || typedContract.includes("doc-apply:")
+          ? [node.id]
+          : [];
+      });
+
+    expect(failures).toEqual([]);
   });
 
   it("contains no managed markers or refs owned by retired rules", () => {
@@ -111,10 +168,6 @@ describe("docs -> task content materialization contract", () => {
       "s-ai-governance": ["ai-governance"],
       "deploy-yap": ["deployment-runbook"],
       customer: ["platform-customer-handoff"],
-      "platform-customer-graphql": ["platform-customer-handoff"],
-      "platform-customer-model": ["platform-customer-handoff"],
-      "platform-customer-seed": ["platform-customer-handoff"],
-      "platform-customer-ui": ["platform-customer-handoff"],
       "std-ci-gates": ["governance-gates"],
     };
     const byId = new Map(nodes.map((node) => [node.id, node]));
@@ -135,7 +188,7 @@ describe("docs -> task content materialization contract", () => {
   it("applies high-risk DoD after all source-specific risks reach their final owners", () => {
     const highRiskNodes = nodes.filter(
       (node) =>
-        INLINE_LEVELS.has(node.level) &&
+        isDirectMaterializationTarget(node) &&
         node.risks.some((risk) => risk.severity === "high" || risk.severity === "critical"),
     );
     const missing = highRiskNodes

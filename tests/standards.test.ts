@@ -60,6 +60,8 @@ describe("yeni standart ref anahtarları — kanonik id çözümü", () => {
     identityDataRef: "identity-data",
     searchQualityRef: "search-quality",
     decisionGradeRef: "decision-grade-data",
+    enterpriseDeliveryRef: "enterprise-delivery",
+    sdkDevelopmentRef: "sdk-development",
     urlPolicyRef: "url-policy",
   };
 
@@ -96,6 +98,8 @@ describe("yeni standart ref anahtarları — kanonik id çözümü", () => {
       identityDataRef: "identity-data",
       searchQualityRef: "search-quality",
       decisionGradeRef: "decision-grade-data",
+      enterpriseDeliveryRef: "enterprise-delivery",
+      sdkDevelopmentRef: "sdk-development",
     });
     for (const [k, v] of Object.entries(refs)) {
       // Boş ref (lazy) serbesttir; yalnız set edilmiş mapped anahtarlar çözülmeli.
