@@ -17,10 +17,10 @@ kapsam sayıları için bu bölüm üstündür. `496`, app kimlik karar kaydın�
 
 | Ölçüm | Değer |
 |---|---|
-| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 292 |
+| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 294 |
 | Task içeriğine materyalize edilen | 218 |
 | İnsan sahiplik kararı bekleyen | 10 |
-| Canonical standard / arşiv / kök indeks kaynağı | 64 |
+| Canonical standard / arşiv / kök indeks kaynağı | 66 |
 | Sınıfsız / erişilemeyen | 0 |
 | App kimlik kaynak snapshot'ı | 496 |
 | Materialized fiziksel WBS JSON'u / görev sayfası | 617 |

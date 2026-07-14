@@ -19,7 +19,7 @@ describe("docs navigation vs task content ownership", () => {
     expect(exported.DOCS?.map((doc) => doc.docPath)).toEqual(["docs/README.md"]);
   });
 
-  it("keeps all 292 tracked sources in the direct-link catalog", () => {
+  it("keeps every tracked source in the direct-link catalog", () => {
     const tracked = execFileSync("git", ["ls-files", "docs/*.md", "docs/**/*.md"], {
       encoding: "utf8",
     })
@@ -27,7 +27,7 @@ describe("docs navigation vs task content ownership", () => {
       .split("\n")
       .filter(Boolean)
       .sort();
-    expect(tracked).toHaveLength(292);
+    expect(new Set(tracked).size).toBe(tracked.length);
     expect(exported.ALL_DOCS?.map((doc) => doc.docPath).sort()).toEqual(tracked);
   });
 

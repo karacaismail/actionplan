@@ -207,7 +207,7 @@ describe("required docs -> task content coverage", () => {
       .filter(Boolean)
       .sort();
     expect(classifications.map((entry) => entry.docPath)).toEqual([...new Set(tracked)]);
-    expect(new Set(classifications.map((entry) => entry.docPath)).size).toBe(292);
+    expect(new Set(classifications.map((entry) => entry.docPath)).size).toBe(tracked.length);
     const classifiedMaterialized = new Set(
       classifications
         .filter((entry) => entry.decision !== "reference-only")

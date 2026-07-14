@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "kernel-data-plane-readiness-queue",
+  "generatedAt": "2026-07-14",
+  "status": "planning-only",
+  "humanQueueDecisionRequired": true,
+  "workspace": "/Users/karaca/DEV/mimari/platform",
+  "baseQueue": {
+    "ref": "reports/platform-implementation-execution-queue-2026-07-09.json",
+    "currentNextActionable": "PR-01",
+    "canonicalSequenceEnd": "PR-11",
+    "overlayHasOrderingAuthority": false,
+    "statusUnchanged": true
+  },
+  "sourceRefs": [
+    "docs/kernel-readiness-gap-analysis-2026-07-14.md",
+    "docs/kernel-sdk-app-delivery-sequence.md",
+    "docs/archetype-storage-canonical-directive.md",
+    "docs/kernel-execution-contract-matrix.md"
+  ],
+  "invariants": [
+    "No KDP item is actionable before the base queue predecessor evidence is verified.",
+    "Every KDP item requires a human queue-order decision and has codeStartAllowed=false.",
+    "Generated CRUD is read-only; mutations use typed actions with tenant, PDP, audit and outbox.",
+    "Planned paths and tests are not implementation evidence."
+  ],
+  "items": [
+    {
+      "id": "KDP-00",
+      "title": "Schema and field-types runtime contract",
+      "status": "blocked",
+      "mode": "contract-readiness-only",
+      "codeStartAllowed": false,
+      "blockedBy": ["human-queue-order-decision"],
+      "scopeNodes": ["k-schema", "k-archetype-fieldtypes"],
+      "codeBearingNode": null,
+      "existingScopeDependencies": ["adr-0022", "scale-cache", "sus-actions"],
+      "goal": "Metadata resolution, field validation and versioned schema ports",
+      "nonGoals": ["ArcheType record storage", "Surface projection", "SDK"]
+    },
+    {
+      "id": "KDP-01",
+      "title": "ArcheType storage and typed record API",
+      "status": "blocked",
+      "mode": "contract-readiness-only",
+      "codeStartAllowed": false,
+      "blockedBy": ["human-queue-order-decision"],
+      "technicalPrerequisites": ["PR-08", "KDP-00", "k-schema", "k-tenancy"],
+      "scopeNode": "k-archetype-storage",
+      "codeBearingNode": "archetype-storage-contract",
+      "goal": "Shared JSONB storage, read-only projection and typed create/patch/archive/restore",
+      "agentPackRef": "docs/platform-kdp01-archetype-storage-agent-pack-2026-07-14.md",
+      "nonGoals": ["Generated mutations", "Physical promotion", "Surface", "SDK"]
+    },
+    {
+      "id": "KDP-02",
+      "title": "Surface projection contract",
+      "status": "blocked",
+      "mode": "contract-readiness-only",
+      "codeStartAllowed": false,
+      "blockedBy": ["human-queue-order-decision"],
+      "technicalPrerequisites": ["KDP-01", "be-sdk", "l1-workflow", "l1-party", "stack-editions"],
+      "scopeNodes": ["k-surface", "k-surface-consumer"],
+      "codeBearingNode": null,
+      "dependencyCycleDecisionRequired": true,
+      "goal": "Definition-to-endpoint projection after dependency-cycle resolution",
+      "nonGoals": ["Frontend product UI", "App assembly"]
+    },
+    {
+      "id": "KDP-03",
+      "title": "Computation contract",
+      "status": "blocked",
+      "mode": "contract-readiness-only",
+      "codeStartAllowed": false,
+      "blockedBy": ["human-queue-order-decision"],
+      "technicalPrerequisites": ["KDP-00"],
+      "scopeNodes": ["k-computation", "k-archetype-computation"],
+      "codeBearingNode": null,
+      "goal": "Deterministic typed derivation graph",
+      "nonGoals": ["Free-form Python, JavaScript or SQL evaluation", "App-specific formulas"]
+    }
+  ]
+}
