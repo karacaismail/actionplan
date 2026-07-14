@@ -1,13 +1,18 @@
 # PR-05 ECA Runtime Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-05`
 Branch: `task/l1-workflow-eca-runtime`
 WBS node'u: `l1-workflow`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-04`
 
-Bu belge product code üretmez. Amaç, PR-04 Event/Outbox kanıtı kapandıktan sonra açılacak PR-05 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-04 Event/Outbox kanıtı kapandıktan sonra açılacak PR-05 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -20,7 +25,7 @@ PR-05 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-04 replay/DLQ note
 - `k-bus` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-05 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -44,9 +49,9 @@ PR-05 şunları yapmaz:
 - Scheduler, SLA engine veya long-running approval workflow başlatmaz.
 - Tenant-level ruleset override veya system ruleset disable yetkisi açmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-04 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-04 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-05 ECA Runtime.
@@ -114,7 +119,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_eca_runtime.py tests/te
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

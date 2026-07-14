@@ -1,13 +1,18 @@
 # PR-03 Authz/PDP Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-03`
 Branch: `task/platform-authz-pdp`
 WBS node'ları: `platform-authn-authz`, `k-authz`, `k-policy-pdp`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-02`
 
-Bu belge product code üretmez. Amaç, PR-02 tenant context kanıtı kapandıktan sonra açılacak PR-03 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-02 tenant context kanıtı kapandıktan sonra açılacak PR-03 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -21,7 +26,7 @@ PR-03 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-02 cross-tenant negative test evidence
 - `platform-tenancy` ve `k-tenancy` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-03 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ PR-03 şunları yapmaz:
 - Full IAM ürünü, user management ekranı veya login UI üretmez.
 - Authorization testlerini yalnız happy-path allow senaryosuyla yeşile boyamaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-02 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-02 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-03 Authz/PDP.
@@ -109,7 +114,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_actor_context.py tests/
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

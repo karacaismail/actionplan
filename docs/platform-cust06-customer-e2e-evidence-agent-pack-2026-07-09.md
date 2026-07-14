@@ -1,13 +1,18 @@
 # CUST-06 Customer E2E + Evidence Writeback Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-06`
 Branch: `task/platform-customer-e2e-evidence`
 WBS node'ları: `customer`, `platform-customer-graphql`, `platform-customer-ui`, `platform-customer-seed`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-05`
 
-Bu belge product code üretmez. Amaç, CUST-05 Customer Seed kanıtı kapandıktan sonra açılacak CUST-06 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, CUST-05 Customer Seed kanıtı kapandıktan sonra açılacak CUST-06 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -18,7 +23,7 @@ CUST-06 yalnız şu kanıtlar geldikten sonra başlar:
 - Customer seed golden fixture ve GraphQL/UI contract evidence
 - Authz, tenant isolation, audit, outbox, observability ve CI evidence writeback'leri
 
-Bu kanıtlar yoksa CUST-06 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -41,9 +46,9 @@ CUST-06 şunları yapmaz:
 - Storefront smoke'u Customer e2e yerine koymaz.
 - Fake PR URL, fake CI URL, fake deploy URL veya uydurma test logu yazmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-05 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-05 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-06 Customer E2E + Evidence Writeback.
@@ -113,7 +118,7 @@ pnpm --filter @platform/web run e2e -- customer.spec.ts
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

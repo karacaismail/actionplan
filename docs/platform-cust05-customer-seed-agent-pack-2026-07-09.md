@@ -1,13 +1,18 @@
 # CUST-05 Customer Seed Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `CUST-05`
 Branch: `task/platform-customer-seed`
 WBS node'u: `platform-customer-seed`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-CUST-04`
 
-Bu belge product code üretmez. Amaç, CUST-04 Customer UI kanıtı kapandıktan sonra açılacak CUST-05 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, CUST-04 Customer UI kanıtı kapandıktan sonra açılacak CUST-05 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -20,7 +25,7 @@ CUST-05 yalnız şu kanıtlar geldikten sonra başlar:
 - CUST-04 Customer UI verified evidence
 - `platform-customer-seed` actionplan writeback'i
 
-Bu kanıtlar yoksa CUST-05 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -43,9 +48,9 @@ CUST-05 şunları yapmaz:
 - OrderOps, Inventory veya başka domain seed üretmez.
 - Seed idempotency testini atlayarak demo verisini elle çoğaltmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-04 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız CUST-04 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: CUST-05 Customer Seed.
@@ -106,7 +111,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_customer_seed.py
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 

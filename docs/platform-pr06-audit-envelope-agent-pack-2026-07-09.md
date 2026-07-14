@@ -1,13 +1,18 @@
 # PR-06 Audit Envelope Agent Pack — 2026-07-09
 
-Durum: docs-only implementation agent pack
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM yalnız ardıl koordinatördür. Platform erişimi
+> `read-only-audit`, uygulama ise `human-developer-only`dır. Claude'u yalnız Codex
+> sınırlı bir worker/slave görevi için çağırabilir.
+
+Durum: docs-only human-developer execution handoff
 Queue item: `PR-06`
 Branch: `task/l1-audit-envelope`
 WBS node'u: `l1-audit`
 Implementation workspace: `/Users/karaca/DEV/mimari/platform`
 Queue status: `blocked-by-PR-05`
 
-Bu belge product code üretmez. Amaç, PR-05 ECA Runtime kanıtı kapandıktan sonra açılacak PR-06 işini implementation operatörünün Claude Code/Cursor/Aider gibi bir kod ajanına verebileceği sıkı prompt ve evidence sözleşmesine dönüştürmektir.
+Bu belge product code üretmez. Amaç, PR-05 ECA Runtime kanıtı kapandıktan sonra açılacak PR-06 işini yalnız insan geliştiriciye verilecek sıkı prompt ve evidence sözleşmesine dönüştürmektir.
 
 ## Önkoşul
 
@@ -20,7 +25,7 @@ PR-06 yalnız şu kanıtlar geldikten sonra başlar:
 - PR-05 ECA safe action allowlist + max-chain verified evidence
 - `l1-workflow` actionplan writeback'i
 
-Bu kanıtlar yoksa PR-06 prompt'u kod ajanına verilmez; yalnız hazırlık/handoff dokümanı olarak kalır.
+Bu kanıtlar yoksa execution paketi insan geliştirici kuyruğuna alınmaz; yalnız hazırlık/handoff dokümanı olarak kalır.
 
 ## Amaç
 
@@ -44,9 +49,9 @@ PR-06 şunları yapmaz:
 - Activity feed'i compliance audit kaydının yerine koymaz.
 - Container/app loglarını audit trail kanıtı gibi sunmaz.
 
-## Agent Prompt
+## Human Developer Execution Packet
 
-Implementation operatörü aşağıdaki prompt'u `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-05 evidence kapandıktan sonra kullanır:
+İnsan geliştirici aşağıdaki execution paketini `/Users/karaca/DEV/mimari/platform` içinde, yalnız PR-05 evidence kapandıktan sonra kullanır:
 
 ```text
 Görev: PR-06 Audit Envelope.
@@ -112,7 +117,7 @@ cd apps/api && uv run --python 3.12 pytest -q tests/test_audit_envelope.py tests
 - manual-review note
 ```
 
-## Operator Checklist
+## Human Developer Checklist
 
 PR açmadan önce:
 
