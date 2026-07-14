@@ -480,3 +480,49 @@ describe("PWB-8 kalan tarihsel plan yürütme yolları", () => {
     for (const file of remainingArchivedPlans) expect(gate).toContain(file);
   });
 });
+
+describe("PWB-9 Commerce OS insan geliştirici handoff'u", () => {
+  const commerceHandoffDocs = [
+    "docs/commerce-os-test-first-parallel-handoff.md",
+    "docs/commerce-os-vibecoder-task-packets.md",
+    "docs/commerce-os-vibecoder-readiness-oracles.md",
+    "docs/README.md",
+  ];
+
+  it.each(commerceHandoffDocs)("%s Commerce authority lock taşır", (file) => {
+    const content = read(file);
+    for (const token of [
+      "AUTHORITY-LOCK",
+      "Codex → PM → uzman ajanlar → Claude workers/slaves",
+      "read-only-audit",
+      "human-developer-only",
+    ])
+      expect(content).toContain(token);
+  });
+
+  it("Commerce handoff kaynakları modele implementation yetkisi vermez", () => {
+    const content = commerceHandoffDocs.map((file) => read(file)).join("\n");
+    for (const forbidden of [
+      /READY FOR VIBECODER/i,
+      /implementation agent\s*\/\s*vibecoder[^.\n]*(?:writes|implements|creates)/i,
+      /(?:the\s+)?vibecoder[^.\n]{0,100}(?:writes|commits|pushes|merges|scaffolds|implements)/i,
+      /vibecoder görevi[^.\n]{0,80}kod üret/i,
+    ])
+      expect(content).not.toMatch(forbidden);
+  });
+
+  it("Commerce sınıflandırması executor'ı insan geliştiriciye kilitler", () => {
+    const classification = readJson("src/data/doc-task-content-classification.json");
+    for (const docPath of commerceHandoffDocs.slice(0, 3)) {
+      const entry = classification.find((item: { docPath: string }) => item.docPath === docPath);
+      expect(entry?.rationale).toContain("human-developer-only");
+      expect(entry?.rationale).toContain("read-only-audit");
+    }
+  });
+
+  it("CI kapısı Commerce kaynaklarını ve classification kaydını tarar", () => {
+    const gate = read("tools/agents/check-platform-write-boundary.mjs");
+    expect(gate).toContain("commerceHandoffDocs");
+    expect(gate).toContain("doc-task-content-classification.json");
+  });
+});

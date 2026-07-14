@@ -41,6 +41,12 @@ const activeHandoffDocs = [
   "docs/platform-wave4-portfolio-pr-handoff-2026-07-09.md",
   "docs/platform-pr01-implementation-dispatch-2026-07-09.md",
 ];
+const commerceHandoffDocs = [
+  "docs/commerce-os-test-first-parallel-handoff.md",
+  "docs/commerce-os-vibecoder-task-packets.md",
+  "docs/commerce-os-vibecoder-readiness-oracles.md",
+  "docs/README.md",
+];
 const activeQueuePaths = [
   "reports/platform-implementation-execution-queue-2026-07-09.json",
   "reports/kernel-data-plane-readiness-queue-2026-07-14.json",
@@ -253,6 +259,32 @@ for (const file of remainingArchivedPlans) {
     /kopyala-yapıştır (?:bir )?prompt zinciri/i,
   ])
     if (forbidden.test(content)) errors.push(`${file}: yürütülebilir model planı ${forbidden}`);
+}
+
+for (const file of commerceHandoffDocs) {
+  const content = read(file);
+  for (const token of [
+    "AUTHORITY-LOCK",
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "read-only-audit",
+    "human-developer-only",
+  ])
+    if (!content.includes(token)) errors.push(`${file}: Commerce yetki tokenı eksik (${token})`);
+  for (const forbidden of [
+    /READY FOR VIBECODER/i,
+    /implementation agent\s*\/\s*vibecoder[^.\n]*(?:writes|implements|creates)/i,
+    /(?:the\s+)?vibecoder[^.\n]{0,100}(?:writes|commits|pushes|merges|scaffolds|implements)/i,
+    /vibecoder görevi[^.\n]{0,80}kod üret/i,
+  ])
+    if (forbidden.test(content)) errors.push(`${file}: Commerce model executor dili ${forbidden}`);
+}
+
+const docClassification = readJson("src/data/doc-task-content-classification.json");
+for (const docPath of commerceHandoffDocs.slice(0, 3)) {
+  const entry = docClassification.find((item) => item.docPath === docPath);
+  for (const token of ["human-developer-only", "read-only-audit"])
+    if (!entry?.rationale?.includes(token))
+      errors.push(`${docPath}: classification executor kilidi eksik (${token})`);
 }
 
 const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];

@@ -1,14 +1,19 @@
-# Commerce Operating System — Master Vibecoder Test-First Parallel Handoff
+# Commerce Operating System — Master Human Developer Test-First Handoff
 
-**Status:** READY FOR VIBECODER INSTRUCTION — 2026-07-13 (granted only after the packet/oracle checks in §0.1 pass). **Explicitly NOT runtime-ready and NOT GA-ready.** No working slice, green test, or SLO/COGS/backup-restore/AI-safety proof is claimed here — those remain future, evidence-gated work ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) O1/O10).
-**Authority contract:** Codex MASTER + human own every decision, scope, and final verification; this document is untrusted worker output until Codex independently checks it. It writes no code/schema/JSON/queue/node/gate and opens no app/module node ([`AGENTS.md`](../AGENTS.md) §0, §4.4). The implementation agent / vibecoder writes **only inside its own target implementation worktree** in the `platform` repo, never in this `actionplan` docs repo and never in the platform repo's dirty tree. No commit/push/merge/destructive-git by the vibecoder.
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Dosya adı içindeki
+> `vibecoder` yalnız tarihsel ref uyumluluğu için korunur.
+
+**Status:** HUMAN-DEVELOPER HANDOFF — 2026-07-13. **Explicitly NOT runtime-ready and NOT GA-ready.** No working slice, green test, or SLO/COGS/backup-restore/AI-safety proof is claimed here — those remain future, evidence-gated work ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) O1/O10).
+**Authority contract:** Codex scope, priority, rollback and final verification authority; PM coordinates packet order and evidence; specialist/Claude outputs are read-only recommendations. Only the human developer may create an implementation worktree/branch, write code/tests, commit, or open a PR. This document itself writes no code/schema/JSON/queue/node/gate and opens no app/module node ([`AGENTS.md`](../AGENTS.md) §0, §4.4).
 **Scope:** Documentation/handoff only. Platform code lives in the `platform` monorepo; the paths below are **proposed but explicit** target paths for the implementation repo, not evidence any file exists.
 
 > **instruction-ready ≠ runtime-ready.** Reading this handoff, a new implementer can select and start the first packet with **no architecture or product decision left to make**, knowing exactly which repo, which recorded base commit, and which test-first stop-gate apply. That is the *only* claim; runtime proof is separate, future work. This supersedes the earlier human-only DRAFT plan and its Cart-`OrderPlaced` / direct `Cart→Order→Payment→Order` language (now replaced by the D10/D7 model in §0.3).
 
 ## 0.1 Readiness precondition (why the status may be asserted)
 
-READY FOR VIBECODER INSTRUCTION is asserted **only because** the twelve readiness oracles O1–O12 have a defined GREEN path and the packet catalog satisfies the 14-field completeness rule ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) §2, O5). If any oracle is RED (D7 publication blocker open, a dependency cycle, a missing packet field, a fabricated "done/GA/passed" claim), this status **reverts to BLOCKED** and no packet is "ready" (oracles §6). The status is about instruction clarity, not execution.
+HUMAN-DEVELOPER HANDOFF status is asserted **only because** the twelve readiness oracles O1–O12 have a defined GREEN path and the packet catalog satisfies the 14-field completeness rule ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) §2, O5). If any oracle is RED (D7 publication blocker open, a dependency cycle, a missing packet field, a fabricated "done/GA/passed" claim), this status **reverts to BLOCKED** and no packet is "ready" (oracles §6). The status is about handoff clarity, not execution.
 
 ## 0.2 Source authority set (canonical — referenced, not restated)
 
@@ -32,7 +37,7 @@ Source: ADR-0031 §Safety invariants; BC-map §1.
 
 ## 1. Roles, ownership, and parallelism (no concurrency claim)
 
-- **Codex MASTER / architecture authority** owns scope, sequencing, and final review. The vibecoder proposes; Codex disposes.
+- **Codex MASTER / architecture authority** owns scope, priority, rollback and final review. PM coordinates the approved sequence; AI actors only audit and propose; the human developer executes.
 - **Single writer per path.** Every allowed-files pattern has exactly one owning packet/lane at a time; two writers never touch the same file, directory, or worktree ([`AGENTS.md`](../AGENTS.md) §6).
 - **Isolation.** Each lane = its own worktree + own branch. The only shared point is the integration lane (merge/DAG order).
 - **Max 4 parallel independent lanes**, and **only** where the phase DAG (§3) *and* disjoint file ownership both permit. This is an upper bound on *safe* concurrency, **not** a claim that four lanes are actually running.
@@ -95,7 +100,7 @@ flowchart TD
 
 - Each packet produces evidence **in the implementation repo** (RED→GREEN artifacts, audit/outbox trace, envelope refs for V13/V15). Evidence schema: [`contract-test plan`](./commerce-os-contract-test-plan.md) §5; `greenArtifact` must be **actual**, never a plan.
 - **Node/app/module writeback stays human-authorized.** V16 may *propose* an `actionplan` evidence writeback but must not directly change `actionplan` app/module nodes unless separately human-authorized ([`AGENTS.md`](../AGENTS.md) §4.4).
-- The vibecoder never commits, pushes, merges, or performs destructive git operations.
+- AI actors never create worktrees/branches, write product code/tests, commit, push, merge, open PRs, or perform destructive git operations.
 
 ## 6. No-go / stop conditions (any one ⇒ STOP, return to Codex)
 
@@ -113,7 +118,7 @@ flowchart TD
 - **Feature-family triage gate** stays mandatory before any implementation lane: research features (DRC/MAG items, provisional BCs) are **not** instant backlog and get no lane until item-level triage classifies them ([`commerce-os-capability-classification.md`](./commerce-os-capability-classification.md) §4/§6).
 - **Adversarial test matrix** (tenant isolation, authz/PDP, idempotency/replay, cross-context ownership, provider failure, money rounding, inventory race, double capture/refund, event versioning, plugin sandbox, offline-sync, agentic mandate, a11y) is required red-first per relevant packet; canonical families are F1–F16 in [`contract-test plan`](./commerce-os-contract-test-plan.md).
 - The older P0–P8 phase names map onto V0–V16; where any legacy note implied Cart emitting `OrderPlaced` or a direct `Cart→Order→Payment→Order` edge, the §0.3 D10/D7 model (Cart `CheckoutSubmitted` intent + single-writer Order saga + neutral contracts) governs.
-- **Ownership:** her shard'ın **tek yazarı** (yetkilendirilmiş implementation worker/vibecoder veya insan geliştirici) vardır; iki writer **aynı dosyaya veya aynı worktree'ye** yazmaz ([`AGENTS.md`](../AGENTS.md) §6). Codex MASTER her changeset'i bağımsız doğrular.
+- **Ownership:** her shard'ın **tek yazarı insan geliştiricidir**; iki writer **aynı dosyaya veya aynı worktree'ye** yazmaz ([`AGENTS.md`](../AGENTS.md) §6). Codex MASTER her changeset'i bağımsız doğrular.
 - **İzolasyon:** her lane **ayrı worktree + ayrı branch**; paylaşılan tek nokta entegrasyon lane'idir (merge/DAG sırası).
 - **Entegrasyon lane:** shard'ları birleştiren tek yetkili writer; contract/regression kapılarını koşar, yeni iş mantığı yazmaz (sequence §App assembly). Birleştirme/commit/push ayrıca insan onayı ister.
 - **PR shard sınırı:** her PR **≤ 400 net satır, ≤ 20 dosya**, tek-amaç + en az bir `non-goal` ([`AGENTS.md`](../AGENTS.md) §4.3). Aşan iş atomik PR'lara bölünür.

@@ -1,14 +1,19 @@
-# Commerce Operating System — Vibecoder Readiness Oracles (Test-Önce)
+# Commerce Operating System — Human Developer Handoff Readiness Oracles (Test-Önce)
+
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Dosya adı içindeki
+> `vibecoder` yalnız tarihsel ref uyumluluğu için korunur.
 
 **Durum:** DRAFT — 2026-07-13 · **Kaynak yetki:** [`adr-0030-commerce-operating-system-boundary.md`](./adr-0030-commerce-operating-system-boundary.md), [`../AGENTS.md`](../AGENTS.md) §0/§3/§4.4
-**Kapsam:** Yalnız dokümantasyon oracle'ı. Bu dosya kod/şema/JSON/queue/node/gate **üretmez**, implementasyon iddiası **taşımaz**, hiçbir kararı **kapatmaz**. Amaç: Commerce OS handoff'unu bir **vibecoder**'ın (yeni implementer) doğrudan kullanabileceği hâle getirmeden önce **kırmızı (RED) koşulları** ilan etmek.
+**Kapsam:** Yalnız dokümantasyon oracle'ı. Bu dosya kod/şema/JSON/queue/node/gate **üretmez**, implementasyon iddiası **taşımaz**, hiçbir kararı **kapatmaz**. Amaç: Commerce OS handoff'unu insan geliştiriciye açmadan önce **kırmızı (RED) koşulları** ilan etmektir. AI bu kaynağı yalnız salt-okunur denetler.
 
 > **instruction-ready ≠ runtime-ready.** Bu oracle yalnız **talimat-hazırlığını** ölçer: handoff'un belirsizlik/döngü/otorite açığı olmadan okunup ilk packet'in seçilebilmesi. **Runtime kanıtı (yeşil test, çalışan slice, SLO ölçümü) gelecekteki iştir** ve bu dosya bunun var olduğunu **iddia etmez** ([`commerce-os-kernel-sdk-gap-directive.md`](./commerce-os-kernel-sdk-gap-directive.md) §7).
 
 ## 1. Okuma modeli
 
 - Her oracle bir **RED koşulu** (yazıma engel) + bir **deterministik/manuel kontrol** taşır. AUTO = metin/link taramasıyla; MANUAL = insan reviewer teyidi.
-- **RED varsa downstream yazım DURUR.** Tüm oracle GREEN olmadan hiçbir vibecoder packet'i "ready" ilan edilemez (§6 stop-gate).
+- **RED varsa downstream yazım DURUR.** Tüm oracle GREEN olmadan hiçbir insan geliştirici packet'i "ready" ilan edilemez (§6 stop-gate).
 - Yetki sırası ihlal edilemez: Codex MASTER karar sahibi; bu oracle yalnız kanıt/çelişki yüzeyler, karar kapatmaz.
 
 ## 2. RED koşulları — O1…O12
@@ -57,7 +62,7 @@ Kontrol (AUTO): yasak-iddia metin taraması; her hazırlık ifadesi "instruction
 RED: Kırık göreli link, veya packet'in `allowed-files` deseni gerçek repo yapısına bağlanmamış / forbidden-stack ([`../AGENTS.md`](../AGENTS.md) §4.1) taramasıyla çelişir. RED.
 Kontrol (AUTO): tüm `./`,`../` linkleri çözülür; her packet allowed/forbidden deseni tek-yazar izolasyonuyla ([`../AGENTS.md`](../AGENTS.md) §6) tutarlı.
 
-**O12 — READY FOR VIBECODER tanımı karşılanır.**
+**O12 — HUMAN-DEVELOPER HANDOFF tanımı karşılanır.**
 RED: Yeni bir implementer **ilk packet'i seçmek için bir mimari/ürün kararı vermek zorunda** kalıyor; veya hedef repo/test-önce stop-gate belirsiz. RED.
 Kontrol (MANUAL): §5 tanımı sağlanır; runtime kanıtı **açıkça gelecek iş** olarak işaretli kalır.
 
@@ -91,15 +96,15 @@ Budget: ≤400 net satır · ≤20 dosya
 - [ ] O9 core slice öncesi edition packet yok
 - [ ] O10 sahte ready/GA/test-passed iddiası yok
 - [ ] O11 tüm göreli linkler + allowed-files geçerli
-- [ ] O12 vibecoder ilk packet'i kararsız seçebilir; runtime kanıtı gelecek iş
+- [ ] O12 insan geliştirici ilk packet'i kararsız seçebilir; runtime kanıtı gelecek iş
 
-## 5. READY FOR VIBECODER — tanım
+## 5. HUMAN-DEVELOPER HANDOFF — tanım
 
-Handoff **READY FOR VIBECODER**'dır ancak ve ancak: yeni bir implementer, **hiçbir mimari veya ürün kararı vermeden** ilk packet'i seçebilir; **hangi repo** ve **hangi test-önce stop-gate**'in geçerli olduğunu tereddütsüz bilir; ve **runtime kanıtı açıkça gelecekteki iş** olarak işaretli kalır. Bu, "çalışıyor/GA" demek **değildir**; yalnız talimatların belirsizlik-siz yürütülebilir olduğunu söyler.
+Handoff **HUMAN-DEVELOPER HANDOFF** durumundadır ancak ve ancak: insan geliştirici, Codex'in onayladığı kapsamda ilk packet'i seçebilir; **hangi repo** ve **hangi test-önce stop-gate**'in geçerli olduğunu tereddütsüz bilir; ve **runtime kanıtı açıkça gelecekteki iş** olarak işaretli kalır. Bu, "çalışıyor/GA" demek **değildir**; yalnız handoff'un belirsiz olmadığını söyler.
 
 ## 6. Final stop-gate
 
-O1–O12'den **herhangi biri RED** ise: hiçbir vibecoder packet'i "ready" ilan edilmez, hiçbir downstream implementasyon dokümanı yazılmaz, hiçbir queue/node üretilmez. Karar/onay Codex MASTER + insan yetkisine aittir; bu oracle yalnız kapıyı **kırmızıda tutar**. Yeşil geçiş bile **instruction-ready** anlamındadır — runtime kanıtı ayrı, gelecek iştir.
+O1–O12'den **herhangi biri RED** ise: hiçbir insan geliştirici packet'i "ready" ilan edilmez, hiçbir downstream implementasyon dokümanı yazılmaz, hiçbir queue/node üretilmez. Karar/onay Codex MASTER'a, yürütme insan geliştiriciye aittir; bu oracle yalnız kapıyı **kırmızıda tutar**. Yeşil geçiş bile **handoff-ready** anlamındadır — runtime kanıtı ayrı, gelecek iştir.
 
 ## İlgili doküman
 

@@ -1,7 +1,12 @@
-# Commerce Operating System — Vibecoder Task-Packet Catalog (V0…V16)
+# Commerce Operating System — Human Developer Task-Packet Catalog (V0…V16)
 
-**Status:** READY FOR VIBECODER INSTRUCTION — 2026-07-13. **Instruction-ready, NOT runtime/GA-ready.** No packet below is done; each is a test-first instruction. No green test, working slice, or SLO is claimed ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) O10).
-**Authority:** Codex MASTER + human own decisions and final review; the vibecoder writes **only inside its own target implementation worktree** in the `platform` repo, never in this `actionplan` docs repo and never in the platform dirty tree. This file produces no code/schema/JSON/queue/node/gate and no commit/push/merge.
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Dosya adı içindeki
+> `vibecoder` yalnız tarihsel ref uyumluluğu için korunur.
+
+**Status:** HUMAN-DEVELOPER HANDOFF — 2026-07-13. **Instruction-ready, NOT runtime/GA-ready.** No packet below is done; each is a test-first human handoff. No green test, working slice, or SLO is claimed ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) O10).
+**Authority:** Codex owns final scope/review, PM coordinates the sequence, AI actors only perform `read-only-audit`, and only the human developer may create a clean implementation worktree/branch, write code/tests, commit, or open a PR. This file itself produces no code/schema/JSON/queue/node/gate.
 **Master handoff:** [`commerce-os-test-first-parallel-handoff.md`](./commerce-os-test-first-parallel-handoff.md) (phase DAG, waves, selection rules, no-go). Read it first.
 
 ## How to read a packet (canonical — not repeated per packet)
