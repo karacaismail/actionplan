@@ -1,6 +1,6 @@
 # AGENTS.md — Bu Repoda Çalışan AI Ajan(lar) İçin Bağlayıcı Çalışma Sözleşmesi
 
-Sürüm: 1.2 · Tarih: 2026-07-13
+Sürüm: 1.3 · Tarih: 2026-07-14
 Durum: Kanonik, bağlayıcı. Bu dosyayla çelişen her ajan davranışı geçersizdir.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm).
 
@@ -20,13 +20,24 @@ Bağlayıcı yorum:
 
 Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`; rol sözleşmesi: `docs/doc-maintainer-operating-boundary.md`. Platform ürün kodunu **yalnız insan geliştirici** yazar.
 
+### 0.1 Kalıcı yetki zinciri
+
+Operasyonel sıra: **Codex → PM → uzman ajanlar → Claude workers/slaves**.
+
+- **Codex = MASTER:** kapsam, öncelik, alt görev, rollback, Git/PR ve teslim kararının tek nihai yetkilisidir.
+- **PM = Codex sonrasındaki ardıl koordinasyon yetkilisi:** Codex'in kilitlediği kapsam içinde sırayı, bağımlılıkları, riskleri ve evidence paketini yönetir; Codex'in nihai yetkisini devralamaz.
+- Uzman ajanlar PM üzerinden Codex'e bağlıdır; doğrudan kapsam genişletemez veya nihai karar veremez.
+- **Claude = worker/slave:** yalnız Codex'in açıkça sınırladığı `claude_review` veya `claude_implement` alt görevini yapar; PM ve uzmanlar Claude çağıramaz.
+- Claude çağrısı yalnız `claude.ai / firstParty / max` doğrulanınca çalışır; API/provider fallback yasaktır ve doğrulama yoksa süreç fail-closed durur.
+- Tüm ara çıktılar öneridir; Codex gerçek dosya, diff ve deterministik testlerle bağımsız doğrulamadan kabul edemez.
+
 ---
 
 ## 1. Bu Repo Nedir (ve Ne Değildir)
 
 `actionplan` bir **WBS planlama + sözleşme katmanıdır**; çalışan ürün kodu burada **değildir**.
 
-- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json` (485 düğüm). Engine bu JSON'ları okur, React UI render eder.
+- İçerik tek doğruluk kaynağı (JSON-as-DB): `src/data/generated/nodes/*.json`; güncel düğüm sayısı `src/data/generated/meta.json` içinden okunur. Engine bu JSON'ları okur, React UI render eder.
 - Gerçek ürün/uygulama kodu `platform` monoreposundadır. AI ajanları onu yalnız salt-okunur denetler; `actionplan` o kodu **planlar ve sözleşmeye bağlar**, ürün kodunu yalnız insan geliştirici yazar.
 - 7 seviye (doğa metaforu): `app` (ada) → `module` (dağ) → `archetype` (kaya) → `feature` (taş) → `component` (kum) → `work_unit` (molekül) → `micro_step` (atom).
 - 7 waterfall faz: `requirements` → `test-plan` → `db-schema` → `development` → `test-qa` → `verification` → `release-maintenance`.
