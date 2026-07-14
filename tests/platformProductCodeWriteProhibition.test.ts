@@ -360,10 +360,10 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
     expect(governance).not.toContain("plan-04-paralel-ajan-orkestrasyon-2026-07-01.md` §1");
   });
 
-  it("CI kapısı 37 platform handoff paketini ve iki genel shell runner'ı tarar", () => {
+  it("CI kapısı 38 tarih-bağımsız platform handoff paketini ve iki sabit QA runner'ını tarar", () => {
     const gate = read("tools/agents/check-platform-write-boundary.mjs");
     for (const token of [
-      "platform-.*-agent-pack-2026-07-09",
+      "platform-.*-agent-pack-\\d{4}-\\d{2}-\\d{2}",
       "AUTHORITY-LOCK",
       "Human Developer Execution Packet",
       "tools/test-loop.mjs",
@@ -439,5 +439,44 @@ describe("PWB-7 aktif platform handoff yetkisi", () => {
     expect(gate).toContain("\\d{4}-\\d{2}-\\d{2}");
     expect(gate).toContain("activeHandoffDocs");
     expect(gate).toContain("activeQueuePaths");
+  });
+});
+
+describe("PWB-8 kalan tarihsel plan yürütme yolları", () => {
+  const remainingArchivedPlans = [
+    "plan-00-kontrol-sentez-2026-07-01.md",
+    "plan-02-numeronym-standart-prompt-paketi-2026-07-01.md",
+    "plan-03-yeni-yonergeler-2026-07-01.md",
+    "plan-05-durum-raporu-ve-sirada-ne-var-2026-07-01.md",
+  ];
+
+  it.each(remainingArchivedPlans)("%s yalnız insan geliştirici arşividir", (file) => {
+    const content = read(file);
+    for (const token of [
+      "ARCHIVED-HUMAN-HANDOFF",
+      "Codex → PM → uzman ajanlar → Claude workers/slaves",
+      "read-only-audit",
+      "human-developer-only",
+    ])
+      expect(content).toContain(token);
+  });
+
+  it("arşiv planları çalıştırılabilir model veya swarm görevi taşımaz", () => {
+    const content = remainingArchivedPlans.map((file) => read(file)).join("\n");
+    for (const forbidden of [
+      /READY FOR VIBECODER/i,
+      /run-swarm\.mjs\s*\+\s*Claude Code/i,
+      /Sırayla verin/i,
+      /ROL:[^\n]*ajan/i,
+      /ajan[^.\n]{0,100}(?:kod yazar|kod üretir|PR açar|platform[^.\n]{0,30}yazar)/i,
+      /kopyala-yapıştır (?:bir )?prompt zinciri/i,
+    ])
+      expect(content).not.toMatch(forbidden);
+  });
+
+  it("CI kapısı kalan dört planı gövde düzeyinde tarar", () => {
+    const gate = read("tools/agents/check-platform-write-boundary.mjs");
+    expect(gate).toContain("remainingArchivedPlans");
+    for (const file of remainingArchivedPlans) expect(gate).toContain(file);
   });
 });

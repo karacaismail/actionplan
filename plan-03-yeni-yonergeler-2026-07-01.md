@@ -1,9 +1,14 @@
 # Dosya 3 — Yeni Yönergeler: WBS / Core / App / Surface / ArcheType
 
-**Tarih:** 2026-07-01 · **Bağlam:** `plan-01` Dalga 0-1 bu yönergeleri ADR ve şema olarak kilitler. · **Kural:** Bu dosya *sözleşme/mimari tarif* verir — implementasyon kodu değil. Kodu ajanlar `plan-01` promptlarıyla yazar.
+> **ARCHIVED-HUMAN-HANDOFF** — tarihsel mimari karar girdisi.
+> Yetki zinciri: `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır.
+
+**Tarih:** 2026-07-01 · **Bağlam:** Bu dosya kararların tarihsel kökenini kaydeder. · **Kural:** Bu dosya *sözleşme/mimari tarif* verir; implementation kodu veya model görevi değildir. Onaylanan değişikliği yalnız insan geliştirici test-first uygular.
 
 **Bu dosya nedir:** Mevcut dokuz yönergenin gözden geçirilmesi + çelişkilerin uzlaştırılması + beş eksik primitif ve Surface v2 için yeni yönerge.
-**Ne yapar:** "Ajan neye göre kod yazacak?" sorusunu yeni primitifler için cevaplar.
+**Ne yapar:** İnsan geliştiricinin hangi kanonik sözleşme ve acceptance ölçütleriyle çalışacağını açıklar.
 **Ne yapmaz:** Mevcut canon yönergelerin içeriğini değiştirmez (onlar insan onayıyla güncellenir); yenilerini ekler ve çelişkileri işaretler.
 
 ---
@@ -28,16 +33,16 @@ Sade özet: repo zaten olgun bir yönerge setine sahip; yeni yönergeler bunlar�
 
 ## 2. Çelişki uzlaştırma tablosu — insan onayına işaretli
 
-Bu, `plan-00 §4`'ün yönerge-düzeyi karşılığıdır. Her satır: çelişki → çözüm → hangi mevcut dokümanın güncelleneceği → sahip. Tablodan önce sade özet: dört çelişki mevcut yönergelerin *içinde* yaşıyor; ikisi insan-eli gerektiriyor (canon), dördü ajan-PR ile kapanabilir.
+Bu, `plan-00 §4`'ün yönerge-düzeyi karşılığıdır. Her satır: çelişki → çözüm → hangi mevcut dokümanın güncelleneceği → sahip. Tüm uygulama sahipliği insan geliştiricidedir; AI yalnız salt-okunur bulgu ve checklist üretir.
 
 | Çelişki | Çözüm (yönerge kararı) | Güncellenecek doküman | Sahip |
 |---|---|---|---|
 | AGENTS.md "Prisma backend" (C1) | "FastAPI + SQLAlchemy 2.0/SQLModel + Alembic" | `AGENTS.md:82` | İnsan (canon) |
-| WCAG AAA varsayılan (C3) | Taban AA zorunlu; AAA yüzey-bazlı hedef | `src/schemas/surface.ts` + `surface-spec` ADR-S5'i kilitle | Ajan PR → İnsan |
-| Surface i18n alanı yok (C4) | Surface şemasına `i18n{locales,defaultLocale,rtl,messagesRef}` | `src/schemas/surface.ts` | Ajan PR → İnsan |
-| Scale opt-in (C5) | Para/sipariş yazan akışta outbox+idempotency zorunlu-invariant | Yeni `scale-invariant-directive` (§5) | Ajan PR → İnsan |
-| 5 primitif kodda yok (C6) | §3'teki 5 yönerge + ADR-A1..A4, ADR-P1 | Yeni ADR + `src/schemas/archetype.ts` uzantısı | Ajan draft → İnsan |
-| `data-api-contract` Prisma (bilinen) | Prisma→SQLAlchemy (zaten JSON'da "kaldırıldı" notu var; seed'ler bayat) | `tools/agents/seed-*.mjs` | Ajan PR → İnsan |
+| WCAG AAA varsayılan (C3) | Taban AA zorunlu; AAA yüzey-bazlı hedef | `src/schemas/surface.ts` + `surface-spec` ADR-S5'i kilitle | İnsan geliştirici |
+| Surface i18n alanı yok (C4) | Surface şemasına `i18n{locales,defaultLocale,rtl,messagesRef}` | `src/schemas/surface.ts` | İnsan geliştirici |
+| Scale opt-in (C5) | Para/sipariş yazan akışta outbox+idempotency zorunlu-invariant | Yeni `scale-invariant-directive` (§5) | İnsan geliştirici |
+| 5 primitif kodda yok (C6) | §3'teki 5 yönerge + ADR-A1..A4, ADR-P1 | Yeni ADR + `src/schemas/archetype.ts` uzantısı | Codex karar + insan geliştirici |
+| `data-api-contract` Prisma (bilinen) | Prisma→SQLAlchemy (zaten JSON'da "kaldırıldı" notu var; seed'ler bayat) | `tools/agents/seed-*.mjs` | İnsan geliştirici |
 
 ---
 
@@ -178,7 +183,7 @@ Bağımlılıklar `wbs-field-semantics`'e uyar: `dependsOn` = teknik sıra (krit
 
 ## 6. Üretilecek yeni yönerge dosyaları (mevcut deseni izler)
 
-Bu dosya *plan*; asıl yönergeler repoda ayrı doküman + ADR olarak yaşamalı (mevcut `docs/` deseni). Sade özet: aşağıdaki dosyalar `plan-01` Dalga 0-1'de ajan-draft + insan-onay ile oluşturulur.
+Bu dosya tarihsel bir *plan*; asıl yönergeler repoda ayrı doküman + ADR olarak yaşar. Aşağıdaki dosyalar yalnız güncel repo denetimi, Codex kapsam kararı ve insan geliştirici uygulamasıyla değiştirilebilir.
 
 - `docs/adr-K1-kernel-kimlik.md` — kernel = ArcheType motoru; stack FastAPI/SQLAlchemy; `atonota/kernel` (CI/CD repo) rolü ayrı; bayat TS/Prisma dokümanı sil.
 - `docs/adr-A1-actor-party.md` + `docs/actor-party-contract.md`
@@ -191,4 +196,3 @@ Bu dosya *plan*; asıl yönergeler repoda ayrı doküman + ADR olarak yaşamalı
 - `docs/ai-governance-master.md` — `claude-ai-archetype-eca-directive` + `task-export-contract` Mode-2 sınırlarını tek çatıda birleştirir; diğer tüm dokümanlar ona referans verir.
 
 Her yeni yönerge, mevcut dokuz yönergenin ortak şablonunu izler: normatif başlık → tanım/jargon → amaç/kapsam → kural tabloları → AI güvenlik invariantı → faz/kapı/kanıt → CI kapısı → risk keşfi. Böylece yeni yönergeler sisteme yabancı durmaz; aynı dille konuşur.
-

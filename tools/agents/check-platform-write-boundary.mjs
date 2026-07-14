@@ -229,6 +229,32 @@ for (const file of archivedPlans) {
       errors.push(`${file}: yürütülebilir tarihsel talimat ${forbidden}`);
 }
 
+const remainingArchivedPlans = [
+  "plan-00-kontrol-sentez-2026-07-01.md",
+  "plan-02-numeronym-standart-prompt-paketi-2026-07-01.md",
+  "plan-03-yeni-yonergeler-2026-07-01.md",
+  "plan-05-durum-raporu-ve-sirada-ne-var-2026-07-01.md",
+];
+for (const file of remainingArchivedPlans) {
+  const content = read(file);
+  for (const token of [
+    "ARCHIVED-HUMAN-HANDOFF",
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "read-only-audit",
+    "human-developer-only",
+  ])
+    if (!content.includes(token)) errors.push(`${file}: arşiv yetki tokenı eksik (${token})`);
+  for (const forbidden of [
+    /READY FOR VIBECODER/i,
+    /run-swarm\.mjs\s*\+\s*Claude Code/i,
+    /Sırayla verin/i,
+    /ROL:[^\n]*ajan/i,
+    /ajan[^.\n]{0,100}(?:kod yazar|kod üretir|PR açar|platform[^.\n]{0,30}yazar)/i,
+    /kopyala-yapıştır (?:bir )?prompt zinciri/i,
+  ])
+    if (forbidden.test(content)) errors.push(`${file}: yürütülebilir model planı ${forbidden}`);
+}
+
 const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];
 for (const file of modelRunnerPaths) {
   const content = read(file);
