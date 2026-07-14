@@ -5,9 +5,9 @@
  * Paylaşılan legacy seed mutator ailesini (seed-docs-lib helper + 8 tüketici + agents:seed
  * public rotası) fail-closed olarak DOĞRULAR. Kapı hiçbir seed'i çalıştırmaz/import etmez —
  * yalnız kaynak okur. Repo-geneli seed korpusu keşfedilir (tools/agents/seed-*.mjs +
- * tools/seed-*.mjs); beklenen 29 = 8 shared-mutator tüketici + 20 pending doğrudan yazıcı +
- * 1 helper. Kalan 20 doğrudan yazıcı Q2/Q3 için EXACT pending allowlist olarak kilitlidir:
- * yeni/keşfedilmemiş bir seed ya da değişen pending set kapıyı kırar.
+ * tools/seed-*.mjs); beklenen 29 = 8 shared-mutator tüketici + 11 Q2 wholesale arşiv stub +
+ * 9 pending Q3 doğrudan yazıcı + 1 helper. Kalan 9 doğrudan yazıcı Q3 için EXACT pending
+ * allowlist olarak kilitlidir: yeni/keşfedilmemiş bir seed ya da değişen set kapıyı kırar.
  *
  * Kırılma nedenleri (invariant): yeni seed dosyası, helper writer reintroduction,
  * güvensiz agents:seed rotası, eksik guarded path, blanket bypass token.
@@ -34,30 +34,39 @@ const SHARED_MUTATOR_CONSUMERS = [
   "tools/agents/seed-meta.mjs",
   "tools/agents/seed-sus.mjs",
 ];
-// Q2/Q3 için EXACT pending allowlist (henüz doğrudan yazabilen entrypoint'ler). ASLA spawn edilmez.
-const PENDING_DIRECT_WRITERS = [
+// Q2 wholesale arşive alınan doğrudan yazıcılar (11) — her biri TEK koşulsuz guard'ı import eden
+// minimal fail-closed stub; writer logic/data/fs izi taşımaz. Import/doğrudan koşum exit 2 verir.
+const GUARDED_Q2 = [
   "tools/agents/seed-aday.mjs",
-  "tools/agents/seed-backend.mjs",
-  "tools/agents/seed-content-collaboration.mjs",
   "tools/agents/seed-core-operations.mjs",
   "tools/agents/seed-crosscut.mjs",
-  "tools/agents/seed-customer-revenue.mjs",
-  "tools/agents/seed-data-intelligence.mjs",
-  "tools/agents/seed-dx-atomic.mjs",
-  "tools/agents/seed-finance.mjs",
   "tools/agents/seed-frontend.mjs",
-  "tools/agents/seed-hr.mjs",
   "tools/agents/seed-kernel.mjs",
   "tools/agents/seed-kernel-deep.mjs",
   "tools/agents/seed-layer0.mjs",
   "tools/agents/seed-layer1.mjs",
   "tools/agents/seed-platform-horizontal.mjs",
   "tools/agents/seed-scale.mjs",
-  "tools/agents/seed-supply-chain.mjs",
-  "tools/agents/seed-vertical.mjs",
   "tools/seed-pilot-traceability.mjs",
 ];
-const EXPECTED_CORPUS = [HELPER, ...SHARED_MUTATOR_CONSUMERS, ...PENDING_DIRECT_WRITERS].sort();
+// Q3 için EXACT pending allowlist (henüz doğrudan yazabilen entrypoint'ler). ASLA spawn edilmez.
+const PENDING_DIRECT_WRITERS = [
+  "tools/agents/seed-backend.mjs",
+  "tools/agents/seed-content-collaboration.mjs",
+  "tools/agents/seed-customer-revenue.mjs",
+  "tools/agents/seed-data-intelligence.mjs",
+  "tools/agents/seed-dx-atomic.mjs",
+  "tools/agents/seed-finance.mjs",
+  "tools/agents/seed-hr.mjs",
+  "tools/agents/seed-supply-chain.mjs",
+  "tools/agents/seed-vertical.mjs",
+];
+const EXPECTED_CORPUS = [
+  HELPER,
+  ...SHARED_MUTATOR_CONSUMERS,
+  ...GUARDED_Q2,
+  ...PENDING_DIRECT_WRITERS,
+].sort();
 
 // Guard/helper içinde bulunması yasak blanket bypass token'ları (env/argv override yok).
 const BYPASS_TOKENS = ["ALLOW_LEGACY_SEED", "SEED_APPLY", "process.env", "process.argv", "--force"];
@@ -67,6 +76,16 @@ const HELPER_WRITER_TOKENS = [
   "NODES_DIR",
   "node:fs",
   "readFileSync",
+  "featureDefs",
+];
+// Q2 arşiv stub'larında geri gelmesi yasak canonical writer izleri.
+const Q2_WRITER_TOKENS = [
+  "writeFileSync",
+  "readFileSync",
+  "node:fs",
+  "NODES",
+  "const CONTENT",
+  "apply(",
   "featureDefs",
 ];
 
@@ -81,7 +100,8 @@ discovered.sort();
 if (discovered.length !== 29)
   errors.push(`seed korpusu 29 değil (28 entrypoint + helper): ${discovered.length}`);
 if (SHARED_MUTATOR_CONSUMERS.length !== 8) errors.push("shared-mutator tüketici sayısı 8 değil");
-if (PENDING_DIRECT_WRITERS.length !== 20) errors.push("pending doğrudan yazıcı sayısı 20 değil");
+if (GUARDED_Q2.length !== 11) errors.push("Q2 guarded arşiv stub sayısı 11 değil");
+if (PENDING_DIRECT_WRITERS.length !== 9) errors.push("pending Q3 doğrudan yazıcı sayısı 9 değil");
 
 const expectedSet = new Set(EXPECTED_CORPUS);
 const discoveredSet = new Set(discovered);
@@ -127,13 +147,33 @@ for (const file of SHARED_MUTATOR_CONSUMERS) {
         errors.push(`${file}: inline stub içinde canonical mutator izi (${forbidden})`);
 }
 
+// --- 4b) 11 Q2 wholesale arşiv stub fail-closed ----------------------------------------
+// Her Q2 entrypoint TEK koşulsuz guard'ı import eder (agent → ./legacy-seed-quarantine.mjs;
+// tools/ → ./agents/legacy-seed-quarantine.mjs) ve hiçbir writer/data/fs izi taşımaz.
+for (const file of GUARDED_Q2) {
+  const source = read(file);
+  const specifier = file.startsWith("tools/agents/")
+    ? "./legacy-seed-quarantine.mjs"
+    : "./agents/legacy-seed-quarantine.mjs";
+  if (!source.includes(`import "${specifier}"`))
+    errors.push(`${file}: Q2 arşiv stub tek koşulsuz guard import'unu içermiyor (${specifier})`);
+  if (!source.includes("ARCHIVED-LEGACY-MUTATOR"))
+    errors.push(`${file}: Q2 arşiv stub markörü eksik (ARCHIVED-LEGACY-MUTATOR)`);
+  for (const forbidden of Q2_WRITER_TOKENS)
+    if (source.includes(forbidden))
+      errors.push(`${file}: Q2 arşiv stub içinde canonical writer izi (${forbidden})`);
+  for (const bypass of BYPASS_TOKENS)
+    if (source.includes(bypass))
+      errors.push(`${file}: Q2 arşiv stub blanket bypass tokenı taşıyor (${bypass})`);
+}
+
 // --- 5) Public agents:seed rotası + qa scripti -----------------------------------------
 const pkg = JSON.parse(read("package.json"));
 const agentsSeed = pkg.scripts?.["agents:seed"] ?? "";
 if (!agentsSeed.includes("legacy-seed-quarantine.mjs"))
   errors.push(`agents:seed guard rotasına bağlı değil: "${agentsSeed}"`);
 if (/seed-kernel/.test(agentsSeed)) errors.push("agents:seed hâlâ seed-kernel'e gidiyor");
-for (const file of [...SHARED_MUTATOR_CONSUMERS, ...PENDING_DIRECT_WRITERS]) {
+for (const file of [...SHARED_MUTATOR_CONSUMERS, ...GUARDED_Q2, ...PENDING_DIRECT_WRITERS]) {
   const base = file.split("/").pop();
   if (agentsSeed.includes(base))
     errors.push(`agents:seed doğrudan seed entrypoint'ine gidiyor: ${base}`);
@@ -151,10 +191,12 @@ if (gateIdx >= 0 && behaviorIdx >= 0 && gateIdx > behaviorIdx)
 
 // --- Sonuç ------------------------------------------------------------------------------
 console.log(
-  `[legacy-seed-quarantine] korpus=${discovered.length} · shared=${SHARED_MUTATOR_CONSUMERS.length} · pending=${PENDING_DIRECT_WRITERS.length} · ihlal=${errors.length}`,
+  `[legacy-seed-quarantine] korpus=${discovered.length} · shared=${SHARED_MUTATOR_CONSUMERS.length} · q2=${GUARDED_Q2.length} · pending=${PENDING_DIRECT_WRITERS.length} · ihlal=${errors.length}`,
 );
 if (errors.length === 0) {
-  console.log("SONUÇ: YEŞİL — paylaşılan legacy seed ailesi Q1 fail-closed (pending=20 Q2/Q3).");
+  console.log(
+    "SONUÇ: YEŞİL — shared (8) + Q2 (11) legacy seed fail-closed; pending=9 Q3 için kilitli.",
+  );
   process.exit(0);
 }
 console.log("SONUÇ: KIRMIZI");
