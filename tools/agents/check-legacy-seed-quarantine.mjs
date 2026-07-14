@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 /**
- * check-legacy-seed-quarantine — Q1 fail-closed karantina kapısı (STATİK).
+ * check-legacy-seed-quarantine — Q3 tam fail-closed karantina kapısı (STATİK).
  *
- * Paylaşılan legacy seed mutator ailesini (seed-docs-lib helper + 8 tüketici + agents:seed
- * public rotası) fail-closed olarak DOĞRULAR. Kapı hiçbir seed'i çalıştırmaz/import etmez —
- * yalnız kaynak okur. Repo-geneli seed korpusu keşfedilir (tools/agents/seed-*.mjs +
- * tools/seed-*.mjs); beklenen 29 = 8 shared-mutator tüketici + 11 Q2 wholesale arşiv stub +
- * 9 pending Q3 doğrudan yazıcı + 1 helper. Kalan 9 doğrudan yazıcı Q3 için EXACT pending
- * allowlist olarak kilitlidir: yeni/keşfedilmemiş bir seed ya da değişen set kapıyı kırar.
+ * TÜM legacy seed mutator ailesini (seed-docs-lib helper + 8 shared tüketici + 11 Q2 wholesale
+ * arşiv stub + 9 Q3 doğrudan yazıcı arşiv stub + agents:seed public rotası) fail-closed olarak
+ * DOĞRULAR. Kapı hiçbir seed'i çalıştırmaz/import etmez — yalnız kaynak okur. Repo-geneli seed
+ * korpusu keşfedilir (tools/agents/seed-*.mjs + tools/seed-*.mjs); beklenen 29 dosya keşfedilir =
+ * 8 shared-mutator tüketici + 11 Q2 arşiv stub + 9 Q3 arşiv stub + 1 helper (28 entrypoint +
+ * helper). Q3 ile pending=0: geriye bekleyen doğrudan yazıcı KALMAZ; yeni/keşfedilmemiş bir seed
+ * ya da değişen set kapıyı kırar.
  *
  * Kırılma nedenleri (invariant): yeni seed dosyası, helper writer reintroduction,
- * güvensiz agents:seed rotası, eksik guarded path, blanket bypass token.
+ * güvensiz agents:seed rotası, eksik guarded path, blanket bypass token, Q3 arşiv stub'ında
+ * geri gelen writer/data/fs izi.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -49,8 +51,9 @@ const GUARDED_Q2 = [
   "tools/agents/seed-scale.mjs",
   "tools/seed-pilot-traceability.mjs",
 ];
-// Q3 için EXACT pending allowlist (henüz doğrudan yazabilen entrypoint'ler). ASLA spawn edilmez.
-const PENDING_DIRECT_WRITERS = [
+// Q3 wholesale arşive alınan son doğrudan yazıcılar (9) — her biri TEK koşulsuz guard'ı import eden
+// minimal fail-closed stub; writer logic/data/fs izi taşımaz. Import/doğrudan koşum exit 2 verir.
+const GUARDED_Q3 = [
   "tools/agents/seed-backend.mjs",
   "tools/agents/seed-content-collaboration.mjs",
   "tools/agents/seed-customer-revenue.mjs",
@@ -61,12 +64,9 @@ const PENDING_DIRECT_WRITERS = [
   "tools/agents/seed-supply-chain.mjs",
   "tools/agents/seed-vertical.mjs",
 ];
-const EXPECTED_CORPUS = [
-  HELPER,
-  ...SHARED_MUTATOR_CONSUMERS,
-  ...GUARDED_Q2,
-  ...PENDING_DIRECT_WRITERS,
-].sort();
+// Q3 sonrası pending set BOŞ: bekleyen doğrudan yazıcı kalmaz (pending=0). Yeni seed kapıyı kırar.
+const PENDING_DIRECT_WRITERS = [];
+const EXPECTED_CORPUS = [HELPER, ...SHARED_MUTATOR_CONSUMERS, ...GUARDED_Q2, ...GUARDED_Q3].sort();
 
 // Guard/helper içinde bulunması yasak blanket bypass token'ları (env/argv override yok).
 const BYPASS_TOKENS = ["ALLOW_LEGACY_SEED", "SEED_APPLY", "process.env", "process.argv", "--force"];
@@ -78,8 +78,8 @@ const HELPER_WRITER_TOKENS = [
   "readFileSync",
   "featureDefs",
 ];
-// Q2 arşiv stub'larında geri gelmesi yasak canonical writer izleri.
-const Q2_WRITER_TOKENS = [
+// Q2/Q3 arşiv stub'larında geri gelmesi yasak canonical writer/data/fs izleri.
+const ARCHIVE_STUB_WRITER_TOKENS = [
   "writeFileSync",
   "readFileSync",
   "node:fs",
@@ -101,13 +101,17 @@ if (discovered.length !== 29)
   errors.push(`seed korpusu 29 değil (28 entrypoint + helper): ${discovered.length}`);
 if (SHARED_MUTATOR_CONSUMERS.length !== 8) errors.push("shared-mutator tüketici sayısı 8 değil");
 if (GUARDED_Q2.length !== 11) errors.push("Q2 guarded arşiv stub sayısı 11 değil");
-if (PENDING_DIRECT_WRITERS.length !== 9) errors.push("pending Q3 doğrudan yazıcı sayısı 9 değil");
+if (GUARDED_Q3.length !== 9) errors.push("Q3 guarded arşiv stub sayısı 9 değil");
+if (PENDING_DIRECT_WRITERS.length !== 0)
+  errors.push(
+    `pending doğrudan yazıcı seti boş değil (pending=0 olmalı): ${PENDING_DIRECT_WRITERS.length}`,
+  );
 
 const expectedSet = new Set(EXPECTED_CORPUS);
 const discoveredSet = new Set(discovered);
 for (const file of discovered)
   if (!expectedSet.has(file))
-    errors.push(`keşfedilen yeni/bilinmeyen seed pending allowlist dışı: ${file}`);
+    errors.push(`keşfedilen yeni/bilinmeyen seed beklenen korpus dışı: ${file}`);
 for (const file of EXPECTED_CORPUS)
   if (!discoveredSet.has(file)) errors.push(`beklenen seed korpustan kayıp: ${file}`);
 
@@ -159,12 +163,34 @@ for (const file of GUARDED_Q2) {
     errors.push(`${file}: Q2 arşiv stub tek koşulsuz guard import'unu içermiyor (${specifier})`);
   if (!source.includes("ARCHIVED-LEGACY-MUTATOR"))
     errors.push(`${file}: Q2 arşiv stub markörü eksik (ARCHIVED-LEGACY-MUTATOR)`);
-  for (const forbidden of Q2_WRITER_TOKENS)
+  if (!source.includes("FAIL-CLOSED"))
+    errors.push(`${file}: Q2 arşiv stub markörü eksik (FAIL-CLOSED)`);
+  for (const forbidden of ARCHIVE_STUB_WRITER_TOKENS)
     if (source.includes(forbidden))
       errors.push(`${file}: Q2 arşiv stub içinde canonical writer izi (${forbidden})`);
   for (const bypass of BYPASS_TOKENS)
     if (source.includes(bypass))
       errors.push(`${file}: Q2 arşiv stub blanket bypass tokenı taşıyor (${bypass})`);
+}
+
+// --- 4c) 9 Q3 wholesale arşiv stub fail-closed (Q3 tam quarantine) ---------------------
+// Her Q3 entrypoint (hepsi tools/agents/ altında) TEK koşulsuz guard'ı import eder
+// (./legacy-seed-quarantine.mjs), ARCHIVED-LEGACY-MUTATOR + FAIL-CLOSED taşır ve hiçbir
+// writer/data/fs/bypass izi taşımaz. Bu kapı YEŞİL olana kadar davranış probu çalışmaz.
+for (const file of GUARDED_Q3) {
+  const source = read(file);
+  if (!source.includes('import "./legacy-seed-quarantine.mjs"'))
+    errors.push(`${file}: Q3 arşiv stub tek koşulsuz guard import'unu içermiyor`);
+  if (!source.includes("ARCHIVED-LEGACY-MUTATOR"))
+    errors.push(`${file}: Q3 arşiv stub markörü eksik (ARCHIVED-LEGACY-MUTATOR)`);
+  if (!source.includes("FAIL-CLOSED"))
+    errors.push(`${file}: Q3 arşiv stub markörü eksik (FAIL-CLOSED)`);
+  for (const forbidden of ARCHIVE_STUB_WRITER_TOKENS)
+    if (source.includes(forbidden))
+      errors.push(`${file}: Q3 arşiv stub içinde canonical writer izi (${forbidden})`);
+  for (const bypass of BYPASS_TOKENS)
+    if (source.includes(bypass))
+      errors.push(`${file}: Q3 arşiv stub blanket bypass tokenı taşıyor (${bypass})`);
 }
 
 // --- 5) Public agents:seed rotası + qa scripti -----------------------------------------
@@ -173,7 +199,7 @@ const agentsSeed = pkg.scripts?.["agents:seed"] ?? "";
 if (!agentsSeed.includes("legacy-seed-quarantine.mjs"))
   errors.push(`agents:seed guard rotasına bağlı değil: "${agentsSeed}"`);
 if (/seed-kernel/.test(agentsSeed)) errors.push("agents:seed hâlâ seed-kernel'e gidiyor");
-for (const file of [...SHARED_MUTATOR_CONSUMERS, ...GUARDED_Q2, ...PENDING_DIRECT_WRITERS]) {
+for (const file of [...SHARED_MUTATOR_CONSUMERS, ...GUARDED_Q2, ...GUARDED_Q3]) {
   const base = file.split("/").pop();
   if (agentsSeed.includes(base))
     errors.push(`agents:seed doğrudan seed entrypoint'ine gidiyor: ${base}`);
@@ -191,11 +217,11 @@ if (gateIdx >= 0 && behaviorIdx >= 0 && gateIdx > behaviorIdx)
 
 // --- Sonuç ------------------------------------------------------------------------------
 console.log(
-  `[legacy-seed-quarantine] korpus=${discovered.length} · shared=${SHARED_MUTATOR_CONSUMERS.length} · q2=${GUARDED_Q2.length} · pending=${PENDING_DIRECT_WRITERS.length} · ihlal=${errors.length}`,
+  `[legacy-seed-quarantine] korpus=${discovered.length} · shared=${SHARED_MUTATOR_CONSUMERS.length} · q2=${GUARDED_Q2.length} · q3=${GUARDED_Q3.length} · pending=${PENDING_DIRECT_WRITERS.length} · ihlal=${errors.length}`,
 );
 if (errors.length === 0) {
   console.log(
-    "SONUÇ: YEŞİL — shared (8) + Q2 (11) legacy seed fail-closed; pending=9 Q3 için kilitli.",
+    "SONUÇ: YEŞİL — shared (8) + Q2 (11) + Q3 (9) legacy seed tam fail-closed; 29 dosya keşfedildi; pending=0.",
   );
   process.exit(0);
 }
