@@ -215,8 +215,11 @@ for (const file of archivedPlans) {
 const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];
 for (const file of modelRunnerPaths) {
   const content = read(file);
-  for (const token of ["MODEL_COMMAND_DENYLIST", "FAIL-CLOSED"])
-    if (!content.includes(token)) errors.push(`${file}: model komut karantinası eksik (${token})`);
+  for (const token of ["TASK_ALLOWLIST", "MODEL_COMMAND_DENYLIST", "FAIL-CLOSED", "shell: false"])
+    if (!content.includes(token)) errors.push(`${file}: sabit QA görev kilidi eksik (${token})`);
+  for (const forbidden of ["shell: true", "execSync(cmd)", 'process.argv.slice(2).join(" ")'])
+    if (content.includes(forbidden))
+      errors.push(`${file}: serbest shell yürütme izi (${forbidden})`);
 }
 
 const packPattern = /^platform-.*-agent-pack-2026-07-09\.md$/;
