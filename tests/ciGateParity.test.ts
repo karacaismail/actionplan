@@ -11,6 +11,7 @@ const deploy = fs.readFileSync(path.join(ROOT, ".github/workflows/deploy.yml"), 
 
 const releaseGates = [
   "qa:platform-write-boundary",
+  "qa:kernel-integrations",
   "qa:ui-delivery",
   "qa:market-readiness",
   "qa:finance-model",

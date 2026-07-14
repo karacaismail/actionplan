@@ -67,6 +67,7 @@ function mergePersistedOverride(base: TaskNode, override: TaskNode): TaskNode {
     appDefinition: base.appDefinition,
     moduleDefinition: base.moduleDefinition,
     deliveryContext: base.deliveryContext,
+    kernelIntegration: base.kernelIntegration,
   };
 }
 

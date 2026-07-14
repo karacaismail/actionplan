@@ -8,12 +8,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { appPortsFor, appPrimitiveIdsFor, readKernelCatalog } from "./lib/kernel-integration.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
 const REGISTRY_PATH = path.join(ROOT, "src/data/app-catalog-decisions.json");
 const APPLY = process.argv.includes("--apply");
 const APP_IDENTITY_BASELINE_DATE = "2026-07-14";
+const kernelCatalog = readKernelCatalog(ROOT);
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -857,6 +859,7 @@ const makeAppDefinition = (node, decision) => {
   const outcomes = appBusinessOutcomes(node);
   const externalAppContracts = externalAppContractsFor(node);
   const personas = personaProfileFor(node);
+  const kernelPrimitiveIds = appPrimitiveIdsFor(kernelCatalog, appId);
   return {
     artifactKind: "sellable-app",
     commercialUnit: "independent-app",
@@ -894,7 +897,7 @@ const makeAppDefinition = (node, decision) => {
       appVersion: "1.0.0",
       kernelRange: ">=1.0.0 <2.0.0",
       sdkRange: ">=1.0.0 <2.0.0",
-      kernelPrimitiveIds: ["k-tenancy", "k-authz", "k-capability", "k-bus", "k-policy-pdp"],
+      kernelPrimitiveIds,
       requiredCapabilityIds: capabilities,
       optionalCapabilityIds: [],
       publishedEventTypes: [`${decision.canonicalSlug}.lifecycle.changed.v1`],
@@ -924,7 +927,7 @@ const makeModuleDefinition = (appNode, coreId) => {
     ownedData: [`${slug}.tenant-configuration`, `${slug}.application-state`],
     lifecycleAuthority: [`${slug}.installation`, `${slug}.configuration`, `${slug}.decommission`],
     providedPorts: [`${slug}.core.public-api.v1`],
-    consumedPorts: ["kernel.tenancy.v1", "kernel.authorization.v1", "kernel.events.v1"],
+    consumedPorts: appPortsFor(kernelCatalog, appNode.appDefinition.manifest.kernelPrimitiveIds),
     publishedEvents: [`${slug}.lifecycle.changed.v1`],
     subscribedEvents: ["tenant.lifecycle.changed.v1"],
     capabilityIds: capabilities,
@@ -970,7 +973,10 @@ const makeOwnedModuleDefinition = (node, appNode) => {
     ownedData: contract.ownedData,
     lifecycleAuthority: contract.lifecycleAuthority,
     providedPorts: contract.providedPorts,
-    consumedPorts: [`${appNode.appDefinition.productSlug}.core.public-api.v1`],
+    consumedPorts: unique([
+      `${appNode.appDefinition.productSlug}.core.public-api.v1`,
+      ...appPortsFor(kernelCatalog, appNode.appDefinition.manifest.kernelPrimitiveIds),
+    ]),
     publishedEvents: contract.publishedEvents,
     subscribedEvents: [`${appNode.appDefinition.productSlug}.lifecycle.changed.v1`],
     capabilityIds: contract.capabilityIds,

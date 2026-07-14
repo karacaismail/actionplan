@@ -1,5 +1,6 @@
 import type { TaskNode } from "@/schemas";
 import { codeStartVerdict, enterpriseDefinitionMarkdown } from "./exportDataEnterprise";
+import { kernelIntegrationMarkdown } from "./exportDataKernel";
 import {
   EXPORT_DATE,
   PRIMARY_WORKSPACE,
@@ -110,11 +111,13 @@ ${uiDeliverySection(node)}
 
 ${enterpriseDefinitionMarkdown(node, index)}
 
-## 13. Canonical Engineering Standards — Resolved From JSON
+${kernelIntegrationMarkdown(node, index)}
+
+## 14. Canonical Engineering Standards — Resolved From JSON
 
 ${resolvedStandardsMarkdown(node)}
 
-## 14. Resolved Document Directives — From JSON
+## 15. Resolved Document Directives — From JSON
 
 ${resolvedDirectivesMarkdown(node, index)}
 `;

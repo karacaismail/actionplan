@@ -6,6 +6,7 @@ import { exportEvidencePatch, exportTask } from "./exportDataStructured";
 
 export { exportDeveloperBrief } from "./exportDataBrief";
 export { exportAgentPrompt, exportVobecoderCard } from "./exportDataPrompts";
+export { kernelIntegrationMarkdown } from "./exportDataKernel";
 export { PAGES_BASE } from "./exportDataShared";
 export {
   CSV_COLUMNS,

@@ -48,6 +48,14 @@ function writeFixture() {
           requiredModuleIds: ["s-clinic-core"],
           classification: { primaryCategory: "sector-app" },
           commercialModel: { licensingModel: "enterprise-subscription" },
+          manifest: {
+            kernelPrimitiveIds: [
+              "k-jurisdiction",
+              "k-surface-consumer",
+              "scale-invariant",
+              "k-calendar-capacity",
+            ],
+          },
           sdkDelivery: {
             required: true,
             manualEditAllowed: false,
@@ -58,6 +66,15 @@ function writeFixture() {
             targetGrade: "enterprise",
             deliveryPolicy: "enterprise-only",
             mvpAllowed: false,
+          },
+        },
+        kernelIntegration: {
+          role: "consumer",
+          requiredPrimitiveIds: ["k-calendar-capacity"],
+          publicBoundary: {
+            directKernelInternalsAllowed: false,
+            directKernelDatabaseAccessAllowed: false,
+            crossContextWritesAllowed: false,
           },
         },
       },
@@ -71,6 +88,12 @@ function writeFixture() {
           moduleId: "s-clinic-core",
           appId: "s-clinic",
           appCoreModuleId: "s-clinic-core",
+          consumedPorts: [
+            "kernel.jurisdiction.v1",
+            "kernel.consumer-surface.v1",
+            "kernel.scale-invariant.v1",
+            "kernel.business-time.v1",
+          ],
           sdkDelivery: {
             required: true,
             manualEditAllowed: false,
@@ -83,12 +106,24 @@ function writeFixture() {
             mvpAllowed: false,
           },
         },
+        kernelIntegration: {
+          role: "consumer",
+          publicBoundary: {
+            directKernelInternalsAllowed: false,
+            directKernelDatabaseAccessAllowed: false,
+            crossContextWritesAllowed: false,
+          },
+        },
       },
       {
         id: "dist-clinic",
         level: "module",
         artifactKind: "legacy-alias",
         canonicalId: "s-clinic",
+        kernelIntegration: {
+          role: "not-applicable",
+          reason: "Legacy alias uses the canonical app Kernel contract.",
+        },
       },
     ]),
   );

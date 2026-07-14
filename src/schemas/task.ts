@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AppDefinitionSchema } from "./app-definition";
 import { AtomDefinitionSchema } from "./atom";
 import { DeliveryContextSchema } from "./delivery-context";
+import { KernelIntegrationSchema } from "./kernel-integration";
 import { ModuleDefinitionSchema } from "./module-definition";
 import { UiArtifactRoleSchema } from "./storybook-registry";
 import { UiDeliverySchema } from "./ui-delivery";
@@ -534,6 +535,8 @@ export const TaskNodeSchema = z
     moduleDefinition: ModuleDefinitionSchema.optional(),
     /** Runtime teslimatını app/module/SDK zincirine bağlar; rollout boyunca opsiyoneldir. */
     deliveryContext: DeliveryContextSchema.optional(),
+    /** Kernel 12.1-12.14 sahiplik/tüketim kararı; WBS ve app kimliğinden ortogonaldir. */
+    kernelIntegration: KernelIntegrationSchema.optional(),
 
     // Mühendislik standardı bağı (ADR-0027) — düğüm tek-kaynak sözleşmelere REFERANS verir.
     standardRefs: StandardRefsSchema.default({}),

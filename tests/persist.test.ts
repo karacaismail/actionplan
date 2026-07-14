@@ -51,6 +51,10 @@ describe("browser-storage kalıcılık (override)", () => {
     const deliveryContext = {
       contract: "canonical-delivery",
     } as unknown as TaskNode["deliveryContext"];
+    const kernelIntegration = {
+      role: "not-applicable",
+      reason: "Canonical Kernel integration decision belongs to the base dataset.",
+    } as TaskNode["kernelIntegration"];
     const base = {
       ...node("a", { status: "todo" }),
       artifactKind: "sellable-app",
@@ -58,6 +62,7 @@ describe("browser-storage kalıcılık (override)", () => {
       appDefinition,
       moduleDefinition,
       deliveryContext,
+      kernelIntegration,
     } as unknown as TaskNode;
     const staleOverride = node("a", { status: "done", owner: "alice" });
 
@@ -70,5 +75,6 @@ describe("browser-storage kalıcılık (override)", () => {
     expect(merged.appDefinition).toBe(appDefinition);
     expect(merged.moduleDefinition).toBe(moduleDefinition);
     expect(merged.deliveryContext).toBe(deliveryContext);
+    expect(merged.kernelIntegration).toBe(kernelIntegration);
   });
 });

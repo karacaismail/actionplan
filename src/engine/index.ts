@@ -51,6 +51,7 @@ export {
   exportAgentPrompt,
   exportEvidencePatch,
   exportVobecoderCard,
+  kernelIntegrationMarkdown,
   exportTaskArtifact,
   exportCSV,
   downloadFile,

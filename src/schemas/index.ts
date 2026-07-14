@@ -5,6 +5,7 @@ export * from "./task";
 export * from "./app-definition";
 export * from "./module-definition";
 export * from "./delivery-context";
+export * from "./kernel-integration";
 export * from "./atom";
 export * from "./archetype";
 export * from "./ruleset";

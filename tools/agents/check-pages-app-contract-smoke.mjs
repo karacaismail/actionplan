@@ -48,6 +48,28 @@ function checkEnterprise(prefix, value) {
   check(enterprise.mvpAllowed === false, `${prefix}.mvpAllowed=false olmalı`);
 }
 
+function checkKernel(prefix, value) {
+  const integration = object(value);
+  check(typeof integration.role === "string", `${prefix}.role açık olmalı`);
+  if (integration.role === "not-applicable") {
+    check(String(integration.reason ?? "").length >= 12, `${prefix}.reason somut olmalı`);
+    return;
+  }
+  const boundary = object(integration.publicBoundary);
+  check(
+    boundary.directKernelInternalsAllowed === false,
+    `${prefix}.publicBoundary.directKernelInternalsAllowed=false olmalı`,
+  );
+  check(
+    boundary.directKernelDatabaseAccessAllowed === false,
+    `${prefix}.publicBoundary.directKernelDatabaseAccessAllowed=false olmalı`,
+  );
+  check(
+    boundary.crossContextWritesAllowed === false,
+    `${prefix}.publicBoundary.crossContextWritesAllowed=false olmalı`,
+  );
+}
+
 function checkApp(node) {
   check(node.level === "app", "s-clinic.level=app olmalı");
   check(node.artifactKind === "sellable-app", "s-clinic.artifactKind=sellable-app olmalı");
@@ -75,6 +97,15 @@ function checkApp(node) {
   );
   checkSdk("s-clinic.appDefinition.sdkDelivery", definition.sdkDelivery);
   checkEnterprise("s-clinic.appDefinition.enterpriseDelivery", definition.enterpriseDelivery);
+  const primitives = object(definition.manifest).kernelPrimitiveIds ?? [];
+  for (const primitiveId of ["k-jurisdiction", "k-surface-consumer", "scale-invariant"])
+    check(primitives.includes(primitiveId), `s-clinic manifest ${primitiveId} içermeli`);
+  const integration = object(node.kernelIntegration);
+  check(integration.role === "consumer", "s-clinic.kernelIntegration.role=consumer olmalı");
+  check(
+    integration.requiredPrimitiveIds?.includes("k-calendar-capacity"),
+    "s-clinic Kernel business-time contract'ını tüketmeli",
+  );
 }
 
 function checkCore(node) {
@@ -103,6 +134,14 @@ function checkCore(node) {
     "s-clinic-core.moduleDefinition.enterpriseDelivery",
     definition.enterpriseDelivery,
   );
+  const consumedPorts = definition.consumedPorts ?? [];
+  for (const port of [
+    "kernel.jurisdiction.v1",
+    "kernel.consumer-surface.v1",
+    "kernel.scale-invariant.v1",
+    "kernel.business-time.v1",
+  ])
+    check(consumedPorts.includes(port), `s-clinic-core ${port} public portunu tüketmeli`);
 }
 
 function checkAlias(node) {
@@ -162,6 +201,8 @@ if (rawNodes !== undefined) {
     check(Array.isArray(nodes), "dist/data/nodes.json bir JSON dizisi olmalı");
     if (Array.isArray(nodes)) {
       const index = new Map(nodes.map((node) => [node?.id, node]));
+      for (const node of nodes)
+        checkKernel(`${node?.id}.kernelIntegration`, node?.kernelIntegration);
       for (const id of ["s-clinic", "s-clinic-core", "dist-clinic"])
         check(index.has(id), `dist/data/nodes.json ${id} kaydını içermeli`);
       if (index.has("s-clinic")) checkApp(index.get("s-clinic"));
@@ -178,6 +219,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `[pages-app-smoke] PASS: ${DEEP_ROUTES.length} deep routes + ${BASE_PATH} base + typed app/core/alias`,
+    `[pages-app-smoke] PASS: ${DEEP_ROUTES.length} deep routes + ${BASE_PATH} base + typed app/core/alias/kernel`,
   );
 }

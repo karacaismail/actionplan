@@ -1,5 +1,6 @@
 import type { TaskNode } from "@/schemas";
 import { codeStartVerdict, enterpriseDefinitionMarkdown } from "./exportDataEnterprise";
+import { kernelIntegrationMarkdown } from "./exportDataKernel";
 import {
   PRIMARY_WORKSPACE,
   commandList,
@@ -89,6 +90,8 @@ ${uiDeliverySection(node)}
 
 ${enterpriseDefinitionMarkdown(node, index)}
 
+${kernelIntegrationMarkdown(node, index)}
+
 ## Canonical Engineering Standards — Resolved From JSON
 
 ${resolvedStandardsMarkdown(node)}
@@ -142,6 +145,8 @@ Kurallar:
 ## Enterprise App / Module Definition
 
 ${enterpriseDefinitionMarkdown(node, index)}
+
+${kernelIntegrationMarkdown(node, index)}
 
 ## İnsan Geliştiricinin Hedef Dosyaları
 
