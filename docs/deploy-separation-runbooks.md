@@ -1,5 +1,10 @@
 # Deploy Ayrımı Runbook'ları — Docs Deploy vs Product Deploy (3 Ayrı Runbook)
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 **Tarih:** 2026-07-02
 **Durum:** Taslak runbook (kilitlenmeyi bekliyor — bkz. §15 Definition of Done)
 **Kaynak/bağlam:** `core-contract-pack.md §3.7` (Release ve Deploy Standardı), `core-contract-pack.md §2.8 / §3.3` (Migration Policy, expand-contract + downgrade), `core-contract-pack.md §3.0.1` (ortak AI-güvenlik invariantı), `adr-0026-tech-profiles.md` (frontend stack profilleri; actionplan = tooling, ürün = saas-app), `.github/workflows/deploy.yml` (docs-viewer CI+Pages akışı), `release-policy.md` (semver/tag/deploy ilişkisi, SPA404 notu).
@@ -9,7 +14,7 @@
 
 ## 1. Amaç
 
-Bu runbook seti, birbirinden farklı üç deploy hedefinin aktör-açık (kim / ne / CI / insan-onayı) yürütme adımlarını, geçiş kapılarını ve geri-alma (rollback) yollarını sabitler. Hedef: "deploy" sözcüğünün üç ayrı anlamının (dokümantasyon sitesi yayını, geliştirici makinesinde üretilen ürünü koşma, Hetzner üretimine ürün dağıtımı) tek bir akışta karışmasını önlemek. Kullanıcının gerçek ortamı temel alınır: **geliştirme = macOS (Apple M4)**, **üretim = Hetzner Debian Linux (AMD EPYC)**, **kaynak = GitHub private repo**. Aktör-açık ifade: *ajan* deploy'u öneremez-uygulayamaz düzeyinde değildir — ajan PR açar ve runbook önerir (draft); *insan* inceler ve onaylar; *CI* kapıları doğrular; *deploy motoru/operatör* onaylı sürümü deterministik ve geri-alınabilir uygular. Hiçbir deploy insan onay kapısı olmadan üretim durumunu değiştirmez.
+Bu runbook seti, birbirinden farklı üç deploy hedefinin aktör-açık (kim / ne / CI / insan-onayı) yürütme adımlarını, geçiş kapılarını ve geri-alma (rollback) yollarını sabitler. Hedef: "deploy" sözcüğünün üç ayrı anlamının (dokümantasyon sitesi yayını, geliştirici makinesinde üretilen ürünü koşma, Hetzner üretimine ürün dağıtımı) tek bir akışta karışmasını önlemektir. Kullanıcının gerçek ortamı temel alınır: **geliştirme = macOS (Apple M4)**, **üretim = Hetzner Debian Linux (AMD EPYC)**, **kaynak = GitHub private repo**. AI aktörleri yalnız `read-only-audit` kapsamında runbook/diff önerisi üretir; branch, commit veya PR açmaz. İnsan geliştirici değişikliği ve PR'ı üretir; insan operatör onaylar; CI kapıları doğrular; deploy motoru onaylı sürümü deterministik ve geri-alınabilir uygular. Hiçbir deploy insan onay kapısı olmadan üretim durumunu değiştirmez.
 
 ## 2. Kapsam
 
@@ -23,7 +28,7 @@ Bu runbook seti şunları **kapsamaz**: (1) Kod/generator akışı — hiçbir d
 
 **Nedir:** Bu doküman, üç ayrı deploy hedefi için üç ayrı runbook'tur. Bir runbook = belirli bir hedefe (docs-viewer / local product / Hetzner production) yönelik, aktör-açık adım dizisi + geçiş kapısı + rollback yolu.
 
-**Ne yapar:** Her deploy hedefini kendi tetikleyicisi, aktörü, CI kapısı, insan-onay noktası ve geri-alma yoluyla ayrı tanımlar; hangi hedefin production sayıldığını tek tabloda netleştirir; docs-deploy ile product-deploy'un karışmasını yasak olarak sabitler; her hedefte AI'ın sınırını (öneri/PR evet, doğrudan deploy/secret hayır) tekrar eder.
+**Ne yapar:** Her deploy hedefini kendi tetikleyicisi, aktörü, CI kapısı, insan-onay noktası ve geri-alma yoluyla ayrı tanımlar; hangi hedefin production sayıldığını tek tabloda netleştirir; docs-deploy ile product-deploy'un karışmasını yasak olarak sabitler; her hedefte AI'ın sınırını (`read-only-audit` önerisi evet, branch/commit/PR/deploy/secret hayır) tekrar eder.
 
 **Ne yapmaz:** Kod/manifest üretmez; git akışı yeniden tanımlamaz; sürüm politikası yazmaz (referans verir); GitHub Pages'i ürün için bir production hedefi *olarak sunmaz* (aksine, bunu açıkça reddeder); AI'a üretime doğrudan yazma/secret görme yetkisi *vermez*; insan onayı olmayan bir yolu (özellikle `main`'e insan-onaysız push veya onaysız production apply) *açmaz*.
 
@@ -37,7 +42,7 @@ Bu tablo runbook'lardaki aktör rollerini ve her rolün deploy bağlamındaki so
 |---|---|---|
 | Geliştirici (insan) | macOS M4 üzerinde çalışan yetkili kişi | Local product'ı koşar; PR açar/onaylar; production deploy'u tetikler ve onaylar |
 | Operatör (insan) | Üretim erişimi olan yetkili kişi | Hetzner production deploy'unu yürütür/onaylar; rollback kararını verir; secrets/KMS erişimine sahiptir |
-| AI ajan (öneri motoru) | Öneri/taslak üretici | PR açar, runbook/diff önerir, dry-run simüle eder; deploy uygulayamaz, secret göremez, `main`'e push edemez |
+| AI aktör (`read-only-audit`) | Öneri/taslak üretici | Runbook/diff önerir, salt-okunur kanıtı inceler; branch/commit/PR açamaz, deploy uygulayamaz, secret göremez, `main`'e push edemez |
 | CI (GitHub Actions) | Otomatik doğrulama | Kapıları çalıştırır (docs-viewer'da 19 kapı + build; production'da migration/smoke); kırmızı kapı deploy'u bloklar |
 | Docs-viewer motoru | GitHub Actions + Pages | actionplan sitesini build eder ve Pages'e yayınlar (yalnız docs) |
 | Deploy motoru/pipeline | Production dağıtım hattı | Onaylı ürün sürümünü Hetzner'a Docker + Caddy + OTA ile deterministik uygular; healthcheck + rollback yürütür |
@@ -62,7 +67,7 @@ Bu tablo docs-viewer publish adımlarını aktör, kapı ve çıktı ile sırayl
 
 | # | Adım | Aktör | Kapı (geçiş koşulu) |
 |---|---|---|---|
-| 1 | Feature branch'ten PR aç | Geliştirici / AI ajan (PR açabilir) | PR CI'da yalnız `build` job çalışır (deploy YOK) |
+| 1 | Feature branch'ten PR aç | İnsan geliştirici | PR CI'da yalnız `build` job çalışır (deploy YOK) |
 | 2 | 19 bloklayıcı kapı + build doğrula | CI | tip/lint/içerik/ruleset/surface/tech-profile/standart/i18n/kernel-sözleşme/audit/veri-kalite/yürütme-hazırlığı/DoR/scale-invariant/birim/E2E+axe hepsi yeşil |
 | 3 | PR'ı incele ve `main`'e merge et | Geliştirici (insan) | İnsan onayı zorunlu; doğrudan `main` commit yasak (`release-policy §Tag/deploy`) |
 | 4 | `main` push → build job (tüm kapılar tekrar) | CI | Üretim derlemesi `BASE_PATH=/actionplan/` + `spa404.mjs` tamamlanır |
@@ -104,13 +109,13 @@ Bu tablo local product run adımlarını aktör ve doğrulama kapısı ile sıra
 
 **Ne yapar / ne yapmaz:** Onaylı ürün sürümünü canlıya alır; healthcheck + rollback ile korur. AI tarafından *tetiklenmez/uygulanmaz*; insan onayı olmadan production durumu *değişmez*.
 
-**Tetikleyici ve aktör:** Operatör/geliştirici (insan) `main`'e merge ve production release'i onaylar → deploy motoru/pipeline uygular. AI ajan yalnız hazırlık PR'ı/diff önerir (draft); apply insan onayına bağlıdır.
+**Tetikleyici ve aktör:** Operatör/geliştirici (insan) `main`'e merge ve production release'i onaylar → deploy motoru/pipeline uygular. AI aktörü yalnız `read-only-audit` ile hazırlık diff'ini inceler veya önerir; branch/commit/PR/apply yetkisi yoktur.
 
 Bu tablo Hetzner production deploy adımlarını aktör, kapı ve geri-alma bağlantısıyla sırayla tanımlar.
 
 | # | Adım | Aktör | Kapı (geçiş koşulu) |
 |---|---|---|---|
-| 1 | Hazırlık PR'ı (kod/migration/compose diff) | Geliştirici / AI ajan (öneri) | PR CI yeşil; en az 1 reviewer (`core-contract §3.7`); doğrudan `main` yasak |
+| 1 | Hazırlık PR'ı (kod/migration/compose diff) | İnsan geliştirici | PR CI yeşil; en az 1 reviewer (`core-contract §3.7`); doğrudan `main` yasak |
 | 2 | `main`'e merge + production release onayı | Geliştirici/Operatör (insan) | İnsan onayı zorunlu; onay referansı (kim/zaman/gerekçe) kayıtlı (`§3.0.1 approval_ref`) |
 | 3 | Image build + private registry'ye push | Deploy motoru | Docker multi-stage; üretim image ≤150 MB (`core-contract §3.7`); imaj imzalı/etiketli |
 | 4 | Secrets/KMS enjeksiyonu | Deploy motoru | Secret'lar KMS/secret-store'dan runtime'a; repoya/imaja gömülmez; AI erişemez |
@@ -152,7 +157,7 @@ Bu tablo üç runbook boyunca AI'ın yapabildiği/yapamadığı sınırları dep
 
 | İşlem | Autonomy | Kural |
 |---|---|---|
-| PR açma / runbook-diff önerme | `draft` | AI docs veya ürün için PR açar, deploy adımı/diff önerir; kendisi merge/deploy edemez |
+| Runbook/diff önerme | `read-only-audit` | AI salt-okunur inceleme ve öneri üretir; branch/commit/PR/merge/deploy yapamaz |
 | Dry-run / plan simülasyonu | `draft` | AI migration/deploy planını simüle eder, riski işaretler; canlıya uygulayamaz |
 | `main`'e push | `none` | AI `main`'e insan-onaysız push edemez; merge insan kararıdır (docs ve ürün için) |
 | Production'a deploy (Hetzner) | `none` | AI production deploy tetikleyemez/uygulayamaz; apply yalnız insan onayıyla deploy motoru |
@@ -160,7 +165,10 @@ Bu tablo üç runbook boyunca AI'ın yapabildiği/yapamadığı sınırları dep
 | Rollback uygulama | `none` (öneri `draft`) | AI rollback *önerebilir*; uygulama Operatör (insan) + deploy motoru işidir |
 | Pages/production ayrımını değiştirme | `none` | AI "docs Pages'i production hedefi yapalım" gibi bir öneriyle §14 yasağını gevşetemez |
 
-Mutlak sınırlar: AI hiçbir deploy hedefinde insan onay kapısını atlayamaz; `main`'e insan-onaysız push edemez; production'a doğrudan yazamaz; secret göremez; kanıtsız "deploy edildi/bitti" diyemez. AI'ın tek üretim-yakını yetkisi öneridir: PR + runbook + dry-run çıktısı.
+Mutlak sınırlar: AI hiçbir deploy hedefinde insan onay kapısını atlayamaz; branch/commit/PR
+açamaz; `main`'e insan-onaysız push edemez; production'a doğrudan yazamaz; secret göremez;
+kanıtsız "deploy edildi/bitti" diyemez. AI'ın tek üretim-yakını yetkisi salt-okunur audit ve
+runbook/diff önerisidir; yürütme insan geliştirici ve operatördedir.
 
 ## 11. Bağlama (reconcile: ADR-0026 stack; core-contract-pack §3.7 deploy)
 
@@ -197,7 +205,8 @@ Bu tablo her runbook için zorunlu doğrulama senaryolarını ve türünü tanı
 - Hetzner production runbook'u `core-contract-pack §3.7`'ye tam sadık: Debian+Docker+Caddy+OTA, KMS secret, expand-contract + `downgrade -1`, blue-green/rolling, healthcheck, smoke, canary rollback.
 - Ayrım tablosu (§9) hangi runbook'un production olduğunu tek bakışta gösterir: yalnız Hetzner = EVET.
 - Çelişki/yasak notu (§14) docs-deploy ≠ product-deploy'u açıkça yasaklar; GitHub Pages'in ürün için production olmadığı sabittir.
-- AI guardrail (§10): AI PR açar/önerir; production'a deploy edemez, secret göremez, `main`'e insan-onaysız push edemez.
+- AI guardrail (§10): AI yalnız `read-only-audit` yapar; branch/commit/PR/deploy yapamaz,
+  secret göremez ve `main`'e push edemez.
 - ADR-0026 (stack) ve core-contract-pack §3.7 (deploy) REFERANS verilir, içerikleri tekrar edilmez.
 
 ## 14. Çelişki notu ve yasak (docs-deploy ≠ product-deploy)
@@ -268,6 +277,6 @@ Aşağıdaki tablo, bu runbook setinin izlenebilir gereksinimlerini kimlik + run
 | DS-10 | Hetzner: blue-green/rolling + healthcheck + smoke + canary rollback | Hetzner prod | P0 | Pipeline | Sağlıksızsa/canary>%0.1 rollback | devops |
 | DS-11 | Ayrım: yalnız Hetzner production; docs Pages + yerel değil | Ayrım | P0 | Contract | §9 tablosu tek production'ı işaret eder | pmo |
 | DS-12 | Çelişki: docs-deploy ≠ product-deploy; Pages ürün-production değil | Yasak | P0 | Contract | §14 yasağı dokümante ve tutarlı | pmo |
-| DS-13 | AI: PR açar/önerir; production deploy/secret/main-push yapamaz | Tümü | P0 | Guardrail(neg) | AI apply/secret/push reddedilir | governance |
+| DS-13 | AI salt-okunur audit/öneriyle sınırlıdır; branch/commit/PR/deploy/secret/main-push yapamaz | Tümü | P0 | Guardrail(neg) | AI write/apply/secret/push reddedilir | governance |
 | DS-14 | Reconcile: ADR-0026 + core-contract-pack §3.7 REFERANS (tekrar yok) | Reconcile | P1 | Review | Kaynaklar referanslı, kopyalanmamış | pmo |
 | DS-15 | Rollback her hedefte tanımlı ve insan-kararı (production'da) | Tümü | P1 | Review | Üç rollback yolu belgeli; audit'li | devops |

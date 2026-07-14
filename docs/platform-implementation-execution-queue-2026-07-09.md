@@ -1,5 +1,10 @@
 # Platform Implementation Execution Queue — 2026-07-09
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 Durum: docs-only execution queue
 Kapsam: `/Users/karaca/DEV/mimari/platform`
 Makine-okunur çıktı: `reports/platform-implementation-execution-queue-2026-07-09.json`
@@ -67,7 +72,7 @@ PR-01 tamamlanmadan PR-02, Customer, Wave 2, Wave 3 veya Wave 4 başlatılmaz.
 
 ## Hazır Agent Pack'ler
 
-Agent pack'ler product code üretmez; implementation operatörüne verilecek sıkı prompt, checklist ve evidence patch sözleşmesidir.
+Handoff paketleri product code üretmez; insan geliştiriciye verilecek kapsam, checklist ve evidence patch sözleşmesidir. AI aktörleri paketleri yalnız `read-only-audit` amacıyla inceler.
 
 | Queue | Agent pack | Durum |
 |---|---|---|

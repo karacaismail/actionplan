@@ -1,6 +1,12 @@
 # KDP-01 ArcheType Storage Agent Pack — 2026-07-14
 
+> **AUTHORITY-LOCK:** `Codex → PM → uzman ajanlar → Claude workers/slaves`.
+> Codex nihai karar merciidir; PM ardıl koordinasyon yetkilisidir. AI erişimi
+> `read-only-audit`, platform yürütücüsü `human-developer-only`dır. Claude yalnız Codex'in
+> sınırlandırılmış çağrısıyla çalışır; aksi durum fail-closed durur.
+
 Durum: docs-only, blocked implementation handoff
+Packet type: Human Developer Execution Packet
 Queue item: `KDP-01`
 Branch: `task/archetype-storage-contract-record-api`
 WBS: `k-archetype-storage`, `archetype-storage-contract`
