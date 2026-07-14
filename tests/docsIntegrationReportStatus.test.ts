@@ -26,18 +26,18 @@ describe("docs JSON integration report current status", () => {
     expect(META.counts.total).toBe(617);
     expect(META.counts.byArtifactKind?.["legacy-alias"]).toBe(5);
     expect(STANDARD_COUNT).toBe(38);
-    expect(CLASSIFICATION).toHaveLength(292);
+    expect(CLASSIFICATION).toHaveLength(294);
     expect(CLASSIFICATION.filter((entry) => entry.decision === "task-materialize")).toHaveLength(
       218,
     );
     expect(CLASSIFICATION.filter((entry) => entry.decision === "human-decision")).toHaveLength(10);
-    expect(CLASSIFICATION.filter((entry) => entry.decision === "reference-only")).toHaveLength(64);
+    expect(CLASSIFICATION.filter((entry) => entry.decision === "reference-only")).toHaveLength(66);
 
     expect(REPORT).toContain("**Durum:** UYGULANDI");
-    expect(REPORT).toContain("| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 292 |");
+    expect(REPORT).toContain("| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 294 |");
     expect(REPORT).toContain("| Task içeriğine materyalize edilen | 218 |");
     expect(REPORT).toContain("| İnsan sahiplik kararı bekleyen | 10 |");
-    expect(REPORT).toContain("| Canonical standard / arşiv / kök indeks kaynağı | 64 |");
+    expect(REPORT).toContain("| Canonical standard / arşiv / kök indeks kaynağı | 66 |");
     expect(REPORT).toContain("| Sınıfsız / erişilemeyen | 0 |");
     expect(REPORT).toContain("| App kimlik kaynak snapshot'ı | 496 |");
     expect(REPORT).toContain("| Materialized fiziksel WBS JSON'u / görev sayfası | 617 |");
