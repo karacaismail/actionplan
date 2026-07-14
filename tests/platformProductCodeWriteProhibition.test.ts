@@ -527,3 +527,96 @@ describe("PWB-9 Commerce OS insan geliştirici handoff'u", () => {
     expect(gate).toContain("doc-task-content-classification.json");
   });
 });
+
+describe("PWB-10 Commerce machine-readable yetki yayılımı", () => {
+  const ruleFiles = [
+    "src/data/doc-task-content-rules/domain-surface-handoff.json",
+    "src/data/doc-task-content-rules/remaining-live-sources.json",
+  ];
+  const ruleTargets = {
+    "commerce-test-first-handoff": ["s-inventory", "s-sales"],
+    "commerce-vibecoder-packets": ["s-inventory", "s-sales"],
+    "commerce-vibecoder-readiness-oracles": [
+      "s-commerce",
+      "sdk-public-contract",
+      "sdk-app-core-template",
+      "std-ci-gates",
+    ],
+  } as const;
+  const rules = ruleFiles.flatMap((file) => readJson(file).rules);
+  const authorityTokens = [
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "Codex nihai karar merciidir",
+    "PM ardıl koordinatördür",
+    "Claude yalnız Codex'in sınırlı worker göreviyle çalışır",
+    "read-only-audit",
+    "human-developer-only",
+  ];
+  const collectStrings = (value: unknown): string[] => {
+    if (typeof value === "string") return [value];
+    if (Array.isArray(value)) return value.flatMap(collectStrings);
+    if (value && typeof value === "object")
+      return Object.values(value as Record<string, unknown>).flatMap(collectStrings);
+    return [];
+  };
+
+  it.each(Object.entries(ruleTargets))(
+    "%s exact selector ve fail-closed authority taşır",
+    (id, nodeIds) => {
+      const rule = rules.find((item: { id: string }) => item.id === id);
+      expect(rule?.selector?.nodeIds).toEqual(nodeIds);
+      const content = JSON.stringify(rule?.content);
+      for (const token of authorityTokens) expect(content).toContain(token);
+      expect(content).not.toMatch(
+        /(?:(?<![-:])\bvibecoder\b|\bimplementation agent\b)[^.\n]{0,160}(?:\bkod\b|\bwrites?\b|\bimplements?\b|\bscaffolds?\b|\bcommits?\b|\bpushes?\b|\bmerges?\b)/i,
+      );
+    },
+  );
+
+  it("yalnız altı canonical node'a, rule-target başına dokuz marker yayar", () => {
+    const expectedNodes = new Set(Object.values(ruleTargets).flat());
+    expect([...expectedNodes].sort()).toEqual([
+      "s-commerce",
+      "s-inventory",
+      "s-sales",
+      "sdk-app-core-template",
+      "sdk-public-contract",
+      "std-ci-gates",
+    ]);
+    for (const [id, nodeIds] of Object.entries(ruleTargets)) {
+      for (const nodeId of nodeIds) {
+        const nodeText = read(`src/data/generated/nodes/${nodeId}.json`);
+        expect(nodeText.match(new RegExp(`\\[DOC-APPLY:${id}\\]`, "g")) ?? []).toHaveLength(9);
+      }
+    }
+  });
+
+  it("altı canonical ve public node yalnız insan geliştirici yürütmesini taşır", () => {
+    const publicNodes = new Map(
+      readJson("public/data/nodes.json").map((node: { id: string }) => [node.id, node]),
+    );
+    for (const nodeId of new Set(Object.values(ruleTargets).flat())) {
+      const canonical = readJson(`src/data/generated/nodes/${nodeId}.json`);
+      expect(publicNodes.get(nodeId)).toEqual(canonical);
+      const markerText = collectStrings(canonical)
+        .filter((text) => Object.keys(ruleTargets).some((id) => text.includes(`[DOC-APPLY:${id}]`)))
+        .join("\n");
+      for (const token of authorityTokens) expect(markerText).toContain(token);
+      expect(markerText).not.toMatch(
+        /(?:(?<![-:])\bvibecoder\b|\bimplementation agent\b)[^.\n]{0,160}(?:\bkod\b|\bwrites?\b|\bimplements?\b|\bscaffolds?\b|\bcommits?\b|\bpushes?\b|\bmerges?\b)/i,
+      );
+    }
+  });
+
+  it("CI kapısı üç rule, altı node, dokuz marker ve public parity yüzeyini tarar", () => {
+    const gate = read("tools/agents/check-platform-write-boundary.mjs");
+    for (const token of [
+      "commerceMaterializedRuleTargets",
+      "domain-surface-handoff.json",
+      "remaining-live-sources.json",
+      "public/data/nodes.json",
+      "markerCount !== 9",
+    ])
+      expect(gate).toContain(token);
+  });
+});

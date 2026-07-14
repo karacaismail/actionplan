@@ -47,6 +47,20 @@ const commerceHandoffDocs = [
   "docs/commerce-os-vibecoder-readiness-oracles.md",
   "docs/README.md",
 ];
+const commerceMaterializedRuleTargets = {
+  "commerce-test-first-handoff": {
+    rulePath: "src/data/doc-task-content-rules/domain-surface-handoff.json",
+    nodeIds: ["s-inventory", "s-sales"],
+  },
+  "commerce-vibecoder-packets": {
+    rulePath: "src/data/doc-task-content-rules/domain-surface-handoff.json",
+    nodeIds: ["s-inventory", "s-sales"],
+  },
+  "commerce-vibecoder-readiness-oracles": {
+    rulePath: "src/data/doc-task-content-rules/remaining-live-sources.json",
+    nodeIds: ["s-commerce", "sdk-public-contract", "sdk-app-core-template", "std-ci-gates"],
+  },
+};
 const activeQueuePaths = [
   "reports/platform-implementation-execution-queue-2026-07-09.json",
   "reports/kernel-data-plane-readiness-queue-2026-07-14.json",
@@ -285,6 +299,68 @@ for (const docPath of commerceHandoffDocs.slice(0, 3)) {
   for (const token of ["human-developer-only", "read-only-audit"])
     if (!entry?.rationale?.includes(token))
       errors.push(`${docPath}: classification executor kilidi eksik (${token})`);
+}
+
+const commerceAuthorityTokens = [
+  "Codex → PM → uzman ajanlar → Claude workers/slaves",
+  "Codex nihai karar merciidir",
+  "PM ardıl koordinatördür",
+  "Claude yalnız Codex'in sınırlı worker göreviyle çalışır",
+  "read-only-audit",
+  "human-developer-only",
+];
+const collectStrings = (value) => {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(collectStrings);
+  if (value && typeof value === "object") return Object.values(value).flatMap(collectStrings);
+  return [];
+};
+const commerceRuleCache = new Map();
+const publicNodes = new Map(readJson("public/data/nodes.json").map((node) => [node.id, node]));
+for (const [id, contract] of Object.entries(commerceMaterializedRuleTargets)) {
+  if (!commerceRuleCache.has(contract.rulePath))
+    commerceRuleCache.set(contract.rulePath, readJson(contract.rulePath).rules);
+  const rule = commerceRuleCache.get(contract.rulePath).find((item) => item.id === id);
+  if (!rule) {
+    errors.push(`${id}: Commerce materialization rule eksik`);
+    continue;
+  }
+  if (JSON.stringify(rule.selector?.nodeIds) !== JSON.stringify(contract.nodeIds))
+    errors.push(`${id}: Commerce selector fan-out değişti`);
+  const ruleText = JSON.stringify(rule.content);
+  for (const token of commerceAuthorityTokens)
+    if (!ruleText.includes(token)) errors.push(`${id}: rule authority tokenı eksik (${token})`);
+  if (
+    /(?:(?<![-:])\bvibecoder\b|\bimplementation agent\b)[^.\n]{0,160}(?:\bkod\b|\bwrites?\b|\bimplements?\b|\bscaffolds?\b|\bcommits?\b|\bpushes?\b|\bmerges?\b)/i.test(
+      ruleText,
+    )
+  )
+    errors.push(`${id}: rule model executor dili taşıyor`);
+
+  for (const nodeId of contract.nodeIds) {
+    const canonical = readJson(`src/data/generated/nodes/${nodeId}.json`);
+    const marker = `[DOC-APPLY:${id}]`;
+    const markerCount = (
+      read(`src/data/generated/nodes/${nodeId}.json`).match(
+        new RegExp(`\\[DOC-APPLY:${id}\\]`, "g"),
+      ) ?? []
+    ).length;
+    if (markerCount !== 9) errors.push(`${id}/${nodeId}: marker sayısı 9 değil (${markerCount})`);
+    const markerText = collectStrings(canonical)
+      .filter((text) => text.includes(marker))
+      .join("\n");
+    for (const token of commerceAuthorityTokens)
+      if (!markerText.includes(token))
+        errors.push(`${id}/${nodeId}: generated authority tokenı eksik (${token})`);
+    if (
+      /(?:(?<![-:])\bvibecoder\b|\bimplementation agent\b)[^.\n]{0,160}(?:\bkod\b|\bwrites?\b|\bimplements?\b|\bscaffolds?\b|\bcommits?\b|\bpushes?\b|\bmerges?\b)/i.test(
+        markerText,
+      )
+    )
+      errors.push(`${id}/${nodeId}: generated model executor dili taşıyor`);
+    if (JSON.stringify(publicNodes.get(nodeId)) !== JSON.stringify(canonical))
+      errors.push(`${nodeId}: public/data/nodes.json canonical parity kaybı`);
+  }
 }
 
 const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];
