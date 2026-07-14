@@ -3,7 +3,7 @@
 Sürüm: 1.0 · Tarih: 2026-07-01 · Durum: Kanonik, bağlayıcı.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm) ve onları tetikleyen otomasyon (OpenClaw, n8n).
 
-Bu yönerge nedir: Dağınık AI-güvenlik kurallarını tek çatı altında birleştiren üst-referanstır. Kaynağı üç kanonik dokümandır: `docs/claude-ai-archetype-eca-directive.md`, `docs/task-export-contract.md` (Mode-2 sınırları) ve `plan-04-paralel-ajan-orkestrasyon-2026-07-01.md` §1 (beş yetki seviyesi).
+Bu yönerge nedir: Dağınık AI-güvenlik kurallarını tek çatı altında birleştiren üst-referanstır. Kaynağı `AGENTS.md`, `docs/task-export-contract.md`, `docs/platform-product-code-write-prohibition-directive.md` ve `development_agents/README.md` sözleşmeleridir. Tarihsel `plan-04` yürütme yetkisi vermez.
 Ne yapar: AI yetki seviyelerini, autonomy enum eşlemesini, yasak hedefleri, maliyet/kill-switch/güvenlik sınırlarını ve insan-onay noktalarını tek yerde sabitler.
 Ne yapmaz: Yeni kural icat etmez; mevcut sözleşmeleri birleştirir. Çelişki halinde `AGENTS.md` ve şema (`src/schemas/task.ts`) üstündür.
 
@@ -46,12 +46,12 @@ Kritik: `app` ve `module` düğümlerinin `agentPolicy.autonomy` değeri **`none
 
 ## 5. Yasak hedefler
 
-Bu yasaklar görev içeriğinden bağımsızdır ve hiçbir koşulda geçersiz kılınamaz. Aşağıdaki liste AI-ajanın hiçbir seviyede yapamayacağı mutasyonları sıralar.
+Bu yasaklar görev içeriğinden bağımsızdır. **Açık Kullanıcı/Admin yetkisi** yalnız Codex'e Actionplan kanonik changeset'ini uygulama, test etme ve PR'a taşıma istisnası verir; PM, uzman ve Claude için mutasyon/Git yetkisi doğurmaz. Aşağıdaki platform, app/module, policy ve üretim yasakları bu istisnayla gevşemez.
 
 - `app` veya `module` WBS düğümü **üretemez/güncelleyemez/silemez/yayınlayamaz** (`forbiddenTargets` varsayılanı `["app", "module"]`).
 - `Actor`, `Capability`, `PDP` (policy decision point) veya `Mode-Profile` primitiflerini üretemez/override edemez; yalnız insan-onaylı taslak önerebilir.
 - Ruleset'i (ECA/lint/CI/güvenlik politikaları) override/disable/bypass edemez.
-- Kanonik dokümanları düzenleyemez (bkz. `AGENTS.md` §7); yalnız changeset önerir.
+- Kanonik dokümanı açık yetki yokken düzenleyemez; açık yetkide yalnız Codex Actionplan changeset'ini uygulayabilir, PM/uzman/Claude yalnız önerir.
 - `jurisdiction`/data-residency/tax-legal-localization politikasını değiştiremez.
 - Üretim (prod) verisine dokunamaz; yalnız staging/fixture.
 

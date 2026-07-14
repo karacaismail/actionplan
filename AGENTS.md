@@ -188,7 +188,7 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 - `src/schemas/*.ts` (şema = TS tiplerinin tek kaynağı)
 - `src/data/standards/*.json` + `src/data/tech-profiles.json` (standart sözleşmeleri)
 
-Yetki sınırı: Bu kanonik dosyaları ve bu `AGENTS.md`'yi yalnız **Kullanıcı/Admin (insan onayı)** değiştirebilir. AI ajan bunları doğrudan yeniden yazamaz; yalnız değişiklik **önerebilir** (changeset). Bir standardı güncellemek istiyorsan, kuralı düğüme kopyalamak yerine standart sözleşmesinde değişiklik öner ve insan onayına sun.
+Yetki sınırı: Bu kanonik dosyalar ve bu `AGENTS.md` yalnız **Açık Kullanıcı/Admin yetkisi** ile değiştirilebilir. Bu açık yetki varsa Actionplan changeset'ini uygulayıp test ve PR teslimini yapabilen tek AI rolü yalnız Codex'tir; PM, uzman ve Claude yalnız ara çıktı/changeset önerir. Açık yetki yoksa Codex de dosyayı değiştirmez. Bu istisna platform ürün koduna, app/module kapsam kararına veya platform Git işlemlerine yazma yetkisi vermez.
 
 Standartların gezinme indeksi `docs/engineering-standards-index.md` altında toplanmıştır; standart listesi için bu dosyanın Bölüm 2'si yerine o hub'ı, `src/schemas/task.ts` içindeki `StandardRefsSchema`'yı ve `src/data/standards/` dizinini kaynak al.
 

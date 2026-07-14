@@ -7,6 +7,8 @@
 import { spawn } from "node:child_process";
 
 const MAKS_DENEME = 6;
+const MODEL_COMMAND_DENYLIST =
+  /(^|[\s;&|()])(?:claude|codex|aider|anthropic|bedrock|vertex|foundry)(?=$|[\s;&|()=-])|ANTHROPIC_API_KEY|api\.anthropic\.com/i;
 
 // argv[2..] tek bir komut dizgesi olarak alınır (tırnak içinde gelebilir).
 const komut = process.argv.slice(2).join(" ").trim();
@@ -14,6 +16,10 @@ const komut = process.argv.slice(2).join(" ").trim();
 if (!komut) {
   console.error('Kullanım: node tools/test-loop.mjs "<komut>"');
   console.error('Örnek:    node tools/test-loop.mjs "npm test"');
+  process.exit(2);
+}
+if (MODEL_COMMAND_DENYLIST.test(komut)) {
+  console.error("[FAIL-CLOSED] Model/provider commands are not valid test-loop input.");
   process.exit(2);
 }
 

@@ -29,6 +29,11 @@ if (clusterIds.length) selected = shards.filter((shard) => clusterIds.includes(s
 else if (flags.priority)
   selected = shards.filter((shard) => String(shard.oncelik) === String(flags.priority));
 
+if (selected.length === 0) {
+  console.error("[FAIL-CLOSED] No known shard matched the handoff preview selection.");
+  process.exit(2);
+}
+
 if (!flags["dry-run"] && DIRECT_EXECUTION_DISABLED) {
   console.error(
     "[FAIL-CLOSED] Direct Claude execution is disabled. Only Codex may dispatch claude_review or claude_implement after claude.ai / firstParty / max verification; API/provider fallback is forbidden.",

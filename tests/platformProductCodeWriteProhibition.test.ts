@@ -267,8 +267,86 @@ describe("PWB-5 kalıcı ajan yetkisi ve Claude fail-closed kapısı", () => {
       "plan-01-vibecoding-eylem-faz-faz-2026-07-01.md",
       "plan-04-paralel-ajan-orkestrasyon-2026-07-01.md",
     ])
-      expect(read(file)).toContain("SUPERSEDED-AUTHORITY");
+      expect(read(file)).toContain("ARCHIVED-HUMAN-HANDOFF");
     expect(read("tools/agents/README.md")).not.toContain("--dangerously-skip-permissions");
     expect(read("tools/agents/check-platform-write-boundary.mjs")).toContain("run-swarm.mjs");
+  });
+});
+
+describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () => {
+  it("tarihsel planlar yalnız insan geliştirici arşivi olarak kalır", () => {
+    for (const file of [
+      "plan-01-vibecoding-eylem-faz-faz-2026-07-01.md",
+      "plan-04-paralel-ajan-orkestrasyon-2026-07-01.md",
+      "docs/vibecoding-prompt-playbook.md",
+    ]) {
+      const content = read(file);
+      expect(content).toContain("ARCHIVED-HUMAN-HANDOFF");
+      expect(content).toContain("human-developer-only");
+      expect(content).toContain("Codex → PM → uzman ajanlar → Claude workers/slaves");
+      for (const forbidden of [
+        /Claude Code'a verilebilir/i,
+        /Claude\/Cursor'a yapıştır/i,
+        /ajan PR açar/i,
+        /ajan[^.\n]{0,80}git worktree/i,
+        /OpenClaw[^.\n]{0,100}ajan[^.\n]{0,100}tetikler/i,
+      ])
+        expect(content).not.toMatch(forbidden);
+    }
+    expect(read("docs/README.md")).toContain("arşivlenmiş human-developer handoff");
+  });
+
+  it.each(["tools/test-loop.mjs", "tools/qa-agent.mjs"])(
+    "%s model/provider komutunu fail-closed reddeder",
+    (file) => {
+      const source = read(file);
+      expect(source).toContain("MODEL_COMMAND_DENYLIST");
+      expect(source).toContain("FAIL-CLOSED");
+      const blocked = spawnSync(process.execPath, [path.join(ROOT, file), "claude -p audit"], {
+        cwd: ROOT,
+        encoding: "utf8",
+      });
+      expect(blocked.status).toBe(2);
+      expect(blocked.stderr).toContain("FAIL-CLOSED");
+    },
+  );
+
+  it("swarm önizlemesi boş veya bilinmeyen shard'ı başarı saymaz", () => {
+    const runner = path.join(ROOT, "tools/agents/run-swarm.mjs");
+    for (const args of [
+      ["--dry-run", "unknown-shard"],
+      ["--dry-run", "--priority=999"],
+    ]) {
+      const result = spawnSync(process.execPath, [runner, ...args], {
+        cwd: ROOT,
+        encoding: "utf8",
+      });
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain("FAIL-CLOSED");
+    }
+  });
+
+  it("kanonik değişiklik istisnasını yalnız açık kullanıcı yetkili Codex'e verir", () => {
+    for (const file of ["AGENTS.md", "docs/ai-governance-master.md"]) {
+      const content = read(file);
+      expect(content).toContain("Açık Kullanıcı/Admin yetkisi");
+      expect(content).toContain("yalnız Codex");
+      expect(content).toContain("PM, uzman ve Claude");
+    }
+    const governance = read("docs/ai-governance-master.md");
+    expect(governance).not.toContain("plan-04-paralel-ajan-orkestrasyon-2026-07-01.md` §1");
+  });
+
+  it("CI kapısı 37 platform handoff paketini ve iki genel shell runner'ı tarar", () => {
+    const gate = read("tools/agents/check-platform-write-boundary.mjs");
+    for (const token of [
+      "platform-.*-agent-pack-2026-07-09",
+      "AUTHORITY-LOCK",
+      "Human Developer Execution Packet",
+      "tools/test-loop.mjs",
+      "tools/qa-agent.mjs",
+      "MODEL_COMMAND_DENYLIST",
+    ])
+      expect(gate).toContain(token);
   });
 });

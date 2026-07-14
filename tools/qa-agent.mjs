@@ -10,6 +10,13 @@ import { execSync } from "node:child_process";
 
 const MAX = 6;
 const cmd = process.argv.slice(2).join(" ") || "npm run typecheck && npm test";
+const MODEL_COMMAND_DENYLIST =
+  /(^|[\s;&|()])(?:claude|codex|aider|anthropic|bedrock|vertex|foundry)(?=$|[\s;&|()=-])|ANTHROPIC_API_KEY|api\.anthropic\.com/i;
+
+if (MODEL_COMMAND_DENYLIST.test(cmd)) {
+  console.error("[FAIL-CLOSED] Model/provider commands are not valid qa-agent input.");
+  process.exit(2);
+}
 
 function run() {
   try {

@@ -229,7 +229,7 @@ Kernel kararlarını **çalıştırılabilir sözleşme + negatif test + kanıt 
 Portföy güvenliği ve 60+ yaş, 3 kişilik ekip için AI-üretim operasyonu.
 
 - [marketplace-module-security-directive.md](marketplace-module-security-directive.md) — dış modül güvenlik yaşam döngüsü: module signing, SBOM/provenance, permission-diff, malicious-update karantina, sandbox (ağ/dosya/process default-deny), modül-tablo RLS, exfiltration testleri.
-- [vibecoding-prompt-playbook.md](vibecoding-prompt-playbook.md) — her görevde kopyalanabilir prompt → beklenen dosyalar → test yeşil → negatif test kırmızı→yeşil → manuel kontrol → **reddetme kriteri**; örnek domain (Customer→Order) adım adım büyür.
+- [vibecoding-prompt-playbook.md](vibecoding-prompt-playbook.md) — arşivlenmiş human-developer handoff; beklenen dosya → pozitif/negatif test → manuel kontrol → **reddetme + rollback** kartı; doğrudan model/worker promptu değildir.
 
 ## 13. 2026-07-02 Gap Kapatma Yönergeleri
 

@@ -188,6 +188,61 @@ for (const forbidden of [/claude\s+-p/i, /Task\/sub-agent mekanizmasını kullan
   if (forbidden.test(workerEntryText))
     errors.push(`aktif worker girişinde doğrudan Claude yolu: ${forbidden}`);
 
+const archivedPlans = [
+  "plan-01-vibecoding-eylem-faz-faz-2026-07-01.md",
+  "plan-04-paralel-ajan-orkestrasyon-2026-07-01.md",
+  "docs/vibecoding-prompt-playbook.md",
+];
+for (const file of archivedPlans) {
+  const content = read(file);
+  for (const token of [
+    "ARCHIVED-HUMAN-HANDOFF",
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "human-developer-only",
+  ])
+    if (!content.includes(token)) errors.push(`${file}: arşiv yetki tokenı eksik (${token})`);
+  for (const forbidden of [
+    /Claude Code'a verilebilir/i,
+    /Claude\/Cursor'a yapıştır/i,
+    /ajan PR açar/i,
+    /ajan[^.\n]{0,80}git worktree/i,
+    /OpenClaw[^.\n]{0,100}ajan[^.\n]{0,100}tetikler/i,
+  ])
+    if (forbidden.test(content))
+      errors.push(`${file}: yürütülebilir tarihsel talimat ${forbidden}`);
+}
+
+const modelRunnerPaths = ["tools/test-loop.mjs", "tools/qa-agent.mjs"];
+for (const file of modelRunnerPaths) {
+  const content = read(file);
+  for (const token of ["MODEL_COMMAND_DENYLIST", "FAIL-CLOSED"])
+    if (!content.includes(token)) errors.push(`${file}: model komut karantinası eksik (${token})`);
+}
+
+const packPattern = /^platform-.*-agent-pack-2026-07-09\.md$/;
+const packFiles = fs.readdirSync(path.join(root, "docs")).filter((file) => packPattern.test(file));
+if (packFiles.length !== 37)
+  errors.push(`platform handoff pack sayısı 37 değil: ${packFiles.length}`);
+for (const file of packFiles) {
+  const relative = `docs/${file}`;
+  const content = read(relative);
+  for (const token of [
+    "AUTHORITY-LOCK",
+    "Codex → PM → uzman ajanlar → Claude workers/slaves",
+    "human-developer-only",
+    "read-only-audit",
+    "Human Developer Execution Packet",
+  ])
+    if (!content.includes(token)) errors.push(`${relative}: handoff yetki tokenı eksik (${token})`);
+  for (const forbidden of [
+    /Claude Code\/Cursor\/Aider/i,
+    /kod ajanına/i,
+    /^## Agent Prompt$/m,
+    /^Durum: docs-only implementation agent pack$/m,
+  ])
+    if (forbidden.test(content)) errors.push(`${relative}: doğrudan model handoff'u ${forbidden}`);
+}
+
 console.log(
   `[platform-write-boundary] actor=${policy.aiActors?.length ?? 0} · yasak=${policy.prohibitedActions?.length ?? 0} · giriş=${requiredFiles.length} · ihlal=${errors.length}`,
 );
