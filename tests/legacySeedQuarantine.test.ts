@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -173,5 +173,207 @@ describe("legacy canonical seed karantinası", () => {
       "seed-sus.mjs",
     ])
       expect(gate).toContain(token);
+  });
+});
+
+// --- Q1 paylaşılan mutator ailesi ------------------------------------------------------
+// 8 shared-mutator tüketici + helper + public agents:seed rotası fail-closed olmalı.
+// Kalan 20 doğrudan yazıcı Q2/Q3 için exact pending allowlist; bu testte ASLA spawn edilmez.
+const GUARD_PATH = "tools/agents/legacy-seed-quarantine.mjs";
+const HELPER_PATH = "tools/agents/seed-docs-lib.mjs";
+const Q1_GATE_PATH = "tools/agents/check-legacy-seed-quarantine.mjs";
+const sharedEntrypoints = [
+  "tools/agents/seed-build.mjs",
+  "tools/agents/seed-edu.mjs",
+  "tools/agents/seed-egitim.mjs",
+  "tools/agents/seed-genel.mjs",
+  "tools/agents/seed-kararlar.mjs",
+  "tools/agents/seed-landx.mjs",
+  "tools/agents/seed-meta.mjs",
+  "tools/agents/seed-sus.mjs",
+] as const;
+const pendingDirectWriters = [
+  "tools/agents/seed-aday.mjs",
+  "tools/agents/seed-backend.mjs",
+  "tools/agents/seed-content-collaboration.mjs",
+  "tools/agents/seed-core-operations.mjs",
+  "tools/agents/seed-crosscut.mjs",
+  "tools/agents/seed-customer-revenue.mjs",
+  "tools/agents/seed-data-intelligence.mjs",
+  "tools/agents/seed-dx-atomic.mjs",
+  "tools/agents/seed-finance.mjs",
+  "tools/agents/seed-frontend.mjs",
+  "tools/agents/seed-hr.mjs",
+  "tools/agents/seed-kernel.mjs",
+  "tools/agents/seed-kernel-deep.mjs",
+  "tools/agents/seed-layer0.mjs",
+  "tools/agents/seed-layer1.mjs",
+  "tools/agents/seed-platform-horizontal.mjs",
+  "tools/agents/seed-scale.mjs",
+  "tools/agents/seed-supply-chain.mjs",
+  "tools/agents/seed-vertical.mjs",
+  "tools/seed-pilot-traceability.mjs",
+] as const;
+
+describe("Q1 legacy seed karantinası — statik kapsam", () => {
+  it("statik kapı (check-legacy-seed-quarantine) yeşil çıkar", () => {
+    const result = spawnSync(process.execPath, [path.join(ROOT, Q1_GATE_PATH)], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    expect(result.stdout + result.stderr).toContain("SONUÇ: YEŞİL");
+    expect(result.status).toBe(0);
+  });
+
+  it("korpus 29 = 8 shared + 20 pending + helper; kesişim yok", () => {
+    expect(sharedEntrypoints).toHaveLength(8);
+    expect(pendingDirectWriters).toHaveLength(20);
+    const all = new Set([...sharedEntrypoints, ...pendingDirectWriters, HELPER_PATH]);
+    expect(all.size).toBe(29);
+    for (const seedPath of [...sharedEntrypoints, ...pendingDirectWriters, HELPER_PATH])
+      expect(fs.existsSync(path.join(ROOT, seedPath))).toBe(true);
+  });
+
+  it("tek koşulsuz guard markörleri taşır, env/argv bypass içermez", () => {
+    const guard = read(GUARD_PATH);
+    for (const token of ["ARCHIVED-LEGACY-MUTATOR", "FAIL-CLOSED", "process.exit(2)"])
+      expect(guard).toContain(token);
+    for (const bypass of [
+      "ALLOW_LEGACY_SEED",
+      "SEED_APPLY",
+      "process.env",
+      "process.argv",
+      "--force",
+    ])
+      expect(guard).not.toContain(bypass);
+  });
+
+  it("helper fail-closed: guard import eder, canonical writer izi taşımaz", () => {
+    const helper = read(HELPER_PATH);
+    expect(helper).toContain('import "./legacy-seed-quarantine.mjs"');
+    expect(helper).toContain("ARCHIVED-LEGACY-MUTATOR");
+    for (const forbidden of [
+      "writeFileSync",
+      "NODES_DIR",
+      "node:fs",
+      "readFileSync",
+      "featureDefs",
+    ])
+      expect(helper).not.toContain(forbidden);
+  });
+
+  it("8 shared-mutator tüketici inline stub veya fail-closed helper importu ile guarded", () => {
+    for (const seedPath of sharedEntrypoints) {
+      const source = read(seedPath);
+      const inlineStub =
+        source.includes("ARCHIVED-LEGACY-MUTATOR") && source.includes("process.exit(2)");
+      const viaHelper = source.includes('from "./seed-docs-lib.mjs"');
+      expect(inlineStub || viaHelper).toBe(true);
+    }
+  });
+
+  it("public agents:seed rotası guard'a gider, seed-kernel'e gitmez", () => {
+    const pkg = JSON.parse(read("package.json"));
+    const agentsSeed = pkg.scripts["agents:seed"] as string;
+    expect(agentsSeed).toContain("legacy-seed-quarantine.mjs");
+    expect(agentsSeed).not.toContain("seed-kernel");
+    const qa = pkg.scripts["qa:legacy-seed-quarantine"] as string;
+    expect(qa).toContain("check-legacy-seed-quarantine.mjs");
+    expect(qa).toContain("legacySeedQuarantine.test");
+    expect(qa.indexOf("check-legacy-seed-quarantine.mjs")).toBeLessThan(
+      qa.indexOf("legacySeedQuarantine.test"),
+    );
+  });
+});
+
+describe("Q1 legacy seed karantinası — davranış (statik kanıttan SONRA)", () => {
+  const fuzzEnv = { ...process.env, ALLOW_LEGACY_SEED: "1", SEED_APPLY: "1", CI: "false" };
+  const guardTargets: string[] = [GUARD_PATH, HELPER_PATH, ...sharedEntrypoints];
+
+  const staticGateGreen = () => {
+    const gate = spawnSync(process.execPath, [path.join(ROOT, Q1_GATE_PATH)], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    return gate.status === 0;
+  };
+
+  // Fail-safe: statik kapı yeşil değilse hiçbir probu çalıştırma; pending 20 ASLA spawn edilmez.
+  const assertProbeSafe = (target: string) => {
+    if (!staticGateGreen())
+      throw new Error("UNSAFE-TEST-STOP: statik kapı yeşil değil, davranış probu çalıştırılamaz");
+    if ((pendingDirectWriters as readonly string[]).includes(target))
+      throw new Error(`UNSAFE-TEST-STOP: pending doğrudan yazıcı spawn edilemez: ${target}`);
+    if (!guardTargets.includes(target))
+      throw new Error(`UNSAFE-TEST-STOP: kapsam dışı hedef: ${target}`);
+  };
+
+  const hashCanonicalUniverse = () => {
+    const files = [
+      ...fs
+        .readdirSync(path.join(ROOT, "src/data/generated/nodes"))
+        .filter((file) => file.endsWith(".json"))
+        .sort()
+        .map((file) => `src/data/generated/nodes/${file}`),
+      "src/data/generated/index.json",
+      "src/data/generated/navigation.json",
+      "src/data/generated/meta.json",
+      "public/data/nodes.json",
+      "reports/doc-task-content-matrix.csv",
+    ];
+    const digest = createHash("sha256");
+    for (const rel of files) digest.update(rel).update("\0").update(read(rel)).update("\0");
+    return { count: files.length, hash: digest.digest("hex") };
+  };
+
+  it("statik kapı davranış problarından ÖNCE yeşil olmalı", () => {
+    expect(staticGateGreen()).toBe(true);
+  });
+
+  it.each(guardTargets)("%s doğrudan çalıştırma env+argv fuzz'a rağmen exit 2", (target) => {
+    assertProbeSafe(target);
+    const result = spawnSync(process.execPath, [path.join(ROOT, target), "--force"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: fuzzEnv,
+    });
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("ARCHIVED-LEGACY-MUTATOR");
+    expect(result.stderr).toContain("FAIL-CLOSED");
+  });
+
+  it.each(guardTargets)("%s dinamik import env fuzz'a rağmen exit 2", (target) => {
+    assertProbeSafe(target);
+    const url = pathToFileURL(path.join(ROOT, target)).href;
+    const result = spawnSync(
+      process.execPath,
+      ["--input-type=module", "-e", `await import(${JSON.stringify(url)});`],
+      { cwd: ROOT, encoding: "utf8", env: fuzzEnv },
+    );
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("ARCHIVED-LEGACY-MUTATOR");
+    expect(result.stderr).toContain("FAIL-CLOSED");
+  });
+
+  it("617 canonical + türev dosya SHA-256 prob öncesi/sonrası birebir aynı", () => {
+    const before = hashCanonicalUniverse();
+    // 617 node + generated index/navigation/meta + public/data/nodes.json + matrix.csv
+    expect(before.count).toBe(622);
+    for (const target of guardTargets) {
+      assertProbeSafe(target);
+      spawnSync(process.execPath, [path.join(ROOT, target), "--force"], {
+        cwd: ROOT,
+        encoding: "utf8",
+        env: fuzzEnv,
+      });
+      const url = pathToFileURL(path.join(ROOT, target)).href;
+      spawnSync(
+        process.execPath,
+        ["--input-type=module", "-e", `await import(${JSON.stringify(url)});`],
+        { cwd: ROOT, encoding: "utf8", env: fuzzEnv },
+      );
+    }
+    const after = hashCanonicalUniverse();
+    expect(after.hash).toBe(before.hash);
   });
 });

@@ -200,15 +200,15 @@ Test önce: `tests/contentQuality.test.ts` (veya dataCompleteness genişletmesi)
 
 ### Gün 20–21 — Platform WBS (app-platform-horizontal) Güncelleme
 
-Kim: AI ajan (seed-platform-horizontal.mjs) + Kullanıcı onayı.
+Kim: human-developer-only (Codex nihai karar merciidir; AI erişimi read-only-audit). ARŞİV NOT: Bu adımın eski hâli bir AI ajanının `seed-platform-horizontal.mjs`'i çalıştırıp kanonik veri yazmasını ve PR açmasını öngörüyordu; bu yürütme yetkisi kaldırıldı. AI ajanları yalnız okuma/öneri yapar; hiçbir model kanonik veri yazamaz, commit atamaz, PR açamaz.
 
-`app-platform-horizontal` kümesinin mevcut durumu incelenir: 14 alt düğüm var (0 module, 1 feature, 9 archetype, component/work_unit/micro_step iskelet). Bu hafta:
+`app-platform-horizontal` kümesinin mevcut durumu incelenir: 14 alt düğüm var (0 module, 1 feature, 9 archetype, component/work_unit/micro_step iskelet). Bu hafta (yalnız insan geliştirici tarafından planlanır ve uygulanır):
 
 - Feature katmanı gerçek platform servisleri için doldurulur (API Gateway, Auth Service, Observability, Feature Flags vb.).
 - Her feature/taş için en az 1 archetype girilir (iskelet değil, gerçek içerik).
-- `tools/agents/seed-platform-horizontal.mjs` güncellenerek çalıştırılır.
+- İçerik kaynak-sahipli materializer ve gözden geçirilmiş migration ile üretilir; legacy `seed-platform-horizontal.mjs` çalıştırılmaz (Q2/Q3 karantina kapsamında pending doğrudan yazıcıdır).
 
-İnsan onayı: PR açılır, platform kümesinin içeriği teknik olarak doğrulanır.
+İnsan onayı: değişiklik insan geliştirici tarafından hazırlanır ve teknik olarak doğrulanır; AI ajanı bu adımda kod yazmaz, commit/PR authority taşımaz.
 
 ---
 
