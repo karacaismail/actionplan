@@ -12,7 +12,7 @@ const readJson = (relative: string) => JSON.parse(read(relative));
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 describe("kernel governance gap addendum", () => {
-  it("binds NO-GO to live graph, readiness, queue, ADR and ghost-WBS blockers", async () => {
+  it("binds NO-GO to live graph/readiness/queue and audited ADR/WBS snapshot", async () => {
     for (const file of [REPORT, LIB, CHECKER])
       expect(fs.existsSync(path.join(ROOT, file))).toBe(true);
     const { validateKernelGovernance } = await import(pathToFileURL(path.join(ROOT, LIB)).href);
@@ -31,47 +31,41 @@ describe("kernel governance gap addendum", () => {
       sdkReady: false,
       appBuildable: false,
     });
-    expect(report.structuralFindings.relationDirectionConflicts).toMatchObject({
-      affectedNodeCount: 35,
-      edgeCount: 46,
-      kernelNodeCount: 5,
-      kernelEdgeCount: 8,
-    });
-    expect(
-      report.decisions.every(
-        (decision: {
-          status: string;
-          decisionOwner: string;
-          coordinator: string;
-          deliveryAuthority: string;
-        }) =>
-          decision.status === "pending" &&
-          decision.decisionOwner === "user-admin" &&
-          decision.coordinator === "project-manager" &&
-          decision.deliveryAuthority === "codex",
-      ),
-    ).toBe(true);
-
-    const falseGo = clone(report);
-    falseGo.finalDecision.codeStartAllowed = true;
-    expect(validateKernelGovernance({ nodes, queue, report: falseGo })).toContain(
-      "unresolved blockers cannot allow code start",
-    );
-    const vacuousPass = clone(report);
-    vacuousPass.structuralFindings.readinessCandidates.result = "PASS";
-    expect(validateKernelGovernance({ nodes, queue, report: vacuousPass })).toContain(
+    const invalid = (field: string, value: unknown, error: string) => {
+      const candidate = clone(report);
+      const path = field.replace(/^\$/, "structuralFindings.").split(".");
+      const leaf = path.pop() as string;
+      let target = candidate;
+      for (const key of path) target = target[key];
+      target[leaf] = value;
+      expect(validateKernelGovernance({ nodes, queue, report: candidate })).toContain(error);
+    };
+    invalid("finalDecision.codeStartAllowed", true, "unresolved blockers cannot allow code start");
+    invalid(
+      "structuralFindings.readinessCandidates.result",
+      "PASS",
       "zero candidates must remain NO_CANDIDATES",
     );
-    const graphDrift = clone(report);
-    graphDrift.structuralFindings.relationDirectionConflicts.edgeCount -= 1;
-    expect(validateKernelGovernance({ nodes, queue, report: graphDrift })).toContain(
+    invalid(
+      "structuralFindings.relationDirectionConflicts.edgeCount",
+      45,
       "relation conflict count drift",
     );
-    const authorityDrift = clone(report);
-    authorityDrift.decisions[0].decisionOwner = "codex";
-    expect(validateKernelGovernance({ nodes, queue, report: authorityDrift })).toContain(
-      "decision authority drift",
+    invalid("decisions", [], "decision inventory drift");
+    invalid("sourceSnapshot.kernelSp", 0, "kernel snapshot drift");
+    invalid(
+      "structuralFindings.readinessCandidates.doneNodes",
+      1,
+      "readiness candidate count drift",
     );
+    invalid("structuralFindings.adrCollisions.0.id", "ADR-Z", "ADR collision snapshot drift");
+    const joinedGhosts = clone(report.structuralFindings.ghostWbsClaims.missingNodeIds);
+    joinedGhosts.splice(0, 2, joinedGhosts.slice(0, 2).join("|"));
+    invalid("$ghostWbsClaims.missingNodeIds", joinedGhosts, "ghost WBS snapshot drift");
+    invalid("$relationDirectionConflicts.kernelNodeIds.0", "x", "relation conflict count drift");
+    invalid("authority.finalAuthority", "pm", "authority chain drift");
+    invalid("decisions.0.decisionOwner", "codex", "decision authority drift");
+    invalid("finalDecision.verdict", "GO", "runtime verdict must remain NO-GO");
 
     const scripts = readJson("package.json").scripts;
     expect(scripts["qa:kernel-governance"]).toBe("node tools/agents/check-kernel-governance.mjs");
