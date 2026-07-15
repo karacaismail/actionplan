@@ -39,7 +39,7 @@ describe("kernel governance gap addendum", () => {
     });
     const invalid = (field: string, value: unknown, error: string) => {
       const candidate = clone(report);
-      const path = field.split(".");
+      const path = field.replace(/^\$/, "structuralFindings.").split(".");
       const leaf = path.pop() as string;
       let target = candidate;
       for (const key of path) target = target[key];
@@ -65,7 +65,8 @@ describe("kernel governance gap addendum", () => {
       "readiness candidate count drift",
     );
     invalid("structuralFindings.adrCollisions.0.id", "ADR-Z", "ADR collision snapshot drift");
-    invalid("structuralFindings.ghostWbsClaims.missingNodeIds", [], "ghost WBS snapshot drift");
+    invalid("$ghostWbsClaims.missingNodeIds.0", "x", "ghost WBS snapshot drift");
+    invalid("$relationDirectionConflicts.kernelNodeIds.0", "x", "relation conflict count drift");
     invalid("authority.finalAuthority", "pm", "authority chain drift");
     invalid("decisions.0.decisionOwner", "codex", "decision authority drift");
     invalid("finalDecision.verdict", "GO", "runtime verdict must remain NO-GO");

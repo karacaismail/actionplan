@@ -12,6 +12,8 @@ const ADR_SNAPSHOT = [
   "ADR-X1:execution-contract-matrix|execution-context-envelope",
   "ADR-A5/ADR-0022:archetype-storage|variant-fieldtype-extension|duplicate-storage-identity",
 ];
+const GHOST_WBS_SNAPSHOT =
+  "archetype-agreement|archetype-document-composition|k-evidence|k-event-projection|k-exec-context|k-kms|k-legal-hold-retention|k-migration-bridge|k-module-security|k-obligation|k-provider-adapter|k-signature|privacy-retention-matrix";
 
 export function relationDirectionConflicts(nodes) {
   const edges = [];
@@ -20,13 +22,13 @@ export function relationDirectionConflicts(nodes) {
     for (const targetId of node.dependsOn ?? [])
       if (blocked.has(targetId)) edges.push({ nodeId: node.id, targetId });
   }
+  const kernelEdges = edges.filter((edge) => edge.nodeId.startsWith("k-"));
   return {
     affectedNodeCount: new Set(edges.map((edge) => edge.nodeId)).size,
     edgeCount: edges.length,
-    kernelNodeCount: new Set(
-      edges.filter((edge) => edge.nodeId.startsWith("k-")).map((edge) => edge.nodeId),
-    ).size,
-    kernelEdgeCount: edges.filter((edge) => edge.nodeId.startsWith("k-")).length,
+    kernelNodeCount: new Set(kernelEdges.map((edge) => edge.nodeId)).size,
+    kernelEdgeCount: kernelEdges.length,
+    kernelNodeIds: [...new Set(kernelEdges.map((edge) => edge.nodeId))].sort(),
   };
 }
 
@@ -49,6 +51,7 @@ export function validateKernelGovernance({ nodes, queue, report }) {
       edgeCount: reportedRelations.edgeCount,
       kernelNodeCount: reportedRelations.kernelNodeCount,
       kernelEdgeCount: reportedRelations.kernelEdgeCount,
+      kernelNodeIds: reportedRelations.kernelNodeIds,
     })
   )
     errors.push("relation conflict count drift");
@@ -81,7 +84,8 @@ export function validateKernelGovernance({ nodes, queue, report }) {
 
   const ids = new Set(nodes.map((node) => node.id));
   const ghosts = report.structuralFindings.ghostWbsClaims;
-  if (ghosts.missingNodeIds.length !== 13 || ghosts.missingNodeIds.some((id) => ids.has(id)))
+  const ghostIdsMatch = ghosts.missingNodeIds.join("|") === GHOST_WBS_SNAPSHOT;
+  if (!ghostIdsMatch || ghosts.missingNodeIds.some((id) => ids.has(id)))
     errors.push("ghost WBS snapshot drift");
   if (ghosts.nodeCreationAllowed !== false) errors.push("gap audit cannot create WBS nodes");
   const adrSnapshot = report.structuralFindings.adrCollisions.map(
