@@ -34,6 +34,16 @@ describe("kernel governance decision pack", () => {
     expect(pack).toContain("aynı node içindeki dependsOn ∩ blocks kesişimidir");
     expect(pack).toContain("doğrudan doğrulanmış eksik-node setidir");
     expect(pack).toContain("PR-01 next-actionable bir code-start izni değildir");
+    for (const ref of [
+      "reports/kernel-adr-collision-source-bindings-2026-07-15.json",
+      "reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json",
+      "reports/kernel-tenancy-authority-inventory-2026-07-15.json",
+    ])
+      expect(pack).toContain(ref);
+    expect(pack).toContain("D08/D09/D10 pending/unselected");
+    expect(normalizedPack).toContain(
+      "bu ledger'lar kanonik ADR topic, WBS owner/disposition veya tenancy topolojisini seçmez",
+    );
     expect(normalizedPack).toContain(
       "node/SP/status/evidence ve graph/queue sayılarını canlı kanonik veriden; ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular",
     );
@@ -45,6 +55,9 @@ describe("kernel governance decision pack", () => {
       "provisional-contract-only seçildi",
       "physicalStrategy belirlendi",
       "base queue değiştirildi",
+      "kanonik ADR topic seçildi",
+      "WBS owner seçildi",
+      "tenancy topolojisi seçildi",
     ])
       expect(pack).not.toContain(forbidden);
     expect(pack).not.toContain("Kernel hazırdır");

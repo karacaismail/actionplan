@@ -12,7 +12,12 @@ const nodes = fs
   .map((file) => readJson(`src/data/generated/nodes/${file}`));
 const queue = readJson("reports/platform-implementation-execution-queue-2026-07-09.json");
 const report = readJson("reports/kernel-governance-gap-addendum-2026-07-15.json");
-const errors = validateKernelGovernance({ nodes, queue, report });
+const artifacts = {
+  adrCollisions: readJson("reports/kernel-adr-collision-source-bindings-2026-07-15.json"),
+  ghostBindings: readJson("reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json"),
+  tenancyAuthority: readJson("reports/kernel-tenancy-authority-inventory-2026-07-15.json"),
+};
+const errors = validateKernelGovernance({ nodes, queue, report, artifacts });
 
 if (errors.length) {
   console.error(`[kernel-governance] FAIL (${errors.length})`);

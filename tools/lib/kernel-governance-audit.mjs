@@ -14,6 +14,79 @@ const ADR_SNAPSHOT = [
 ];
 const GHOST_WBS_SNAPSHOT =
   "archetype-agreement|archetype-document-composition|k-evidence|k-event-projection|k-exec-context|k-kms|k-legal-hold-retention|k-migration-bridge|k-module-security|k-obligation|k-provider-adapter|k-signature|privacy-retention-matrix";
+const GOVERNANCE_ARTIFACTS = {
+  adrCollisionSourceBindings: "reports/kernel-adr-collision-source-bindings-2026-07-15.json",
+  ghostWbsDirectiveBindings: "reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json",
+  tenancyAuthorityInventory: "reports/kernel-tenancy-authority-inventory-2026-07-15.json",
+};
+
+function validateGovernanceArtifacts(artifacts) {
+  const errors = [];
+  const adr = artifacts?.adrCollisions;
+  const ghost = artifacts?.ghostBindings;
+  const tenancy = artifacts?.tenancyAuthority;
+  if (!adr || !ghost || !tenancy) {
+    errors.push("governance artifacts missing");
+    return errors;
+  }
+  if (
+    [adr, ghost, tenancy].some(
+      (artifact) =>
+        artifact.decision?.decisionOwner !== "user-admin" ||
+        artifact.decision?.coordinator !== "project-manager" ||
+        artifact.decision?.finalAuthority !== "codex" ||
+        artifact.authorityBoundary?.runtimeExecutor !== "human-developer-only",
+    )
+  )
+    errors.push("governance artifact authority drift");
+  if (adr.decisionId !== "KGA-D08" || adr.decision?.status !== "pending")
+    errors.push("ADR ledger decision drift");
+  if (adr.approvalRefAllowed !== false) errors.push("ADR approval ref requires human decision");
+  if (
+    adr.identityMutationAllowed?.renumber !== false ||
+    adr.identityMutationAllowed?.alias !== false ||
+    adr.identityMutationAllowed?.supersession !== false
+  )
+    errors.push("ADR identity mutation requires human decision");
+  if (
+    adr.collisionsStatus !== "ambiguous" ||
+    (adr.collisions ?? []).some((c) => c.status !== "ambiguous" || c.canonicalTopic !== null)
+  )
+    errors.push("ADR canonical topic requires human decision");
+  if (
+    ghost.decisionId !== "KGA-D09" ||
+    ghost.decision?.status !== "pending" ||
+    ghost.bindingsStatus !== "candidate-unselected"
+  )
+    errors.push("ghost ledger decision drift");
+  if ((ghost.bindings ?? []).some((b) => b.selected !== false))
+    errors.push("ghost binding cannot select a canonical node");
+  if (ghost.nodeCreationAllowed !== false)
+    errors.push("ghost binding ledger cannot create WBS nodes");
+  const t = tenancy.tenancy ?? {};
+  if (tenancy.decisionId !== "KGA-D10" || tenancy.decision?.status !== "pending")
+    errors.push("tenancy ledger decision drift");
+  if (t.physicalStrategy !== null || t.threshold !== null)
+    errors.push("tenancy inventory cannot select a topology");
+  if (t.mandatoryRls !== true) errors.push("tenancy inventory cannot weaken mandatory RLS");
+  if (t.invalidAuthority?.isTenancyAuthority !== false) errors.push("tenancy authority drift");
+  for (const artifact of [adr, ghost, tenancy])
+    if (artifact.authorityBoundary?.codeStartAllowed !== false) {
+      errors.push("governance artifact cannot allow code start");
+      break;
+    }
+  for (const artifact of [adr, ghost, tenancy])
+    if (
+      artifact.authorityBoundary?.kernelReady !== false ||
+      artifact.authorityBoundary?.sdkReady !== false ||
+      artifact.authorityBoundary?.appBuildable !== false ||
+      artifact.authorityBoundary?.verdict !== "NO-GO"
+    ) {
+      errors.push("governance artifact cannot claim readiness");
+      break;
+    }
+  return errors;
+}
 
 export function relationDirectionConflicts(nodes) {
   const edges = [];
@@ -39,8 +112,15 @@ export function readinessCandidates(nodes) {
   };
 }
 
-export function validateKernelGovernance({ nodes, queue, report }) {
+export function validateKernelGovernance({ nodes, queue, report, artifacts }) {
   const errors = [];
+  const reportedArtifacts = report.governanceArtifacts ?? {};
+  if (
+    Object.keys(reportedArtifacts).length !== Object.keys(GOVERNANCE_ARTIFACTS).length ||
+    Object.entries(GOVERNANCE_ARTIFACTS).some(([key, value]) => reportedArtifacts[key] !== value)
+  )
+    errors.push("governance artifact ref drift");
+  errors.push(...validateGovernanceArtifacts(artifacts));
   const kernel = nodes.filter((node) => node.id.startsWith("k-"));
   const relations = relationDirectionConflicts(nodes);
   const reportedRelations = report.structuralFindings.relationDirectionConflicts;

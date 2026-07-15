@@ -22,8 +22,19 @@ describe("kernel governance gap addendum", () => {
       .map((file) => readJson(`src/data/generated/nodes/${file}`));
     const queue = readJson("reports/platform-implementation-execution-queue-2026-07-09.json");
     const report = readJson(REPORT);
+    const artifactRefs = {
+      adrCollisionSourceBindings: "reports/kernel-adr-collision-source-bindings-2026-07-15.json",
+      ghostWbsDirectiveBindings: "reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json",
+      tenancyAuthorityInventory: "reports/kernel-tenancy-authority-inventory-2026-07-15.json",
+    };
+    const artifacts = {
+      adrCollisions: readJson(artifactRefs.adrCollisionSourceBindings),
+      ghostBindings: readJson(artifactRefs.ghostWbsDirectiveBindings),
+      tenancyAuthority: readJson(artifactRefs.tenancyAuthorityInventory),
+    };
 
-    expect(validateKernelGovernance({ nodes, queue, report })).toEqual([]);
+    expect(validateKernelGovernance({ nodes, queue, report, artifacts })).toEqual([]);
+    expect(report.governanceArtifacts).toEqual(artifactRefs);
     expect(report.finalDecision).toMatchObject({
       verdict: "NO-GO",
       codeStartAllowed: false,
@@ -66,6 +77,47 @@ describe("kernel governance gap addendum", () => {
     invalid("authority.finalAuthority", "pm", "authority chain drift");
     invalid("decisions.0.decisionOwner", "codex", "decision authority drift");
     invalid("finalDecision.verdict", "GO", "runtime verdict must remain NO-GO");
+
+    const rejectsArtifact = (mutate: (a: typeof artifacts) => void, error: string) => {
+      const candidate = clone(artifacts);
+      mutate(candidate);
+      expect(validateKernelGovernance({ nodes, queue, report, artifacts: candidate })).toContain(
+        error,
+      );
+    };
+    rejectsArtifact((a) => {
+      a.adrCollisions.approvalRefAllowed = true;
+    }, "ADR approval ref requires human decision");
+    rejectsArtifact((a) => {
+      a.adrCollisions.collisions[0].canonicalTopic = "evidence-seal";
+    }, "ADR canonical topic requires human decision");
+    rejectsArtifact((a) => {
+      a.ghostBindings.bindings[0].selected = true;
+    }, "ghost binding cannot select a canonical node");
+    rejectsArtifact((a) => {
+      a.ghostBindings.nodeCreationAllowed = true;
+    }, "ghost binding ledger cannot create WBS nodes");
+    rejectsArtifact((a) => {
+      a.tenancyAuthority.tenancy.physicalStrategy = "schema-per-tenant";
+    }, "tenancy inventory cannot select a topology");
+    rejectsArtifact((a) => {
+      a.tenancyAuthority.tenancy.mandatoryRls = false;
+    }, "tenancy inventory cannot weaken mandatory RLS");
+    for (const key of ["adrCollisions", "ghostBindings", "tenancyAuthority"] as const)
+      rejectsArtifact((a) => {
+        a[key].authorityBoundary.codeStartAllowed = true;
+      }, "governance artifact cannot allow code start");
+    rejectsArtifact((a) => {
+      a.adrCollisions.decision.finalAuthority = "pm";
+    }, "governance artifact authority drift");
+    rejectsArtifact((a) => {
+      a.tenancyAuthority.authorityBoundary.kernelReady = true;
+    }, "governance artifact cannot claim readiness");
+    const wrongRef = clone(report);
+    wrongRef.governanceArtifacts.adrCollisionSourceBindings = "reports/wrong.json";
+    expect(validateKernelGovernance({ nodes, queue, report: wrongRef, artifacts })).toContain(
+      "governance artifact ref drift",
+    );
 
     const scripts = readJson("package.json").scripts;
     expect(scripts["qa:kernel-governance"]).toBe("node tools/agents/check-kernel-governance.mjs");
