@@ -120,7 +120,16 @@ describe("kernel governance gap addendum", () => {
     );
 
     const scripts = readJson("package.json").scripts;
-    expect(scripts["qa:kernel-governance"]).toBe("node tools/agents/check-kernel-governance.mjs");
+    const governanceGate = scripts["qa:kernel-governance"] as string;
+    expect(governanceGate).toContain("node tools/agents/check-kernel-governance.mjs");
+    for (const exactTest of [
+      "kernelGovernanceGapAddendum.test.ts",
+      "kernelGovernanceDecisionPack.test.ts",
+      "kernelAdrCollisionSourceBindings.test.ts",
+      "kernelGhostWbsDirectiveBindings.test.ts",
+      "kernelTenancyAuthorityInventory.test.ts",
+    ])
+      expect(governanceGate).toContain(exactTest);
     expect(scripts["qa:ci"]).toContain("npm run qa:kernel-governance");
     expect(read(".github/workflows/deploy.yml")).toContain("run: npm run qa:kernel-governance");
   });
