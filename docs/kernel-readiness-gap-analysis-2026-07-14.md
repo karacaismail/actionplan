@@ -114,8 +114,10 @@ Codex'e gelir; Claude yalnız Codex'in sınırlı worker çağrısıdır. Nihai 
 
 ## Öncelikli Yapısal Boşluklar
 
-1. 38 kernel module parent'ın yalnız 6'sında herhangi bir child vardır; 32'si code-bearing
-   child kararı olmadan yürütülemez. Parent değişikliği insan-onaylı WBS ledger'ı bekler.
+1. 38 kernel module parent'ın 6'sında herhangi bir direct child vardır; ancak yalnız 5'inde
+   archetype veya daha alt seviyede code-bearing descendant bulunur. `k-control-planes`
+   yalnız üç module child taşıdığı için kapsanmış sayılmaz; 33 parent code-bearing descendant
+   kararı olmadan yürütülemez. Parent değişikliği insan-onaylı WBS ledger'ı bekler.
 2. 17 kernel düğümünde `docs/` yolu içeren ref yoktur. Standart metni kopyalanmaz; doğru
    task-specific kanonik kaynak bağlanır.
 3. Yalnız `k-tenancy`, `k-authz`, `k-bus`, `k-capability`, `k-policy-pdp` traceability taşır;

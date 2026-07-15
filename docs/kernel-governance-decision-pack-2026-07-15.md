@@ -49,7 +49,7 @@ decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine ge�
 
 | Karar | Konu | Kaynak | Durum |
 |---|---|---|---|
-| KGA-D01 | Code-bearing child seçimi | Base gap inventory | pending/unselected |
+| KGA-D01 | Code-bearing descendant seçimi | Base gap inventory | pending/unselected |
 | KGA-D02 | k-surface dependency ve SDK sırası | Base gap inventory | pending/unselected |
 | KGA-D03 | PR-07 capability / module-registry sahipliği | Base gap inventory | pending/unselected |
 | KGA-D04 | Sahipsiz kernel directive kimlikleri | Base gap inventory | pending/unselected |
@@ -65,12 +65,15 @@ decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine ge�
 Bu belge aşağıdaki seçenekleri seçmez; etkiyi görünür kılar ve kararı User/Admin'e
 bırakır. Bütün seçenekler pending/unselected durumundadır.
 
-### KGA-D01 — Code-bearing Child Seçimi
+### KGA-D01 — Code-bearing Descendant Seçimi
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
-32 module parent için gerçek uygulama ve test kanıtını taşıyacak child kimlikleri
-seçilmelidir. Bu paket child üretmez, parent seviyesini değiştirmez ve code-start açmaz.
+38 kernel module parent'ın yalnız beşinde archetype veya daha alt seviyede code-bearing
+descendant vardır. Kalan 33 parent için gerçek uygulama ve test kanıtını taşıyacak
+descendant kimlikleri seçilmelidir. `k-control-planes` yalnız üç module child taşıdığı için
+code-bearing kapsama sayılmaz. Bu paket node üretmez, parent seviyesini değiştirmez ve
+code-start açmaz.
 
 ### KGA-D02 — k-surface Dependency ve SDK Sırası
 
