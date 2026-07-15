@@ -152,6 +152,19 @@ Doğrulama kapısı node/SP/status/phase/evidence gerçekliğini, 41 düğümün
 32/17/5 yapısal sayımlarını, base queue değişmezliğini, PR-07 mismatch'ini ve kalıcı yetki
 zincirini test eder. Herhangi biri drift ederse envanter testi kırmızı olur.
 
+## 2026-07-15 Governance Eki
+
+PM, backend, kernel integrator ve QA/QASP salt-okunur denetimi üç ek bloklayıcı sınıfı
+doğruladı: 35 düğümde 46 çelişkili dependency/blocks kenarı (5 kernel düğümünde 8
+kenar), kalıcı DB/transaction zemininin PR-02..07 beklentilerinden sonra PR-08'de
+gelmesi ve 5 ADR kimlik çakışmasıyla 13 hayalet WBS iddiası.
+
+Machine-readable kanıt reports/kernel-governance-gap-addendum-2026-07-15.json, insan
+kararı gerektiren seçenekler ise docs/kernel-governance-decision-pack-2026-07-15.md
+içindedir. Bu ek base queue, WBS node, ADR kimliği veya tenancy fiziksel stratejisi
+değiştirmez. Actionplan tooling için güvenli düzeltmeler uygulanabilir; runtime kernel,
+SDK-ready ve app-buildable kararları NO-GO kalır.
+
 ## Rollback
 
 Plan değişikliği geri alınırsa yeni refs/requirements notu ve KDP ek kuyruğu revert edilir; eski
