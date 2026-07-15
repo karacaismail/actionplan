@@ -14,6 +14,93 @@ const ADR_SNAPSHOT = [
 ];
 const GHOST_WBS_SNAPSHOT =
   "archetype-agreement|archetype-document-composition|k-evidence|k-event-projection|k-exec-context|k-kms|k-legal-hold-retention|k-migration-bridge|k-module-security|k-obligation|k-provider-adapter|k-signature|privacy-retention-matrix";
+const GOVERNANCE_ARTIFACTS = {
+  adrCollisionSourceBindings: "reports/kernel-adr-collision-source-bindings-2026-07-15.json",
+  ghostWbsDirectiveBindings: "reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json",
+  tenancyAuthorityInventory: "reports/kernel-tenancy-authority-inventory-2026-07-15.json",
+};
+
+function authorityDrift(artifact) {
+  return (
+    artifact.decision?.decisionOwner !== "user-admin" ||
+    artifact.decision?.coordinator !== "project-manager" ||
+    artifact.decision?.finalAuthority !== "codex" ||
+    artifact.authorityBoundary?.runtimeExecutor !== "human-developer-only"
+  );
+}
+
+function validateAdrLedger(adr) {
+  const errors = [];
+  if (adr.decisionId !== "KGA-D08" || adr.decision?.status !== "pending")
+    errors.push("ADR ledger decision drift");
+  if (adr.approvalRefAllowed !== false) errors.push("ADR approval ref requires human decision");
+  const identity = adr.identityMutationAllowed ?? {};
+  if (
+    [identity.renumber, identity.alias, identity.supersession].some((allowed) => allowed !== false)
+  )
+    errors.push("ADR identity mutation requires human decision");
+  const selected = (adr.collisions ?? []).some(
+    (collision) => collision.status !== "ambiguous" || collision.canonicalTopic !== null,
+  );
+  if (adr.collisionsStatus !== "ambiguous" || selected)
+    errors.push("ADR canonical topic requires human decision");
+  return errors;
+}
+
+function validateGhostLedger(ghost) {
+  const errors = [];
+  if (
+    ghost.decisionId !== "KGA-D09" ||
+    ghost.decision?.status !== "pending" ||
+    ghost.bindingsStatus !== "candidate-unselected"
+  )
+    errors.push("ghost ledger decision drift");
+  if ((ghost.bindings ?? []).some((b) => b.selected !== false))
+    errors.push("ghost binding cannot select a canonical node");
+  if (ghost.nodeCreationAllowed !== false)
+    errors.push("ghost binding ledger cannot create WBS nodes");
+  return errors;
+}
+
+function validateTenancyLedger(tenancy) {
+  const errors = [];
+  const t = tenancy.tenancy ?? {};
+  if (tenancy.decisionId !== "KGA-D10" || tenancy.decision?.status !== "pending")
+    errors.push("tenancy ledger decision drift");
+  if (t.physicalStrategy !== null || t.threshold !== null)
+    errors.push("tenancy inventory cannot select a topology");
+  if (t.mandatoryRls !== true) errors.push("tenancy inventory cannot weaken mandatory RLS");
+  if (t.invalidAuthority?.isTenancyAuthority !== false) errors.push("tenancy authority drift");
+  return errors;
+}
+
+function validateArtifactBoundaries(ledgers) {
+  const errors = [];
+  if (ledgers.some((artifact) => artifact.authorityBoundary?.codeStartAllowed !== false))
+    errors.push("governance artifact cannot allow code start");
+  const claimsReadiness = ledgers.some(
+    (artifact) =>
+      artifact.authorityBoundary?.kernelReady !== false ||
+      artifact.authorityBoundary?.sdkReady !== false ||
+      artifact.authorityBoundary?.appBuildable !== false ||
+      artifact.authorityBoundary?.verdict !== "NO-GO",
+  );
+  if (claimsReadiness) errors.push("governance artifact cannot claim readiness");
+  return errors;
+}
+
+function validateGovernanceArtifacts(artifacts) {
+  const ledgers = [artifacts?.adrCollisions, artifacts?.ghostBindings, artifacts?.tenancyAuthority];
+  if (ledgers.some((artifact) => !artifact)) return ["governance artifacts missing"];
+  const [adr, ghost, tenancy] = ledgers;
+  const errors = [];
+  if (ledgers.some(authorityDrift)) errors.push("governance artifact authority drift");
+  errors.push(...validateAdrLedger(adr));
+  errors.push(...validateGhostLedger(ghost));
+  errors.push(...validateTenancyLedger(tenancy));
+  errors.push(...validateArtifactBoundaries(ledgers));
+  return errors;
+}
 
 export function relationDirectionConflicts(nodes) {
   const edges = [];
@@ -39,8 +126,15 @@ export function readinessCandidates(nodes) {
   };
 }
 
-export function validateKernelGovernance({ nodes, queue, report }) {
+export function validateKernelGovernance({ nodes, queue, report, artifacts }) {
   const errors = [];
+  const reportedArtifacts = report.governanceArtifacts ?? {};
+  if (
+    Object.keys(reportedArtifacts).length !== Object.keys(GOVERNANCE_ARTIFACTS).length ||
+    Object.entries(GOVERNANCE_ARTIFACTS).some(([key, value]) => reportedArtifacts[key] !== value)
+  )
+    errors.push("governance artifact ref drift");
+  errors.push(...validateGovernanceArtifacts(artifacts));
   const kernel = nodes.filter((node) => node.id.startsWith("k-"));
   const relations = relationDirectionConflicts(nodes);
   const reportedRelations = report.structuralFindings.relationDirectionConflicts;

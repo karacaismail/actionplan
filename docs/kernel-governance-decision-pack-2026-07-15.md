@@ -87,6 +87,18 @@ PostgreSQL RLS deny-by-default kabul edilmiş invarianttır; fakat ortak şema, 
 başına şema veya hybrid seçiminde physicalStrategy = null durumundadır. ADR-0026
 frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
+## P0 Bağlayıcı Ledger'lar
+
+Aşağıdaki üç P0 envanteri D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
+olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR topic, WBS owner/disposition
+veya tenancy topolojisini seçmez.
+
+| Karar | P0 ledger | Durum |
+|---|---|---|
+| KGA-D08 | reports/kernel-adr-collision-source-bindings-2026-07-15.json | pending; ADR kimlikleri ambiguous, canonicalTopic null |
+| KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
+| KGA-D10 | reports/kernel-tenancy-authority-inventory-2026-07-15.json | pending; physicalStrategy null, mandatory RLS korunur |
+
 ## Uygulanan Güvenli Sıra
 
 1. Weak-content analizini import sırasında rapor yazmayan saf kütüphaneye ayır.
