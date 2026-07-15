@@ -99,6 +99,13 @@ veya tenancy topolojisini seçmez.
 | KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
 | KGA-D10 | reports/kernel-tenancy-authority-inventory-2026-07-15.json | pending; physicalStrategy null, mandatory RLS korunur |
 
+## P1 Karar ve Yerleşim Handoff'ları
+
+- `reports/kernel-crosscut-handoff-2026-07-15.json`: GraphQL otoritesi, kontrol düzlemi,
+  erişilebilirlik, performans, deploy, i18n ve dependency yönü seçimlerini pending bırakır.
+- `reports/kernel-missing-doc-ref-placement-2026-07-15.json`: 17 docs-ref boşluğunu
+  14 candidate-unselected ve 3 canonical-source-missing olarak bağlar; ref uygulamaz.
+
 ## Uygulanan Güvenli Sıra
 
 1. Weak-content analizini import sırasında rapor yazmayan saf kütüphaneye ayır.
@@ -135,8 +142,10 @@ classification, matrix, source-node traceability ref'i, generated/public aggrega
 integration sayımlarını birlikte revert eder. Governance raporu yalnız checker/lib/test/
 workflow/package ile tam governance shard rollback'inde geri alınır. Base queue, WBS
 kimliği/parent/edge, ADR kimlikleri ve tenancy stratejisi değişmediği için semantic data
-rollback gerekmez. Runtime safhasında veri oluşursa destructive geri alma yerine route
-kapatma ve additive forward-fix uygulanır.
+rollback gerekmez. Crosscut ve missing-doc-ref shard'ları önce tüketen governance
+integration shard'ı, sonra ilgili report+test çifti geri alınarak atomik kapatılır. Runtime
+safhasında veri oluşursa destructive geri alma yerine route kapatma ve additive
+forward-fix uygulanır.
 
 ## Codex Nihai Kararı
 

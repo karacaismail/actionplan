@@ -128,6 +128,8 @@ describe("kernel governance gap addendum", () => {
       "kernelAdrCollisionSourceBindings.test.ts",
       "kernelGhostWbsDirectiveBindings.test.ts",
       "kernelTenancyAuthorityInventory.test.ts",
+      "kernelCrosscutHandoff.test.ts",
+      "kernelMissingDocRefPlacement.test.ts",
     ])
       expect(governanceGate).toContain(exactTest);
     expect(scripts["qa:ci"]).toContain("npm run qa:kernel-governance");
