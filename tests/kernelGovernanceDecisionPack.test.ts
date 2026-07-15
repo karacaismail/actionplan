@@ -28,6 +28,21 @@ describe("kernel governance decision pack", () => {
     expect(pack).toContain("atonota/kernel");
     expect(pack).toContain("2 test");
     expect(pack).toContain("uzak repo boş değildir");
+    expect(pack).toContain("pending/unselected");
+    expect(pack).toContain("ambiguous");
+    expect(pack).toContain("aynı node içindeki dependsOn ∩ blocks kesişimidir");
+    expect(pack).toContain("doğrudan doğrulanmış eksik-node setidir");
+    expect(pack).toContain("PR-01 next-actionable bir code-start izni değildir");
+    expect(
+      pack.match(/Karar sahibi: User\/Admin · Koordinatör: PM · Teslim yetkilisi: Codex/g),
+    ).toHaveLength(5);
+    for (const forbidden of [
+      "early-minimal-db-substrate seçildi",
+      "provisional-contract-only seçildi",
+      "physicalStrategy belirlendi",
+      "base queue değiştirildi",
+    ])
+      expect(pack).not.toContain(forbidden);
     expect(pack).not.toContain("Kernel hazırdır");
 
     const gap = read("docs/kernel-readiness-gap-analysis-2026-07-14.md");

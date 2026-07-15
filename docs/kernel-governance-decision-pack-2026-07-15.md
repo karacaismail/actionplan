@@ -41,9 +41,11 @@ kapsamındadır.
 ## İnsan Kararı Paketi
 
 Bu belge aşağıdaki seçenekleri seçmez; etkiyi görünür kılar ve kararı User/Admin'e
-bırakır.
+bırakır. Bütün seçenekler pending/unselected durumundadır.
 
 ### KGA-D06 — Kalıcı Veri Zemini ve Queue
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
 1. early-minimal-db-substrate: PR-01 sonrasında küçük, açık bir DB/Alembic/transaction/RLS
    zemini eklenir; PR-02..07 gerçek kalıcılık üzerinde doğrulanır.
@@ -55,21 +57,31 @@ Base queue insan kararı olmadan değiştirilmez.
 
 ### KGA-D07 — Dependency/Blocks Semantiği
 
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
 35 düğüm, 46 çelişkili kenar ve kernel alt kümesindeki 5 kernel düğümü, 8 çelişkili
 kenar için blocks yönü, reciprocity ve birleşik precedence anlamı kararlaştırılmalıdır.
-Karar gelmeden otomatik edge düzeltmesi yapılmaz.
+Bu ölçüm yalnız aynı node içindeki dependsOn ∩ blocks kesişimidir. Karar gelmeden
+otomatik edge düzeltmesi yapılmaz.
 
 ### KGA-D08 — ADR Kimlikleri
 
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
 E1, M1, S1, X1 ve A5/ADR-0022 için tekil topic, status, owner, alias ve supersession
-kararı gerekir. Çakışan kimlikler machine consumer'ları açmamalıdır.
+kararı gerekir. Bu kimlikler ambiguous kalır ve machine consumer'ları açmamalıdır.
 
 ### KGA-D09 — Hayalet WBS Kimlikleri
 
-13 hayalet WBS adayı için tek tek create / alias / fold / reject kararı gerekir.
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+13 hayalet WBS, bu auditin doğrudan doğrulanmış eksik-node setidir; tüm aday/alias
+envanteri değildir. Her biri için tek tek create / alias / fold / reject kararı gerekir.
 Bu paket node üretmez, module parent değiştirmez ve DoD tamamlandı iddiası yazmaz.
 
 ### KGA-D10 — Tenancy Fiziksel Stratejisi
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
 PostgreSQL RLS deny-by-default kabul edilmiş invarianttır; fakat ortak şema, tenant
 başına şema veya hybrid seçiminde physicalStrategy = null durumundadır. ADR-0026
@@ -115,5 +127,5 @@ oluşursa destructive geri alma yerine route kapatma ve additive forward-fix uyg
 
 Runtime kernel için NO-GO sürer. Actionplan tarafında yalnız fail-closed tooling,
 kanıtlı gap kaydı ve insan-karar paketi uygulanabilir. Şu anda yalnız PR-01
-next-actionable kabul edilir; KGA-D06..D10 kapanmadan kernel-ready, SDK-ready veya
-app-buildable kararı verilmez.
+next-actionable konumundadır. PR-01 next-actionable bir code-start izni değildir;
+KGA-D06..D10 kapanmadan kernel-ready, SDK-ready veya app-buildable kararı verilmez.
