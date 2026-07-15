@@ -67,8 +67,37 @@ describe("repo-wide kernel gap inventory", () => {
 
   it("materializes structural gaps from canonical node data", () => {
     const modules = kernel.filter((node) => node.level === "module");
-    const withoutChild = modules
-      .filter((parent) => !nodes.some((node) => node.parentId === parent.id))
+    const codeBearingLevels = new Set([
+      "archetype",
+      "feature",
+      "component",
+      "work_unit",
+      "micro_step",
+    ]);
+    const childrenByParent = new Map<string, typeof nodes>();
+    for (const node of nodes) {
+      if (!node.parentId) continue;
+      const children = childrenByParent.get(node.parentId) ?? [];
+      children.push(node);
+      childrenByParent.set(node.parentId, children);
+    }
+    const descendantsOf = (parentId: string) => {
+      const descendants: typeof nodes = [];
+      const pending = [...(childrenByParent.get(parentId) ?? [])];
+      const visited = new Set([parentId]);
+      while (pending.length > 0) {
+        const node = pending.shift();
+        if (!node || visited.has(node.id)) continue;
+        visited.add(node.id);
+        descendants.push(node);
+        pending.push(...(childrenByParent.get(node.id) ?? []));
+      }
+      return descendants;
+    };
+    const withoutCodeBearingDescendant = modules
+      .filter(
+        (parent) => !descendantsOf(parent.id).some((node) => codeBearingLevels.has(node.level)),
+      )
       .map((node) => node.id);
     const withoutDocPath = kernel
       .filter((node) => !(node.refs ?? []).some((ref: string) => ref.includes("docs/")))
@@ -77,7 +106,18 @@ describe("repo-wide kernel gap inventory", () => {
     const gap = (id: string) =>
       report.structuralGaps.find((item: { id: string }) => item.id === id);
 
-    expect(gap("KGA-G01")).toMatchObject({ count: 32, nodeIds: sorted(withoutChild) });
+    expect(withoutCodeBearingDescendant).toHaveLength(33);
+    expect(withoutCodeBearingDescendant).toContain("k-control-planes");
+    expect(childrenByParent.get("k-control-planes")?.map((node) => node.level)).toEqual([
+      "module",
+      "module",
+      "module",
+    ]);
+    expect(gap("KGA-G01")).toMatchObject({
+      kind: "missing-code-bearing-descendant",
+      count: 33,
+      nodeIds: sorted(withoutCodeBearingDescendant),
+    });
     expect(gap("KGA-G02")).toMatchObject({ count: 17, nodeIds: sorted(withoutDocPath) });
     expect(gap("KGA-G03")).toMatchObject({
       coveredCount: 5,
