@@ -38,6 +38,8 @@ describe("kernel governance decision pack", () => {
       "reports/kernel-adr-collision-source-bindings-2026-07-15.json",
       "reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json",
       "reports/kernel-tenancy-authority-inventory-2026-07-15.json",
+      "reports/kernel-crosscut-handoff-2026-07-15.json",
+      "reports/kernel-missing-doc-ref-placement-2026-07-15.json",
     ])
       expect(pack).toContain(ref);
     expect(pack).toContain("D08/D09/D10 pending/unselected");
@@ -69,6 +71,7 @@ describe("kernel governance decision pack", () => {
     expect(gap).toContain("yalnız traceability ref ekler");
     expect(normalizedPack).toContain("Karar paketi shard'ı belge, classification, matrix");
     expect(normalizedPack).toContain("tam governance shard rollback'inde");
+    expect(normalizedPack).toContain("Crosscut ve missing-doc-ref shard'ları");
     expect(pack).not.toContain("Karar paketi ve governance raporu birlikte revert edilir");
     const evidence = read("docs/evidence-taxonomy.md");
     expect(evidence).toContain("güncel 617 düğüm");
