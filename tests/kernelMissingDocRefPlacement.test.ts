@@ -2,8 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-// RED: reports/kernel-missing-doc-ref-placement-2026-07-15.json is absent, so the
-// existence assertion fails after the live inventory passes; Codex must independently run RED.
+// Test-first provenance: report absence was the RED gate after live inventory passed.
 const ROOT = process.cwd();
 const REPORT = "reports/kernel-missing-doc-ref-placement-2026-07-15.json";
 const NODES = "src/data/generated/nodes";
@@ -55,6 +54,7 @@ const EXPECTED: Row[] = [
 ];
 const IDS = EXPECTED.map((r) => r.id).sort();
 const byId = new Map(EXPECTED.map((r) => [r.id, r] as const));
+// biome-ignore lint/suspicious/noExplicitAny: helper navigates untyped JSON fixtures.
 const P = (r: any, id: string) => r.placement.find((x: { id: string }) => x.id === id);
 
 const liveMissingDocRefs = (): string[] =>
@@ -68,6 +68,7 @@ const liveMissingDocRefs = (): string[] =>
     .sort();
 
 // biome-ignore format: audited validation table stays compact for shard budget
+// biome-ignore lint/suspicious/noExplicitAny: validator consumes untyped JSON fixtures.
 function validate(report: any, has: (p: string) => boolean): string[] {
   const errors: string[] = [];
   if (JSON.stringify(report.placementDefaults) !== JSON.stringify(DEFAULTS))
@@ -76,11 +77,13 @@ function validate(report: any, has: (p: string) => boolean): string[] {
     gapId: "KGA-G02", status: "pending", finalAuthority: "codex",
     successorCoordinator: "project-manager", runtimeExecutor: "human-developer-only",
     generatedNodeMutationAllowed: false, refApplicationAllowed: false, codeStartAllowed: false,
-    kernelReady: false, verdict: "NO-GO", gapClosed: false,
+    kernelReady: false, sdkReady: false, appBuildable: false, verdict: "NO-GO", gapClosed: false,
+    rollbackRuntimeDataImpact: "none",
   };
   const actual: Record<string, unknown> = {
     gapId: report.gapId, status: report.status,
     ...report.authority, ...report.boundary, gapClosed: report.gapClosed,
+    rollbackRuntimeDataImpact: report.rollback?.runtimeDataImpact,
   };
   for (const [key, value] of Object.entries(expected))
     if (JSON.stringify(actual[key]) !== JSON.stringify(value)) errors.push(`${key} drift`);
@@ -126,6 +129,7 @@ describe("kernel missing doc-ref placement (KGA-G02)", () => {
     expect(fs.existsSync(path.join(ROOT, REPORT))).toBe(true);
     const report = json(REPORT);
     expect(validate(report, exists)).toEqual([]);
+    // biome-ignore lint/suspicious/noExplicitAny: negative clones intentionally mutate JSON.
     const cases: { mutate?: (r: any) => void; miss?: string; error: string }[] = [
       { mutate: (r) => { P(r, "k-archetype-computation").selected = true; }, error: "k-archetype-computation selected" },
       { mutate: (r) => { P(r, "k-archetype-computation").refApplied = true; }, error: "k-archetype-computation refApplied" },
@@ -135,8 +139,11 @@ describe("kernel missing doc-ref placement (KGA-G02)", () => {
       { mutate: (r) => { r.authority.finalAuthority = "human-developer"; }, error: "finalAuthority drift" },
       { mutate: (r) => { r.boundary.codeStartAllowed = true; }, error: "codeStartAllowed drift" },
       { mutate: (r) => { r.boundary.kernelReady = true; }, error: "kernelReady drift" },
+      { mutate: (r) => { r.boundary.sdkReady = true; }, error: "sdkReady drift" },
+      { mutate: (r) => { r.boundary.appBuildable = true; }, error: "appBuildable drift" },
       { mutate: (r) => { r.boundary.verdict = "GO"; }, error: "verdict drift" },
       { mutate: (r) => { r.gapClosed = true; }, error: "gapClosed drift" },
+      { mutate: (r) => { r.rollback.runtimeDataImpact = "runtime"; }, error: "rollbackRuntimeDataImpact drift" },
       { miss: CORE, error: `missing ${CORE}` },
     ];
     for (const testCase of cases) {
