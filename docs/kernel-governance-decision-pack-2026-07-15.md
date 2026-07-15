@@ -75,6 +75,10 @@ descendant kimlikleri seçilmelidir. `k-control-planes` yalnız üç module chil
 code-bearing kapsama sayılmaz. Bu paket node üretmez, parent seviyesini değiştirmez ve
 code-start açmaz.
 
+Makine-okunur `reports/kernel-code-bearing-descendant-handoff-2026-07-15.json`, canlı
+graph'taki 38/6/5/33 ölçümünü ve 33 pending parent'ı bağlar. Aday listeleri boştur;
+selection, rationale ve approval alanları null'dır. Bu kayıt karar formudur, karar değildir.
+
 ### KGA-D02 — k-surface Dependency ve SDK Sırası
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -149,12 +153,13 @@ frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
 ## P0 Bağlayıcı Ledger'lar
 
-Aşağıdaki üç P0 envanteri D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
+Aşağıdaki dört P0 ledger D01/D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
 olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR topic, WBS owner/disposition
-veya tenancy topolojisini seçmez.
+veya tenancy topolojisini seçmez. D01 handoff ayrıca code-bearing descendant seçmez.
 
 | Karar | P0 ledger | Durum |
 |---|---|---|
+| KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | pending; 33 parent, candidate listeleri boş, selection null |
 | KGA-D08 | reports/kernel-adr-collision-source-bindings-2026-07-15.json | pending; ADR kimlikleri ambiguous, canonicalTopic null |
 | KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
 | KGA-D10 | reports/kernel-tenancy-authority-inventory-2026-07-15.json | pending; physicalStrategy null, mandatory RLS korunur |
@@ -194,6 +199,8 @@ veya tenancy topolojisini seçmez.
   machine-readable ek arasında bağ kurduğunu doğrular.
 - Birleşik registry testi D01..D10 sırasını, kaynak parity'sini, kimlik benzersizliğini,
   seçilmemiş seçenekleri ve fail-closed code-start durumunu doğrular.
+- D01 handoff testi canlı graph'tan 38 module parent, 6 doğrudan-child sahibi, 5 covered
+  ve 33 pending ölçümünü yeniden üretir; boş aday/seçim alanlarını ve NO-GO sınırını zorlar.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
   rollback drill evidence ile yeniden değerlendirilir.
 
@@ -208,6 +215,8 @@ rollback gerekmez. Crosscut ve missing-doc-ref shard'ları önce tüketen govern
 integration shard'ı, sonra ilgili report+test çifti geri alınarak atomik kapatılır. Runtime
 safhasında veri oluşursa destructive geri alma yerine route kapatma ve additive
 forward-fix uygulanır.
+KGA-D01 handoff shard'ı report/test dosyaları ile registry, decision pack ve named-gate
+bağlantıları tek committe geri alınarak kapatılır; generated node veya runtime veri etkisi yoktur.
 
 ## Codex Nihai Kararı
 
