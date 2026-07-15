@@ -17,7 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRewriteLayer, rewriteLayerStats } from "../lib/pattern-layer.mjs";
-import { computeWeakStats } from "./report-weak-content.mjs";
+import { computeWeakStats } from "../lib/weak-content-analysis.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const BASELINE = path.join(ROOT, "tools", "agents", "weak-content-baseline.json");

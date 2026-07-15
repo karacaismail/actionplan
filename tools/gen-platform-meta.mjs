@@ -7,6 +7,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { blockLegacyPlatformWriter } from "./lib/legacy-platform-writer-quarantine.mjs";
+
+blockLegacyPlatformWriter("tools/gen-platform-meta.mjs");
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODES = path.join(ROOT, "src", "data", "generated", "nodes");
