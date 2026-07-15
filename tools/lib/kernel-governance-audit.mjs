@@ -84,7 +84,8 @@ export function validateKernelGovernance({ nodes, queue, report }) {
 
   const ids = new Set(nodes.map((node) => node.id));
   const ghosts = report.structuralFindings.ghostWbsClaims;
-  const ghostIdsMatch = ghosts.missingNodeIds.join("|") === GHOST_WBS_SNAPSHOT;
+  const ghostIdsMatch =
+    ghosts.missingNodeIds.length === 13 && ghosts.missingNodeIds.join("|") === GHOST_WBS_SNAPSHOT;
   if (!ghostIdsMatch || ghosts.missingNodeIds.some((id) => ids.has(id)))
     errors.push("ghost WBS snapshot drift");
   if (ghosts.nodeCreationAllowed !== false) errors.push("gap audit cannot create WBS nodes");

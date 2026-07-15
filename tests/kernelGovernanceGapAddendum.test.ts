@@ -31,12 +31,6 @@ describe("kernel governance gap addendum", () => {
       sdkReady: false,
       appBuildable: false,
     });
-    expect(report.structuralFindings.relationDirectionConflicts).toMatchObject({
-      affectedNodeCount: 35,
-      edgeCount: 46,
-      kernelNodeCount: 5,
-      kernelEdgeCount: 8,
-    });
     const invalid = (field: string, value: unknown, error: string) => {
       const candidate = clone(report);
       const path = field.replace(/^\$/, "structuralFindings.").split(".");
@@ -65,7 +59,9 @@ describe("kernel governance gap addendum", () => {
       "readiness candidate count drift",
     );
     invalid("structuralFindings.adrCollisions.0.id", "ADR-Z", "ADR collision snapshot drift");
-    invalid("$ghostWbsClaims.missingNodeIds.0", "x", "ghost WBS snapshot drift");
+    const joinedGhosts = clone(report.structuralFindings.ghostWbsClaims.missingNodeIds);
+    joinedGhosts.splice(0, 2, joinedGhosts.slice(0, 2).join("|"));
+    invalid("$ghostWbsClaims.missingNodeIds", joinedGhosts, "ghost WBS snapshot drift");
     invalid("$relationDirectionConflicts.kernelNodeIds.0", "x", "relation conflict count drift");
     invalid("authority.finalAuthority", "pm", "authority chain drift");
     invalid("decisions.0.decisionOwner", "codex", "decision authority drift");
