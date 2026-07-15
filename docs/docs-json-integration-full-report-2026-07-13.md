@@ -14,13 +14,15 @@ Bu tablo 2026-07-14 app kimlik materialization'ı sonrasındaki repo gerçeğidi
 §1-§9 bölümleri ilk 225-belge/117-orphan denetiminin tarihsel planlama baseline'ını korur;
 kapsam sayıları için bu bölüm üstündür. `496`, app kimlik karar kaydının yeniden
 üretilebilir kaynak girdisidir; `617` ile aynı metriğin eski/yeni değeri değildir.
+2026-07-15 kernel governance karar paketi reference-only gap-audit olarak eklenmiş,
+archetype-storage-contract refs hattına bağlanmış ve aşağıdaki kaynak sayımları yenilenmiştir.
 
 | Ölçüm | Değer |
 |---|---|
-| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 294 |
+| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 295 |
 | Task içeriğine materyalize edilen | 218 |
 | İnsan sahiplik kararı bekleyen | 10 |
-| Canonical standard / arşiv / kök indeks kaynağı | 66 |
+| Canonical standard / arşiv / kök indeks kaynağı | 67 |
 | Sınıfsız / erişilemeyen | 0 |
 | App kimlik kaynak snapshot'ı | 496 |
 | Materialized fiziksel WBS JSON'u / görev sayfası | 617 |
