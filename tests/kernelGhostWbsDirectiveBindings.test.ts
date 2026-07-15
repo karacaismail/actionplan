@@ -48,6 +48,8 @@ const nodeIds = () =>
       .map((f) => json(`${NODES}/${f}`).id),
   );
 
+// biome-ignore format: audited validation table stays compact for shard budget
+// biome-ignore lint/suspicious/noExplicitAny: validator consumes untyped JSON fixtures.
 function validate(report: any, ids: Set<string>): string[] {
   const errors: string[] = [];
   const expected = {
@@ -75,7 +77,7 @@ function validate(report: any, ids: Set<string>): string[] {
   for (const [key, value] of Object.entries(expected))
     if (JSON.stringify(actual[key]) !== JSON.stringify(value)) errors.push(`${key} drift`);
   if (JSON.stringify(report.bindings) !== JSON.stringify(BINDINGS)) errors.push("binding table drift");
-  if (report.bindings?.some((b: any) => b.selected !== false)) errors.push("binding selected");
+  if (report.bindings?.some((b: { selected?: unknown }) => b.selected !== false)) errors.push("binding selected");
   const text = JSON.stringify(report);
   for (const token of ['"ownerId"', '"disposition"', '"approved"', '"approvalRef"'])
     if (text.includes(token)) errors.push(`forbidden ${token}`);
@@ -84,6 +86,7 @@ function validate(report: any, ids: Set<string>): string[] {
   return errors;
 }
 
+// biome-ignore format: audited negative matrix stays compact for shard budget
 describe("kernel ghost WBS directive bindings (KGA-D09)", () => {
   it("binds all claims without choosing an owner or disposition", () => {
     const ids = nodeIds();
@@ -104,13 +107,16 @@ describe("kernel ghost WBS directive bindings (KGA-D09)", () => {
     expect(fs.existsSync(path.join(ROOT, REPORT))).toBe(true);
     const report = json(REPORT);
     expect(validate(report, ids)).toEqual([]);
+    expect(report.rollback.action).toContain("governance integration shard");
+    expect(report.rollback.runtimeDataImpact).toBe("none");
+    // biome-ignore lint/suspicious/noExplicitAny: negative clones intentionally mutate JSON.
     const cases: [((r: any, s: Set<string>) => void), string][] = [
       [(r) => r.bindings.push(clone(r.bindings[0])), "binding table drift"],
       [(r) => r.bindings.pop(), "binding table drift"],
-      [(r) => (r.bindings[2].directiveRef = "docs/missing.md"), "binding table drift"],
-      [(r) => (r.bindings[2].selected = true), "binding table drift"],
-      [(r) => (r.nodeCreationAllowed = true), "nodeCreationAllowed drift"],
-      [(r) => (r.decisionId = "KGA-D06"), "decisionId drift"],
+      [(r) => { r.bindings[2].directiveRef = "docs/missing.md"; }, "binding table drift"],
+      [(r) => { r.bindings[2].selected = true; }, "binding table drift"],
+      [(r) => { r.nodeCreationAllowed = true; }, "nodeCreationAllowed drift"],
+      [(r) => { r.decisionId = "KGA-D06"; }, "decisionId drift"],
       [(_, s) => s.add("archetype-agreement"), "ghost archetype-agreement exists"],
       [(_, s) => s.add("k-legal-hold"), "proposal k-legal-hold exists"],
     ];
