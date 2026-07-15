@@ -17,14 +17,17 @@ const GATES = "src/data/generated/nodes/std-ci-gates.json";
 const CHECK = "tools/agents/check-execution-contract.mjs";
 const DEPLOY = ".github/workflows/deploy.yml";
 type Ref = { path: string; marker: string };
+// biome-ignore format: audited shape stays compact for shard budget
 type Collision = {
   id: string; status: "ambiguous"; canonicalTopic: null; topics: string[];
   sourceBindings: Ref[]; machineConsumerRefs: Ref[];
 };
 const ref = (p: string, marker: string): Ref => ({ path: p, marker });
+// biome-ignore format: audited shape stays compact for shard budget
 const col = (id: string, topics: string[], src: Ref[], mach: Ref[]): Collision => ({
   id, status: "ambiguous", canonicalTopic: null, topics, sourceBindings: src, machineConsumerRefs: mach,
 });
+// biome-ignore format: audited collision snapshot stays compact for shard budget
 const COLLISIONS: Collision[] = [
   col("ADR-E1", ["event-replay-projection", "evidence-seal"],
     [ref("docs/event-replay-projection-contract.md", "ADR-E1"), ref("docs/k-evidence-seal-directive.md", "ADR-E1")],
@@ -42,6 +45,8 @@ const COLLISIONS: Collision[] = [
     [ref(CHECK, "ADR-A5"), ref(DEPLOY, "ADR-A5")]),
 ];
 
+// biome-ignore format: audited validation table stays compact for shard budget
+// biome-ignore lint/suspicious/noExplicitAny: validator consumes untyped JSON fixtures.
 function validate(report: any, has: (p: string) => boolean): string[] {
   const errors: string[] = [];
   const expected: Record<string, unknown> = {
@@ -72,6 +77,7 @@ function validate(report: any, has: (p: string) => boolean): string[] {
   return errors;
 }
 
+// biome-ignore format: audited negative matrix stays compact for shard budget
 describe("kernel ADR collision source bindings (KGA-D08)", () => {
   it("binds five collisions without selecting a canonical identity", () => {
     const addendum = json(ADDENDUM);
@@ -89,15 +95,18 @@ describe("kernel ADR collision source bindings (KGA-D08)", () => {
     expect(fs.existsSync(path.join(ROOT, REPORT))).toBe(true);
     const report = json(REPORT);
     expect(validate(report, exists)).toEqual([]);
+    expect(report.rollback.action).toContain("governance integration shard");
+    expect(report.rollback.runtimeDataImpact).toBe("none");
+    // biome-ignore lint/suspicious/noExplicitAny: negative clones intentionally mutate JSON.
     const cases: { mutate?: (r: any) => void; miss?: string; error: string }[] = [
-      { mutate: (r) => (r.collisions[0].canonicalTopic = "evidence-seal"), error: "collision table drift" },
-      { mutate: (r) => (r.collisions[0].status = "accepted"), error: "collision table drift" },
-      { mutate: (r) => (r.approvalRefAllowed = true), error: "approvalRefAllowed drift" },
-      { mutate: (r) => (r.identityMutationAllowed.renumber = true), error: "renumber drift" },
-      { mutate: (r) => (r.collisions[1].sourceBindings[0].path = "docs/nope.md"), error: "collision table drift" },
-      { mutate: (r) => (r.collisions[3].sourceBindings[0].marker = "ADR-ZZ"), error: "marker ADR-ZZ absent in docs/kernel-execution-contract-matrix.md" },
+      { mutate: (r) => { r.collisions[0].canonicalTopic = "evidence-seal"; }, error: "collision table drift" },
+      { mutate: (r) => { r.collisions[0].status = "accepted"; }, error: "collision table drift" },
+      { mutate: (r) => { r.approvalRefAllowed = true; }, error: "approvalRefAllowed drift" },
+      { mutate: (r) => { r.identityMutationAllowed.renumber = true; }, error: "renumber drift" },
+      { mutate: (r) => { r.collisions[1].sourceBindings[0].path = "docs/nope.md"; }, error: "collision table drift" },
+      { mutate: (r) => { r.collisions[3].sourceBindings[0].marker = "ADR-ZZ"; }, error: "marker ADR-ZZ absent in docs/kernel-execution-contract-matrix.md" },
       { mutate: (r) => r.collisions[0].machineConsumerRefs.pop(), error: "collision table drift" },
-      { mutate: (r) => (r.decisionId = "KGA-D07"), error: "decisionId drift" },
+      { mutate: (r) => { r.decisionId = "KGA-D07"; }, error: "decisionId drift" },
       { miss: "docs/surface-spec.md", error: "missing docs/surface-spec.md" },
     ];
     for (const testCase of cases) {
