@@ -54,8 +54,12 @@ function liveScan() {
       const rel = path.relative(ROOT, abs).split(path.sep).join("/");
       let review = 0;
       let fp = 0;
-      for (const line of read(rel).split(/\r?\n/))
-        if (qualifies(line)) isAggregateToken(line) ? (fp += 1) : (review += 1);
+      for (const line of read(rel).split(/\r?\n/)) {
+        if (qualifies(line)) {
+          if (isAggregateToken(line)) fp += 1;
+          else review += 1;
+        }
+      }
       if (review + fp > 0) rows.push({ path: rel, review, fp });
     }
   }
@@ -95,6 +99,7 @@ function tenantStrategyInventory() {
 
 // Pinned live-derived truth (2026-07-15 canonical sources). Kept sorted to match scan output.
 const D = "src/data/generated/nodes/";
+// biome-ignore format: audited path snapshot stays compact for shard budget
 const EXPECTED_RAW_PATHS = [
   "docs/actor-party-contract.md", "docs/archetype-agreement-lifecycle-negotiation-directive.md",
   "docs/archetype-document-composition-directive.md", "docs/core-contract-pack.md",
@@ -111,18 +116,26 @@ const EXPECTED_RAW_PATHS = [
 ];
 const EXPECTED_AFTER_SELF = EXPECTED_RAW_PATHS.filter((p) => p !== DECISION_PACK);
 const EXPECTED_REVIEW = EXPECTED_AFTER_SELF.filter((p) => p !== STD_CI_GATES);
+// biome-ignore format: audited node pattern stays compact for shard budget
 const EXPECTED_HYBRID = Array.from({ length: 17 }, (_, i) => `urlp-${String(i).padStart(2, "0")}`)
   .concat("urlp-program-work-unit");
 const EXPECTED_FALSE_SELECTED = ["platform-customer-model", "platform-db-schema"];
 const EXPECTED_AMBIGUOUS = ["platform-tenancy"];
+// biome-ignore format: audited node snapshot stays compact for shard budget
 const EXPECTED_DEPENDENCY = ["be-sdk", "k-bus", "k-capability", "l1-audit", "l1-workflow", "platform-migration-contract"];
 
 // The report contract as [actual, expected, error] rows; each doubles as a negative-clone guard.
 // `same` (JSON deep-equal) covers scalars, null and exact path/count arrays alike.
+// biome-ignore format: audited snapshot stays compact for shard budget
+// biome-ignore lint/suspicious/noExplicitAny: validator consumes untyped JSON fixtures.
 function checks(r: any, scan: ReturnType<typeof liveScan>, inv: ReturnType<typeof tenantStrategyInventory>) {
-  const d = r.decision ?? {}, t = r.tenancy ?? {}, ia = t.invalidAuthority ?? {};
-  const ab = r.authorityBoundary ?? {}, m = ab.mutationAllowed ?? {};
-  const s = r.scan ?? {}, ti = r.tenantStrategyInventory ?? {};
+  const d = r.decision ?? {};
+  const t = r.tenancy ?? {};
+  const ia = t.invalidAuthority ?? {};
+  const ab = r.authorityBoundary ?? {};
+  const m = ab.mutationAllowed ?? {};
+  const s = r.scan ?? {};
+  const ti = r.tenantStrategyInventory ?? {};
   return [
     [r.decisionId, "KGA-D10", "decisionId must remain KGA-D10"],
     [d.status, "pending", "decision status must remain pending"],
@@ -160,6 +173,8 @@ function checks(r: any, scan: ReturnType<typeof liveScan>, inv: ReturnType<typeo
     [ti.dependencyOrFutureContext, inv.dependencyOrFutureContext, "dependency/future-context inventory drift"],
   ] as [unknown, unknown, string][];
 }
+// biome-ignore format: audited validation pipeline stays compact for shard budget
+// biome-ignore lint/suspicious/noExplicitAny: validator consumes untyped JSON fixtures.
 const validate = (r: any, scan: ReturnType<typeof liveScan>, inv: ReturnType<typeof tenantStrategyInventory>) =>
   checks(r, scan, inv).filter(([a, e]) => !same(a, e)).map(([, , msg]) => msg);
 
@@ -201,22 +216,25 @@ describe("kernel tenancy authority inventory (KGA-D10)", () => {
     expect(inv.dependencyOrFutureContext).toEqual(EXPECTED_DEPENDENCY);
     expect(inv.dependencyOrFutureContext).toHaveLength(6);
 
-    // RED gate: the report must exist. It is intentionally absent now.
+    // Test-first provenance: report absence was the RED gate before the ledger was added.
     expect(fs.existsSync(path.join(ROOT, REPORT))).toBe(true);
 
     const report = readJson(REPORT);
     expect(validate(report, scan, inv)).toEqual([]);
+    expect(report.rollback).toContain("governance integration shard");
 
     // Negative clones: selecting a strategy/threshold, flipping D10→D06, enabling
     // mutations/code-start, weakening RLS or the verdict must each be rejected.
+    // biome-ignore format: audited snapshot stays compact for shard budget
+    // biome-ignore lint/suspicious/noExplicitAny: negative clones intentionally mutate JSON.
     const negatives: [(c: any) => void, string][] = [
-      [(c) => (c.tenancy.physicalStrategy = "schema-per-tenant"), "physicalStrategy must stay null (no strategy selected)"],
-      [(c) => (c.tenancy.threshold = 500), "threshold must stay null (no threshold selected)"],
-      [(c) => (c.tenancy.mandatoryRls = false), "mandatoryRls must stay true (RLS not weakened)"],
-      [(c) => (c.decisionId = "KGA-D06"), "decisionId must remain KGA-D10"],
-      [(c) => (c.authorityBoundary.mutationAllowed.generatedNodes = true), "generated node mutation must stay false"],
-      [(c) => (c.authorityBoundary.codeStartAllowed = true), "code start must stay false"],
-      [(c) => (c.authorityBoundary.verdict = "GO"), "verdict must remain NO-GO"],
+      [(c) => { c.tenancy.physicalStrategy = "schema-per-tenant"; }, "physicalStrategy must stay null (no strategy selected)"],
+      [(c) => { c.tenancy.threshold = 500; }, "threshold must stay null (no threshold selected)"],
+      [(c) => { c.tenancy.mandatoryRls = false; }, "mandatoryRls must stay true (RLS not weakened)"],
+      [(c) => { c.decisionId = "KGA-D06"; }, "decisionId must remain KGA-D10"],
+      [(c) => { c.authorityBoundary.mutationAllowed.generatedNodes = true; }, "generated node mutation must stay false"],
+      [(c) => { c.authorityBoundary.codeStartAllowed = true; }, "code start must stay false"],
+      [(c) => { c.authorityBoundary.verdict = "GO"; }, "verdict must remain NO-GO"],
     ];
     for (const [mutate, error] of negatives) {
       const c = clone(report);
