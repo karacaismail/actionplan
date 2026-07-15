@@ -10,6 +10,7 @@ describe("kernel governance decision pack", () => {
   it("publishes evidence-backed options without taking human architecture decisions", () => {
     expect(fs.existsSync(path.join(ROOT, PACK))).toBe(true);
     const pack = read(PACK);
+    const normalizedPack = pack.replace(/\s+/g, " ");
     for (const token of [
       "NO-GO",
       "Codex → PM → uzman ajanlar → Claude workers/slaves",
@@ -33,6 +34,9 @@ describe("kernel governance decision pack", () => {
     expect(pack).toContain("aynı node içindeki dependsOn ∩ blocks kesişimidir");
     expect(pack).toContain("doğrudan doğrulanmış eksik-node setidir");
     expect(pack).toContain("PR-01 next-actionable bir code-start izni değildir");
+    expect(normalizedPack).toContain(
+      "node/SP/status/evidence ve graph/queue sayılarını canlı kanonik veriden; ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular",
+    );
     expect(
       pack.match(/Karar sahibi: User\/Admin · Koordinatör: PM · Teslim yetkilisi: Codex/g),
     ).toHaveLength(5);
@@ -61,5 +65,22 @@ describe("kernel governance decision pack", () => {
     });
     const owner = JSON.parse(read("src/data/generated/nodes/archetype-storage-contract.json"));
     expect(owner.refs).toContain(PACK);
+
+    const governance = JSON.parse(read("reports/kernel-governance-gap-addendum-2026-07-15.json"));
+    expect(governance.finalDecision).toMatchObject({
+      verdict: "NO-GO",
+      codeStartAllowed: false,
+      nextActionable: "PR-01",
+    });
+    expect(governance.decisions.map((decision: { id: string }) => decision.id)).toEqual([
+      "KGA-D06",
+      "KGA-D07",
+      "KGA-D08",
+      "KGA-D09",
+      "KGA-D10",
+    ]);
+    for (const decision of governance.decisions) expect(pack).toContain(`### ${decision.id}`);
+    expect(governance.structuralFindings.ghostWbsClaims.missingNodeIds).toHaveLength(13);
+    expect(governance.structuralFindings.tenancyPhysicalStrategy.physicalStrategy).toBeNull();
   });
 });

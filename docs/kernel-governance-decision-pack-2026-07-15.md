@@ -109,8 +109,8 @@ frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 - Saf import testi, tracked raporların hash ve içerik olarak değişmediğini doğrular.
 - Legacy writer negatif testleri doğrudan çalıştırma ve import yollarının exit 2 ile
   kapandığını doğrular.
-- Governance testi node/SP/status/evidence, graph, queue, ADR ve hayalet WBS
-  sayılarını canlı kanonik veriden yeniden hesaplar.
+- Governance testi node/SP/status/evidence ve graph/queue sayılarını canlı kanonik veriden;
+  ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular.
 - Karar paketi testi bu belgenin seçenek sunduğunu, karar almadığını ve gap raporuyla
   machine-readable ek arasında bağ kurduğunu doğrular.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
