@@ -51,7 +51,7 @@ describe("kernel governance decision pack", () => {
     );
     expect(
       pack.match(/Karar sahibi: User\/Admin · Koordinatör: PM · Teslim yetkilisi: Codex/g),
-    ).toHaveLength(5);
+    ).toHaveLength(10);
     for (const forbidden of [
       "early-minimal-db-substrate seçildi",
       "provisional-contract-only seçildi",
