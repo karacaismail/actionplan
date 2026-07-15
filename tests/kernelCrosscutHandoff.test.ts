@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-// RED: sources pass first; only the absent report may fail before the later human handoff.
+// Test-first provenance: report absence was the RED gate after source probes passed.
 
 const ROOT = process.cwd();
 const REPORT = "reports/kernel-crosscut-handoff-2026-07-15.json";
@@ -107,6 +107,8 @@ describe("kernel crosscut handoff — test-first RED", () => {
       axisDefaults: Record<string, unknown>;
       axes: Array<Record<string, unknown>>;
       readiness: Record<string, unknown>;
+      mutationBoundary: Record<string, unknown>;
+      rollback: Record<string, unknown>;
     }) => {
       expect(report.authority).toMatchObject({
         finalAuthority: "codex",
@@ -152,6 +154,13 @@ describe("kernel crosscut handoff — test-first RED", () => {
         verdict: "NO-GO",
       });
       expect(report.readiness.verdict).not.toBe("GO");
+      expect(report.mutationBoundary).toEqual({
+        generatedNodes: false,
+        generators: false,
+        runtime: false,
+      });
+      expect(report.rollback).toMatchObject({ runtimeDataImpact: "none" });
+      expect(report.rollback.action).toContain("governance integration shard");
     };
 
     expect(exists(REPORT)).toBe(true);
@@ -170,6 +179,10 @@ describe("kernel crosscut handoff — test-first RED", () => {
       (candidate) => { candidate.authority.finalAuthority = "project-manager"; },
       (candidate) => { candidate.readiness.kernelReady = true; },
       (candidate) => { candidate.readiness.verdict = "GO"; },
+      (candidate) => { candidate.mutationBoundary.generatedNodes = true; },
+      (candidate) => { candidate.mutationBoundary.generators = true; },
+      (candidate) => { candidate.mutationBoundary.runtime = true; },
+      (candidate) => { candidate.rollback.runtimeDataImpact = "runtime"; },
     ];
     for (const mutate of negativeClones) {
       const candidate = clone(report);
