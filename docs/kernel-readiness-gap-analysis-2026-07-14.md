@@ -161,9 +161,9 @@ gelmesi ve 5 ADR kimlik çakışmasıyla 13 hayalet WBS iddiası.
 
 Machine-readable kanıt reports/kernel-governance-gap-addendum-2026-07-15.json, insan
 kararı gerektiren seçenekler ise docs/kernel-governance-decision-pack-2026-07-15.md
-içindedir. Bu ek base queue, WBS node, ADR kimliği veya tenancy fiziksel stratejisi
-değiştirmez. Actionplan tooling için güvenli düzeltmeler uygulanabilir; runtime kernel,
-SDK-ready ve app-buildable kararları NO-GO kalır.
+içindedir. Bu ek base queue, WBS kimliği/parent/edge, ADR kimliği veya tenancy fiziksel
+stratejisi değiştirmez; yalnız traceability ref ekler. Actionplan tooling için güvenli
+düzeltmeler uygulanabilir; runtime kernel, SDK-ready ve app-buildable kararları NO-GO kalır.
 
 ## Rollback
 

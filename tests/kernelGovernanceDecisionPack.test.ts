@@ -52,6 +52,11 @@ describe("kernel governance decision pack", () => {
     const gap = read("docs/kernel-readiness-gap-analysis-2026-07-14.md");
     expect(gap).toContain(PACK);
     expect(gap).toContain("reports/kernel-governance-gap-addendum-2026-07-15.json");
+    expect(gap).toContain("WBS kimliği/parent/edge");
+    expect(gap).toContain("yalnız traceability ref ekler");
+    expect(normalizedPack).toContain("Karar paketi shard'ı belge, classification, matrix");
+    expect(normalizedPack).toContain("tam governance shard rollback'inde");
+    expect(pack).not.toContain("Karar paketi ve governance raporu birlikte revert edilir");
     const evidence = read("docs/evidence-taxonomy.md");
     expect(evidence).toContain("güncel 617 düğüm");
     expect(evidence).not.toContain("güncel 467 düğüm");

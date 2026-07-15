@@ -118,10 +118,13 @@ frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
 ## Rollback
 
-Her tooling shard'ı ayrı commit olarak geri alınabilir. Karar paketi ve governance
-raporu birlikte revert edilir; base queue, WBS node'ları, ADR kimlikleri ve tenancy
-stratejisi değişmediği için semantic data rollback gerekmez. Runtime safhasında veri
-oluşursa destructive geri alma yerine route kapatma ve additive forward-fix uygulanır.
+Her tooling shard'ı ayrı commit olarak geri alınabilir. Karar paketi shard'ı belge,
+classification, matrix, source-node traceability ref'i, generated/public aggregate ve
+integration sayımlarını birlikte revert eder. Governance raporu yalnız checker/lib/test/
+workflow/package ile tam governance shard rollback'inde geri alınır. Base queue, WBS
+kimliği/parent/edge, ADR kimlikleri ve tenancy stratejisi değişmediği için semantic data
+rollback gerekmez. Runtime safhasında veri oluşursa destructive geri alma yerine route
+kapatma ve additive forward-fix uygulanır.
 
 ## Codex Nihai Kararı
 
