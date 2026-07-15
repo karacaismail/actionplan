@@ -38,7 +38,18 @@ describe("kernel governance gap addendum", () => {
       kernelEdgeCount: 8,
     });
     expect(
-      report.decisions.every((decision: { status: string }) => decision.status === "pending"),
+      report.decisions.every(
+        (decision: {
+          status: string;
+          decisionOwner: string;
+          coordinator: string;
+          deliveryAuthority: string;
+        }) =>
+          decision.status === "pending" &&
+          decision.decisionOwner === "user-admin" &&
+          decision.coordinator === "project-manager" &&
+          decision.deliveryAuthority === "codex",
+      ),
     ).toBe(true);
 
     const falseGo = clone(report);
@@ -55,6 +66,11 @@ describe("kernel governance gap addendum", () => {
     graphDrift.structuralFindings.relationDirectionConflicts.edgeCount -= 1;
     expect(validateKernelGovernance({ nodes, queue, report: graphDrift })).toContain(
       "relation conflict count drift",
+    );
+    const authorityDrift = clone(report);
+    authorityDrift.decisions[0].decisionOwner = "codex";
+    expect(validateKernelGovernance({ nodes, queue, report: authorityDrift })).toContain(
+      "decision authority drift",
     );
 
     const scripts = readJson("package.json").scripts;

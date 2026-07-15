@@ -67,6 +67,15 @@ export function validateKernelGovernance({ nodes, queue, report }) {
     errors.push("ADR collision inventory must remain fail-closed");
   if (report.structuralFindings.tenancyPhysicalStrategy.physicalStrategy !== null)
     errors.push("tenancy physical strategy requires human decision");
+  if (
+    report.decisions.some(
+      (decision) =>
+        decision.decisionOwner !== "user-admin" ||
+        decision.coordinator !== "project-manager" ||
+        decision.deliveryAuthority !== "codex",
+    )
+  )
+    errors.push("decision authority drift");
 
   const evidenceCount = kernel.reduce((sum, node) => sum + (node.evidence ?? []).length, 0);
   if (kernel.length !== 41 || evidenceCount !== 0) errors.push("kernel snapshot drift");
