@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "kernel-db-substrate-queue-handoff-2026-07-15",
+  "generatedAt": "2026-07-15",
+  "decisionId": "KGA-D06",
+  "status": "pending-human-selection",
+  "gapClosed": false,
+  "decision": {
+    "topic": "DB substrate before durable tenancy/outbox/audit evidence",
+    "status": "pending",
+    "decisionOwner": "user-admin",
+    "coordinator": "project_manager",
+    "finalAuthority": "codex",
+    "selectedOption": null,
+    "rationale": null,
+    "approvalRef": null
+  },
+  "sourceRefs": [
+    "reports/platform-implementation-execution-queue-2026-07-09.json",
+    "reports/kernel-governance-gap-addendum-2026-07-15.json",
+    "docs/platform-pr02-tenancy-context-agent-pack-2026-07-09.md",
+    "docs/platform-pr04-event-outbox-agent-pack-2026-07-09.md",
+    "docs/platform-pr06-audit-envelope-agent-pack-2026-07-09.md",
+    "docs/platform-pr07-capability-registry-agent-pack-2026-07-09.md",
+    "docs/platform-pr08-db-schema-migrations-agent-pack-2026-07-09.md",
+    "docs/platform-tenancy-readiness-gap-2026-07-09.md",
+    "docs/l1-workflow-eca-readiness-gap-2026-07-09.md",
+    "docs/task-to-code-contract.md"
+  ],
+  "queueSnapshot": {
+    "baseSequence": ["PR-01", "PR-02", "PR-03", "PR-04", "PR-05", "PR-06", "PR-07", "PR-08", "PR-09", "PR-10", "PR-11"],
+    "currentNextActionable": "PR-01",
+    "dbSubstrateItem": "PR-08",
+    "baseQueueChanged": false,
+    "overlayHasOrderingAuthority": false,
+    "sourceConflict": "PR-02/04/06/07 require durable DB or transaction evidence before PR-08 creates the DB/Alembic substrate",
+    "reconciledFinding": "PR-02 durable isolation proof, PR-04 transactional outbox and PR-06 durable audit require DB before PR-08; PR-07 is indirectly blocked by those durable predecessors"
+  },
+  "affectedItems": [
+    { "id": "PR-02", "dependencyClasses": ["split-contract-vs-durable-proof"] },
+    { "id": "PR-03", "dependencyClasses": ["indirect-via-pr02"] },
+    { "id": "PR-04", "dependencyClasses": ["direct-hard-db"] },
+    { "id": "PR-05", "dependencyClasses": ["indirect-via-outbox", "audit-order-cycle"] },
+    { "id": "PR-06", "dependencyClasses": ["direct-hard-db"] },
+    { "id": "PR-07", "dependencyClasses": ["indirect-via-durable-predecessors"] },
+    { "id": "PR-08", "dependencyClasses": ["db-substrate-owner-in-current-queue"] }
+  ],
+  "options": [
+    {
+      "id": "early-minimal-db-substrate",
+      "status": "candidate-unselected",
+      "selected": false,
+      "queueEffectIfSelected": "requires a separate User/Admin-approved queue amendment after PR-01; this handoff does not create it",
+      "evidenceRule": "PR-02 durable isolation, PR-04 outbox and PR-06 audit claims execute on an explicitly approved early DB/Alembic/transaction/RLS substrate; PR-07 inherits verified durable predecessors",
+      "rationale": null,
+      "approvalRef": null
+    },
+    {
+      "id": "provisional-contract-only-then-replay-after-pr08",
+      "status": "candidate-unselected",
+      "selected": false,
+      "queueEffectIfSelected": "retains the base order; this handoff does not change any queue item",
+      "evidenceRule": "PR-02/04/06 persistence-dependent claims remain provisional until replay after verified PR-08; PR-07 cannot inherit durable evidence before that replay",
+      "rationale": null,
+      "approvalRef": null
+    }
+  ],
+  "relatedDecisionIds": ["KGA-D01", "KGA-D03", "KGA-D07", "KGA-D10"],
+  "queuePatch": null,
+  "invariants": [
+    "The base queue and PR identities remain unchanged.",
+    "PR-01 remains the only next-actionable item.",
+    "No provisional result is durable runtime evidence.",
+    "PR-07 DB dependency remains indirect through durable predecessors.",
+    "KGA-D10 physicalStrategy remains pending and mandatory RLS is not weakened."
+  ],
+  "authorityBoundary": {
+    "mutationAllowed": { "baseQueue": false, "generatedNodes": false, "platformCode": false, "runtime": false },
+    "runtimeExecutor": "human-developer-only",
+    "codeStartAllowed": false,
+    "kernelReady": false,
+    "sdkReady": false,
+    "appBuildable": false,
+    "verdict": "NO-GO"
+  },
+  "nonGoals": [
+    "select or recommend either D06 option",
+    "mutate PR identities, order, status or blockedBy fields",
+    "split, renumber or redefine PR-08",
+    "resolve KGA-D10 tenancy physical strategy",
+    "write platform DB, migration or runtime tests",
+    "claim durable runtime evidence or readiness"
+  ],
+  "rollback": {
+    "trigger": "D06 identity, options, live queue snapshot, authority, linkage or NO-GO boundary drifts",
+    "action": "revert registry and decision-pack links, then revert this report, its test and package gate wiring; leave the base queue unchanged",
+    "runtimeDataImpact": "none"
+  }
+}

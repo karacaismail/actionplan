@@ -25,8 +25,8 @@ kapsamındadır.
 
 - PM: yalnız PR-01 sıradaki uygulanabilir queue adayıdır; KDP overlay sıralama
   yetkisine sahip değildir.
-- Backend/kernel integrator: PR-02, PR-04, PR-06 ve PR-07 kalıcı veri/transaction
-  davranışı isterken ilk açık DB/ORM/Alembic zemini PR-08'dedir.
+- Backend/kernel integrator: PR-02'nin kalıcı izolasyon kanıtı, PR-04 outbox'ı ve PR-06
+  audit'i doğrudan DB ister; PR-07 bu kalıcı öncüller nedeniyle dolaylı bağlıdır.
 - QA/QASP: readiness kapıları 0 done ve 0 development adayında boş-küme yeşili
   üretebilir; bu kernel-ready anlamına gelmez.
 - Graph denetimi: 35 düğüm üzerinde 46 çelişkili kenar vardır. Bunların 5 kernel
@@ -113,11 +113,12 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
 1. early-minimal-db-substrate: PR-01 sonrasında küçük, açık bir DB/Alembic/transaction/RLS
    zemini eklenir; PR-02..07 gerçek kalıcılık üzerinde doğrulanır.
-2. provisional-contract-only: mevcut sıra korunur; PR-02..07 yalnız provisional
-   contract olarak işaretlenir ve PR-08 sonrasında persistence testleri yeniden oynatılır.
+2. provisional-contract-only-then-replay-after-pr08: mevcut sıra korunur; DB'ye bağlı
+   kanıtlar provisional kalır ve PR-08 sonrasında persistence testleri yeniden oynatılır.
 
-Birinci seçenek teknik olarak daha doğrudan görünse de bu bir seçim veya onay değildir.
-Base queue insan kararı olmadan değiştirilmez.
+İki seçenek de candidate-unselected durumundadır; bu paket öneri veya varsayılan üretmez.
+Base queue insan kararı olmadan değiştirilmez. Machine-readable karar handoff'u:
+`reports/kernel-db-substrate-queue-handoff-2026-07-15.json`.
 
 ### KGA-D07 — Dependency/Blocks Semantiği
 
@@ -153,13 +154,14 @@ frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
 ## P0 Bağlayıcı Ledger'lar
 
-Aşağıdaki dört P0 ledger D01/D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
+Aşağıdaki beş P0 ledger D01/D06 ve D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
 olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR topic, WBS owner/disposition
 veya tenancy topolojisini seçmez. D01 handoff ayrıca code-bearing descendant seçmez.
 
 | Karar | P0 ledger | Durum |
 |---|---|---|
 | KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | pending; 33 parent, candidate listeleri boş, selection null |
+| KGA-D06 | reports/kernel-db-substrate-queue-handoff-2026-07-15.json | pending; iki seçenek candidate-unselected, queuePatch null |
 | KGA-D08 | reports/kernel-adr-collision-source-bindings-2026-07-15.json | pending; ADR kimlikleri ambiguous, canonicalTopic null |
 | KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
 | KGA-D10 | reports/kernel-tenancy-authority-inventory-2026-07-15.json | pending; physicalStrategy null, mandatory RLS korunur |
@@ -201,6 +203,8 @@ veya tenancy topolojisini seçmez. D01 handoff ayrıca code-bearing descendant s
   seçilmemiş seçenekleri ve fail-closed code-start durumunu doğrular.
 - D01 handoff testi canlı graph'tan 38 module parent, 6 doğrudan-child sahibi, 5 covered
   ve 33 pending ölçümünü yeniden üretir; boş aday/seçim alanlarını ve NO-GO sınırını zorlar.
+- D06 handoff testi canlı PR-01..11 zincirini, DB bağımlılık sınıflarını, iki tarafsız
+  seçeneği, değişmemiş base queue'yu ve NO-GO yetki sınırını zorlar.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
   rollback drill evidence ile yeniden değerlendirilir.
 
@@ -217,6 +221,8 @@ safhasında veri oluşursa destructive geri alma yerine route kapatma ve additiv
 forward-fix uygulanır.
 KGA-D01 handoff shard'ı report/test dosyaları ile registry, decision pack ve named-gate
 bağlantıları tek committe geri alınarak kapatılır; generated node veya runtime veri etkisi yoktur.
+KGA-D06 handoff shard'ı da aynı beş dosyalık atomik sırayla geri alınır; base queue ve
+runtime hiç değişmediği için migration veya veri rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
