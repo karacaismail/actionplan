@@ -38,10 +38,67 @@ kapsamındadır.
 - Security/rollback: yanlış runtime readiness, yanlış ADR approval_ref ve legacy
   writer yan etkisi fail-closed ele alınmalıdır.
 
+## Birleşik Karar Dizini
+
+Kanonik görünürlük kaydı
+`reports/kernel-governance-decision-registry-2026-07-15.json`, aşağıdaki iki kaynak
+decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine geçmez:
+
+- `reports/kernel-gap-inventory-2026-07-14.json`: KGA-D01..D05
+- `reports/kernel-governance-gap-addendum-2026-07-15.json`: KGA-D06..D10
+
+| Karar | Konu | Kaynak | Durum |
+|---|---|---|---|
+| KGA-D01 | Code-bearing child seçimi | Base gap inventory | pending/unselected |
+| KGA-D02 | k-surface dependency ve SDK sırası | Base gap inventory | pending/unselected |
+| KGA-D03 | PR-07 capability / module-registry sahipliği | Base gap inventory | pending/unselected |
+| KGA-D04 | Sahipsiz kernel directive kimlikleri | Base gap inventory | pending/unselected |
+| KGA-D05 | PR-10 / PR-11 exit semantiği | Base gap inventory | pending/unselected |
+| KGA-D06 | Kalıcı DB zemini ve queue | Governance addendum | pending/unselected |
+| KGA-D07 | dependsOn / blocks semantiği | Governance addendum | pending/unselected |
+| KGA-D08 | ADR kimliği ve supersession | Governance addendum | pending/unselected |
+| KGA-D09 | Hayalet WBS disposition | Governance addendum | pending/unselected |
+| KGA-D10 | Tenancy fiziksel stratejisi | Governance addendum | pending/unselected |
+
 ## İnsan Kararı Paketi
 
 Bu belge aşağıdaki seçenekleri seçmez; etkiyi görünür kılar ve kararı User/Admin'e
 bırakır. Bütün seçenekler pending/unselected durumundadır.
+
+### KGA-D01 — Code-bearing Child Seçimi
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+32 module parent için gerçek uygulama ve test kanıtını taşıyacak child kimlikleri
+seçilmelidir. Bu paket child üretmez, parent seviyesini değiştirmez ve code-start açmaz.
+
+### KGA-D02 — k-surface Dependency ve SDK Sırası
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+`k-surface`, `be-sdk` ve `stack-editions` arasındaki sıra/döngü için dependency yönü ve
+minimum provisional contract sınırı seçilmelidir. Karar gelmeden edge veya queue değişmez.
+
+### KGA-D03 — PR-07 Registry Sahipliği
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+PR-07'nin `k-capability` ile `k-mod-l` arasındaki module-registry sorumluluğu
+ayrıştırılmalıdır. Bu paket iki modülü birleştirmez ve owner atamaz.
+
+### KGA-D04 — Sahipsiz Kernel Directive Kimlikleri
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+Base envanterdeki yedi directive adayı için mevcut owner'a bağlama veya yeni WBS kimliği
+kararı gerekir. Geniş hayalet-WBS ledger'ı D09 altında kalır; bu bölüm node oluşturmaz.
+
+### KGA-D05 — PR-10 / PR-11 Exit Semantiği
+
+Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
+
+SDK port iskeletinin ve API/UI walking skeleton'ının hangi kanıtla scaffold-only durumundan
+çıktığı tanımlanmalıdır. Bu iki adım kernel-ready, SDK-ready veya app-buildable kanıtı değildir.
 
 ### KGA-D06 — Kalıcı Veri Zemini ve Queue
 
@@ -132,6 +189,8 @@ veya tenancy topolojisini seçmez.
   ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular.
 - Karar paketi testi bu belgenin seçenek sunduğunu, karar almadığını ve gap raporuyla
   machine-readable ek arasında bağ kurduğunu doğrular.
+- Birleşik registry testi D01..D10 sırasını, kaynak parity'sini, kimlik benzersizliğini,
+  seçilmemiş seçenekleri ve fail-closed code-start durumunu doğrular.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
   rollback drill evidence ile yeniden değerlendirilir.
 
@@ -152,4 +211,4 @@ forward-fix uygulanır.
 Runtime kernel için NO-GO sürer. Actionplan tarafında yalnız fail-closed tooling,
 kanıtlı gap kaydı ve insan-karar paketi uygulanabilir. Şu anda yalnız PR-01
 next-actionable konumundadır. PR-01 next-actionable bir code-start izni değildir;
-KGA-D06..D10 kapanmadan kernel-ready, SDK-ready veya app-buildable kararı verilmez.
+KGA-D01..D10 kapanmadan kernel-ready, SDK-ready veya app-buildable kararı verilmez.

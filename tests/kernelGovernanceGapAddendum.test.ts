@@ -123,7 +123,9 @@ describe("kernel governance gap addendum", () => {
     const governanceGate = scripts["qa:kernel-governance"] as string;
     expect(governanceGate).toContain("node tools/agents/check-kernel-governance.mjs");
     for (const exactTest of [
+      "kernelGapInventory.test.ts",
       "kernelGovernanceGapAddendum.test.ts",
+      "kernelGovernanceDecisionRegistry.test.ts",
       "kernelGovernanceDecisionPack.test.ts",
       "kernelAdrCollisionSourceBindings.test.ts",
       "kernelGhostWbsDirectiveBindings.test.ts",
