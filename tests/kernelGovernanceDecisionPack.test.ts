@@ -51,5 +51,15 @@ describe("kernel governance decision pack", () => {
     const evidence = read("docs/evidence-taxonomy.md");
     expect(evidence).toContain("güncel 617 düğüm");
     expect(evidence).not.toContain("güncel 467 düğüm");
+
+    const classifications = JSON.parse(read("src/data/doc-task-content-classification.json"));
+    expect(
+      classifications.find((entry: { docPath: string }) => entry.docPath === PACK),
+    ).toMatchObject({
+      documentClass: "gap-audit",
+      decision: "reference-only",
+    });
+    const owner = JSON.parse(read("src/data/generated/nodes/archetype-storage-contract.json"));
+    expect(owner.refs).toContain(PACK);
   });
 });
