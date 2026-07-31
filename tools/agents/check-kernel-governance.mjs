@@ -4,15 +4,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateKernelGovernance } from "../lib/kernel-governance-audit.mjs";
 import { validateKernelGovernanceAuthorization } from "../lib/kernel-governance-authorization-audit.mjs";
+import { validateKernelNodeUniverse } from "../lib/kernel-node-universe.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const readJson = (relative) => JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
-const nodes = fs
+const nodeRecords = fs
   .readdirSync(path.join(ROOT, "src/data/generated/nodes"))
   .filter((file) => file.endsWith(".json"))
-  .map((file) => readJson(`src/data/generated/nodes/${file}`));
+  .map((filename) => ({
+    filename,
+    node: readJson(`src/data/generated/nodes/${filename}`),
+  }));
+const nodes = nodeRecords.map(({ node }) => node);
 const queue = readJson("reports/platform-implementation-execution-queue-2026-07-09.json");
 const report = readJson("reports/kernel-governance-gap-addendum-2026-07-15.json");
+const handoff = readJson("reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
 const artifacts = {
   adrCollisions: readJson("reports/kernel-adr-collision-source-bindings-2026-07-15.json"),
   ghostBindings: readJson("reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json"),
@@ -28,6 +34,7 @@ const scripts = readJson("package.json").scripts;
 const errors = [
   ...validateKernelGovernance({ nodes, queue, report, artifacts }),
   ...validateKernelGovernanceAuthorization({ authority, registry, pack, scripts }),
+  ...validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors,
 ];
 
 if (errors.length) {

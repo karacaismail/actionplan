@@ -48,6 +48,8 @@ const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "actionplan-reindex-")
 try {
   for (const file of trackedFiles) copyIntoFixture(fixtureRoot, file);
   copyIntoFixture(fixtureRoot, "tools/reindex.mjs");
+  copyIntoFixture(fixtureRoot, "tools/lib/kernel-node-universe.mjs");
+  copyIntoFixture(fixtureRoot, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
 
   const fixtureBefore = snapshot(fixtureRoot);
   const runReindex = () =>

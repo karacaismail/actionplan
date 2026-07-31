@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+// @ts-expect-error -- the pure JavaScript oracle intentionally has no declaration file.
+// biome-ignore format: the test imports the complete immutable oracle constant set.
+import { D01_APPROVED_ID_SET_SHA256, D01_APPROVED_MAPPING_SHA256, PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, PRE_D01_PROTECTED_PROJECTION_SHA256, PRE_D01_SOURCE_COMMIT, validateKernelNodeUniverse } from "../tools/lib/kernel-node-universe.mjs";
 
 const ROOT = process.cwd();
 const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
@@ -29,60 +32,12 @@ const ROOT_KEYS = ["applicationSummary", "authorityBoundary", "decision", "decis
 // biome-ignore format: exact approved authority split stays compact for the shard budget.
 const AUTHORITY = { actionplanWriter: "codex-governance-only", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
 
-// biome-ignore format: audited live-node projection stays compact for the shard budget.
-type NodeRecord = { id: string; level: string; parentId?: string; owner?: string; source?: { cluster?: string } };
-type LedgerRow = {
-  parentId: string;
-  parentOwner: string;
-  sourceCluster: string;
-  selectedDescendantId: string;
-  title: string;
-  level: string;
-  approvalRef: string;
-  selectionStatus: string;
-  applicationStatus: string;
-  implementationBoundary: { contract: string; scope: string; expansionAllowed: boolean };
-  dependencies: string[];
-  plannedTestCommand: string;
-  evidenceContract: { required: string[]; acceptance: string };
-  rollback: { owner: string; trigger: string; action: string };
-};
-type Handoff = {
-  schemaVersion: string;
-  id: string;
-  generatedAt: string;
-  decisionId: string;
-  gapId: string;
-  status: string;
-  gapClosed: boolean;
-  decision: Record<string, unknown>;
-  sourceRefs: string[];
-  provenance: Record<string, unknown>;
-  measurement: Record<string, unknown>;
-  applicationSummary: Record<string, unknown>;
-  ledger: LedgerRow[];
-  authorityBoundary: {
-    actionplanWriter: string;
-    kernelWriter: string;
-    claudeAuthGate: {
-      loggedIn: boolean;
-      authMethod: string;
-      apiProvider: string;
-      subscriptionType: string;
-      perInvocation: boolean;
-      cachedEvidenceAllowed: boolean;
-    };
-    platformProductWriter: string;
-    gitExecutor: string;
-    codeStartAllowed: boolean;
-    runtimeCodeAllowed: boolean;
-    releaseAllowed: boolean;
-    deployAllowed: boolean;
-    verdict: string;
-  };
-  nonGoals: string[];
-  rollback: typeof TOP_ROLLBACK;
-};
+// biome-ignore format: audited test types stay compact for the shard budget.
+type NodeRecord = { id: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string } };
+// biome-ignore format: exact ledger surface stays compact for the shard budget.
+type LedgerRow = { parentId: string; parentOwner: string; sourceCluster: string; selectedDescendantId: string; title: string; level: string; approvalRef: string; selectionStatus: string; applicationStatus: string; implementationBoundary: { contract: string; scope: string; expansionAllowed: boolean }; dependencies: string[]; plannedTestCommand: string; evidenceContract: { required: string[]; acceptance: string }; rollback: { owner: string; trigger: string; action: string } };
+// biome-ignore format: exact handoff root stays compact for the shard budget.
+type Handoff = { schemaVersion: string; id: string; generatedAt: string; decisionId: string; gapId: string; status: string; gapClosed: boolean; decision: Record<string, unknown>; sourceRefs: string[]; provenance: { source: Record<string, unknown>; approval: Record<string, unknown> }; measurement: Record<string, unknown>; applicationSummary: Record<string, unknown>; ledger: LedgerRow[]; authorityBoundary: typeof AUTHORITY; nonGoals: string[]; rollback: typeof TOP_ROLLBACK };
 
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const readJson = <T>(relative: string) => JSON.parse(read(relative)) as T;
@@ -90,25 +45,16 @@ const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.st
 const sorted = (values: string[]) => [...values].sort();
 const testCommand = (id: string) =>
   `uv run --python 3.12 pytest -q tests/kernel/contracts/test_${id.replaceAll("-", "_")}.py`;
-const rowEvidence = (id: string) => ({
-  required: ["implementation-diff", "planned-test-pass", "negative-boundary-proof"],
-  acceptance: `${id} positive behavior and parent-scope exclusion are both proven`,
-});
-const rowRollback = (id: string) => ({
-  owner: "codex",
-  trigger: `${id} planned test or parent-scope evidence fails`,
-  action: `withdraw ${id} application and restore the pre-application canonical state`,
-});
+// biome-ignore format: exact derived row contracts stay compact for the shard budget.
+const rowEvidence = (id: string) => ({ required: ["implementation-diff", "planned-test-pass", "negative-boundary-proof"], acceptance: `${id} positive behavior and parent-scope exclusion are both proven` });
+// biome-ignore format: exact derived rollback stays compact for the shard budget.
+const rowRollback = (id: string) => ({ owner: "codex", trigger: `${id} planned test or parent-scope evidence fails`, action: `withdraw ${id} application and restore the pre-application canonical state` });
 const isDag = (rows: LedgerRow[]) => {
   const ids = new Set(rows.map((row) => row.selectedDescendantId));
   const indegree = new Map([...ids].map((id) => [id, 0]));
   const dependents = new Map<string, string[]>();
-  for (const row of rows) {
-    for (const dependency of row.dependencies.filter((id) => ids.has(id))) {
-      indegree.set(row.selectedDescendantId, (indegree.get(row.selectedDescendantId) ?? 0) + 1);
-      dependents.set(dependency, [...(dependents.get(dependency) ?? []), row.selectedDescendantId]);
-    }
-  }
+  // biome-ignore format: compact DAG setup keeps this test shard within its source budget.
+  for (const row of rows) for (const dependency of row.dependencies.filter((id) => ids.has(id))) { indegree.set(row.selectedDescendantId, (indegree.get(row.selectedDescendantId) ?? 0) + 1); dependents.set(dependency, [...(dependents.get(dependency) ?? []), row.selectedDescendantId]); }
   const queue = [...indegree].filter(([, degree]) => degree === 0).map(([id]) => id);
   let visited = 0;
   while (queue.length) {
@@ -123,17 +69,33 @@ const isDag = (rows: LedgerRow[]) => {
   }
   return visited === rows.length;
 };
-const nodes = fs
+const nodeRecords = fs
   .readdirSync(path.join(ROOT, "src/data/generated/nodes"))
   .filter((file) => file.endsWith(".json"))
-  .map((file) => readJson<NodeRecord>(`src/data/generated/nodes/${file}`));
+  .map((filename) => ({
+    filename,
+    node: readJson<NodeRecord>(`src/data/generated/nodes/${filename}`),
+  }));
+const nodes = nodeRecords.map(({ node }) => node);
+const universe = (handoff = readJson<Handoff>(HANDOFF), records = nodeRecords) =>
+  validateKernelNodeUniverse({ records, handoff });
+const appliedFixture = () => {
+  const handoff = structuredClone(readJson<Handoff>(HANDOFF));
+  const row = handoff.ledger[0];
+  row.applicationStatus = "applied";
+  handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+  const records = structuredClone(nodeRecords);
+  records.push({
+    filename: `${row.selectedDescendantId}.json`,
+    node: { id: row.selectedDescendantId, level: "archetype", parentId: row.parentId },
+  });
+  return { handoff, records, row };
+};
 
 const derive = (records: NodeRecord[]) => {
   const children = new Map<string, NodeRecord[]>();
-  for (const node of records) {
-    if (!node.parentId) continue;
-    children.set(node.parentId, [...(children.get(node.parentId) ?? []), node]);
-  }
+  for (const node of records)
+    if (node.parentId) children.set(node.parentId, [...(children.get(node.parentId) ?? []), node]);
   const boundaries = (parentId: string) => {
     const result: string[] = [];
     const queue = [...(children.get(parentId) ?? [])];
@@ -190,10 +152,26 @@ const validate = (handoff: Handoff, records = nodes) => {
     codeBearingLevels: LEVELS,
     traversal: "recursive-nearest-code-bearing-boundary-per-branch",
     coveredParentIds: live.covered.map((row) => row.parentId),
+    preD01Baseline: {
+      expectedNodeCount: PRE_D01_EXPECTED_NODE_COUNT,
+      nodeSetSha256: PRE_D01_NODE_SET_SHA256,
+      protectedProjectionSha256: PRE_D01_PROTECTED_PROJECTION_SHA256,
+    },
   };
   const provenance = {
-    source: { liveNodeRoot: SOURCES[0], inventoryRef: INVENTORY, authorityClosureReport: CLOSURE },
-    approval: { gateId: "GATE-01", authority: "user-admin", normalizedSelectionSha256: APPROVAL_SHA },
+    source: {
+      liveNodeRoot: SOURCES[0],
+      inventoryRef: INVENTORY,
+      authorityClosureReport: CLOSURE,
+      sourceCommit: PRE_D01_SOURCE_COMMIT,
+    },
+    approval: {
+      gateId: "GATE-01",
+      authority: "user-admin",
+      normalizedSelectionSha256: APPROVAL_SHA,
+      approvedMappingSha256: D01_APPROVED_MAPPING_SHA256,
+      approvedIdSetSha256: D01_APPROVED_ID_SET_SHA256,
+    },
   };
 
   if (!same(handoff.sourceRefs, SOURCES)) errors.push("sources");
@@ -240,39 +218,63 @@ const validate = (handoff: Handoff, records = nodes) => {
 // biome-ignore format: adversarial contract matrix stays compact for the shard budget.
 describe("KGA-D01 approved code-bearing descendant ledger", () => {
   it("binds 33 exact GATE-01 selections to canonical parent scope without applying them", () => {
-    expect(validate(readJson<Handoff>(HANDOFF))).toEqual([]);
+    const handoff = readJson<Handoff>(HANDOFF);
+    expect(validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors).toEqual([]);
+    expect(validate(handoff)).toEqual([]);
+    expect([PRE_D01_SOURCE_COMMIT, PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, PRE_D01_PROTECTED_PROJECTION_SHA256, D01_APPROVED_MAPPING_SHA256, D01_APPROVED_ID_SET_SHA256]).toEqual(["09f0a1fb52d4141092add22a54df1a6204c155a4", 617, "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be", "598e39b8600b5ee78fa763e42cd7b80f3626e47c5d91860b338ee474c9ddd136", "2e5ce4b1c96446b6ca1f0e42cdc5225c4f36ac9551056fec31147b1febc332b0", "dd797dbf38594e77c8171a776d0eef1b681e0dfb7302b22b17e62526f950431d"]);
+  });
+
+  it("accepts exactly one correctly applied approved descendant at total 618", () => {
+    const fixture = appliedFixture();
+    expect(universe(fixture.handoff, fixture.records).errors).toEqual([]);
+    expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: [fixture.row.selectedDescendantId], baselineRecordCount: 617 });
+  });
+
+  it("rejects node-universe and application drift with named evidence", () => {
+    const current = readJson<Handoff>(HANDOFF);
+    const expectError = (handoff: Handoff, records: typeof nodeRecords, error: string) =>
+      expect(universe(handoff, records).errors).toContain(error);
+    const extra = structuredClone(nodeRecords);
+    extra.push({ filename: "unknown-extra.json", node: { id: "unknown-extra", level: "archetype" } });
+    expectError(current, extra, "unapproved-extra:baseline-count=618");
+    expectError(current, structuredClone(nodeRecords).slice(1), "baseline-removal:baseline-count=616");
+    const renamed = structuredClone(nodeRecords); renamed[0].node.id = "renamed-baseline"; renamed[0].filename = "renamed-baseline.json";
+    expectError(current, renamed, "baseline-id-hash-drift");
+    const pending = appliedFixture(); pending.handoff.ledger[0].applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    expectError(pending.handoff, pending.records, `pending-node-present:${pending.row.selectedDescendantId}`);
+    const missing = appliedFixture(); expectError(missing.handoff, nodeRecords, `applied-node-missing:${missing.row.selectedDescendantId}`);
+    for (const [field, value, error] of [["parentId", "wrong-parent", `applied-node-parent-drift:${missing.row.selectedDescendantId}`], ["level", "feature", `applied-node-level-drift:${missing.row.selectedDescendantId}`]] as const) {
+      const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
+      expectError(fixture.handoff, fixture.records, error);
+    }
+    const duplicate = structuredClone(current); duplicate.ledger[1].selectedDescendantId = duplicate.ledger[0].selectedDescendantId; expectError(duplicate, nodeRecords, `duplicate-selected-id:${duplicate.ledger[0].selectedDescendantId}`);
+    const mapping = structuredClone(current); mapping.ledger[0].parentId = "drift"; expectError(mapping, nodeRecords, "approved-mapping-digest-drift");
+    const idSet = structuredClone(current); idSet.ledger[0].selectedDescendantId = "drift"; expectError(idSet, nodeRecords, "approved-id-set-digest-drift");
+    const duplicateNode = structuredClone(nodeRecords); duplicateNode.push({ filename: "duplicate.json", node: duplicateNode[0].node }); expectError(current, duplicateNode, `duplicate-canonical-id:${duplicateNode[0].node.id}`);
+    const filename = structuredClone(nodeRecords); filename[0].filename = "wrong.json"; expectError(current, filename, `filename-id-drift:wrong.json:${filename[0].node.id}`);
+    const unknownStatus = structuredClone(current); unknownStatus.ledger[0].applicationStatus = "unknown"; expectError(unknownStatus, nodeRecords, `unknown-application-status:${unknownStatus.ledger[0].parentId}:unknown`);
+    const evidenceCases: Array<[string, string, string]> = [["source", "sourceCommit", "baseline-source-commit-drift"], ["measurement", "expectedNodeCount", "baseline-count-evidence-drift"], ["measurement", "nodeSetSha256", "baseline-id-evidence-drift"], ["measurement", "protectedProjectionSha256", "baseline-projection-evidence-drift"], ["approval", "approvedMappingSha256", "approved-mapping-evidence-drift"], ["approval", "approvedIdSetSha256", "approved-id-set-evidence-drift"]];
+    for (const [section, field, error] of evidenceCases) {
+      const handoff = structuredClone(current);
+      const target = section === "measurement" ? (handoff.measurement.preD01Baseline as Record<string, unknown>) : handoff.provenance[section as "source" | "approval"];
+      target[field] = "drift";
+      expectError(handoff, nodeRecords, error);
+    }
+    const protectedDrift = structuredClone(nodeRecords); protectedDrift[0].node.owner = "drift";
+    expectError(current, protectedDrift, "baseline-protected-projection-drift");
+    for (const field of ["dependsOn", "blocks", "related"] as const) { const invalid = structuredClone(nodeRecords); invalid[0].node[field] = [1] as unknown as string[]; expectError(current, invalid, `invalid-protected-relation:${invalid[0].node.id}:${field}`); }
   });
 
   it("rejects mapping, ownership, provenance, unresolved-field and runtime-boundary drift", () => {
     const handoff = readJson<Handoff>(HANDOFF);
     if (!Array.isArray(handoff.ledger)) return;
+    // biome-ignore format: existing adversarial surface stays compact for the shard budget.
     const mutations: Array<(clone: Handoff) => void> = [
-      (clone) => void clone.ledger.pop(),
-      (clone) => void Object.assign(clone.ledger[1], { parentId: clone.ledger[0].parentId }),
-      (clone) => void Object.assign(clone.ledger[0], { selectedDescendantId: clone.ledger[1].selectedDescendantId }),
-      (clone) => void Object.assign(clone.ledger[0], { parentOwner: "invented-owner" }),
-      (clone) => void Object.assign(clone.ledger[0], { sourceCluster: "expanded-scope" }),
-      (clone) => void Object.assign(clone.ledger[0], { title: "Invented Contract" }),
-      (clone) => void Object.assign(clone.ledger[0], { level: "feature", approvalRef: "GATE-00", selectionStatus: "candidate", applicationStatus: "applied" }),
-      (clone) => void Object.assign(clone.ledger[0].implementationBoundary, { contract: "invented", expansionAllowed: true }),
-      (clone) => void Object.assign(clone.ledger[0].implementationBoundary, { scope: "defer" }),
-      (clone) => void clone.ledger[0].dependencies.push("invented-dependency"),
-      (clone) => void Object.assign(clone.ledger[0], { plannedTestCommand: "pytest", evidenceContract: null }),
-      (clone) => void Object.assign(clone.ledger[0].rollback, { owner: "worker", trigger: "defer" }),
-      (clone) => void Object.assign(clone.applicationSummary, { approved: 32, applied: 1 }),
-      (clone) => void Object.assign(clone.provenance, { approval: { gateId: "GATE-01", authority: "user-admin", normalizedSelectionSha256: "stale" } }),
-      (clone) => void Object.assign(clone.authorityBoundary, { codeStartAllowed: true, runtimeCodeAllowed: true, releaseAllowed: true, deployAllowed: true }),
-      (clone) => void Object.assign(clone.authorityBoundary, { actionplanWriter: "claude", kernelWriter: "human", platformProductWriter: "claude", gitExecutor: "worker" }),
-      (clone) => void Object.assign(clone.authorityBoundary, { claudeAuthGate: { loggedIn: false, authMethod: "api-key", apiProvider: "fallback", subscriptionType: "api", perInvocation: false, cachedEvidenceAllowed: true } }),
-      (clone) => void Object.assign(clone.authorityBoundary, { runtimeExecutor: "ambiguous" }),
-      (clone) => void clone.ledger.find((row) => row.parentId === "k-party")?.dependencies.push("actor-role-binding-contract"),
-      (clone) => void Object.assign(clone, { runtimeReady: true }),
-      (clone) => void Object.assign(clone, { codeStartAllowed: true }),
-      (clone) => void Object.assign(clone, { kernelReady: true }),
-      (clone) => void Object.assign(clone, { schemaVersion: "2.0.0" }),
-      (clone) => void Reflect.deleteProperty(clone, "id"),
-      (clone) => void Reflect.deleteProperty(clone, "generatedAt"),
-      (clone) => void Object.assign(clone, { status: "applied", gapClosed: true }),
+      (clone) => void clone.ledger.pop(), (clone) => void Object.assign(clone.ledger[1], { parentId: clone.ledger[0].parentId }), (clone) => void Object.assign(clone.ledger[0], { selectedDescendantId: clone.ledger[1].selectedDescendantId }), (clone) => void Object.assign(clone.ledger[0], { parentOwner: "invented-owner" }), (clone) => void Object.assign(clone.ledger[0], { sourceCluster: "expanded-scope" }),
+      (clone) => void Object.assign(clone.ledger[0], { title: "Invented Contract" }), (clone) => void Object.assign(clone.ledger[0], { level: "feature", approvalRef: "GATE-00", selectionStatus: "candidate", applicationStatus: "applied" }), (clone) => void Object.assign(clone.ledger[0].implementationBoundary, { contract: "invented", expansionAllowed: true }), (clone) => void Object.assign(clone.ledger[0].implementationBoundary, { scope: "defer" }), (clone) => void clone.ledger[0].dependencies.push("invented-dependency"),
+      (clone) => void Object.assign(clone.ledger[0], { plannedTestCommand: "pytest", evidenceContract: null }), (clone) => void Object.assign(clone.ledger[0].rollback, { owner: "worker", trigger: "defer" }), (clone) => void Object.assign(clone.applicationSummary, { approved: 32, applied: 1 }), (clone) => void Object.assign(clone.provenance, { approval: { gateId: "GATE-01", authority: "user-admin", normalizedSelectionSha256: "stale" } }), (clone) => void Object.assign(clone.authorityBoundary, { codeStartAllowed: true, runtimeCodeAllowed: true, releaseAllowed: true, deployAllowed: true }),
+      (clone) => void Object.assign(clone.authorityBoundary, { actionplanWriter: "claude", kernelWriter: "human", platformProductWriter: "claude", gitExecutor: "worker" }), (clone) => void Object.assign(clone.authorityBoundary, { claudeAuthGate: { loggedIn: false, authMethod: "api-key", apiProvider: "fallback", subscriptionType: "api", perInvocation: false, cachedEvidenceAllowed: true } }), (clone) => void Object.assign(clone.authorityBoundary, { runtimeExecutor: "ambiguous" }), (clone) => void clone.ledger.find((row) => row.parentId === "k-party")?.dependencies.push("actor-role-binding-contract"), (clone) => void Object.assign(clone, { runtimeReady: true }),
+      (clone) => void Object.assign(clone, { codeStartAllowed: true }), (clone) => void Object.assign(clone, { kernelReady: true }), (clone) => void Object.assign(clone, { schemaVersion: "2.0.0" }), (clone) => void Reflect.deleteProperty(clone, "id"), (clone) => void Reflect.deleteProperty(clone, "generatedAt"), (clone) => void Object.assign(clone, { status: "applied", gapClosed: true }),
     ];
     for (const mutate of mutations) {
       const clone = structuredClone(handoff);
