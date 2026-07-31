@@ -270,7 +270,7 @@ describe("kernel integration registry coverage", () => {
     };
     expect(universe.expectedNodeCount).toBe(liveUniverse.expectedNodeCount + 1);
     expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
-    expect(expectedKernelRoleCounts(liveUniverse.appliedRows.length + 1).contributor).toBe(124);
+    expect(expectedKernelRoleCounts(liveUniverse.appliedRows.length + 1).contributor).toBe(125);
 
     const pending = appliedFixture();
     pending.row.applicationStatus = "pending";
