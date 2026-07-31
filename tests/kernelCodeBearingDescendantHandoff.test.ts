@@ -44,7 +44,7 @@ const ROOT_KEYS = ["applicationSummary", "authorityBoundary", "decision", "decis
 const AUTHORITY = { actionplanWriter: "codex-governance-only", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
 
 // biome-ignore format: audited test types stay compact for the shard budget.
-type NodeRecord = { id: string; title?: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { corpus?: string; originalId?: string; granularity?: string; cluster?: string } };
+type NodeRecord = { id: string; title?: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; schedule?: { start?: string | null; end?: string | null; actualStart?: string | null; actualEnd?: string | null; baselineStart?: string | null; baselineEnd?: string | null }; source?: { corpus?: string; originalId?: string; granularity?: string; cluster?: string } };
 // biome-ignore format: exact ledger surface stays compact for the shard budget.
 type LedgerRow = { parentId: string; parentOwner: string; sourceCluster: string; selectedDescendantId: string; title: string; level: string; approvalRef: string; selectionStatus: string; applicationStatus: string; implementationBoundary: { contract: string; scope: string; expansionAllowed: boolean }; dependencies: string[]; plannedTestCommand: string; evidenceContract: { required: string[]; acceptance: string }; rollback: { owner: string; trigger: string; action: string } };
 // biome-ignore format: exact handoff root stays compact for the shard budget.
@@ -336,6 +336,9 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     const handoff = readJson<Handoff>(HANDOFF);
     expect(validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors).toEqual([]);
     expect(validate(handoff)).toEqual([]);
+    const applied = nodes.find((node) => node.id === "event-bus-delivery-contract");
+    const parent = nodes.find((node) => node.id === "k-bus");
+    expect(applied?.schedule).toEqual(parent?.schedule);
     expect([PRE_D01_SOURCE_COMMIT, PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, PRE_D01_PROTECTED_PROJECTION_SHA256, D01_APPROVED_MAPPING_SHA256, D01_APPROVED_ID_SET_SHA256]).toEqual(["09f0a1fb52d4141092add22a54df1a6204c155a4", 617, "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be", "598e39b8600b5ee78fa763e42cd7b80f3626e47c5d91860b338ee474c9ddd136", "2e5ce4b1c96446b6ca1f0e42cdc5225c4f36ac9551056fec31147b1febc332b0", "dd797dbf38594e77c8171a776d0eef1b681e0dfb7302b22b17e62526f950431d"]);
   });
 
