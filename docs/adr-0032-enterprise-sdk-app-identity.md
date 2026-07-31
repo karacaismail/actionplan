@@ -144,7 +144,7 @@ Zorunlu alanların ayrıntısı `docs/app-enterprise-definition-contract.md` iç
 7. WBS kodu değişimi ilgisiz düğümleri yeniden numaralamamalıdır; stable identity/ordinal korunur.
 8. Public aggregate, navigation, index ve canonical node dosyaları aynı üretim koşusunda güncellenir ve byte-idempotence ile doğrulanır.
 
-2026-07-14 materialized baseline sonucu:
+2026-07-14 immutable pre-D01 snapshot sonucu:
 
 - 121 canonical `sellable-app`;
 - 121 zorunlu `app-core-module`;
@@ -152,6 +152,9 @@ Zorunlu alanların ayrıntısı `docs/app-enterprise-definition-contract.md` iç
 - 5 canonical app'e yönelen `legacy-alias` tombstone;
 - 617 fiziksel JSON node ve aliaslar hariç 612 aktif WBS kaydı;
 - app/module tarafında 249 typed enterprise definition.
+
+Current-live fiziksel node toplamı bu tarihsel snapshot'tan kopyalanmaz;
+`resolveD01NodeUniverse` ile kanonik handoff ve live node kayıtlarından doğrulanır.
 
 Sentetik Finans, İK, Tedarik Zinciri, Veri & Zekâ ve benzeri kökler portfolio olarak kalır; Kernel/SDK/Platform Factory foundation'dır. ADR, eğitim, katalog ve build kayıtları executable module sayılmaz; governance veya delivery-task olarak sınıflandırılır.
 

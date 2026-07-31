@@ -77,6 +77,7 @@ const nodes = new Map(
 const classifications = JSON.parse(fs.readFileSync(CLASSIFICATION, "utf8")) as Array<{
   docPath: string;
   decision: "task-materialize" | "reference-only" | "human-decision";
+  rationale: string;
 }>;
 
 describe("doc task content rule registry", () => {
@@ -280,6 +281,45 @@ describe("doc task content rule registry", () => {
     expect(byId.get("evidence-writeback-runbook")?.selector.all).toBe(true);
   });
 
+  it("keeps current-live coverage count-neutral and preserves the immutable app identity snapshot", () => {
+    const byId = new Map(rules.map((rule) => [rule.id, rule]));
+    const integrationRule = byId.get("md-json-standards-integration-remediation");
+    const ruleContent = JSON.stringify(integrationRule?.content);
+    expect(ruleContent).toContain("doğrulanmış current-live task-page coverage");
+    expect(ruleContent).not.toContain("617 task-page coverage");
+
+    const appIdentity = classifications.find(
+      (entry) => entry.docPath === "docs/adr-0032-enterprise-sdk-app-identity.md",
+    );
+    expect(appIdentity?.rationale).toContain("doğrulanmış current-live JSON evrenine");
+    expect(appIdentity?.rationale).not.toContain("617 JSON kaydına");
+
+    const standardsGap = fs.readFileSync(
+      path.join(ROOT, "docs/json-standards-integration-gap-report-2026-07-13.md"),
+      "utf8",
+    );
+    expect(standardsGap).toContain("doğrulanmış current-live materialized WBS düğümleri");
+    expect(standardsGap).not.toContain("Güncel materialized katalog `617`");
+
+    const identityAdr = fs.readFileSync(
+      path.join(ROOT, "docs/adr-0032-enterprise-sdk-app-identity.md"),
+      "utf8",
+    );
+    expect(identityAdr).toContain("immutable pre-D01 snapshot");
+    expect(identityAdr).toContain("resolveD01NodeUniverse");
+
+    for (const nodeId of [
+      "std-contracts",
+      "std-ci-gates",
+      "std-ui-surfacing",
+      "golden-slice-ref",
+    ]) {
+      const node = fs.readFileSync(path.join(NODE_DIR, `${nodeId}.json`), "utf8");
+      expect(node, nodeId).toContain("doğrulanmış current-live task-page coverage");
+      expect(node, nodeId).not.toContain("617 task-page coverage");
+    }
+  });
+
   it("keeps missing shared primitives as consumer-only projections", () => {
     const byId = new Map(rules.map((rule) => [rule.id, rule]));
     const projections = [
@@ -352,6 +392,10 @@ describe("doc task content rule registry", () => {
     expect(command).toContain("tests/docTaskContentMaterialization.test.ts");
 
     const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/deploy.yml"), "utf8");
+    expect(workflow).toContain(
+      "Kernel WBS entegrasyon kapısı (current-live görev evreni + public SDK sınırı)",
+    );
+    expect(workflow).not.toContain("Kernel WBS entegrasyon kapısı (617 görev");
     const wbsGate = workflow.indexOf("run: npm run qa:wbs");
     const docGate = workflow.indexOf("run: npm run qa:doc-content");
     const contentGate = workflow.indexOf("run: npm run qa:content");
