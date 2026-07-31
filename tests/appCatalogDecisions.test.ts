@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
+// @ts-expect-error -- the JavaScript governance helper intentionally has no declaration file.
+import { resolveD01NodeUniverse } from "../tools/lib/kernel-integration.mjs";
 
 type DecisionProfile = {
   decisionStatus: "accepted" | "proposed" | "audit-pending";
@@ -92,14 +94,26 @@ const MANDATORY_APP_CANDIDATES = [
 
 let registry: DecisionRegistry;
 let nodeIds: string[];
+let expectedNodeCount: number;
 
 beforeAll(() => {
   registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, "utf8")) as DecisionRegistry;
-  nodeIds = fs
+  const files = fs
     .readdirSync(NODE_DIR)
     .filter((file) => file.endsWith(".json"))
-    .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")).id as string)
     .sort();
+  const records = files.map((filename) => ({
+    filename,
+    node: JSON.parse(fs.readFileSync(path.join(NODE_DIR, filename), "utf8")),
+  }));
+  nodeIds = records.map(({ node }) => node.id as string).sort();
+  const handoff = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"),
+      "utf8",
+    ),
+  );
+  expectedNodeCount = resolveD01NodeUniverse({ records, handoff }).expectedNodeCount;
 });
 
 const resolve = (id: string) => {
@@ -112,13 +126,13 @@ describe("app catalog identity decision registry", () => {
   it("covers the current materialized node snapshot exactly once", () => {
     const registryIds = Object.keys(registry.entries).sort();
     expect(registry.sourceSnapshot.expectedNodeCount).toBe(496);
-    expect(registry.materializedSnapshot.expectedNodeCount).toBe(617);
+    expect(registry.materializedSnapshot.expectedNodeCount).toBe(expectedNodeCount);
     expect(registry.materializedSnapshot.canonicalApps).toBe(121);
     expect(registry.materializedSnapshot.appCores).toBe(121);
     expect(registry.materializedSnapshot.legacyAliases).toBe(5);
-    expect(nodeIds).toHaveLength(617);
+    expect(nodeIds).toHaveLength(expectedNodeCount);
     expect(registryIds).toEqual(nodeIds);
-    expect(new Set(registryIds).size).toBe(617);
+    expect(new Set(registryIds).size).toBe(expectedNodeCount);
   });
 
   it("resolves every profile and keeps canonical ids/slugs valid", () => {

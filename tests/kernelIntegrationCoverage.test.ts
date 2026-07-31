@@ -1,63 +1,56 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+// @ts-expect-error -- the JavaScript governance helpers intentionally have no declaration file.
+// biome-ignore format: the complete D01 helper surface stays visible in one audited import.
+import { PRE_D01_NODE_SET_SHA256, appliedD01AppDecision, appliedD01KernelDecision, expectedKernelRoleCounts, nodeIdSetSha256, readKernelCatalog, reconcileD01AppEntries, resolveD01NodeUniverse, validateAppliedD01RegistryDelta } from "../tools/lib/kernel-integration.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
 const REGISTRY_PATH = path.join(ROOT, "src/data/kernel-integration-decisions.json");
 const PUBLIC_NODES_PATH = path.join(ROOT, "public/data/nodes.json");
-const EXPECTED_NODE_SET_SHA256 = "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be";
-const EXPECTED_ROLES = new Set([
-  "root",
-  "provider",
-  "sdk-bridge",
-  "consumer",
-  "contributor",
-  "not-applicable",
-]);
+// biome-ignore format: the canonical handoff path stays compact.
+const HANDOFF_PATH = path.join(ROOT, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
+// biome-ignore format: the closed role enum stays compact.
+const EXPECTED_ROLES = new Set(["root", "provider", "sdk-bridge", "consumer", "contributor", "not-applicable"]);
 
-type RawNode = {
-  id: string;
-  artifactKind?: string;
-  dependsOn?: string[];
-  deliveryContext?: { applicability?: string };
-  kernelIntegration?: { role?: string };
-  appDefinition?: { manifest?: { kernelPrimitiveIds?: string[] } };
-};
+// biome-ignore format: audited fixture types stay compact to preserve the test source budget.
+type RawNode = { id: string; level?: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string }; deliveryContext?: { applicability?: string }; kernelIntegration?: { role?: string }; appDefinition?: { manifest?: { kernelPrimitiveIds?: string[] } } };
+// biome-ignore format: audited fixture types stay compact to preserve the test source budget.
+type RegistryEntry = { profile?: string; role?: string; reason?: string; areaId?: string; providedPrimitiveIds?: string[]; targetProviderIds?: string[]; contributionKind?: string };
+// biome-ignore format: audited fixture types stay compact to preserve the test source budget.
+type KernelRegistry = { snapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; sourceSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; materializedSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; decisionProfiles?: Record<string, RegistryEntry>; profiles?: Record<string, RegistryEntry>; entries?: Record<string, RegistryEntry> };
 
-type RegistryEntry = {
-  profile?: string;
-  role?: string;
-  reason?: string;
-  providedPrimitiveIds?: string[];
-  targetProviderIds?: string[];
-  contributionKind?: string;
-};
-
-type KernelRegistry = {
-  snapshot?: { expectedNodeCount?: number; nodeSetSha256?: string };
-  sourceSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string };
-  materializedSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string };
-  decisionProfiles?: Record<string, RegistryEntry>;
-  profiles?: Record<string, RegistryEntry>;
-  entries?: Record<string, RegistryEntry>;
-};
-
-const nodes = fs
+const nodeFiles = fs
   .readdirSync(NODE_DIR)
   .filter((file) => file.endsWith(".json"))
-  .sort()
-  .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as RawNode);
+  .sort();
+const nodes = nodeFiles.map(
+  (file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as RawNode,
+);
+const nodeRecords = nodeFiles.map((filename, index) => ({ filename, node: nodes[index] }));
 const nodesById = new Map(nodes.map((node) => [node.id, node]));
 const nodeIds = nodes.map((node) => node.id).sort();
-const nodeSetSha256 = crypto
-  .createHash("sha256")
-  .update(`${nodeIds.join("\n")}\n`)
-  .digest("hex");
+const nodeSetSha256 = nodeIdSetSha256(nodeIds);
 const registry = fs.existsSync(REGISTRY_PATH)
   ? (JSON.parse(fs.readFileSync(REGISTRY_PATH, "utf8")) as KernelRegistry)
   : null;
+const handoff = JSON.parse(fs.readFileSync(HANDOFF_PATH, "utf8"));
+const liveUniverse = resolveD01NodeUniverse({ records: nodeRecords, handoff });
+const kernelCatalog = readKernelCatalog(ROOT);
+
+const appliedFixture = (parentId = "k-actor") => {
+  const fixtureHandoff = structuredClone(handoff);
+  const row = fixtureHandoff.ledger.find(
+    (candidate: { parentId: string }) => candidate.parentId === parentId,
+  );
+  row.applicationStatus = "applied";
+  fixtureHandoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+  // biome-ignore format: the complete synthetic approved node stays reviewable as one contract.
+  const node = { id: row.selectedDescendantId, title: row.title, level: "archetype", parentId: row.parentId, owner: row.parentOwner, artifactKind: "delivery-task", dependsOn: row.dependencies, blocks: [], related: [], source: { cluster: row.sourceCluster } };
+  const records = [...structuredClone(nodeRecords), { filename: `${node.id}.json`, node }];
+  return { handoff: fixtureHandoff, records, row, node };
+};
 
 function profilesOf(value: KernelRegistry): Record<string, RegistryEntry> {
   return value.decisionProfiles ?? value.profiles ?? {};
@@ -76,15 +69,15 @@ function requireRegistry(): KernelRegistry {
 }
 
 describe("kernel integration registry coverage", () => {
-  it("locks the current 617-node identity set with a SHA-256 fingerprint", () => {
+  it("locks the pre-D01 baseline and derives the live count from applied approved rows", () => {
     const value = requireRegistry();
     const snapshot = value.materializedSnapshot ?? value.sourceSnapshot ?? value.snapshot;
 
-    expect(nodes).toHaveLength(617);
-    expect(new Set(nodeIds)).toHaveLength(617);
-    expect(nodeSetSha256).toBe(EXPECTED_NODE_SET_SHA256);
-    expect(snapshot?.expectedNodeCount).toBe(617);
-    expect(snapshot?.nodeSetSha256).toBe(EXPECTED_NODE_SET_SHA256);
+    expect(nodes).toHaveLength(liveUniverse.expectedNodeCount);
+    expect(new Set(nodeIds)).toHaveLength(liveUniverse.expectedNodeCount);
+    expect(liveUniverse.baselineNodeSetSha256).toBe(PRE_D01_NODE_SET_SHA256);
+    expect(snapshot?.expectedNodeCount).toBe(liveUniverse.expectedNodeCount);
+    expect(snapshot?.nodeSetSha256).toBe(nodeSetSha256);
   });
 
   it("contains exactly one explicit, resolved role decision for every node", () => {
@@ -100,20 +93,12 @@ describe("kernel integration registry coverage", () => {
         expect(resolved.reason?.trim().length, `${id}: N/A reason zorunlu`).toBeGreaterThan(0);
       }
     }
-    expect(
-      nodeIds.reduce<Record<string, number>>((counts, id) => {
-        const role = resolveEntry(value, id)?.role ?? "missing";
-        counts[role] = (counts[role] ?? 0) + 1;
-        return counts;
-      }, {}),
-    ).toEqual({
-      consumer: 292,
-      contributor: 121,
-      "not-applicable": 168,
-      provider: 30,
-      root: 1,
-      "sdk-bridge": 5,
-    });
+    const counts = nodeIds.reduce<Record<string, number>>((counts, id) => {
+      const role = resolveEntry(value, id)?.role ?? "missing";
+      counts[role] = (counts[role] ?? 0) + 1;
+      return counts;
+    }, {});
+    expect(counts).toEqual(expectedKernelRoleCounts(liveUniverse.appliedRows.length));
   });
 
   it("classifies app-kernel as root and preserves the duplicate/contributor decisions", () => {
@@ -228,7 +213,7 @@ describe("kernel integration registry coverage", () => {
     const value = requireRegistry();
     const publicNodes = JSON.parse(fs.readFileSync(PUBLIC_NODES_PATH, "utf8")) as RawNode[];
 
-    expect(publicNodes).toHaveLength(617);
+    expect(publicNodes).toHaveLength(liveUniverse.expectedNodeCount);
     for (const collection of [nodes, publicNodes]) {
       for (const node of collection) {
         expect(node.kernelIntegration, `${node.id}: kernelIntegration eksik`).toBeDefined();
@@ -237,5 +222,62 @@ describe("kernel integration registry coverage", () => {
         );
       }
     }
+  });
+
+  it("inherits provider and contributor parent routing and rejects both drift forms", () => {
+    const value = requireRegistry();
+    // biome-ignore format: provider and contributor expectations are an exact two-case matrix.
+    const cases = [
+      { parentId: "k-authz", parent: { role: "provider", areaId: "k-sozlesme" }, child: { areaId: "k-sozlesme", targetProviderIds: ["k-authz"] }, drift: { areaId: "k-authz" } },
+      { parentId: "k-actor", parent: { role: "contributor", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"] }, child: { areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"] }, drift: { targetProviderIds: ["k-actor"] } },
+    ];
+    for (const item of cases) {
+      const fixture = appliedFixture(item.parentId);
+      const parent = resolveEntry(value, item.parentId);
+      const child = appliedD01KernelDecision(kernelCatalog, fixture.row, parent);
+      expect(parent).toMatchObject(item.parent);
+      // biome-ignore format: the invariant tuple stays compact.
+      expect(child).toMatchObject({ role: "contributor", contributionKind: "specification", runtimeProviderClaimAllowed: false, ...item.child });
+      const kernelEntries = { ...value.entries, [fixture.node.id]: { ...child, ...item.drift } };
+      // biome-ignore format: the adversarial validator call stays compact.
+      expect(validateAppliedD01RegistryDelta({ appliedRows: [fixture.row], kernelEntries, kernelCatalog })).toContain(`${fixture.node.id}:kernel-decision-drift`);
+    }
+  });
+
+  it("accepts only applied approved deltas and rejects stale, unapproved, parent or role drift", () => {
+    const fixture = appliedFixture();
+    const universe = resolveD01NodeUniverse(fixture);
+    const value = requireRegistry();
+    const parent = resolveEntry(value, fixture.row.parentId);
+    const appEntry = appliedD01AppDecision(fixture.row);
+    const kernelEntry = appliedD01KernelDecision(kernelCatalog, fixture.row, parent);
+    // biome-ignore format: the exact dual-registry fixture stays compact.
+    const valid = { appliedRows: universe.appliedRows, appEntries: { [fixture.node.id]: appEntry }, kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry }, kernelCatalog };
+    expect(universe.expectedNodeCount).toBe(618);
+    expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
+    expect(expectedKernelRoleCounts(1).contributor).toBe(122);
+
+    const pending = appliedFixture();
+    pending.handoff.ledger[0].applicationStatus = "pending";
+    pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    expect(() => resolveD01NodeUniverse(pending)).toThrow(/pending-node-present/);
+    const unapproved = structuredClone(nodeRecords);
+    // biome-ignore format: the one-record unapproved delta stays compact.
+    unapproved.push({ filename: "unapproved-d01-node.json", node: { ...pending.node, id: "unapproved-d01-node" } });
+    // biome-ignore format: the fail-closed assertion stays compact.
+    expect(() => resolveD01NodeUniverse({ records: unapproved, handoff })).toThrow(/unapproved-extra/);
+    const wrongParent = appliedFixture();
+    wrongParent.records.at(-1)!.node.parentId = "k-mode";
+    expect(() => resolveD01NodeUniverse(wrongParent)).toThrow(/applied-node-parent-drift/);
+    const pendingId = handoff.ledger[1].selectedDescendantId;
+    // biome-ignore format: stale and applied entries form one exact reconciliation fixture.
+    const entries = { [pendingId]: { profile: "delivery-task" }, [fixture.node.id]: { profile: "foundation-component" } };
+    reconcileD01AppEntries(entries, resolveD01NodeUniverse(fixture));
+    expect(entries[pendingId]).toBeUndefined();
+    expect(entries[fixture.node.id]).toEqual(appEntry);
+    // biome-ignore format: the wrong-role mutation stays compact.
+    const wrongRole = { ...valid, kernelEntries: { ...valid.kernelEntries, [fixture.node.id]: { ...kernelEntry, role: "provider" } } };
+    // biome-ignore format: the fail-closed assertion stays compact.
+    expect(validateAppliedD01RegistryDelta(wrongRole)).toContain(`${fixture.node.id}:kernel-decision-drift`);
   });
 });

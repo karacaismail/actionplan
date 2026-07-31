@@ -1,5 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  PRE_D01_EXPECTED_NODE_COUNT,
+  PRE_D01_NODE_SET_SHA256,
+  nodeIdSetSha256,
+  validateKernelNodeUniverse,
+} from "./kernel-node-universe.mjs";
+
+export { PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, nodeIdSetSha256 };
 
 export const KERNEL_AREA_IDS = [
   "k-agent-runtime",
@@ -18,8 +26,16 @@ export const KERNEL_AREA_IDS = [
   "k-calendar-capacity",
 ];
 
-export const KERNEL_NODE_SET_SHA256 =
-  "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be";
+export const KERNEL_NODE_SET_SHA256 = PRE_D01_NODE_SET_SHA256;
+
+export const PRE_D01_KERNEL_ROLE_COUNTS = Object.freeze({
+  root: 1,
+  provider: 30,
+  "sdk-bridge": 5,
+  consumer: 292,
+  contributor: 121,
+  "not-applicable": 168,
+});
 
 export function readKernelCatalog(root) {
   return JSON.parse(
@@ -74,4 +90,100 @@ export function areasForPrimitives(catalog, primitiveIds) {
       .filter(Boolean),
   );
   return KERNEL_AREA_IDS.filter((areaId) => included.has(areaId));
+}
+
+export function resolveD01NodeUniverse({ records = [], handoff = {} }) {
+  const universe = validateKernelNodeUniverse({ records, handoff });
+  if (universe.errors.length)
+    throw new Error(`[kernel-node-universe] ${universe.errors.join(",")}`);
+  const rowsById = new Map(
+    (handoff.ledger ?? []).map((row) => [String(row.selectedDescendantId), row]),
+  );
+  const appliedRows = universe.appliedIds.map((id) => rowsById.get(id));
+  return {
+    ...universe,
+    appliedRows,
+    expectedNodeCount: PRE_D01_EXPECTED_NODE_COUNT + appliedRows.length,
+  };
+}
+
+export function expectedKernelRoleCounts(appliedCount) {
+  return {
+    ...PRE_D01_KERNEL_ROLE_COUNTS,
+    contributor: PRE_D01_KERNEL_ROLE_COUNTS.contributor + appliedCount,
+  };
+}
+
+export function appliedD01AppDecision(row) {
+  const id = String(row.selectedDescendantId);
+  return {
+    profile: "delivery-task",
+    canonicalId: id,
+    canonicalSlug: id,
+    aliases: [],
+  };
+}
+
+export function reconcileD01AppEntries(entries, universe) {
+  for (const id of universe.approvedIds) delete entries[id];
+  for (const row of universe.appliedRows)
+    entries[row.selectedDescendantId] = appliedD01AppDecision(row);
+  return entries;
+}
+
+const kernelIntegrationCommon = (catalog, nodeId) => ({
+  kernelRef: catalog.kernelRef,
+  contractRefs: catalog.contractRefs,
+  publicBoundary: {
+    directKernelInternalsAllowed: false,
+    directKernelDatabaseAccessAllowed: false,
+    crossContextWritesAllowed: false,
+  },
+  plannedTestRefs: [
+    `planned-test:${nodeId}:kernel-public-contract`,
+    `planned-test:${nodeId}:kernel-boundary-negative`,
+  ],
+});
+
+export function appliedD01KernelDecision(catalog, row, parentDecision) {
+  const id = String(row.selectedDescendantId);
+  const parentId = String(row.parentId);
+  if (!["provider", "contributor"].includes(parentDecision?.role))
+    throw new Error(`${id}: invalid D01 parent kernel role (${parentDecision?.role ?? "missing"})`);
+  if (!parentDecision.areaId) throw new Error(`${id}: D01 parent areaId missing`);
+  const targetProviderIds =
+    parentDecision.role === "provider" ? [parentId] : parentDecision.targetProviderIds;
+  if (!Array.isArray(targetProviderIds) || targetProviderIds.length === 0)
+    throw new Error(`${id}: D01 parent provider targets missing`);
+  return {
+    role: "contributor",
+    ...kernelIntegrationCommon(catalog, id),
+    runtimeProviderClaimAllowed: false,
+    areaId: parentDecision.areaId,
+    contributionKind: "specification",
+    targetProviderIds: [...targetProviderIds],
+  };
+}
+
+export function validateAppliedD01RegistryDelta({
+  appliedRows,
+  appEntries,
+  kernelEntries,
+  kernelCatalog,
+}) {
+  const errors = [];
+  for (const row of appliedRows) {
+    const id = String(row.selectedDescendantId);
+    if (appEntries && JSON.stringify(appEntries[id]) !== JSON.stringify(appliedD01AppDecision(row)))
+      errors.push(`${id}:app-decision-drift`);
+    if (
+      kernelEntries &&
+      JSON.stringify(kernelEntries[id]) !==
+        JSON.stringify(
+          appliedD01KernelDecision(kernelCatalog, row, kernelEntries[String(row.parentId)]),
+        )
+    )
+      errors.push(`${id}:kernel-decision-drift`);
+  }
+  return errors.sort();
 }
