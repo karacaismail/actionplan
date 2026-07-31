@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
 const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
+const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("kernel governance decision pack", () => {
@@ -47,6 +48,46 @@ describe("kernel governance decision pack", () => {
     expect(pack).toContain("## GATE-01 Approval Intake — Application Pending");
     expect(pack).toContain("approved-application-pending");
     expect(pack).toContain(AUTHORITY);
+    expect(pack).toContain(HANDOFF);
+    for (const approvalAware of [
+      "GATE-01 onaylı exact 33-row D01 descendant ledger",
+      "application 0/33 pending",
+      "kanonik descendant düğümlerinin hiçbiri henüz mevcut değildir",
+      "D01 kapanmış değildir",
+      "`codeStartAllowed=false`",
+      "`runtimeCodeAllowed=false`",
+      "approved/not-applied",
+    ])
+      expect(normalizedPack).toContain(approvalAware);
+    for (const obsolete of [
+      "D01 handoff ayrıca code-bearing descendant seçmez",
+      "Aday listeleri boştur",
+      "selection, rationale ve approval alanları null'dır",
+      "candidate listeleri boş, selection null",
+      "| KGA-D01 | Code-bearing descendant seçimi | Base gap inventory | pending/unselected |",
+      "D01 applied",
+      "D01 closed",
+      "runtimeReady=true",
+    ])
+      expect(pack).not.toContain(obsolete);
+    const handoff = JSON.parse(read(HANDOFF));
+    expect(handoff).toMatchObject({
+      status: "approved-application-pending",
+      gapClosed: false,
+      applicationSummary: { approved: 33, applied: 0, remaining: 33 },
+      authorityBoundary: {
+        codeStartAllowed: false,
+        runtimeCodeAllowed: false,
+        verdict: "NO-GO",
+      },
+    });
+    expect(handoff.ledger).toHaveLength(33);
+    expect(
+      handoff.ledger.every(
+        (row: { selectionStatus: string; applicationStatus: string }) =>
+          row.selectionStatus === "approved-not-applied" && row.applicationStatus === "pending",
+      ),
+    ).toBe(true);
     expect(normalizedPack).toContain(
       "bu ledger'lar kanonik ADR topic, WBS owner/disposition veya tenancy topolojisini seçmez",
     );

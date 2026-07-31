@@ -49,7 +49,7 @@ decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine ge�
 
 | Karar | Konu | Kaynak | Durum |
 |---|---|---|---|
-| KGA-D01 | Code-bearing descendant seçimi | Base gap inventory | pending/unselected |
+| KGA-D01 | Code-bearing descendant seçimi | Base gap inventory | approved/not-applied; application 0/33 pending |
 | KGA-D02 | k-surface dependency ve SDK sırası | Base gap inventory | pending/unselected |
 | KGA-D03 | PR-07 capability / module-registry sahipliği | Base gap inventory | pending/unselected |
 | KGA-D04 | Sahipsiz kernel directive kimlikleri | Base gap inventory | pending/unselected |
@@ -62,22 +62,24 @@ decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine ge�
 
 ## İnsan Kararı Paketi
 
-Bu belge aşağıdaki seçenekleri seçmez; etkiyi görünür kılar ve kararı User/Admin'e
-bırakır. Bütün seçenekler pending/unselected durumundadır.
+Bu belge D01 için GATE-01 onayını kaydeder; D02..D10 seçeneklerinin etkisini görünür
+kılar ve kararlarını User/Admin'e bırakır. D01 uygulaması pending, diğer seçenekler
+pending/unselected durumundadır.
 
 ### KGA-D01 — Code-bearing Descendant Seçimi
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
 38 kernel module parent'ın yalnız beşinde archetype veya daha alt seviyede code-bearing
-descendant vardır. Kalan 33 parent için gerçek uygulama ve test kanıtını taşıyacak
-descendant kimlikleri seçilmelidir. `k-control-planes` yalnız üç module child taşıdığı için
-code-bearing kapsama sayılmaz. Bu paket node üretmez, parent seviyesini değiştirmez ve
-code-start açmaz.
+descendant vardır. GATE-01 onaylı exact 33-row D01 descendant ledger, kalan 33 parent
+için gerçek uygulama ve test kanıtını taşıyacak kimlikleri seçer. `k-control-planes`
+yalnız üç module child taşıdığı için code-bearing kapsama sayılmaz. Bu paket node
+üretmez, parent seviyesini değiştirmez ve code-start açmaz.
 
 Makine-okunur `reports/kernel-code-bearing-descendant-handoff-2026-07-15.json`, canlı
-graph'taki 38/6/5/33 ölçümünü ve 33 pending parent'ı bağlar. Aday listeleri boştur;
-selection, rationale ve approval alanları null'dır. Bu kayıt karar formudur, karar değildir.
+graph'taki 38/6/5/33 ölçümünü ve exact 33 seçimi bağlar. D01 application 0/33 pending;
+kanonik descendant düğümlerinin hiçbiri henüz mevcut değildir ve D01 kapanmış değildir.
+`codeStartAllowed=false`, `runtimeCodeAllowed=false` ve runtime verdict `NO-GO` kalır.
 
 ### KGA-D02 — k-surface Dependency ve SDK Sırası
 
@@ -154,13 +156,14 @@ frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
 ## P0 Bağlayıcı Ledger'lar
 
-Aşağıdaki beş P0 ledger D01/D06 ve D08/D09/D10 pending/unselected durumunu makine-okunur snapshot
-olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR topic, WBS owner/disposition
-veya tenancy topolojisini seçmez. D01 handoff ayrıca code-bearing descendant seçmez.
+Aşağıdaki beş P0 ledger D01'i approval-aware, D06 ve D08/D09/D10 pending/unselected
+makine-okunur snapshot olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR
+topic, WBS owner/disposition veya tenancy topolojisini seçmez. D01 handoff exact 33
+descendant seçimini kaydeder, fakat canonical application yapmaz.
 
 | Karar | P0 ledger | Durum |
 |---|---|---|
-| KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | pending; 33 parent, candidate listeleri boş, selection null |
+| KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | approved/not-applied; application 0/33 pending; canonical descendant yok; D01 kapanmadı; NO-GO |
 | KGA-D06 | reports/kernel-db-substrate-queue-handoff-2026-07-15.json | pending; iki seçenek candidate-unselected, queuePatch null |
 | KGA-D08 | reports/kernel-adr-collision-source-bindings-2026-07-15.json | pending; ADR kimlikleri ambiguous, canonicalTopic null |
 | KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
@@ -191,7 +194,7 @@ kapanışı değildir: registry pending/unselected, `codeStartAllowed=false` ve
 ## Riskler
 
 - Docs green, runtime green değildir.
-- Boş aday kümesinde PASS, gerçek readiness'i yanlış temsil edebilir.
+- Approved ledger PASS, canonical descendant uygulaması olmadan readiness kanıtı değildir.
 - Queue değiştirilmeden gerçek persistence beklentileri karşılanamaz.
 - Çakışan graph/ADR kimlikleri yanlış işi veya yanlış approval_ref'i açabilir.
 - Repo dışı ingest kaynakları olmadan tüm canonical üretim upstream'den yeniden
@@ -204,12 +207,13 @@ kapanışı değildir: registry pending/unselected, `codeStartAllowed=false` ve
   kapandığını doğrular.
 - Governance testi node/SP/status/evidence ve graph/queue sayılarını canlı kanonik veriden;
   ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular.
-- Karar paketi testi bu belgenin seçenek sunduğunu, karar almadığını ve gap raporuyla
-  machine-readable ek arasında bağ kurduğunu doğrular.
+- Karar paketi testi D01 GATE-01 onayını approval-aware kaydettiğini, diğer kararları
+  seçmediğini ve gap raporuyla machine-readable ek arasında bağ kurduğunu doğrular.
 - Birleşik registry testi D01..D10 sırasını, kaynak parity'sini, kimlik benzersizliğini,
   seçilmemiş seçenekleri ve fail-closed code-start durumunu doğrular.
 - D01 handoff testi canlı graph'tan 38 module parent, 6 doğrudan-child sahibi, 5 covered
-  ve 33 pending ölçümünü yeniden üretir; boş aday/seçim alanlarını ve NO-GO sınırını zorlar.
+  ve 33 pending ölçümünü yeniden üretir; exact approved ledger, 0/33 application,
+  referential integrity, DAG ve NO-GO sınırını zorlar.
 - D06 handoff testi canlı PR-01..11 zincirini, DB bağımlılık sınıflarını, iki tarafsız
   seçeneği, değişmemiş base queue'yu ve NO-GO yetki sınırını zorlar.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
