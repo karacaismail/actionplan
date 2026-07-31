@@ -3,23 +3,29 @@
  * Materialize the Kernel 12.1-12.14 decision registry into every canonical task JSON.
  * Default mode is a byte-drift check; --apply is the only write mode.
  */
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   KERNEL_AREA_IDS,
-  KERNEL_NODE_SET_SHA256,
   appPrimitiveIdsFor,
+  appliedD01KernelDecision,
   areasForPrimitives,
+  nodeIdSetSha256,
   providerDefinitions,
   readKernelCatalog,
+  resolveD01NodeUniverse,
   unique,
+  validateAppliedD01RegistryDelta,
 } from "./lib/kernel-integration.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
 const REGISTRY_PATH = path.join(ROOT, "src/data/kernel-integration-decisions.json");
+const HANDOFF_PATH = path.join(
+  ROOT,
+  "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json",
+);
 const APPLY = process.argv.includes("--apply");
 const catalog = readKernelCatalog(ROOT);
 const nodeFiles = fs
@@ -29,20 +35,15 @@ const nodeFiles = fs
 const nodes = nodeFiles.map((file) =>
   JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")),
 );
+const handoff = JSON.parse(fs.readFileSync(HANDOFF_PATH, "utf8"));
+const universe = resolveD01NodeUniverse({
+  records: nodeFiles.map((filename, index) => ({ filename, node: nodes[index] })),
+  handoff,
+});
 const byId = new Map(nodes.map((node) => [node.id, node]));
 const providers = providerDefinitions(catalog);
 const nodeIds = nodes.map((node) => node.id).sort();
-const nodeSetSha256 = crypto
-  .createHash("sha256")
-  .update(`${nodeIds.join("\n")}\n`)
-  .digest("hex");
-
-if (nodes.length !== 617 || nodeSetSha256 !== KERNEL_NODE_SET_SHA256) {
-  console.error(
-    `[kernel-integration] snapshot drift: count=${nodes.length}, sha256=${nodeSetSha256}`,
-  );
-  process.exit(1);
-}
+const nodeSetSha256 = nodeIdSetSha256(nodeIds);
 
 const publicBoundary = {
   directKernelInternalsAllowed: false,
@@ -236,7 +237,26 @@ function integrationFor(node) {
   };
 }
 
-const decisions = Object.fromEntries(nodes.map((node) => [node.id, integrationFor(node)]));
+const appliedIds = new Set(universe.appliedIds);
+const decisions = Object.fromEntries(
+  nodes.filter((node) => !appliedIds.has(node.id)).map((node) => [node.id, integrationFor(node)]),
+);
+for (const row of universe.appliedRows)
+  decisions[row.selectedDescendantId] = appliedD01KernelDecision(
+    catalog,
+    row,
+    decisions[row.parentId],
+  );
+const deltaErrors = validateAppliedD01RegistryDelta({
+  appliedRows: universe.appliedRows,
+  kernelEntries: decisions,
+  kernelCatalog: catalog,
+});
+if (deltaErrors.length) {
+  console.error(`[kernel-integration] D01 registry delta FAIL (${deltaErrors.length})`);
+  for (const error of deltaErrors) console.error(` - ${error}`);
+  process.exit(1);
+}
 const registry = {
   schemaVersion: "1.0.0",
   source: {
