@@ -9,6 +9,10 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const NODE_DIR = path.join(ROOT, "src/data/generated/nodes");
 const REGISTRY_PATH = path.join(ROOT, "src/data/kernel-integration-decisions.json");
 const PUBLIC_NODES_PATH = path.join(ROOT, "public/data/nodes.json");
+const APP_REGISTRY_PATH = path.join(ROOT, "src/data/app-catalog-decisions.json");
+const INDEX_PATH = path.join(ROOT, "src/data/generated/index.json");
+const NAVIGATION_PATH = path.join(ROOT, "src/data/generated/navigation.json");
+const META_PATH = path.join(ROOT, "src/data/generated/meta.json");
 // biome-ignore format: the canonical handoff path stays compact.
 const HANDOFF_PATH = path.join(ROOT, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
 // biome-ignore format: the closed role enum stays compact.
@@ -41,14 +45,14 @@ const kernelCatalog = readKernelCatalog(ROOT);
 
 const appliedFixture = (parentId?: string) => {
   const fixtureHandoff = structuredClone(handoff);
+  const targetParentId = parentId ?? "k-schema";
   const row = fixtureHandoff.ledger.find(
     (candidate: { parentId: string; applicationStatus: string }) =>
-      parentId
-        ? candidate.parentId === parentId && candidate.applicationStatus === "pending"
-        : candidate.applicationStatus === "pending",
+      candidate.parentId === targetParentId,
   );
-  const nextApplied = fixtureHandoff.applicationSummary.applied + 1;
-  const nextRemaining = fixtureHandoff.applicationSummary.remaining - 1;
+  const alreadyApplied = row.applicationStatus === "applied";
+  const nextApplied = fixtureHandoff.applicationSummary.applied + (alreadyApplied ? 0 : 1);
+  const nextRemaining = fixtureHandoff.applicationSummary.remaining - (alreadyApplied ? 0 : 1);
   row.applicationStatus = "applied";
   fixtureHandoff.applicationSummary = {
     approved: 33,
@@ -57,7 +61,10 @@ const appliedFixture = (parentId?: string) => {
   };
   // biome-ignore format: the complete synthetic approved node stays reviewable as one contract.
   const node = { id: row.selectedDescendantId, title: row.title, level: "archetype", parentId: row.parentId, owner: row.parentOwner, artifactKind: "delivery-task", dependsOn: row.dependencies, blocks: [], related: [], source: { cluster: row.sourceCluster } };
-  const records = [...structuredClone(nodeRecords), { filename: `${node.id}.json`, node }];
+  const records = [
+    ...structuredClone(nodeRecords).filter(({ node: candidate }) => candidate.id !== node.id),
+    { filename: `${node.id}.json`, node },
+  ];
   return { handoff: fixtureHandoff, records, row, node };
 };
 
@@ -81,12 +88,45 @@ describe("kernel integration registry coverage", () => {
   it("locks the pre-D01 baseline and derives the live count from applied approved rows", () => {
     const value = requireRegistry();
     const snapshot = value.materializedSnapshot ?? value.sourceSnapshot ?? value.snapshot;
+    const targetId = "schema-metadata-engine-contract";
+    const appRegistry = JSON.parse(fs.readFileSync(APP_REGISTRY_PATH, "utf8"));
+    const publicNodes = JSON.parse(fs.readFileSync(PUBLIC_NODES_PATH, "utf8"));
+    const index = JSON.parse(fs.readFileSync(INDEX_PATH, "utf8"));
+    const navigation = JSON.parse(fs.readFileSync(NAVIGATION_PATH, "utf8"));
+    const meta = JSON.parse(fs.readFileSync(META_PATH, "utf8"));
 
     expect(nodes).toHaveLength(liveUniverse.expectedNodeCount);
     expect(new Set(nodeIds)).toHaveLength(liveUniverse.expectedNodeCount);
     expect(liveUniverse.baselineNodeSetSha256).toBe(PRE_D01_NODE_SET_SHA256);
     expect(snapshot?.expectedNodeCount).toBe(liveUniverse.expectedNodeCount);
     expect(snapshot?.nodeSetSha256).toBe(nodeSetSha256);
+    expect([
+      liveUniverse.expectedNodeCount,
+      publicNodes.length,
+      index.length,
+      meta.counts.total,
+      appRegistry.materializedSnapshot.expectedNodeCount,
+    ]).toEqual([621, 621, 621, 621, 621]);
+    expect(appRegistry.entries[targetId]).toEqual({
+      profile: "delivery-task",
+      canonicalId: targetId,
+      canonicalSlug: targetId,
+      aliases: [],
+    });
+    expect(index.find((entry: { id: string }) => entry.id === targetId)).toMatchObject({
+      id: targetId,
+      parentId: "k-schema",
+      level: "archetype",
+      wbsCode: "36.7.1",
+      cluster: "layer0",
+    });
+    expect(JSON.stringify(navigation)).toContain(`"id":"${targetId}"`);
+    expect(resolveEntry(value, targetId)).toMatchObject({
+      role: "contributor",
+      areaId: "k-sozlesme",
+      contributionKind: "specification",
+      targetProviderIds: ["k-schema"],
+    });
   });
 
   it("contains exactly one explicit, resolved role decision for every node", () => {
@@ -268,9 +308,9 @@ describe("kernel integration registry coverage", () => {
       kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry },
       kernelCatalog,
     };
-    expect(universe.expectedNodeCount).toBe(liveUniverse.expectedNodeCount + 1);
+    expect(universe.expectedNodeCount).toBe(621);
     expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
-    expect(expectedKernelRoleCounts(liveUniverse.appliedRows.length + 1).contributor).toBe(125);
+    expect(expectedKernelRoleCounts(universe.appliedRows.length).contributor).toBe(125);
 
     const pending = appliedFixture();
     pending.row.applicationStatus = "pending";
