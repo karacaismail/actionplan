@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateKernelNodeUniverse } from "./lib/kernel-node-universe.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GEN = path.resolve(__dirname, "..", "src", "data", "generated");
@@ -18,6 +19,21 @@ const files = fs
   .filter((f) => f.endsWith(".json"))
   .sort();
 const nodes = files.map((f) => JSON.parse(fs.readFileSync(path.join(NODES, f), "utf8")));
+const handoff = JSON.parse(
+  fs.readFileSync(
+    path.resolve(__dirname, "..", "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"),
+    "utf8",
+  ),
+);
+const universe = validateKernelNodeUniverse({
+  records: files.map((filename, index) => ({ filename, node: nodes[index] })),
+  handoff,
+});
+if (universe.errors.length) {
+  console.error(`[reindex] KERNEL-NODE-UNIVERSE FAIL (${universe.errors.length})`);
+  for (const error of universe.errors) console.error(` - ${error}`);
+  process.exit(1);
+}
 const byId = new Map(nodes.map((n) => [n.id, n]));
 const differs = (file, bytes) => !fs.existsSync(file) || fs.readFileSync(file, "utf8") !== bytes;
 const writeIfChanged = (file, bytes) => {
