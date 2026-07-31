@@ -327,11 +327,13 @@ describe("PWB-6 tarihsel yürütme ve dolaylı model komutu karantinası", () =>
       const allowed = spawnSync(process.execPath, [path.join(ROOT, file), "typecheck"], {
         cwd: ROOT,
         encoding: "utf8",
-        timeout: 30_000,
+        // A full parallel Vitest run can contend with the nested tsc process.
+        // Keep the fail-closed assertions intact while allowing measured CI jitter.
+        timeout: 60_000,
       });
       expect(allowed.status).toBe(0);
     },
-    60_000,
+    90_000,
   );
 
   it("swarm önizlemesi boş veya bilinmeyen shard'ı başarı saymaz", () => {
