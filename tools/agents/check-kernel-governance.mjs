@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateKernelGovernance } from "../lib/kernel-governance-audit.mjs";
+import { validateKernelGovernanceAuthorization } from "../lib/kernel-governance-authorization-audit.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const readJson = (relative) => JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
@@ -17,7 +18,17 @@ const artifacts = {
   ghostBindings: readJson("reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json"),
   tenancyAuthority: readJson("reports/kernel-tenancy-authority-inventory-2026-07-15.json"),
 };
-const errors = validateKernelGovernance({ nodes, queue, report, artifacts });
+const authority = readJson("reports/kernel-governance-closure-authority-2026-07-31.json");
+const registry = readJson("reports/kernel-governance-decision-registry-2026-07-15.json");
+const pack = fs.readFileSync(
+  path.join(ROOT, "docs/kernel-governance-decision-pack-2026-07-15.md"),
+  "utf8",
+);
+const scripts = readJson("package.json").scripts;
+const errors = [
+  ...validateKernelGovernance({ nodes, queue, report, artifacts }),
+  ...validateKernelGovernanceAuthorization({ authority, registry, pack, scripts }),
+];
 
 if (errors.length) {
   console.error(`[kernel-governance] FAIL (${errors.length})`);

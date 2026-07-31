@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const INVENTORY = "reports/kernel-gap-inventory-2026-07-14.json";
 const ADDENDUM = "reports/kernel-governance-gap-addendum-2026-07-15.json";
 const REGISTRY = "reports/kernel-governance-decision-registry-2026-07-15.json";
+const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
 const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const readJson = (relative: string) => JSON.parse(read(relative));
@@ -26,6 +27,8 @@ describe("kernel governance decision registry", () => {
     const registryIds = registry.decisions.map((decision: { id: string }) => decision.id);
 
     expect(registry.sourceReports).toEqual([INVENTORY, ADDENDUM]);
+    expect(registry.authorizationRef).toBe(AUTHORITY);
+    expect(registry.closureStateRef).toBe(`${AUTHORITY}#application`);
     expect(sourceIds).toEqual(expectedIds);
     expect(new Set(sourceIds).size).toBe(sourceIds.length);
     expect(registryIds).toEqual(expectedIds);
@@ -79,7 +82,9 @@ describe("kernel governance decision registry", () => {
     for (let index = 1; index <= 10; index += 1)
       expect(pack).toContain(`### KGA-D${String(index).padStart(2, "0")}`);
     for (const ref of [INVENTORY, ADDENDUM, REGISTRY]) expect(pack).toContain(ref);
+    expect(pack).toContain(AUTHORITY);
     expect(gate).toContain("tests/kernelGapInventory.test.ts");
     expect(gate).toContain("tests/kernelGovernanceDecisionRegistry.test.ts");
+    expect(gate).toContain("qa:kernel-governance-authority");
   });
 });
