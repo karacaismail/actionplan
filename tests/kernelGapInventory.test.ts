@@ -1,42 +1,60 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = process.cwd();
 const REPORT = "reports/kernel-gap-inventory-2026-07-14.json";
 const readJson = (relative: string) =>
   JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
-const nodes = fs
-  .readdirSync(path.join(ROOT, "src/data/generated/nodes"))
-  .filter((file) => file.endsWith(".json"))
-  .map((file) => readJson(`src/data/generated/nodes/${file}`));
-const kernel = nodes.filter((node) => node.id.startsWith("k-"));
+const live = readD01LiveUniverse();
+const nodes = live.nodes;
+const kPrefixedNodes = nodes.filter((node) => node.id.startsWith("k-"));
 const report = readJson(REPORT);
 const sorted = (values: string[]) => [...values].sort();
+const CODE_BEARING_LEVELS = new Set([
+  "archetype",
+  "feature",
+  "component",
+  "work_unit",
+  "micro_step",
+]);
+
+const missingCodeBearingParentIds = (nodeSet: typeof nodes) => {
+  const modules = nodeSet.filter((node) => node.id.startsWith("k-") && node.level === "module");
+  const childrenByParent = new Map<string, typeof nodes>();
+  for (const node of nodeSet) {
+    if (!node.parentId) continue;
+    childrenByParent.set(node.parentId, [...(childrenByParent.get(node.parentId) ?? []), node]);
+  }
+  const hasCodeBearingDescendant = (parentId: string) => {
+    const pending = [...(childrenByParent.get(parentId) ?? [])];
+    const visited = new Set([parentId]);
+    while (pending.length > 0) {
+      const node = pending.shift();
+      if (!node || visited.has(node.id)) continue;
+      visited.add(node.id);
+      if (CODE_BEARING_LEVELS.has(node.level)) return true;
+      pending.push(...(childrenByParent.get(node.id) ?? []));
+    }
+    return false;
+  };
+  return modules.filter((parent) => !hasCodeBearingDescendant(parent.id)).map((node) => node.id);
+};
 
 describe("repo-wide kernel gap inventory", () => {
-  it("locks the current 41-node reality without claiming runtime readiness", () => {
-    const totalSp = (items: Array<{ effort?: { estimate?: number } }>) =>
-      items.reduce((sum, node) => sum + (node.effort?.estimate ?? 0), 0);
-    const levels = Object.fromEntries(
-      ["module", "feature"].map((level) => [
-        level,
-        kernel.filter((node) => node.level === level).length,
-      ]),
-    );
+  it("locks the immutable 2026-07-14 snapshot without claiming current runtime readiness", () => {
     expect(report.sourceSnapshot).toMatchObject({
-      nodeCount: nodes.length,
-      totalSp: totalSp(nodes),
-      kernelNodeCount: kernel.length,
-      kernelSp: totalSp(kernel),
-      levels,
+      nodeCount: 617,
+      totalSp: 10082,
+      kernelNodeCount: 41,
+      kernelSp: 787,
+      levels: { module: 38, feature: 3 },
       status: "backlog",
       phase: "requirements",
       runtimeEvidenceCount: 0,
     });
-    expect(kernel.every((node) => node.status === "backlog")).toBe(true);
-    expect(kernel.every((node) => node.phase === "requirements")).toBe(true);
-    expect(kernel.every((node) => (node.evidence ?? []).length === 0)).toBe(true);
+    expect(nodes).toHaveLength(live.liveExpectedNodeCount);
     expect(report.finalDecision).toMatchObject({
       kernelReady: false,
       sdkReady: false,
@@ -49,7 +67,7 @@ describe("repo-wide kernel gap inventory", () => {
 
   it("assigns every k-* node once to a PM-coordinated audit shard", () => {
     const assigned = report.shards.flatMap((shard: { nodeIds: string[] }) => shard.nodeIds);
-    expect(sorted(assigned)).toEqual(sorted(kernel.map((node) => node.id)));
+    expect(sorted(assigned)).toEqual(sorted(kPrefixedNodes.map((node) => node.id)));
     expect(new Set(assigned).size).toBe(41);
     expect(report.shards.map((shard: { id: string }) => shard.id)).toEqual([
       "KGA-01",
@@ -65,59 +83,33 @@ describe("repo-wide kernel gap inventory", () => {
     }
   });
 
-  it("materializes structural gaps from canonical node data", () => {
-    const modules = kernel.filter((node) => node.level === "module");
-    const codeBearingLevels = new Set([
-      "archetype",
-      "feature",
-      "component",
-      "work_unit",
-      "micro_step",
-    ]);
-    const childrenByParent = new Map<string, typeof nodes>();
-    for (const node of nodes) {
-      if (!node.parentId) continue;
-      const children = childrenByParent.get(node.parentId) ?? [];
-      children.push(node);
-      childrenByParent.set(node.parentId, children);
-    }
-    const descendantsOf = (parentId: string) => {
-      const descendants: typeof nodes = [];
-      const pending = [...(childrenByParent.get(parentId) ?? [])];
-      const visited = new Set([parentId]);
-      while (pending.length > 0) {
-        const node = pending.shift();
-        if (!node || visited.has(node.id)) continue;
-        visited.add(node.id);
-        descendants.push(node);
-        pending.push(...(childrenByParent.get(node.id) ?? []));
-      }
-      return descendants;
-    };
-    const withoutCodeBearingDescendant = modules
-      .filter(
-        (parent) => !descendantsOf(parent.id).some((node) => codeBearingLevels.has(node.level)),
-      )
-      .map((node) => node.id);
-    const withoutDocPath = kernel
+  it("validates the historical structural snapshot separately from current-live gaps", () => {
+    const historicalMissingParents = live.handoff.ledger.map(
+      (row: { parentId: string }) => row.parentId,
+    );
+    const currentMissingParents = missingCodeBearingParentIds(nodes);
+    const appliedParents = new Set(
+      live.handoff.ledger
+        .filter((row: { applicationStatus: string }) => row.applicationStatus === "applied")
+        .map((row: { parentId: string }) => row.parentId),
+    );
+    const expectedCurrentMissing = historicalMissingParents.filter(
+      (parentId: string) => !appliedParents.has(parentId),
+    );
+    const withoutDocPath = kPrefixedNodes
       .filter((node) => !(node.refs ?? []).some((ref: string) => ref.includes("docs/")))
       .map((node) => node.id);
-    const traceable = kernel.filter((node) => node.traceability).map((node) => node.id);
+    const traceable = kPrefixedNodes.filter((node) => node.traceability).map((node) => node.id);
     const gap = (id: string) =>
       report.structuralGaps.find((item: { id: string }) => item.id === id);
 
-    expect(withoutCodeBearingDescendant).toHaveLength(33);
-    expect(withoutCodeBearingDescendant).toContain("k-control-planes");
-    expect(childrenByParent.get("k-control-planes")?.map((node) => node.level)).toEqual([
-      "module",
-      "module",
-      "module",
-    ]);
+    expect(historicalMissingParents).toHaveLength(33);
     expect(gap("KGA-G01")).toMatchObject({
       kind: "missing-code-bearing-descendant",
       count: 33,
-      nodeIds: sorted(withoutCodeBearingDescendant),
+      nodeIds: sorted(historicalMissingParents),
     });
+    expect(sorted(currentMissingParents)).toEqual(sorted(expectedCurrentMissing));
     expect(gap("KGA-G02")).toMatchObject({ count: 17, nodeIds: sorted(withoutDocPath) });
     expect(gap("KGA-G03")).toMatchObject({
       coveredCount: 5,
@@ -129,6 +121,30 @@ describe("repo-wide kernel gap inventory", () => {
       conflicts: ["be-sdk", "stack-editions"],
       codeStartAllowed: false,
     });
+  });
+
+  it("keeps historical KGA-G01 at 33 while first-applied current-live gap becomes 32", () => {
+    const historicalGap = report.structuralGaps.find(
+      (item: { id: string }) => item.id === "KGA-G01",
+    );
+    const row = live.handoff.ledger.find(
+      (candidate: { selectedDescendantId: string }) =>
+        candidate.selectedDescendantId === "actor-role-binding-contract",
+    );
+    const firstAppliedNodes = [
+      ...structuredClone(nodes),
+      {
+        id: row.selectedDescendantId,
+        level: "archetype",
+        parentId: row.parentId,
+      },
+    ];
+    const currentMissing = missingCodeBearingParentIds(firstAppliedNodes);
+
+    expect(historicalGap).toMatchObject({ count: 33 });
+    expect(historicalGap.nodeIds).toContain(row.parentId);
+    expect(currentMissing).toHaveLength(32);
+    expect(currentMissing).not.toContain(row.parentId);
   });
 
   it("keeps the base queue unchanged and blocks semantic mismatches", () => {
@@ -158,8 +174,12 @@ describe("repo-wide kernel gap inventory", () => {
       "Claude",
     ]);
     expect(report.authorityChain.claude).toBe("worker-slave-codex-invocation-only");
-    expect(report.decisions.every((item: { status: string }) => item.status === "pending")).toBe(
-      true,
-    );
+    expect(report.decisions.map((item: { id: string }) => item.id)).toEqual([
+      "KGA-D01",
+      "KGA-D02",
+      "KGA-D03",
+      "KGA-D04",
+      "KGA-D05",
+    ]);
   });
 });

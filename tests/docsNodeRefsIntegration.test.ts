@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const PUBLIC_NODES = JSON.parse(
@@ -12,6 +13,7 @@ const APP_CATALOG = JSON.parse(
 const META = JSON.parse(
   fs.readFileSync(path.join(ROOT, "src/data/generated/meta.json"), "utf8"),
 ) as { counts: { total: number; byArtifactKind?: Record<string, number> } };
+const { liveExpectedNodeCount, nodes: canonicalNodes } = readD01LiveUniverse({ root: ROOT });
 
 const DOC_NODE_REFS: Record<string, string[]> = {
   "docs/adr-A1-actor-party.md": ["k-party", "k-actor"],
@@ -46,21 +48,12 @@ describe("DOC-NODE-REF-1 kanonik belgeler mevcut WBS düğümlerinden erişilebi
     });
   }
 
-  it("public node refs 617 materialized düğümle eşleşir; 496 kaynak snapshot ayrı kalır", () => {
-    const nodesDir = path.join(ROOT, "src/data/generated/nodes");
-    const canonicalNodes = fs
-      .readdirSync(nodesDir)
-      .filter((file) => file.endsWith(".json"))
-      .map((file) => JSON.parse(fs.readFileSync(path.join(nodesDir, file), "utf8"))) as Array<{
-      id: string;
-      refs?: string[];
-    }>;
-
+  it("public node refs doğrulanmış current-live evrenle eşleşir; 496 kaynak snapshot ayrı kalır", () => {
     expect(APP_CATALOG.sourceSnapshot.expectedNodeCount).toBe(496);
-    expect(META.counts.total).toBe(617);
+    expect(META.counts.total).toBe(liveExpectedNodeCount);
     expect(META.counts.byArtifactKind?.["legacy-alias"]).toBe(5);
-    expect(canonicalNodes).toHaveLength(617);
-    expect(PUBLIC_NODES).toHaveLength(617);
+    expect(canonicalNodes).toHaveLength(liveExpectedNodeCount);
+    expect(PUBLIC_NODES).toHaveLength(liveExpectedNodeCount);
     expect(PUBLIC_NODES).toHaveLength(canonicalNodes.length);
     for (const node of canonicalNodes) {
       const publicNode = PUBLIC_NODES.find((candidate) => candidate.id === node.id);

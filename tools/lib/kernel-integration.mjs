@@ -4,10 +4,15 @@ import {
   PRE_D01_EXPECTED_NODE_COUNT,
   PRE_D01_NODE_SET_SHA256,
   nodeIdSetSha256,
-  validateKernelNodeUniverse,
+  resolveD01NodeUniverse,
 } from "./kernel-node-universe.mjs";
 
-export { PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, nodeIdSetSha256 };
+export {
+  PRE_D01_EXPECTED_NODE_COUNT,
+  PRE_D01_NODE_SET_SHA256,
+  nodeIdSetSha256,
+  resolveD01NodeUniverse,
+};
 
 export const KERNEL_AREA_IDS = [
   "k-agent-runtime",
@@ -90,21 +95,6 @@ export function areasForPrimitives(catalog, primitiveIds) {
       .filter(Boolean),
   );
   return KERNEL_AREA_IDS.filter((areaId) => included.has(areaId));
-}
-
-export function resolveD01NodeUniverse({ records = [], handoff = {} }) {
-  const universe = validateKernelNodeUniverse({ records, handoff });
-  if (universe.errors.length)
-    throw new Error(`[kernel-node-universe] ${universe.errors.join(",")}`);
-  const rowsById = new Map(
-    (handoff.ledger ?? []).map((row) => [String(row.selectedDescendantId), row]),
-  );
-  const appliedRows = universe.appliedIds.map((id) => rowsById.get(id));
-  return {
-    ...universe,
-    appliedRows,
-    expectedNodeCount: PRE_D01_EXPECTED_NODE_COUNT + appliedRows.length,
-  };
 }
 
 export function expectedKernelRoleCounts(appliedCount) {

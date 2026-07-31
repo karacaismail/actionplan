@@ -195,3 +195,18 @@ export function validateKernelNodeUniverse({ records = [], handoff = {} }) {
     baselineProtectedProjectionSha256,
   };
 }
+
+export function resolveD01NodeUniverse({ records = [], handoff = {} }) {
+  const validatedLiveUniverse = validateKernelNodeUniverse({ records, handoff });
+  if (validatedLiveUniverse.errors.length)
+    throw new Error(`[kernel-node-universe] ${validatedLiveUniverse.errors.join(",")}`);
+  const rowsById = new Map(
+    (handoff.ledger ?? []).map((row) => [String(row.selectedDescendantId), row]),
+  );
+  const appliedRows = validatedLiveUniverse.appliedIds.map((id) => rowsById.get(id));
+  return {
+    ...validatedLiveUniverse,
+    appliedRows,
+    expectedNodeCount: PRE_D01_EXPECTED_NODE_COUNT + appliedRows.length,
+  };
+}

@@ -81,7 +81,9 @@ const universe = (handoff = readJson<Handoff>(HANDOFF), records = nodeRecords) =
   validateKernelNodeUniverse({ records, handoff });
 const appliedFixture = () => {
   const handoff = structuredClone(readJson<Handoff>(HANDOFF));
-  const row = handoff.ledger[0];
+  const row = handoff.ledger.find(
+    (candidate) => candidate.selectedDescendantId === "actor-role-binding-contract",
+  ) as LedgerRow;
   row.applicationStatus = "applied";
   handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
   const records = structuredClone(nodeRecords);
@@ -142,6 +144,9 @@ const validate = (handoff: Handoff, records = nodes) => {
   const expectedParents = Object.keys(APPROVED);
   const rowParents = handoff.ledger.map((row) => row.parentId);
   const selectedIds = handoff.ledger.map((row) => row.selectedDescendantId);
+  const historical = derive(records.filter((node) => !selectedIds.includes(node.id)));
+  const appliedRows = handoff.ledger.filter((row) => row.applicationStatus === "applied");
+  const pendingRows = handoff.ledger.filter((row) => row.applicationStatus === "pending");
   const gap = inventory.structuralGaps.find((item) => item.id === "KGA-G01");
   const closureD01 = closure.applications.find((item) => item.id === "KGA-D01");
   const measurement = {
@@ -151,7 +156,7 @@ const validate = (handoff: Handoff, records = nodes) => {
     parentsMissingCodeBearingDescendantCount: 33,
     codeBearingLevels: LEVELS,
     traversal: "recursive-nearest-code-bearing-boundary-per-branch",
-    coveredParentIds: live.covered.map((row) => row.parentId),
+    coveredParentIds: historical.covered.map((row) => row.parentId),
     preD01Baseline: {
       expectedNodeCount: PRE_D01_EXPECTED_NODE_COUNT,
       nodeSetSha256: PRE_D01_NODE_SET_SHA256,
@@ -179,15 +184,15 @@ const validate = (handoff: Handoff, records = nodes) => {
   if (handoff.schemaVersion !== "1.0.0" || handoff.id !== "kernel-code-bearing-descendant-handoff-2026-07-15" || handoff.generatedAt !== "2026-07-15") errors.push("root-identity");
   if (!same(handoff.provenance, provenance)) errors.push("provenance");
   if (!same(handoff.measurement, measurement)) errors.push("measurement");
-  if (!same(handoff.applicationSummary, { approved: 33, applied: 0, remaining: 33 })) errors.push("counts");
+  if (!same(handoff.applicationSummary, { approved: 33, applied: appliedRows.length, remaining: pendingRows.length })) errors.push("counts");
   if (!same(handoff.nonGoals, NON_GOALS)) errors.push("non-goals");
   if (!same(handoff.rollback, TOP_ROLLBACK)) errors.push("rollback");
   if (handoff.decisionId !== "KGA-D01" || handoff.gapId !== "KGA-G01" || handoff.status !== "approved-application-pending" || handoff.gapClosed) errors.push("identity-status");
   if (!same(handoff.decision, { topic: "code-bearing descendants for 33 module parents", status: "approved-not-applied", decisionOwner: "user-admin", coordinator: "project_manager", finalAuthority: "codex", selectedOption: "33-approved-descendant-ledger" })) errors.push("decision");
-  if (!same(rowParents, expectedParents) || !same(rowParents, live.pending.map((row) => row.parentId)) || new Set(rowParents).size !== 33 || new Set(selectedIds).size !== 33) errors.push("ledger-identity");
+  if (!same(rowParents, expectedParents) || new Set(rowParents).size !== 33 || new Set(selectedIds).size !== 33) errors.push("ledger-identity");
   if (!same(gap, { ...gap, kind: "missing-code-bearing-descendant", count: 33, nodeIds: expectedParents })) errors.push("inventory");
   if (closure.status !== "approved-application-pending" || closure.approval.gateId !== "GATE-01" || closure.approval.authority !== "user-admin" || closure.approval.normalizedSelectionSha256 !== APPROVAL_SHA || closureD01?.approvedPendingApplication !== 33 || closureD01.applicationStatus !== "pending") errors.push("approval-source");
-  if (live.rows.length !== 38 || live.direct.length !== 6 || live.covered.length !== 5 || live.pending.length !== 33) errors.push("live-counts");
+  if (records.length !== PRE_D01_EXPECTED_NODE_COUNT + appliedRows.length || live.rows.length !== 38 || live.covered.length !== historical.covered.length + appliedRows.length || live.pending.length !== historical.pending.length - appliedRows.length || !same(sorted(live.pending.map((row) => row.parentId)), sorted(pendingRows.map((row) => row.parentId)))) errors.push("live-counts");
 
   for (const row of handoff.ledger) {
     const parent = nodeById.get(row.parentId);
@@ -198,9 +203,11 @@ const validate = (handoff: Handoff, records = nodes) => {
       continue;
     }
     const expectedId = expected.id;
+    const selected = nodeById.get(expectedId);
     if (!parent || parent.level !== "module" || row.parentOwner !== parent.owner || row.sourceCluster !== parent.source?.cluster) errors.push(`parent-source:${row.parentId}`);
-    if (row.selectedDescendantId !== expectedId || row.title !== expected.title || !same(row.dependencies, expected.dependencies) || records.some((node) => node.id === row.selectedDescendantId)) errors.push(`selection:${row.parentId}`);
-    if (row.level !== "archetype" || row.approvalRef !== "GATE-01" || row.selectionStatus !== "approved-not-applied" || row.applicationStatus !== "pending") errors.push(`state:${row.parentId}`);
+    if (row.selectedDescendantId !== expectedId || row.title !== expected.title || !same(row.dependencies, expected.dependencies)) errors.push(`selection:${row.parentId}`);
+    if (row.level !== "archetype" || row.approvalRef !== "GATE-01" || row.selectionStatus !== "approved-not-applied" || !["pending", "applied"].includes(row.applicationStatus)) errors.push(`state:${row.parentId}`);
+    if ((row.applicationStatus === "pending" && selected) || (row.applicationStatus === "applied" && (!selected || selected.level !== "archetype" || selected.parentId !== row.parentId))) errors.push(`application-live-state:${row.parentId}`);
     if (row.implementationBoundary.contract !== expectedId || row.implementationBoundary.expansionAllowed || row.implementationBoundary.scope.trim().length < 40) errors.push(`boundary:${row.parentId}`);
     if (row.plannedTestCommand !== testCommand(expectedId) || !same(row.evidenceContract, rowEvidence(expectedId)) || !same(row.rollback, rowRollback(expectedId))) errors.push(`handoff:${row.parentId}`);
     if (JSON.stringify(row).toLowerCase().includes("null") || JSON.stringify(row).toLowerCase().includes("defer")) errors.push(`unresolved:${row.parentId}`);
@@ -226,8 +233,26 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
 
   it("accepts exactly one correctly applied approved descendant at total 618", () => {
     const fixture = appliedFixture();
+    const currentNodes = fixture.records.map(({ node }) => node);
     expect(universe(fixture.handoff, fixture.records).errors).toEqual([]);
     expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: [fixture.row.selectedDescendantId], baselineRecordCount: 617 });
+    expect(validate(fixture.handoff, currentNodes)).toEqual([]);
+    const currentLive = derive(currentNodes);
+    expect([currentNodes.length, currentLive.covered.length, currentLive.pending.length]).toEqual([
+      618, 6, 32,
+    ]);
+    expect(fixture.handoff).toMatchObject({
+      applicationSummary: { approved: 33, applied: 1, remaining: 32 },
+      status: "approved-application-pending",
+      gapClosed: false,
+      authorityBoundary: { codeStartAllowed: false, verdict: "NO-GO" },
+    });
+
+    const pendingPresent = structuredClone(fixture.handoff);
+    pendingPresent.ledger[0].applicationStatus = "pending";
+    pendingPresent.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    expect(validate(pendingPresent, currentNodes)).toContain("application-live-state:k-actor");
+    expect(validate(fixture.handoff, nodes)).toContain("application-live-state:k-actor");
   });
 
   it("rejects node-universe and application drift with named evidence", () => {

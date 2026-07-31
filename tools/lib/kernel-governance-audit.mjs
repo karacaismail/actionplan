@@ -1,3 +1,5 @@
+import { PRE_D01_EXPECTED_NODE_COUNT } from "./kernel-node-universe.mjs";
+
 const DECISION_IDS = ["KGA-D06", "KGA-D07", "KGA-D08", "KGA-D09", "KGA-D10"];
 const AUTHORITY_CHAIN = [
   "codex-master",
@@ -218,7 +220,7 @@ export function validateKernelGovernance({ nodes, queue, report, artifacts }) {
   const evidenceCount = kernel.reduce((sum, node) => sum + (node.evidence ?? []).length, 0);
   const kernelSp = kernel.reduce((sum, node) => sum + Number(node.effort?.estimate ?? 0), 0);
   if (
-    report.sourceSnapshot.nodeCount !== nodes.length ||
+    report.sourceSnapshot.nodeCount !== PRE_D01_EXPECTED_NODE_COUNT ||
     report.sourceSnapshot.kernelNodeCount !== kernel.length ||
     report.sourceSnapshot.kernelSp !== kernelSp ||
     report.sourceSnapshot.kernelRuntimeEvidenceCount !== evidenceCount

@@ -24,8 +24,11 @@ tek açılabilir iş `PR-01` remote/default-branch/CI baseline'dır.
 | `app-*` | 88 |
 | `s-*` | 198 |
 
-617/41/787/88/198 sayıları doğrulandı. Önceki 9.836 SP toplamı güncel checkout ile uyuşmaz;
-`src/data/generated/meta.json` ve 617 node toplamı 10.082 SP üretir.
+Bu immutable 2026-07-14 pre-D01 snapshot'ında 617/41/787/88/198 sayıları doğrulandı.
+Önceki 9.836 SP toplamı o checkout ile uyuşmaz; snapshot'ın `src/data/generated/meta.json`
+kaydı ve 617 node toplamı 10.082 SP üretir. Current-live toplam bu tarihsel tuple'dan değil,
+`resolveD01NodeUniverse` sonucundan türetilir. `k-*` sayımı yalnız kimlik-prefix metriğidir;
+uygulanmış D01 descendant'larının veya tüm kernel descendant'larının sayımı değildir.
 
 ## Kod Gerçekliği
 
@@ -96,8 +99,8 @@ Makine-okunur ek kuyruk: `reports/kernel-data-plane-readiness-queue-2026-07-14.j
 
 ## Repo-Geneli Gap Uygulaması
 
-Tam envanter `reports/kernel-gap-inventory-2026-07-14.json` içinde, canlı node verisine
-bağlı test ise `tests/kernelGapInventory.test.ts` içindedir. Bu uygulama runtime kodu veya
+Tam tarihsel envanter `reports/kernel-gap-inventory-2026-07-14.json` içinde, current-live
+evren doğrulaması ise `tests/kernelGapInventory.test.ts` içindedir. Bu uygulama runtime kodu veya
 module parent değiştirmez; yanlış readiness beyanını engelleyen plan kapısı ekler.
 
 | Audit shard | Kapsam | Düğüm | Durum |
@@ -108,8 +111,8 @@ module parent değiştirmez; yanlış readiness beyanını engelleyen plan kapı
 | KGA-04 | bus/worker/agent/plugin/module/search/MDM/gateway | 8 | runtime yok |
 | KGA-05 | surface/consumer/terminology/KPI/calendar/panels | 8 | cycle kararı bekliyor |
 
-Beş shard'ın birleşimi tam olarak 41 benzersiz `k-*` düğümdür; dağılım 38 module + 3
-feature ve 787 SP'dir. Her shard PM tarafından koordine edilir, uzman bulguları PM üzerinden
+2026-07-14 snapshot'ındaki beş shard'ın birleşimi tam olarak 41 benzersiz `k-*` kimliğidir;
+bu prefix metriğinin dağılımı 38 module + 3 feature ve 787 SP'dir. Her shard PM tarafından koordine edilir, uzman bulguları PM üzerinden
 Codex'e gelir; Claude yalnız Codex'in sınırlı worker çağrısıdır. Nihai kabul Codex'tedir.
 
 ## Öncelikli Yapısal Boşluklar
@@ -150,7 +153,8 @@ Codex'e gelir; Claude yalnız Codex'in sınırlı worker çağrısıdır. Nihai 
 5. Platformu temiz sibling worktree'de insan geliştirici uygulasın; gerçek PR/CI/test/evidence
    actionplan'a geri yazılmadan `implemented/verified/done` üretme.
 
-Doğrulama kapısı node/SP/status/phase/evidence gerçekliğini, 41 düğümün shard birleşimini,
+Doğrulama kapısı current-live node evrenini resolver'dan; 2026-07-14 snapshot'ındaki
+node/SP/status/phase/evidence ve 41 `k-*` kimliğinin shard birleşimini tarihsel rapordan,
 32/17/5 yapısal sayımlarını, base queue değişmezliğini, PR-07 mismatch'ini ve kalıcı yetki
 zincirini test eder. Herhangi biri drift ederse envanter testi kırmızı olur.
 

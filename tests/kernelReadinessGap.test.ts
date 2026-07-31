@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
@@ -11,18 +12,8 @@ const PACK = "docs/platform-kdp01-archetype-storage-agent-pack-2026-07-14.md";
 const QUEUE = "reports/kernel-data-plane-readiness-queue-2026-07-14.json";
 
 describe("kernel readiness gap paketi", () => {
-  it("repo ile doğrulanan kapsamı iddia edilen walking skeleton'dan ayırır", () => {
+  it("immutable 2026-07-14 pre-D01 snapshot'ını iddia edilen walking skeleton'dan ayırır", () => {
     const gap = read(GAP);
-    const nodes = fs
-      .readdirSync(path.join(ROOT, "src/data/generated/nodes"))
-      .filter((file) => file.endsWith(".json"))
-      .map((file) => readJson(`src/data/generated/nodes/${file}`));
-    const kernelNodes = nodes.filter((node) => node.id.startsWith("k-"));
-    const sumSp = (items: Array<{ effort?: { estimate?: number } }>) =>
-      items.reduce((sum, node) => sum + (node.effort?.estimate ?? 0), 0);
-    expect([nodes.length, sumSp(nodes), kernelNodes.length, sumSp(kernelNodes)]).toEqual([
-      617, 10082, 41, 787,
-    ]);
     for (const token of [
       "617",
       "10.082 SP",
@@ -38,6 +29,11 @@ describe("kernel readiness gap paketi", () => {
     }
     expect(gap).toMatch(/28 test.*doğrulanmadı/s);
     expect(gap).not.toMatch(/28 tests?[^.\n]*(green|pass|yeşil)/i);
+  });
+
+  it("current-live kapsamını tarihsel tuple yerine kanonik resolver'dan türetir", () => {
+    const { liveExpectedNodeCount, nodes } = readD01LiveUniverse();
+    expect(nodes).toHaveLength(liveExpectedNodeCount);
   });
 
   it("module sınırını korur ve code-start durumunu izinli task JSON'a yansıtır", () => {

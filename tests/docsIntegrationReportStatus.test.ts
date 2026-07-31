@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const REPORT = fs.readFileSync(
@@ -19,11 +20,13 @@ const CLASSIFICATION = JSON.parse(
 const STANDARD_COUNT = fs
   .readdirSync(path.join(ROOT, "src/data/standards"))
   .filter((file) => file.endsWith(".json")).length;
+const { liveExpectedNodeCount, nodes } = readD01LiveUniverse({ root: ROOT });
 
 describe("docs JSON integration report current status", () => {
   it("kaynak snapshot ile materialized WBS kapsamını birbirine karıştırmadan açıklar", () => {
     expect(APP_CATALOG.sourceSnapshot.expectedNodeCount).toBe(496);
-    expect(META.counts.total).toBe(617);
+    expect(META.counts.total).toBe(liveExpectedNodeCount);
+    expect(nodes).toHaveLength(liveExpectedNodeCount);
     expect(META.counts.byArtifactKind?.["legacy-alias"]).toBe(5);
     expect(STANDARD_COUNT).toBe(38);
     expect(CLASSIFICATION).toHaveLength(295);
@@ -40,12 +43,15 @@ describe("docs JSON integration report current status", () => {
     expect(REPORT).toContain("| Canonical standard / arşiv / kök indeks kaynağı | 67 |");
     expect(REPORT).toContain("| Sınıfsız / erişilemeyen | 0 |");
     expect(REPORT).toContain("| App kimlik kaynak snapshot'ı | 496 |");
-    expect(REPORT).toContain("| Materialized fiziksel WBS JSON'u / görev sayfası | 617 |");
-    expect(REPORT).toContain("| Aktif WBS kaydı (legacy alias hariç) | 612 |");
+    expect(REPORT).toContain(
+      "| Tarihsel pre-D01 materialized fiziksel WBS JSON'u / görev sayfası | 617 |",
+    );
+    expect(REPORT).toContain("| Tarihsel pre-D01 aktif WBS kaydı (legacy alias hariç) | 612 |");
     expect(REPORT).toContain("| Legacy alias / yönlendirme kaydı | 5 |");
     expect(REPORT).toContain("| Canonical standard sözleşmesi | 38 |");
     expect(REPORT).toContain("496 düğümlük kaynak snapshot'ın tarihsel");
-    expect(REPORT).toContain("617/617 materialized sayfa");
+    expect(REPORT).toContain("Current-live toplam `resolveD01NodeUniverse` ile doğrulanır");
+    expect(REPORT).not.toContain("güncel materialized katalog 617");
     expect(REPORT).toContain("`catalog:`");
     expect(REPORT).toContain("`decision:`");
   });
