@@ -17,11 +17,14 @@ const META_PATH = path.join(ROOT, "src/data/generated/meta.json");
 const HANDOFF_PATH = path.join(ROOT, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
 // biome-ignore format: the closed role enum stays compact.
 const EXPECTED_ROLES = new Set(["root", "provider", "sdk-bridge", "consumer", "contributor", "not-applicable"]);
+const EXPECTED_NODE_SET_SHA256 = "79fc84f28ca660ce0964ef56984c3055d7c46a76e35186274707a77c0e435bda";
+// biome-ignore format: D4 projection pins remain while D5 adds the exact catalog-derived routing tuple.
+const APPLIED_PROJECTION_SPECS = { "schema-metadata-engine-contract": { parentId: "k-schema", wbsCode: "36.7.1", areaId: "k-sozlesme", targetProviderIds: ["k-schema"] }, "party-role-context-contract": { parentId: "k-party", wbsCode: "36.12.1", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"] } } as const;
 
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
-type RawNode = { id: string; level?: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string }; deliveryContext?: { applicability?: string }; kernelIntegration?: { role?: string }; appDefinition?: { manifest?: { kernelPrimitiveIds?: string[] } } };
+type RawNode = { id: string; wbsCode?: string; level?: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string }; deliveryContext?: { applicability?: string }; kernelIntegration?: { role?: string }; appDefinition?: { manifest?: { kernelPrimitiveIds?: string[] } } };
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
-type RegistryEntry = { profile?: string; role?: string; reason?: string; areaId?: string; providedPrimitiveIds?: string[]; targetProviderIds?: string[]; contributionKind?: string };
+type RegistryEntry = { profile?: string; role?: string; reason?: string; areaId?: string; providedPrimitiveIds?: string[]; targetProviderIds?: string[]; contributionKind?: string; runtimeProviderClaimAllowed?: boolean; publicBoundary?: { directKernelInternalsAllowed?: boolean; directKernelDatabaseAccessAllowed?: boolean; crossContextWritesAllowed?: boolean } };
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
 type KernelRegistry = { snapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; sourceSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; materializedSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; decisionProfiles?: Record<string, RegistryEntry>; profiles?: Record<string, RegistryEntry>; entries?: Record<string, RegistryEntry> };
 
@@ -45,7 +48,7 @@ const kernelCatalog = readKernelCatalog(ROOT);
 
 const appliedFixture = (parentId?: string) => {
   const fixtureHandoff = structuredClone(handoff);
-  const targetParentId = parentId ?? "k-schema";
+  const targetParentId = parentId ?? "k-party";
   const row = fixtureHandoff.ledger.find(
     (candidate: { parentId: string; applicationStatus: string }) =>
       candidate.parentId === targetParentId,
@@ -60,7 +63,20 @@ const appliedFixture = (parentId?: string) => {
     remaining: nextRemaining,
   };
   // biome-ignore format: the complete synthetic approved node stays reviewable as one contract.
-  const node = { id: row.selectedDescendantId, title: row.title, level: "archetype", parentId: row.parentId, owner: row.parentOwner, artifactKind: "delivery-task", dependsOn: row.dependencies, blocks: [], related: [], source: { cluster: row.sourceCluster } };
+  const spec = APPLIED_PROJECTION_SPECS[row.selectedDescendantId as keyof typeof APPLIED_PROJECTION_SPECS];
+  const node = {
+    id: row.selectedDescendantId,
+    wbsCode: spec?.wbsCode,
+    title: row.title,
+    level: "archetype",
+    parentId: row.parentId,
+    owner: row.parentOwner,
+    artifactKind: "delivery-task",
+    dependsOn: row.dependencies,
+    blocks: [],
+    related: [],
+    source: { cluster: row.sourceCluster },
+  };
   const records = [
     ...structuredClone(nodeRecords).filter(({ node: candidate }) => candidate.id !== node.id),
     { filename: `${node.id}.json`, node },
@@ -79,6 +95,15 @@ function resolveEntry(value: KernelRegistry, id: string): RegistryEntry | null {
   return { ...(profile ?? {}), ...entry };
 }
 
+type NavigationNode = {
+  id: string;
+  parentId?: string;
+  wbsCode?: string;
+  children?: NavigationNode[];
+};
+const flattenNavigation = (items: NavigationNode[]): NavigationNode[] =>
+  items.flatMap((item) => [item, ...flattenNavigation(item.children ?? [])]);
+
 function requireRegistry(): KernelRegistry {
   expect(registry, "src/data/kernel-integration-decisions.json eksik").not.toBeNull();
   return registry as KernelRegistry;
@@ -88,45 +113,178 @@ describe("kernel integration registry coverage", () => {
   it("locks the pre-D01 baseline and derives the live count from applied approved rows", () => {
     const value = requireRegistry();
     const snapshot = value.materializedSnapshot ?? value.sourceSnapshot ?? value.snapshot;
-    const targetId = "schema-metadata-engine-contract";
     const appRegistry = JSON.parse(fs.readFileSync(APP_REGISTRY_PATH, "utf8"));
-    const publicNodes = JSON.parse(fs.readFileSync(PUBLIC_NODES_PATH, "utf8"));
-    const index = JSON.parse(fs.readFileSync(INDEX_PATH, "utf8"));
-    const navigation = JSON.parse(fs.readFileSync(NAVIGATION_PATH, "utf8"));
+    const publicNodes = JSON.parse(fs.readFileSync(PUBLIC_NODES_PATH, "utf8")) as RawNode[];
+    const index = JSON.parse(fs.readFileSync(INDEX_PATH, "utf8")) as Array<
+      RawNode & { cluster?: string }
+    >;
+    const navigation = JSON.parse(fs.readFileSync(NAVIGATION_PATH, "utf8")) as NavigationNode[];
+    const flatNavigation = flattenNavigation(navigation);
     const meta = JSON.parse(fs.readFileSync(META_PATH, "utf8"));
+    const idsOf = (items: Array<{ id: string }>) => items.map(({ id }) => id).sort();
 
     expect(nodes).toHaveLength(liveUniverse.expectedNodeCount);
     expect(new Set(nodeIds)).toHaveLength(liveUniverse.expectedNodeCount);
     expect(liveUniverse.baselineNodeSetSha256).toBe(PRE_D01_NODE_SET_SHA256);
     expect(snapshot?.expectedNodeCount).toBe(liveUniverse.expectedNodeCount);
-    expect(snapshot?.nodeSetSha256).toBe(nodeSetSha256);
+    expect([
+      nodeSetSha256,
+      snapshot?.nodeSetSha256,
+      appRegistry.d01MaterializedSnapshot.nodeSetSha256,
+    ]).toEqual([EXPECTED_NODE_SET_SHA256, EXPECTED_NODE_SET_SHA256, EXPECTED_NODE_SET_SHA256]);
     expect([
       liveUniverse.expectedNodeCount,
       publicNodes.length,
       index.length,
       meta.counts.total,
       appRegistry.materializedSnapshot.expectedNodeCount,
-    ]).toEqual([621, 621, 621, 621, 621]);
-    expect(appRegistry.entries[targetId]).toEqual({
-      profile: "delivery-task",
-      canonicalId: targetId,
-      canonicalSlug: targetId,
-      aliases: [],
-    });
-    expect(index.find((entry: { id: string }) => entry.id === targetId)).toMatchObject({
-      id: targetId,
-      parentId: "k-schema",
-      level: "archetype",
-      wbsCode: "36.7.1",
-      cluster: "layer0",
-    });
-    expect(JSON.stringify(navigation)).toContain(`"id":"${targetId}"`);
-    expect(resolveEntry(value, targetId)).toMatchObject({
-      role: "contributor",
-      areaId: "k-sozlesme",
-      contributionKind: "specification",
-      targetProviderIds: ["k-schema"],
-    });
+    ]).toEqual([622, 622, 622, 622, 622]);
+    expect(idsOf(publicNodes)).toEqual(nodeIds);
+    expect(idsOf(index)).toEqual(nodeIds);
+    expect(idsOf(flatNavigation)).toEqual(
+      idsOf(index.filter((entry) => entry.artifactKind !== "legacy-alias")),
+    );
+    for (const [targetId, spec] of Object.entries(APPLIED_PROJECTION_SPECS)) {
+      expect(nodeIds.filter((id) => id === targetId)).toHaveLength(1);
+      expect(appRegistry.entries[targetId]).toEqual({
+        profile: "delivery-task",
+        canonicalId: targetId,
+        canonicalSlug: targetId,
+        aliases: [],
+      });
+      const indexMatches = index.filter((entry) => entry.id === targetId);
+      const publicMatches = publicNodes.filter((entry) => entry.id === targetId);
+      const navigationMatches = flatNavigation.filter((entry) => entry.id === targetId);
+      expect([indexMatches.length, publicMatches.length, navigationMatches.length]).toEqual([
+        1, 1, 1,
+      ]);
+      expect(indexMatches[0]).toMatchObject({
+        id: targetId,
+        parentId: spec.parentId,
+        level: "archetype",
+        wbsCode: spec.wbsCode,
+        cluster: "layer0",
+      });
+      expect(publicMatches[0]).toMatchObject({
+        id: targetId,
+        parentId: spec.parentId,
+        level: "archetype",
+        wbsCode: spec.wbsCode,
+      });
+      expect(
+        flatNavigation
+          .find((entry) => entry.id === spec.parentId)
+          ?.children?.filter((entry) => entry.id === targetId),
+      ).toHaveLength(1);
+      expect(navigationMatches[0]).toMatchObject({ id: targetId, wbsCode: spec.wbsCode });
+      expect(resolveEntry(value, targetId)).toMatchObject({
+        role: "contributor",
+        areaId: spec.areaId,
+        contributionKind: "specification",
+        targetProviderIds: spec.targetProviderIds,
+        runtimeProviderClaimAllowed: false,
+        publicBoundary: {
+          directKernelInternalsAllowed: false,
+          directKernelDatabaseAccessAllowed: false,
+          crossContextWritesAllowed: false,
+        },
+      });
+    }
+  });
+
+  it("rejects registry count/hash and structured projection drift", () => {
+    const value = requireRegistry();
+    const base = {
+      app: JSON.parse(fs.readFileSync(APP_REGISTRY_PATH, "utf8")),
+      kernel: structuredClone(value),
+      index: JSON.parse(fs.readFileSync(INDEX_PATH, "utf8")) as Array<
+        RawNode & { cluster?: string }
+      >,
+      publicNodes: JSON.parse(fs.readFileSync(PUBLIC_NODES_PATH, "utf8")) as RawNode[],
+      navigation: JSON.parse(fs.readFileSync(NAVIGATION_PATH, "utf8")) as NavigationNode[],
+    };
+    const errorsOf = (state: typeof base) => {
+      const errors: string[] = [];
+      const snapshot =
+        state.kernel.materializedSnapshot ?? state.kernel.sourceSnapshot ?? state.kernel.snapshot;
+      const ids = (items: Array<{ id: string }>) => items.map(({ id }) => id).sort();
+      const nav = flattenNavigation(state.navigation);
+      if (
+        state.app.materializedSnapshot.expectedNodeCount !== 622 ||
+        snapshot?.expectedNodeCount !== 622 ||
+        Object.keys(state.app.entries).length !== 622 ||
+        Object.keys(state.kernel.entries ?? {}).length !== 622
+      )
+        errors.push("registry-count-drift");
+      if (
+        state.app.d01MaterializedSnapshot.nodeSetSha256 !== EXPECTED_NODE_SET_SHA256 ||
+        snapshot?.nodeSetSha256 !== EXPECTED_NODE_SET_SHA256
+      )
+        errors.push("node-set-hash-drift");
+      if (
+        JSON.stringify(ids(state.index)) !== JSON.stringify(nodeIds) ||
+        JSON.stringify(ids(state.publicNodes)) !== JSON.stringify(nodeIds)
+      )
+        errors.push("projection-id-set-drift");
+      for (const [targetId, spec] of Object.entries(APPLIED_PROJECTION_SPECS)) {
+        if (
+          state.index.filter(({ id }) => id === targetId).length !== 1 ||
+          state.publicNodes.filter(({ id }) => id === targetId).length !== 1 ||
+          nav.filter(({ id }) => id === targetId).length !== 1
+        )
+          errors.push(`projection-target-count-drift:${targetId}`);
+        if (
+          state.index.find(({ id }) => id === targetId)?.parentId !== spec.parentId ||
+          !flattenNavigation(state.navigation)
+            .find(({ id }) => id === spec.parentId)
+            ?.children?.some(({ id }) => id === targetId)
+        )
+          errors.push(`projection-parent-drift:${targetId}`);
+        if (!state.app.entries[targetId] || !state.kernel.entries?.[targetId])
+          errors.push(`registry-target-missing:${targetId}`);
+      }
+      return errors;
+    };
+    expect(errorsOf(base)).toEqual([]);
+    const cases: Array<[string, (state: typeof base) => void]> = [
+      [
+        "registry-count-drift",
+        (state) => {
+          state.app.materializedSnapshot.expectedNodeCount = 621;
+        },
+      ],
+      [
+        "node-set-hash-drift",
+        (state) => {
+          state.kernel.materializedSnapshot!.nodeSetSha256 = "drift";
+        },
+      ],
+      ["projection-id-set-drift", (state) => void state.index.pop()],
+      [
+        "projection-target-count-drift:party-role-context-contract",
+        (state) =>
+          void flattenNavigation(state.navigation)
+            .find(({ id }) => id === "k-party")
+            ?.children?.push({ id: "party-role-context-contract" }),
+      ],
+      [
+        "projection-parent-drift:party-role-context-contract",
+        (state) =>
+          void Object.assign(
+            state.index.find(({ id }) => id === "party-role-context-contract") ?? {},
+            { parentId: "k-actor" },
+          ),
+      ],
+      [
+        "registry-target-missing:party-role-context-contract",
+        (state) => void Reflect.deleteProperty(state.app.entries, "party-role-context-contract"),
+      ],
+    ];
+    for (const [error, mutate] of cases) {
+      const state = structuredClone(base);
+      mutate(state);
+      expect(errorsOf(state)).toContain(error);
+    }
   });
 
   it("contains exactly one explicit, resolved role decision for every node", () => {
@@ -148,6 +306,7 @@ describe("kernel integration registry coverage", () => {
       return counts;
     }, {});
     expect(counts).toEqual(expectedKernelRoleCounts(liveUniverse.appliedRows.length));
+    expect(counts.contributor).toBe(126);
   });
 
   it("classifies app-kernel as root and preserves the duplicate/contributor decisions", () => {
@@ -308,9 +467,9 @@ describe("kernel integration registry coverage", () => {
       kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry },
       kernelCatalog,
     };
-    expect(universe.expectedNodeCount).toBe(621);
+    expect(universe.expectedNodeCount).toBe(622);
     expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
-    expect(expectedKernelRoleCounts(universe.appliedRows.length).contributor).toBe(125);
+    expect(expectedKernelRoleCounts(universe.appliedRows.length).contributor).toBe(126);
 
     const pending = appliedFixture();
     pending.row.applicationStatus = "pending";
@@ -338,8 +497,19 @@ describe("kernel integration registry coverage", () => {
     expect(entries[pendingId]).toBeUndefined();
     expect(entries[fixture.node.id]).toEqual(appEntry);
     // biome-ignore format: the wrong-role mutation stays compact.
-    const wrongRole = { ...valid, kernelEntries: { ...valid.kernelEntries, [fixture.node.id]: { ...kernelEntry, role: "provider" } } };
-    // biome-ignore format: the fail-closed assertion stays compact.
-    expect(validateAppliedD01RegistryDelta(wrongRole)).toContain(`${fixture.node.id}:kernel-decision-drift`);
+    for (const drift of [{ role: "provider" }, { areaId: "k-party" }, { targetProviderIds: ["k-actor"] }]) {
+      const wrongKernel = { ...valid, kernelEntries: { ...valid.kernelEntries, [fixture.node.id]: { ...kernelEntry, ...drift } } };
+      expect(validateAppliedD01RegistryDelta(wrongKernel)).toContain(`${fixture.node.id}:kernel-decision-drift`);
+    }
+    const wrongApp = {
+      ...valid,
+      appEntries: {
+        ...valid.appEntries,
+        [fixture.node.id]: { ...appEntry, profile: "foundation-component" },
+      },
+    };
+    expect(validateAppliedD01RegistryDelta(wrongApp)).toContain(
+      `${fixture.node.id}:app-decision-drift`,
+    );
   });
 });

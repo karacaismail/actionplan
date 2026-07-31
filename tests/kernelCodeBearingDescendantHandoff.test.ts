@@ -22,7 +22,7 @@ const SOURCES = [
   CLOSURE,
 ];
 const NON_GOALS = [
-  "canonical mutation is limited to ledger rows marked applied and their deterministic app registry, kernel registry, index, navigation, meta, public and doc-matrix projections; the current shard applies schema-metadata-engine-contract only",
+  "canonical mutation is limited to ledger rows marked applied and their deterministic app registry, kernel registry, index, navigation, meta, public and doc-matrix projections; the current shard applies party-role-context-contract only",
   "no parent-node, historical inventory, authority, package, queue or runtime mutation",
   "no unapproved or bulk descendant application; D01 cannot close before 33/33",
   "no runtime implementation or readiness claim",
@@ -33,7 +33,7 @@ const TOP_ROLLBACK = {
   trigger:
     "applied row, canonical node, app or kernel registry, deterministic projection, live or immutable hash, or fail-closed NO-GO boundary drifts",
   action:
-    "atomically set the schema-metadata-engine-contract ledger row to pending; restore application summary to 33/3/30; remove its canonical node and app/kernel registry entries; restore the 620-node snapshots; regenerate index, navigation, meta, public nodes and doc matrix projections; preserve PRE-D01 hashes and authority; rerun all governance, registry, projection and content gates",
+    "atomically set the party-role-context-contract ledger row to pending; restore application summary to 33/4/29; remove its canonical node and app/kernel registry entries; restore the 621-node snapshots; regenerate index, navigation, meta, public nodes and doc matrix projections; preserve PRE-D01 hashes and authority; rerun all governance, registry, projection and content gates",
   runtimeDataImpact: "none",
 };
 // biome-ignore format: exact row contract stays compact for the shard budget.
@@ -42,9 +42,11 @@ const ROW_KEYS = ["applicationStatus", "approvalRef", "dependencies", "evidenceC
 const ROOT_KEYS = ["applicationSummary", "authorityBoundary", "decision", "decisionId", "gapClosed", "gapId", "generatedAt", "id", "ledger", "measurement", "nonGoals", "provenance", "rollback", "schemaVersion", "sourceRefs", "status"];
 // biome-ignore format: exact approved authority split stays compact for the shard budget.
 const AUTHORITY = { actionplanWriter: "codex-governance-only", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
+// biome-ignore format: D4 remains pinned while D5 adds its independent exact contract.
+const APPLIED_NODE_SPECS = { "schema-metadata-engine-contract": { wbsCode: "36.7.1", explicitNullState: false, requiredRefs: [] }, "party-role-context-contract": { wbsCode: "36.12.1", explicitNullState: false, requiredRefs: ["sözleşme: docs/actor-party-contract.md", "adr: docs/adr-A1-actor-party.md"] } } as const;
 
 // biome-ignore format: audited test types stay compact for the shard budget.
-type NodeRecord = { id: string; wbsCode?: string; title?: string; summary?: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; phase?: string; status?: string; progress?: number; implementationStatus?: unknown; traceability?: unknown; schedule?: { start?: string | null; end?: string | null; actualStart?: string | null; actualEnd?: string | null; baselineStart?: string | null; baselineEnd?: string | null }; source?: { corpus?: string; originalId?: string; granularity?: string; cluster?: string } };
+type NodeRecord = { id: string; wbsCode?: string; title?: string; summary?: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; refs?: string[]; phase?: string; status?: string; progress?: number; implementationStatus?: unknown; traceability?: unknown; schedule?: { start?: string | null; end?: string | null; actualStart?: string | null; actualEnd?: string | null; baselineStart?: string | null; baselineEnd?: string | null }; source?: { corpus?: string; originalId?: string; granularity?: string; cluster?: string } };
 // biome-ignore format: exact ledger surface stays compact for the shard budget.
 type LedgerRow = { parentId: string; parentOwner: string; sourceCluster: string; selectedDescendantId: string; title: string; level: string; approvalRef: string; selectionStatus: string; applicationStatus: string; implementationBoundary: { contract: string; scope: string; expansionAllowed: boolean }; dependencies: string[]; plannedTestCommand: string; evidenceContract: { required: string[]; acceptance: string }; rollback: { owner: string; trigger: string; action: string } };
 // biome-ignore format: exact handoff root stays compact for the shard budget.
@@ -74,13 +76,14 @@ const validateRootApplicationScope = (handoff: Handoff) => {
   if (
     !same(appliedIds, [
       "event-bus-delivery-contract",
+      "party-role-context-contract",
       "schema-metadata-engine-contract",
       "schema-pinning-conformance-contract",
       "kernel-terminology-contract",
     ]) ||
     !includesEvery(nonGoals, [
       "ledger rows marked applied",
-      "schema-metadata-engine-contract only",
+      "party-role-context-contract only",
       "app registry",
       "kernel registry",
       "index",
@@ -114,13 +117,13 @@ const validateRootApplicationScope = (handoff: Handoff) => {
   if (
     !includesEvery(action, [
       "atomically",
-      "schema-metadata-engine-contract",
+      "party-role-context-contract",
       "pending",
-      "33/3/30",
+      "33/4/29",
       "remove",
       "canonical node",
       "app/kernel registry",
-      "620-node",
+      "621-node",
       "index",
       "navigation",
       "meta",
@@ -225,12 +228,13 @@ const universe = (handoff = readJson<Handoff>(HANDOFF), records = nodeRecords) =
 const appliedFixture = () => {
   const handoff = structuredClone(readJson<Handoff>(HANDOFF));
   const row = handoff.ledger.find(
-    (candidate) => candidate.selectedDescendantId === "schema-metadata-engine-contract",
+    (candidate) => candidate.selectedDescendantId === "party-role-context-contract",
   ) as LedgerRow;
   const parent = nodeRecords.find(({ node }) => node.id === row.parentId)?.node;
   if (!parent?.schedule) throw new Error(`fixture-parent-schedule-missing:${row.parentId}`);
   row.applicationStatus = "applied";
-  handoff.applicationSummary = { approved: 33, applied: 4, remaining: 29 };
+  handoff.applicationSummary = { approved: 33, applied: 5, remaining: 28 };
+  const spec = APPLIED_NODE_SPECS[row.selectedDescendantId as keyof typeof APPLIED_NODE_SPECS];
   const records = structuredClone(nodeRecords).filter(
     ({ node }) => node.id !== row.selectedDescendantId,
   );
@@ -238,7 +242,7 @@ const appliedFixture = () => {
     filename: `${row.selectedDescendantId}.json`,
     node: {
       id: row.selectedDescendantId,
-      wbsCode: "36.7.1",
+      wbsCode: spec.wbsCode,
       title: row.title,
       summary: row.implementationBoundary.scope,
       level: "archetype",
@@ -248,6 +252,7 @@ const appliedFixture = () => {
       dependsOn: row.dependencies,
       blocks: [],
       related: [],
+      refs: [...spec.requiredRefs],
       phase: "requirements",
       status: "backlog",
       progress: 0,
@@ -382,10 +387,12 @@ const validate = (handoff: Handoff, records = nodes) => {
       if (!selected) errors.push(`applied-node-missing:${row.selectedDescendantId}`);
       else {
         if (selected.title !== row.title || selected.summary !== row.implementationBoundary.scope || selected.owner !== row.parentOwner || selected.artifactKind !== "delivery-task") errors.push(`applied-node-row-parity:${row.selectedDescendantId}`);
-        if (row.selectedDescendantId === "schema-metadata-engine-contract" && (selected.wbsCode !== "36.7.1" || records.some((node) => node.id !== selected.id && node.wbsCode === selected.wbsCode))) errors.push(`applied-node-wbs-drift:${row.selectedDescendantId}`);
+        const spec = APPLIED_NODE_SPECS[row.selectedDescendantId as keyof typeof APPLIED_NODE_SPECS];
+        if (spec && (selected.wbsCode !== spec.wbsCode || records.some((node) => node.id !== selected.id && node.wbsCode === selected.wbsCode))) errors.push(`applied-node-wbs-drift:${row.selectedDescendantId}`);
         if (!same(selected.dependsOn, row.dependencies) || !same(selected.blocks, []) || !same(selected.related, [])) errors.push(`applied-node-dependency-drift:${row.selectedDescendantId}`);
         if (!same(selected.source, { corpus: "synthetic", originalId: row.selectedDescendantId, granularity: row.level, cluster: row.sourceCluster })) errors.push(`applied-node-source-drift:${row.selectedDescendantId}`);
-        if (row.selectedDescendantId === "schema-metadata-engine-contract" && (selected.phase !== "requirements" || selected.status !== "backlog" || selected.progress !== 0 || selected.implementationStatus != null || selected.traceability != null)) errors.push(`applied-node-state-drift:${row.selectedDescendantId}`);
+        if (spec && (selected.phase !== "requirements" || selected.status !== "backlog" || selected.progress !== 0 || selected.implementationStatus != null || selected.traceability != null || (spec.explicitNullState && (!Object.hasOwn(selected, "implementationStatus") || !Object.hasOwn(selected, "traceability"))))) errors.push(`applied-node-state-drift:${row.selectedDescendantId}`);
+        if (spec?.requiredRefs.some((ref) => !selected.refs?.includes(ref))) errors.push(`applied-node-reference-drift:${row.selectedDescendantId}`);
         errors.push(...validateAppliedNodeSchedule(selected, parent, row.selectedDescendantId));
       }
     }
@@ -411,6 +418,7 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     expect(validate(handoff)).toEqual([]);
     for (const [appliedId, parentId] of [
       ["event-bus-delivery-contract", "k-bus"],
+      ["party-role-context-contract", "k-party"],
       ["schema-metadata-engine-contract", "k-schema"],
       ["schema-pinning-conformance-contract", "k-sozlesme"],
       ["kernel-terminology-contract", "k-terminoloji"],
@@ -422,19 +430,19 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     expect([PRE_D01_SOURCE_COMMIT, PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, PRE_D01_PROTECTED_PROJECTION_SHA256, D01_APPROVED_MAPPING_SHA256, D01_APPROVED_ID_SET_SHA256]).toEqual(["09f0a1fb52d4141092add22a54df1a6204c155a4", 617, "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be", "598e39b8600b5ee78fa763e42cd7b80f3626e47c5d91860b338ee474c9ddd136", "2e5ce4b1c96446b6ca1f0e42cdc5225c4f36ac9551056fec31147b1febc332b0", "dd797dbf38594e77c8171a776d0eef1b681e0dfb7302b22b17e62526f950431d"]);
   });
 
-  it("accepts exactly four correctly applied approved descendants at total 621", () => {
+  it("accepts exactly five correctly applied approved descendants at total 622", () => {
     const fixture = appliedFixture();
     const currentNodes = fixture.records.map(({ node }) => node);
     expect(universe(fixture.handoff, nodeRecords).errors).toEqual([]);
     expect(universe(fixture.handoff, fixture.records).errors).toEqual([]);
-    expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: ["event-bus-delivery-contract", "kernel-terminology-contract", fixture.row.selectedDescendantId, "schema-pinning-conformance-contract"], baselineRecordCount: 617 });
+    expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: ["event-bus-delivery-contract", "kernel-terminology-contract", fixture.row.selectedDescendantId, "schema-metadata-engine-contract", "schema-pinning-conformance-contract"], baselineRecordCount: 617 });
     expect(validate(fixture.handoff, currentNodes)).toEqual([]);
     const currentLive = derive(currentNodes);
     expect([currentNodes.length, currentLive.covered.length, currentLive.pending.length]).toEqual([
-      621, 9, 29,
+      622, 10, 28,
     ]);
     expect(fixture.handoff).toMatchObject({
-      applicationSummary: { approved: 33, applied: 4, remaining: 29 },
+      applicationSummary: { approved: 33, applied: 5, remaining: 28 },
       status: "approved-application-pending",
       gapClosed: false,
       authorityBoundary: { codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" },
@@ -443,7 +451,7 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     const pendingPresent = structuredClone(fixture.handoff);
     const pendingRow = pendingPresent.ledger.find((row) => row.selectedDescendantId === fixture.row.selectedDescendantId) as LedgerRow;
     pendingRow.applicationStatus = "pending";
-    pendingPresent.applicationSummary = { approved: 33, applied: 3, remaining: 30 };
+    pendingPresent.applicationSummary = { approved: 33, applied: 4, remaining: 29 };
     expect(validate(pendingPresent, currentNodes)).toContain(`application-live-state:${fixture.row.parentId}`);
     expect(validate(fixture.handoff, nodes.filter((node) => node.id !== fixture.row.selectedDescendantId))).toContain(`application-live-state:${fixture.row.parentId}`);
   });
@@ -458,7 +466,7 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     expectError(current, structuredClone(nodeRecords).slice(1), "baseline-removal:baseline-count=616");
     const renamed = structuredClone(nodeRecords); renamed[0].node.id = "renamed-baseline"; renamed[0].filename = "renamed-baseline.json";
     expectError(current, renamed, "baseline-id-hash-drift");
-    const pending = appliedFixture(); pending.row.applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 3, remaining: 30 };
+    const pending = appliedFixture(); pending.row.applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 4, remaining: 29 };
     expectError(pending.handoff, pending.records, `pending-node-present:${pending.row.selectedDescendantId}`);
     const missing = appliedFixture();
     const missingErrors = universe(
@@ -476,10 +484,12 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
       const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
       expect(validate(fixture.handoff, fixture.records.map(({ node }) => node))).toContain(`applied-node-row-parity:${fixture.row.selectedDescendantId}`);
     }
-    for (const [field, value, error] of [["wbsCode", "36.7.2", "applied-node-wbs-drift"], ["dependsOn", ["drift"], "applied-node-dependency-drift"], ["source", { corpus: "synthetic", originalId: "drift", granularity: "archetype", cluster: "layer0" }, "applied-node-source-drift"], ["phase", "development", "applied-node-state-drift"]] as const) {
+    for (const [field, value, error] of [["wbsCode", "36.12.2", "applied-node-wbs-drift"], ["dependsOn", ["k-tenancy", "schema-metadata-engine-contract"], "applied-node-dependency-drift"], ["blocks", ["drift"], "applied-node-dependency-drift"], ["related", ["drift"], "applied-node-dependency-drift"], ["source", { corpus: "synthetic", originalId: "drift", granularity: "archetype", cluster: "layer0" }, "applied-node-source-drift"], ["phase", "development", "applied-node-state-drift"], ["status", "done", "applied-node-state-drift"], ["progress", 1, "applied-node-state-drift"], ["implementationStatus", "implemented", "applied-node-state-drift"], ["traceability", {}, "applied-node-state-drift"], ["refs", ["drift"], "applied-node-reference-drift"]] as const) {
       const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
       expect(validate(fixture.handoff, fixture.records.map(({ node }) => node))).toContain(`${error}:${fixture.row.selectedDescendantId}`);
     }
+    const duplicateWbs = appliedFixture(); duplicateWbs.records[0].node.wbsCode = "36.12.1";
+    expect(validate(duplicateWbs.handoff, duplicateWbs.records.map(({ node }) => node))).toContain(`applied-node-wbs-drift:${duplicateWbs.row.selectedDescendantId}`);
     const scheduleCases: Array<[string, (schedule: NonNullable<NodeRecord["schedule"]>) => void]> = [
       ["applied-node-current-schedule-missing", (schedule) => void Reflect.deleteProperty(schedule, "start")],
       ["applied-node-current-schedule-drift", (schedule) => void Object.assign(schedule, { end: "2099-01-01" })],

@@ -1,0 +1,898 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "party-role-context-contract",
+  "wbsCode": "36.12.1",
+  "level": "archetype",
+  "title": "Party Role Context Contract",
+  "slug": "party-role-context-contract",
+  "aliases": [],
+  "summary": "Define person or organization identity and tenant, channel and app role context without authentication or PDP ownership.",
+  "parentId": "k-party",
+  "order": 1,
+  "icon": "ph-identification-card",
+  "tags": [
+    "party",
+    "person",
+    "organization",
+    "role-context",
+    "tenant",
+    "channel",
+    "temporal",
+    "kvkk",
+    "archetype"
+  ],
+  "dependsOn": [
+    "schema-metadata-engine-contract",
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/actor-party-contract.md",
+    "adr: docs/adr-A1-actor-party.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Person veya organization identity ile tenant, channel, app, role ve temporal validity sınırı insan onayıyla netleşir.",
+        "Credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership açık non-goal olarak korunur.",
+        "[DOC-APPLY:task-handoff] Party Role Context Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Party Role Context Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planlanan pytest ile positive person/organization context ve cross-tenant, expiry, onaysız activation negatifleri eşlenir.",
+        "Komutun burada çalıştırılmadığı ve runtime evidence olmadığı açık tutulur.",
+        "[DOC-APPLY:high-risk-dod] Party Role Context Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Party Role Context Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Party Role Context Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Party Role Context Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] party-role-context-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] party-role-context-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] party-role-context-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "PartyRoleContext alanları, temporal validity ve KVKK retention/audit handoff'u insan geliştirici için tipli sözleşmeye bağlanır.",
+        "Bu planlama node'u migration veya credential store üretmez."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Platform implementation yalnız human-developer-only sınırında ve tamamlanmış predecessor kanıtlarıyla başlayabilir.",
+        "2026 planning başlangıcı schema-metadata completion öncesinde olduğundan executable dependency-order veya readiness iddiası kurulmaz.",
+        "[DOC-APPLY:ready-for-dev] Party Role Context Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Tenant A/B izolasyonu, expired role, wrong channel/app ve AI activation denial testleri gerçek fixture kanıtıyla doğrulanır.",
+        "PII log redaksiyonu ve RoleBinding human approval gate ayrı negatif assertion taşır."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact dependency, WBS, schedule, reference, registry projection ve NO-GO authority gerçek Actionplan gate çıktılarıyla doğrulanır.",
+        "Runtime implementation veya release kanıtı olmadan verified/done yazılmaz.",
+        "[DOC-APPLY:high-risk-dod] Party Role Context Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] party-role-context-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] party-role-context-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Party Role Context Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] party-role-context-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "Bu shard release veya deploy yetkisi açmaz; planned runtime command yayın kanıtı değildir.",
+        "Withdrawal yalnız D5 node ve deterministic projectionları kaldırıp 621-node NO-GO durumunu geri yükler.",
+        "[DOC-APPLY:high-risk-dod] party-role-context-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Party Role Context Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Party Role Context Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Party Role Context Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Party Role Context Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Party Role Context Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Human-developer handoff specification for person or organization identity and tenant, channel, app and temporal role context.",
+    "Fail-closed cross-tenant and expired-role negative matrix with explicit credentials, sessions, authentication/SSO and PDP ownership exclusions.",
+    "PII/KVKK classification, purpose, retention, deletion or anonymization and audit planning contract.",
+    "Human-approval-gated RoleBinding draft plan; AI activation authority remains absent.",
+    "[DOC-APPLY:high-risk-dod] party-role-context-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Party Role Context Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] party-role-context-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] party-role-context-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Party Role Context Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Party Role Context Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Party Role Context Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node matches the approved k-party row for Party Role Context Contract, platform-ekibi ownership, archetype level, layer0 source and delivery-task artifact.",
+    "dependsOn is exactly ordered as schema-metadata-engine-contract then k-tenancy; blocks and related remain empty.",
+    "Current and baseline schedule are exactly 2026-07-01 through 2028-04-30, while actualStart and actualEnd remain explicit null values.",
+    "The schedule is a planning window only; its early start does not prove predecessor completion, executable dependency order or development readiness.",
+    "Person and organization identities resolve tenant, channel and app role context only inside an explicit temporal validity interval.",
+    "Missing tenant, cross-tenant mismatch, expired role, wrong channel or wrong app fails closed without a default role.",
+    "Credentials, sessions, authentication/SSO, credential lifecycle and PDP or policy allow-deny ownership remain explicit non-goals.",
+    "PII/KVKK retention, deletion or anonymization, audit minimization and legal-hold planning have named human ownership before implementation.",
+    "AI may propose a RoleBinding draft but cannot activate it without human approval; no autonomous apply path is implied.",
+    "The planned pytest command remains a future kernel contract command and is never counted as Actionplan runtime evidence.",
+    "The contract remains requirements/backlog with zero progress, absent implementation status and traceability, and no code-start, runtime, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Party Role Context Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] party-role-context-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] party-role-context-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Party Role Context Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Party Role Context Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] party-role-context-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Party Role Context Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] party-role-context-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Party Role Context Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-party-role-cross-tenant",
+      "desc": "A tenant, channel or app mismatch could bind a party role across isolation boundaries.",
+      "severity": "critical",
+      "mitigation": "Require exact tenant context, temporal validity and negative Tenant A/B fixtures with fail-closed rejection."
+    },
+    {
+      "id": "r-party-role-pii-retention",
+      "desc": "Party identity or audit fields could be retained beyond KVKK purpose and retention limits.",
+      "severity": "high",
+      "mitigation": "Bind data classification, retention owner, deletion or anonymization path, legal hold and redacted audit plan."
+    },
+    {
+      "id": "r-party-role-authority-expansion",
+      "desc": "Role context planning could be misread as credential, authentication/SSO or PDP policy ownership.",
+      "severity": "high",
+      "mitigation": "Keep exclusions explicit and block AI RoleBinding activation until human approval is recorded."
+    }
+  ],
+  "rollback": "Withdraw only party-role-context-contract, set its D01 row back to pending, remove its app/kernel registry and generated projections, regenerate the exact 621-node 33/4/29 NO-GO state, and leave runtime data unchanged.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-party-role-context-contract-done",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "done"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "Party Role Context Contract tamamlandı"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-blocked",
+      "event": "task.status.changed",
+      "when": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "blocked"
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Party Role Context Contract blokajını çöz",
+          "priority": "high"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-complete",
+      "event": "task.progress.changed",
+      "when": [
+        {
+          "field": "progress",
+          "op": "gte",
+          "value": 100
+        }
+      ],
+      "then": {
+        "type": "set-field",
+        "params": {
+          "field": "status",
+          "value": "done"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "party-role-context-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "party-role-context-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "party-role-context-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-risk-quarantine",
+      "event": "ai.risk.scored",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "riskScore",
+          "op": "gte",
+          "value": 80
+        }
+      ],
+      "then": {
+        "type": "create-task",
+        "params": {
+          "title": "Party Role Context Contract AI risk incelemesi",
+          "priority": "critical"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-party-role-context-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "party-role-context-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-party-role-context-contract-archetype-prod-history-deny",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "neq",
+          "value": true
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "prod-archetype-update-must-preserve-history",
+          "node": "party-role-context-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-party-role-context-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "party-role-context-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-party-role-context-contract-role-binding-draft-gated",
+      "event": "ai.role-binding.draft.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "notify",
+        "params": {
+          "target": "owner",
+          "message": "RoleBinding taslağı insan onayı bekliyor"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-party-role-context-contract-role-binding-activation-deny",
+      "event": "ai.role-binding.activation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "role-binding-activation-requires-human-approval",
+          "node": "party-role-context-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    }
+  ],
+  "agentPolicy": {
+    "autonomy": "draft",
+    "capabilities": [
+      "read",
+      "suggest-changeset",
+      "archetype-draft",
+      "archetype-prod-update-proposal"
+    ],
+    "allowedTargets": [
+      "archetype"
+    ],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset",
+      "generate-archetype-draft",
+      "update-archetype-draft",
+      "propose-archetype-prod-update"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write"
+    ],
+    "stepUp": [
+      "propose-archetype-prod-update",
+      "delete-field",
+      "change-permission",
+      "disable-protection",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Sözleşme kapsamı, bir person veya organization kimliğini tenant, channel ve app bağlamındaki süreli role context girdisi ve deterministik çözüm çıktısıyla sınırlar.",
+        "PartyRoleContext başlangıç ve bitiş geçerliliğini açık taşır; credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny sahipliği bu contract dışında kalır.",
+        "Bir RoleBinding yalnız taslak olarak önerilebilir; activation çıktısı insan onayı olmadan üretilemez ve cross-tenant context fail-closed reddedilir.",
+        "[DOC-APPLY:waterfall-handoff] party-role-context-contract: Party Role Context Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı."
+      ],
+      "notes": "party-role-context-contract/featureDefs: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract featureDefs kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Party Role Context Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tenant kimliği ile party ve role context birlikte doğrulanır; eksik tenant, tenant uyuşmazlığı veya süresi dolmuş bağlam deny ve audit nedeni üretir.",
+        "PII alanları KVKK veri sınıfı, en az ayrıcalık ve tenant izolasyonu kapsamında planlanır; credentials ve session secret bu node içinde tutulmaz.",
+        "Cross-tenant okuma, yazma veya RoleBinding activation girişimi insan onayı ve açık authority olmadan fail-closed kalır."
+      ],
+      "notes": "party-role-context-contract/security: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract security kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Tip güvenli PartyRoleContext doğrulaması identity, tenant, channel, app, role ve temporal validity alanlarını tek sorumluluklu contract katmanında tutar.",
+        "Role çözümleme yolu lint kapısı, karmaşıklık sınırı ve deterministik sıralama altında aynı girdi için aynı sonucu üretmelidir.",
+        "Credentials, authentication/SSO ve PDP karar motoru bu contract içine alınmayarak bağımlılık yönü ve modüler sınır korunur."
+      ],
+      "notes": "party-role-context-contract/codeOptimization: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract codeOptimization kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Least-privilege sertleştirmesi tenant, channel, app ve role değerlerini allowlist ile sınırlar; session veya credential secret kabul edilmez.",
+        "RoleBinding taslağı imzalı insan onay kaydına bağlanmadan activation yüzeyine ilerleyemez; AI için doğrudan activation kapalıdır.",
+        "PII projection yüzeyi minimum alanla sınırlandırılır ve cross-tenant egress güvenli varsayımla reddedilir."
+      ],
+      "notes": "party-role-context-contract/securityOptimization: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract securityOptimization kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Party role context çözümü için p95 50 ms hedefi, tenant ve temporal index seçimiyle gelecekteki insan geliştirici load testinde ölçülecek bütçedir.",
+        "Identity, tenant, channel ve app bileşik index planı süresi dolmuş rol kayıtlarını taramadan geçerli context sonucuna ulaşmayı hedefler.",
+        "Cache kullanılırsa tenant, party, channel, app ve validity değişiminde invalidation zorunludur; bu hedef runtime performans kanıtı değildir."
+      ],
+      "notes": "party-role-context-contract/performance: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract performance kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobil ve PWA tüketicisi yalnız tipli PartyRoleContext çıktısını public contract üzerinden okur; credential veya session sahipliği edinmez.",
+        "Offline role context kopyası tenant ya da temporal validity değişiminden sonra authoritative kabul edilmez ve güvenli senkron gerekir.",
+        "RoleBinding activation mobil köprü üzerinden otomatik çalışmaz; insan onay adımı ayrı ve erişilebilir bir tüketici yüzeyinin sorumluluğudur."
+      ],
+      "notes": "party-role-context-contract/mobileApps: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract mobileApps kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Bu governance node UI üretmez; role context veya human approval gösteren tüketici yüzey klavye, görünür focus ve ekran okuyucu akışını sağlamalıdır.",
+        "Tenant mismatch, expired role ve approval-required sonucu yalnız renk veya ikonla anlatılamaz; WCAG 2.2 AAA uyumlu erişilebilir metin gerekir.",
+        "Dokunma hedefi en az 44px ve kontrast 7:1 ölçümü gelecekteki UI sahibinin kanıtıdır; burada runtime a11y PASS iddiası kurulmaz."
+      ],
+      "notes": "party-role-context-contract/wcag: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract wcag kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "Party role runtime servisi, Kubernetes, shared host veya başka dağıtım hedefinde bu planning node tarafından deploy edilmez.",
+        "Gelecekteki deployment readiness probe tenant izolasyonu ve temporal validity bağımlılıklarını doğrulamalı, başarısızlıkta güvenli kapalı kalmalıdır.",
+        "Governance rollback yalnız D5 node ve projection setini 621-node tabanına geri alır; runtime veri veya credential migrationı çalıştırmaz."
+      ],
+      "notes": "party-role-context-contract/deployment: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract deployment kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "party.role-binding.draft.requested olayı AI taslak önerisini insan approval kuyruğuna tetikleyebilir fakat activation eylemi üretemez.",
+        "Aynı draft event yeniden işlendiğinde idempotent kayıt üretmeli ve ECA zinciri maksimum 6 derinliği aşmamalıdır.",
+        "Cross-tenant veya approval bulunmayan activation olayı deny ile kapanır; PDP policy allow-deny sahipliği bu ECA kapsamına taşınmaz."
+      ],
+      "notes": "party-role-context-contract/eca: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract eca kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI yalnız bounded RoleBinding draft önerebilir; insan onayı olmadan activate, publish veya tenant context mutasyonu yapması yasaktır.",
+        "Agent credentials, sessions, authentication/SSO, credential lifecycle ya da PDP policy ownership kapsamını bu contract içine genişletemez.",
+        "Planlanan pytest komutu, release veya deploy sonucu gerçek insan kanıtı olmadan çalıştırılmış veya PASS olarak gösterilemez."
+      ],
+      "notes": "party-role-context-contract/aiAgents: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract aiAgents kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planlanan unit ve integration testleri person ve organization için exact tenant, channel, app, role ve temporal validity çözümünü doğrular.",
+        "Negatif fixture seti cross-tenant context, expired role, yanlış channel/app, credential/session sızıntısı ve onaysız RoleBinding activation reddini kapsar.",
+        "Ledger pytest komutu yalnız gelecekteki kernel contract test planıdır; bu Actionplan materialization çalışmasında runtime evidence veya PASS değildir.",
+        "[DOC-APPLY:high-risk-dod] party-role-context-contract: party-role-context-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] party-role-context-contract: party-role-context-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] party-role-context-contract: party-role-context-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] party-role-context-contract: Party Role Context Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:enterprise-dod] party-role-context-contract: Party Role Context Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "party-role-context-contract/testing: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract testing kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- party-role-context-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Party Role Context Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- party-role-context-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- party-role-context-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Party Role Context Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- party-role-context-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- party-role-context-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Party Role Context Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- party-role-context-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Party Role Context Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Party Role Context Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Party Role Context Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP access control ve prompt injection tehdidi, tenant veya role context girdisinin AI ya da client tarafından yetkisiz genişletilmesi üzerinden modellenir.",
+        "Girdi validation allowlist dışı role, channel, app ve tenant değerini fail-closed reddeder; PDP kararı veya authentication sonucu uydurulmaz.",
+        "Cross-tenant denetim izi identity reference, tenant, temporal window ve rejection reason taşır; PII değerini gereksiz loglamaz."
+      ],
+      "notes": "party-role-context-contract/owasp: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract owasp kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration sözleşmesi party identity ve k-tenancy bağını tipli PartyRoleContext API girdisiyle birleştirir; doğrudan kernel internal erişim vermez.",
+        "Bağımlılık yönü tam olarak schema-metadata-engine-contract ardından k-tenancy sırasındadır; erken planning schedule executable order sayılmaz.",
+        "Authentication/SSO, credential lifecycle ve PDP allow-deny contractları ayrı authority olarak kalır; bu node yalnız referanslanan context specification üretir.",
+        "[DOC-APPLY:task-handoff] party-role-context-contract: Party Role Context Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+      ],
+      "notes": "party-role-context-contract/integration: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract integration kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: party-role-context-contract — Party Role Context Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Party Role Context Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- party-role-context-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Party Role Context Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "App ve module tüketicileri PartyRoleContext sonucunu public contract üzerinden consume eder; party veya tenant tablosuna doğrudan DB erişimi kuramaz.",
+        "Channel ve app rolü yalnız geçerli tenant ve temporal contract kapısından sonra kullanılabilir; consumer kendi RoleBinding activation yetkisini türetemez.",
+        "Mode, authorization ve policy tüketicileri context specification referansı alabilir fakat identity lifecycle ya da PDP ownership bu node'a geçmez."
+      ],
+      "notes": "party-role-context-contract/moduleUsage: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract moduleUsage kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Party identity ve role context için PII/KVKK veri sınıfı ile purpose-specific retention ve saklama takvimi insan veri sahibi tarafından onaylanmalıdır.",
+        "Süresi dolan veya amacı sona eren role context kayıtları yasal hold hariç silme ya da anonimleştirme akışına girer; audit izi ayrı retention taşır.",
+        "Tenant ayrımı, temporal history ve RoleBinding approval kaydı append-only veya expand-contract migration planında korunur; runtime göç bu node tarafından yapılmaz."
+      ],
+      "notes": "party-role-context-contract/dataLifecycle: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract dataLifecycle kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planlanan SLI metric, geçerli role context çözüm oranı ve cross-tenant reject metriğidir; SLO ve error-budget eşikleri runtime sahibi tarafından onaylanır.",
+        "Tenant mismatch, expired role ve approval-required sonuçları PII redaksiyonlu structured log ve trace correlation ile gözlenebilir olmalıdır.",
+        "Alert ve runbook planı cross-tenant accept sayısı sıfırdan büyük olduğunda acil müdahale ve authority kill-switch adımını tarif eder."
+      ],
+      "notes": "party-role-context-contract/observability: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract observability kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "Birincil failure mode stale temporal role veya yanlış tenant context kabulüdür; çözüm aynı input için idempotent ve fail-closed olmalıdır.",
+        "Context kaynağı erişilemezse otomatik default role verilmez; retry/backoff sonrasında kademeli degrade sonucu deny olarak kalır.",
+        "RoleBinding approval event tekrarı duplicate activation üretmez; dead-letter kuyruğu varsa insan incelemesi olmadan yeniden activation yapmaz."
+      ],
+      "notes": "party-role-context-contract/reliability: planlı governance sözleşmesi; actual runtime evidence yoktur.",
+      "prompt": "Party Role Context Contract reliability kapsamını party identity, tenant/channel/app role context, temporal validity, fail-closed cross-tenant davranış ve PII/KVKK sınırında ayrıntılandır. Güvenlik sınırı: credentials, sessions, authentication/SSO, credential lifecycle ve PDP allow-deny ownership kapsam dışıdır. Çıktı: insan onaylı RoleBinding draft handoff'u ve ölçülebilir planlama kanıtı; runtime sonuç uydurma.",
+      "provenance": "human"
+    }
+  },
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "standardRefs": {
+    "observabilityRef": "observability",
+    "testingStandardRef": "testing-strategy",
+    "codingStandardRef": "coding-standards",
+    "dataApiContractRef": "data-api-contract",
+    "aiGovernanceRef": "ai-governance",
+    "releasePolicyRef": "release-versioning",
+    "architectureRef": "architecture",
+    "qualityGateRef": "quality-gates",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "i14yRef": "i14y",
+    "shortCodeRef": "short-code",
+    "c13nRef": "c13n",
+    "dataNormalizationRef": "data-normalization",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa"
+  },
+  "applicability": {},
+  "waivers": [],
+  "artifactKind": "delivery-task",
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "party-role-context-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-07-31",
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:party-role-context-contract:kernel-public-contract",
+      "planned-test:party-role-context-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-fieldtypes",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-party"
+    ]
+  }
+}
