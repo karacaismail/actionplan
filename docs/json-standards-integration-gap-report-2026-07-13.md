@@ -14,11 +14,12 @@ Bu repoda bir kuralın üç yaşam biçimi vardır; rapor bu üçlüye göre sı
 |---|---|---|---|
 | Anlatı yönergesi | `docs/*.md` (Pages'ta görünen dokümanlar) | İnsan-okur gerekçe, karar, kapsam | globalReadiness/urlPolicy vb. kavram testleri |
 | Makine sözleşmesi | `src/data/standards/<id>.json` (38 adet) | CI-zorlanabilir kural değerleri; tek kaynak | `check-*` kapıları + `check-standards-coverage` |
-| İçerik sayfaları | `public/data/nodes.json` (617 materialized WBS düğümü; "json base content pages") | Her düğümün 17 boyut içeriği + `standardRefs` bağları | `check-dimension-applicability`, `check-standards-coverage` |
+| İçerik sayfaları | `public/data/nodes.json` (doğrulanmış current-live materialized WBS düğümleri; "json base content pages") | Her düğümün 17 boyut içeriği + `standardRefs` bağları | `check-dimension-applicability`, `check-standards-coverage` |
 
 App kimlik karar kaydındaki `496`, yeniden üretilebilir **kaynak snapshot** sayısıdır.
-Güncel materialized katalog `617` fiziksel JSON kaydıdır (`612` aktif + `5` legacy alias);
-bu iki sayı aynı metriğin eski/yeni değeri gibi birbirinin yerine kullanılmaz.
+Current-live materialized katalog `resolveD01NodeUniverse` ile doğrulanır; aktif kayıt ve
+legacy alias ayrımı node `artifactKind` verisinden türetilir. Kaynak snapshot ve current-live
+toplam aynı metriğin eski/yeni değeri gibi birbirinin yerine kullanılmaz.
 
 Entegrasyon ilkesi (00-standards-index): anlatı kuralı YENİDEN YAZMAZ, makine sözleşmesini işaret eder. Kural değeri yalnız JSON'da değişir. Bir .md'nin "JSON'a aktarılması" = zorlanabilir kurallarının `StandardContractSchema` uyumlu sözleşmeye taşınması + anlatının referansa dönmesi.
 
@@ -73,7 +74,7 @@ Not: `10-business-model-switching` fiyatlandırma bölümü §1'deki `finance-mo
 
 ## 3. İçerik sayfalarına (nodes.json) entegrasyon — üç yayılım sınıfı
 
-### 3.1 HER DÜĞÜME (617/617 materialized) — mevcut mekanizmayla, yeni alan icat etmeden
+### 3.1 HER CURRENT-LIVE DÜĞÜME — mevcut mekanizmayla, yeni alan icat etmeden
 
 Bu sınıf iki kanaldan her düğümde yaşıyor ve J1-J4 kapanışında yeni sözleşmelere bağlandı:
 
@@ -120,4 +121,4 @@ KALAN KARARLAR (CPO): (1) `i18nRef` feature seviyesinde Ö→Z terfisi; (2) `fin
 
 1. Yeni JSON + yeni sayfa: §1 tablosundaki 5 P0-P1 sözleşme (`global-market-readiness`, `finance-money-model`, `identity-data`, `search-quality`, `decision-grade-data`) tamamlandı; 2 P2 aday insan kararı bekler. Zaman tipleri yeni JSON değil atom-registry kaydıdır.
 2. Mevcut JSON entegrasyonu: §2 tablosundaki i18n çekirdeği, privacy G1-G12, a11y×i18n, identifier güvenliği, bölgesel altyapı ve launch-gate deltaları hedef sözleşmelere uygulandı.
-3. Her yere entegrasyon: yeni alan icat edilmez — `i18nRef` app..archetype Z; sözleşmeler 617 materialized sayfaya raw/effective referans, typed app/module sözleşmesi ve task-specific prompt içeriğiyle yayılır. Semantic feature overlay'leri §3.2, UI sayfası beyanları §3.3; §3.4 kapsamları bilinçli olarak globalleştirilmez.
+3. Her yere entegrasyon: yeni alan icat edilmez — `i18nRef` app..archetype Z; sözleşmeler doğrulanmış current-live materialized sayfalara raw/effective referans, typed app/module sözleşmesi ve task-specific prompt içeriğiyle yayılır. Semantic feature overlay'leri §3.2, UI sayfası beyanları §3.3; §3.4 kapsamları bilinçli olarak globalleştirilmez.
