@@ -22,7 +22,7 @@ const SOURCES = [
   CLOSURE,
 ];
 const NON_GOALS = [
-  "canonical mutation is limited to ledger rows marked applied and their deterministic app registry, kernel registry, index, navigation, meta, public and doc-matrix projections; the current shard applies event-bus-delivery-contract only",
+  "canonical mutation is limited to ledger rows marked applied and their deterministic app registry, kernel registry, index, navigation, meta, public and doc-matrix projections; the current shard applies kernel-terminology-contract only",
   "no parent-node, historical inventory, authority, package, queue or runtime mutation",
   "no unapproved or bulk descendant application; D01 cannot close before 33/33",
   "no runtime implementation or readiness claim",
@@ -33,7 +33,7 @@ const TOP_ROLLBACK = {
   trigger:
     "applied row, canonical node, app or kernel registry, deterministic projection, live or immutable hash, or fail-closed NO-GO boundary drifts",
   action:
-    "atomically set the event-bus-delivery-contract ledger row to pending; restore application summary to 33/0/33; remove its canonical node and app/kernel registry entries; restore the 617-node snapshots; regenerate index, navigation, meta, public nodes and doc matrix projections; preserve PRE-D01 hashes and authority; rerun all governance, registry, projection and content gates",
+    "atomically set the kernel-terminology-contract ledger row to pending; restore application summary to 33/1/32; remove its canonical node and app/kernel registry entries; restore the 618-node snapshots; regenerate index, navigation, meta, public nodes and doc matrix projections; preserve PRE-D01 hashes and authority; rerun all governance, registry, projection and content gates",
   runtimeDataImpact: "none",
 };
 // biome-ignore format: exact row contract stays compact for the shard budget.
@@ -72,10 +72,10 @@ const validateRootApplicationScope = (handoff: Handoff) => {
   if (/\bno (?:commit|push|pull request|pr)\b/.test(nonGoals))
     errors.push("non-goals-semantics:delivery-step-prohibition");
   if (
-    !same(appliedIds, ["event-bus-delivery-contract"]) ||
+    !same(appliedIds, ["event-bus-delivery-contract", "kernel-terminology-contract"]) ||
     !includesEvery(nonGoals, [
       "ledger rows marked applied",
-      "event-bus-delivery-contract only",
+      "kernel-terminology-contract only",
       "app registry",
       "kernel registry",
       "index",
@@ -109,13 +109,13 @@ const validateRootApplicationScope = (handoff: Handoff) => {
   if (
     !includesEvery(action, [
       "atomically",
-      "event-bus-delivery-contract",
+      "kernel-terminology-contract",
       "pending",
-      "33/0/33",
+      "33/1/32",
       "remove",
       "canonical node",
       "app/kernel registry",
-      "617-node",
+      "618-node",
       "index",
       "navigation",
       "meta",
@@ -136,6 +136,40 @@ const testCommand = (id: string) =>
 const rowEvidence = (id: string) => ({ required: ["implementation-diff", "planned-test-pass", "negative-boundary-proof"], acceptance: `${id} positive behavior and parent-scope exclusion are both proven` });
 // biome-ignore format: exact derived rollback stays compact for the shard budget.
 const rowRollback = (id: string) => ({ owner: "codex", trigger: `${id} planned test or parent-scope evidence fails`, action: `withdraw ${id} application and restore the pre-application canonical state` });
+const CURRENT_SCHEDULE_FIELDS = ["start", "end"] as const;
+const BASELINE_SCHEDULE_FIELDS = ["baselineStart", "baselineEnd"] as const;
+const ACTUAL_SCHEDULE_FIELDS = ["actualStart", "actualEnd"] as const;
+const validateAppliedNodeSchedule = (
+  selected: NodeRecord,
+  parent: NodeRecord | undefined,
+  id: string,
+) => {
+  const errors: string[] = [];
+  const expected = parent?.schedule;
+  const actual = selected.schedule;
+  if (!expected) return [`applied-node-parent-schedule-missing:${id}`];
+  const owns = (field: keyof NonNullable<NodeRecord["schedule"]>) =>
+    Boolean(actual && Object.hasOwn(actual, field));
+  const differs = (field: keyof NonNullable<NodeRecord["schedule"]>) =>
+    actual?.[field] !== expected[field];
+  if (!CURRENT_SCHEDULE_FIELDS.every(owns))
+    errors.push(`applied-node-current-schedule-missing:${id}`);
+  else if (CURRENT_SCHEDULE_FIELDS.some(differs))
+    errors.push(`applied-node-current-schedule-drift:${id}`);
+  if (!BASELINE_SCHEDULE_FIELDS.every(owns))
+    errors.push(`applied-node-baseline-schedule-missing:${id}`);
+  else if (BASELINE_SCHEDULE_FIELDS.some(differs))
+    errors.push(`applied-node-baseline-schedule-drift:${id}`);
+  if (!ACTUAL_SCHEDULE_FIELDS.every(owns))
+    errors.push(`applied-node-actual-schedule-missing:${id}`);
+  else if (
+    ACTUAL_SCHEDULE_FIELDS.some(differs) ||
+    actual?.actualStart !== null ||
+    actual.actualEnd !== null
+  )
+    errors.push(`applied-node-actual-schedule-drift:${id}`);
+  return errors;
+};
 const isDag = (rows: LedgerRow[]) => {
   const ids = new Set(rows.map((row) => row.selectedDescendantId));
   const indegree = new Map([...ids].map((id) => [id, 0]));
@@ -169,10 +203,12 @@ const universe = (handoff = readJson<Handoff>(HANDOFF), records = nodeRecords) =
 const appliedFixture = () => {
   const handoff = structuredClone(readJson<Handoff>(HANDOFF));
   const row = handoff.ledger.find(
-    (candidate) => candidate.selectedDescendantId === "event-bus-delivery-contract",
+    (candidate) => candidate.selectedDescendantId === "kernel-terminology-contract",
   ) as LedgerRow;
+  const parent = nodeRecords.find(({ node }) => node.id === row.parentId)?.node;
+  if (!parent?.schedule) throw new Error(`fixture-parent-schedule-missing:${row.parentId}`);
   row.applicationStatus = "applied";
-  handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+  handoff.applicationSummary = { approved: 33, applied: 2, remaining: 31 };
   const records = structuredClone(nodeRecords).filter(
     ({ node }) => node.id !== row.selectedDescendantId,
   );
@@ -186,6 +222,7 @@ const appliedFixture = () => {
       owner: row.parentOwner,
       artifactKind: "delivery-task",
       dependsOn: row.dependencies,
+      schedule: structuredClone(parent.schedule),
       source: {
         corpus: "synthetic",
         originalId: row.selectedDescendantId,
@@ -314,7 +351,10 @@ const validate = (handoff: Handoff, records = nodes) => {
     if ((row.applicationStatus === "pending" && selected) || (row.applicationStatus === "applied" && (!selected || selected.level !== "archetype" || selected.parentId !== row.parentId))) errors.push(`application-live-state:${row.parentId}`);
     if (row.applicationStatus === "applied") {
       if (!selected) errors.push(`applied-node-missing:${row.selectedDescendantId}`);
-      else if (selected.title !== row.title || selected.owner !== row.parentOwner || !same(selected.dependsOn, row.dependencies) || !same(selected.source, { corpus: "synthetic", originalId: row.selectedDescendantId, granularity: row.level, cluster: row.sourceCluster }) || selected.artifactKind !== "delivery-task") errors.push(`applied-node-row-parity:${row.selectedDescendantId}`);
+      else {
+        if (selected.title !== row.title || selected.owner !== row.parentOwner || !same(selected.dependsOn, row.dependencies) || !same(selected.source, { corpus: "synthetic", originalId: row.selectedDescendantId, granularity: row.level, cluster: row.sourceCluster }) || selected.artifactKind !== "delivery-task") errors.push(`applied-node-row-parity:${row.selectedDescendantId}`);
+        errors.push(...validateAppliedNodeSchedule(selected, parent, row.selectedDescendantId));
+      }
     }
     if (row.implementationBoundary.contract !== expectedId || row.implementationBoundary.expansionAllowed || row.implementationBoundary.scope.trim().length < 40) errors.push(`boundary:${row.parentId}`);
     if (row.plannedTestCommand !== testCommand(expectedId) || !same(row.evidenceContract, rowEvidence(expectedId)) || !same(row.rollback, rowRollback(expectedId))) errors.push(`handoff:${row.parentId}`);
@@ -336,24 +376,29 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     const handoff = readJson<Handoff>(HANDOFF);
     expect(validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors).toEqual([]);
     expect(validate(handoff)).toEqual([]);
-    const applied = nodes.find((node) => node.id === "event-bus-delivery-contract");
-    const parent = nodes.find((node) => node.id === "k-bus");
-    expect(applied?.schedule).toEqual(parent?.schedule);
+    for (const [appliedId, parentId] of [
+      ["event-bus-delivery-contract", "k-bus"],
+      ["kernel-terminology-contract", "k-terminoloji"],
+    ]) {
+      const applied = nodes.find((node) => node.id === appliedId);
+      const parent = nodes.find((node) => node.id === parentId);
+      expect(applied?.schedule).toEqual(parent?.schedule);
+    }
     expect([PRE_D01_SOURCE_COMMIT, PRE_D01_EXPECTED_NODE_COUNT, PRE_D01_NODE_SET_SHA256, PRE_D01_PROTECTED_PROJECTION_SHA256, D01_APPROVED_MAPPING_SHA256, D01_APPROVED_ID_SET_SHA256]).toEqual(["09f0a1fb52d4141092add22a54df1a6204c155a4", 617, "c87a7e67763454dec4fde4243e01e2a108a64a3b6c5cfd33b86e28dbc3daf6be", "598e39b8600b5ee78fa763e42cd7b80f3626e47c5d91860b338ee474c9ddd136", "2e5ce4b1c96446b6ca1f0e42cdc5225c4f36ac9551056fec31147b1febc332b0", "dd797dbf38594e77c8171a776d0eef1b681e0dfb7302b22b17e62526f950431d"]);
   });
 
-  it("accepts exactly one correctly applied approved descendant at total 618", () => {
+  it("accepts exactly two correctly applied approved descendants at total 619", () => {
     const fixture = appliedFixture();
     const currentNodes = fixture.records.map(({ node }) => node);
     expect(universe(fixture.handoff, fixture.records).errors).toEqual([]);
-    expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: [fixture.row.selectedDescendantId], baselineRecordCount: 617 });
+    expect(universe(fixture.handoff, fixture.records)).toMatchObject({ appliedIds: ["event-bus-delivery-contract", fixture.row.selectedDescendantId], baselineRecordCount: 617 });
     expect(validate(fixture.handoff, currentNodes)).toEqual([]);
     const currentLive = derive(currentNodes);
     expect([currentNodes.length, currentLive.covered.length, currentLive.pending.length]).toEqual([
-      618, 6, 32,
+      619, 7, 31,
     ]);
     expect(fixture.handoff).toMatchObject({
-      applicationSummary: { approved: 33, applied: 1, remaining: 32 },
+      applicationSummary: { approved: 33, applied: 2, remaining: 31 },
       status: "approved-application-pending",
       gapClosed: false,
       authorityBoundary: { codeStartAllowed: false, verdict: "NO-GO" },
@@ -362,7 +407,7 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     const pendingPresent = structuredClone(fixture.handoff);
     const pendingRow = pendingPresent.ledger.find((row) => row.selectedDescendantId === fixture.row.selectedDescendantId) as LedgerRow;
     pendingRow.applicationStatus = "pending";
-    pendingPresent.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    pendingPresent.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
     expect(validate(pendingPresent, currentNodes)).toContain(`application-live-state:${fixture.row.parentId}`);
     expect(validate(fixture.handoff, nodes.filter((node) => node.id !== fixture.row.selectedDescendantId))).toContain(`application-live-state:${fixture.row.parentId}`);
   });
@@ -377,16 +422,29 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     expectError(current, structuredClone(nodeRecords).slice(1), "baseline-removal:baseline-count=616");
     const renamed = structuredClone(nodeRecords); renamed[0].node.id = "renamed-baseline"; renamed[0].filename = "renamed-baseline.json";
     expectError(current, renamed, "baseline-id-hash-drift");
-    const pending = appliedFixture(); pending.row.applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    const pending = appliedFixture(); pending.row.applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
     expectError(pending.handoff, pending.records, `pending-node-present:${pending.row.selectedDescendantId}`);
     const missing = appliedFixture(); expectError(missing.handoff, nodeRecords.filter(({ node }) => node.id !== missing.row.selectedDescendantId), `applied-node-missing:${missing.row.selectedDescendantId}`);
     for (const [field, value, error] of [["parentId", "wrong-parent", `applied-node-parent-drift:${missing.row.selectedDescendantId}`], ["level", "feature", `applied-node-level-drift:${missing.row.selectedDescendantId}`]] as const) {
       const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
       expectError(fixture.handoff, fixture.records, error);
     }
-    for (const [field, value] of [["title", "Drift"], ["owner", "drift-owner"], ["artifactKind", "governance"], ["dependsOn", []], ["source", { corpus: "synthetic", originalId: "drift", granularity: "archetype", cluster: "layer0" }]] as const) {
+    for (const [field, value] of [["title", "Drift"], ["owner", "drift-owner"], ["artifactKind", "governance"], ["dependsOn", ["drift"]], ["source", { corpus: "synthetic", originalId: "drift", granularity: "archetype", cluster: "layer0" }]] as const) {
       const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
       expect(validate(fixture.handoff, fixture.records.map(({ node }) => node))).toContain(`applied-node-row-parity:${fixture.row.selectedDescendantId}`);
+    }
+    const scheduleCases: Array<[string, (schedule: NonNullable<NodeRecord["schedule"]>) => void]> = [
+      ["applied-node-current-schedule-missing", (schedule) => void Reflect.deleteProperty(schedule, "start")],
+      ["applied-node-current-schedule-drift", (schedule) => void Object.assign(schedule, { end: "2099-01-01" })],
+      ["applied-node-baseline-schedule-missing", (schedule) => void Reflect.deleteProperty(schedule, "baselineStart")],
+      ["applied-node-baseline-schedule-drift", (schedule) => void Object.assign(schedule, { baselineEnd: "2099-01-01" })],
+      ["applied-node-actual-schedule-missing", (schedule) => void Reflect.deleteProperty(schedule, "actualStart")],
+      ["applied-node-actual-schedule-drift", (schedule) => void Object.assign(schedule, { actualEnd: "2099-01-01" })],
+    ];
+    for (const [error, mutate] of scheduleCases) {
+      const fixture = appliedFixture();
+      mutate(fixture.records.at(-1)?.node.schedule as NonNullable<NodeRecord["schedule"]>);
+      expect(validate(fixture.handoff, fixture.records.map(({ node }) => node))).toContain(`${error}:${fixture.row.selectedDescendantId}`);
     }
     const duplicate = structuredClone(current); duplicate.ledger[1].selectedDescendantId = duplicate.ledger[0].selectedDescendantId; expectError(duplicate, nodeRecords, `duplicate-selected-id:${duplicate.ledger[0].selectedDescendantId}`);
     const mapping = structuredClone(current); mapping.ledger[0].parentId = "drift"; expectError(mapping, nodeRecords, "approved-mapping-digest-drift");
