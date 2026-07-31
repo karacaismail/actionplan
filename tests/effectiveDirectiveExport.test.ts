@@ -1,15 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import { exportAgentPrompt, exportJSON, exportTask, getDescendants, indexById } from "@/engine";
 import { effectiveDirectiveApplications } from "@/engine/effectiveDirectives";
 import type { TaskNode } from "@/schemas";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
-const NODE_DIR = path.join(process.cwd(), "src/data/generated/nodes");
-const nodes = fs
-  .readdirSync(NODE_DIR)
-  .filter((file) => file.endsWith(".json"))
-  .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as TaskNode);
+const live = readD01LiveUniverse();
+const nodes = live.nodes as TaskNode[];
 const index = indexById(nodes);
 const byId = new Map(nodes.map((node) => [node.id, node]));
 
@@ -112,11 +108,11 @@ describe("effective document directives in JSON and prompt exports", () => {
     ).toBe(true);
   });
 
-  it("exports a non-empty resolved-directive sidecar for all 617 JSON-backed pages", () => {
+  it("exports a non-empty resolved-directive sidecar for every current-live JSON-backed page", () => {
     const before = JSON.stringify(nodes);
     const exported = JSON.parse(exportJSON(nodes));
 
-    expect(Object.keys(exported.resolvedDirectivesByNode)).toHaveLength(617);
+    expect(Object.keys(exported.resolvedDirectivesByNode)).toHaveLength(live.liveExpectedNodeCount);
     for (const node of nodes) {
       expect(exported.resolvedDirectivesByNode[node.id].length, node.id).toBeGreaterThan(0);
     }

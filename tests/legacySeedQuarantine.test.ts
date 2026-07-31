@@ -4,10 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const sha256 = (relative: string) => createHash("sha256").update(read(relative)).digest("hex");
+const { liveExpectedNodeCount } = readD01LiveUniverse({ root: ROOT });
 
 const seedContracts = [
   {
@@ -472,10 +474,9 @@ describe("Q3 legacy seed tam karantinası — davranış (statik kanıttan SONRA
     expect(result.stderr).toContain("FAIL-CLOSED");
   });
 
-  it("617 canonical + türev dosya SHA-256 prob öncesi/sonrası birebir aynı", () => {
+  it("current-live canonical + türev dosya SHA-256 prob öncesi/sonrası birebir aynı", () => {
     const before = hashCanonicalUniverse();
-    // 617 node + generated index/navigation/meta + public/data/nodes.json + matrix.csv
-    expect(before.count).toBe(622);
+    expect(before.count).toBe(liveExpectedNodeCount + 5);
     for (const target of guardTargets) {
       assertProbeSafe(target);
       spawnSync(process.execPath, [path.join(ROOT, target), "--force"], {

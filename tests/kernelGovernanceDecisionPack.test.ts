@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+// @ts-expect-error -- the JavaScript governance helpers intentionally have no declaration files.
+import { validateKernelGovernance } from "../tools/lib/kernel-governance-audit.mjs";
+// @ts-expect-error -- the JavaScript governance helper intentionally has no declaration file.
+import { resolveD01NodeUniverse } from "../tools/lib/kernel-node-universe.mjs";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
 const ROOT = process.cwd();
 const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
@@ -9,6 +14,99 @@ const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("kernel governance decision pack", () => {
+  it("accepts a validated synthetic first-applied current-live universe without rewriting the historical addendum", () => {
+    const live = readD01LiveUniverse();
+    const handoff = structuredClone(live.handoff);
+    const row = handoff.ledger.find(
+      (candidate: { selectedDescendantId: string }) =>
+        candidate.selectedDescendantId === "actor-role-binding-contract",
+    );
+    row.applicationStatus = "applied";
+    handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+    const child = structuredClone(
+      live.nodes.find((node: { id: string }) => node.id === row.parentId),
+    );
+    Object.assign(child, {
+      id: row.selectedDescendantId,
+      title: row.title,
+      level: "archetype",
+      parentId: row.parentId,
+      owner: row.parentOwner,
+      artifactKind: "delivery-task",
+      dependsOn: row.dependencies,
+      blocks: [],
+      related: [],
+      source: { cluster: row.sourceCluster },
+    });
+    const nodeRecords = [
+      ...structuredClone(live.nodeRecords),
+      { filename: `${child.id}.json`, node: child },
+    ];
+    const validatedLiveUniverse = resolveD01NodeUniverse({ records: nodeRecords, handoff });
+    const nodes = nodeRecords.map(({ node }) => node);
+    const activeNodes = nodes.filter(
+      (node: { artifactKind?: string }) => node.artifactKind !== "legacy-alias",
+    );
+    const kPrefixedNodes = nodes.filter((node: { id: string }) => node.id.startsWith("k-"));
+    const sumSp = (items: Array<{ effort?: { estimate?: number } }>) =>
+      items.reduce((sum, node) => sum + (node.effort?.estimate ?? 0), 0);
+    const queue = JSON.parse(
+      read("reports/platform-implementation-execution-queue-2026-07-09.json"),
+    );
+    const report = JSON.parse(read("reports/kernel-governance-gap-addendum-2026-07-15.json"));
+    const artifacts = {
+      adrCollisions: JSON.parse(
+        read("reports/kernel-adr-collision-source-bindings-2026-07-15.json"),
+      ),
+      ghostBindings: JSON.parse(
+        read("reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json"),
+      ),
+      tenancyAuthority: JSON.parse(
+        read("reports/kernel-tenancy-authority-inventory-2026-07-15.json"),
+      ),
+    };
+
+    expect(validatedLiveUniverse.expectedNodeCount).toBe(618);
+    expect([
+      nodes.length,
+      activeNodes.length,
+      sumSp(nodes),
+      kPrefixedNodes.length,
+      sumSp(kPrefixedNodes),
+    ]).toEqual([618, 613, 10103, 41, 787]);
+    expect(validateKernelGovernance({ nodes, queue, report, artifacts })).toEqual([]);
+    expect(report.sourceSnapshot.nodeCount).toBe(617);
+    const invalidHistoricalSnapshot = structuredClone(report);
+    invalidHistoricalSnapshot.sourceSnapshot.nodeCount = 999;
+    expect(
+      validateKernelGovernance({ nodes, queue, report: invalidHistoricalSnapshot, artifacts }),
+    ).toContain("kernel snapshot drift");
+
+    const allAppliedHandoff = structuredClone(live.handoff);
+    for (const appliedRow of allAppliedHandoff.ledger) appliedRow.applicationStatus = "applied";
+    allAppliedHandoff.applicationSummary = { approved: 33, applied: 33, remaining: 0 };
+    const allAppliedRecords = [
+      ...structuredClone(live.nodeRecords),
+      ...allAppliedHandoff.ledger.map((appliedRow: typeof row) => {
+        const appliedChild = structuredClone(
+          live.nodes.find((node: { id: string }) => node.id === appliedRow.parentId),
+        );
+        Object.assign(appliedChild, {
+          id: appliedRow.selectedDescendantId,
+          level: "archetype",
+          parentId: appliedRow.parentId,
+        });
+        return { filename: `${appliedChild.id}.json`, node: appliedChild };
+      }),
+    ];
+    expect(
+      resolveD01NodeUniverse({
+        records: allAppliedRecords,
+        handoff: allAppliedHandoff,
+      }).expectedNodeCount,
+    ).toBe(650);
+  });
+
   it("publishes evidence-backed options without taking human architecture decisions", () => {
     expect(fs.existsSync(path.join(ROOT, PACK))).toBe(true);
     const pack = read(PACK);
@@ -51,12 +149,10 @@ describe("kernel governance decision pack", () => {
     expect(pack).toContain(HANDOFF);
     for (const approvalAware of [
       "GATE-01 onaylı exact 33-row D01 descendant ledger",
-      "application 0/33 pending",
-      "kanonik descendant düğümlerinin hiçbiri henüz mevcut değildir",
+      "application özeti ve pending/applied satırları kanonik resolver ile doğrulanır",
       "D01 kapanmış değildir",
       "`codeStartAllowed=false`",
       "`runtimeCodeAllowed=false`",
-      "approved/not-applied",
     ])
       expect(normalizedPack).toContain(approvalAware);
     for (const obsolete of [
@@ -71,10 +167,10 @@ describe("kernel governance decision pack", () => {
     ])
       expect(pack).not.toContain(obsolete);
     const handoff = JSON.parse(read(HANDOFF));
+    const currentLive = readD01LiveUniverse();
     expect(handoff).toMatchObject({
       status: "approved-application-pending",
       gapClosed: false,
-      applicationSummary: { approved: 33, applied: 0, remaining: 33 },
       authorityBoundary: {
         codeStartAllowed: false,
         runtimeCodeAllowed: false,
@@ -82,17 +178,13 @@ describe("kernel governance decision pack", () => {
       },
     });
     expect(handoff.ledger).toHaveLength(33);
-    expect(
-      handoff.ledger.every(
-        (row: { selectionStatus: string; applicationStatus: string }) =>
-          row.selectionStatus === "approved-not-applied" && row.applicationStatus === "pending",
-      ),
-    ).toBe(true);
+    expect(currentLive.validatedLiveUniverse.approvedIds).toHaveLength(33);
+    expect(currentLive.nodes).toHaveLength(currentLive.liveExpectedNodeCount);
     expect(normalizedPack).toContain(
       "bu ledger'lar kanonik ADR topic, WBS owner/disposition veya tenancy topolojisini seçmez",
     );
     expect(normalizedPack).toContain(
-      "node/SP/status/evidence ve graph/queue sayılarını canlı kanonik veriden; ADR ve hayalet WBS envanterini denetimli snapshot'tan doğrular",
+      "current-live graph/readiness durumunu canlı kanonik veriden; tarihsel nodeCount ile ADR/hayalet WBS envanterini denetimli snapshot'tan doğrular",
     );
     expect(
       pack.match(/Karar sahibi: User\/Admin · Koordinatör: PM · Teslim yetkilisi: Codex/g),
@@ -119,7 +211,7 @@ describe("kernel governance decision pack", () => {
     expect(normalizedPack).toContain("Crosscut ve missing-doc-ref shard'ları");
     expect(pack).not.toContain("Karar paketi ve governance raporu birlikte revert edilir");
     const evidence = read("docs/evidence-taxonomy.md");
-    expect(evidence).toContain("güncel 617 düğüm");
+    expect(evidence).toContain("doğrulanmış current-live düğüm evreni");
     expect(evidence).not.toContain("güncel 467 düğüm");
 
     const classifications = JSON.parse(read("src/data/doc-task-content-classification.json"));

@@ -4,12 +4,10 @@ import { effectiveDirectiveApplications } from "@/engine/effectiveDirectives";
 import { indexById } from "@/engine/resolve";
 import type { TaskNode } from "@/schemas";
 import { describe, expect, it } from "vitest";
+import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
 
-const NODE_DIR = path.join(process.cwd(), "src/data/generated/nodes");
-const nodes = fs
-  .readdirSync(NODE_DIR)
-  .filter((file) => file.endsWith(".json"))
-  .map((file) => JSON.parse(fs.readFileSync(path.join(NODE_DIR, file), "utf8")) as TaskNode);
+const live = readD01LiveUniverse();
+const nodes = live.nodes as TaskNode[];
 const index = indexById(nodes);
 const EXECUTABLE = new Set(["archetype", "feature", "component", "work_unit", "micro_step"]);
 const TYPED_RUNTIME_ARTIFACTS = new Set(["sellable-app", "app-core-module", "app-module"]);
@@ -104,8 +102,8 @@ function readMatrix(): MatrixRow[] {
 }
 
 describe("effective directive content on every JSON-backed task page", () => {
-  it("gives all 617 routes direct or inherited source-owned content and prompts", () => {
-    expect(nodes).toHaveLength(617);
+  it("gives every current-live route direct or inherited source-owned content and prompts", () => {
+    expect(nodes).toHaveLength(live.liveExpectedNodeCount);
     const failures: string[] = [];
 
     for (const node of nodes) {
