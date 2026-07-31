@@ -39,13 +39,22 @@ const handoff = JSON.parse(fs.readFileSync(HANDOFF_PATH, "utf8"));
 const liveUniverse = resolveD01NodeUniverse({ records: nodeRecords, handoff });
 const kernelCatalog = readKernelCatalog(ROOT);
 
-const appliedFixture = (parentId = "k-actor") => {
+const appliedFixture = (parentId?: string) => {
   const fixtureHandoff = structuredClone(handoff);
   const row = fixtureHandoff.ledger.find(
-    (candidate: { parentId: string }) => candidate.parentId === parentId,
+    (candidate: { parentId: string; applicationStatus: string }) =>
+      parentId
+        ? candidate.parentId === parentId && candidate.applicationStatus === "pending"
+        : candidate.applicationStatus === "pending",
   );
+  const nextApplied = fixtureHandoff.applicationSummary.applied + 1;
+  const nextRemaining = fixtureHandoff.applicationSummary.remaining - 1;
   row.applicationStatus = "applied";
-  fixtureHandoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+  fixtureHandoff.applicationSummary = {
+    approved: 33,
+    applied: nextApplied,
+    remaining: nextRemaining,
+  };
   // biome-ignore format: the complete synthetic approved node stays reviewable as one contract.
   const node = { id: row.selectedDescendantId, title: row.title, level: "archetype", parentId: row.parentId, owner: row.parentOwner, artifactKind: "delivery-task", dependsOn: row.dependencies, blocks: [], related: [], source: { cluster: row.sourceCluster } };
   const records = [...structuredClone(nodeRecords), { filename: `${node.id}.json`, node }];
@@ -252,14 +261,24 @@ describe("kernel integration registry coverage", () => {
     const appEntry = appliedD01AppDecision(fixture.row);
     const kernelEntry = appliedD01KernelDecision(kernelCatalog, fixture.row, parent);
     // biome-ignore format: the exact dual-registry fixture stays compact.
-    const valid = { appliedRows: universe.appliedRows, appEntries: { [fixture.node.id]: appEntry }, kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry }, kernelCatalog };
-    expect(universe.expectedNodeCount).toBe(618);
+    const appEntries = Object.fromEntries(universe.appliedRows.map((row: typeof fixture.row) => [row.selectedDescendantId, appliedD01AppDecision(row)]));
+    const valid = {
+      appliedRows: universe.appliedRows,
+      appEntries,
+      kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry },
+      kernelCatalog,
+    };
+    expect(universe.expectedNodeCount).toBe(liveUniverse.expectedNodeCount + 1);
     expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
-    expect(expectedKernelRoleCounts(1).contributor).toBe(122);
+    expect(expectedKernelRoleCounts(liveUniverse.appliedRows.length + 1).contributor).toBe(123);
 
     const pending = appliedFixture();
-    pending.handoff.ledger[0].applicationStatus = "pending";
-    pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    pending.row.applicationStatus = "pending";
+    pending.handoff.applicationSummary = {
+      approved: 33,
+      applied: liveUniverse.appliedRows.length,
+      remaining: 33 - liveUniverse.appliedRows.length,
+    };
     expect(() => resolveD01NodeUniverse(pending)).toThrow(/pending-node-present/);
     const unapproved = structuredClone(nodeRecords);
     // biome-ignore format: the one-record unapproved delta stays compact.
@@ -269,7 +288,10 @@ describe("kernel integration registry coverage", () => {
     const wrongParent = appliedFixture();
     wrongParent.records.at(-1)!.node.parentId = "k-mode";
     expect(() => resolveD01NodeUniverse(wrongParent)).toThrow(/applied-node-parent-drift/);
-    const pendingId = handoff.ledger[1].selectedDescendantId;
+    const pendingId = handoff.ledger.find(
+      (row: { applicationStatus: string; selectedDescendantId: string }) =>
+        row.applicationStatus === "pending" && row.selectedDescendantId !== fixture.node.id,
+    ).selectedDescendantId;
     // biome-ignore format: stale and applied entries form one exact reconciliation fixture.
     const entries = { [pendingId]: { profile: "delivery-task" }, [fixture.node.id]: { profile: "foundation-component" } };
     reconcileD01AppEntries(entries, resolveD01NodeUniverse(fixture));

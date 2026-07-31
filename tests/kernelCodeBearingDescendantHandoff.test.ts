@@ -21,10 +21,21 @@ const SOURCES = [
   INVENTORY,
   CLOSURE,
 ];
-// biome-ignore format: exact non-goals stay compact for the shard budget.
-const NON_GOALS = ["no canonical node, parent, projection, inventory, registry, authority, package or queue mutation", "decision pack change is limited to D01 approval-aware wording", "no runtime implementation or readiness claim", "no D01 closure", "no commit, push or pull request"];
-// biome-ignore format: exact rollback stays compact for the shard budget.
-const TOP_ROLLBACK = { owner: "codex", trigger: "GATE-01 provenance, exact mapping, live 38/5/33 measurement or fail-closed boundary drifts", action: "revert the report, decision-pack D01 approval-aware wording, and both associated tests together; leave canonical graph, governance records, queue and runtime unchanged", runtimeDataImpact: "none" };
+const NON_GOALS = [
+  "canonical mutation is limited to ledger rows marked applied and their deterministic app registry, kernel registry, index, navigation, meta, public and doc-matrix projections; the current shard applies event-bus-delivery-contract only",
+  "no parent-node, historical inventory, authority, package, queue or runtime mutation",
+  "no unapproved or bulk descendant application; D01 cannot close before 33/33",
+  "no runtime implementation or readiness claim",
+  "no release, deploy, tag, force operation or direct-main push",
+];
+const TOP_ROLLBACK = {
+  owner: "codex",
+  trigger:
+    "applied row, canonical node, app or kernel registry, deterministic projection, live or immutable hash, or fail-closed NO-GO boundary drifts",
+  action:
+    "atomically set the event-bus-delivery-contract ledger row to pending; restore application summary to 33/0/33; remove its canonical node and app/kernel registry entries; restore the 617-node snapshots; regenerate index, navigation, meta, public nodes and doc matrix projections; preserve PRE-D01 hashes and authority; rerun all governance, registry, projection and content gates",
+  runtimeDataImpact: "none",
+};
 // biome-ignore format: exact row contract stays compact for the shard budget.
 const ROW_KEYS = ["applicationStatus", "approvalRef", "dependencies", "evidenceContract", "implementationBoundary", "level", "parentId", "parentOwner", "plannedTestCommand", "rollback", "selectedDescendantId", "selectionStatus", "sourceCluster", "title"];
 // biome-ignore format: exact fail-closed root stays compact for the shard budget.
@@ -33,7 +44,7 @@ const ROOT_KEYS = ["applicationSummary", "authorityBoundary", "decision", "decis
 const AUTHORITY = { actionplanWriter: "codex-governance-only", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
 
 // biome-ignore format: audited test types stay compact for the shard budget.
-type NodeRecord = { id: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string } };
+type NodeRecord = { id: string; title?: string; level: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { corpus?: string; originalId?: string; granularity?: string; cluster?: string } };
 // biome-ignore format: exact ledger surface stays compact for the shard budget.
 type LedgerRow = { parentId: string; parentOwner: string; sourceCluster: string; selectedDescendantId: string; title: string; level: string; approvalRef: string; selectionStatus: string; applicationStatus: string; implementationBoundary: { contract: string; scope: string; expansionAllowed: boolean }; dependencies: string[]; plannedTestCommand: string; evidenceContract: { required: string[]; acceptance: string }; rollback: { owner: string; trigger: string; action: string } };
 // biome-ignore format: exact handoff root stays compact for the shard budget.
@@ -43,6 +54,82 @@ const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "u
 const readJson = <T>(relative: string) => JSON.parse(read(relative)) as T;
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 const sorted = (values: string[]) => [...values].sort();
+const includesEvery = (text: string, markers: string[]) =>
+  markers.every((marker) => text.includes(marker));
+const validateRootApplicationScope = (handoff: Handoff) => {
+  const errors: string[] = [];
+  const nonGoals = handoff.nonGoals.join(" ").toLowerCase();
+  const trigger = handoff.rollback.trigger.toLowerCase();
+  const action = handoff.rollback.action.toLowerCase();
+  const appliedIds = handoff.ledger
+    .filter((row) => row.applicationStatus === "applied")
+    .map((row) => row.selectedDescendantId);
+  if (
+    /no canonical node[^.]*mutation/.test(nonGoals) ||
+    /wording(?: only|-only)|limited to [^.]*wording/.test(nonGoals)
+  )
+    errors.push("non-goals-semantics:stale-approval-only");
+  if (/\bno (?:commit|push|pull request|pr)\b/.test(nonGoals))
+    errors.push("non-goals-semantics:delivery-step-prohibition");
+  if (
+    !same(appliedIds, ["event-bus-delivery-contract"]) ||
+    !includesEvery(nonGoals, [
+      "ledger rows marked applied",
+      "event-bus-delivery-contract only",
+      "app registry",
+      "kernel registry",
+      "index",
+      "navigation",
+      "meta",
+      "public",
+      "doc-matrix",
+      "parent-node",
+      "historical inventory",
+      "authority",
+      "package",
+      "queue",
+      "runtime mutation",
+      "unapproved",
+      "bulk descendant",
+      "33/33",
+      "runtime implementation",
+      "readiness",
+      "release",
+      "deploy",
+      "tag",
+      "force",
+      "direct-main push",
+    ])
+  )
+    errors.push("non-goals-semantics:applied-shard-markers");
+  if (/leave canonical graph[^.]*unchanged|revert the report/.test(action))
+    errors.push("rollback-semantics:stale-approval-only");
+  if (!includesEvery(trigger, ["row", "node", "registry", "projection", "hash", "no-go"]))
+    errors.push("rollback-semantics:trigger-markers");
+  if (
+    !includesEvery(action, [
+      "atomically",
+      "event-bus-delivery-contract",
+      "pending",
+      "33/0/33",
+      "remove",
+      "canonical node",
+      "app/kernel registry",
+      "617-node",
+      "index",
+      "navigation",
+      "meta",
+      "public",
+      "doc matrix",
+      "pre-d01",
+      "authority",
+      "rerun",
+      "gates",
+    ])
+  )
+    errors.push("rollback-semantics:atomic-restore-markers");
+  return errors;
+};
 const testCommand = (id: string) =>
   `uv run --python 3.12 pytest -q tests/kernel/contracts/test_${id.replaceAll("-", "_")}.py`;
 // biome-ignore format: exact derived row contracts stay compact for the shard budget.
@@ -82,14 +169,30 @@ const universe = (handoff = readJson<Handoff>(HANDOFF), records = nodeRecords) =
 const appliedFixture = () => {
   const handoff = structuredClone(readJson<Handoff>(HANDOFF));
   const row = handoff.ledger.find(
-    (candidate) => candidate.selectedDescendantId === "actor-role-binding-contract",
+    (candidate) => candidate.selectedDescendantId === "event-bus-delivery-contract",
   ) as LedgerRow;
   row.applicationStatus = "applied";
   handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
-  const records = structuredClone(nodeRecords);
+  const records = structuredClone(nodeRecords).filter(
+    ({ node }) => node.id !== row.selectedDescendantId,
+  );
   records.push({
     filename: `${row.selectedDescendantId}.json`,
-    node: { id: row.selectedDescendantId, level: "archetype", parentId: row.parentId },
+    node: {
+      id: row.selectedDescendantId,
+      title: row.title,
+      level: "archetype",
+      parentId: row.parentId,
+      owner: row.parentOwner,
+      artifactKind: "delivery-task",
+      dependsOn: row.dependencies,
+      source: {
+        corpus: "synthetic",
+        originalId: row.selectedDescendantId,
+        granularity: row.level,
+        cluster: row.sourceCluster,
+      },
+    },
   });
   return { handoff, records, row };
 };
@@ -187,6 +290,7 @@ const validate = (handoff: Handoff, records = nodes) => {
   if (!same(handoff.applicationSummary, { approved: 33, applied: appliedRows.length, remaining: pendingRows.length })) errors.push("counts");
   if (!same(handoff.nonGoals, NON_GOALS)) errors.push("non-goals");
   if (!same(handoff.rollback, TOP_ROLLBACK)) errors.push("rollback");
+  errors.push(...validateRootApplicationScope(handoff));
   if (handoff.decisionId !== "KGA-D01" || handoff.gapId !== "KGA-G01" || handoff.status !== "approved-application-pending" || handoff.gapClosed) errors.push("identity-status");
   if (!same(handoff.decision, { topic: "code-bearing descendants for 33 module parents", status: "approved-not-applied", decisionOwner: "user-admin", coordinator: "project_manager", finalAuthority: "codex", selectedOption: "33-approved-descendant-ledger" })) errors.push("decision");
   if (!same(rowParents, expectedParents) || new Set(rowParents).size !== 33 || new Set(selectedIds).size !== 33) errors.push("ledger-identity");
@@ -208,6 +312,10 @@ const validate = (handoff: Handoff, records = nodes) => {
     if (row.selectedDescendantId !== expectedId || row.title !== expected.title || !same(row.dependencies, expected.dependencies)) errors.push(`selection:${row.parentId}`);
     if (row.level !== "archetype" || row.approvalRef !== "GATE-01" || row.selectionStatus !== "approved-not-applied" || !["pending", "applied"].includes(row.applicationStatus)) errors.push(`state:${row.parentId}`);
     if ((row.applicationStatus === "pending" && selected) || (row.applicationStatus === "applied" && (!selected || selected.level !== "archetype" || selected.parentId !== row.parentId))) errors.push(`application-live-state:${row.parentId}`);
+    if (row.applicationStatus === "applied") {
+      if (!selected) errors.push(`applied-node-missing:${row.selectedDescendantId}`);
+      else if (selected.title !== row.title || selected.owner !== row.parentOwner || !same(selected.dependsOn, row.dependencies) || !same(selected.source, { corpus: "synthetic", originalId: row.selectedDescendantId, granularity: row.level, cluster: row.sourceCluster }) || selected.artifactKind !== "delivery-task") errors.push(`applied-node-row-parity:${row.selectedDescendantId}`);
+    }
     if (row.implementationBoundary.contract !== expectedId || row.implementationBoundary.expansionAllowed || row.implementationBoundary.scope.trim().length < 40) errors.push(`boundary:${row.parentId}`);
     if (row.plannedTestCommand !== testCommand(expectedId) || !same(row.evidenceContract, rowEvidence(expectedId)) || !same(row.rollback, rowRollback(expectedId))) errors.push(`handoff:${row.parentId}`);
     if (JSON.stringify(row).toLowerCase().includes("null") || JSON.stringify(row).toLowerCase().includes("defer")) errors.push(`unresolved:${row.parentId}`);
@@ -224,7 +332,7 @@ const validate = (handoff: Handoff, records = nodes) => {
 
 // biome-ignore format: adversarial contract matrix stays compact for the shard budget.
 describe("KGA-D01 approved code-bearing descendant ledger", () => {
-  it("binds 33 exact GATE-01 selections to canonical parent scope without applying them", () => {
+  it("binds 33 exact GATE-01 selections to the current live application state", () => {
     const handoff = readJson<Handoff>(HANDOFF);
     expect(validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors).toEqual([]);
     expect(validate(handoff)).toEqual([]);
@@ -249,10 +357,11 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     });
 
     const pendingPresent = structuredClone(fixture.handoff);
-    pendingPresent.ledger[0].applicationStatus = "pending";
+    const pendingRow = pendingPresent.ledger.find((row) => row.selectedDescendantId === fixture.row.selectedDescendantId) as LedgerRow;
+    pendingRow.applicationStatus = "pending";
     pendingPresent.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
-    expect(validate(pendingPresent, currentNodes)).toContain("application-live-state:k-actor");
-    expect(validate(fixture.handoff, nodes)).toContain("application-live-state:k-actor");
+    expect(validate(pendingPresent, currentNodes)).toContain(`application-live-state:${fixture.row.parentId}`);
+    expect(validate(fixture.handoff, nodes.filter((node) => node.id !== fixture.row.selectedDescendantId))).toContain(`application-live-state:${fixture.row.parentId}`);
   });
 
   it("rejects node-universe and application drift with named evidence", () => {
@@ -265,12 +374,16 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
     expectError(current, structuredClone(nodeRecords).slice(1), "baseline-removal:baseline-count=616");
     const renamed = structuredClone(nodeRecords); renamed[0].node.id = "renamed-baseline"; renamed[0].filename = "renamed-baseline.json";
     expectError(current, renamed, "baseline-id-hash-drift");
-    const pending = appliedFixture(); pending.handoff.ledger[0].applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
+    const pending = appliedFixture(); pending.row.applicationStatus = "pending"; pending.handoff.applicationSummary = { approved: 33, applied: 0, remaining: 33 };
     expectError(pending.handoff, pending.records, `pending-node-present:${pending.row.selectedDescendantId}`);
-    const missing = appliedFixture(); expectError(missing.handoff, nodeRecords, `applied-node-missing:${missing.row.selectedDescendantId}`);
+    const missing = appliedFixture(); expectError(missing.handoff, nodeRecords.filter(({ node }) => node.id !== missing.row.selectedDescendantId), `applied-node-missing:${missing.row.selectedDescendantId}`);
     for (const [field, value, error] of [["parentId", "wrong-parent", `applied-node-parent-drift:${missing.row.selectedDescendantId}`], ["level", "feature", `applied-node-level-drift:${missing.row.selectedDescendantId}`]] as const) {
       const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
       expectError(fixture.handoff, fixture.records, error);
+    }
+    for (const [field, value] of [["title", "Drift"], ["owner", "drift-owner"], ["artifactKind", "governance"], ["dependsOn", []], ["source", { corpus: "synthetic", originalId: "drift", granularity: "archetype", cluster: "layer0" }]] as const) {
+      const fixture = appliedFixture(); Object.assign(fixture.records.at(-1)?.node ?? {}, { [field]: value });
+      expect(validate(fixture.handoff, fixture.records.map(({ node }) => node))).toContain(`applied-node-row-parity:${fixture.row.selectedDescendantId}`);
     }
     const duplicate = structuredClone(current); duplicate.ledger[1].selectedDescendantId = duplicate.ledger[0].selectedDescendantId; expectError(duplicate, nodeRecords, `duplicate-selected-id:${duplicate.ledger[0].selectedDescendantId}`);
     const mapping = structuredClone(current); mapping.ledger[0].parentId = "drift"; expectError(mapping, nodeRecords, "approved-mapping-digest-drift");
@@ -312,6 +425,29 @@ describe("KGA-D01 approved code-bearing descendant ledger", () => {
       "external-dependency:k-actor:missing-canonical-contract",
     );
     expect(validate(handoff, [...nodes, { id: APPROVED["k-authz"].id, level: "archetype", parentId: "k-authz" }]).length).toBeGreaterThan(0);
+    const staleApprovalOnly = structuredClone(handoff);
+    staleApprovalOnly.nonGoals = [
+      "no canonical node, parent, projection, inventory, registry, authority, package or queue mutation",
+      "decision pack change is limited to D01 approval-aware wording",
+      "no runtime implementation or readiness claim",
+      "no D01 closure",
+      "no commit, push or pull request",
+    ];
+    staleApprovalOnly.rollback = {
+      owner: "codex",
+      trigger:
+        "GATE-01 provenance, exact mapping, live 38/5/33 measurement or fail-closed boundary drifts",
+      action:
+        "revert the report and associated tests together; leave canonical graph and runtime unchanged",
+      runtimeDataImpact: "none",
+    };
+    expect(validateRootApplicationScope(staleApprovalOnly)).toEqual(
+      expect.arrayContaining([
+        "non-goals-semantics:stale-approval-only",
+        "non-goals-semantics:delivery-step-prohibition",
+        "rollback-semantics:stale-approval-only",
+      ]),
+    );
   });
 
   it("keeps registry, pack and named governance gate traceability", () => {
