@@ -14,15 +14,19 @@ const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("kernel governance decision pack", () => {
-  it("accepts a validated synthetic first-applied current-live universe without rewriting the historical addendum", () => {
+  it("accepts a validated synthetic next-applied current-live universe without rewriting the historical addendum", () => {
     const live = readD01LiveUniverse();
     const handoff = structuredClone(live.handoff);
     const row = handoff.ledger.find(
-      (candidate: { selectedDescendantId: string }) =>
-        candidate.selectedDescendantId === "actor-role-binding-contract",
+      (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
     );
+    const nextApplied = handoff.applicationSummary.applied + 1;
     row.applicationStatus = "applied";
-    handoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+    handoff.applicationSummary = {
+      approved: 33,
+      applied: nextApplied,
+      remaining: handoff.applicationSummary.remaining - 1,
+    };
     const child = structuredClone(
       live.nodes.find((node: { id: string }) => node.id === row.parentId),
     );
@@ -66,14 +70,26 @@ describe("kernel governance decision pack", () => {
       ),
     };
 
-    expect(validatedLiveUniverse.expectedNodeCount).toBe(618);
+    const liveActiveNodes = live.nodes.filter(
+      (node: { artifactKind?: string }) => node.artifactKind !== "legacy-alias",
+    );
+    const liveKPrefixedNodes = live.nodes.filter((node: { id: string }) =>
+      node.id.startsWith("k-"),
+    );
+    expect(validatedLiveUniverse.expectedNodeCount).toBe(live.liveExpectedNodeCount + 1);
     expect([
       nodes.length,
       activeNodes.length,
       sumSp(nodes),
       kPrefixedNodes.length,
       sumSp(kPrefixedNodes),
-    ]).toEqual([618, 613, 10103, 41, 787]);
+    ]).toEqual([
+      live.nodes.length + 1,
+      liveActiveNodes.length + 1,
+      sumSp(live.nodes) + (child.effort?.estimate ?? 0),
+      liveKPrefixedNodes.length,
+      sumSp(liveKPrefixedNodes),
+    ]);
     expect(validateKernelGovernance({ nodes, queue, report, artifacts })).toEqual([]);
     expect(report.sourceSnapshot.nodeCount).toBe(617);
     const invalidHistoricalSnapshot = structuredClone(report);
@@ -85,8 +101,11 @@ describe("kernel governance decision pack", () => {
     const allAppliedHandoff = structuredClone(live.handoff);
     for (const appliedRow of allAppliedHandoff.ledger) appliedRow.applicationStatus = "applied";
     allAppliedHandoff.applicationSummary = { approved: 33, applied: 33, remaining: 0 };
+    const approvedIds = new Set(
+      allAppliedHandoff.ledger.map((appliedRow: typeof row) => appliedRow.selectedDescendantId),
+    );
     const allAppliedRecords = [
-      ...structuredClone(live.nodeRecords),
+      ...structuredClone(live.nodeRecords).filter(({ node }) => !approvedIds.has(node.id)),
       ...allAppliedHandoff.ledger.map((appliedRow: typeof row) => {
         const appliedChild = structuredClone(
           live.nodes.find((node: { id: string }) => node.id === appliedRow.parentId),

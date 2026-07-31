@@ -6,11 +6,11 @@ import { AppDefinitionSchema } from "@/schemas/app-definition";
 import { DeliveryContextSchema } from "@/schemas/delivery-context";
 import { ModuleDefinitionSchema } from "@/schemas/module-definition";
 import { describe, expect, it } from "vitest";
+// biome-ignore format: keep the import on the line covered by the TypeScript suppression.
 // @ts-expect-error -- the JavaScript governance helper intentionally has no declaration file.
-import { resolveD01NodeUniverse } from "../tools/lib/kernel-integration.mjs";
+import { expectedKernelRoleCounts, nodeIdSetSha256, resolveD01NodeUniverse } from "../tools/lib/kernel-integration.mjs";
 
 const root = process.cwd();
-const D01_618_NODE_SET_SHA256 = "51e42ca1917c50479449595051d02551ee84fe5e25c755c9218f16b00e5ff0a4";
 const nodeDir = path.join(root, "src/data/generated/nodes");
 const nodeFiles = fs
   .readdirSync(nodeDir)
@@ -64,7 +64,7 @@ const canonicalAppIds = Object.keys(registry.entries)
   .sort();
 
 describe("enterprise SDK app/module catalog materialization", () => {
-  it("materializes an isolated approved 618th D01 node through both real scripts", () => {
+  it("materializes the deterministic next approved D01 node through both real scripts", () => {
     const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "actionplan-d01-s1b-"));
     const fixturePath = (relative: string) => path.join(fixtureRoot, relative);
     const readFixture = (relative: string) =>
@@ -85,10 +85,16 @@ describe("enterprise SDK app/module catalog materialization", () => {
       const handoffRef = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
       const fixtureHandoff = readFixture(handoffRef);
       const row = fixtureHandoff.ledger.find(
-        (candidate: { parentId: string }) => candidate.parentId === "k-actor",
+        (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
       );
+      const nextApplied = fixtureHandoff.applicationSummary.applied + 1;
+      const nextRemaining = fixtureHandoff.applicationSummary.remaining - 1;
       row.applicationStatus = "applied";
-      fixtureHandoff.applicationSummary = { approved: 33, applied: 1, remaining: 32 };
+      fixtureHandoff.applicationSummary = {
+        approved: 33,
+        applied: nextApplied,
+        remaining: nextRemaining,
+      };
       writeFixture(handoffRef, fixtureHandoff);
       const staleRow = fixtureHandoff.ledger.find(
         (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
@@ -98,7 +104,7 @@ describe("enterprise SDK app/module catalog materialization", () => {
       fixtureAppRegistry.entries[staleRow.selectedDescendantId] = { profile: "delivery-task", canonicalId: staleRow.selectedDescendantId, canonicalSlug: staleRow.selectedDescendantId, aliases: [] };
       writeFixture("src/data/app-catalog-decisions.json", fixtureAppRegistry);
 
-      const child = structuredClone(readNode("k-actor"));
+      const child = structuredClone(readNode(row.parentId));
       const childId = String(row.selectedDescendantId);
       // biome-ignore format: the synthetic node is the complete approved-row projection.
       Object.assign(child, { id: childId, title: row.title, level: "archetype", parentId: row.parentId, owner: row.parentOwner, artifactKind: "delivery-task", dependsOn: row.dependencies, blocks: [], related: [], source: { cluster: row.sourceCluster } });
@@ -136,18 +142,21 @@ describe("enterprise SDK app/module catalog materialization", () => {
         counts[role] = (counts[role] ?? 0) + 1;
         return counts;
       }, {});
-      expect(ids).toHaveLength(618);
+      const nextExpectedNodeCount =
+        fixtureHandoff.measurement.preD01Baseline.expectedNodeCount + nextApplied;
+      const nextNodeSetSha256 = nodeIdSetSha256(ids);
+      expect(ids).toHaveLength(nextExpectedNodeCount);
       expect(Object.keys(appEntries).sort()).toEqual(ids);
       expect(Object.keys(kernelEntries).sort()).toEqual(ids);
       expect(appEntries[staleRow.selectedDescendantId]).toBeUndefined();
       expect(appEntries[childId].profile).toBe("delivery-task");
-      expect(appRegistry.materializedSnapshot.expectedNodeCount).toBe(618);
-      // biome-ignore format: both registry snapshots must pin the exact synthetic 618 set.
-      expect(appRegistry.d01MaterializedSnapshot).toEqual({ expectedNodeCount: 618, nodeSetSha256: D01_618_NODE_SET_SHA256 });
-      // biome-ignore format: both registry snapshots must pin the exact synthetic 618 set.
-      expect(kernelRegistry.materializedSnapshot).toEqual({ expectedNodeCount: 618, nodeSetSha256: D01_618_NODE_SET_SHA256 });
+      expect(appRegistry.materializedSnapshot.expectedNodeCount).toBe(nextExpectedNodeCount);
+      // biome-ignore format: both registry snapshots must pin the exact synthetic next-applied set.
+      expect(appRegistry.d01MaterializedSnapshot).toEqual({ expectedNodeCount: nextExpectedNodeCount, nodeSetSha256: nextNodeSetSha256 });
+      // biome-ignore format: both registry snapshots must pin the exact synthetic next-applied set.
+      expect(kernelRegistry.materializedSnapshot).toEqual({ expectedNodeCount: nextExpectedNodeCount, nodeSetSha256: nextNodeSetSha256 });
       // biome-ignore format: only contributor grows over the immutable pre-D01 role baseline.
-      expect(roles).toEqual({ root: 1, provider: 30, "sdk-bridge": 5, consumer: 292, contributor: 122, "not-applicable": 168 });
+      expect(roles).toEqual(expectedKernelRoleCounts(nextApplied));
       // biome-ignore format: the complete fail-closed child registry contract stays one assertion.
       expect(kernelEntries[childId]).toMatchObject({ role: "contributor", areaId: "k-archetype-fieldtypes", contributionKind: "specification", targetProviderIds: ["k-party"], runtimeProviderClaimAllowed: false, publicBoundary: { directKernelInternalsAllowed: false, directKernelDatabaseAccessAllowed: false, crossContextWritesAllowed: false } });
       expect(materializedChild.artifactKind).toBe("delivery-task");

@@ -123,13 +123,12 @@ describe("repo-wide kernel gap inventory", () => {
     });
   });
 
-  it("keeps historical KGA-G01 at 33 while first-applied current-live gap becomes 32", () => {
+  it("keeps historical KGA-G01 at 33 while the next-applied current-live gap decreases by one", () => {
     const historicalGap = report.structuralGaps.find(
       (item: { id: string }) => item.id === "KGA-G01",
     );
     const row = live.handoff.ledger.find(
-      (candidate: { selectedDescendantId: string }) =>
-        candidate.selectedDescendantId === "actor-role-binding-contract",
+      (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
     );
     const firstAppliedNodes = [
       ...structuredClone(nodes),
@@ -143,7 +142,7 @@ describe("repo-wide kernel gap inventory", () => {
 
     expect(historicalGap).toMatchObject({ count: 33 });
     expect(historicalGap.nodeIds).toContain(row.parentId);
-    expect(currentMissing).toHaveLength(32);
+    expect(currentMissing).toHaveLength(live.handoff.applicationSummary.remaining - 1);
     expect(currentMissing).not.toContain(row.parentId);
   });
 

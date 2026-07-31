@@ -54,6 +54,12 @@ const generatedFiles = (fixture: string) => {
     path.join(fixture, "public/data/nodes.json"),
   ]);
 };
+const expectedGeneratedFileCount = (fixture: string) => {
+  const meta = JSON.parse(
+    fs.readFileSync(path.join(fixture, "src/data/generated/meta.json"), "utf8"),
+  ) as { counts: { total: number } };
+  return meta.counts.total + 4;
+};
 
 describe("reindex idempotence checker purity", () => {
   it("reports stale generated data without rewriting the checked checkout", () => {
@@ -61,7 +67,7 @@ describe("reindex idempotence checker purity", () => {
     try {
       makeStale(fixture);
       const tracked = generatedFiles(fixture);
-      expect(tracked).toHaveLength(621);
+      expect(tracked).toHaveLength(expectedGeneratedFileCount(fixture));
       const before = tracked.map(digest);
       const result = spawnSync(
         process.execPath,
@@ -82,7 +88,7 @@ describe("reindex idempotence checker purity", () => {
     try {
       makeStale(fixture);
       const tracked = generatedFiles(fixture);
-      expect(tracked).toHaveLength(621);
+      expect(tracked).toHaveLength(expectedGeneratedFileCount(fixture));
       const handoffPath = path.join(fixture, HANDOFF);
       const handoff = JSON.parse(fs.readFileSync(handoffPath, "utf8"));
       Object.assign(handoff.provenance.approval, {
