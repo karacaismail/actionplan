@@ -173,6 +173,13 @@ veya tenancy topolojisini seçmez. D01 handoff ayrıca code-bearing descendant s
 - `reports/kernel-missing-doc-ref-placement-2026-07-15.json`: 17 docs-ref boşluğunu
   14 candidate-unselected ve 3 canonical-source-missing olarak bağlar; ref uygulamaz.
 
+## GATE-01 Approval Intake — Application Pending
+
+User/Admin GATE-01 onayı `reports/kernel-governance-closure-authority-2026-07-31.json`
+ile approved-application-pending olarak kaydedildi. Bu ref kanonik uygulama veya karar
+kapanışı değildir: registry pending/unselected, `codeStartAllowed=false` ve
+`runtimeCodeAllowed=false` kalır.
+
 ## Uygulanan Güvenli Sıra
 
 1. Weak-content analizini import sırasında rapor yazmayan saf kütüphaneye ayır.

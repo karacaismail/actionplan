@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
+const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("kernel governance decision pack", () => {
@@ -43,6 +44,9 @@ describe("kernel governance decision pack", () => {
     ])
       expect(pack).toContain(ref);
     expect(pack).toContain("D08/D09/D10 pending/unselected");
+    expect(pack).toContain("## GATE-01 Approval Intake — Application Pending");
+    expect(pack).toContain("approved-application-pending");
+    expect(pack).toContain(AUTHORITY);
     expect(normalizedPack).toContain(
       "bu ledger'lar kanonik ADR topic, WBS owner/disposition veya tenancy topolojisini seçmez",
     );
