@@ -6,6 +6,11 @@ import {
   EFFECTIVE_AUTHORITY_CHAIN_REF,
   validateKernelEffectiveAuthorityChain,
 } from "../lib/kernel-effective-authority-chain.mjs";
+import {
+  APPLICATION_STATE_REF,
+  resolveApplicationStateEvidence,
+  validateKernelGovernanceApplicationState,
+} from "../lib/kernel-governance-application-state.mjs";
 import { validateKernelGovernance } from "../lib/kernel-governance-audit.mjs";
 import { validateKernelGovernanceAuthorization } from "../lib/kernel-governance-authorization-audit.mjs";
 import {
@@ -40,6 +45,11 @@ const pack = fs.readFileSync(
 const scripts = readJson("package.json").scripts;
 const chainPath = path.join(ROOT, EFFECTIVE_AUTHORITY_CHAIN_REF);
 const chain = fs.existsSync(chainPath) ? readJson(EFFECTIVE_AUTHORITY_CHAIN_REF) : null;
+const statePath = path.join(ROOT, APPLICATION_STATE_REF);
+const applicationState = fs.existsSync(statePath) ? readJson(APPLICATION_STATE_REF) : null;
+const evidence = resolveApplicationStateEvidence(applicationState, (ref) =>
+  fs.existsSync(path.join(ROOT, ref)) ? readJson(ref) : null,
+);
 let universeBoundary;
 try {
   universeBoundary = resolveD01AuthorityBoundary();
@@ -49,6 +59,8 @@ try {
 const errors = [
   ...validateKernelGovernance({ nodes, queue, report, artifacts }),
   ...validateKernelGovernanceAuthorization({ authority, registry, pack, scripts }),
+  // biome-ignore format: the application-state gate call stays compact for the shard budget
+  ...validateKernelGovernanceApplicationState({ state: applicationState, closure: authority, chain, registry, scripts, evidence }),
   ...validateKernelEffectiveAuthorityChain({
     chain,
     closure: authority,
