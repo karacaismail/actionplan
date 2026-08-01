@@ -139,6 +139,17 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 SDK port iskeletinin ve API/UI walking skeleton'ının hangi kanıtla scaffold-only durumundan
 çıktığı tanımlanmalıdır. Bu iki adım kernel-ready, SDK-ready veya app-buildable kanıtı değildir.
 
+GATE-01 `D05=SCAFFOLD_AND_WALKING_SKELETON_ONLY` token'ı ile PR-10 exit tavanı
+`scaffold-only`, PR-11 exit tavanı `walking-skeleton-only` olarak kaydedilir. Tavan, exit
+kanıtının kendisi değildir: `promotesReadiness=false` sürer, hiçbir PR-10 çıktısı SDK-ready,
+hiçbir PR-11 çıktısı app-buildable okunamaz. Base execution queue salt-okunur kanıttır ve
+bayt kimliğiyle sabitlenir (37 item, PR-01..PR-11 sırası, `nextActionable=PR-01`); PR-10
+`PR-09` arkasında, PR-11 `PR-10` arkasında blocked kalır ve bu kayıt hiçbirini açmaz,
+sıralamaz veya yetkilendirmez. PR execution handoff ile PR-10/PR-11 agent pack'leri
+`source-evidence-only`dır; normatif DoD'ye yükseltilmez ve canonical ownership taşımaz.
+Runtime, scaffold, SDK, API veya UI kodu yazılmaz. Ayrıntı:
+`reports/kernel-scaffold-walking-skeleton-exit-semantics-2026-08-01.json`.
+
 ### KGA-D06 — Kalıcı Veri Zemini ve Queue
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -238,7 +249,13 @@ applied, kapsamı yalnız unowned-directive-ownership-disposition-record ve kan�
 yedi aday owner kimliği reddedilir, node oluşturulmaz ve owner atanmaz. Bu satır KGA-G05
 kapanışı değildir: gap P0 açık kalır, ownership çözümü `human-WBS-owner-decision`
 durumundadır ve on üç satırlık D09 hayalet ledger'ı bayt-aynı, `candidate-unselected` ve
-pending kalarak `ghostLedgerDisposition=deferred-to-KGA-D09` ile ertelenir. `KGA-D05`–`KGA-D10` pending'dir ve `applicationScope`
+pending kalarak `ghostLedgerDisposition=deferred-to-KGA-D09` ile ertelenir. `KGA-D05`:
+applied, kapsamı yalnız scaffold-walking-skeleton-exit-semantics-record ve kanıtı
+`reports/kernel-scaffold-walking-skeleton-exit-semantics-2026-08-01.json`'dır; PR-10 tavanı
+`scaffold-only`, PR-11 tavanı `walking-skeleton-only` kaydedilir, hiçbiri readiness
+promote etmez ve `runtimeImplementation=deferred-no-code-start` kalır. Base queue
+bayt-aynıdır, PR-10/PR-11 blocked ve `nextActionable=PR-01` sürer; agent pack'leri
+source-evidence-only kalır. `KGA-D06`–`KGA-D10` pending'dir ve `applicationScope`
 değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
@@ -314,6 +331,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; hiçbir aday kimlik için node, owner veya edge
 yazılmadığı ve D09 hayalet ledger'ı bayt-aynı bırakıldığı için semantic data, ghost ledger
 veya runtime rollback'i yoktur.
+KGA-D05 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; base queue bayt-aynı bırakıldığı, PR-10/PR-11
+blocked kaldığı ve hiçbir runtime, scaffold veya SDK kodu üretilmediği için queue, semantic
+data veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 

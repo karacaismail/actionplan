@@ -23,18 +23,20 @@ const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf050
 const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
 const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
 const EPOCH02_TEXT_SHA256 = "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
-const DECLARATION_SHA256 = "494a7ed628e6eb4cadd164d93190f672b33849b4d04f3b073c3dee8ff31566b7";
+const DECLARATION_SHA256 = "84496cf7188622fc0934adbdf8063e9f311c695d0b98495f1ccf119bd17d68d4";
 const D01_SCOPE = "approved-descendant-materialization";
 const D02_SCOPE = "governance-semantics-record";
 const D03_SCOPE = "ownership-split-governance-record";
 const D04_SCOPE = "unowned-directive-ownership-disposition-record";
 const D04_RECORD = "reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json";
+const D05_SCOPE = "scaffold-walking-skeleton-exit-semantics-record";
+const D05_RECORD = "reports/kernel-scaffold-walking-skeleton-exit-semantics-2026-08-01.json";
 const PACK_HEADING = "## Application State Ledger — Partial Application, NO-GO";
 const readJson = (relative: string) =>
   JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
 
 // biome-ignore format: the exact application-state row ledger stays compact for the shard budget
-const ROWS = [{ id: "KGA-D01", applicationStatus: "applied", applicationScope: D01_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D01_HANDOFF] }, { id: "KGA-D02", applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D02_HANDOFF] }, { id: "KGA-D03", applicationStatus: "applied", applicationScope: D03_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D03_HANDOFF] }, { id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] }, { id: "KGA-D05", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D06", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM, D06_HANDOFF] }, { id: "KGA-D07", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D08", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D09", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D10", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }];
+const ROWS = [{ id: "KGA-D01", applicationStatus: "applied", applicationScope: D01_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D01_HANDOFF] }, { id: "KGA-D02", applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D02_HANDOFF] }, { id: "KGA-D03", applicationStatus: "applied", applicationScope: D03_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D03_HANDOFF] }, { id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] }, { id: "KGA-D05", applicationStatus: "applied", applicationScope: D05_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D05_RECORD] }, { id: "KGA-D06", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM, D06_HANDOFF] }, { id: "KGA-D07", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D08", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D09", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D10", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }];
 // biome-ignore format: the exact fail-closed gate block stays compact for the shard budget
 const GATE = { gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, kernelReady: false, sdkReady: false, appBuildable: false, verdict: "NO-GO", unlockCondition: "all-ten-rows-applied-canonical-with-human-runtime-evidence" };
 // biome-ignore format: the exact intake binding and live EPOCH-03 stamp stay compact
@@ -42,12 +44,12 @@ const INTAKE = { closureRef: CLOSURE, registryRef: REGISTRY, normalizedSelection
 // biome-ignore format: the exact live head stamp stays compact for the shard budget
 const STAMP = { ref: CHAIN, seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 };
 // biome-ignore format: the ledger-owned change boundary stays compact for the shard budget
-const ALLOWED_FILES = ["tests/kernelUnownedDirectiveOwnershipDisposition.test.ts", D04_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", "tests/kernelModuleRegistryOwnershipSplitHandoff.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs"];
+const ALLOWED_FILES = ["tests/kernelScaffoldWalkingSkeletonExitSemantics.test.ts", D05_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", "tests/kernelModuleRegistryOwnershipSplitHandoff.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs"];
 // biome-ignore format: the exact closed root and row key sets stay compact for the shard budget
 const ROOT_KEYS = ["changeBoundary", "effectiveAuthority", "gate", "generatedAt", "id", "intakeBinding", "invariants", "nonGoals", "rollback", "rows", "schemaVersion", "status", "summary"];
 // biome-ignore format: the exact closed row key set stays compact for the shard budget
 const ROW_KEYS = ["applicationScope", "applicationStatus", "canonicalStatus", "evidenceRefs", "gapClosed", "id"];
-const PACK_SECTION_SHA256 = "e996d7488bda902bccdaa745253a7ccf8514b726fa2f821c9c9c39c99d84a23f";
+const PACK_SECTION_SHA256 = "cce88d261adef85ec2d4d8167bd9932b1997ea9076303dc01a27a9a58b855846";
 
 describe("kernel governance application state ledger", () => {
   it("records real canonical application state without mutating the GATE-01 intake", () => {
@@ -60,7 +62,7 @@ describe("kernel governance application state ledger", () => {
 
     expect(Object.keys(state).sort()).toEqual(ROOT_KEYS);
     // biome-ignore format: the exact ledger contract stays compact for the shard budget
-    expect(state).toMatchObject({ schemaVersion: "1.0.0", id: "kernel-governance-application-state-2026-08-01", generatedAt: "2026-08-01", status: "partial-application-no-go", intakeBinding: INTAKE, effectiveAuthority: STAMP, rows: ROWS, summary: { total: 10, applied: 4, pending: 6, canonical: 4 }, gate: GATE });
+    expect(state).toMatchObject({ schemaVersion: "1.0.0", id: "kernel-governance-application-state-2026-08-01", generatedAt: "2026-08-01", status: "partial-application-no-go", intakeBinding: INTAKE, effectiveAuthority: STAMP, rows: ROWS, summary: { total: 10, applied: 5, pending: 5, canonical: 5 }, gate: GATE });
     for (const row of state.rows) expect(Object.keys(row).sort()).toEqual(ROW_KEYS);
     // The ledger owns its own change boundary; the frozen closure boundary is never widened.
     expect(state.changeBoundary).toEqual({ allowedFiles: ALLOWED_FILES });
@@ -83,6 +85,9 @@ describe("kernel governance application state ledger", () => {
     // KGA-D04 is applied only as a candidate-owner rejection: the D09 ghost ledger stays deferred.
     // biome-ignore format: the exact D04 scope and deferred ghost ledger disposition stay compact
     expect(readJson(D04_RECORD).applicationSummary).toEqual({ approved: 1, applied: 1, remaining: 0, applicationScope: D04_SCOPE, candidateOwnerIdentitiesRejected: 7, ghostLedgerDisposition: "deferred-to-KGA-D09" });
+    // KGA-D05 is applied only as an exit-ceiling record: no runtime, scaffold or SDK code starts.
+    // biome-ignore format: the exact D05 scope and deferred runtime implementation stay compact
+    expect(readJson(D05_RECORD).applicationSummary).toEqual({ approved: 1, applied: 1, remaining: 0, applicationScope: D05_SCOPE, exitCeilingsRecorded: 2, runtimeImplementation: "deferred-no-code-start" });
     // The stamp binds the live EPOCH-03 head, not the superseded EPOCH-02 stamp its evidence uses.
     expect(state.effectiveAuthority.seq).toBe(chain.chainHeadSeq);
     expect(state.effectiveAuthority.chainHeadSha256).toBe(chain.chainHeadEntrySha256);
@@ -102,7 +107,7 @@ describe("kernel governance application state ledger", () => {
     // biome-ignore format: the exact normalized application-state pack section stays compact
     const section = pack.slice(pack.indexOf(PACK_HEADING)).split("\n## ")[0].replaceAll("\r\n", "\n").trim();
     // biome-ignore format: the pack section is ratcheted by exact normalized bytes and digest
-    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([2805, PACK_SECTION_SHA256]);
+    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([3280, PACK_SECTION_SHA256]);
   });
 
   it("fails closed on forged intake, stale stamps, unbacked application and unwired gates", async () => {
@@ -175,7 +180,20 @@ describe("kernel governance application state ledger", () => {
       (candidate) => { candidate.state.rows[2].applicationStatus = "pending"; },
       (candidate) => { candidate.state.rows[2].canonicalStatus = "pending"; },
       (candidate) => { candidate.state.rows[2].evidenceRefs.push(D01_HANDOFF); },
-      (candidate) => { Object.assign(candidate.state.rows[4], { applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", evidenceRefs: [INVENTORY, D04_RECORD] }); candidate.state.summary = { total: 10, applied: 5, pending: 5, canonical: 5 }; },
+      (candidate) => { Object.assign(candidate.state.rows[5], { applicationStatus: "applied", applicationScope: D05_SCOPE, canonicalStatus: "canonical", evidenceRefs: [ADDENDUM, D06_HANDOFF, D05_RECORD] }); candidate.state.summary = { total: 10, applied: 6, pending: 4, canonical: 6 }; },
+      (candidate) => { candidate.evidence[D05_RECORD].id = "kernel-scaffold-walking-skeleton-exit-semantics-2026-08-02"; },
+      (candidate) => { candidate.evidence[D05_RECORD].status = "applied"; },
+      (candidate) => { candidate.evidence[D05_RECORD].decisionId = "KGA-D11"; },
+      (candidate) => { candidate.evidence[D05_RECORD].gapClosed = true; },
+      (candidate) => { candidate.evidence[D05_RECORD].provenance.approval.normalizedSelectionSha256 = "drift"; },
+      (candidate) => { candidate.evidence[D05_RECORD].applicationSummary.exitCeilingsRecorded = 1; },
+      (candidate) => { candidate.evidence[D05_RECORD].applicationSummary.runtimeImplementation = "applied"; },
+      (candidate) => { candidate.evidence[D05_RECORD].applicationSummary.applicationScope = "sdk-implementation-record"; },
+      (candidate) => { candidate.state.rows[4].applicationScope = D04_SCOPE; },
+      (candidate) => { candidate.state.rows[4].applicationScope = null; },
+      (candidate) => { candidate.state.rows[4].canonicalStatus = "pending"; },
+      (candidate) => { candidate.state.rows[4].evidenceRefs = [INVENTORY]; },
+      (candidate) => { candidate.state.rows[3].applicationScope = D05_SCOPE; },
       (candidate) => { candidate.evidence[D04_RECORD].id = "kernel-unowned-directive-ownership-disposition-2026-08-02"; },
       (candidate) => { candidate.evidence[D04_RECORD].status = "applied"; },
       (candidate) => { candidate.evidence[D04_RECORD].decisionId = "KGA-D09"; },
@@ -195,9 +213,10 @@ describe("kernel governance application state ledger", () => {
       (candidate) => { candidate.state.rows.pop(); },
       (candidate) => { candidate.state.rows = [candidate.state.rows[1], candidate.state.rows[0], ...candidate.state.rows.slice(2)]; },
       (candidate) => { candidate.state.rows[3].id = "KGA-D03"; },
-      (candidate) => { candidate.state.summary.applied = 5; },
-      (candidate) => { candidate.state.summary.pending = 5; },
+      (candidate) => { candidate.state.summary.applied = 6; },
+      (candidate) => { candidate.state.summary.pending = 4; },
       (candidate) => { candidate.state.summary.canonical = 3; },
+      (candidate) => { candidate.state.summary.total = 11; },
       (candidate) => { candidate.state.gate.gapClosed = true; },
       (candidate) => { candidate.state.gate.codeStartAllowed = true; },
       (candidate) => { candidate.state.gate.runtimeCodeAllowed = true; },
