@@ -391,7 +391,7 @@ const validate = (handoff: Handoff, records = nodes) => {
     effectiveAuthority: {
       ref: CHAIN,
       seq: 2,
-      chainHeadSha256: readJson<{ chainHeadEntrySha256: string }>(CHAIN).chainHeadEntrySha256,
+      chainHeadSha256: readJson<{ entries: { seq: number; entrySha256: string }[] }>(CHAIN).entries.find((entry) => entry.seq === 2)?.entrySha256,
       normalizedTextSha256: EPOCH_TEXT_SHA256,
     },
   };

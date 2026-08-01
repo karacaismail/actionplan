@@ -15,19 +15,26 @@ export const HISTORICAL_SELECTION_SHA256 =
 export const EPOCH02_TEXT_BYTES = 870;
 export const EPOCH02_TEXT_SHA256 =
   "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
+export const EPOCH03_TEXT_BYTES = 524;
+export const EPOCH03_TEXT_SHA256 =
+  "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
+// biome-ignore format: the pinned sealed predecessor entry digests stay compact for the shard budget.
+export const SEALED_ENTRY_DIGESTS = { 1: "367cf0579654a82b2d056a2dd1f9aeb0d68b181fbf4d2bc5892244db0786cd99", 2: "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029" };
 const HANDOFF_REF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
 const UNIVERSE_REF = "tools/lib/kernel-node-universe.mjs";
 const GATE_REF = "tools/agents/check-kernel-governance.mjs";
 const CONTRACT_REF = "AGENTS.md";
 
 // biome-ignore format: the closed authority dimension registry stays compact for the shard budget.
-export const AUTHORITY_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
+export const AUTHORITY_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
+// biome-ignore format: the exact EPOCH-03 effective token floor stays compact for the shard budget.
+export const EPOCH03_TOKEN_FLOOR = { SOURCE: "DIRECT_USER_ADMIN_INSTRUCTION", SUPERSEDES: "EPOCH-02", SCOPE: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", CODEX: "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR", KERNEL_RUNTIME_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", ACTIONPLAN_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", KERNEL_REVIEWER: "CLAUDE_ONLY_FAIL_CLOSED", RELEASE_ALLOWED: "false", DEPLOY_ALLOWED: "false", DIRECT_MAIN_WRITE: "false", FORCE_GIT: "false", TAGGING: "false", EXCLUDED_TARGETS: "SDK,APP_CORE,APP,MODULE", CODE_START: "NO", RUNTIME_CODE: "NO", VERDICT: "NO-GO" };
 // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
 export const NON_SUPERSEDABLE_FLOORS = { claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", codeStart: "NO", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO", runtimeCode: "NO", verdict: "NO-GO" };
 // biome-ignore format: the Git floor table stays compact for the shard budget.
 export const GIT_FLOOR = { authorizedNow: false, ciRequired: true, directDefaultBranchPush: false, force: false, reviewRequired: true, tags: false, workerGitMutationAllowed: false };
 // biome-ignore format: the Claude-only role dimensions stay compact for the shard budget.
-export const CLAUDE_ROLE_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "kernelReviewer", "kernelWriter", "requirementsFirstPass", "workerAgentPool"];
+export const CLAUDE_ROLE_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "requirementsFirstPass", "workerAgentPool"];
 // biome-ignore format: the deterministic epoch-token to D01 boundary mapping stays compact.
 const BOUNDARY_MAP = { actionplanWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, kernelWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, claudeAuthGate: { CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false } }, platformProductWriter: { HUMAN_DEVELOPER_ONLY: "human-developer-only" }, gitExecutor: { CODEX_EXPLICIT_USER_AUTH_ONLY: "codex" }, codeStart: { NO: false }, runtimeCode: { NO: false }, release: { NO: false }, deploy: { NO: false }, verdict: { "NO-GO": "NO-GO" } };
 // biome-ignore format: the derived boundary key order matches the applied D7 contract byte order.
@@ -150,32 +157,31 @@ const validateHistory = (chain, closure, errors) => {
   return text;
 };
 
+// The current head is the terminal of the supersedes relation at chainHeadSeq. Sealed entries keep
+// the status they were appended with — `status` is inside entryDigest, so demoting a predecessor
+// would break its pinned hash. Head resolution therefore never reads `status` to pick a winner.
 const validateHead = (chain, errors) => {
-  const head = chain.entries.at(-1);
-  if (head?.status !== "effective") errors.push("effective-epoch-not-head");
-  if (chain.entries.filter((entry) => entry?.status === "effective").length !== 1)
-    errors.push("effective-epoch-count-drift");
-  if (head?.epochId !== "AUTHORITY-SUPERSESSION-02") errors.push("epoch-identity-drift");
-  const text = head?.normalizedText;
+  const head = chain.entries.find((entry) => entry?.seq === chain?.chainHeadSeq) ?? null;
+  const superseded = new Set(chain.entries.map((entry) => entry?.supersedes).filter(Boolean));
+  const terminal = chain.entries.filter((entry) => !superseded.has(entry?.seq));
+  if (!head || terminal.length !== 1 || terminal[0] !== head || head.status !== "effective")
+    errors.push("effective-epoch-not-head");
+  if (!head) return null;
+  if (head.epochId !== "AUTHORITY-SUPERSESSION-03") errors.push("epoch-identity-drift");
+  const text = head.normalizedText;
   if (typeof text !== "string") {
     errors.push("epoch-text-missing");
     return head;
   }
-  if (
-    Buffer.byteLength(text, "utf8") !== EPOCH02_TEXT_BYTES ||
-    head.normalizedTextBytes !== EPOCH02_TEXT_BYTES
-  )
-    errors.push("epoch-text-bytes-drift");
-  if (sha256(text) !== EPOCH02_TEXT_SHA256 || head.normalizedTextSha256 !== EPOCH02_TEXT_SHA256)
+  // biome-ignore format: the exact head byte-count floor stays compact for the shard budget.
+  if (Buffer.byteLength(text, "utf8") !== EPOCH03_TEXT_BYTES || head.normalizedTextBytes !== EPOCH03_TEXT_BYTES) errors.push("epoch-text-bytes-drift");
+  if (sha256(text) !== EPOCH03_TEXT_SHA256 || head.normalizedTextSha256 !== EPOCH03_TEXT_SHA256)
     errors.push("epoch-text-digest-drift");
   const tokens = tokenMap(text);
-  if (
-    tokens.get("SOURCE") !== "DIRECT_USER_ADMIN_INSTRUCTION" ||
-    head.sourceType !== "direct-user-admin-instruction"
-  )
-    errors.push("epoch-source-type-drift");
+  for (const [token, value] of Object.entries(EPOCH03_TOKEN_FLOOR))
+    if (tokens.get(token) !== value) errors.push(`epoch-token-floor-drift:${token}`);
+  if (head.sourceType !== "direct-user-admin-instruction") errors.push("epoch-source-type-drift");
   if (head.sourceRef !== null) errors.push("epoch-source-ref-fabricated");
-  if (tokens.get("SUPERSEDES") !== "EPOCH-01") errors.push("epoch-supersession-token-drift");
   if (tokens.get("SCOPE") !== head.supersessionScope) errors.push("epoch-scope-drift");
   return head;
 };
@@ -207,8 +213,41 @@ const validateOrchestration = (chain, resolved, errors) => {
   // biome-ignore format: the exact single-shared-writer floor stays compact.
   if (policy.concurrentRepoWriters !== 1 || policy.writerLease !== "single-repo-writer" || resolved.parallelism?.value !== "PANE_MULTI_AGENT_SINGLE_SHARED_WRITER") errors.push("shared-writer-parallelism-enabled");
   // biome-ignore format: the exact Codex orchestration role contract stays compact.
-  if (policy.codexExternalDirectiveWriter !== true || policy.codexFinalVerifier !== "read-only" || resolved.finalVerifier?.value !== "CODEX_READ_ONLY" || resolved.orchestrator?.value !== "MASTER_ORCHESTRATOR_REQUIREMENTS_GAP_REVIEW_DIRECTIVE_FINAL_VERIFIER") errors.push("codex-orchestration-role-drift");
+  if (policy.codexExternalDirectiveWriter !== true || policy.codexFinalVerifier !== "read-only" || resolved.finalVerifier?.value !== "CODEX_READ_ONLY" || resolved.orchestrator?.value !== "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR") errors.push("codex-orchestration-role-drift");
   if (!same(policy.claudeRoles, CLAUDE_ROLE_DIMENSIONS)) errors.push("claude-role-registry-drift");
+};
+
+const sealedStamp = (chain, binding) => {
+  const digest = binding?.chainHeadSha256;
+  if (typeof digest !== "string" || !digest) return null;
+  return chain.entries.find((entry) => entry?.entrySha256 === digest) ?? null;
+};
+
+// The normalized-text digest a sealed entry actually seals. The genesis entry deliberately keeps no
+// inline text and seals its digest through normalizedTextRef, so reading `normalizedTextSha256`
+// alone yields undefined there and a stamp that simply omits the field compares equal to it. This
+// resolves both shapes and returns null instead of undefined, so a comparison against it can never
+// be satisfied by two absent values.
+const sealedTextSha256 = (entry) => {
+  const digest = entry?.normalizedTextSha256 ?? entry?.normalizedTextRef?.sha256;
+  return typeof digest === "string" && digest ? digest : null;
+};
+
+// Naming a sealed entry is necessary but not sufficient: a stamp stays valid only while the
+// authority it named still governs. The boundary derived from the chain prefix ending at the stamped
+// entry must equal the boundary in force now. An append that leaves the boundary byte-identical
+// keeps every earlier stamp valid — the live EPOCH-02 stamps survive the EPOCH-03 head untouched —
+// while a sealed but pre-supersession entry binds a boundary that no longer holds and fails closed.
+// An unresolvable or erroring derivation is a rejection, never a bypass.
+const stampGoverns = (chain, stamped, boundary) => {
+  const index = chain.entries.indexOf(stamped);
+  if (index < 0) return false;
+  try {
+    const derived = deriveAuthorityBoundary({ entries: chain.entries.slice(0, index + 1) });
+    return !derived.errors.length && same(derived.boundary, boundary);
+  } catch {
+    return false;
+  }
 };
 
 const validateConsumers = (chain, handoff, universeBoundary, boundary, errors) => {
@@ -221,12 +260,24 @@ const validateConsumers = (chain, handoff, universeBoundary, boundary, errors) =
   const effective = handoff.provenance?.effectiveAuthority;
   if (!effective) errors.push("handoff-effective-authority-missing");
   else {
+    // A consumer stamp is historical-at-write: it must name a sealed entry of this chain, not
+    // necessarily the current head, so appending an epoch never invalidates an earlier handoff.
+    const stamped = sealedStamp(chain, effective);
+    const sealedDigest = sealedTextSha256(stamped);
     if (effective.ref !== EFFECTIVE_AUTHORITY_CHAIN_REF)
       errors.push("handoff-effective-authority-ref-drift");
-    if (effective.seq !== chain.chainHeadSeq) errors.push("handoff-effective-authority-seq-drift");
-    if (effective.chainHeadSha256 !== chain.chainHeadEntrySha256)
-      errors.push("handoff-effective-authority-chain-head-drift");
-    if (effective.normalizedTextSha256 !== EPOCH02_TEXT_SHA256)
+    if (!stamped) errors.push("handoff-effective-authority-chain-head-drift");
+    else if (effective.seq !== stamped.seq || stamped.seq > chain.chainHeadSeq)
+      errors.push("handoff-effective-authority-seq-drift");
+    else if (!stampGoverns(chain, stamped, boundary))
+      errors.push("handoff-effective-authority-stamp-superseded");
+    // Never compare against an absent digest: an omitted stamp field and a sealed entry that keeps
+    // its digest only in normalizedTextRef must both fail, not cancel each other out.
+    if (
+      !sealedDigest ||
+      typeof effective.normalizedTextSha256 !== "string" ||
+      effective.normalizedTextSha256 !== sealedDigest
+    )
       errors.push("handoff-effective-authority-text-digest-drift");
   }
   const approval = handoff.provenance?.approval ?? {};
@@ -246,7 +297,13 @@ export function validateKernelEffectiveAuthorityChain({ chain, closure, handoff,
   const historicalText = validateHistory(chain, closure, errors);
   const head = validateHead(chain, errors);
   validateSequence(chain.entries, errors);
-  if (chain.chainHeadSeq !== head?.seq) errors.push("chain-head-seq-drift");
+  // Append-only floor: every sealed predecessor stays byte-identical, `status` included.
+  for (const [seq, digest] of Object.entries(SEALED_ENTRY_DIGESTS)) {
+    const sealed = chain.entries.find((entry) => entry?.seq === Number(seq));
+    if (!sealed || sealed.entrySha256 !== digest || entryDigest(sealed) !== digest)
+      errors.push(`sealed-entry-digest-drift:${seq}`);
+  }
+  if (chain.chainHeadSeq !== chain.entries.at(-1)?.seq) errors.push("chain-head-seq-drift");
   if (chain.chainHeadEntrySha256 !== head?.entrySha256) errors.push("chain-head-digest-drift");
   if (chain.chainSha256 !== chainDigest(chain.entries)) errors.push("chain-digest-drift");
   chain.entries.forEach((entry, index) => {

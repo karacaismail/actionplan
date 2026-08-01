@@ -93,7 +93,11 @@ describe("KGA-D02 surface dependency order application handoff", () => {
     const handoff = readJson(HANDOFF);
     const closure = readJson(CLOSURE);
     const chain = readJson(CHAIN);
-    const head = chain.entries.at(-1);
+    // The stamp is historical-at-write: it is pinned to the sealed EPOCH-02 entry this handoff was
+    // authored against, never to whatever epoch currently heads the append-only chain.
+    const stamp = chain.entries.find(
+      (entry: { epochId: string }) => entry.epochId === "AUTHORITY-SUPERSESSION-02",
+    );
 
     expect(handoff.provenance.approval).toMatchObject({
       gateId: "GATE-01",
@@ -103,9 +107,9 @@ describe("KGA-D02 surface dependency order application handoff", () => {
     expect(closure.approval.normalizedSelection).toContain("D02=EDITION_APP_TO_SDK_TO_KERNEL");
     expect(handoff.provenance.effectiveAuthority).toMatchObject({
       ref: CHAIN,
-      seq: chain.chainHeadSeq,
-      chainHeadSha256: chain.chainHeadEntrySha256,
-      normalizedTextSha256: head.normalizedTextSha256,
+      seq: stamp.seq,
+      chainHeadSha256: stamp.entrySha256,
+      normalizedTextSha256: stamp.normalizedTextSha256,
     });
     expect(handoff.provenance.immutableRefs).toMatchObject({
       closureRef: CLOSURE,

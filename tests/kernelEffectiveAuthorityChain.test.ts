@@ -16,16 +16,26 @@ const HISTORICAL_SHA256 = "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd
 const EPOCH_TEXT_SHA256 = "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
 // biome-ignore format: the exact 870-byte Codex-approved EPOCH-02 text stays on one immutable line.
 const EPOCH_TEXT = "AUTHORITY-SUPERSESSION-02 EFFECTIVE; SOURCE=DIRECT_USER_ADMIN_INSTRUCTION; SUPERSEDES=EPOCH-01; SCOPE=ROLE_ASSIGNMENT_AND_EXECUTION_PROTOCOL_ONLY; CODEX=MASTER_ORCHESTRATOR_REQUIREMENTS_GAP_REVIEW_DIRECTIVE_FINAL_VERIFIER; REQUIREMENTS_FIRST_PASS=CLAUDE_ONLY_FAIL_CLOSED; ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED; KERNEL_WRITER=CLAUDE_ONLY_FAIL_CLOSED; ACTIONPLAN_REVIEWER=CLAUDE_ONLY_FAIL_CLOSED; KERNEL_REVIEWER=CLAUDE_ONLY_FAIL_CLOSED; WORKER_AGENT_POOL=CLAUDE_ONLY_FAIL_CLOSED; PARALLELISM=PANE_MULTI_AGENT_SINGLE_SHARED_WRITER; FINAL_VERIFIER=CODEX_READ_ONLY; GIT_EXECUTOR=CODEX_EXPLICIT_USER_AUTH_ONLY; GIT_MODE=NONFORCE_NO_TAGS_CI_GATED; PLATFORM_PRODUCT_WRITER=HUMAN_DEVELOPER_ONLY; CLAUDE_AUTH_GATE=CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK; CODE_START=NO; RUNTIME_CODE=NO; RELEASE=NO; DEPLOY=NO; VERDICT=NO-GO; HISTORICAL_APPROVAL_MUTATION=FORBIDDEN";
+const EPOCH01_ENTRY_SHA256 = "367cf0579654a82b2d056a2dd1f9aeb0d68b181fbf4d2bc5892244db0786cd99";
+const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
+const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
+const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c";
+// biome-ignore format: the exact 524-byte Codex-approved EPOCH-03 text stays on one immutable line.
+const EPOCH03_TEXT = "AUTHORITY-SUPERSESSION-03 EFFECTIVE; SOURCE=DIRECT_USER_ADMIN_INSTRUCTION; SUPERSEDES=EPOCH-02; SCOPE=KERNEL_RUNTIME_APPROVED_SHARDS_ONLY; CODEX=MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR; KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED; ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED; KERNEL_REVIEWER=CLAUDE_ONLY_FAIL_CLOSED; RELEASE_ALLOWED=false; DEPLOY_ALLOWED=false; DIRECT_MAIN_WRITE=false; FORCE_GIT=false; TAGGING=false; EXCLUDED_TARGETS=SDK,APP_CORE,APP,MODULE; CODE_START=NO; RUNTIME_CODE=NO; VERDICT=NO-GO";
 // biome-ignore format: the closed authority dimension registry stays compact for the shard budget.
-const REGISTRY = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
+const REGISTRY = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
 // biome-ignore format: the derived D01 boundary stays byte-identical to the applied D7 contract.
 const BOUNDARY = { actionplanWriter: "claude-only-fail-closed", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
 // biome-ignore format: EPOCH-01 keeps the only dimensions its 691-byte GATE-01 text actually encodes.
 const EPOCH01_DIMENSIONS = ["actionplanWriter", "deploy", "gitExecutor", "gitMode", "kernelWriter", "release", "technicalDecisions"];
 // biome-ignore format: EPOCH-02 supersedes exactly six EPOCH-01 dimensions and adds thirteen new ones.
 const EPOCH02_SUPERSEDES = ["actionplanWriter", "deploy", "gitExecutor", "gitMode", "kernelWriter", "release"];
+// biome-ignore format: EPOCH-03 supersedes exactly three EPOCH-02 dimensions and adds one new one.
+const EPOCH03_SUPERSEDES = ["actionplanWriter", "kernelReviewer", "orchestrator"];
+// biome-ignore format: the sorted EPOCH-03 dimension surface stays compact for the shard budget.
+const EPOCH03_DIMENSIONS = ["actionplanWriter", "kernelReviewer", "kernelRuntimeWriter", "orchestrator"];
 // biome-ignore format: the Claude-only role dimensions stay compact for the shard budget.
-const CLAUDE_ROLES = ["actionplanReviewer", "actionplanWriter", "kernelReviewer", "kernelWriter", "requirementsFirstPass", "workerAgentPool"];
+const CLAUDE_ROLES = ["actionplanReviewer", "actionplanWriter", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "requirementsFirstPass", "workerAgentPool"];
 
 type Cell = { token: string; value: string };
 // biome-ignore format: the append-only entry surface stays compact for the shard budget.
@@ -64,7 +74,7 @@ describe("kernel effective authority supersession chain", () => {
       id: "kernel-effective-authority-chain-2026-07-31",
       status: "effective",
       appendOnly: true,
-      chainHeadSeq: 2,
+      chainHeadSeq: 3,
       dimensionRegistry: REGISTRY,
       effectiveAuthorityBoundary: BOUNDARY,
       historicalInvariant: {
@@ -75,8 +85,8 @@ describe("kernel effective authority supersession chain", () => {
         mutation: "FORBIDDEN",
       },
     });
-    expect(chain.entries).toHaveLength(2);
-    const [genesis, head] = chain.entries;
+    expect(chain.entries).toHaveLength(3);
+    const [genesis, epoch02, head] = chain.entries;
     expect(genesis).toMatchObject({
       seq: 1,
       status: "superseded",
@@ -92,22 +102,16 @@ describe("kernel effective authority supersession chain", () => {
       readJson<{ approval: { normalizedSelection: string } }>(CLOSURE).approval.normalizedSelection,
     );
     expect(Object.keys(genesis.dimensions).sort()).toEqual(EPOCH01_DIMENSIONS);
-    expect(head).toMatchObject({
-      seq: 2,
-      epochId: "AUTHORITY-SUPERSESSION-02",
-      status: "effective",
-      sourceType: "direct-user-admin-instruction",
-      sourceRef: null,
-      supersedes: 1,
-      supersedesDimensions: EPOCH02_SUPERSEDES,
-      supersessionScope: "ROLE_ASSIGNMENT_AND_EXECUTION_PROTOCOL_ONLY",
-      normalizedText: EPOCH_TEXT,
-      normalizedTextBytes: 870,
-      normalizedTextSha256: EPOCH_TEXT_SHA256,
-      previousEntrySha256: genesis.entrySha256,
-    });
-    expect(Buffer.byteLength(head.normalizedText ?? "", "utf8")).toBe(870);
-    expect(Object.keys(head.dimensions)).toHaveLength(19);
+    // EPOCH-02 is a sealed predecessor now: byte- and hash-identical, and it keeps the
+    // status it was appended with, because `status` is inside its pinned entry digest.
+    // biome-ignore format: the sealed EPOCH-02 predecessor surface stays compact for the shard budget.
+    expect(epoch02).toMatchObject({ seq: 2, epochId: "AUTHORITY-SUPERSESSION-02", status: "effective", supersedes: 1, supersedesDimensions: EPOCH02_SUPERSEDES, supersessionScope: "ROLE_ASSIGNMENT_AND_EXECUTION_PROTOCOL_ONLY", normalizedText: EPOCH_TEXT, normalizedTextBytes: 870, normalizedTextSha256: EPOCH_TEXT_SHA256, previousEntrySha256: EPOCH01_ENTRY_SHA256, entrySha256: EPOCH02_ENTRY_SHA256 });
+    expect(genesis.entrySha256).toBe(EPOCH01_ENTRY_SHA256);
+    expect(Object.keys(epoch02.dimensions)).toHaveLength(19);
+    // biome-ignore format: the EPOCH-03 head surface stays compact for the shard budget.
+    expect(head).toMatchObject({ seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", status: "effective", sourceType: "direct-user-admin-instruction", sourceRef: null, supersedes: 2, supersedesDimensions: EPOCH03_SUPERSEDES, supersessionScope: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", normalizedText: EPOCH03_TEXT, normalizedTextBytes: 524, normalizedTextSha256: EPOCH03_TEXT_SHA256, previousEntrySha256: EPOCH02_ENTRY_SHA256 });
+    expect(Buffer.byteLength(head.normalizedText ?? "", "utf8")).toBe(524);
+    expect(Object.keys(head.dimensions).sort()).toEqual(EPOCH03_DIMENSIONS);
   });
 
   it("recomputes historical, epoch, entry and chain digests deterministically", async () => {
@@ -116,7 +120,7 @@ describe("kernel effective authority supersession chain", () => {
     const chain = readJson<Chain>(CHAIN);
     expect(canonicalJson({ b: 1, a: [2, { d: 3, c: 4 }] })).toBe('{"a":[2,{"c":4,"d":3}],"b":1}');
     for (const entry of chain.entries) expect(entryDigest(entry)).toBe(entry.entrySha256);
-    expect(chain.chainHeadEntrySha256).toBe(chain.entries[1].entrySha256);
+    expect(chain.chainHeadEntrySha256).toBe(chain.entries[2].entrySha256);
     expect(chain.chainSha256).toBe(chainDigest(chain.entries));
     expect(validateSelf(await lib(), fixture())).toEqual([]);
   });
@@ -128,8 +132,12 @@ describe("kernel effective authority supersession chain", () => {
     const { errors, resolved } = resolveAuthorityDimensions(chain);
     expect(errors).toEqual([]);
     expect(Object.keys(resolved).sort()).toEqual(REGISTRY);
+    // Every dimension's provenance epoch is pinned: EPOCH-01 keeps only technicalDecisions,
+    // EPOCH-03 owns its four, and EPOCH-02 still owns everything else.
     expect(resolved.technicalDecisions.seq).toBe(1);
-    for (const key of [...EPOCH02_SUPERSEDES, ...CLAUDE_ROLES]) expect(resolved[key].seq).toBe(2);
+    for (const key of EPOCH03_DIMENSIONS) expect(resolved[key].seq, key).toBe(3);
+    // biome-ignore format: the EPOCH-02 remainder stays one deterministic expression.
+    for (const key of REGISTRY.filter((k) => k !== "technicalDecisions" && !EPOCH03_DIMENSIONS.includes(k))) expect(resolved[key].seq, key).toBe(2);
     for (const key of CLAUDE_ROLES) expect(resolved[key].value).toBe("CLAUDE_ONLY_FAIL_CLOSED");
     // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
     expect(chain.nonSupersedableFloors).toEqual({ claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", codeStart: "NO", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO", runtimeCode: "NO", verdict: "NO-GO" });
@@ -165,8 +173,9 @@ describe("kernel effective authority supersession chain", () => {
       ["history", "genesis-reference-replacement", (input) => { input.chain.entries[0].sourceRef = HANDOFF; }],
       ["history", "genesis-text-copy-forbidden", (input) => { input.chain.entries[0].normalizedText = (input.closure.approval as { normalizedSelection: string }).normalizedSelection; }],
       ["history", "historical-invariant-drift", (input) => { (input.chain.historicalInvariant as { mutation: string }).mutation = "ALLOWED"; }],
-      ["chain", "epoch-text-bytes-drift", (input) => { input.chain.entries[1].normalizedText += "."; }],
-      ["chain", "epoch-text-digest-drift", (input) => { input.chain.entries[1].normalizedTextSha256 = HISTORICAL_SHA256; }],
+      ["chain", "epoch-text-bytes-drift", (input) => { input.chain.entries[2].normalizedText += "."; }],
+      ["chain", "epoch-text-digest-drift", (input) => { input.chain.entries[2].normalizedTextSha256 = HISTORICAL_SHA256; }],
+      ["chain", "sealed-entry-digest-drift:2", (input) => { input.chain.entries[1].normalizedText += "."; reseal(input); }],
       ["chain", "entry-digest-drift:1", (input) => { input.chain.entries[0].entrySha256 = HISTORICAL_SHA256; }],
       ["chain", "broken-previous-link:2", (input) => { input.chain.entries[1].previousEntrySha256 = HISTORICAL_SHA256; }],
       ["chain", "duplicate-epoch-seq:1", (input) => { input.chain.entries[1].seq = 1; reseal(input); }],
@@ -177,7 +186,8 @@ describe("kernel effective authority supersession chain", () => {
       ["chain", "chain-head-digest-drift", (input) => { input.chain.chainHeadEntrySha256 = HISTORICAL_SHA256; }],
       ["chain", "chain-head-seq-drift", (input) => { input.chain.chainHeadSeq = 1; }],
       ["chain", "chain-digest-drift", (input) => { input.chain.chainSha256 = HISTORICAL_SHA256; }],
-      ["chain", "effective-epoch-count-drift", (input) => { input.chain.entries[0].status = "effective"; reseal(input); }],
+      ["chain", "sealed-entry-digest-drift:1", (input) => { input.chain.entries[0].status = "effective"; reseal(input); }],
+      ["chain", "effective-epoch-not-head", (input) => { input.chain.entries[2].supersedes = 1; reseal(input); }],
       ["precedence", "authority-dimension-omission:verdict", (input) => { Reflect.deleteProperty(input.chain.entries[1].dimensions, "verdict"); reseal(input); }],
       ["precedence", "authority-dimension-overlap:kernelWriter", (input) => { input.chain.entries[1].supersedesDimensions = []; reseal(input); }],
       ["precedence", "authority-dimension-orphan:inventedAuthority", (input) => { input.chain.entries[1].dimensions.inventedAuthority = { token: "INVENTED", value: "YES" }; reseal(input); }],
@@ -205,13 +215,17 @@ describe("kernel effective authority supersession chain", () => {
       ["consumer", "handoff-effective-authority-seq-drift", (input) => { (((input.handoff.provenance as Record<string, Record<string, unknown>>).effectiveAuthority)).seq = 1; }],
       ["consumer", "handoff-effective-authority-chain-head-drift", (input) => { (((input.handoff.provenance as Record<string, Record<string, unknown>>).effectiveAuthority)).chainHeadSha256 = HISTORICAL_SHA256; }],
       ["consumer", "handoff-effective-authority-text-digest-drift", (input) => { (((input.handoff.provenance as Record<string, Record<string, unknown>>).effectiveAuthority)).normalizedTextSha256 = HISTORICAL_SHA256; }],
+      ["consumer", "handoff-effective-authority-text-digest-drift", (input) => { Reflect.deleteProperty(((input.handoff.provenance as Record<string, Record<string, unknown>>).effectiveAuthority), "normalizedTextSha256"); }],
+      ["consumer", "handoff-effective-authority-stamp-superseded", (input) => { Object.assign(((input.handoff.provenance as Record<string, Record<string, unknown>>).effectiveAuthority), { seq: 1, chainHeadSha256: EPOCH01_ENTRY_SHA256, normalizedTextSha256: HISTORICAL_SHA256 }); }],
       ["consumer", "handoff-historical-approval-ref-overwritten", (input) => { (((input.handoff.provenance as Record<string, Record<string, unknown>>).approval)).normalizedSelectionSha256 = EPOCH_TEXT_SHA256; }],
       ["consumer", "handoff-authority-divergence", (input) => { (input.handoff.authorityBoundary as Record<string, unknown>).verdict = "GO"; }],
       ["consumer", "universe-authority-divergence", (input) => { input.universeBoundary.gitExecutor = "claude"; }],
       ["consumer", "consumer-binding-drift", (input) => { input.chain.consumerBindings.handoffRef = CLOSURE; }],
       ["orchestration", "codex-repo-writer-enabled", (input) => { input.chain.orchestrationPolicy.codexRepoWriter = true; }],
-      ["orchestration", "codex-repo-writer-enabled", (input) => { input.chain.entries[1].dimensions.actionplanWriter.value = "CODEX_GOVERNANCE_ONLY"; reseal(input); }],
-      ["orchestration", "claude-role-loss:kernelReviewer", (input) => { input.chain.entries[1].dimensions.kernelReviewer.value = "CODEX_ONLY"; reseal(input); }],
+      ["orchestration", "codex-repo-writer-enabled", (input) => { input.chain.entries[2].dimensions.actionplanWriter.value = "CODEX_GOVERNANCE_ONLY"; reseal(input); }],
+      ["orchestration", "claude-role-loss:kernelReviewer", (input) => { input.chain.entries[2].dimensions.kernelReviewer.value = "CODEX_ONLY"; reseal(input); }],
+      ["orchestration", "claude-role-loss:kernelRuntimeWriter", (input) => { input.chain.entries[2].dimensions.kernelRuntimeWriter.value = "CODEX_ONLY"; reseal(input); }],
+      ["orchestration", "codex-orchestration-role-drift", (input) => { input.chain.entries[2].dimensions.orchestrator.value = "MASTER_ORCHESTRATOR_REQUIREMENTS_GAP_REVIEW_DIRECTIVE_FINAL_VERIFIER"; reseal(input); }],
       ["orchestration", "claude-self-delegation-enabled", (input) => { input.chain.orchestrationPolicy.claudeSelfDelegationAllowed = true; }],
       ["orchestration", "shared-writer-parallelism-enabled", (input) => { input.chain.orchestrationPolicy.concurrentRepoWriters = 2; }],
       ["orchestration", "shared-writer-parallelism-enabled", (input) => { input.chain.entries[1].dimensions.parallelism.value = "PANE_MULTI_AGENT_MULTI_WRITER"; reseal(input); }],
@@ -237,6 +251,37 @@ describe("kernel effective authority supersession chain", () => {
     ]);
   });
 
+  it("binds a consumer stamp to a sealed entry that still governs, on a total text digest", async () => {
+    expect(preflight()).toEqual([]);
+    const { validateKernelEffectiveAuthorityChain } = await lib();
+    const restamp = (stamp: Record<string, unknown>): string[] => {
+      const input = fixture();
+      (input.handoff.provenance as Record<string, unknown>).effectiveAuthority = stamp;
+      return validateKernelEffectiveAuthorityChain(input);
+    };
+    // EPOCH-01 is sealed but pre-supersession: the chain prefix ending at it no longer derives the
+    // boundary in force. Omitting the digest must not pass by comparing undefined against the
+    // genesis entry, which seals its text through normalizedTextRef and carries no
+    // `normalizedTextSha256` of its own — two absent values must never satisfy the comparison.
+    expect(restamp({ ref: CHAIN, seq: 1, chainHeadSha256: EPOCH01_ENTRY_SHA256 })).toEqual([
+      "handoff-effective-authority-stamp-superseded",
+      "handoff-effective-authority-text-digest-drift",
+    ]);
+    // The genuine normalizedTextRef digest resolves, so only the superseded boundary rejects it.
+    // biome-ignore format: the genuine genesis-ref stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 1, chainHeadSha256: EPOCH01_ENTRY_SHA256, normalizedTextSha256: HISTORICAL_SHA256 })).toEqual(["handoff-effective-authority-stamp-superseded"]);
+    // Appending EPOCH-03 left the derived boundary byte-identical, so the live EPOCH-02 stamp and
+    // the current head stamp both stay valid — historical-at-write is preserved, not weakened.
+    // biome-ignore format: the live EPOCH-02 consumer stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 2, chainHeadSha256: EPOCH02_ENTRY_SHA256, normalizedTextSha256: EPOCH_TEXT_SHA256 })).toEqual([]);
+    // biome-ignore format: the current EPOCH-03 head stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 3, chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 })).toEqual([]);
+    // A forged digest naming no sealed entry still fails closed on both the head and the text.
+    // biome-ignore format: the forged future stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 4, chainHeadSha256: "f".repeat(64), normalizedTextSha256: EPOCH03_TEXT_SHA256 })).toEqual(["handoff-effective-authority-chain-head-drift", "handoff-effective-authority-text-digest-drift"]);
+    expect(readJson<Chain>(CHAIN).entries[2].entrySha256).toBe(EPOCH03_ENTRY_SHA256);
+  });
+
   it("binds AGENTS.md, the handoff, the node universe and the governance gate to the chain", async () => {
     expect(preflight()).toEqual([]);
     const chain = readJson<Chain>(CHAIN);
@@ -256,14 +301,19 @@ describe("kernel effective authority supersession chain", () => {
       HANDOFF,
     ).provenance;
     expect(provenance.approval.normalizedSelectionSha256).toBe(HISTORICAL_SHA256);
+    // The handoff stamp is historical-at-write: it stays pinned to the sealed EPOCH-02 entry it
+    // was authored against, so appending EPOCH-03 never rewrites a downstream consumer artifact.
     expect(provenance.effectiveAuthority).toEqual({
       ref: CHAIN,
       seq: 2,
-      chainHeadSha256: chain.chainHeadEntrySha256,
+      chainHeadSha256: EPOCH02_ENTRY_SHA256,
       normalizedTextSha256: EPOCH_TEXT_SHA256,
     });
+    expect(chain.entries[1].entrySha256).toBe(EPOCH02_ENTRY_SHA256);
     const agents = read("AGENTS.md");
     expect(agents).toContain(CHAIN);
+    expect(agents).toContain("EPOCH-03");
+    expect(agents).toContain("KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED");
     expect(agents).toContain("ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED");
     expect(agents).toContain("human-developer-only");
     expect(agents).toContain("Açık Kullanıcı/Admin yetkisi");
