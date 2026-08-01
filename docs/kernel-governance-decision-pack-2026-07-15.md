@@ -179,6 +179,17 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 E1, M1, S1, X1 ve A5/ADR-0022 için tekil topic, status, owner, alias ve supersession
 kararı gerekir. Bu kimlikler ambiguous kalır ve machine consumer'ları açmamalıdır.
 
+GATE-01 `D08=QUARANTINE_AMBIGUOUS_ADRS` token'ı ile bu beş kimlik yerinde ve
+non-authoritative olarak karantinaya alınır: `quarantineStatus=quarantined-ambiguous`,
+`canonicalTopic`, `alias` ve `supersession` null kalır. Karantina bir kimlik kararı
+değildir; hiçbir ADR renumber, alias, supersede, merge veya move edilmez ve
+`machineConsumerUnblocked=false` ile hiçbir classification rule, blocker listesi,
+generated node veya workflow ambiguous marker kabul edecek şekilde gevşetilmez. Beş
+satırlık ADR collision ledger'ı salt-okunur kanıttır; bayt kimliği, `ambiguous` ve
+`pending` durumu ile renumber/alias/supersession zeminleri korunur. Kimlik çözümü
+`deferred-to-human-adr-identity-decision` olarak insan kararına bırakılır. Ayrıntı:
+`reports/kernel-adr-identity-quarantine-2026-08-02.json`.
+
 ### KGA-D09 — Hayalet WBS Kimlikleri
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -255,7 +266,13 @@ applied, kapsamı yalnız scaffold-walking-skeleton-exit-semantics-record ve kan
 `scaffold-only`, PR-11 tavanı `walking-skeleton-only` kaydedilir, hiçbiri readiness
 promote etmez ve `runtimeImplementation=deferred-no-code-start` kalır. Base queue
 bayt-aynıdır, PR-10/PR-11 blocked ve `nextActionable=PR-01` sürer; agent pack'leri
-source-evidence-only kalır. `KGA-D06`–`KGA-D10` pending'dir ve `applicationScope`
+source-evidence-only kalır. `KGA-D08`: applied, kapsamı yalnız
+adr-identity-quarantine-record ve kanıtı
+`reports/kernel-adr-identity-quarantine-2026-08-02.json`'dır; ADR-E1, ADR-M1, ADR-S1,
+ADR-X1 ve A5/ADR-0022 yerinde karantinada ve ambiguous kalır, canonical topic/alias/
+supersession seçilmez ve hiçbir machine consumer açılmaz. Collision ledger bayt-aynıdır ve
+`identityResolutionDisposition=deferred-to-human-adr-identity-decision` sürer. `KGA-D06`,
+`KGA-D07`, `KGA-D09` ve `KGA-D10` pending'dir ve `applicationScope`
 değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
@@ -336,6 +353,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; base queue bayt-aynı bırakıldığı, PR-10/PR-11
 blocked kaldığı ve hiçbir runtime, scaffold veya SDK kodu üretilmediği için queue, semantic
 data veya runtime rollback'i yoktur.
+KGA-D08 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir ADR kimliği renumber/alias/supersede
+edilmediği, machine consumer açılmadığı ve collision ledger bayt-aynı bırakıldığı için
+ADR kimlik, generated node veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
