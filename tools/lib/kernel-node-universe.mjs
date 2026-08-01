@@ -32,6 +32,36 @@ const resolveEffectiveAuthority = () => {
   }
 };
 
+// A consumer provenance stamp is historical-at-write: it names the sealed entry the artifact was
+// authored against, so appending a successor epoch must never make it drift. Resolution is by
+// entry digest against the sealed chain, never against the current head. A stamp naming no sealed
+// entry resolves to null and fails closed at every call site.
+let sealedEntries = null;
+const sealedChainEntries = () => {
+  if (!authorityChain) return null;
+  try {
+    sealedEntries ??= authorityChain.loadEffectiveAuthorityChain()?.entries ?? [];
+    return sealedEntries;
+  } catch {
+    return null;
+  }
+};
+const sealedStamp = (binding) => {
+  const digest = binding?.chainHeadSha256;
+  if (typeof digest !== "string" || !digest) return null;
+  return sealedChainEntries()?.find((entry) => entry?.entrySha256 === digest) ?? null;
+};
+
+// The normalized-text digest a sealed entry actually seals. The genesis entry deliberately keeps
+// no inline text and seals its digest through normalizedTextRef, so reading `normalizedTextSha256`
+// alone yields undefined there and a stamp that simply omits the field compares equal to it. This
+// resolves both shapes and returns null instead of undefined, so a comparison against it can never
+// be satisfied by two absent values.
+const sealedTextSha256 = (entry) => {
+  const digest = entry?.normalizedTextSha256 ?? entry?.normalizedTextRef?.sha256;
+  return typeof digest === "string" && digest ? digest : null;
+};
+
 export const PRE_D01_SOURCE_COMMIT = "09f0a1fb52d4141092add22a54df1a6204c155a4";
 export const PRE_D01_EXPECTED_NODE_COUNT = 617;
 export const PRE_D01_NODE_SET_SHA256 =
@@ -69,6 +99,26 @@ const exactObject = (actual, expected) =>
       ? exactObject(actual[key], value)
       : actual[key] === value,
   );
+
+// Naming a sealed entry is necessary but not sufficient: a stamp stays valid only while the
+// authority it named still governs. The D01 boundary derived from the chain prefix ending at the
+// stamped entry must equal the boundary in force now. An append that leaves the boundary
+// byte-identical keeps every earlier stamp valid — the live EPOCH-02 stamps survive the EPOCH-03
+// head untouched — while a sealed but pre-supersession entry binds a boundary that no longer holds
+// and fails closed. An unresolvable or erroring derivation is a rejection, never a bypass.
+const stampGoverns = (stamped, effective) => {
+  const entries = sealedChainEntries();
+  const index = entries?.indexOf(stamped) ?? -1;
+  if (index < 0 || !effective) return false;
+  try {
+    const derived = authorityChain.deriveAuthorityBoundary({
+      entries: entries.slice(0, index + 1),
+    });
+    return !derived?.errors?.length && exactObject(derived.boundary, effective.boundary);
+  } catch {
+    return false;
+  }
+};
 
 export const nodeIdSetSha256 = (ids) => lineHash(uniqueSorted(ids));
 export const approvedMappingSha256 = (ledger) =>
@@ -163,7 +213,13 @@ export function validateKernelNodeUniverse({ records = [], handoff = {} }) {
   if (authorityChain) {
     if (binding.ref !== authorityChain.EFFECTIVE_AUTHORITY_CHAIN_REF)
       errors.push("effective-authority-ref-drift");
-    if (binding.normalizedTextSha256 !== authorityChain.EPOCH02_TEXT_SHA256)
+    const stamped = sealedStamp(binding);
+    const sealedDigest = sealedTextSha256(stamped);
+    if (
+      !sealedDigest ||
+      typeof binding.normalizedTextSha256 !== "string" ||
+      binding.normalizedTextSha256 !== sealedDigest
+    )
       errors.push("effective-authority-text-digest-drift");
     if (D01_EFFECTIVE_AUTHORITY_CHAIN_REF !== authorityChain.EFFECTIVE_AUTHORITY_CHAIN_REF)
       errors.push("effective-authority-ref-constant-drift");
@@ -213,9 +269,13 @@ export function validateKernelNodeUniverse({ records = [], handoff = {} }) {
   const effective = resolveEffectiveAuthority();
   if (effective) {
     if (!exactObject(boundary, effective.boundary)) errors.push("authority-boundary-drift");
-    if (binding.seq !== effective.seq) errors.push("effective-authority-seq-drift");
-    if (binding.chainHeadSha256 !== effective.chainHeadSha256)
-      errors.push("effective-authority-chain-head-drift");
+    // The stamp must name a sealed entry at or behind the current head — never ahead of it — and
+    // that entry must still carry today's boundary, so a valid-but-too-old stamp cannot pass.
+    const stamped = sealedStamp(binding);
+    if (!stamped) errors.push("effective-authority-chain-head-drift");
+    else if (binding.seq !== stamped.seq || stamped.seq > effective.seq)
+      errors.push("effective-authority-seq-drift");
+    else if (!stampGoverns(stamped, effective)) errors.push("effective-authority-stamp-superseded");
   } else if (isCompleteCheckout()) {
     // Complete checkout without a resolvable chain: fail closed, never bypass.
     errors.push(CHAIN_MISSING);
