@@ -18,6 +18,8 @@ const SELECTION_SHA256 = "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd0
 const SCOPE = "ownership-split-governance-record";
 const D04_SCOPE = "unowned-directive-ownership-disposition-record";
 const D04_RECORD = "reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json";
+const D05_SCOPE = "scaffold-walking-skeleton-exit-semantics-record";
+const D05_RECORD = "reports/kernel-scaffold-walking-skeleton-exit-semantics-2026-08-01.json";
 const NODES = "src/data/generated/nodes";
 const COMBINED_NODE = "src/data/generated/nodes/capability-registry-contract.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
@@ -145,12 +147,15 @@ describe("KGA-D03 module registry ownership split handoff", () => {
 
     // biome-ignore format: D03 becomes applied and canonical only inside the ownership split scope
     expect(row).toEqual({ id: "KGA-D03", applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, HANDOFF] });
-    expect(state.summary).toEqual({ total: 10, applied: 4, pending: 6, canonical: 4 });
+    expect(state.summary).toEqual({ total: 10, applied: 5, pending: 5, canonical: 5 });
     // D04 is applied alongside D03, but only inside its own scoped disposition record.
     // biome-ignore format: the neighbouring D04 row is pinned exactly, never skipped
     expect(state.rows.find((item: { id: string }) => item.id === "KGA-D04")).toEqual({ id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] });
-    // biome-ignore format: D05..D10 stay pending with no scope while the global gate stays NO-GO
-    for (const pending of state.rows.slice(4)) expect(pending).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false });
+    // D05 is applied alongside D03 and D04, but only inside its own exit-semantics scope.
+    // biome-ignore format: the neighbouring D05 row is pinned exactly, never skipped
+    expect(state.rows.find((item: { id: string }) => item.id === "KGA-D05")).toEqual({ id: "KGA-D05", applicationStatus: "applied", applicationScope: D05_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D05_RECORD] });
+    // biome-ignore format: D06..D10 stay pending with no scope while the global gate stays NO-GO
+    for (const pending of state.rows.slice(5)) expect(pending).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false });
     // biome-ignore format: partial application never unlocks code, runtime, readiness, release or deploy
     expect(state.gate).toMatchObject({ gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" });
     // The promotion is only legal because the validator gained a deliberate D03 contract.
@@ -181,7 +186,7 @@ describe("KGA-D03 module registry ownership split handoff", () => {
       (candidate) => { candidate.evidence[HANDOFF].provenance.approval.normalizedSelectionSha256 = "drift"; },
       (candidate) => { candidate.evidence[HANDOFF].applicationSummary.applicationScope = "module-registry-and-capability-merged"; },
       (candidate) => { candidate.evidence[HANDOFF].applicationSummary.remaining = 1; },
-      (candidate) => { Object.assign(candidate.state.rows[3], { applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", evidenceRefs: [INVENTORY, HANDOFF] }); candidate.state.summary = { total: 10, applied: 4, pending: 6, canonical: 4 }; },
+      (candidate) => { Object.assign(candidate.state.rows[3], { applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", evidenceRefs: [INVENTORY, HANDOFF] }); candidate.state.summary = { total: 10, applied: 5, pending: 5, canonical: 5 }; },
     ];
     // biome-ignore format: the negative matrix driver stays compact for the shard budget
     for (const mutate of mutations) { const candidate = structuredClone(input); mutate(candidate); expect(validateKernelGovernanceApplicationState(candidate).length).toBeGreaterThan(0); }
