@@ -158,7 +158,7 @@ describe("KGA-D08 ADR identity quarantine", () => {
     const row = state.rows.find((entry: { id: string }) => entry.id === "KGA-D08");
     expect(row.gapClosed).toBe(false);
     // biome-ignore format: a promoted D08 row is legal only as this exact scoped, evidence-bound record
-    if (row.applicationStatus === "applied") { expect(row).toEqual({ id: "KGA-D08", applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, REPORT] }); expect(state.summary).toEqual({ total: 10, applied: 6, pending: 4, canonical: 6 }); }
+    if (row.applicationStatus === "applied") { expect(row).toEqual({ id: "KGA-D08", applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, REPORT] }); expect(state.summary).toEqual({ total: 10, applied: 7, pending: 3, canonical: 7 }); }
     // biome-ignore format: otherwise D08 stays pending with no scope at all
     else expect(row).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending" });
     // biome-ignore format: partial application never unlocks code, runtime, readiness, release or deploy

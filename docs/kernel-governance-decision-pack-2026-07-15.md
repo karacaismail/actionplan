@@ -198,6 +198,18 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 envanteri değildir. Her biri için tek tek create / alias / fold / reject kararı gerekir.
 Bu paket node üretmez, module parent değiştirmez ve DoD tamamlandı iddiası yazmaz.
 
+GATE-01 `D04_D09=REJECT_13_GHOSTS` token'ı D04 ile D09 arasında paylaşılır. Bu kayıt
+token'ın yalnız ghost-wbs-identity-rejection payını tüketir: 13 hayalet kimliğin her biri
+tek tek `rejected-no-create-no-alias-no-fold` olarak reddedilir ve `create`, `alias`,
+`fold` alanlarının tümü false kalır. Yedi aday owner kimliği D04'ün ayrık payıdır; burada
+yeniden karara bağlanmaz ve D04 kaydı yeniden uygulanmaz (`ownerIdentityDecidedHere=false`).
+13 satırlık ghost ledger bayt-aynı salt-okunur kanıttır ve yerinde yeniden yazılmaz;
+current-live 650 düğümlük evren değişmez ve 13 kimliğin tümü absent kalır. 13 directive
+belgesi düzenlenmez; dangling textual ref'leri
+`deferred-to-human-directive-text-decision` ile açık residual kanıt olarak korunur.
+Node, owner, module parent, DoD, registry, intake, queue veya generated çıktı yazılmaz.
+Ayrıntı: `reports/kernel-ghost-wbs-identity-rejection-2026-08-02.json`.
+
 ### KGA-D10 — Tenancy Fiziksel Stratejisi
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -271,8 +283,12 @@ adr-identity-quarantine-record ve kanıtı
 `reports/kernel-adr-identity-quarantine-2026-08-02.json`'dır; ADR-E1, ADR-M1, ADR-S1,
 ADR-X1 ve A5/ADR-0022 yerinde karantinada ve ambiguous kalır, canonical topic/alias/
 supersession seçilmez ve hiçbir machine consumer açılmaz. Collision ledger bayt-aynıdır ve
-`identityResolutionDisposition=deferred-to-human-adr-identity-decision` sürer. `KGA-D06`,
-`KGA-D07`, `KGA-D09` ve `KGA-D10` pending'dir ve `applicationScope`
+`identityResolutionDisposition=deferred-to-human-adr-identity-decision` sürer. `KGA-D09`:
+applied, kapsamı yalnız ghost-wbs-identity-rejection-record ve kanıtı
+`reports/kernel-ghost-wbs-identity-rejection-2026-08-02.json`'dır; 13 hayalet WBS kimliği
+tek tek reddedilir, create/alias/fold false kalır, 650 düğümlük evren değişmez ve 13
+directive ref'i `residualDirectiveReferenceDisposition=deferred-to-human-directive-text-decision`
+ile açık kalır. `KGA-D06`, `KGA-D07` ve `KGA-D10` pending'dir ve `applicationScope`
 değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
@@ -358,6 +374,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; hiçbir ADR kimliği renumber/alias/supersede
 edilmediği, machine consumer açılmadığı ve collision ledger bayt-aynı bırakıldığı için
 ADR kimlik, generated node veya runtime rollback'i yoktur.
+KGA-D09 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir hayalet kimlik için node, alias, fold,
+owner veya module parent yazılmadığı, 13 directive belgesi düzenlenmediği ve ghost ledger
+bayt-aynı bırakıldığı için node, WBS kimliği, doküman veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
