@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "sequence-allocation-contract",
+  "wbsCode": "36.19.1",
+  "level": "archetype",
+  "title": "Sequence Allocation Contract",
+  "slug": "sequence-allocation-contract",
+  "aliases": [],
+  "summary": "Allocate concurrent-safe, gap-free and auditable numbers through reserve and commit without owning document lifecycle.",
+  "parentId": "k-sequence",
+  "order": 1,
+  "icon": "ph-hash",
+  "tags": [
+    "sequence",
+    "reserve",
+    "commit",
+    "gap-free",
+    "concurrent-safe",
+    "audit",
+    "tenant",
+    "archetype"
+  ],
+  "dependsOn": [
+    "k-tenancy",
+    "event-bus-delivery-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "Allocation is a two-step reserve and commit: a reserve holds a number against a scope key, and only a commit makes it final and visible.",
+        "Allocation is gap-free within a scope key: a reserve that is never committed is either committed later or explicitly recorded as a cancelled number, so the series stays auditable.",
+        "Allocation is concurrent-safe: two simultaneous reserves against the same scope key never receive the same number, and neither is silently dropped.",
+        "The scope key is explicit and tenant-bound, so a series is defined by tenant plus scope key and never shared across tenants.",
+        "document lifecycle ownership stays outside: this contract issues numbers and never decides whether a document is valid, posted, cancelled or reversed.",
+        "The multi-region posture is declared: under a CAP partition the contract prefers consistency and refuses allocation rather than issuing a possibly duplicate number.",
+        "[DOC-APPLY:task-handoff] Sequence Allocation Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Sequence Allocation Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices reserve and commit a number against a scope key and assert the series advances by exactly one with no gap.",
+        "Planned concurrency cases prove simultaneous reserves against the same scope key receive distinct numbers and that none is lost.",
+        "Planned negatives prove an abandoned reserve becomes an explicit cancelled number in the audit series rather than an unexplained gap.",
+        "Planned negatives prove a cross-tenant allocation against another tenant's scope key is refused rather than silently rescoped.",
+        "Planned partition cases prove that under a CAP partition the multi-region deployment refuses allocation instead of issuing a possibly duplicate number.",
+        "[DOC-APPLY:high-risk-dod] Sequence Allocation Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Sequence Allocation Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Sequence Allocation Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Sequence Allocation Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] sequence-allocation-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] sequence-allocation-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] sequence-allocation-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The sequence record with its scope key, tenant, current position, reserved set, committed set and cancelled number set is specified as typed metadata without creating storage here.",
+        "Allocation history evolves append-only under expand-contract so a historical series stays auditable; no migration and no allocator is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Sequence Allocation Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove gap-free auditability under load: after a mixed run of commits and abandonments the series reconstructs with every number either committed or explicitly cancelled.",
+        "Future tests prove concurrent-safe allocation and tenant scoping hold under an adversarial allocation burst."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.19.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Sequence Allocation Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] sequence-allocation-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] sequence-allocation-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Sequence Allocation Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] sequence-allocation-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed gap-free, concurrency and isolation evidence.",
+        "Rollback removes only D27 data/projections, restores 33/25/8 and the 642-node hash a5f380b0beac386bec54e80badbc7746c10f9d15f77daaf863769395f19703a0, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] sequence-allocation-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Sequence Allocation Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Sequence Allocation Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Sequence Allocation Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Sequence Allocation Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Sequence Allocation Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only allocation shape: a reserve and commit pair against an explicit tenant-bound scope key, with only a commit making a number final.",
+    "Planning-only gap-free contract: every reserved number ends either committed or recorded as a cancelled number, so an auditor can reconstruct the whole series.",
+    "Planning-only concurrency contract: simultaneous reserves against one scope key receive distinct numbers and none is lost.",
+    "Planning-only multi-region contract: under a CAP partition the contract prefers consistency and refuses allocation rather than risking a duplicate number.",
+    "Planning-only audit contract: reserve, commit and cancellation are recorded append-only with actor attribution for each scope key.",
+    "Explicit human approval gate with a fixed boundary: document lifecycle ownership, legal e-document formatting and general-purpose identifier generation all stay outside.",
+    "[DOC-APPLY:high-risk-dod] sequence-allocation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Sequence Allocation Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] sequence-allocation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] sequence-allocation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Sequence Allocation Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Sequence Allocation Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Sequence Allocation Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly sequence-allocation-contract, WBS 36.19.1, archetype, parent k-sequence, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly k-tenancy and event-bus-delivery-contract; blocks and related are empty and the parent's related list is not inherited.",
+    "Allocation is a two-step reserve and commit; a reserved number is not final and is never presented as issued before its commit.",
+    "Allocation is gap-free within a scope key: every reserved number ends committed or explicitly recorded as a cancelled number, so no unexplained gap exists.",
+    "Allocation is concurrent-safe: two simultaneous reserves on the same scope key never receive the same number and neither is silently dropped.",
+    "The scope key is explicit and tenant-bound; a cross-tenant allocation is refused rather than silently rescoped to the caller's tenant.",
+    "Reserve, commit and cancellation are recorded append-only with actor attribution, so a series remains auditable after the fact.",
+    "Under a CAP partition the multi-region posture prefers consistency: allocation is refused rather than issuing a number that might duplicate.",
+    "document lifecycle ownership is excluded: this contract issues numbers and never decides whether a document is valid, posted, cancelled or reversed.",
+    "legal e-document formatting is excluded: layout, statutory field sets and regulatory submission stay with their own authority.",
+    "general-purpose identifier generation is excluded: this contract serves ordered auditable series and is not a UUID or surrogate key service.",
+    "Human approval is mandatory before any sequence model is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-sequence: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Sequence Allocation Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] sequence-allocation-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] sequence-allocation-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Sequence Allocation Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Sequence Allocation Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] sequence-allocation-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Sequence Allocation Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] sequence-allocation-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Sequence Allocation Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-sac-duplicate-number",
+      "desc": "Issuing the same number twice in a legally numbered series would produce two documents claiming one identity, which is a statutory and financial correctness failure.",
+      "severity": "critical",
+      "mitigation": "Make allocation concurrent-safe by construction, prefer consistency under a CAP partition and prove distinctness with an adversarial concurrency burst."
+    },
+    {
+      "id": "r-sac-unexplained-gap",
+      "desc": "An abandoned reserve that leaves an unexplained gap would make a legally numbered series unauditable and could read as a deleted document.",
+      "severity": "critical",
+      "mitigation": "Require every reserved number to end committed or recorded as a cancelled number, and prove series reconstruction as evidence."
+    },
+    {
+      "id": "r-sac-cross-tenant-series",
+      "desc": "A scope key that is not tenant-bound would let one tenant consume or observe another tenant's numbering series.",
+      "severity": "high",
+      "mitigation": "Bind every scope key to one tenant, refuse cross-tenant allocation rather than rescoping it and keep the refusal a fixed negative-test axis."
+    },
+    {
+      "id": "r-sac-scope-expansion",
+      "desc": "A sequence allocator could be misread as owning document lifecycle, legal e-document formatting or general-purpose identifier generation.",
+      "severity": "high",
+      "mitigation": "Keep those three exclusions explicit in every phase, issue numbers only, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove sequence-allocation-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/25/8, 642 nodes, contributor 146 and node-set hash a5f380b0beac386bec54e80badbc7746c10f9d15f77daaf863769395f19703a0; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-sequence-allocation-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "sequence-allocation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-sequence-allocation-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "sequence-allocation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-sequence-allocation-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "sequence-allocation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-sequence-allocation-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "sequence-allocation-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-sequence-allocation-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "sequence-allocation-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Allocation is a reserve and commit pair against an explicit tenant-bound scope key, and only a commit makes a number final.",
+        "Girdi is a scope key plus a tenant context; çıktı is a reserved number and then a committed number, or an explicit refusal.",
+        "The series is gap-free and auditable: every reserved number ends committed or recorded as a cancelled number.",
+        "Allocation is concurrent-safe, so two simultaneous reserves on one scope key receive distinct numbers and neither is dropped.",
+        "Kapsam sınırı gereği document lifecycle ownership, legal e-document formatting and general-purpose identifier generation all stay outside."
+      ],
+      "notes": "sequence-allocation-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract featureDefs kapsamı. Kapsa: reserve and commit allocation, tenant-bound scope key, gap-free auditable series with cancelled numbers, concurrent-safe distinctness. Exclude document lifecycle, legal e-document formatting and general-purpose identifier generation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Number distinctness is the primary control: a duplicate in a legally numbered series is an integrity failure, so allocation is concurrent-safe by construction rather than by retry.",
+        "The scope key is tenant-bound, so a cross-tenant allocation or series read is refused rather than rescoped, which preserves izolasyon.",
+        "Gap-free auditability is a security property: an unexplained gap can read as a suppressed document, so every abandoned reserve becomes an explicit cancelled number.",
+        "Reserve, commit and cancellation are recorded append-only with actor attribution, which keeps a numbered series an auditable denetim artifact.",
+        "Under a CAP partition the multi-region posture prefers consistency and refuses allocation, so availability pressure can never produce a duplicate number."
+      ],
+      "notes": "sequence-allocation-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract security kapsamı. Kapsa: concurrent-safe distinctness, tenant-bound scope keys, gap-free auditability, append-only allocation records, consistency-preferring partition behaviour. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed allocation katman for every series rather than a per-document-type allocator, so gap-free semantics cannot diverge.",
+        "Scope key derivation and series reconstruction stay pure functions with low cyclomatic complexity, testable without a datastore.",
+        "Allocation and document lifecycle stay separated; ölü kod and speculative per-country numbering variants are refused, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] sequence-allocation-contract: sequence-allocation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] sequence-allocation-contract: Sequence Allocation Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] sequence-allocation-contract: sequence-allocation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] sequence-allocation-contract: sequence-allocation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] sequence-allocation-contract: Sequence Allocation Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] sequence-allocation-contract: Sequence Allocation Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] sequence-allocation-contract: Sequence Allocation Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "sequence-allocation-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract codeOptimization kapsamı. Kapsa: one typed allocator, pure scope key and reconstruction logic, allocation versus document lifecycle separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- sequence-allocation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Sequence Allocation Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- sequence-allocation-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Sequence Allocation Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- sequence-allocation-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Sequence Allocation Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- sequence-allocation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Sequence Allocation Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- sequence-allocation-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- sequence-allocation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Sequence Allocation Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- sequence-allocation-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Sequence Allocation Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Sequence Allocation Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Sequence Allocation Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: sequence-allocation-contract — Sequence Allocation Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Sequence Allocation Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The scope key vocabulary is closed and versioned, so introducing a new series is a reviewed change rather than something a caller can create implicitly by allocating.",
+        "Least ayrıcalık applies per scope key: a caller may allocate only in series it is entitled to, so a number cannot be consumed from an unrelated series.",
+        "Reserve lifetimes are bounded, so an abandoned reserve resolves to a cancelled number automatically rather than holding a position indefinitely.",
+        "The allocation yüzey stays kapalı: a caller supplies only a scope key and never a candidate number, and the allocator has no egress path that could seed a series from outside the platform."
+      ],
+      "notes": "sequence-allocation-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract securityOptimization kapsamı. Kapsa: closed versioned scope key vocabulary, per-series least privilege, bounded reserve lifetimes resolving to cancelled numbers. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for a reserve and a separate budget for a commit on a hot scope key; no measurement is claimed here.",
+        "A single scope key is an inherent serialisation point, so the budget states expected throughput per scope key rather than assuming unlimited parallelism.",
+        "Allocation must avoid N+1 access; a batch reserve for one scope key is served in one round trip rather than once per requested number."
+      ],
+      "notes": "sequence-allocation-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract performance kapsamı. Kapsa: p95 budgets for reserve and commit, per-scope-key throughput expectations, batched allocation without N+1. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client consumes a server-issued number; a cihaz may not generate a local sequence number offline and submit it as authoritative.",
+        "An offline client shows a document as unnumbered and pending rather than displaying a provisional number that a later commit could contradict.",
+        "No mobile numbering administration surface is introduced here; rendering an issued number stays a separate consumer responsibility."
+      ],
+      "notes": "sequence-allocation-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract mobileApps kapsamı. Kapsa: server-issued numbers only, unnumbered pending state offline, no mobile numbering administration. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future numbering administration surface must present the scope key, current position and cancelled number set as keyboard navigable content with a visible odak ring at the AAA kontrast threshold.",
+        "An allocation refusal, such as a partition refusal or a cross-tenant attempt, must be announced through an aria live region naming the reason.",
+        "This contract defines allocation semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "sequence-allocation-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract wcag kapsamı. Kapsa: keyboard-navigable series presentation, announced allocation refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future multi-region Kubernetes topology for an allocator remains human-developer work.",
+        "Opening a new scope key is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous scope key set.",
+        "Reverting the allocator shard is confined to this planning contract and the files regenerated from it, so no series position or issued number shifts, runtimeDataImpact stays none and NO-GO remains."
+      ],
+      "notes": "sequence-allocation-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract deployment kapsamı. Kapsa: no release or deploy here, scope key opening as an approved data change, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A commit olay may notify downstream consumers that a number became final, but this contract never performs a business action such as posting the document.",
+        "A commit that triggers a downstream numbering action forms a chain that stops at maxChainDepth 6, so an allocation cannot cascade without bound.",
+        "Re-delivering the same reserve or commit event for the same scope key and reservation id must be idempotent, and opening a new series always requires an explicit onay."
+      ],
+      "notes": "sequence-allocation-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract eca kapsamı. Kapsa: commit events without acting, depth-bounded numbering chains, idempotent reserve and commit replay, approval-gated series opening. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay forbidden actions ve yasak kalır.",
+        "AI cannot reserve or commit a number, cannot open a scope key and cannot cancel an issued number; each of those needs insan onayı, and a cancellation additionally requires a step-up review.",
+        "Any allocation request reaching the lane as sub_prompt is untrusted, the kill switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 scope or claim an unexecuted test result."
+      ],
+      "notes": "sequence-allocation-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from reserving, committing, opening scope keys or cancelling numbers, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases reserve and commit against a scope key and assert the series advances by exactly one, as unit and integration matrices.",
+        "Planned concurrency cases prove simultaneous reserves receive distinct numbers and that none is lost under load.",
+        "Planned negatives prove an abandoned reserve becomes an explicit cancelled number rather than an unexplained gap.",
+        "Planned negatives prove a cross-tenant allocation is refused and that a CAP partition produces a refusal rather than a possibly duplicate number.",
+        "Gap-free and concurrency claims count only after a human-approved run has really executed them, and the planned matrix on its own proves nothing."
+      ],
+      "notes": "sequence-allocation-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract testing kapsamı. Kapsa: reserve and commit positives, concurrency distinctness, cancelled-number negatives, cross-tenant and partition refusal negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A08 software and data integrity failures is the defining axis: a duplicate or unexplained gap in a legally numbered series is an integrity breach, so both are refused by construction.",
+        "OWASP A01 broken access control is modeled by binding every scope key to one tenant and refusing cross-tenant allocation.",
+        "OWASP A04 insecure design is modeled by declaring the reserve and commit split, bounded reserve lifetimes and consistency-preferring partition behaviour up front.",
+        "Girdi doğrulama applies to every reserve and commit: the scope key, tenant and reservation id are validated before a position is consumed, and every reserve, commit and cancellation leaves a denetim izi."
+      ],
+      "notes": "sequence-allocation-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract owasp kapsamı. Kapsa: A08 via duplicate and gap refusal, A01 via tenant-bound scope keys, A04 via declared reserve/commit split and partition posture. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-computation with contributionKind specification, targetProviderIds [k-sequence] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so an allocation touches no kernel internal, no kernel database and no cross-context write path; a commit notification arrives as an olay instead.",
+        "This schedule is only a planning window; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly k-tenancy and event-bus-delivery-contract, and the parent's related list is not inherited.",
+        "Scope stays inside the allocation layer: document lifecycle ownership, legal e-document formatting and general-purpose identifier generation all stay outside."
+      ],
+      "notes": "sequence-allocation-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-computation to k-sequence, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir a number through reserve and commit and may not maintain its own counter or reach a doğrudan tablo for the series position.",
+        "A consumer must carry the scope key alongside any stored number, so a later audit can tell which series produced it.",
+        "Deciding whether a document is posted or reversed belongs to the document lifecycle authority; this contract issues numbers only."
+      ],
+      "notes": "sequence-allocation-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract moduleUsage kapsamı. Kapsa: allocator-mediated numbering without local counters or direct table reads, scope key carried with stored numbers, excluded document lifecycle authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "An issued number links to a commercial document and can therefore expose PII indirectly, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Statutory numbering obligations usually exceed operational needs, so the allocation record saklama süresi is set by the longest applicable legal retention rather than the shortest.",
+        "Reserve, commit and cancellation records are retained append-only so a historical series stays reconstructable, and stored series evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "sequence-allocation-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract dataLifecycle kapsamı. Kapsa: indirect PII through document links, statutory retention driving allocation records, append-only series history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include reserve and commit latency percentiles, abandoned reserve rates, cancelled number counts and partition refusal counts on tenant-safe labels.",
+        "Structured log and trace records carry the scope key and reservation id; issued numbers and document references are redacted and never become metric labels.",
+        "Alerts cover any detected duplicate, any unexplained gap in a reconstructed series and a spike in partition refusals; thresholds and the runbook require human approval."
+      ],
+      "notes": "sequence-allocation-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract observability kapsamı. Kapsa: reserve and commit SLIs, redacted scope-key traces, duplicate and gap alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is a partition or store failure mid-allocation; the contract refuses the allocation and leaves the prior series position intact rather than issuing optimistically.",
+        "Commit is idempotent by construction: re-committing the same reservation id returns the same number, so a retry with bounded backoff cannot consume two positions.",
+        "A repeatedly failing commit is routed to a dead-letter path for human review rather than retried forever, and a circuit breaker protects the shared allocator."
+      ],
+      "notes": "sequence-allocation-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Sequence Allocation Contract reliability kapsamı. Kapsa: refusal over optimistic issuance under partition, idempotent commit with bounded retry, dead-letter routing and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "allocate-sequence-number",
+      "open-scope-key",
+      "cancel-issued-number"
+    ],
+    "stepUp": [
+      "allocate-sequence-number",
+      "open-scope-key",
+      "cancel-issued-number",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "financeModelRef": "finance-money-model",
+    "decisionGradeRef": "decision-grade-data",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "sequence-allocation-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:sequence-allocation-contract:kernel-public-contract",
+      "planned-test:sequence-allocation-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-computation",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-sequence"
+    ]
+  }
+}

@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "search-index-query-contract",
+  "wbsCode": "36.17.1",
+  "level": "archetype",
+  "title": "Search Index Query Contract",
+  "slug": "search-index-query-contract",
+  "aliases": [],
+  "summary": "Provide tenant-scoped full-text and faceted index query semantics without replacing the canonical datastore query path.",
+  "parentId": "k-search",
+  "order": 1,
+  "icon": "ph-magnifying-glass",
+  "tags": [
+    "search",
+    "index",
+    "query",
+    "full-text",
+    "faceted",
+    "relevance",
+    "tenant-isolation",
+    "archetype"
+  ],
+  "dependsOn": [
+    "schema-metadata-engine-contract",
+    "k-tenancy",
+    "event-bus-delivery-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "yönerge: docs/k-search-directive.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The SearchIndex, SearchQuery and SearchResult triple is human-approved as the closed read shape before any implementation begins.",
+        "Isolation is fixed at index level through per-tenant-index with index_key and tenant_id, so a query can never span two tenants.",
+        "SearchQuery supports full-text, faceted and attribute retrieval and exposes a filter_fields/sort_fields allowlist; no raw SQL/DSL may be passed through from a caller.",
+        "SearchResult returns a cursor and facet_counts, and its consistency is declared eventual so no read-after-write guarantee is implied.",
+        "The exclusion set is explicit: search never becomes the canonical datastore query path, never makes an authorization decision, never owns computation and never owns the reindex job runtime.",
+        "[DOC-APPLY:task-handoff] Search Index Query Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Search Index Query Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover full-text, faceted and attribute queries with cursor paging and facet_counts on a per-tenant-index.",
+        "Planned negatives prove a filter or sort key outside the filter_fields/sort_fields allowlist is rejected and that no raw SQL/DSL reaches the engine.",
+        "Planned negatives prove a missing tenant_id is fail-closed and that a cross-tenant index_key can never be resolved.",
+        "Planned negatives prove no read-after-write guarantee is claimed and that a stale result is surfaced as eventual rather than as an error.",
+        "Planned performance cases assert a p95 budget over a 100k-document corpus and prove result hydration avoids N+1 lookups.",
+        "[DOC-APPLY:high-risk-dod] Search Index Query Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Search Index Query Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Search Index Query Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Search Index Query Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] search-index-query-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] search-index-query-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] search-index-query-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The SearchIndex definition with index_key, tenant_id, indexed attribute set and its GIN-backed pg-fts|opensearch adapter shape is specified without creating storage.",
+        "Index evolution is specified as an additive reindex plan under expand-contract; no migration and no reindex job runtime is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Search Index Query Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove the same SearchQuery contract yields equivalent semantics across the pg-fts|opensearch adapters so a consuming app does not change.",
+        "Future tests prove per-tenant-index isolation, allowlist enforcement and the declared p95 budget under a realistic corpus."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.17.1, dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Search Index Query Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] search-index-query-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] search-index-query-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Search Index Query Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] search-index-query-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed negative/security/performance evidence.",
+        "Rollback removes only D13 data/projections, restores 33/12/21 and the 629-node hash 59580623316b418bb81fc8d146fce6280dd8677bd027dbbbbe1965092160a006, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] search-index-query-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Search Index Query Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Search Index Query Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Search Index Query Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Search Index Query Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Search Index Query Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only read shape: SearchIndex, SearchQuery and SearchResult as the closed triple, with index_key and tenant_id binding every index to exactly one tenant.",
+    "Planning-only isolation contract: per-tenant-index separation that is fail-closed, so a missing or mismatched tenant_id rejects the query instead of widening its scope.",
+    "Planning-only query contract: full-text, faceted and attribute retrieval behind a filter_fields/sort_fields allowlist with cursor paging and facet_counts, and no raw SQL/DSL pass-through.",
+    "Planning-only consistency contract: index freshness is eventual with no read-after-write guarantee, fed by event bus updates rather than by synchronous writes.",
+    "Planning-only portability and performance contract: one SearchQuery contract over a pg-fts|opensearch adapter pair, a GIN-backed baseline, a declared p95 budget and N+1-free result hydration.",
+    "Explicit human approval gate with fixed exclusions: search is not the canonical datastore query path, makes no authorization decision, owns no computation and owns no reindex job runtime.",
+    "[DOC-APPLY:high-risk-dod] search-index-query-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Search Index Query Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] search-index-query-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] search-index-query-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Search Index Query Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Search Index Query Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Search Index Query Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly search-index-query-contract, WBS 36.17.1, archetype, parent k-search, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly schema-metadata-engine-contract, k-tenancy and event-bus-delivery-contract in that order; blocks and related are empty and parent-only edges are not inherited.",
+    "A SearchIndex is identified by index_key and bound to one tenant_id under per-tenant-index isolation; no index may hold two tenants' documents.",
+    "A SearchQuery expresses full-text, faceted and attribute retrieval, and every filter or sort key is validated against the filter_fields/sort_fields allowlist.",
+    "no raw SQL/DSL from a caller ever reaches the engine; an unlisted key is rejected rather than silently dropped or passed through.",
+    "A SearchResult returns a cursor for paging and facet_counts for the requested facets, and offset paging is not offered as an alternative.",
+    "Index freshness is eventual and no read-after-write guarantee is made; a consumer that needs certainty reads the canonical datastore instead.",
+    "tenant isolation is fail-closed: a missing tenant_id or a cross-tenant index_key rejects the query and never falls back to an unscoped search.",
+    "The same SearchQuery contract is served by a pg-fts|opensearch adapter pair with a GIN-backed PostgreSQL baseline, so a consuming app does not change when the engine changes.",
+    "A p95 latency budget is declared over a realistic corpus and result hydration must avoid N+1 lookups against the canonical datastore.",
+    "Exclusions hold: search never replaces the canonical datastore query path, never makes an authorization decision, never owns computation and never owns the reindex job runtime.",
+    "Human approval is mandatory before any index activation or implementation; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-search: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Search Index Query Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] search-index-query-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] search-index-query-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Search Index Query Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Search Index Query Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] search-index-query-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Search Index Query Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] search-index-query-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Search Index Query Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-siq-cross-tenant-result",
+      "desc": "A query that resolves an index_key without its tenant_id would return another tenant's documents through a path that looks like an ordinary search.",
+      "severity": "critical",
+      "mitigation": "Require per-tenant-index isolation with fail-closed tenant_id binding and cross-tenant negatives before human-approved implementation."
+    },
+    {
+      "id": "r-siq-query-injection",
+      "desc": "Passing caller-supplied filter or sort expressions through as raw SQL/DSL would expose the index and the datastore behind it to injection.",
+      "severity": "critical",
+      "mitigation": "Fix a filter_fields/sort_fields allowlist, forbid raw SQL/DSL pass-through and prove an unlisted key is rejected rather than forwarded."
+    },
+    {
+      "id": "r-siq-consistency-misuse",
+      "desc": "Treating an eventual index as authoritative would let a consumer act on stale data as though a read-after-write guarantee existed.",
+      "severity": "high",
+      "mitigation": "State that freshness is eventual with no read-after-write guarantee and require consumers needing certainty to use the canonical datastore query path."
+    },
+    {
+      "id": "r-siq-scope-expansion",
+      "desc": "A search contract could be misread as authority to replace the datastore query path, decide access or own the reindex job runtime.",
+      "severity": "high",
+      "mitigation": "Keep the canonical datastore query path, authorization decision, computation and reindex job runtime exclusions explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove search-index-query-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/12/21, 629 nodes, contributor 133 and node-set hash 59580623316b418bb81fc8d146fce6280dd8677bd027dbbbbe1965092160a006; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-search-index-query-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "search-index-query-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-search-index-query-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "search-index-query-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-search-index-query-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "search-index-query-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-search-index-query-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "search-index-query-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-search-index-query-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "search-index-query-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The read shape is the closed triple SearchIndex, SearchQuery and SearchResult, where a SearchIndex is identified by index_key and bound to one tenant_id under per-tenant-index isolation.",
+        "SearchQuery covers full-text, faceted and attribute retrieval, and every filter or sort key must appear in the filter_fields/sort_fields allowlist.",
+        "SearchResult carries a cursor for paging and facet_counts for the requested facets, and its freshness is eventual rather than transactional.",
+        "One contract spans a pg-fts|opensearch adapter pair over a GIN-backed baseline, so scaling the engine leaves the consuming app unchanged.",
+        "Search is a read primitive ve kapsam sınırı gereği arama canonical datastore query path yerine geçmez; no raw SQL/DSL is accepted from a caller."
+      ],
+      "notes": "search-index-query-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract featureDefs kapsamı. Kapsa: SearchIndex/SearchQuery/SearchResult shape with index_key and tenant_id; per-tenant-index isolation; full-text, faceted and attribute retrieval; filter_fields/sort_fields allowlist; cursor and facet_counts; eventual freshness; pg-fts|opensearch adapters over GIN. Exclude the canonical datastore query path, authorization decision, computation and reindex job runtime. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Isolation is structural: per-tenant-index binds every index_key to one tenant_id, and a missing tenant context is fail-closed rather than resolved to an unscoped index.",
+        "no raw SQL/DSL crosses the boundary; the filter_fields/sort_fields allowlist is the only way to express a filter or a sort, which removes the injection surface.",
+        "Search returns what an index holds and never makes an authorization decision; a consumer must still obtain a decision before exposing any hit it receives.",
+        "Indexed attributes are chosen deliberately under least-privilege so sensitive fields are not made searchable by default, and query logs redact user-supplied terms.",
+        "[DOC-APPLY:high-risk-dod] search-index-query-contract: search-index-query-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] search-index-query-contract: Search Index Query Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] search-index-query-contract: search-index-query-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] search-index-query-contract: search-index-query-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] search-index-query-contract: Search Index Query Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] search-index-query-contract: Search Index Query Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] search-index-query-contract: Search Index Query Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "search-index-query-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract security kapsamı. Kapsa: per-tenant-index structural isolation, fail-closed tenant binding, allowlist-only filtering with no raw SQL/DSL, authorization delegation, deliberate indexed attribute selection and query log redaction. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- search-index-query-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Search Index Query Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- search-index-query-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Search Index Query Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- search-index-query-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Search Index Query Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- search-index-query-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Search Index Query Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- search-index-query-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- search-index-query-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Search Index Query Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- search-index-query-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Search Index Query Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Search Index Query Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Search Index Query Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: search-index-query-contract — Search Index Query Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Search Index Query Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one SearchQuery builder behind an adapter interface instead of per-engine query code, with a short-code bütçe sınırı and katman separation.",
+        "Allowlist validation and cursor encoding stay pure functions with low cyclomatic complexity, so query construction is testable without a live index.",
+        "Search quality and tenancy rules are referenced through standardRefs rather than restated inside this contract."
+      ],
+      "notes": "search-index-query-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract codeOptimization kapsamı. Kapsa: single query builder behind an adapter interface, pure allowlist and cursor logic, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Boundary validation rejects any filter or sort key outside filter_fields/sort_fields and any index_key that does not belong to the caller's tenant_id.",
+        "Least-privilege separates index definition from querying: a query caller cannot add an indexed attribute or widen the allowlist.",
+        "A cursor is opaque and integrity-protected so a caller cannot rewrite it to page into another tenant's index."
+      ],
+      "notes": "search-index-query-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract securityOptimization kapsamı. Kapsa: allowlist and index_key validation, least-privilege between definition and query, opaque integrity-protected cursor. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 latency budget is declared for a full-text and faceted query over a realistic corpus of at least 100k documents; no measurement is claimed here.",
+        "Result hydration must avoid N+1 lookups: the index returns enough projected fields that a list view does not fan out into per-hit datastore reads.",
+        "GIN index coverage and facet_counts cardinality must be evidenced before any readiness claim, since wide facets dominate query cost."
+      ],
+      "notes": "search-index-query-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract performance kapsamı. Kapsa: p95 budget over a 100k corpus, N+1-free hydration, GIN coverage and facet cardinality evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobile, web and service channels issue the same SearchQuery and cannot add a channel-local filter key outside the shared allowlist.",
+        "A mobile client pages strictly through the returned cursor, tolerates offline staleness and must accept eventual freshness rather than assuming a just-written record is searchable.",
+        "No mobile search UI is introduced; presenting results and highlighting stays a separate consumer responsibility."
+      ],
+      "notes": "search-index-query-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract mobileApps kapsamı. Kapsa: shared SearchQuery across channels, cursor-only paging with eventual freshness tolerance, no search UI here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future search UI must announce result counts and facet_counts changes through an aria live region without moving focus away from the query field.",
+        "An empty result set or a rejected filter key must be conveyed as accessible text with a stated reason, keyboard reachable with a visible focus ring at the AAA contrast threshold.",
+        "This contract defines query semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "search-index-query-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract wcag kapsamı. Kapsa: announced result and facet changes, accessible empty and rejection states, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Docker/Kubernetes topology for a PostgreSQL FTS baseline or an OpenSearch cluster remains human-developer work.",
+        "Moving from pg-fts to opensearch must keep the SearchQuery contract stable so the change is a deployment concern rather than an application rewrite.",
+        "Withdrawing this shard affects only the planning contract and its deterministic projections, so runtimeDataImpact remains none and NO-GO stands."
+      ],
+      "notes": "search-index-query-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract deployment kapsamı. Kapsa: no release or deploy here, adapter swap as a deployment concern, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "This contract is read semantics, not automation: index updates arrive from event bus messages but no ruleset acts on search results here.",
+        "The reindex job runtime is owned elsewhere; this node describes what an index must contain, never the worker that populates it.",
+        "Automation may record a planned approval request but cannot create an index, widen the allowlist or claim successful runtime execution."
+      ],
+      "notes": "search-index-query-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract eca kapsamı. Kapsa: event-driven index updates only, reindex job runtime excluded, no automated index creation or allowlist widening. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read the search contract and suggest a changeset, but creating an index, widening the filter_fields/sort_fields allowlist, issuing raw SQL/DSL and bypassing tenant scope are forbidden actions ve yasak kalır.",
+        "Implementation and index activation depend on explicit insan onayı; no AI lane carries an automatic apply path, an admin override or delegated-admin standing here.",
+        "An AI retrieval consumer must treat results as eventual and unauthorized until a decision is obtained, and no prompt or repository text may widen this shard's fixed D01 scope or fabricate executed-test evidence."
+      ],
+      "notes": "search-index-query-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, forbidden index creation and allowlist widening, AI retrieval treated as eventual and unauthorized, mandatory human approval. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases cover full-text, faceted and attribute queries with cursor paging and facet_counts against a per-tenant-index, as unit and integration matrices.",
+        "Planned negatives prove an unlisted filter or sort key is rejected by the filter_fields/sort_fields allowlist and that no raw SQL/DSL is forwarded to the engine.",
+        "Planned negatives prove a missing tenant_id is fail-closed and that a cross-tenant index_key or rewritten cursor never returns another tenant's documents.",
+        "Planned consistency cases prove results are eventual with no read-after-write guarantee, and adapter parity cases compare pg-fts|opensearch behaviour on the same SearchQuery.",
+        "Planned performance cases assert the declared p95 budget and prove hydration is free of N+1 lookups against the canonical datastore."
+      ],
+      "notes": "search-index-query-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract testing kapsamı. Kapsa: full-text/faceted/attribute positives with cursor and facet_counts, allowlist and raw-DSL negatives, tenant isolation and cursor tampering, eventual consistency proof, adapter parity, p95 and N+1 evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 injection is modeled by refusing raw SQL/DSL and constraining every filter and sort to the declared allowlist through strict input validation.",
+        "OWASP A01 broken access control is modeled through per-tenant-index isolation plus explicit delegation of the authorization decision to its own contract.",
+        "OWASP A04 insecure design is modeled by declaring search eventual and non-authoritative, so no consumer builds a correctness guarantee on an index read."
+      ],
+      "notes": "search-index-query-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract owasp kapsamı. Kapsa: A03 injection via allowlist-only filtering, A01 per-tenant-index and authorization delegation, A04 eventual non-authoritative design. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-surface with contributionKind specification, targetProviderIds [k-search] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a search consumer touches no kernel internal, no kernel database and no cross-context write path.",
+        "This schedule is only a planning window; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly schema-metadata-engine-contract, k-tenancy and event-bus-delivery-contract and does not inherit parent-only edges.",
+        "Scope stays inside the read layer: no canonical datastore query path replacement, no authorization decision, no computation and no reindex job runtime."
+      ],
+      "notes": "search-index-query-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract integration kapsamı. Kapsa: contributor routing to k-search under areaId k-surface, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming app issues a SearchQuery for discovery and falls back to the canonical datastore query path whenever it needs an authoritative read.",
+        "A consumer must preserve tenant_id on every query and cannot introduce its own filter key without extending the shared allowlist through the owning contract.",
+        "Deriving a computed value from a search hit remains a computation authority elsewhere; the index reports, it does not calculate."
+      ],
+      "notes": "search-index-query-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract moduleUsage kapsamı. Kapsa: discovery use with datastore fallback, preserved tenant_id and shared allowlist, computation ownership excluded. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "An index may hold PII copied from the canonical store, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "A deletion in the canonical store must propagate to every per-tenant-index, since a stale hit would keep erased data discoverable after erasure.",
+        "Index retention follows the source record's policy and is tenant-scoped; the index is a derived copy and never the system of record."
+      ],
+      "notes": "search-index-query-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract dataLifecycle kapsamı. Kapsa: indexed personal-data classification, deletion propagation to indexes, tenant-scoped derived-copy retention. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include query latency percentiles by query kind, zero-result rate, allowlist rejection counts and index lag behind the canonical store on tenant-safe labels.",
+        "Logs and traces carry index_key, query kind and tenant scope with search terms redacted; user-supplied text and result payloads are never metric labels.",
+        "Alerts cover a p95 budget breach, a growing index lag that widens the eventual window and any cross-tenant query rejection spike; thresholds require human approval."
+      ],
+      "notes": "search-index-query-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract observability kapsamı. Kapsa: latency and zero-result SLIs, redacted query labels, index lag and cross-tenant rejection alerts. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unavailable or lagging index; it degrades to an explicit error or a declared stale result, never to a silent partial result set.",
+        "The same SearchQuery against the same index version must return the same ordering, so relevance ranking is deterministic, idempotent and reproducible for evidence.",
+        "Rebuilding an index never blocks reads on the previous one; the canonical datastore query path remains the fallback for any authoritative read."
+      ],
+      "notes": "search-index-query-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Search Index Query Contract reliability kapsamı. Kapsa: explicit degradation on index unavailability, deterministic ranking, non-blocking rebuild with datastore fallback. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "create-search-index",
+      "bypass-tenant-scope"
+    ],
+    "stepUp": [
+      "create-search-index",
+      "widen-filter-allowlist",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "searchQualityRef": "search-quality",
+    "i14yRef": "i14y",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "c13nRef": "c13n",
+    "dataNormalizationRef": "data-normalization"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "search-index-query-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:search-index-query-contract:kernel-public-contract",
+      "planned-test:search-index-query-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-surface",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-search"
+    ]
+  }
+}

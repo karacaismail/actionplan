@@ -1,0 +1,751 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "actor-role-binding-contract",
+  "wbsCode": "36.9.1",
+  "level": "archetype",
+  "title": "Actor RoleBinding Contract",
+  "slug": "actor-role-binding-contract",
+  "aliases": [],
+  "summary": "Bind party and actor roles to tenant, channel and app context only; identity lifecycle and policy evaluation stay outside.",
+  "parentId": "k-actor",
+  "order": 1,
+  "icon": "ph-users-three",
+  "tags": [
+    "actor",
+    "party",
+    "role",
+    "RoleBinding",
+    "tenant",
+    "channel",
+    "scope",
+    "archetype"
+  ],
+  "dependsOn": [
+    "party-role-context-contract",
+    "authorization-decision-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "adr: docs/adr-A1-actor-party.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "A RoleBinding attaches exactly one party and one actor to one role within a declared tenant, channel and app scope; a binding without a complete scope is refused.",
+        "The same party may hold different roles in different scopes, so a role is never global: resolution always answers within one tenant, channel and app triple.",
+        "Binding resolution is default-deny: when no binding matches the requested scope the answer is an empty role set, never an inherited or ambient role.",
+        "The contract declares what a binding IS; whether a bound role may perform an action is a policy evaluation owned by the PDP and is never decided here.",
+        "identity lifecycle, including SSO/OIDC/MFA registration, credential rotation and account deactivation, stays outside this contract and is only referenced as an external precondition.",
+        "Every binding create, change and revoke is tenant-scoped and recorded append-only, and a cross-tenant binding attempt is refused rather than silently narrowed.",
+        "[DOC-APPLY:task-handoff] Actor RoleBinding Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Actor RoleBinding Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices bind one party and actor to a role in a given tenant, channel and app scope and resolve the same role set back for that exact scope.",
+        "Planned negatives prove a binding missing its tenant, channel or app scope field is refused before it is stored.",
+        "Planned negatives prove that resolving a scope with no matching binding returns an empty role set under default-deny rather than a fallback role.",
+        "Planned negatives prove a cross-tenant binding create or read is refused, so one tenant can never bind a role inside another tenant's scope.",
+        "Planned boundary cases prove this contract never answers an authorization question: a bound role does not imply an allow, which stays a PDP policy evaluation.",
+        "[DOC-APPLY:high-risk-dod] Actor RoleBinding Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Actor RoleBinding Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Actor RoleBinding Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Actor RoleBinding Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] actor-role-binding-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] actor-role-binding-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] actor-role-binding-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The RoleBinding record with its party reference, actor reference, role reference, tenant, channel and app scope and validity window is specified as typed metadata without creating storage here.",
+        "Bindings evolve append-only under expand-contract so an earlier binding stays explainable for audit; no migration and no resolver is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor party-role-context-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Actor RoleBinding Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove scope isolation: a role bound in one channel or app must not resolve in another, and a tenant boundary must never be crossed by resolution.",
+        "Future tests prove that revoking a binding removes the role from every subsequent resolution without rewriting the historical binding record."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.9.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Actor RoleBinding Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] actor-role-binding-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] actor-role-binding-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Actor RoleBinding Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] actor-role-binding-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed scope-isolation and least-privilege evidence.",
+        "Rollback removes only D23 data/projections, restores 33/21/12 and the 638-node hash 4c2313a74297092271f47fbeb0f67d9b40b22db10f221876c86d6b15ddc99dcc, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] actor-role-binding-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Actor RoleBinding Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Actor RoleBinding Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Actor RoleBinding Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Actor RoleBinding Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Actor RoleBinding Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only binding shape: one RoleBinding record joining a party, an actor and a role inside a declared tenant, channel and app scope with a validity window.",
+    "Planning-only resolution contract: given a party or actor plus a tenant, channel and app scope, return the bound role set, and return an empty set under default-deny when nothing matches.",
+    "Planning-only scope contract: a role is never global, so the same party may carry different roles per scope and no binding leaks across a tenant boundary.",
+    "Planning-only audit contract: binding create, change and revoke are recorded append-only so a historical authorization context stays reconstructable.",
+    "Explicit human approval gate with a fixed boundary: identity lifecycle including SSO/OIDC/MFA stays outside, and policy evaluation stays with the PDP.",
+    "Developer handoff naming party-role-context-contract as the party and role context owner and authorization-decision-contract as the decision owner this contract feeds but never replaces.",
+    "[DOC-APPLY:high-risk-dod] actor-role-binding-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Actor RoleBinding Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] actor-role-binding-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] actor-role-binding-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Actor RoleBinding Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Actor RoleBinding Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Actor RoleBinding Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly actor-role-binding-contract, WBS 36.9.1, archetype, parent k-actor, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly party-role-context-contract and authorization-decision-contract; blocks and related are empty and the parent-only k-identity edge and its related list are not inherited.",
+    "A RoleBinding is admissible only with a complete tenant, channel and app scope plus a party, an actor and a role reference; an incomplete scope is refused.",
+    "A role is never global: the same party may hold different roles in different scopes, and resolution always answers within one tenant, channel and app triple.",
+    "Resolution is default-deny: a scope with no matching binding resolves to an empty role set, never to an inherited, ambient or fallback role.",
+    "A cross-tenant binding create, read or resolution is refused rather than silently narrowed, so a tenant boundary is never crossed by a binding.",
+    "identity lifecycle is excluded: SSO/OIDC/MFA registration, credential rotation and account deactivation are external preconditions and are never modeled here.",
+    "policy evaluation is excluded: a bound role does not imply an allow, and the allow or deny answer stays with the PDP through authorization-decision-contract.",
+    "party and role context ownership stays with party-role-context-contract; this contract binds those references and never redefines a party or a role.",
+    "Binding create, change and revoke are recorded append-only, so revoking a binding changes future resolution without rewriting its history.",
+    "Human approval is mandatory before any binding model is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-actor: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor party-role-context-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Actor RoleBinding Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] actor-role-binding-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] actor-role-binding-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Actor RoleBinding Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Actor RoleBinding Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] actor-role-binding-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Actor RoleBinding Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] actor-role-binding-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Actor RoleBinding Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-arb-scope-leak",
+      "desc": "A binding that resolves outside its declared tenant, channel or app scope would grant a role in a context nobody reviewed, which is a silent privilege escalation.",
+      "severity": "critical",
+      "mitigation": "Require a complete scope on every binding, resolve strictly within one tenant, channel and app triple and keep cross-tenant refusal a fixed negative-test axis."
+    },
+    {
+      "id": "r-arb-default-allow",
+      "desc": "Treating an unmatched scope as an inherited or ambient role would turn a missing binding into an accidental grant across the whole platform.",
+      "severity": "critical",
+      "mitigation": "Fix resolution at default-deny with an empty role set, and prove the empty answer with a dedicated negative rather than assuming a fallback."
+    },
+    {
+      "id": "r-arb-authority-merge",
+      "desc": "A RoleBinding contract could be misread as deciding authorization, so a bound role would be treated as an allow without any policy evaluation.",
+      "severity": "high",
+      "mitigation": "State in every phase that a bound role is an input to the PDP and never a decision, and keep authorization-decision-contract as the named decision owner."
+    },
+    {
+      "id": "r-arb-identity-absorption",
+      "desc": "Absorbing identity lifecycle would duplicate SSO/OIDC/MFA and credential ownership and create two competing sources of truth for who a party is.",
+      "severity": "high",
+      "mitigation": "Keep identity lifecycle an explicit exclusion referenced as a precondition, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove actor-role-binding-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/21/12, 638 nodes, contributor 142 and node-set hash 4c2313a74297092271f47fbeb0f67d9b40b22db10f221876c86d6b15ddc99dcc; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-actor-role-binding-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "actor-role-binding-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-actor-role-binding-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "actor-role-binding-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-actor-role-binding-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "actor-role-binding-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-actor-role-binding-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "actor-role-binding-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-actor-role-binding-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "actor-role-binding-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "A RoleBinding joins one party, one actor and one role inside a declared tenant, channel and app scope with a validity window.",
+        "Girdi is a party or actor reference plus a scope triple; çıktı is the bound role set for exactly that scope, or an empty set under default-deny.",
+        "A role is never global, so the same party may hold different roles per scope and no binding is inherited across a tenant, channel or app boundary.",
+        "Binding create, change and revoke are append-only, which keeps a historical authorization context reconstructable without rewriting the record.",
+        "Kapsam sınırı gereği identity lifecycle including SSO/OIDC/MFA stays outside and policy evaluation stays with the PDP."
+      ],
+      "notes": "actor-role-binding-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract featureDefs kapsamı. Kapsa: party/actor/role binding inside a tenant, channel and app scope, default-deny scope resolution, per-scope role differences, append-only binding history. Exclude identity lifecycle and policy evaluation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Scope completeness is the primary control: a binding without a tenant, channel and app scope is refused, so no role can be granted in an unreviewed context.",
+        "Resolution is default-deny, so an unmatched scope yields an empty role set rather than an inherited or ambient role that nobody approved.",
+        "Every binding is bound to one tenant and a cross-tenant create, read or resolution is refused rather than filtered, which preserves izolasyon.",
+        "A bound role is an input to an authorization decision and never the decision itself; policy evaluation stays with the PDP, which keeps the security boundary single-owner.",
+        "Binding create, change and revoke are recorded append-only with actor attribution, which keeps a privilege change auditable as a denetim trail."
+      ],
+      "notes": "actor-role-binding-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract security kapsamı. Kapsa: mandatory complete scope, default-deny resolution, tenant-bound bindings, binding-is-not-a-decision boundary, append-only privilege audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed resolution katman for every scope rather than a per-channel resolver, so binding semantics cannot diverge between surfaces.",
+        "Scope matching and role set assembly stay pure functions with low cyclomatic complexity, testable without a datastore.",
+        "Binding and policy evaluation stay separated; ölü kod and speculative per-app role models are refused, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] actor-role-binding-contract: actor-role-binding-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] actor-role-binding-contract: Actor RoleBinding Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] actor-role-binding-contract: actor-role-binding-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] actor-role-binding-contract: actor-role-binding-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] actor-role-binding-contract: Actor RoleBinding Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] actor-role-binding-contract: Actor RoleBinding Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] actor-role-binding-contract: Actor RoleBinding Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "actor-role-binding-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract codeOptimization kapsamı. Kapsa: one typed scope resolver, pure scope matching, binding versus policy evaluation separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- actor-role-binding-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Actor RoleBinding Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- actor-role-binding-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Actor RoleBinding Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- actor-role-binding-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Actor RoleBinding Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- actor-role-binding-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Actor RoleBinding Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- actor-role-binding-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- actor-role-binding-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Actor RoleBinding Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- actor-role-binding-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Actor RoleBinding Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Actor RoleBinding Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Actor RoleBinding Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: actor-role-binding-contract — Actor RoleBinding Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Actor RoleBinding Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The role reference set is closed and owned externally, so introducing a role is a reviewed change rather than something a binding request can invent.",
+        "Least ayrıcalık applies per scope: a binding grants a role in exactly one tenant, channel and app triple and never widens to a sibling scope.",
+        "A binding validity window bounds exposure in time, so a temporary elevation expires by construction instead of relying on a manual revoke.",
+        "The binding surface stays kapalı: the resolver exposes no egress path to an external directory and its reachable yüzey is the declared scope triple, so a compromised consumer cannot widen what it can read."
+      ],
+      "notes": "actor-role-binding-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract securityOptimization kapsamı. Kapsa: externally owned closed role set, per-scope least privilege, time-bounded binding validity. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for a single scope resolution on a representative binding set; no measurement is claimed here.",
+        "Resolution is expected on every request path, so the declared budget treats it as a hot lookup rather than an occasional administrative query.",
+        "Scope resolution must avoid N+1 lookups; the binding set for a party is fetched once per resolution rather than once per candidate role."
+      ],
+      "notes": "actor-role-binding-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract performance kapsamı. Kapsa: p95 budget for scope resolution, hot-path treatment, N+1-free binding lookup. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client consumes a resolved role set for its own scope; a cihaz may not assemble or cache a role set as authoritative for another scope.",
+        "An offline client displays the last synchronised role set as stale together with its scope, rather than assuming a binding is still valid.",
+        "No mobile binding administration surface is introduced here; rendering a resolved role set stays a separate consumer responsibility."
+      ],
+      "notes": "actor-role-binding-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract mobileApps kapsamı. Kapsa: server-authoritative role resolution, stale offline display with scope, no mobile binding administration here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future binding administration surface must present the party, actor, role and scope triple as keyboard navigable content with a visible odak ring at the AAA kontrast threshold.",
+        "A binding refusal, such as an incomplete scope or a cross-tenant attempt, must be announced through an aria live region naming the failing scope field.",
+        "This contract defines binding semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "actor-role-binding-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract wcag kapsamı. Kapsa: keyboard-navigable binding presentation, announced binding refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Kubernetes topology for a binding resolution service remains human-developer work.",
+        "Creating or revoking a binding is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous binding state.",
+        "Backing this binding shard out is a plan-level revert of the contract text plus the files regenerated from it, with no stored binding altered, so runtimeDataImpact stays none and NO-GO still holds."
+      ],
+      "notes": "actor-role-binding-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract deployment kapsamı. Kapsa: no release or deploy here, binding changes as approved data changes, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A binding create or revoke olay may notify downstream consumers, but this contract never performs a business action of its own on that event.",
+        "A binding change that triggers a downstream re-resolution forms a chain that stops at maxChainDepth 6, so a privilege change cannot cascade without bound.",
+        "Re-delivering the same binding event for the same binding version must be idempotent, and any privilege elevation always requires an explicit onay."
+      ],
+      "notes": "actor-role-binding-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract eca kapsamı. Kapsa: binding events without acting, depth-bounded re-resolution chains, idempotent replay and approval-gated elevation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay forbidden actions ve yasak kalır.",
+        "AI cannot create, widen or revoke a RoleBinding and cannot resolve a scope on its own authority; each of those needs insan onayı, and a privilege elevation additionally requires a step-up review.",
+        "Any binding request reaching the lane as sub_prompt is untrusted, the kill switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 scope or claim an unexecuted test result."
+      ],
+      "notes": "actor-role-binding-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from creating, widening or revoking bindings, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases bind a party and actor to a role in a tenant, channel and app scope and resolve the same role set back, as unit and integration matrices.",
+        "Planned negatives prove an incomplete scope is refused before storage and that an unmatched scope resolves to an empty role set under default-deny.",
+        "Planned negatives prove a cross-tenant binding create, read or resolution is refused rather than narrowed.",
+        "Planned boundary cases prove a bound role never produces an allow on its own, keeping policy evaluation with the PDP.",
+        "These binding matrices are plans rather than evidence: a pass is recordable only after a human-approved execution has genuinely run."
+      ],
+      "notes": "actor-role-binding-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract testing kapsamı. Kapsa: scope binding and resolution positives, incomplete-scope and default-deny negatives, cross-tenant negatives, binding-is-not-a-decision boundary cases. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is the defining axis: bindings are scope-complete and tenant-bound, and resolution is default-deny so a missing binding never becomes a grant.",
+        "OWASP A04 insecure design is modeled by declaring the scope triple, the validity window and the binding-is-not-a-decision boundary up front rather than patching them later.",
+        "OWASP A09 security logging failures is modeled by recording every binding create, change and revoke append-only with actor attribution.",
+        "Girdi doğrulama applies to every binding request: the scope triple, party, actor and role references are validated against closed reference sets before storage, and each accepted or refused binding leaves a denetim izi."
+      ],
+      "notes": "actor-role-binding-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract owasp kapsamı. Kapsa: A01 via scope-complete tenant-bound default-deny bindings, A04 via declared scope and boundary design, A09 via append-only privilege logging. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-fieldtypes with contributionKind specification, targetProviderIds [k-party] and runtimeProviderClaimAllowed=false.",
+        "The parent k-actor is itself a contributor routed to k-party, so this descendant inherits that provider target rather than claiming its own parent id as a provider.",
+        "All three publicBoundary flags stay false, so a binding touches no kernel internal, no kernel database and no cross-context write path; a change notification arrives as an olay instead.",
+        "This schedule is only a planning window; predecessor party-role-context-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly party-role-context-contract and authorization-decision-contract, and the parent-only k-identity edge and its related list are not inherited."
+      ],
+      "notes": "actor-role-binding-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-fieldtypes to k-party, inherited contributor parent target, closed public boundary, exact dependsOn and planning window marker. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir a resolved role set through this contract and may not maintain its own role table or reach a doğrudan tablo for bindings.",
+        "A consumer must carry the scope triple alongside any stored role decision, so a later audit can tell which binding context produced it.",
+        "Defining a party or a role belongs to party-role-context-contract and deciding an action belongs to authorization-decision-contract; this contract binds only."
+      ],
+      "notes": "actor-role-binding-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract moduleUsage kapsamı. Kapsa: binding-mediated role sets without local role tables or direct table reads, scope carried with stored decisions, excluded party/role definition and decision authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A binding names a party and therefore exposes PII indirectly, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "A revoked binding is retained for its declared saklama süresi so a historical authorization context stays explainable, while the underlying identity record removal stays an external owner's obligation.",
+        "Bindings and their audit records are retained append-only, and stored bindings evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "actor-role-binding-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract dataLifecycle kapsamı. Kapsa: indirect PII through party references, retention of revoked bindings, append-only history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include scope resolution latency percentiles, empty-result rates by scope kind and refused binding counts by failing rule on tenant-safe labels.",
+        "Structured log and trace records carry the scope triple and the binding version; party identifiers and role payloads are redacted and never become metric labels.",
+        "Alerts cover a spike in cross-tenant binding refusals, an unexpected surge of empty resolutions and repeated privilege elevation attempts; thresholds and the runbook require human approval."
+      ],
+      "notes": "actor-role-binding-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract observability kapsamı. Kapsa: resolution and refusal SLIs, redacted scope-carrying traces, cross-tenant and elevation alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unreachable binding store during resolution; the contract degrades to an explicit default-deny empty role set, never to a cached permissive answer.",
+        "Resolution is idempotent by construction: the same party and scope against the same binding version always returns the same role set, so a retry with bounded backoff cannot drift a privilege.",
+        "A repeatedly failing binding change is routed to a dead-letter path for human review rather than retried forever, and a circuit breaker protects the shared resolver."
+      ],
+      "notes": "actor-role-binding-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Actor RoleBinding Contract reliability kapsamı. Kapsa: fail-closed empty resolution on store failure, idempotent resolution with bounded retry, dead-letter routing and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "create-role-binding",
+      "widen-binding-scope",
+      "revoke-role-binding"
+    ],
+    "stepUp": [
+      "create-role-binding",
+      "widen-binding-scope",
+      "revoke-role-binding",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "privacyRef": "privacy",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "actor-role-binding-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:actor-role-binding-contract:kernel-public-contract",
+      "planned-test:actor-role-binding-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-fieldtypes",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-party"
+    ]
+  }
+}

@@ -1,0 +1,756 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "digital-asset-storage-contract",
+  "wbsCode": "36.14.1",
+  "level": "archetype",
+  "title": "Digital Asset Storage Contract",
+  "slug": "digital-asset-storage-contract",
+  "aliases": [],
+  "summary": "Store versioned digital assets and renditions through provider-neutral object storage without product catalog ownership.",
+  "parentId": "k-storage",
+  "order": 1,
+  "icon": "ph-images",
+  "tags": [
+    "storage",
+    "digital_asset",
+    "asset_rendition",
+    "AssetRef",
+    "provider-neutral",
+    "retention",
+    "tenant",
+    "archetype"
+  ],
+  "dependsOn": [
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/k-storage-dam-directive.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "A digital_asset record holds the immutable original with its checksum, size, media type, scan status and tenant scope; the bytes themselves live in provider-neutral object storage.",
+        "An asset_rendition is derived from exactly one digital_asset and records its rendition lineage, so every derivative can be traced back to the original it came from.",
+        "A consumer references an asset only through an AssetRef; it never stores a provider path, bucket name or raw object key.",
+        "Access is granted through a short-lived pre-signed URL with an explicit TTL, and an asset whose scan status is not clean is never served.",
+        "retention and legal-hold are declared per asset: a legal-hold suspends deletion even when retention has expired, and the suspension is explicit rather than implied.",
+        "product catalog ownership stays outside: this contract stores assets and never becomes the source of truth for products, variants or merchandising.",
+        "[DOC-APPLY:task-handoff] Digital Asset Storage Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Digital Asset Storage Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices upload a digital_asset, derive an asset_rendition and assert the rendition lineage resolves back to the original checksum.",
+        "Planned negatives prove a checksum mismatch on upload and an asset whose scan status is not clean are both refused before any pre-signed URL is issued.",
+        "Planned negatives prove a pre-signed URL past its TTL is rejected and that an AssetRef cannot be resolved into a raw provider path by a consumer.",
+        "Planned negatives prove a cross-tenant asset read, rendition or URL issuance is refused rather than silently filtered.",
+        "Planned retention cases prove a legal-hold suspends deletion past retention expiry and that lifting the hold is an explicit approved action.",
+        "[DOC-APPLY:high-risk-dod] Digital Asset Storage Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Digital Asset Storage Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Digital Asset Storage Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Digital Asset Storage Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] digital-asset-storage-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] digital-asset-storage-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] digital-asset-storage-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The digital_asset and asset_rendition records with checksum, size, media type, scan status, rendition lineage, retention, legal-hold and tenant scope are specified as typed metadata without creating storage here.",
+        "Asset metadata evolves append-only under expand-contract so an earlier rendition lineage stays explainable; no migration and no storage adapter is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor k-tenancy ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Digital Asset Storage Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove provider neutrality: swapping the object storage provider must not change an AssetRef, a rendition lineage or any consumer contract.",
+        "Future tests prove TTL enforcement, scan gating and tenant scoping hold under an adversarial asset request."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.14.1, the single dependency, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Digital Asset Storage Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] digital-asset-storage-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] digital-asset-storage-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Digital Asset Storage Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] digital-asset-storage-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed integrity, isolation and retention evidence.",
+        "Rollback removes only D28 data/projections, restores 33/26/7 and the 643-node hash 35031a8039bf2d47b06ce957542ee12d97a5d51e8440e462930f19cb6dfd7fa0, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] digital-asset-storage-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Digital Asset Storage Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Digital Asset Storage Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Digital Asset Storage Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Digital Asset Storage Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Digital Asset Storage Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only asset shape: a digital_asset holding the immutable original with checksum, size, media type, scan status and tenant scope over provider-neutral object storage.",
+    "Planning-only rendition contract: an asset_rendition derived from exactly one digital_asset with a recorded rendition lineage back to the original.",
+    "Planning-only reference contract: consumers hold an AssetRef only, never a provider path, bucket name or raw object key.",
+    "Planning-only access contract: a short-lived pre-signed URL with an explicit TTL, issued only for an asset whose scan status is clean.",
+    "Planning-only lifecycle contract: declared retention with a legal-hold that suspends deletion, and CDN delivery constrained so a cached object cannot outlive its access grant.",
+    "Explicit human approval gate with a fixed boundary: product catalog ownership, DAM management UI and the provider SDK client all stay outside.",
+    "[DOC-APPLY:high-risk-dod] digital-asset-storage-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Digital Asset Storage Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] digital-asset-storage-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] digital-asset-storage-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Digital Asset Storage Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Digital Asset Storage Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Digital Asset Storage Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly digital-asset-storage-contract, WBS 36.14.1, archetype, parent k-storage, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly k-tenancy; blocks and related are empty and the parent's related list is not inherited.",
+    "A digital_asset records the immutable original with its checksum, size, media type, scan status and tenant scope; a checksum mismatch is refused at upload.",
+    "An asset_rendition derives from exactly one digital_asset and records rendition lineage, so every derivative resolves back to its original.",
+    "A consumer references an asset only through an AssetRef and never stores a provider path, bucket name or raw object key, which keeps storage provider-neutral.",
+    "Access is granted only through a short-lived pre-signed URL carrying an explicit TTL; an expired URL is rejected rather than silently renewed.",
+    "An asset whose scan status is not clean is never served and never receives a pre-signed URL, whatever its other metadata says.",
+    "retention is declared per asset, and a legal-hold suspends deletion past retention expiry until the hold is explicitly lifted by an approved action.",
+    "Every asset, rendition and URL issuance is scoped to one tenant, and a cross-tenant read or issuance is refused rather than silently filtered.",
+    "CDN delivery is constrained so a cached object cannot outlive its access grant, and a revoked asset stops being reachable through the cache.",
+    "product catalog ownership is excluded: products, variants and merchandising stay with their own authority and are only referenced by AssetRef.",
+    "DAM management UI is excluded: this contract defines storage semantics and never specifies an asset management interface.",
+    "provider SDK client work is excluded: choosing and wiring a concrete object storage SDK is human-developer implementation, not contract scope.",
+    "Human approval is mandatory before any asset model is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-storage: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor k-tenancy ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Digital Asset Storage Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] digital-asset-storage-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] digital-asset-storage-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Digital Asset Storage Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Digital Asset Storage Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] digital-asset-storage-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Digital Asset Storage Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] digital-asset-storage-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Digital Asset Storage Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-das-unscanned-content",
+      "desc": "Serving an asset whose scan status is not clean would distribute malicious content from a trusted platform domain to every downstream consumer.",
+      "severity": "critical",
+      "mitigation": "Gate every pre-signed URL on a clean scan status, refuse issuance otherwise and prove the refusal with a dedicated negative."
+    },
+    {
+      "id": "r-das-cross-tenant-access",
+      "desc": "A pre-signed URL or AssetRef that resolves outside its tenant would expose one tenant's documents and media to another with no further authorization step.",
+      "severity": "critical",
+      "mitigation": "Scope every asset, rendition and URL issuance to one tenant, refuse cross-tenant access and keep the refusal a fixed negative-test axis."
+    },
+    {
+      "id": "r-das-retention-breach",
+      "desc": "Deleting an asset under legal-hold, or retaining one past its declared retention, would each breach a distinct legal obligation in opposite directions.",
+      "severity": "high",
+      "mitigation": "Model retention and legal-hold as separate explicit declarations, require an approved action to lift a hold and prove both directions with negatives."
+    },
+    {
+      "id": "r-das-provider-leak",
+      "desc": "Letting a consumer hold a provider path or bucket name would couple the platform to one object storage vendor and break provider neutrality.",
+      "severity": "high",
+      "mitigation": "Expose only AssetRef, keep provider paths internal, exclude the provider SDK client from scope and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove digital-asset-storage-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/26/7, 643 nodes, contributor 147 and node-set hash 35031a8039bf2d47b06ce957542ee12d97a5d51e8440e462930f19cb6dfd7fa0; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-digital-asset-storage-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "digital-asset-storage-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-digital-asset-storage-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "digital-asset-storage-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-digital-asset-storage-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "digital-asset-storage-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-digital-asset-storage-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "digital-asset-storage-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-digital-asset-storage-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "digital-asset-storage-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "A digital_asset holds the immutable original with checksum, size, media type, scan status and tenant scope over provider-neutral object storage.",
+        "Girdi is an upload or a reference plus a tenant context; çıktı is an AssetRef and, when access is granted, a short-lived pre-signed URL with an explicit TTL.",
+        "An asset_rendition derives from exactly one digital_asset and records rendition lineage, so every derivative resolves back to its original.",
+        "retention and legal-hold are declared per asset, and CDN delivery is constrained so a cached object cannot outlive its access grant.",
+        "Kapsam sınırı gereği product catalog ownership, DAM management UI and provider SDK client work all stay outside."
+      ],
+      "notes": "digital-asset-storage-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract featureDefs kapsamı. Kapsa: digital_asset originals with checksum and scan status, asset_rendition lineage, AssetRef indirection, TTL-bounded pre-signed URLs, retention and legal-hold, constrained CDN delivery. Exclude product catalog ownership, DAM management UI and provider SDK client. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Scan gating is the primary control: an asset whose scan status is not clean is never served and never receives a pre-signed URL, so the platform cannot distribute malicious content.",
+        "Access is always a short-lived pre-signed URL with an explicit TTL rather than a durable public link, so an exposed URL stops working instead of leaking indefinitely.",
+        "Every asset, rendition and URL issuance is bound to one tenant, so a cross-tenant read is refused rather than filtered, which preserves izolasyon.",
+        "The checksum makes tampering detectable: an original whose bytes no longer match its recorded checksum is treated as corrupt rather than served.",
+        "AssetRef indirection keeps provider paths internal, which prevents a consumer from constructing a direct object URL that bypasses the access grant entirely."
+      ],
+      "notes": "digital-asset-storage-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract security kapsamı. Kapsa: scan-status gating, TTL-bounded pre-signed access, tenant-bound issuance, checksum tamper detection, AssetRef indirection against direct object access. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed asset katman behind a provider-neutral port rather than a per-provider storage path, so behaviour cannot diverge by vendor.",
+        "Checksum verification, rendition lineage resolution and TTL evaluation stay pure functions with low cyclomatic complexity, testable without a provider.",
+        "Storage semantics and catalog modelling stay separated; ölü kod and speculative per-media-type pipelines are refused, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] digital-asset-storage-contract: digital-asset-storage-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] digital-asset-storage-contract: Digital Asset Storage Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] digital-asset-storage-contract: digital-asset-storage-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] digital-asset-storage-contract: digital-asset-storage-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] digital-asset-storage-contract: Digital Asset Storage Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] digital-asset-storage-contract: Digital Asset Storage Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] digital-asset-storage-contract: Digital Asset Storage Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "digital-asset-storage-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract codeOptimization kapsamı. Kapsa: one typed asset layer behind a provider-neutral port, pure checksum, lineage and TTL logic, storage versus catalog separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- digital-asset-storage-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Digital Asset Storage Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- digital-asset-storage-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Digital Asset Storage Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- digital-asset-storage-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Digital Asset Storage Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- digital-asset-storage-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Digital Asset Storage Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- digital-asset-storage-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- digital-asset-storage-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Digital Asset Storage Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- digital-asset-storage-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Digital Asset Storage Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Digital Asset Storage Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Digital Asset Storage Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: digital-asset-storage-contract — Digital Asset Storage Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Digital Asset Storage Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The TTL ceiling is declared and versioned per tenant, so extending an access window is a reviewed change rather than a value a caller can request.",
+        "Least ayrıcalık applies per rendition: a consumer entitled to a thumbnail is not thereby entitled to the original, and each requires its own grant.",
+        "URL issuance is rate-limited per tenant, so bulk enumeration of AssetRefs cannot be used to harvest another tenant's media or exhaust signing capacity.",
+        "The delivery yüzey stays kapalı: public buckets and durable links are forbidden, egress happens only through a signed short-lived URL, and the scanner allowlist of accepted media types is versioned rather than open."
+      ],
+      "notes": "digital-asset-storage-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract securityOptimization kapsamı. Kapsa: versioned per-tenant TTL ceiling, per-rendition least privilege, rate-limited URL issuance against harvesting. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for AssetRef resolution and pre-signed URL issuance, separately from the byte transfer itself which the provider serves.",
+        "Rendition generation is asynchronous by design, so a consumer receives the original or a ready rendition rather than blocking on derivation.",
+        "Resolution must avoid N+1 access; a list of AssetRefs is resolved in one batch rather than once per reference, and CDN caching absorbs repeated reads."
+      ],
+      "notes": "digital-asset-storage-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract performance kapsamı. Kapsa: p95 budgets for reference resolution and URL issuance, asynchronous rendition generation, batched resolution and CDN absorption. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client requests a rendition sized for its viewport rather than the original, and it holds an AssetRef rather than a cihaz-local provider path.",
+        "An offline client caches a rendition only for the life of its access grant and treats the cached copy as stale once the TTL has passed.",
+        "No mobile asset management surface is introduced here; rendering an asset stays a separate consumer responsibility."
+      ],
+      "notes": "digital-asset-storage-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract mobileApps kapsamı. Kapsa: viewport-sized renditions, AssetRef-only client state, TTL-bounded offline caching, no mobile asset management surface. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "An asset carries alternative-text metadata as a first-class field so a consuming surface can meet its own AAA obligation without inventing a description.",
+        "A refused asset request, such as an expired TTL or an unclean scan status, must be announced through an aria live region rather than rendering a broken image.",
+        "This contract defines storage semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "digital-asset-storage-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract wcag kapsamı. Kapsa: alternative-text metadata as a first-class field, announced asset refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Kubernetes topology for a storage gateway or rendition worker pool remains human-developer work.",
+        "Changing a retention or TTL declaration is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous declaration.",
+        "Undoing this storage shard removes planning text and the projections rebuilt from it only, touching no stored asset, rendition or retention timer, which keeps runtimeDataImpact at none and NO-GO unchanged."
+      ],
+      "notes": "digital-asset-storage-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract deployment kapsamı. Kapsa: no release or deploy here, retention and TTL changes as approved data changes, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "An upload olay may trigger scanning and rendition derivation, but this contract never performs a business action such as publishing the asset.",
+        "A rendition that triggers a further derivation forms a chain that stops at maxChainDepth 6, so an upload cannot cascade without bound.",
+        "Re-delivering the same upload event for the same checksum must be idempotent, and lifting a legal-hold always requires an explicit onay."
+      ],
+      "notes": "digital-asset-storage-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract eca kapsamı. Kapsa: upload-triggered scan and rendition without acting, depth-bounded derivation chains, checksum-idempotent replay and approval-gated legal-hold lifting. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay forbidden actions ve yasak kalır.",
+        "AI cannot issue a pre-signed URL, cannot lift a legal-hold and cannot delete an asset; each of those needs insan onayı, and a legal-hold change additionally requires a step-up review.",
+        "Any asset or metadata reaching the lane as sub_prompt is untrusted, the kill switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 scope or claim an unexecuted test result."
+      ],
+      "notes": "digital-asset-storage-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from issuing URLs, lifting legal-holds or deleting assets, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases upload a digital_asset, derive an asset_rendition and assert rendition lineage resolves to the original checksum, as unit and integration matrices.",
+        "Planned negatives prove a checksum mismatch and an unclean scan status are refused before any pre-signed URL is issued.",
+        "Planned negatives prove an expired TTL is rejected and that an AssetRef cannot be resolved into a raw provider path by a consumer.",
+        "Planned negatives prove a cross-tenant read is refused and that a legal-hold suspends deletion past retention expiry.",
+        "Nothing above may be marked verified until a human-approved run has genuinely taken place, and a planned case never scores as a pass."
+      ],
+      "notes": "digital-asset-storage-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract testing kapsamı. Kapsa: asset and rendition lineage positives, checksum and scan-status negatives, TTL and AssetRef indirection negatives, cross-tenant and legal-hold negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by TTL-bounded pre-signed URLs, tenant-bound issuance and AssetRef indirection that blocks direct object access.",
+        "OWASP A08 software and data integrity failures is modeled by recording a checksum with every original and treating a mismatch as corruption rather than serving it.",
+        "OWASP A05 security misconfiguration is modeled by forbidding public buckets and durable public links by construction, so a misconfigured provider default cannot expose assets.",
+        "Girdi doğrulama applies to every upload: declared media type, size and checksum are validated against the received bytes before storage, and every issuance, refusal and deletion leaves a denetim izi."
+      ],
+      "notes": "digital-asset-storage-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract owasp kapsamı. Kapsa: A01 via TTL-bounded tenant-scoped access and AssetRef indirection, A08 via checksum integrity, A05 via forbidding public buckets and durable links. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-sozlesme with contributionKind specification, targetProviderIds [k-storage] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so an asset operation touches no kernel internal, no kernel database and no cross-context write path; an upload notification arrives as an olay instead.",
+        "This schedule is only a planning window; predecessor k-tenancy ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly k-tenancy, and the parent's related list is not inherited.",
+        "Scope stays inside the storage layer: product catalog ownership, DAM management UI and provider SDK client work all stay outside."
+      ],
+      "notes": "digital-asset-storage-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract integration kapsamı. Kapsa: contributor routing under areaId k-sozlesme to k-storage, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir an asset through an AssetRef and may not store a provider path or reach a doğrudan tablo for asset metadata.",
+        "A consumer must carry the AssetRef and rendition identity alongside any stored reference, so a later audit can tell which asset version was shown.",
+        "Owning the product record belongs to the catalog authority; this contract stores assets and renditions only."
+      ],
+      "notes": "digital-asset-storage-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract moduleUsage kapsamı. Kapsa: AssetRef-mediated consumption without provider paths or direct table reads, rendition identity carried with stored references, excluded catalog authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "An asset can contain identity documents, photographs or contracts, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "retention sets the saklama süresi per asset and a legal-hold suspends deletion past expiry, so an erasure request must resolve the hold conflict explicitly rather than failing silently.",
+        "Deleting an original must also invalidate every derived rendition and every cached CDN copy, and asset metadata evolves by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "digital-asset-storage-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract dataLifecycle kapsamı. Kapsa: high-sensitivity asset classification, retention versus legal-hold conflict resolution, cascade invalidation of renditions and CDN copies, expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include URL issuance latency percentiles, scan-refusal counts, rendition backlog depth and expired-TTL rejection rates on tenant-safe labels.",
+        "Structured log and trace records carry the AssetRef and rendition identity; file names, checksums of user content and pre-signed URLs are redacted and never become metric labels.",
+        "Alerts cover a scan-refusal spike, a rendition backlog that exceeds its budget and any deletion attempted against a legal-hold; thresholds and the runbook require human approval."
+      ],
+      "notes": "digital-asset-storage-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract observability kapsamı. Kapsa: issuance and scan SLIs, redacted AssetRef traces, scan-spike and legal-hold-violation alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unavailable object storage provider; the contract refuses issuance with an explicit error and keeps metadata consistent rather than returning a broken URL.",
+        "Upload is idempotent by construction: the same checksum in the same tenant resolves to the same digital_asset, so a retry with bounded backoff cannot duplicate an original.",
+        "A repeatedly failing rendition derivation is routed to a dead-letter path for human review rather than retried forever, and a circuit breaker protects the shared storage gateway."
+      ],
+      "notes": "digital-asset-storage-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Digital Asset Storage Contract reliability kapsamı. Kapsa: explicit refusal on provider outage, checksum-idempotent upload with bounded retry, dead-letter rendition routing and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "issue-presigned-url",
+      "lift-legal-hold",
+      "delete-asset"
+    ],
+    "stepUp": [
+      "issue-presigned-url",
+      "lift-legal-hold",
+      "delete-asset",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "edgeSecurityRef": "edge-security",
+    "a11yRef": "a11y",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "searchQualityRef": "search-quality"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "digital-asset-storage-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:digital-asset-storage-contract:kernel-public-contract",
+      "planned-test:digital-asset-storage-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-sozlesme",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-storage"
+    ]
+  }
+}

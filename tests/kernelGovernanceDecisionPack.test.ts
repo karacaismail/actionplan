@@ -12,14 +12,25 @@ const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
 const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
 const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
+// The live D01 ledger is fully applied (33/33/0). The synthetic next-applied universe is built on
+// a clone that deliberately withdraws this already-applied row; live data is never mutated.
+const WITHDRAWN_APPLIED_DESCENDANT_ID = "worker-job-execution-contract";
 
 describe("kernel governance decision pack", () => {
   it("accepts a validated synthetic next-applied current-live universe without rewriting the historical addendum", () => {
     const live = readD01LiveUniverse();
     const handoff = structuredClone(live.handoff);
     const row = handoff.ledger.find(
-      (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
+      (candidate: { selectedDescendantId: string }) =>
+        candidate.selectedDescendantId === WITHDRAWN_APPLIED_DESCENDANT_ID,
     );
+    row.applicationStatus = "pending";
+    handoff.applicationSummary = { approved: 33, applied: 32, remaining: 1 };
+    const withdrawnRecords = structuredClone(live.nodeRecords).filter(
+      ({ node }) => node.id !== row.selectedDescendantId,
+    );
+    const withdrawn = resolveD01NodeUniverse({ records: withdrawnRecords, handoff });
+    const withdrawnNodes = withdrawnRecords.map(({ node }) => node);
     const nextApplied = handoff.applicationSummary.applied + 1;
     row.applicationStatus = "applied";
     handoff.applicationSummary = {
@@ -43,7 +54,7 @@ describe("kernel governance decision pack", () => {
       source: { cluster: row.sourceCluster },
     });
     const nodeRecords = [
-      ...structuredClone(live.nodeRecords),
+      ...structuredClone(withdrawnRecords),
       { filename: `${child.id}.json`, node: child },
     ];
     const validatedLiveUniverse = resolveD01NodeUniverse({ records: nodeRecords, handoff });
@@ -70,13 +81,14 @@ describe("kernel governance decision pack", () => {
       ),
     };
 
-    const liveActiveNodes = live.nodes.filter(
+    const withdrawnActiveNodes = withdrawnNodes.filter(
       (node: { artifactKind?: string }) => node.artifactKind !== "legacy-alias",
     );
-    const liveKPrefixedNodes = live.nodes.filter((node: { id: string }) =>
+    const withdrawnKPrefixedNodes = withdrawnNodes.filter((node: { id: string }) =>
       node.id.startsWith("k-"),
     );
-    expect(validatedLiveUniverse.expectedNodeCount).toBe(live.liveExpectedNodeCount + 1);
+    expect(withdrawn.expectedNodeCount).toBe(live.liveExpectedNodeCount - 1);
+    expect(validatedLiveUniverse.expectedNodeCount).toBe(withdrawn.expectedNodeCount + 1);
     expect([
       nodes.length,
       activeNodes.length,
@@ -84,11 +96,11 @@ describe("kernel governance decision pack", () => {
       kPrefixedNodes.length,
       sumSp(kPrefixedNodes),
     ]).toEqual([
-      live.nodes.length + 1,
-      liveActiveNodes.length + 1,
-      sumSp(live.nodes) + (child.effort?.estimate ?? 0),
-      liveKPrefixedNodes.length,
-      sumSp(liveKPrefixedNodes),
+      withdrawnNodes.length + 1,
+      withdrawnActiveNodes.length + 1,
+      sumSp(withdrawnNodes) + (child.effort?.estimate ?? 0),
+      withdrawnKPrefixedNodes.length,
+      sumSp(withdrawnKPrefixedNodes),
     ]);
     expect(validateKernelGovernance({ nodes, queue, report, artifacts })).toEqual([]);
     expect(report.sourceSnapshot.nodeCount).toBe(617);

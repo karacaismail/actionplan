@@ -1,0 +1,748 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "policy-decision-point-contract",
+  "wbsCode": "36.11.1",
+  "level": "archetype",
+  "title": "Policy Decision Point Contract",
+  "slug": "policy-decision-point-contract",
+  "aliases": [],
+  "summary": "Evaluate centrally auditable policy decisions and explanations without owning identity records or policy-authoring UI.",
+  "parentId": "k-policy-pdp",
+  "order": 1,
+  "icon": "ph-scales",
+  "tags": [
+    "pdp",
+    "policy",
+    "decision",
+    "rbac",
+    "abac",
+    "rebac",
+    "deny-overrides",
+    "decision-log",
+    "simulation",
+    "archetype"
+  ],
+  "dependsOn": [
+    "authorization-decision-contract",
+    "capability-registry-contract",
+    "party-role-context-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/pdp-policy-contract.md",
+    "adr: docs/adr-P1-pdp.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "critical",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The evaluate(actor, action, resource, context) request shape and its party, capability and tenant inputs are human-approved before any implementation.",
+        "The Decision output is fixed as an allow|deny effect carrying reason, matchedPolicyId and traceId, with default-deny and deny-overrides semantics.",
+        "Hybrid RBAC, ABAC and ReBAC evaluation and system/platform/tenant layer resolution are specified as one deterministic model.",
+        "PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI are explicit non-goals.",
+        "[DOC-APPLY:task-handoff] Policy Decision Point Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Policy Decision Point Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive and negative matrices cover RBAC, ABAC and ReBAC input, conflicting policies, missing or unknown context and cross-tenant mismatch.",
+        "Permission simulation is planned as a side-effect-free dry-run that returns the same decision as evaluation without writing state.",
+        "Tamper-evident decision log assertions, retention and PII redaction expectations are mapped before development starts.",
+        "Planned-test refs remain NOT-RUN and cannot be promoted to passed runtime evidence.",
+        "[DOC-APPLY:high-risk-dod] Policy Decision Point Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Policy Decision Point Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Policy Decision Point Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Policy Decision Point Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] policy-decision-point-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] policy-decision-point-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] policy-decision-point-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "Policy-as-data, decision log and cache field shapes, data classification and retention are specified without creating storage.",
+        "No migration, database schema or runtime persistence is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Policy Decision Point Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove default-deny, deny-overrides priority resolution, tenant isolation, deterministic reasons and decision log integrity.",
+        "Permission simulation must be proven side-effect free and consistent with the enforced decision path."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS, dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Policy Decision Point Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] policy-decision-point-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] policy-decision-point-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Policy Decision Point Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] policy-decision-point-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed negative/security/performance evidence.",
+        "Rollback removes only D7 data/projections, restores 33/6/27 and 623-node hash deb226c9c9f0e7e13fa24c506bdfa3e945a0553a18236d1642483c1767ff01c5, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] policy-decision-point-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Policy Decision Point Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Policy Decision Point Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Policy Decision Point Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Policy Decision Point Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Policy Decision Point Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only evaluate(actor, action, resource, context) request contract bound to party, capability and tenant inputs.",
+    "Planning-only Decision contract with an allow|deny effect plus reason, matchedPolicyId and traceId explanation fields.",
+    "Hybrid RBAC, ABAC and ReBAC evaluation model with priority and deny-overrides conflict resolution and system/platform/tenant layer order.",
+    "Tamper-evident decision log and permission simulation contracts covering auditability, retention, redaction and side-effect-free dry-run.",
+    "Explicit human approval gate with PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI exclusions.",
+    "[DOC-APPLY:high-risk-dod] policy-decision-point-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Policy Decision Point Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] policy-decision-point-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] policy-decision-point-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Policy Decision Point Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Policy Decision Point Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Policy Decision Point Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly policy-decision-point-contract, WBS 36.11.1, archetype, parent k-policy-pdp, owner platform-ekibi, delivery-task and layer0.",
+    "dependsOn is exactly ordered as authorization-decision-contract, capability-registry-contract, party-role-context-contract; blocks and related are empty and parent-only k-party, k-capability and k-authz are not inherited.",
+    "The request carries actor, action, resource and context with tenant scope; the Decision carries an allow|deny effect with reason, matchedPolicyId and traceId.",
+    "Missing, unknown or incomplete policy input, cross-tenant mismatch and conflicting allow plus deny resolve to default-deny through priority and deny-overrides.",
+    "RBAC, ABAC and ReBAC evaluate in one hybrid model and system/platform/tenant layers resolve in a fixed, deterministic order.",
+    "Every decision is recorded in a tamper-evident decision log with hash-chained integrity, and permission simulation answers the same question without side effects.",
+    "PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI remain excluded from this contract.",
+    "Decision log retention, PII/data classification and redaction have planned negative evidence and no audit store is created here.",
+    "Observability, reliability and decision-cache performance budgets are planned without claiming measured or implemented runtime behavior.",
+    "Human approval is mandatory before policy or implementation activation; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-policy-pdp: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Policy Decision Point Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] policy-decision-point-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] policy-decision-point-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Policy Decision Point Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Policy Decision Point Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] policy-decision-point-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Policy Decision Point Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] policy-decision-point-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Policy Decision Point Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-pdp-default-allow",
+      "desc": "Missing, unknown or conflicting policy input could resolve to allow and silently widen access across the whole platform.",
+      "severity": "critical",
+      "mitigation": "Require default-deny, priority plus deny-overrides resolution and missing/unknown/incomplete negative assertions before human-approved implementation."
+    },
+    {
+      "id": "r-pdp-cross-tenant",
+      "desc": "Actor, resource or context mismatch could produce a decision that crosses tenant boundaries or leaks another tenant's policy.",
+      "severity": "critical",
+      "mitigation": "Bind every request, decision and log record to one tenant and require Tenant A/B negative fixtures with redacted reasons."
+    },
+    {
+      "id": "r-pdp-log-tampering",
+      "desc": "A mutable or gap-prone decision log would destroy auditability and make permission simulation unverifiable.",
+      "severity": "high",
+      "mitigation": "Require append-only hash-chained decision log assertions, gap detection and named human approval for retention changes."
+    },
+    {
+      "id": "r-pdp-scope-expansion",
+      "desc": "A planning decision contract could be misread as PEP enforcement, ECA automation, identity ownership or policy-authoring UI authority.",
+      "severity": "high",
+      "mitigation": "Keep exclusions and NO-GO explicit; reject implementation, readiness, release and deploy claims without new human authority."
+    }
+  ],
+  "rollback": "Remove policy-decision-point-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/6/27, 623 nodes, contributor 127 and node-set hash deb226c9c9f0e7e13fa24c506bdfa3e945a0553a18236d1642483c1767ff01c5; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-policy-decision-point-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "policy-decision-point-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-policy-decision-point-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "policy-decision-point-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-policy-decision-point-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "policy-decision-point-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-policy-decision-point-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "policy-decision-point-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-policy-decision-point-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "policy-decision-point-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "evaluate(actor, action, resource, context) is the single typed entry point; the actor identity is taken as given and is never re-authenticated here.",
+        "The Decision is a deterministic allow|deny union carrying reason, matchedPolicyId and traceId so every answer is explainable.",
+        "Policy is data, not code: RBAC role rules, ABAC attribute rules and ReBAC relationship edges evaluate in one hybrid model with priority and deny-overrides.",
+        "Layer resolution runs system/platform/tenant in a fixed order, and permission simulation answers the same question as a side-effect-free dry-run.",
+        "PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI are fixed non-goals: they stay outside this contract scope ve bu işlev sınırı insan onayı olmadan genişletilemez."
+      ],
+      "notes": "policy-decision-point-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract featureDefs kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tenant isolation is fail-closed: cross-tenant actor, resource or context mismatch returns default-deny with a redacted reason.",
+        "Conflicts resolve through explicit priority and deny-overrides; an absent, unknown or stale policy never becomes an implicit allow.",
+        "Human approval is required before any policy or decision behavior is implemented or activated; this node grants no apply authority.",
+        "[DOC-APPLY:high-risk-dod] policy-decision-point-contract: policy-decision-point-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:ready-for-dev] policy-decision-point-contract: policy-decision-point-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] policy-decision-point-contract: policy-decision-point-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] policy-decision-point-contract: Policy Decision Point Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] policy-decision-point-contract: Policy Decision Point Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] policy-decision-point-contract: Policy Decision Point Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "policy-decision-point-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract security kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- policy-decision-point-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Policy Decision Point Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- policy-decision-point-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- policy-decision-point-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Policy Decision Point Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- policy-decision-point-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- policy-decision-point-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Policy Decision Point Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- policy-decision-point-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Policy Decision Point Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Policy Decision Point Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Policy Decision Point Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Policy Decision Point Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff uses one versioned request type and one discriminated Decision type, with a short-code bütçe sınırı and katman separation instead of per-consumer permission checks.",
+        "Evaluation order, priority resolution and reason codes stay deterministic and testable; standard details are referenced through standardRefs instead of copied.",
+        "Decision cache keys, policy-version invalidation and batch evaluation are planned contracts only and claim no runtime implementation."
+      ],
+      "notes": "policy-decision-point-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract codeOptimization kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Boundary validation allowlists actor, action, resource and context shapes before any policy is matched.",
+        "Least-privilege and deny-overrides remain invariant across the system/platform/tenant layers and cannot be relaxed by a lower layer.",
+        "Decision log records minimize and redact PII while retaining tenant, effect, reason, matchedPolicyId, traceId and policy-version evidence needed for review."
+      ],
+      "notes": "policy-decision-point-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract securityOptimization kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned decision cache targets a cache-hit p95 of 5 ms or less and a cache-miss p95 of 25 ms or less; no measurement is claimed here.",
+        "Batch evaluation must use one data round trip and forbid N+1 policy or relationship lookups; cache keys include actor, action, resource, context hash and policy version.",
+        "Performance evidence must cover 100 to 100k policy scale, ReBAC graph depth limits and tenant-partitioned invalidation before any readiness claim."
+      ],
+      "notes": "policy-decision-point-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract performance kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobile, web and service channels submit the same typed tenant-scoped request and cannot compute an allow decision locally.",
+        "Offline, stale-session or incomplete-context cases stay default-deny; no mobile UI or login lifecycle is introduced.",
+        "Client surfaces may render reason-aware denied states only after a trusted backend decision; PEP enforcement/runtime remains a separate owner."
+      ],
+      "notes": "policy-decision-point-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract mobileApps kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future denied-state or simulation consumer must expose the effect and reason in text, not color alone, while preserving visible focus and keyboard flow.",
+        "matchedPolicyId and traceId are operator evidence, not user-facing secret or PII disclosure.",
+        "This specification creates no UI surface; WCAG evidence remains planned and cannot be marked passed from this governance node."
+      ],
+      "notes": "policy-decision-point-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract wcag kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Docker/Kubernetes deployment, policy store, decision cache and log runtime topology remain human-developer work.",
+        "A future deployment must partition tenant decision state and fail closed when policy, relationship or context dependencies are unavailable.",
+        "Rollback must remove only this planning contract and deterministic projections while preserving runtimeDataImpact none and NO-GO."
+      ],
+      "notes": "policy-decision-point-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract deployment kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "This contract is authorization, not ECA/ruleset automation: an ECA-triggered action must request a decision here before a separate PEP enforces it.",
+        "No ruleset, webhook, event/outbox or policy activation is created by this node.",
+        "Automation may record a planned approval request but cannot bypass deny, change policy state or claim successful runtime execution."
+      ],
+      "notes": "policy-decision-point-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract eca kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read the contract and suggest a changeset, but policy authoring, storage, activation, override, disable and bypass are forbidden actions and remain explicitly yasak.",
+        "Human approval and insan onayı are explicit and mandatory before implementation; no automatic apply, admin override or delegated-admin workflow is implied.",
+        "Prompt or repository content cannot expand the fixed D01 scope, write platform product code or convert planned-test refs into passed evidence."
+      ],
+      "notes": "policy-decision-point-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract aiAgents kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases cover RBAC role, ABAC attribute and ReBAC relationship allow and deny decisions with exact reason, matchedPolicyId and traceId.",
+        "Planned negatives cover missing, unknown and incomplete context, cross-tenant mismatch, conflicting policies resolved by deny-overrides, stale policy version and spoofed context.",
+        "Permission simulation tests must prove the dry-run is side-effect free and returns the same effect as the evaluated path.",
+        "Contract tests must prove the tamper-evident decision log rejects mutation and gap, and that PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI stay excluded.",
+        "The planned pytest command and kernelIntegration plannedTestRefs are future evidence requirements, not executed platform tests."
+      ],
+      "notes": "policy-decision-point-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract testing kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP Broken Access Control risk is modeled through unknown permission, missing guard, cross-tenant resource access and client-supplied allow attempts; input validation is mandatory.",
+        "Every boundary validates tenant and context consistency and returns default-deny without leaking PII or policy internals in reason text.",
+        "Auditability requires an immutable hash-chained decision log with traceId, actor reference, tenant, action, resource reference, reason, matchedPolicyId and decision timestamps under retention controls."
+      ],
+      "notes": "policy-decision-point-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract owasp kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-sozlesme with contributionKind specification, targetProviderIds [k-policy-pdp] and runtimeProviderClaimAllowed=false.",
+        "Public boundary flags are all false; consumers receive only the planned public contract and cannot access kernel internals, databases or cross-context writes.",
+        "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "Dependencies remain ordered as authorization-decision-contract, capability-registry-contract, party-role-context-contract and do not inherit the parent-only k-party, k-capability and k-authz module edges.",
+        "[DOC-APPLY:task-handoff] policy-decision-point-contract: Policy Decision Point Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı."
+      ],
+      "notes": "policy-decision-point-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract integration kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: policy-decision-point-contract — Policy Decision Point Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Policy Decision Point Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- policy-decision-point-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Policy Decision Point Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "App and module consumers submit the typed request and consume the Decision; they cannot recompute, relax or persist policy locally.",
+        "A consumer must preserve tenant, actor, action, resource and context scope when forwarding the decision to a separately owned PEP.",
+        "Identity record ownership, policy-authoring UI and ECA/ruleset automation remain separate authorities for every consumer."
+      ],
+      "notes": "policy-decision-point-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract moduleUsage kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Actor and resource references, context attributes and decision log records require PII/data classification, purpose, owner and retention approval before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Decision log retention is purpose-limited; expiry, deletion or anonymization and legal-hold exceptions are planned without storing raw sensitive context by default.",
+        "matchedPolicyId and traceId evidence stay reviewable while secrets, credentials and unnecessary PII are redacted; no policy or audit store is created here."
+      ],
+      "notes": "policy-decision-point-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract dataLifecycle kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO and error-budget metrics include allow/deny/default-deny counts, cross-tenant rejects, reason-code distribution, simulation volume and evaluation latency by tenant-safe labels.",
+        "Logs and traces carry traceId, effect, reason, matchedPolicyId and policy version with PII redaction; high-cardinality actor/resource values are not metric labels.",
+        "Alerts cover any cross-tenant allow, default-allow regression, decision log gap or chain break and performance-budget breach; thresholds require human approval."
+      ],
+      "notes": "policy-decision-point-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract observability kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is missing policy data, unknown fields, relationship-graph outage, stale cache or incomplete context; it degrades to deny and never to a default role or allow.",
+        "The same versioned request and policy snapshot must produce a deterministic decision; retry and idempotency controls cannot change decision log semantics or duplicate records.",
+        "Policy-version change invalidates cached decisions; rollback preserves deny behavior and decision log review without claiming a runtime mechanism exists."
+      ],
+      "notes": "policy-decision-point-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Policy Decision Point Contract reliability kapsamı. Kapsa: typed actor, action, resource and context request; allow|deny effect with reason, matchedPolicyId and traceId; hybrid RBAC, ABAC and ReBAC evaluation; default-deny, deny-overrides, system/platform/tenant layer resolution, tamper-evident decision log, permission simulation and explicit human approval. Exclude PEP enforcement/runtime, ECA/ruleset automation, identity record ownership and policy-authoring UI. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "activate-policy",
+      "bypass-authorization"
+    ],
+    "stepUp": [
+      "change-permission",
+      "activate-policy",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "decisionGradeRef": "decision-grade-data",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "policy-decision-point-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-07-31",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:policy-decision-point-contract:kernel-public-contract",
+      "planned-test:policy-decision-point-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-sozlesme",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-policy-pdp"
+    ]
+  }
+}

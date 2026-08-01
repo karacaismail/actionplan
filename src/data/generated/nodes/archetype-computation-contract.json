@@ -1,0 +1,740 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "archetype-computation-contract",
+  "wbsCode": "12.9.1",
+  "level": "archetype",
+  "title": "ArcheType Computation Definition Contract",
+  "slug": "archetype-computation-contract",
+  "aliases": [],
+  "summary": "Attach side-effect-free structural computation graphs and triggers to ArcheType definitions; free-form executable code is excluded.",
+  "parentId": "k-archetype-computation",
+  "order": 1,
+  "icon": "ph-function",
+  "tags": [
+    "computation",
+    "derived-field",
+    "expression-graph",
+    "trigger",
+    "pricing",
+    "tax",
+    "deterministic",
+    "archetype"
+  ],
+  "dependsOn": [
+    "schema-metadata-engine-contract",
+    "archetype-field-type-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The declaration shape is human-approved before implementation: a derived field is defined by a computation graph plus exactly one trigger drawn from write, query or batch.",
+        "The computation graph is a structural expression tree over declared fields and constants; it is side-effect-free and pure, and free-form executable code is excluded by construction.",
+        "Evaluation is deterministic: the same inputs at the same schema version always yield the same derived value, so a dry run and a stored value can be compared.",
+        "Profile coverage is declared for pricing, tax, BOM, payroll and forecast derivations without turning any of them into a business-specific model.",
+        "The exclusion set is explicit: evaluation scheduling, caching and invalidation belong to the computation runtime, and this contract only declares what must be computed.",
+        "[DOC-APPLY:task-handoff] ArcheType Computation Definition Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Computation Definition Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover a write trigger, a query trigger and a batch trigger over the same computation graph with identical results.",
+        "Planned negatives prove a graph containing free-form executable code, an external call or a write attempt is rejected at declaration time rather than at evaluation time.",
+        "Planned negatives prove a graph that references another tenant's inputs is refused, so no derived value can leak across a tenant boundary.",
+        "Planned negatives prove a cyclic dependency between two derived fields and a graph exceeding the declared depth or node-count bound are both rejected.",
+        "Planned determinism cases prove a pricing, tax, BOM, payroll or forecast derivation is reproducible for evidence, with money rounding fixed by the field type contract.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Computation Definition Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] ArcheType Computation Definition Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Computation Definition Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] ArcheType Computation Definition Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] archetype-computation-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] archetype-computation-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] archetype-computation-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The derived field declaration, its computation graph and its trigger binding are specified as typed, versioned schema metadata with a tenant scope, without creating storage here.",
+        "Materialization of a derived value is specified as an additive, expand-contract evolution owned by the computation runtime; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-06-09; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Computation Definition Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove that a side-effect-free graph evaluated through a write, query or batch trigger produces the same derived field value under the same schema version.",
+        "Future tests prove purity enforcement, tenant scoping and the depth and node-count bounds hold under an adversarial definition."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.9.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Computation Definition Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] archetype-computation-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] archetype-computation-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] ArcheType Computation Definition Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] archetype-computation-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed determinism, purity and financial-correctness evidence.",
+        "Rollback removes only D15 data/projections, restores 33/14/19 and the 631-node hash cfa60caac1136b7ee4ee8121cd9da4c0b1b79cf67a4e8f28e67320591fe94c5a, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] archetype-computation-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] ArcheType Computation Definition Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Computation Definition Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] ArcheType Computation Definition Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] ArcheType Computation Definition Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Computation Definition Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only declaration shape: a derived field bound to one computation graph and exactly one trigger from write, query or batch, versioned with the ArcheType definition that owns it.",
+    "Planning-only purity contract: a structural expression graph that is side-effect-free and pure, evaluated without ambient state, so free-form executable code is excluded by construction.",
+    "Planning-only determinism contract: identical inputs at an identical schema version yield an identical derived value, making dry-run comparison and reproducible evidence possible.",
+    "Planning-only profile coverage: pricing, tax, BOM, payroll and forecast derivations expressed through the same graph vocabulary instead of five bespoke engines.",
+    "Planning-only safety bounds: declared depth, node-count and evaluation-cost limits plus a tenant-scoped input rule that forbids cross-tenant reads.",
+    "Explicit human approval gate with a fixed boundary: evaluation scheduling, caching and invalidation stay with the computation runtime, and no business-specific model is introduced here.",
+    "[DOC-APPLY:high-risk-dod] archetype-computation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] ArcheType Computation Definition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] archetype-computation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] archetype-computation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Computation Definition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] ArcheType Computation Definition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] ArcheType Computation Definition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly archetype-computation-contract, WBS 12.9.1, archetype, parent k-archetype-computation, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly schema-metadata-engine-contract and archetype-field-type-contract in that order; blocks and related are empty and parent-only edges are not inherited.",
+    "A derived field is declared by exactly one computation graph plus exactly one trigger chosen from write, query or batch; a declaration without a trigger is invalid.",
+    "The computation graph is a structural expression tree over declared fields and constants, and it is side-effect-free: it may not write, may not call out and may not read ambient state.",
+    "free-form executable code is excluded; a definition that embeds a script, a lambda body or an eval-style expression is rejected at declaration time.",
+    "Evaluation is pure and deterministic: the same inputs at the same schema version always produce the same derived value, so a dry run can be compared against a stored value.",
+    "pricing, tax, BOM, payroll and forecast derivations are expressible through the shared graph vocabulary, and money semantics defer to the field type contract rather than being redefined here.",
+    "Every computation graph is tenant scoped: it may read only inputs visible in its own tenant, and a cross-tenant input reference is refused rather than silently filtered.",
+    "Declared depth, node-count and evaluation-cost bounds are mandatory, so a definition cannot become a denial-of-service vector against the platform.",
+    "A cycle between two derived fields is detected and rejected at declaration time; a partially evaluated graph never persists a derived value.",
+    "Exclusions hold: evaluation scheduling, caching and invalidation belong to the computation runtime, and this contract neither owns the schema engine nor introduces a business-specific model.",
+    "Human approval is mandatory before any computation definition is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-archetype-computation: 2026-07-01 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] ArcheType Computation Definition Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] archetype-computation-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] archetype-computation-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] ArcheType Computation Definition Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] ArcheType Computation Definition Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] archetype-computation-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] ArcheType Computation Definition Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] archetype-computation-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Computation Definition Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-acc-code-injection",
+      "desc": "Admitting free-form executable code into a computation definition would turn ArcheType metadata into a remote-code-execution surface reachable by any definition author.",
+      "severity": "critical",
+      "mitigation": "Restrict the contract to a structural expression graph over declared fields, reject script or eval-style bodies at declaration time and prove the rejection with negatives."
+    },
+    {
+      "id": "r-acc-financial-correctness",
+      "desc": "A wrong derived value in a pricing, tax, BOM or payroll graph is a financial-correctness incident rather than a display defect, and it can propagate silently to downstream records.",
+      "severity": "critical",
+      "mitigation": "Require deterministic evaluation, defer money rounding to the field type contract and demand reproducible dry-run evidence before any human-approved activation."
+    },
+    {
+      "id": "r-acc-impurity-leak",
+      "desc": "A graph that writes, calls out or reads another tenant's inputs would break auditability and could leak data across a tenant boundary through a derived field.",
+      "severity": "high",
+      "mitigation": "Enforce side-effect-free purity and tenant-scoped inputs as declaration-time rules, with cross-tenant and write-attempt negatives as a fixed test axis."
+    },
+    {
+      "id": "r-acc-scope-expansion",
+      "desc": "A computation definition contract could be misread as authority over the computation runtime, the schema engine or a business-specific pricing model.",
+      "severity": "high",
+      "mitigation": "Keep the computation runtime, schema engine and business-model exclusions explicit in every phase, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove archetype-computation-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/14/19, 631 nodes, contributor 135 and node-set hash cfa60caac1136b7ee4ee8121cd9da4c0b1b79cf67a4e8f28e67320591fe94c5a; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-archetype-computation-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "archetype-computation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-computation-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "archetype-computation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-computation-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "archetype-computation-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-computation-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "archetype-computation-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-archetype-computation-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "archetype-computation-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The declared shape is a derived field bound to one computation graph and exactly one trigger drawn from write, query or batch.",
+        "Girdi is the set of declared fields and constants visible in the owning ArcheType; çıktı is a single deterministic derived value plus its evaluation provenance.",
+        "The graph is a structural expression tree that stays side-effect-free and pure, so free-form executable code is excluded and no script host is introduced.",
+        "The same vocabulary covers pricing, tax, BOM, payroll and forecast derivations, which keeps five business needs on one contract rather than five engines.",
+        "Kapsam sınırı gereği evaluation scheduling, caching and invalidation belong to the computation runtime; this node declares what to compute, not when."
+      ],
+      "notes": "archetype-computation-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract featureDefs kapsamı. Kapsa: derived field plus graph plus single trigger, declared-field inputs, pure structural expression tree, shared pricing/tax/BOM/payroll/forecast vocabulary. Exclude free-form executable code and the computation runtime. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Excluding free-form executable code is the primary control: a structural expression graph is not a script host, so a definition author cannot obtain code execution through ArcheType metadata.",
+        "Purity is enforced rather than assumed under least privilege: a graph that attempts a write, an outbound call or an ambient read is refused, which keeps evaluation auditable.",
+        "Every graph is tenant scoped, so a derived field may read only inputs inside its own tenant; a cross-tenant reference is refused instead of silently filtered, which preserves izolasyon.",
+        "Triggers on write, query and batch are the untrusted entry points and each needs its own erişim decision plus an append-only denetim record before any implementation.",
+        "[DOC-APPLY:high-risk-dod] archetype-computation-contract: archetype-computation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] archetype-computation-contract: ArcheType Computation Definition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] archetype-computation-contract: archetype-computation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] archetype-computation-contract: archetype-computation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] archetype-computation-contract: ArcheType Computation Definition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] archetype-computation-contract: ArcheType Computation Definition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] archetype-computation-contract: ArcheType Computation Definition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "archetype-computation-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract security kapsamı. Kapsa: no-code-execution boundary, enforced purity, tenant-scoped inputs and authorized audited triggers. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-computation-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- ArcheType Computation Definition Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- archetype-computation-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Computation Definition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- archetype-computation-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- ArcheType Computation Definition Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-computation-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- ArcheType Computation Definition Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- archetype-computation-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-computation-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- ArcheType Computation Definition Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- archetype-computation-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Computation Definition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- ArcheType Computation Definition Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Computation Definition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: archetype-computation-contract — ArcheType Computation Definition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Computation Definition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed graph model and one validator katman instead of a per-profile evaluator, so pricing and payroll share the same code path.",
+        "Graph validation, cycle detection and bound checking stay pure functions with low cyclomatic complexity, which makes a definition testable without an evaluator.",
+        "Declaration and evaluation stay in separate layers; ölü kod and speculative per-domain abstractions are refused, and engineering rules are reached through standardRefs rather than restated here."
+      ],
+      "notes": "archetype-computation-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract codeOptimization kapsamı. Kapsa: single typed graph model, pure validation and cycle detection, declaration/evaluation layer split, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The allowlist of expression node kinds is closed: only declared operators and declared field references are admissible, and anything outside it is refused before storage.",
+        "Least ayrıcalık applies to triggers: a batch trigger cannot acquire a wider input scope than the write trigger on the same derived field.",
+        "Declared depth, node-count and evaluation-cost limits harden the surface against a definition crafted to exhaust platform resources, and rate-limits apply per tenant.",
+        "A stored definition is integrity-protected and versioned, so an unreviewed edit cannot silently change a money-bearing derivation."
+      ],
+      "notes": "archetype-computation-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract securityOptimization kapsamı. Kapsa: closed operator allowlist, least-privilege triggers, declared cost bounds with per-tenant rate limits, versioned integrity-protected definitions. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for evaluating a single derived field on a write trigger over a realistic definition, and a separate budget applies to a batch trigger; no measurement is claimed here.",
+        "Input resolution for a graph must avoid N+1 lookups: the declared field set is fetched once per evaluation rather than per expression node.",
+        "A query trigger may use a bounded cache keyed by tenant and schema version, and cache invalidation remains the computation runtime's responsibility rather than this contract's."
+      ],
+      "notes": "archetype-computation-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract performance kapsamı. Kapsa: per-trigger p95 budgets, N+1-free input resolution, bounded query cache with runtime-owned invalidation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobil, web and service channels read the same derived field value; a cihaz may not evaluate a graph locally and submit its own result as authoritative.",
+        "An offline client shows the last synchronised derived value as stale rather than recomputing it, because determinism is guaranteed only against a known schema version.",
+        "No mobile calculation UI is introduced here; presenting a derived value and its provenance stays a separate consumer responsibility."
+      ],
+      "notes": "archetype-computation-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract mobileApps kapsamı. Kapsa: server-authoritative derived values across channels, offline staleness rather than local recomputation, no calculation UI here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future definition editor must expose the expression graph as keyboard navigable structure with a visible odak ring at the AAA kontrast threshold, not as a drag-only canvas.",
+        "A validation refusal must be announced through an aria live region with the offending node named, so a screen reader user can locate the rejected expression.",
+        "This contract defines declaration semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "archetype-computation-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract wcag kapsamı. Kapsa: keyboard-navigable graph structure, announced validation refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Kubernetes topology for an evaluator or a batch worker remains human-developer work.",
+        "Activating a new computation definition is a config-level change behind human approval, so it must not require a container rebuild or a code deploy.",
+        "Withdrawing this shard affects only the planning contract and its deterministic projections, so rollback is bounded, runtimeDataImpact remains none and NO-GO stands."
+      ],
+      "notes": "archetype-computation-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract deployment kapsamı. Kapsa: no release or deploy here, definition activation as an approved config change, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A write trigger is an olay binding rather than an automation: it says when a derived field must be recomputed, and it may not itself perform another business action.",
+        "A recomputation chain stops at maxChainDepth 6, so one derived field feeding another cannot produce an unbounded cascade.",
+        "Repeating the same trigger for the same input version must be idempotent, and activating a new definition always requires an explicit onay step."
+      ],
+      "notes": "archetype-computation-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract eca kapsamı. Kapsa: triggers as recomputation bindings, depth-bounded cascades, idempotent replay and approval-gated activation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read this contract and suggest a changeset, but generating or updating an app or module, overriding a ruleset and writing directly to production are forbidden actions ve yasak kalır.",
+        "AI cannot activate, edit or execute a computation definition; every such apply step needs insan onayı, and a money-bearing derivation additionally requires a step-up review.",
+        "sub_prompt is treated as untrusted input, the kill switch stays available, and no prompt or repository text may widen this shard's fixed D01 scope or fabricate executed-test evidence."
+      ],
+      "notes": "archetype-computation-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, forbidden app/module mutation, human-approved definition activation with step-up on money derivations, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases cover a write, query and batch trigger over the same graph producing identical derived values, as unit and integration matrices.",
+        "Planned negatives prove free-form executable code, an outbound call and a write attempt inside a graph are each rejected at declaration time.",
+        "Planned negatives prove a cross-tenant input reference, a cycle between two derived fields and a graph beyond the declared depth or node-count bound are refused.",
+        "Planned determinism cases replay a pricing, tax, BOM, payroll and forecast derivation against a fixed schema version and compare the result as reproducible evidence.",
+        "No result may be recorded before a real human-approved run exists; a planned matrix is never counted as a passing test."
+      ],
+      "notes": "archetype-computation-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract testing kapsamı. Kapsa: trigger-parity positives, declaration-time rejection negatives, cross-tenant and cycle negatives, determinism replay evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 injection is modeled by excluding free-form executable code and admitting only a closed operator set, with strict doğrulama of every expression node before storage.",
+        "OWASP A01 broken access control is modeled through tenant-scoped graph inputs and an explicit authorization requirement on each write, query and batch trigger.",
+        "OWASP A04 insecure design is modeled by declaring purity, determinism and cost bounds up front, so an expensive or impure definition cannot become a denial-of-service vector."
+      ],
+      "notes": "archetype-computation-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract owasp kapsamı. Kapsa: A03 via closed operator set and validation, A01 via tenant-scoped inputs and trigger authorization, A04 via purity and cost bounds. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-computation with contributionKind specification, targetProviderIds [k-computation] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a computation definition touches no kernel internal, no kernel database and no cross-context write path; a recomputation need travels as an olay instead.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-06-09; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly schema-metadata-engine-contract and archetype-field-type-contract, and the parent-only k-schema bağımlılık edge is not inherited.",
+        "Scope stays inside the declaration layer: the computation runtime owns evaluation, the schema engine owns definitions and no business-specific model is introduced."
+      ],
+      "notes": "archetype-computation-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-computation to k-computation, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module declares a derived field through this contract and tüketir the resulting value; it may not compute the same value locally and write it back as authoritative.",
+        "A consumer must reach inputs through the declared field set rather than a doğrudan tablo read, so the graph stays the single description of the derivation.",
+        "Scheduling and caching a derivation belong to the computation runtime; this contract declares the derivation, it does not execute it."
+      ],
+      "notes": "archetype-computation-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract moduleUsage kapsamı. Kapsa: declared-derivation consumption, no local recomputation or direct table reads, excluded scheduling and caching authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A derived field may expose PII indirectly, for example a payroll figure computed from personal inputs, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "A derived value inherits the saklama süresi of its most restrictive input, and erasing a source input must invalidate or anonymise any materialised derived value that depends on it.",
+        "Definition versions are kept append-only so a historical money figure stays explainable, and any change to a stored derivation follows an expand-contract migration rather than an in-place rewrite."
+      ],
+      "notes": "archetype-computation-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract dataLifecycle kapsamı. Kapsa: indirect PII in derived values, retention inherited from inputs with erasure propagation, append-only definition versions and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include evaluation latency percentiles by trigger kind, declaration-time rejection counts by rule and the share of evaluations that hit a declared cost bound, on tenant-safe labels.",
+        "Structured log and trace records carry the definition id, its version and the trigger kind; input values and derived money figures are redacted and never become metric labels.",
+        "Alerts cover a determinism mismatch between a dry run and a stored value, a rejection-rate spike after a definition change and repeated cost-bound breaches; thresholds and the runbook require human approval."
+      ],
+      "notes": "archetype-computation-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract observability kapsamı. Kapsa: per-trigger evaluation SLIs, redacted definition-scoped traces, determinism-mismatch and cost-bound alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unresolvable input or a bound breach during evaluation; it degrades to an explicit refusal with the prior derived value left intact, never to a silent partial result.",
+        "Recomputation is idempotent by construction: the same inputs at the same definition version yield the same derived value, so a retry with bounded backoff cannot drift the result.",
+        "A batch trigger that fails repeatedly is routed to the owning runtime's dead-letter path rather than retried forever, and no derived value is persisted from a partially evaluated graph."
+      ],
+      "notes": "archetype-computation-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Computation Definition Contract reliability kapsamı. Kapsa: explicit refusal on unresolvable input or bound breach, idempotent recomputation with bounded retry, dead-letter routing for failing batches. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "activate-computation-definition",
+      "execute-computation-graph"
+    ],
+    "stepUp": [
+      "activate-computation-definition",
+      "change-money-derivation",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "financeModelRef": "finance-money-model"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "archetype-computation-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:archetype-computation-contract:kernel-public-contract",
+      "planned-test:archetype-computation-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-computation",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-computation"
+    ]
+  }
+}

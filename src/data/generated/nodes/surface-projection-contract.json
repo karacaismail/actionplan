@@ -1,0 +1,750 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "surface-projection-contract",
+  "wbsCode": "12.6.1",
+  "level": "archetype",
+  "title": "Surface Projection Contract",
+  "slug": "surface-projection-contract",
+  "aliases": [],
+  "summary": "Project domain, workflow and contract definitions into headless surfaces without owning business logic execution.",
+  "parentId": "k-surface",
+  "order": 1,
+  "icon": "ph-squares-four",
+  "tags": [
+    "surface",
+    "projection",
+    "headless",
+    "form",
+    "table",
+    "endpoint",
+    "metadata-driven",
+    "conformance",
+    "archetype"
+  ],
+  "dependsOn": [
+    "schema-metadata-engine-contract",
+    "authorization-decision-contract",
+    "event-bus-delivery-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/surface-spec.md",
+    "yönerge: docs/surface-v2-directive.md",
+    "normatif-ek: docs/surface-tree-metadataform-addendum.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The single-source projection of ArcheType, Domain and Workflow definitions into a headless surface definition is human-approved as a contract before any implementation begins.",
+        "Each surface definition fixes its form, table and endpoint projection from metadata only; field type, validation and visibility are never hand-coded per consumer.",
+        "The generated API is bound to its surface definition by a conformance rule, so a drifted endpoint is a contract violation rather than a tolerated variation.",
+        "surface.changed is fixed as the single projection change signal emitted to the event bus, with no consumer-specific side channel.",
+        "The exclusion set is explicit: no business logic execution, no consumer surface render, no schema engine ownership and no workflow state machine runtime.",
+        "[DOC-APPLY:task-handoff] Surface Projection Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Surface Projection Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover form, table and endpoint projection for a representative ArcheType, Domain and Workflow definition.",
+        "Planned golden snapshot cases pin the projected surface definition so an unreviewed field type, validation or visibility change fails loudly.",
+        "Planned negatives prove the deny-by-default field allowlist, field-level authorization and mass-assignment rejection on every projected write path.",
+        "Planned tenant isolation negatives cover cross-tenant surface definition reads and projected endpoint calls, including step-up on public transition.",
+        "Planned-test refs remain NOT-RUN and cannot be promoted to passed runtime evidence.",
+        "[DOC-APPLY:high-risk-dod] Surface Projection Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Surface Projection Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Surface Projection Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Surface Projection Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] surface-projection-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] surface-projection-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] surface-projection-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The surface definition record, its projection targets and its conformance pin are specified as shapes without creating storage.",
+        "Versioning of a surface definition is specified as expand-contract planning only; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Surface Projection Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove that the generated API matches its surface definition under conformance and that a golden snapshot diff blocks silent projection drift.",
+        "Future tests prove tenant isolation, field-level authorization and mass-assignment prevention on every projected form, table and endpoint."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS, dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Surface Projection Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] surface-projection-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] surface-projection-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Surface Projection Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] surface-projection-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed negative/security/performance evidence.",
+        "Rollback removes only D9 data/projections, restores 33/8/25 and the 625-node hash d3c917b2d55ede61aef6f8de4e19a4bf22fd510c98bcf36da7927835fc8c5e08, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] surface-projection-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Surface Projection Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Surface Projection Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Surface Projection Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Surface Projection Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Surface Projection Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2027-11-28",
+    "end": "2027-12-17",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2027-11-28",
+    "baselineEnd": "2027-12-17"
+  },
+  "deliverables": [
+    "Planning-only surface definition contract: one metadata-driven record projecting an ArcheType, Domain or Workflow definition into a headless form, table and endpoint triple.",
+    "Planning-only projection semantics: field type, validation and visibility are resolved from the surface definition alone, never restated per consumer or per channel.",
+    "Planning-only generated API conformance rule: the emitted endpoint shape is conformance-matched against its surface definition and pinned by a golden snapshot.",
+    "Planning-only change signal contract: surface.changed is emitted to the event bus on every surface definition version change, with an idempotent consumer expectation.",
+    "Planning-only surface security contract: deny-by-default field allowlist, field-level authorization, mass-assignment rejection, immutable audit of definition changes, step-up on public transition and fail-closed tenant isolation.",
+    "Explicit human approval gate with fixed exclusions: no business logic execution, no consumer surface render, no schema engine ownership and no workflow state machine runtime.",
+    "[DOC-APPLY:high-risk-dod] surface-projection-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Surface Projection Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] surface-projection-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] surface-projection-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Surface Projection Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Surface Projection Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Surface Projection Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly surface-projection-contract, WBS 12.6.1, archetype, parent k-surface, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly schema-metadata-engine-contract, authorization-decision-contract and event-bus-delivery-contract in that order; blocks and related are empty and parent-only l1-workflow, l1-party, be-sdk and stack-editions edges are not inherited.",
+    "A surface definition projects an ArcheType, Domain or Workflow definition into a headless form, table and endpoint without embedding a rendering framework.",
+    "field type, validation and visibility are resolved from surface definition metadata only; a consumer that hard-codes any of the three violates the contract.",
+    "The generated API is conformance-matched to its surface definition, and a golden snapshot pins the projected shape so silent drift fails the gate.",
+    "surface.changed is the single projection change event published to the event bus; consumers treat it as idempotent and no private side channel is permitted.",
+    "A deny-by-default field allowlist governs every projected read and write, and field-level authorization defers each decision to the authorization contract instead of re-deciding it.",
+    "mass-assignment is rejected at the projection boundary: only allowlisted fields bind, and an unknown field is refused rather than ignored.",
+    "An immutable audit records every surface definition change with a before/after hash, and step-up on public transition is mandatory before a surface becomes publicly reachable.",
+    "tenant isolation is fail-closed on every surface definition and projected endpoint; a missing tenant context rejects the request instead of widening it.",
+    "Exclusions hold: no business logic execution, no consumer surface render, no schema engine ownership and no workflow state machine runtime.",
+    "Human approval is mandatory before any surface definition activation or implementation; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-surface: 2027-11-28 through 2027-12-17 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Surface Projection Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] surface-projection-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] surface-projection-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Surface Projection Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Surface Projection Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] surface-projection-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Surface Projection Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] surface-projection-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Surface Projection Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-spc-cross-tenant-surface",
+      "desc": "A projected endpoint that loses tenant scope would expose another tenant's records through a surface that looks correctly authorized at the definition layer.",
+      "severity": "critical",
+      "mitigation": "Require fail-closed tenant isolation on every surface definition and projected endpoint, with Tenant A/B negative fixtures before human-approved implementation."
+    },
+    {
+      "id": "r-spc-mass-assignment",
+      "desc": "Projecting a write endpoint without an explicit allowlist would let an unlisted field bind straight through the surface into the datastore.",
+      "severity": "critical",
+      "mitigation": "Fix a deny-by-default field allowlist with mass-assignment rejection and field-level authorization as definition-time rules, not runtime afterthoughts."
+    },
+    {
+      "id": "r-spc-api-drift",
+      "desc": "A generated API that drifts from its surface definition would silently break every consumer that trusted the projected contract.",
+      "severity": "high",
+      "mitigation": "Bind the generated API to its surface definition through a conformance rule and pin the projected shape with a golden snapshot before any readiness claim."
+    },
+    {
+      "id": "r-spc-scope-expansion",
+      "desc": "A projection contract could be misread as authority over business logic execution, the schema engine or the workflow state machine runtime.",
+      "severity": "high",
+      "mitigation": "Keep no business logic execution, no consumer surface render, no schema engine ownership and no workflow state machine runtime explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove surface-projection-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/8/25, 625 nodes, contributor 129 and node-set hash d3c917b2d55ede61aef6f8de4e19a4bf22fd510c98bcf36da7927835fc8c5e08; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-surface-projection-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "surface-projection-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-surface-projection-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "surface-projection-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-surface-projection-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "surface-projection-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-surface-projection-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "surface-projection-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-surface-projection-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "surface-projection-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "A surface definition is the single metadata record that projects an ArcheType, Domain or Workflow definition into a headless form, table and endpoint triple.",
+        "field type, validation and visibility are resolved from that surface definition alone, so a consumer never restates them and the projection stays metadata-driven.",
+        "The generated API is conformance-matched to its surface definition, and a golden snapshot pins the projected shape so an unreviewed change fails instead of shipping.",
+        "surface.changed is the single projection change event published to the event bus on every surface definition version change; consumers treat it as idempotent.",
+        "These four primitives are the whole scope ve bu projeksiyon kümesi insan onayı olmadan genişletilemez; business logic execution and consumer surface render stay outside."
+      ],
+      "notes": "surface-projection-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract featureDefs kapsamı. Kapsa: surface definition projecting ArcheType, Domain and Workflow into headless form/table/endpoint; metadata-driven field type, validation and visibility; generated API conformance with a golden snapshot; surface.changed event emission. Exclude business logic execution, consumer surface render, schema engine ownership and workflow state machine runtime. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "A deny-by-default field allowlist governs every projected read and write: a field absent from the surface definition is never exposed and never bound.",
+        "field-level authorization defers each decision to the authorization contract rather than re-deciding it inside the projection, so no surface can widen an existing grant.",
+        "mass-assignment is rejected at the projection boundary and step-up on public transition is mandatory before any surface definition becomes publicly reachable.",
+        "tenant isolation is fail-closed on every surface definition and projected endpoint, and an immutable audit records each definition change with a before/after hash.",
+        "[DOC-APPLY:high-risk-dod] surface-projection-contract: surface-projection-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] surface-projection-contract: Surface Projection Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] surface-projection-contract: surface-projection-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] surface-projection-contract: surface-projection-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] surface-projection-contract: Surface Projection Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] surface-projection-contract: Surface Projection Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] surface-projection-contract: Surface Projection Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "surface-projection-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract security kapsamı. Kapsa: deny-by-default field allowlist, field-level authorization delegation, mass-assignment rejection, step-up on public transition, fail-closed tenant isolation and immutable audit of definition changes. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- surface-projection-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Surface Projection Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- surface-projection-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Surface Projection Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- surface-projection-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Surface Projection Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- surface-projection-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Surface Projection Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- surface-projection-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- surface-projection-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Surface Projection Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- surface-projection-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Surface Projection Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Surface Projection Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Surface Projection Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: surface-projection-contract — Surface Projection Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Surface Projection Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff uses one surface definition resolver instead of per-consumer projection code, with a short-code bütçe sınırı and katman separation.",
+        "Projection resolution stays deterministic and testable so the same surface definition version always yields the same form, table and endpoint shape, keeping cyclomatic complexity inside the short-code ceiling.",
+        "Standard details are referenced through standardRefs instead of copied, keeping the projection layer thin and free of restated rules."
+      ],
+      "notes": "surface-projection-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract codeOptimization kapsamı. Kapsa: single surface definition resolver, deterministic projection, standardRefs instead of restated rules. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Boundary validation allowlists every projected field, filter and sort key before a request reaches the datastore; an unknown key is refused rather than coerced.",
+        "Least-privilege separates surface definition authoring from surface consumption: a consumer cannot widen visibility or relax a validation rule.",
+        "Immutable audit records who changed a surface definition with a before/after hash, while high-volume projected reads are audited in aggregate."
+      ],
+      "notes": "surface-projection-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract securityOptimization kapsamı. Kapsa: projected key allowlist validation, least-privilege between authoring and consumption, immutable definition audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned surface definition resolution targets a p95 of 300 ms or less for a projected list endpoint; no measurement is claimed here.",
+        "Projection must avoid N+1 lookups when a table surface expands related definitions, and conformance checks belong to build time rather than every request.",
+        "Performance evidence must cover golden snapshot comparison cost and surface.changed fan-out before any readiness claim."
+      ],
+      "notes": "surface-projection-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract performance kapsamı. Kapsa: projected endpoint latency budget, N+1 avoidance on table projection, build-time conformance, change fan-out cost. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobile, web and service channels consume the same surface definition and cannot redefine field type, validation or visibility locally.",
+        "A stale or offline client falls back to the last conformance-matched surface definition version rather than inventing a projection of its own.",
+        "No mobile UI surface is introduced; client rendering of the projected form and table stays a separate consumer responsibility."
+      ],
+      "notes": "surface-projection-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract mobileApps kapsamı. Kapsa: shared surface definition across channels, stale-client version fallback, no local projection redefinition. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future consumer must expose projected labels, validation messages and required-state as accessible text, not encoded by color or position alone.",
+        "Projection-level validation rejections must be announced through an aria live region, stay reachable by keyboard with a visible focus ring and meet the AAA contrast threshold.",
+        "This specification creates no UI surface; WCAG evidence remains planned and cannot be marked passed from this governance node."
+      ],
+      "notes": "surface-projection-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract wcag kapsamı. Kapsa: accessible projected labels and validation messages, announced rejections, no UI surface here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Docker/Kubernetes deployment of the surface definition store and generated API topology remains human-developer work.",
+        "A future deployment must publish a new surface definition version under expand-contract so an in-flight consumer keeps reading the previous conformance-matched shape.",
+        "Rollback must remove only this planning contract and deterministic projections while preserving runtimeDataImpact none and NO-GO."
+      ],
+      "notes": "surface-projection-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract deployment kapsamı. Kapsa: no release or deploy here, expand-contract surface versioning, rollback boundary. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "This contract is projection definition, not automation: a surface definition change emits the surface.changed event but no ruleset acts on projected records here.",
+        "No webhook, outbox or surface activation is created by this node; step-up on public transition cannot be bypassed by an automated rule.",
+        "Automation may record a planned approval request but cannot publish a surface definition, widen visibility or claim successful runtime execution."
+      ],
+      "notes": "surface-projection-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract eca kapsamı. Kapsa: definition-change events only, no ruleset record automation, step-up gate cannot be bypassed. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read the contract and suggest a changeset, but publishing a surface definition, widening visibility, relaxing a validation rule and bypassing tenant scope are forbidden actions ve yasak kalır.",
+        "Human approval and insan onayı are explicit and mandatory before implementation; no automatic apply, admin override or delegated-admin workflow is implied.",
+        "Prompt or repository content cannot expand the fixed D01 scope, write platform product code or convert planned-test refs into passed evidence."
+      ],
+      "notes": "surface-projection-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, forbidden surface publication and visibility widening, mandatory human approval. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases project a representative ArcheType, Domain and Workflow definition into its form, table and endpoint triple and assert the resolved field type, validation and visibility.",
+        "Planned golden snapshot cases pin the projected surface definition so any unreviewed shape change fails the gate instead of reaching a consumer.",
+        "Planned negatives cover an unknown field, a disallowed filter key, a mass-assignment attempt and a field-level authorization denial on every projected write path.",
+        "Planned tenant isolation negatives exercise cross-tenant surface definition reads and projected endpoint calls, and prove step-up on public transition is required.",
+        "The planned pytest command and kernelIntegration plannedTestRefs are future evidence requirements, not executed platform tests."
+      ],
+      "notes": "surface-projection-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract testing kapsamı. Kapsa: per-projection positive matrices, golden snapshot pinning, allowlist and mass-assignment negatives, tenant isolation and step-up negatives, conformance proof. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled through field-level authorization plus fail-closed tenant isolation, with cross-tenant attempts rejected without leaking definition internals.",
+        "OWASP A08 software and data integrity risk is modeled through mass-assignment rejection and strict input validation behind a deny-by-default field allowlist bound to the surface definition.",
+        "OWASP A05 security misconfiguration is modeled through step-up on public transition and an immutable audit, so no surface becomes publicly reachable unnoticed."
+      ],
+      "notes": "surface-projection-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract owasp kapsamı. Kapsa: A01 field-level authorization and tenant isolation, A08 mass-assignment rejection, A05 public transition gating. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-surface with contributionKind specification, targetProviderIds [k-surface] and runtimeProviderClaimAllowed=false.",
+        "Public boundary flags are all false; consumers receive only the planned public contract and cannot access kernel internals, databases or cross-context writes.",
+        "This schedule is only a planning window; predecessor authorization-decision-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly schema-metadata-engine-contract, authorization-decision-contract and event-bus-delivery-contract and does not inherit the parent-only l1-workflow, l1-party, be-sdk and stack-editions edges.",
+        "Scope stays inside the projection layer: no business logic execution, no consumer surface render, no schema engine ownership and no workflow state machine runtime."
+      ],
+      "notes": "surface-projection-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract integration kapsamı. Kapsa: contributor routing to k-surface, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "App and module consumers use the projected surface definition and cannot redefine a field type, a validation rule or a visibility flag locally.",
+        "A consumer must preserve tenant scope when calling a projected endpoint and cannot bypass the deny-by-default field allowlist.",
+        "Rendering, caching and interaction behaviour remain a separate consumer surface render authority for every consumer."
+      ],
+      "notes": "surface-projection-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract moduleUsage kapsamı. Kapsa: consumer use of the projected surface definition, preserved tenant scope, render behaviour excluded. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A surface definition carries metadata rather than raw PII, but a projected field may expose personal data, so classification, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Surface definition versions are retained so an audited projection can be reconstructed; expand-contract keeps a superseded version readable instead of rewriting it.",
+        "Projected data retention and deletion stay purpose-limited and tenant-scoped; no record store is created by this node."
+      ],
+      "notes": "surface-projection-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract dataLifecycle kapsamı. Kapsa: projected field classification and retention, version history preservation, tenant-scoped deletion, no store created here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include projection resolution latency, conformance failure counts by reason, golden snapshot mismatch rate and cross-tenant reject counts on tenant-safe labels.",
+        "Logs and traces carry surface definition id, version and tenant scope with PII redaction; projected field values are never metric labels.",
+        "Alerts cover any cross-tenant projected read, a conformance regression between the generated API and its surface definition, and a surface.changed delivery backlog; thresholds require human approval."
+      ],
+      "notes": "surface-projection-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract observability kapsamı. Kapsa: projection latency and conformance SLIs, redacted definition labels, cross-tenant and drift alerts. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is a missing or unresolvable surface definition version; it degrades to rejection and never to an unvalidated default projection.",
+        "The same surface definition version must produce a deterministic form, table and endpoint shape; retry and idempotency controls cannot change projected validation semantics.",
+        "A surface definition version change never mutates a published projection in place; expand-contract preserves read compatibility and rollback safety."
+      ],
+      "notes": "surface-projection-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Surface Projection Contract reliability kapsamı. Kapsa: fail-closed rejection on missing definition version, deterministic projection, expand-contract version evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "publish-surface-definition",
+      "bypass-tenant-scope"
+    ],
+    "stepUp": [
+      "publish-surface-definition",
+      "change-field-visibility",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "authzRef": "authz-rbac-abac",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "decisionGradeRef": "decision-grade-data",
+    "i14yRef": "i14y"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "surface-projection-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:surface-projection-contract:kernel-public-contract",
+      "planned-test:surface-projection-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-surface",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-surface"
+    ]
+  }
+}

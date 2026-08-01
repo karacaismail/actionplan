@@ -1,0 +1,751 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "control-plane-taxonomy-contract",
+  "wbsCode": "12.3.4",
+  "level": "archetype",
+  "title": "Control Plane Taxonomy Contract",
+  "slug": "control-plane-taxonomy-contract",
+  "aliases": [],
+  "summary": "Classify the four control-plane audiences and projection boundaries without implementing any panel or business capability.",
+  "parentId": "k-control-planes",
+  "order": 4,
+  "icon": "ph-squares-four",
+  "tags": [
+    "control-plane",
+    "taxonomy",
+    "audience",
+    "panel",
+    "projection",
+    "boundary",
+    "tenant",
+    "archetype"
+  ],
+  "dependsOn": [
+    "authorization-decision-contract",
+    "policy-decision-point-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "docs/panel-tier-contract.md",
+    "docs/kume-e-panel-eca-plan.md",
+    "docs/kapsama-matrisi-arsam-panel-2026-07-12.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "critical",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The four control plane audiences are fixed from the parent taxonomy as Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages, and this enumeration is human-approved before any implementation begins.",
+        "panelTier stays a separate presentation taxonomy owned by the panel-tier contract; this node references it and never redefines or renumbers its developer, tenant-admin, tenant-enduser and counterparty values.",
+        "Each audience is bound to a projection boundary that states which surface schema subset it may receive, so audience membership never implies data access by itself.",
+        "The classification is presentation, not a security boundary: every access decision is delegated to the PDP and no plane may self-authorize.",
+        "Presentation order 4 is recorded as ordering only, not dependency order; the three existing panel modules keep their codes 12.3.1 through 12.3.3 unchanged.",
+        "[DOC-APPLY:task-handoff] Control Plane Taxonomy Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Control Plane Taxonomy Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices assert the exact four-audience enumeration and its projection boundary mapping for each plane.",
+        "Planned negatives prove cross-tier isolation: an Ops/DevOps identity cannot reach a Tenant/Müşteri-admin projection and a counterparty cannot reach an admin projection.",
+        "Planned negatives prove that a plane classification alone never grants access and that every decision path still consults the PDP.",
+        "Planned tenant isolation negatives cover cross-tenant reads on each plane, including the Public/Frontpages transition.",
+        "Planned-test refs remain NOT-RUN and cannot be promoted to passed runtime evidence.",
+        "[DOC-APPLY:high-risk-dod] Control Plane Taxonomy Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Control Plane Taxonomy Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Control Plane Taxonomy Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Control Plane Taxonomy Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] control-plane-taxonomy-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] control-plane-taxonomy-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] control-plane-taxonomy-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The audience classification record and its projection boundary mapping are specified as shapes without creating storage.",
+        "Adding a future plane is specified as an append-only taxonomy change under expand-contract; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor policy-decision-point-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Control Plane Taxonomy Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove cross-tier isolation across all four planes and prove that the taxonomy is not a security boundary on its own.",
+        "Future tests prove that a surface schema subset delivered to one audience never leaks another audience's fields."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.3.4, dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Control Plane Taxonomy Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] control-plane-taxonomy-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] control-plane-taxonomy-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Control Plane Taxonomy Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] control-plane-taxonomy-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed negative/security/performance evidence.",
+        "Rollback removes only D10 data/projections, restores 33/9/24 and the 626-node hash 05b4f081e50638631826f751d407c408dfc544ecb2ea9eeecf87795ba0424f40, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] control-plane-taxonomy-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Control Plane Taxonomy Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Control Plane Taxonomy Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Control Plane Taxonomy Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Control Plane Taxonomy Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Control Plane Taxonomy Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-10-21",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-10-21",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only audience taxonomy: the four control plane audiences Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages, inherited from the parent and not re-invented here.",
+    "Planning-only projection boundary map: for each audience, the surface schema subset it may receive and the fields it must never be offered.",
+    "Planning-only separation statement: this classification is presentation and not a security boundary, and every access decision is delegated to the PDP.",
+    "Planning-only taxonomy relationship: panelTier with its developer, tenant-admin, tenant-enduser and counterparty values is a separate presentation taxonomy that this contract references without redefining.",
+    "Planning-only cross-tier isolation contract: no audience may traverse into another plane's projection, and a counterparty never reaches an administrative projection.",
+    "Explicit human approval gate with fixed exclusions: no panel implementation, no surface schema ownership, no identity/authentication lifecycle and no ECA/ruleset automation.",
+    "[DOC-APPLY:high-risk-dod] control-plane-taxonomy-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Control Plane Taxonomy Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] control-plane-taxonomy-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] control-plane-taxonomy-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Control Plane Taxonomy Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Control Plane Taxonomy Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Control Plane Taxonomy Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly control-plane-taxonomy-contract, WBS 12.3.4, archetype, parent k-control-planes, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly authorization-decision-contract and policy-decision-point-contract in that order; blocks and related are empty and the parent-only dx-workflow, be-sdk, be-deploy-profilleri, l1-seo and s-data-catalog edges are not inherited.",
+    "The control plane taxonomy enumerates exactly four audiences: Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages.",
+    "panelTier is treated as a separate presentation taxonomy with its own developer, tenant-admin, tenant-enduser and counterparty values; this contract references it and never redefines, merges or renumbers it.",
+    "Each audience carries an explicit projection boundary naming the surface schema subset it may receive; an unlisted field is never projected to that plane.",
+    "The taxonomy is presentation and is not a security boundary: plane membership alone grants nothing and every access decision is delegated to the PDP.",
+    "cross-tier isolation holds in both directions, and a counterparty audience can never be resolved into an administrative plane projection.",
+    "Presentation order 4 is ordering only and carries no dependency meaning; k-boyut1-ops-panel, k-boyut2-developer-panel and k-boyut3-tenant-panel keep 12.3.1, 12.3.2 and 12.3.3 unchanged.",
+    "Exclusions hold: no panel implementation, no surface schema ownership, no identity/authentication lifecycle and no ECA/ruleset automation.",
+    "tenant isolation is fail-closed on every plane projection; a missing tenant context rejects the request instead of widening it.",
+    "Human approval is mandatory before any taxonomy activation or implementation; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-control-planes: 2026-10-21 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor policy-decision-point-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Control Plane Taxonomy Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] control-plane-taxonomy-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] control-plane-taxonomy-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Control Plane Taxonomy Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Control Plane Taxonomy Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] control-plane-taxonomy-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Control Plane Taxonomy Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] control-plane-taxonomy-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Control Plane Taxonomy Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-cpt-taxonomy-as-authz",
+      "desc": "Treating the audience classification as a security boundary would let plane membership stand in for an authorization decision and silently bypass the PDP.",
+      "severity": "critical",
+      "mitigation": "State that the taxonomy is presentation and not a security boundary, and require every plane projection path to consult the PDP before any human-approved implementation."
+    },
+    {
+      "id": "r-cpt-cross-tier-leak",
+      "desc": "A projection boundary that omits a field-level rule could deliver an administrative surface schema subset to a counterparty or tenant end-user plane.",
+      "severity": "critical",
+      "mitigation": "Require an explicit per-audience projection boundary plus cross-tier isolation negatives covering every plane pair before implementation."
+    },
+    {
+      "id": "r-cpt-taxonomy-collision",
+      "desc": "Merging the four control plane audiences with the panelTier presentation values would produce one incoherent taxonomy that neither document owns.",
+      "severity": "high",
+      "mitigation": "Keep the two taxonomies separate and reference panel-tier-contract instead of restating it, so neither definition drifts into the other."
+    },
+    {
+      "id": "r-cpt-scope-expansion",
+      "desc": "A taxonomy contract could be misread as authority to build the panels themselves or to own the surface schema and identity lifecycle.",
+      "severity": "high",
+      "mitigation": "Keep no panel implementation, no surface schema ownership, no identity/authentication lifecycle and no ECA/ruleset automation explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove control-plane-taxonomy-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/9/24, 626 nodes, contributor 130 and node-set hash 05b4f081e50638631826f751d407c408dfc544ecb2ea9eeecf87795ba0424f40; the three existing panel modules keep 12.3.1 through 12.3.3; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-control-plane-taxonomy-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "control-plane-taxonomy-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-control-plane-taxonomy-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "control-plane-taxonomy-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-control-plane-taxonomy-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "control-plane-taxonomy-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-control-plane-taxonomy-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "control-plane-taxonomy-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-control-plane-taxonomy-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "control-plane-taxonomy-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The control plane taxonomy names exactly four audiences: Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages, taken from the parent definition rather than re-derived.",
+        "Each audience carries a projection boundary that fixes the surface schema subset it may receive, so the taxonomy describes what is shown and never what is permitted.",
+        "panelTier with its developer, tenant-admin, tenant-enduser and counterparty values is a separate presentation taxonomy; this contract points at it and leaves its ownership untouched.",
+        "The classification is presentation, not a security boundary; the PDP remains the only place where an access decision is made.",
+        "Presentation order 4 records ordering alone ve bu sıralama bağımlılık anlamı taşımaz; panel implementation stays outside this scope."
+      ],
+      "notes": "control-plane-taxonomy-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract featureDefs kapsamı. Kapsa: the four control plane audiences Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages; per-audience projection boundary; the separate panelTier presentation taxonomy; presentation-not-a-security-boundary statement; presentation-only ordering. Exclude panel implementation, surface schema ownership, identity/authentication lifecycle and ECA/ruleset automation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Plane membership is never an authorization result: the taxonomy is presentation and not a security boundary, and the PDP decides every access on its own inputs.",
+        "cross-tier isolation is fail-closed in both directions, so no Ops/DevOps, Developer-admin, Tenant/Müşteri-admin or Public/Frontpages projection can be reached from another plane.",
+        "A counterparty audience is never resolvable into an administrative projection, and a public transition requires an explicit approved step before it is offered.",
+        "tenant isolation applies to every plane projection and an immutable audit records each taxonomy change with a before/after hash.",
+        "[DOC-APPLY:high-risk-dod] control-plane-taxonomy-contract: control-plane-taxonomy-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] control-plane-taxonomy-contract: Control Plane Taxonomy Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] control-plane-taxonomy-contract: control-plane-taxonomy-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] control-plane-taxonomy-contract: control-plane-taxonomy-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] control-plane-taxonomy-contract: Control Plane Taxonomy Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] control-plane-taxonomy-contract: Control Plane Taxonomy Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] control-plane-taxonomy-contract: Control Plane Taxonomy Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "control-plane-taxonomy-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract security kapsamı. Kapsa: taxonomy is not a security boundary, PDP delegation, cross-tier isolation, counterparty containment, fail-closed tenant isolation and immutable taxonomy audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- control-plane-taxonomy-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Control Plane Taxonomy Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- control-plane-taxonomy-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Control Plane Taxonomy Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- control-plane-taxonomy-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Control Plane Taxonomy Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- control-plane-taxonomy-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Control Plane Taxonomy Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- control-plane-taxonomy-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- control-plane-taxonomy-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Control Plane Taxonomy Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- control-plane-taxonomy-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Control Plane Taxonomy Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Control Plane Taxonomy Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Control Plane Taxonomy Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: control-plane-taxonomy-contract — Control Plane Taxonomy Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Control Plane Taxonomy Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one audience enumeration and one projection boundary table instead of per-panel conditionals, with a short-code bütçe sınırı and katman separation.",
+        "Audience resolution stays a pure lookup with minimal cyclomatic complexity so the same identity and tenant context always produce the same plane classification.",
+        "panelTier details are referenced through the owning contract rather than copied, keeping this node free of restated presentation rules."
+      ],
+      "notes": "control-plane-taxonomy-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract codeOptimization kapsamı. Kapsa: single audience enumeration and boundary table, pure audience resolution, referenced panelTier instead of restated rules. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Boundary validation allowlists the four audience identifiers; an unknown plane value is rejected rather than defaulted to the least restrictive plane.",
+        "Least-privilege separates taxonomy authoring from plane consumption: a consumer cannot add an audience or widen a projection boundary.",
+        "Immutable audit records who changed an audience definition or a projection boundary with a before/after hash."
+      ],
+      "notes": "control-plane-taxonomy-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract securityOptimization kapsamı. Kapsa: audience allowlist validation, least-privilege between authoring and consumption, immutable taxonomy audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Audience resolution is a bounded lookup over four values and must stay inside a declared p95 budget for a plane projection; no measurement is claimed here.",
+        "The projection boundary table is small enough to be cached per deployment, so classification never triggers an extra datastore round trip.",
+        "Performance evidence must cover the combined classification plus PDP decision path before any readiness claim."
+      ],
+      "notes": "control-plane-taxonomy-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract performance kapsamı. Kapsa: bounded four-value audience lookup, cacheable boundary table, combined classification and PDP path budget. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobile, web and service channels resolve the same four audiences and cannot introduce a channel-local plane or reinterpret a projection boundary.",
+        "A stale or offline mobile client keeps the last approved audience classification rather than assuming a wider plane when the taxonomy version is unknown.",
+        "No mobile panel is introduced here; presenting a plane remains a separate panel implementation responsibility."
+      ],
+      "notes": "control-plane-taxonomy-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract mobileApps kapsamı. Kapsa: shared four-audience resolution across channels, conservative stale-client behaviour, no panel implementation here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future panel must expose its plane identity as accessible text so an assistive-technology user knows which control plane they are in, not by color or layout alone.",
+        "A cross-tier isolation rejection must be announced through an aria live region, stay reachable by keyboard with a visible focus ring and meet the AAA contrast threshold.",
+        "Accessibility thresholds for the panels themselves belong to their own panel contracts; this taxonomy node introduces no rendered surface and records no accessibility result."
+      ],
+      "notes": "control-plane-taxonomy-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract wcag kapsamı. Kapsa: accessible plane identity, announced isolation rejections, panel accessibility owned elsewhere. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Docker/Kubernetes topology that separates the four planes at the edge remains human-developer work.",
+        "A future deployment must add a plane through an append-only taxonomy change so existing plane consumers keep resolving their audience unchanged.",
+        "Reversal is limited to this planning contract and its deterministic projections, leaving runtimeDataImpact at none and the verdict at NO-GO."
+      ],
+      "notes": "control-plane-taxonomy-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract deployment kapsamı. Kapsa: no release or deploy here, append-only plane addition, bounded reversal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "This contract is classification, not automation: a taxonomy change may emit a planned event but no ruleset acts on plane membership here.",
+        "ECA/ruleset automation stays outside this scope, and no rule may promote an audience, widen a projection boundary or activate a plane.",
+        "Automation may record a planned approval request but cannot alter the four-audience enumeration or claim successful runtime execution."
+      ],
+      "notes": "control-plane-taxonomy-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract eca kapsamı. Kapsa: classification-change events only, ECA/ruleset automation excluded, no automated plane promotion. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read the taxonomy and suggest a changeset, but adding an audience, widening a projection boundary, promoting a plane and bypassing tenant scope are forbidden actions ve yasak kalır.",
+        "Every implementation or activation step waits for explicit insan onayı; an AI lane may not auto-apply, self-approve or act as a delegated administrator on this taxonomy.",
+        "Neither prompt text nor repository content may widen the fixed D01 scope of this shard, author platform product code or turn a planned-test ref into recorded evidence."
+      ],
+      "notes": "control-plane-taxonomy-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, forbidden audience addition and boundary widening, mandatory human approval. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases assert the exact four-audience enumeration and the projection boundary attached to each of Ops/DevOps, Developer-admin, Tenant/Müşteri-admin and Public/Frontpages.",
+        "Planned negatives cover every plane pair for cross-tier isolation and prove a counterparty can never resolve into an administrative projection.",
+        "Planned negatives prove that plane membership alone authorizes nothing and that the PDP is still consulted on each projection path.",
+        "Planned tenant isolation negatives exercise cross-tenant reads on each plane and prove an unknown audience value is rejected rather than defaulted.",
+        "The planned pytest command and the kernelIntegration plannedTestRefs describe evidence still owed by a human developer; neither has been executed in this repository."
+      ],
+      "notes": "control-plane-taxonomy-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract testing kapsamı. Kapsa: four-audience enumeration assertions, per-pair cross-tier isolation negatives, counterparty containment, PDP delegation proof, tenant isolation negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by refusing to let plane membership substitute for a PDP decision, with cross-tier isolation negatives on every plane pair.",
+        "OWASP A04 insecure design is modeled by separating the presentation taxonomy from the authorization boundary instead of overloading one concept with both roles.",
+        "OWASP A05 security misconfiguration is modeled by input validation that rejects an unknown audience value rather than resolving it to the least restrictive plane."
+      ],
+      "notes": "control-plane-taxonomy-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract owasp kapsamı. Kapsa: A01 PDP delegation, A04 taxonomy/authorization separation, A05 unknown-audience rejection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-control-planes with contributionKind specification, targetProviderIds [k-control-planes] and runtimeProviderClaimAllowed=false.",
+        "Every publicBoundary flag stays false, so a consumer of this taxonomy reaches no kernel internal, no kernel database and no cross-context write path; the planned public API contract is the only sanctioned route.",
+        "This schedule is only a planning window; predecessor policy-decision-point-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly authorization-decision-contract and policy-decision-point-contract and does not inherit the parent-only dx-workflow, be-sdk, be-deploy-profilleri, l1-seo and s-data-catalog edges.",
+        "Scope stays inside the classification layer: no panel implementation, no surface schema ownership, no identity/authentication lifecycle and no ECA/ruleset automation."
+      ],
+      "notes": "control-plane-taxonomy-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract integration kapsamı. Kapsa: contributor routing to k-control-planes, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "App and module consumers resolve an audience through this taxonomy and cannot define a private plane or reinterpret a projection boundary locally.",
+        "A consumer must preserve tenant scope when projecting a plane and must still obtain a PDP decision before exposing any record.",
+        "Building the Ops, developer and tenant panels themselves remains a separate panel implementation authority for every consumer."
+      ],
+      "notes": "control-plane-taxonomy-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract moduleUsage kapsamı. Kapsa: consumer audience resolution, preserved tenant scope and PDP delegation, panel implementation excluded. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "The taxonomy itself holds no PII, but a plane projection may expose personal data under KVKK/GDPR, so veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Audience definitions evolve append-only so an audited projection decision can be reconstructed against the taxonomy version that produced it.",
+        "Retention and deletion of anything surfaced through a plane stay purpose-limited and tenant-scoped; no record store is created by this node."
+      ],
+      "notes": "control-plane-taxonomy-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract dataLifecycle kapsamı. Kapsa: plane exposure classification and retention, append-only taxonomy history, tenant-scoped deletion, no store created here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include audience resolution failure counts, cross-tier isolation reject counts by plane pair and unknown-audience rejection rate on tenant-safe labels.",
+        "Logs and traces carry the resolved plane, taxonomy version and tenant scope with PII redaction; projected record values are never metric labels.",
+        "Alerts cover any cross-tier isolation breach, a counterparty resolving into an administrative plane and a taxonomy change without an audit entry; thresholds require human approval."
+      ],
+      "notes": "control-plane-taxonomy-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract observability kapsamı. Kapsa: audience resolution and isolation SLIs, redacted plane labels, cross-tier and audit-gap alerts. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unresolvable or ambiguous audience; it degrades to rejection and never to the widest available plane.",
+        "The same identity, tenant context and taxonomy version must always resolve to the same plane; retry controls cannot change a classification result and repeated resolution stays idempotent.",
+        "A taxonomy version change never reclassifies an already-audited projection in place; append-only evolution preserves read compatibility and rollback safety."
+      ],
+      "notes": "control-plane-taxonomy-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Control Plane Taxonomy Contract reliability kapsamı. Kapsa: fail-closed rejection on ambiguous audience, deterministic classification, append-only taxonomy evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "add-control-plane-audience",
+      "bypass-tenant-scope"
+    ],
+    "stepUp": [
+      "add-control-plane-audience",
+      "widen-projection-boundary",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "authzRef": "authz-rbac-abac",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "decisionGradeRef": "decision-grade-data",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "identityDataRef": "identity-data",
+    "financeModelRef": "finance-money-model"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "control-plane-taxonomy-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:control-plane-taxonomy-contract:kernel-public-contract",
+      "planned-test:control-plane-taxonomy-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-control-planes",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-control-planes"
+    ]
+  }
+}

@@ -1,0 +1,744 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "archetype-mode-profile-contract",
+  "wbsCode": "12.8.1",
+  "level": "archetype",
+  "title": "ArcheType Mode Profile Contract",
+  "slug": "archetype-mode-profile-contract",
+  "aliases": [],
+  "summary": "Define capability, surface, workflow and policy profile transitions with preview and rollback; edition packaging is excluded.",
+  "parentId": "k-archetype-mode-profile",
+  "order": 1,
+  "icon": "ph-arrows-left-right",
+  "tags": [
+    "mode-profile",
+    "capability",
+    "surface",
+    "workflow",
+    "policy",
+    "preview",
+    "rollback",
+    "archetype"
+  ],
+  "dependsOn": [
+    "capability-registry-contract",
+    "schema-metadata-engine-contract",
+    "surface-projection-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "A mode profile is ArcheType-scoped and names exactly four coordinates: a capability profile, a surface profile, a workflow profile and a policy profile.",
+        "A business model such as b2c|b2b|c2c|d2c|b4b|hybrid is expressed as a versioned composition of those four coordinates rather than as branching code.",
+        "Every profile transition follows preview, then validate, then publish, with rollback available to the previously published version at any point.",
+        "live data preservation is mandatory: a transition may not delete or rewrite records that the previous profile created, and rollback restores reachability rather than resurrecting deleted rows.",
+        "The exclusion set is explicit: edition packaging is excluded, tenant mode-profile composition is excluded, capability catalog ownership is excluded and surface definition ownership is excluded.",
+        "[DOC-APPLY:task-handoff] ArcheType Mode Profile Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Mode Profile Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover a full profile transition through preview, validate and publish with the four coordinates changing together as one versioned composition.",
+        "Planned negatives prove publish is refused without a passing validate, and that a validate bound to an older preview is rejected.",
+        "Planned negatives prove live data preservation: a transition that would orphan or delete existing records is refused rather than completed with a warning.",
+        "Planned negatives prove tenant isolation, so a profile transition in one tenant can never alter the active profile of another.",
+        "Planned rollback cases prove returning to the previous published version restores the four coordinates together and never leaves a half-switched profile.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Mode Profile Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] ArcheType Mode Profile Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Mode Profile Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] ArcheType Mode Profile Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] archetype-mode-profile-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] archetype-mode-profile-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] archetype-mode-profile-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The profile version record, its four coordinate references and its preview or validate result are specified as typed, tenant-scoped schema metadata, without creating storage here.",
+        "Profile evolution is specified as an additive, expand-contract change so an earlier published version stays resolvable; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Mode Profile Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove the four coordinates always move together, so no published state exposes a capability without its matching surface, workflow and policy profile.",
+        "Future tests prove preview, validate, publish and rollback hold under a concurrent transition attempt by two administrators in the same tenant."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.8.1, the three dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Mode Profile Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] archetype-mode-profile-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] archetype-mode-profile-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] ArcheType Mode Profile Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] archetype-mode-profile-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed transition, rollback and data-preservation evidence.",
+        "Rollback removes only D19 data/projections, restores 33/18/15 and the 635-node hash 020e9e6dd1ebdd0dedc3957ad87bcc035a2e4ddb8cc8209cc285ad74ea8c3753, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] archetype-mode-profile-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] ArcheType Mode Profile Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Mode Profile Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] ArcheType Mode Profile Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] ArcheType Mode Profile Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Mode Profile Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only profile shape: an ArcheType-scoped mode profile naming one capability profile, one surface profile, one workflow profile and one policy profile as a single unit.",
+    "Planning-only composition contract: a business model such as b2c|b2b|c2c|d2c|b4b|hybrid expressed as a versioned composition of the four coordinates instead of branching code.",
+    "Planning-only transition contract: preview, then validate, then publish, with an explicit rollback path to the previously published version.",
+    "Planning-only data contract: live data preservation across every transition, so switching a profile never deletes or rewrites records created under the previous one.",
+    "Planning-only isolation contract: tenant isolation on every profile version, preview and publish, so one tenant's transition cannot reach another tenant's active profile.",
+    "Explicit human approval gate with fixed exclusions: edition packaging is excluded, tenant mode-profile composition is excluded, capability catalog ownership is excluded and surface definition ownership is excluded.",
+    "[DOC-APPLY:high-risk-dod] archetype-mode-profile-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] ArcheType Mode Profile Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] archetype-mode-profile-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] archetype-mode-profile-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Mode Profile Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] ArcheType Mode Profile Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] ArcheType Mode Profile Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly archetype-mode-profile-contract, WBS 12.8.1, archetype, parent k-archetype-mode-profile, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly capability-registry-contract, schema-metadata-engine-contract and surface-projection-contract in that order; blocks and related are empty and the parent-only k-capability and k-schema edges are not inherited.",
+    "A mode profile is ArcheType-scoped and always names all four coordinates together: capability profile, surface profile, workflow profile and policy profile.",
+    "A business model such as b2c|b2b|c2c|d2c|b4b|hybrid is a versioned composition of those coordinates; no coordinate may be switched on its own.",
+    "Every profile transition passes preview, then validate, then publish; publishing without a passing validate bound to that exact preview is refused.",
+    "rollback returns the four coordinates together to the previously published version, and a half-switched profile is never observable.",
+    "live data preservation holds: a transition may not delete or rewrite records created under the previous profile, and a transition that would orphan data is refused.",
+    "tenant isolation applies to every profile version, preview, publish and rollback, so a transition can never affect another tenant's active profile.",
+    "edition packaging is excluded; commercial bundling of profiles into sellable editions is decided elsewhere and never inferred from a mode profile.",
+    "tenant mode-profile composition is excluded: composing several ArcheType profiles into one tenant-wide mode is owned by its own contract.",
+    "capability catalog ownership is excluded and surface definition ownership is excluded; this contract references those catalogs and never redefines their entries.",
+    "Human approval is mandatory before any profile version is published or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-archetype-mode-profile: 2026-07-01 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] ArcheType Mode Profile Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] archetype-mode-profile-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] archetype-mode-profile-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] ArcheType Mode Profile Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] ArcheType Mode Profile Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] archetype-mode-profile-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] ArcheType Mode Profile Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] archetype-mode-profile-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Mode Profile Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-amp-partial-transition",
+      "desc": "Switching one coordinate without the other three would expose a capability whose surface, workflow or policy profile does not yet permit it, opening an access gap.",
+      "severity": "critical",
+      "mitigation": "Bind the four coordinates into one versioned composition, require preview and validate before publish, and prove that a partial transition is refused."
+    },
+    {
+      "id": "r-amp-live-data-loss",
+      "desc": "A profile transition that rewrites or deletes records created under the previous profile would destroy live business data during a routine configuration change.",
+      "severity": "critical",
+      "mitigation": "Make live data preservation a declaration-time invariant, refuse an orphaning transition and require rollback evidence before human-approved implementation."
+    },
+    {
+      "id": "r-amp-cross-tenant-transition",
+      "desc": "A profile version resolved without its tenant would let one tenant's transition change another tenant's active profile.",
+      "severity": "high",
+      "mitigation": "Scope every version, preview, publish and rollback to a tenant and prove cross-tenant negatives as a fixed test axis."
+    },
+    {
+      "id": "r-amp-scope-expansion",
+      "desc": "An ArcheType mode profile contract could be misread as authority over edition packaging, tenant-wide composition, the capability catalog or surface definitions.",
+      "severity": "high",
+      "mitigation": "Keep the edition packaging, tenant mode-profile composition, capability catalog and surface definition exclusions explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove archetype-mode-profile-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/18/15, 635 nodes, contributor 139 and node-set hash 020e9e6dd1ebdd0dedc3957ad87bcc035a2e4ddb8cc8209cc285ad74ea8c3753; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-archetype-mode-profile-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "archetype-mode-profile-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-mode-profile-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "archetype-mode-profile-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-mode-profile-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "archetype-mode-profile-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-mode-profile-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "archetype-mode-profile-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-archetype-mode-profile-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "archetype-mode-profile-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "A mode profile is ArcheType-scoped and binds four coordinates as one unit: a capability profile, a surface profile, a workflow profile and a policy profile.",
+        "Girdi is a proposed profile change; çıktı is a versioned composition plus a preview and a validate result bound to that exact version.",
+        "The durum path is preview, validate, publish, with rollback to the previously published version, so no half-switched profile is ever observable.",
+        "A business model such as b2c|b2b|c2c|d2c|b4b|hybrid is a composition of those coordinates rather than branching code, which keeps the ArcheType single-source.",
+        "Kapsam sınırı gereği edition packaging is excluded, tenant mode-profile composition is excluded, capability catalog ownership is excluded and surface definition ownership is excluded."
+      ],
+      "notes": "archetype-mode-profile-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract featureDefs kapsamı. Kapsa: four-coordinate ArcheType-scoped profile, versioned business-model composition, preview/validate/publish with rollback. Exclude edition packaging, tenant composition, capability catalog and surface definition ownership. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "The policy profile coordinate carries yetki meaning, so a transition that widens capability without the matching policy profile is refused rather than published.",
+        "tenant isolation applies to every version, preview, publish and rollback, so a profile change in one tenant cannot reach another tenant's active composition.",
+        "Publishing is separated from authoring under least privilege, and every preview, validate, publish and rollback is written to an append-only denetim record.",
+        "A profile transition never grants standing erişim by itself: the capability it activates is still evaluated by the policy engine on every request.",
+        "[DOC-APPLY:high-risk-dod] archetype-mode-profile-contract: archetype-mode-profile-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] archetype-mode-profile-contract: ArcheType Mode Profile Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] archetype-mode-profile-contract: archetype-mode-profile-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] archetype-mode-profile-contract: archetype-mode-profile-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] archetype-mode-profile-contract: ArcheType Mode Profile Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] archetype-mode-profile-contract: ArcheType Mode Profile Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] archetype-mode-profile-contract: ArcheType Mode Profile Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "archetype-mode-profile-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract security kapsamı. Kapsa: policy coordinate moving with capability, tenant-scoped transitions, author/publisher separation with audit, no standing access from a transition. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-mode-profile-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- ArcheType Mode Profile Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- archetype-mode-profile-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Mode Profile Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- archetype-mode-profile-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- ArcheType Mode Profile Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-mode-profile-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- ArcheType Mode Profile Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- archetype-mode-profile-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-mode-profile-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- ArcheType Mode Profile Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- archetype-mode-profile-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Mode Profile Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- ArcheType Mode Profile Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Mode Profile Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: archetype-mode-profile-contract — ArcheType Mode Profile Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Mode Profile Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed profile composition model instead of per-business-model branches, so a new model is data rather than a new katman of code.",
+        "Composition validation, version comparison and rollback resolution stay pure functions with low cyclomatic complexity, testable without a live tenant.",
+        "Profile declaration and profile evaluation stay separated; ölü kod and speculative per-model abstractions are refused, and engineering rules are reached through standardRefs rather than restated here."
+      ],
+      "notes": "archetype-mode-profile-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract codeOptimization kapsamı. Kapsa: single typed composition model without per-model branches, pure validation and rollback logic, declaration/evaluation separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The admissible coordinate value set is an allowlist drawn from the capability and surface catalogs; an unknown coordinate value is refused before a version is stored.",
+        "Least ayrıcalık separates the identity that proposes a profile version from the identity that publishes it, and neither may edit an already published version.",
+        "Published versions are integrity-protected with an imza so a rollback target cannot be tampered with after the fact, and transitions are rate-limited per tenant."
+      ],
+      "notes": "archetype-mode-profile-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract securityOptimization kapsamı. Kapsa: allowlisted coordinate values, proposer/publisher separation, signed immutable published versions with per-tenant rate limits. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for resolving the active profile composition on a request path and a separate budget for producing a preview; no measurement is claimed here.",
+        "Active profile resolution uses a bounded önbellek keyed by tenant and profile version, so a request does not re-resolve four coordinates on every call.",
+        "Version history listings page through a cursor and must avoid N+1 lookups when expanding each coordinate reference of a listed version."
+      ],
+      "notes": "archetype-mode-profile-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract performance kapsamı. Kapsa: p95 budgets for resolution and preview, version-keyed bounded cache, cursor-paged history without N+1 coordinate expansion. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client resolves the same active profile composition as web; a cihaz may not cache a stale profile and act on a capability the current version withdrew.",
+        "An offline client must treat its cached profile as stale and revalidate before performing a capability-gated action, since a transition may have published meanwhile.",
+        "No mobile profile-switching UI is introduced here; presenting preview diffs and collecting approval stays a separate consumer responsibility."
+      ],
+      "notes": "archetype-mode-profile-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract mobileApps kapsamı. Kapsa: identical profile resolution across devices, revalidation of stale offline profiles before gated actions, no switching UI here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future transition surface must present the four-coordinate preview diff as keyboard navigable content with a visible odak ring at the AAA kontrast threshold.",
+        "A validate failure and a rollback outcome must be announced through an aria live region with the failing coordinate named, not signalled by colour alone.",
+        "This contract defines composition semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "archetype-mode-profile-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract wcag kapsamı. Kapsa: keyboard-navigable coordinate diffs, announced validate and rollback outcomes without colour-only signalling, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; publishing a profile version is a data-level change and must never require a container rebuild or a code dağıtım.",
+        "Because a business model is data rather than a build variant, the same image serves every composition, and rollback is a version pointer move rather than a redeploy.",
+        "Withdrawing this shard affects only the planning contract and its deterministic projections, so runtimeDataImpact remains none and NO-GO stands."
+      ],
+      "notes": "archetype-mode-profile-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract deployment kapsamı. Kapsa: no release or deploy here, profile publish as a data change on one image, rollback as a version pointer move. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "Publishing a profile version emits an olay so dependent projections can refresh, but no rule may publish or roll back a version by itself.",
+        "An automated proposal still requires a human onay after a passing validate, and a triggered chain stops at maxChainDepth 6.",
+        "Re-delivering the same publish event must be idempotent, so a retry does not create a second version or a duplicate rollback point."
+      ],
+      "notes": "archetype-mode-profile-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract eca kapsamı. Kapsa: publish emits events without automating publish, human approval after validate, depth-bounded chains and idempotent replay. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane may read the profile composition and propose a changeset, yet generating or updating an app or module, overriding a ruleset and writing straight to production stay forbidden actions ve yasak kalır.",
+        "AI can never publish or roll back a profile version and cannot widen a capability coordinate; every such step needs insan onayı after a real validate run.",
+        "Profile proposal text arriving as sub_prompt stays untrusted, the kill switch remains reachable, and neither a prompt nor repository prose may widen this shard's fixed D01 scope or invent an executed-test result."
+      ],
+      "notes": "archetype-mode-profile-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, AI barred from publishing or rolling back versions and from widening capability coordinates, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases move a profile through preview, validate and publish with all four coordinates changing together, as unit and integration matrices.",
+        "Planned negatives prove publish without a passing validate, and publish against a stale preview, are both refused.",
+        "Planned negatives prove a transition that would delete or orphan live records is refused, so live data preservation is enforced rather than assumed.",
+        "Planned negatives prove cross-tenant transition attempts fail and that a partial coordinate switch is never observable.",
+        "Planned rollback cases prove the previous published version is restored atomically; no result may be recorded before a real human-approved run exists."
+      ],
+      "notes": "archetype-mode-profile-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract testing kapsamı. Kapsa: transition positives, stale-preview and missing-validate negatives, data-preservation and cross-tenant negatives, atomic rollback evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by moving the capability and policy coordinates together, so a published profile can never grant access control has not caught up with.",
+        "OWASP A04 insecure design is modeled by requiring preview and validate before publish and by keeping rollback always available for a live composition.",
+        "OWASP A08 software and data integrity failures are modeled by signed immutable published versions plus strict doğrulama that a publish matches the validated preview."
+      ],
+      "notes": "archetype-mode-profile-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract owasp kapsamı. Kapsa: A01 via coupled capability and policy coordinates, A04 via mandatory preview and validate, A08 via signed versions and publish-preview validation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-mode-profile with contributionKind specification, targetProviderIds [k-mode] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a profile transition touches no kernel internal, no kernel database and no cross-context write path; a publish leaves as an olay instead.",
+        "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly capability-registry-contract, schema-metadata-engine-contract and surface-projection-contract, and the parent-only k-capability and k-schema bağımlılık edges are not inherited.",
+        "Scope stays inside the ArcheType-scoped layer: edition packaging is excluded, tenant mode-profile composition is excluded, capability catalog ownership is excluded and surface definition ownership is excluded."
+      ],
+      "notes": "archetype-mode-profile-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-mode-profile to k-mode, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir the active profile composition through this contract rather than reading a doğrudan veritabanı row to infer which capability is on.",
+        "A consumer must accept the four coordinates as one unit and cannot enable a capability locally when the surface, workflow or policy coordinate says otherwise.",
+        "Composing several ArcheType profiles into a tenant-wide mode belongs to its own contract; this contract scopes one ArcheType and defers the rest."
+      ],
+      "notes": "archetype-mode-profile-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract moduleUsage kapsamı. Kapsa: contract-mediated profile consumption without direct table reads, four-coordinate atomicity for consumers, excluded tenant-wide composition. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A profile change can alter which personal fields a surface exposes, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "live data preservation binds retention: records created under an earlier profile keep their own saklama süresi and are never dropped because a coordinate changed.",
+        "Published versions are retained append-only so an earlier composition stays explainable, and any change to the stored profile shape follows an expand-contract migration."
+      ],
+      "notes": "archetype-mode-profile-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract dataLifecycle kapsamı. Kapsa: profile-driven personal-field exposure classification, retention preserved across transitions, append-only version history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include transition duration percentiles, validate failure rate by coordinate, rollback frequency and active-version resolution latency on tenant-safe labels.",
+        "Structured log and trace records carry the profile id, version and coordinate names; tenant business payloads and personal fields are redacted and never become metric labels.",
+        "Alerts cover a publish without a matching validate, a rollback spike after a transition and a stuck half-applied publish attempt; thresholds and the runbook require human approval."
+      ],
+      "notes": "archetype-mode-profile-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract observability kapsamı. Kapsa: transition and rollback SLIs, redacted profile-scoped traces, unvalidated-publish and rollback-spike alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is a publish interrupted midway; the transition degrades to the previously published version rather than leaving a partially applied composition.",
+        "Publishing is idempotent by construction: re-applying the same validated version must not create a second version, and retries use bounded backoff.",
+        "Rollback is always available to the previous published version, so a failed transition never removes the tenant's ability to operate under a known-good profile."
+      ],
+      "notes": "archetype-mode-profile-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Mode Profile Contract reliability kapsamı. Kapsa: degradation to the previous published version, idempotent publish with bounded retry, always-available rollback. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "publish-mode-profile",
+      "rollback-mode-profile"
+    ],
+    "stepUp": [
+      "publish-mode-profile",
+      "rollback-mode-profile",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "archetype-mode-profile-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:archetype-mode-profile-contract:kernel-public-contract",
+      "planned-test:archetype-mode-profile-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-mode-profile",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-mode"
+    ]
+  }
+}

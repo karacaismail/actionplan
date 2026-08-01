@@ -1,0 +1,756 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "master-data-golden-record-contract",
+  "wbsCode": "36.18.1",
+  "level": "archetype",
+  "title": "Master Data Golden Record Contract",
+  "slug": "master-data-golden-record-contract",
+  "aliases": [],
+  "summary": "Produce reversible golden records with field provenance and survivorship without taking source-system mutation ownership.",
+  "parentId": "k-mdm",
+  "order": 1,
+  "icon": "ph-git-merge",
+  "tags": [
+    "mdm",
+    "golden-record",
+    "survivorship",
+    "provenance",
+    "dedup",
+    "merge",
+    "unmerge",
+    "archetype"
+  ],
+  "dependsOn": [
+    "computation-runtime-contract",
+    "policy-decision-point-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/k-mdm-provenance-directive.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The contract deduplicates conflicting multi-source copies of the same real-world entity into one golden record, where every field stays bound to the source it came from.",
+        "The four declared dedup strategies are exact, fuzzy, phonetic and ML matching, and each candidate pair records which strategy proposed it and with what confidence.",
+        "survivorship decides which source wins per field rather than per record, so a golden record can take an address from one source and a tax identifier from another.",
+        "the survivorship rule is consumed as a computation_ref, not owned: the rule is a computation graph evaluated by computation-runtime-contract rather than a second engine defined here.",
+        "merge decisions are submitted to the PDP for evaluation, not decided here: policy-decision-point-contract remains the deciding authority for whether a proposed merge may proceed.",
+        "Every merge is reversible: an unmerge restores the contributing records with their original field-level provenance intact, so a wrong match is recoverable rather than destructive.",
+        "The merge and unmerge history is a tamper-evident merge trail, so an auditor can reconstruct which sources produced a golden field at any past point.",
+        "[DOC-APPLY:task-handoff] Master Data Golden Record Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Master Data Golden Record Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices produce a golden record from three conflicting sources and assert field-level provenance names the winning source for each field.",
+        "Planned negatives prove each of exact, fuzzy, phonetic and ML matching records its own strategy and confidence rather than collapsing into an unattributed match.",
+        "Planned negatives prove an unmerge restores every contributing record and its provenance exactly, so a merge followed by an unmerge is a no-op on the source data.",
+        "Planned negatives prove a merge denied by the PDP is not applied, and that the contract never decides the merge itself.",
+        "Planned negatives prove a cross-tenant merge candidate is refused rather than silently rescoped, and that a tenant's golden record never absorbs another tenant's source.",
+        "[DOC-APPLY:high-risk-dod] Master Data Golden Record Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Master Data Golden Record Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Master Data Golden Record Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Master Data Golden Record Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] master-data-golden-record-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] master-data-golden-record-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] master-data-golden-record-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The golden record, the contributing source records, the field-level provenance entries and the merge trail are specified as typed metadata; no storage, migration or table is produced in Actionplan.",
+        "The merge trail is append-only so an unmerge adds a reversal rather than deleting history, and records evolve by expand-contract rather than in-place rewrite."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "source-system mutation ownership is excluded: the contract reads source records and writes only golden records and provenance, never mutating the originating system.",
+        "[DOC-APPLY:ready-for-dev] Master Data Golden Record Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove a merge chain of three or more records unmerges back to the exact pre-merge state, including provenance and the trail entries that produced it.",
+        "Future tests prove survivorship remains deterministic when a source is re-ingested with a newer timestamp but a lower-confidence match."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.18.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Master Data Golden Record Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] master-data-golden-record-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] master-data-golden-record-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Master Data Golden Record Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] master-data-golden-record-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed reversibility, provenance and cross-tenant refusal evidence.",
+        "Rollback removes only D33 data/projections, restores 33/32/1 and the 649-node hash 73300e04362b4af600629a4c5f0d107839b3d3448ea09c643c7d5357e5ef28b8, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] master-data-golden-record-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Master Data Golden Record Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Master Data Golden Record Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Master Data Golden Record Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Master Data Golden Record Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Master Data Golden Record Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only deduplication shape: exact, fuzzy, phonetic and ML matching strategies, each recording which strategy proposed a candidate pair and with what confidence.",
+    "Planning-only golden record shape: one record per real-world entity in which every field carries field-level provenance naming its winning source.",
+    "Planning-only survivorship contract: per-field source selection where the survivorship rule is consumed as a computation_ref, not owned.",
+    "Planning-only authority statement: merge decisions are submitted to the PDP for evaluation, not decided here, so policy-decision-point-contract keeps the decision.",
+    "Planning-only reversibility contract: every merge has an unmerge that restores the contributing records and their provenance, recorded in a tamper-evident merge trail.",
+    "Explicit human approval gate with a fixed boundary: source-system mutation ownership is excluded, genealogy and lineage ownership is excluded, bitemporal as-of restatement is excluded, and data quality scoring and enrichment are excluded.",
+    "[DOC-APPLY:high-risk-dod] master-data-golden-record-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Master Data Golden Record Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] master-data-golden-record-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] master-data-golden-record-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Master Data Golden Record Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Master Data Golden Record Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Master Data Golden Record Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly master-data-golden-record-contract, WBS 36.18.1, archetype, parent k-mdm, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly computation-runtime-contract and policy-decision-point-contract in that order; blocks and related are empty and the parent related list is not inherited.",
+    "A golden record is produced per real-world entity from conflicting multi-source copies rather than by picking one source wholesale.",
+    "The dedup strategy set is exactly exact, fuzzy, phonetic and ML matching, and each candidate pair records the strategy and confidence that proposed it.",
+    "survivorship is decided per field, so field-level provenance can name a different winning source for each field of the same golden record.",
+    "the survivorship rule is consumed as a computation_ref, not owned: this contract references a computation graph and never becomes a second derivation engine.",
+    "merge decisions are submitted to the PDP for evaluation, not decided here; a merge the PDP denies is not applied and the denial is recorded.",
+    "Every merge is reversible: an unmerge restores the contributing records with their original field-level provenance, so a wrong match is recoverable.",
+    "The merge and unmerge history forms a tamper-evident merge trail that lets an auditor reconstruct any past golden field and the source behind it.",
+    "A cross-tenant merge candidate is refused rather than silently rescoped, so one tenant's golden record can never absorb another tenant's source record.",
+    "source-system mutation ownership is excluded: source records are read and never written back by this contract.",
+    "s-pim and s-data-cleansing are consumers of this contract rather than absorbed into it, and neither is redefined here.",
+    "genealogy and lineage ownership is excluded, bitemporal as-of restatement is excluded, and data quality scoring and enrichment are excluded; each is named as an adjacent undecided area without implying it is decided here.",
+    "human approval is mandatory before any merge model is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-mdm: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Master Data Golden Record Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] master-data-golden-record-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] master-data-golden-record-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Master Data Golden Record Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Master Data Golden Record Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] master-data-golden-record-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Master Data Golden Record Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] master-data-golden-record-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Master Data Golden Record Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-mdg-irreversible-merge",
+      "desc": "A merge that discards the contributing records makes a wrong match permanent: the original customer, supplier or product data can no longer be recovered once it has been collapsed.",
+      "severity": "critical",
+      "mitigation": "Make every merge reversible by construction, keep contributing records and their provenance intact and prove that a merge followed by an unmerge is a no-op on source data."
+    },
+    {
+      "id": "r-mdg-cross-tenant-absorption",
+      "desc": "A fuzzy or phonetic match crossing a tenant boundary would fuse two customers' master data, which is both a correctness failure and a data-protection breach.",
+      "severity": "critical",
+      "mitigation": "Scope every candidate pair to one tenant, refuse a cross-tenant candidate rather than rescoping it and prove the refusal with a dedicated negative."
+    },
+    {
+      "id": "r-mdg-provenance-loss",
+      "desc": "Recording provenance only per record rather than per field would make a golden record unexplainable: nobody could say which system supplied a disputed value.",
+      "severity": "high",
+      "mitigation": "Bind provenance to each field, keep the merge trail append-only and tamper-evident and prove field-level attribution across three conflicting sources."
+    },
+    {
+      "id": "r-mdg-engine-duplication",
+      "desc": "Owning the survivorship rule inside MDM would duplicate the computation runtime and let two engines disagree about the same derived value.",
+      "severity": "high",
+      "mitigation": "Consume the rule as a computation_ref, keep decision authority with the PDP and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove master-data-golden-record-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/32/1, 649 nodes, contributor 153 and node-set hash 73300e04362b4af600629a4c5f0d107839b3d3448ea09c643c7d5357e5ef28b8; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-master-data-golden-record-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "master-data-golden-record-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-master-data-golden-record-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "master-data-golden-record-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-master-data-golden-record-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "master-data-golden-record-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-master-data-golden-record-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "master-data-golden-record-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-master-data-golden-record-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "master-data-golden-record-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The contract sağlar one golden record per real-world entity, assembled from conflicting multi-source copies rather than by trusting a single system.",
+        "Girdi is a set of source records plus a tenant scope; çıktı is a golden record with field-level provenance, a confidence-scored candidate set and a merge trail entry.",
+        "The declared dedup strategies are exact, fuzzy, phonetic and ML matching, and survivorship decides the winning source per field rather than per record.",
+        "Every merge is reversible through an unmerge that restores the contributing records and their provenance, recorded in a tamper-evident merge trail.",
+        "Kapsam sınırı gereği source-system mutation ownership is excluded, genealogy and lineage ownership is excluded, bitemporal as-of restatement is excluded and data quality scoring and enrichment are excluded."
+      ],
+      "notes": "master-data-golden-record-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract featureDefs kapsamı. Kapsa: one golden record per entity, the four dedup strategies, per-field survivorship and provenance, reversible merges and a tamper-evident trail. Exclude source-system mutation, genealogy, as-of restatement and data quality enrichment. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Merging master data fuses identities, so tenant izolasyon is the primary control: a cross-tenant merge candidate is refused rather than rescoped, and erişim to a golden record stays inside its tenant.",
+        "merge decisions are submitted to the PDP for evaluation, not decided here, so no MDM path can approve its own privileged fusion of two records.",
+        "Reversibility is a security property as much as a correctness one: an unmerge restores the contributing records, which limits the blast radius of a malicious or mistaken match.",
+        "The merge trail is append-only and tamper-evident, so every merge and unmerge leaves a denetim izi naming the actor, the strategy and the confidence.",
+        "source-system mutation ownership is excluded, which keeps the contract read-only toward the originating systems and removes it as a write path into them."
+      ],
+      "notes": "master-data-golden-record-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract security kapsamı. Kapsa: cross-tenant merge refusal, PDP as the merge authority, reversibility as blast-radius control, tamper-evident audit, read-only stance toward source systems. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one tipli matching katman behind a strategy-neutral port so exact, fuzzy, phonetic and ML matching cannot develop divergent candidate semantics.",
+        "Candidate generation and survivorship application stay pure functions with low karmaşıklık, testable from fixed source fixtures without a live ingestion pipeline.",
+        "Ölü kod and speculative per-domain matchers are refused, the short-code bütçe is respected, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] master-data-golden-record-contract: master-data-golden-record-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] master-data-golden-record-contract: Master Data Golden Record Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] master-data-golden-record-contract: master-data-golden-record-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] master-data-golden-record-contract: master-data-golden-record-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] master-data-golden-record-contract: Master Data Golden Record Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] master-data-golden-record-contract: Master Data Golden Record Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] master-data-golden-record-contract: Master Data Golden Record Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "master-data-golden-record-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract codeOptimization kapsamı. Kapsa: one typed matching layer behind a strategy-neutral port, pure low-complexity candidate and survivorship logic, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- master-data-golden-record-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Master Data Golden Record Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- master-data-golden-record-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Master Data Golden Record Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- master-data-golden-record-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Master Data Golden Record Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- master-data-golden-record-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Master Data Golden Record Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- master-data-golden-record-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- master-data-golden-record-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Master Data Golden Record Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- master-data-golden-record-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Master Data Golden Record Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Master Data Golden Record Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Master Data Golden Record Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: master-data-golden-record-contract — Master Data Golden Record Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Master Data Golden Record Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "En az ayrıcalık separates proposing a candidate, approving a merge and performing an unmerge, so no single role can fuse and then hide a record.",
+        "The accepted strategy set is an allowlist of exact, fuzzy, phonetic and ML matching, so an unrecognised matcher cannot introduce untracked candidates.",
+        "The write yüzey stays kapalı: the contract writes golden records and provenance only, and every source system remains read-only from here.",
+        "Automatic merge is bounded by a confidence threshold and a per-tenant rate, so a bulk low-confidence sweep cannot quietly collapse a master data set."
+      ],
+      "notes": "master-data-golden-record-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract securityOptimization kapsamı. Kapsa: separated propose, approve and unmerge privileges, allowlisted matching strategies, closed write surface, confidence and rate bounded automatic merges. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for resolving a golden record by key and a separate budget for a candidate generation pass over a blocking key; no measurement is claimed here.",
+        "Candidate search is bounded by a blocking strategy plus an index rather than pairwise comparison, so cost grows with block size instead of quadratically with the corpus.",
+        "Golden record reads must avoid N+1 access: field-level provenance is fetched with the record in one pass rather than once per field."
+      ],
+      "notes": "master-data-golden-record-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract performance kapsamı. Kapsa: p95 budgets for golden record resolution and candidate generation, index-backed blocking instead of pairwise comparison, single-pass provenance fetch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client reads a golden record together with the provenance of the fields it displays; a cihaz may not propose or approve a merge on its own authority.",
+        "An offline client shows the last synchronised golden record as stale and refuses to queue a merge or unmerge for later replay, since both require a live PDP decision.",
+        "No mobile-only matching strategy or steward surface is introduced here; rendering a golden record stays a separate consumer responsibility."
+      ],
+      "notes": "master-data-golden-record-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract mobileApps kapsamı. Kapsa: record plus provenance on mobile, no device-side merge proposal or approval, stale offline display without queued merges, no mobile-only strategy. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future stewardship surface must convey a conflicting field, its winning source and the match confidence through text rather than colour alone, at the WCAG AAA kontrast threshold with a visible odak ring.",
+        "A merge or unmerge outcome must be announced through an aria live region naming the affected records, so a klavye-only reviewer is never left guessing what was fused.",
+        "This contract defines merge semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "master-data-golden-record-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract wcag kapsamı. Kapsa: non-colour-only conveyance of conflicts, winning sources and confidence at AAA contrast, announced merge outcomes, keyboard-first review, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; the hosting topology and container dağıtım of any matching service remain human-developer work behind ops-plane authority.",
+        "Changing a survivorship rule or a confidence threshold is a data-level change behind human approval and must not require a redeploy; rollback returns to the previous rule.",
+        "Reverting this MDM shard changes the planning contract and the projections derived from it, never a golden record or a source system, so runtimeDataImpact stays none and NO-GO remains in force."
+      ],
+      "notes": "master-data-golden-record-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract deployment kapsamı. Kapsa: no release or deploy here, hosting owned by the ops plane, data-level rule and threshold changes without redeploy, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A merge or unmerge olay may be announced so consumers refresh their view of an entity, but this contract never performs a business action on the fused record.",
+        "A reaction chain raised from a merge olay stops at maxChainDepth 6, so a bulk deduplication run cannot cascade into an unbounded downstream rewrite.",
+        "Re-delivering the same merge olay must be idempoten, and changing a survivorship rule or confidence threshold always requires an explicit onay."
+      ],
+      "notes": "master-data-golden-record-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract eca kapsamı. Kapsa: merge and unmerge events without business actions, depth-bounded reaction chains, idempotent replay and approval-gated rule changes. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay yasak.",
+        "An ML matcher may propose a candidate but can never approve a merge, perform an unmerge or change a survivorship rule; each of those needs insan onayı with a step-up review.",
+        "Any source-supplied record text reaching the lane as sub_prompt is güvenilmez, the kill-switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 sınır or claim an unexecuted test result."
+      ],
+      "notes": "master-data-golden-record-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, ML matchers propose but never approve, step-up for merges, unmerges and rule changes, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases build a golden record from three conflicting sources and assert per-field provenance names the winning source, as birim and entegrasyon matrices.",
+        "Planned negatif cases prove each of exact, fuzzy, phonetic and ML matching records its own strategy and confidence rather than an unattributed match.",
+        "Planned negatif cases prove an unmerge restores contributing records and provenance exactly, so a merge followed by an unmerge is a no-op on source data.",
+        "Planned negatif cases prove a PDP-denied merge is not applied and that a cross-tenant candidate is refused rather than rescoped.",
+        "Merge results are recordable only from a human-approved run that truly executed, so the planned matrices here are never counted as passing tests."
+      ],
+      "notes": "master-data-golden-record-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract testing kapsamı. Kapsa: multi-source golden record positives with per-field provenance, per-strategy attribution negatives, unmerge reversibility negatives, PDP denial and cross-tenant negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is the defining axis: refusing cross-tenant candidates and routing every merge through the PDP is what keeps one tenant's identities out of another's.",
+        "OWASP A08 software and data integrity failures is modeled by the append-only tamper-evident merge trail and by reversible merges, so a fusion cannot silently rewrite history.",
+        "OWASP A04 insecure design is modeled by excluding source-system mutation, which removes the possibility of MDM becoming an unaudited write path into an ERP or marketplace.",
+        "Girdi doğrulama applies to every source record: the tenant scope, strategy and confidence are validated before a candidate is admitted, and each decision leaves a denetim izi."
+      ],
+      "notes": "master-data-golden-record-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract owasp kapsamı. Kapsa: A01 via cross-tenant refusal and PDP routing, A08 via tamper-evident reversible trail, A04 via excluded source mutation, candidate validation with audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-computation with contributionKind specification, targetProviderIds [k-mdm] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a merge touches no kernel internal, no kernel database and no cross-context write path; it is announced as an olay instead.",
+        "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "Bağımlılık yönü stays exactly computation-runtime-contract and policy-decision-point-contract, and the parent related list is not inherited; s-pim and s-data-cleansing are consumers rather than dependencies.",
+        "Scope stays inside the master data sözleşme: source-system mutation ownership, genealogy and lineage ownership, bitemporal as-of restatement and data quality scoring and enrichment all stay outside."
+      ],
+      "notes": "master-data-golden-record-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-computation to provider k-mdm, closed public boundary, exact dependsOn, consumers named without absorption, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir a golden record through this contract and may not run its own deduplication or reach a doğrudan tablo for the contributing source rows.",
+        "A consumer must carry the golden record key and the provenance of any field it stores, so a later unmerge can be reconciled against what it cached.",
+        "s-pim and s-data-cleansing are consumers of this sözleşme rather than absorbed into it, and owning the derivation engine and the merge decision belongs to computation-runtime-contract and policy-decision-point-contract respectively."
+      ],
+      "notes": "master-data-golden-record-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract moduleUsage kapsamı. Kapsa: contract-mediated golden record consumption without local dedup or direct table reads, key and provenance carried with cached fields, named consumers and externally owned engine and decision. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Master data about customers and suppliers is directly PII, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir and a deletion must propagate to the golden record as well as to its contributing copies.",
+        "The merge trail has its own saklama süresi, longer than a single golden record, because reversibility is only meaningful while the trail that describes the merge is still readable.",
+        "The merge trail is retained append-only so an unmerge adds a reversal rather than erasing history, and records evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "master-data-golden-record-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract dataLifecycle kapsamı. Kapsa: direct PII in master data with KVKK/GDPR classification and DSAR propagation to golden and contributing records, merge trail retention, append-only reversal and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrik set includes candidate generation latency, automatic merge rate by strategy, unmerge rate and PDP denial rate on tenant-safe labels.",
+        "Structured log and trace records carry the golden record key class, strategy and confidence; source field values and personal identifiers are redacted and never become metric labels.",
+        "Alarm coverage includes an unmerge spike suggesting a bad matcher, a cross-tenant candidate surge and an automatic merge rate above its bound; thresholds and the runbook require human approval."
+      ],
+      "notes": "master-data-golden-record-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract observability kapsamı. Kapsa: candidate latency and merge-rate SLIs, redacted strategy-scoped traces, unmerge spike and cross-tenant candidate alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The dominant failure mode is a partially applied merge; the contributing records stay authoritative until the merge commits, so no entity is ever left half-fused.",
+        "Merge and unmerge are idempoten by construction: replaying the same decision for the same candidate pair yields the same golden state under a bounded retry with backoff.",
+        "A repeatedly failing merge is routed to a dead-letter path for steward review rather than blocking the tenant's ingestion queue, and a circuit breaker protects the shared matching path."
+      ],
+      "notes": "master-data-golden-record-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Master Data Golden Record Contract reliability kapsamı. Kapsa: authoritative contributing records until commit, idempotent merge and unmerge with bounded retry, dead-letter routing without head-of-line blocking and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "approve-merge",
+      "perform-unmerge",
+      "change-survivorship-rule"
+    ],
+    "stepUp": [
+      "approve-merge",
+      "perform-unmerge",
+      "change-survivorship-rule",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "decisionGradeRef": "decision-grade-data",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "c13nRef": "c13n",
+    "dataNormalizationRef": "data-normalization"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "master-data-golden-record-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:master-data-golden-record-contract:kernel-public-contract",
+      "planned-test:master-data-golden-record-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-computation",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-mdm"
+    ]
+  }
+}
