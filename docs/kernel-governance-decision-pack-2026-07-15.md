@@ -50,7 +50,7 @@ decision array'ini tekil ve sıralı biçimde keşfeder; kaynakların yerine ge�
 | Karar | Konu | Kaynak | Durum |
 |---|---|---|---|
 | KGA-D01 | Code-bearing descendant seçimi | Base gap inventory + kanonik handoff | approved; application state resolver-validated |
-| KGA-D02 | k-surface dependency ve SDK sırası | Base gap inventory | pending/unselected |
+| KGA-D02 | k-surface dependency ve SDK sırası | Base gap inventory + application handoff | approved; application kaydedildi; gap açık |
 | KGA-D03 | PR-07 capability / module-registry sahipliği | Base gap inventory | pending/unselected |
 | KGA-D04 | Sahipsiz kernel directive kimlikleri | Base gap inventory | pending/unselected |
 | KGA-D05 | PR-10 / PR-11 exit semantiği | Base gap inventory | pending/unselected |
@@ -88,6 +88,13 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 
 `k-surface`, `be-sdk` ve `stack-editions` arasındaki sıra/döngü için dependency yönü ve
 minimum provisional contract sınırı seçilmelidir. Karar gelmeden edge veya queue değişmez.
+
+GATE-01 onaylı yön `edition-app-to-sdk-to-kernel` olarak
+`reports/kernel-surface-dependency-order-handoff-2026-08-01.json` içinde application
+kaydına alınmıştır: `status=approved-application-pending`, `gapClosed=false`,
+`edgeMutation=false`. Kayıt yalnız semantiktir; 8 kernel çakışma kenarının ikisi olan
+`k-surface` kenarlarının onarımı KGA-D07'ye aittir ve bu handoff hiçbir edge, node,
+queue, registry, closure veya EPOCH-02 kaydını değiştirmez.
 
 ### KGA-D03 — PR-07 Registry Sahipliği
 
@@ -236,6 +243,9 @@ KGA-D01 handoff shard'ı report/test dosyaları ile registry, decision pack ve n
 bağlantıları tek committe geri alınarak kapatılır; generated node veya runtime veri etkisi yoktur.
 KGA-D06 handoff shard'ı da aynı beş dosyalık atomik sırayla geri alınır; base queue ve
 runtime hiç değişmediği için migration veya veri rollback'i yoktur.
+KGA-D02 application shard'ı önce decision pack linki, package gate ve authorization audit
+parent-gate aynası, sonra report+test çifti geri alınarak kapatılır; edge, node, queue,
+registry, closure ve EPOCH-02 hiç değişmediği için semantic data rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
