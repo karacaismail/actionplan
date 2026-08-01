@@ -103,6 +103,15 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 PR-07'nin `k-capability` ile `k-mod-l` arasındaki module-registry sorumluluğu
 ayrıştırılmalıdır. Bu paket iki modülü birleştirmez ve owner atamaz.
 
+Onaylanan ayrım yalnız governance kaydı olarak canonical'dır; canlı ownership
+projeksiyonu henüz onarılmamıştır. `src/data/generated/nodes/capability-registry-contract.json`
+hâlâ `k-capability` altında yaşayan, module registry + manifest validation + registry
+health ile capability/entitlement'ı birleştiren bir descendant'tır; bu kayıt onu
+çözmez, unresolved olarak işaretler. Statü:
+`deferred-to-pr07-pre-execution-node-rescope`. Herhangi bir PR-07 code start'tan önce
+sınırlı bir governance projection shard'ında yeniden kapsamlandırılmalıdır. Ayrıntı:
+`reports/kernel-module-registry-ownership-split-handoff-2026-08-01.json`.
+
 ### KGA-D04 — Sahipsiz Kernel Directive Kimlikleri
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -200,10 +209,21 @@ taşır ve bir satır yalnız kendi `applicationScope`'u içinde canonical'dır;
 dışındaki hiçbir şey applied veya canonical değildir. `KGA-D01`: applied, kapsamı
 approved-descendant-materialization. `KGA-D02`: applied, kapsamı yalnız
 governance-semantics-record; kanonik edge application deferred-to-KGA-D07 kalır, burada
-ne applied ne canonical'dır. `KGA-D03`–`KGA-D10` pending'dir ve `applicationScope`
+ne applied ne canonical'dır. `KGA-D03`: applied, kapsamı yalnız
+ownership-split-governance-record ve kanıtı
+`reports/kernel-module-registry-ownership-split-handoff-2026-08-01.json`'dır; `k-mod-l`
+module registry, manifest registration, versions, dependency resolution, declared
+permissions ve registry health/lifecycle'ı, `k-capability` capability catalog,
+user-tenant-plan entitlement resolution ve allow/deny visibility'yi tutar; hiçbiri
+diğerini soğurmaz, node/edge/owner yazılmaz ve birleşik PR-07 belgeleri
+source-evidence-only kalır. Bu satır canlı graph sahipliğinin zaten ayrıştığı anlamına
+gelmez: `capability-registry-contract` hâlâ `k-capability` altında birleşik kapsamla
+durur, `graphProjectionApplied=false`, `nodeRescopeComplete=false` ve
+`canonicalNodeApplication=deferred-to-pr07-pre-execution-node-rescope` kalır. `KGA-D04`–`KGA-D10` pending'dir ve `applicationScope`
 değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
-sözleşmesiyle durur: birebir artifact ref'i, birebir application summary'si,
-approved-application-pending kök statüsü ve 691 baytlık GATE-01 approval digest'i.
+sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
+application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
+approval digest'i.
 Sözleşmesi olmayan bir karar, JSON'u ne kadar applied görünürse görünsün applied
 olamaz; pending satır tamamlanma iddia edemez. Ledger canlı EPOCH-03 zincir başına
 bağlanır; EPOCH-02, eksik veya bayat damga fail-closed reddedilir. Kısmi uygulama gap
@@ -265,6 +285,11 @@ runtime hiç değişmediği için migration veya veri rollback'i yoktur.
 KGA-D02 application shard'ı önce decision pack linki, package gate ve authorization audit
 parent-gate aynası, sonra report+test çifti geri alınarak kapatılır; edge, node, queue,
 registry, closure ve EPOCH-02 hiç değişmediği için semantic data rollback'i yoktur.
+KGA-D03 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; node, edge, owner, queue, registry, closure ve
+EPOCH-03 hiç değişmediği ve `capability-registry-contract` yalnız unresolved olarak
+kaydedildiği için semantic data veya projection rollback'i yoktur.
 
 ## Codex Nihai Kararı
 

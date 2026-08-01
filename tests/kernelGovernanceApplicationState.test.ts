@@ -16,21 +16,23 @@ const INVENTORY = "reports/kernel-gap-inventory-2026-07-14.json";
 const ADDENDUM = "reports/kernel-governance-gap-addendum-2026-07-15.json";
 const D01_HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
 const D02_HANDOFF = "reports/kernel-surface-dependency-order-handoff-2026-08-01.json";
+const D03_HANDOFF = "reports/kernel-module-registry-ownership-split-handoff-2026-08-01.json";
 const D06_HANDOFF = "reports/kernel-db-substrate-queue-handoff-2026-07-15.json";
 const SELECTION_SHA256 = "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6";
 const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c";
 const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
 const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
 const EPOCH02_TEXT_SHA256 = "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
-const DECLARATION_SHA256 = "c914275a5b9e1763dee7349bec9ed74de33e791ec6c2f07ff8d9a7309d3497f9";
+const DECLARATION_SHA256 = "368e499621586d4b5b3676958a69a3f33ad106a2e3a483aba4959dabf61b547d";
 const D01_SCOPE = "approved-descendant-materialization";
 const D02_SCOPE = "governance-semantics-record";
+const D03_SCOPE = "ownership-split-governance-record";
 const PACK_HEADING = "## Application State Ledger — Partial Application, NO-GO";
 const readJson = (relative: string) =>
   JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
 
 // biome-ignore format: the exact application-state row ledger stays compact for the shard budget
-const ROWS = [{ id: "KGA-D01", applicationStatus: "applied", applicationScope: D01_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D01_HANDOFF] }, { id: "KGA-D02", applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D02_HANDOFF] }, { id: "KGA-D03", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D04", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D05", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D06", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM, D06_HANDOFF] }, { id: "KGA-D07", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D08", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D09", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D10", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }];
+const ROWS = [{ id: "KGA-D01", applicationStatus: "applied", applicationScope: D01_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D01_HANDOFF] }, { id: "KGA-D02", applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D02_HANDOFF] }, { id: "KGA-D03", applicationStatus: "applied", applicationScope: D03_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D03_HANDOFF] }, { id: "KGA-D04", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D05", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [INVENTORY] }, { id: "KGA-D06", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM, D06_HANDOFF] }, { id: "KGA-D07", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D08", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D09", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }, { id: "KGA-D10", applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false, evidenceRefs: [ADDENDUM] }];
 // biome-ignore format: the exact fail-closed gate block stays compact for the shard budget
 const GATE = { gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, kernelReady: false, sdkReady: false, appBuildable: false, verdict: "NO-GO", unlockCondition: "all-ten-rows-applied-canonical-with-human-runtime-evidence" };
 // biome-ignore format: the exact intake binding and live EPOCH-03 stamp stay compact
@@ -38,12 +40,12 @@ const INTAKE = { closureRef: CLOSURE, registryRef: REGISTRY, normalizedSelection
 // biome-ignore format: the exact live head stamp stays compact for the shard budget
 const STAMP = { ref: CHAIN, seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 };
 // biome-ignore format: the ledger-owned change boundary stays compact for the shard budget
-const ALLOWED_FILES = [LEDGER, "tests/kernelGovernanceApplicationState.test.ts", VALIDATOR, GATE_SCRIPT, "tools/lib/kernel-governance-authorization-audit.mjs", "package.json", PACK, REGISTRY];
+const ALLOWED_FILES = ["tests/kernelModuleRegistryOwnershipSplitHandoff.test.ts", D03_HANDOFF, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs"];
 // biome-ignore format: the exact closed root and row key sets stay compact for the shard budget
 const ROOT_KEYS = ["changeBoundary", "effectiveAuthority", "gate", "generatedAt", "id", "intakeBinding", "invariants", "nonGoals", "rollback", "rows", "schemaVersion", "status", "summary"];
 // biome-ignore format: the exact closed row key set stays compact for the shard budget
 const ROW_KEYS = ["applicationScope", "applicationStatus", "canonicalStatus", "evidenceRefs", "gapClosed", "id"];
-const PACK_SECTION_SHA256 = "4f7cc089acc65225a75f17c6d8d611baf2bc6e5b0ecb9e1c3ad7bec70b3692b1";
+const PACK_SECTION_SHA256 = "1438d990e9546aeee6dc9759a9a8798284eaff5837116f25d96d0316cc1e04ca";
 
 describe("kernel governance application state ledger", () => {
   it("records real canonical application state without mutating the GATE-01 intake", () => {
@@ -56,7 +58,7 @@ describe("kernel governance application state ledger", () => {
 
     expect(Object.keys(state).sort()).toEqual(ROOT_KEYS);
     // biome-ignore format: the exact ledger contract stays compact for the shard budget
-    expect(state).toMatchObject({ schemaVersion: "1.0.0", id: "kernel-governance-application-state-2026-08-01", generatedAt: "2026-08-01", status: "partial-application-no-go", intakeBinding: INTAKE, effectiveAuthority: STAMP, rows: ROWS, summary: { total: 10, applied: 2, pending: 8, canonical: 2 }, gate: GATE });
+    expect(state).toMatchObject({ schemaVersion: "1.0.0", id: "kernel-governance-application-state-2026-08-01", generatedAt: "2026-08-01", status: "partial-application-no-go", intakeBinding: INTAKE, effectiveAuthority: STAMP, rows: ROWS, summary: { total: 10, applied: 3, pending: 7, canonical: 3 }, gate: GATE });
     for (const row of state.rows) expect(Object.keys(row).sort()).toEqual(ROW_KEYS);
     // The ledger owns its own change boundary; the frozen closure boundary is never widened.
     expect(state.changeBoundary).toEqual({ allowedFiles: ALLOWED_FILES });
@@ -95,7 +97,7 @@ describe("kernel governance application state ledger", () => {
     // biome-ignore format: the exact normalized application-state pack section stays compact
     const section = pack.slice(pack.indexOf(PACK_HEADING)).split("\n## ")[0].replaceAll("\r\n", "\n").trim();
     // biome-ignore format: the pack section is ratcheted by exact normalized bytes and digest
-    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([1404, PACK_SECTION_SHA256]);
+    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([2262, PACK_SECTION_SHA256]);
   });
 
   it("fails closed on forged intake, stale stamps, unbacked application and unwired gates", async () => {
@@ -147,6 +149,13 @@ describe("kernel governance application state ledger", () => {
       (candidate) => { candidate.evidence[D01_HANDOFF].applicationSummary.applied = 0; },
       (candidate) => { candidate.evidence[D01_HANDOFF].applicationSummary.approved = 32; },
       (candidate) => { candidate.evidence[D01_HANDOFF].status = "applied"; },
+      (candidate) => { candidate.evidence[D01_HANDOFF].id = "kernel-code-bearing-descendant-handoff-2026-07-16"; },
+      (candidate) => { candidate.evidence[D02_HANDOFF].id = "kernel-surface-dependency-order-handoff-2026-08-02"; },
+      (candidate) => { candidate.evidence[D03_HANDOFF].id = "kernel-module-registry-ownership-split-handoff-2026-08-02"; },
+      (candidate) => { candidate.evidence[D03_HANDOFF].applicationSummary.canonicalNodeApplication = "applied"; },
+      (candidate) => { candidate.evidence[D03_HANDOFF].applicationSummary.canonicalNodeApplication = "not-applicable-no-node-mutation"; },
+      (candidate) => { candidate.evidence[D03_HANDOFF].applicationSummary.applicationScope = "module-registry-and-capability-merged"; },
+      (candidate) => { candidate.state.rows[2].applicationScope = D01_SCOPE; },
       (candidate) => { candidate.evidence[D01_HANDOFF].gapClosed = true; },
       (candidate) => { candidate.evidence[D02_HANDOFF].decisionId = "KGA-D03"; },
       (candidate) => { candidate.evidence[D02_HANDOFF].provenance.approval.normalizedSelectionSha256 = "drift"; },
@@ -158,18 +167,18 @@ describe("kernel governance application state ledger", () => {
       (candidate) => { candidate.state.rows[2].applicationScope = D02_SCOPE; },
       (candidate) => { candidate.state.rows[0].codeStartAllowed = true; },
       (candidate) => { candidate.state.rows[2].runtimeReady = true; },
-      (candidate) => { candidate.state.rows[2].applicationStatus = "applied"; },
-      (candidate) => { candidate.state.rows[2].canonicalStatus = "canonical"; },
+      (candidate) => { candidate.state.rows[2].applicationStatus = "pending"; },
+      (candidate) => { candidate.state.rows[2].canonicalStatus = "pending"; },
       (candidate) => { candidate.state.rows[2].evidenceRefs.push(D01_HANDOFF); },
-      (candidate) => { Object.assign(candidate.state.rows[2], { applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", evidenceRefs: [INVENTORY, D02_HANDOFF] }); candidate.state.summary = { total: 10, applied: 3, pending: 7, canonical: 3 }; candidate.evidence[D02_HANDOFF] = { ...candidate.evidence[D02_HANDOFF], decisionId: "KGA-D03" }; },
+      (candidate) => { Object.assign(candidate.state.rows[3], { applicationStatus: "applied", applicationScope: D03_SCOPE, canonicalStatus: "canonical", evidenceRefs: [INVENTORY, D03_HANDOFF] }); candidate.state.summary = { total: 10, applied: 4, pending: 6, canonical: 4 }; candidate.evidence[D03_HANDOFF] = { ...candidate.evidence[D03_HANDOFF], decisionId: "KGA-D04" }; },
       (candidate) => { candidate.state.rows[5].evidenceRefs = [ADDENDUM]; },
       (candidate) => { candidate.state.rows[0].applicationStatus = "done"; },
       (candidate) => { candidate.state.rows[0].gapClosed = true; },
       (candidate) => { candidate.state.rows.pop(); },
       (candidate) => { candidate.state.rows = [candidate.state.rows[1], candidate.state.rows[0], ...candidate.state.rows.slice(2)]; },
       (candidate) => { candidate.state.rows[3].id = "KGA-D03"; },
-      (candidate) => { candidate.state.summary.applied = 3; },
-      (candidate) => { candidate.state.summary.pending = 7; },
+      (candidate) => { candidate.state.summary.applied = 4; },
+      (candidate) => { candidate.state.summary.pending = 6; },
       (candidate) => { candidate.state.gate.gapClosed = true; },
       (candidate) => { candidate.state.gate.codeStartAllowed = true; },
       (candidate) => { candidate.state.gate.runtimeCodeAllowed = true; },
