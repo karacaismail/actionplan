@@ -23,7 +23,9 @@ const D05_RECORD = "reports/kernel-scaffold-walking-skeleton-exit-semantics-2026
 const D08_SCOPE = "adr-identity-quarantine-record";
 const D08_RECORD = "reports/kernel-adr-identity-quarantine-2026-08-02.json";
 const ADDENDUM = "reports/kernel-governance-gap-addendum-2026-07-15.json";
-const PENDING_IDS = ["KGA-D06", "KGA-D07", "KGA-D09", "KGA-D10"];
+const D09_SCOPE = "ghost-wbs-identity-rejection-record";
+const D09_RECORD = "reports/kernel-ghost-wbs-identity-rejection-2026-08-02.json";
+const PENDING_IDS = ["KGA-D06", "KGA-D07", "KGA-D10"];
 const NODES = "src/data/generated/nodes";
 const COMBINED_NODE = "src/data/generated/nodes/capability-registry-contract.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
@@ -151,7 +153,7 @@ describe("KGA-D03 module registry ownership split handoff", () => {
 
     // biome-ignore format: D03 becomes applied and canonical only inside the ownership split scope
     expect(row).toEqual({ id: "KGA-D03", applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, HANDOFF] });
-    expect(state.summary).toEqual({ total: 10, applied: 6, pending: 4, canonical: 6 });
+    expect(state.summary).toEqual({ total: 10, applied: 7, pending: 3, canonical: 7 });
     // D04 is applied alongside D03, but only inside its own scoped disposition record.
     // biome-ignore format: the neighbouring D04 row is pinned exactly, never skipped
     expect(state.rows.find((item: { id: string }) => item.id === "KGA-D04")).toEqual({ id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] });
@@ -161,7 +163,10 @@ describe("KGA-D03 module registry ownership split handoff", () => {
     // D08 is applied alongside D03, D04 and D05, but only inside its own quarantine scope.
     // biome-ignore format: the neighbouring D08 row is pinned exactly, never skipped
     expect(state.rows.find((item: { id: string }) => item.id === "KGA-D08")).toEqual({ id: "KGA-D08", applicationStatus: "applied", applicationScope: D08_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D08_RECORD] });
-    // biome-ignore format: exactly D06, D07, D09 and D10 stay pending while the global gate stays NO-GO
+    // D09 is applied alongside its predecessors, but only inside its own rejection scope.
+    // biome-ignore format: the neighbouring D09 row is pinned exactly, never skipped
+    expect(state.rows.find((item: { id: string }) => item.id === "KGA-D09")).toEqual({ id: "KGA-D09", applicationStatus: "applied", applicationScope: D09_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D09_RECORD] });
+    // biome-ignore format: exactly D06, D07 and D10 stay pending while the global gate stays NO-GO
     expect(state.rows.filter((item: { applicationStatus: string }) => item.applicationStatus === "pending").map((item: { id: string }) => item.id)).toEqual(PENDING_IDS);
     // biome-ignore format: every remaining pending row keeps a null scope and no canonical claim
     for (const pending of state.rows.filter((item: { id: string }) => PENDING_IDS.includes(item.id))) expect(pending).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false });
