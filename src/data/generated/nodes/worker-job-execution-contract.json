@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "worker-job-execution-contract",
+  "wbsCode": "36.16.1",
+  "level": "archetype",
+  "title": "Worker Job Execution Contract",
+  "slug": "worker-job-execution-contract",
+  "aliases": [],
+  "summary": "Execute tenant-isolated retriable and scheduled jobs with idempotency and DLQ without owning business action authority.",
+  "parentId": "k-worker",
+  "order": 1,
+  "icon": "ph-queue",
+  "tags": [
+    "worker",
+    "job",
+    "queue",
+    "retry",
+    "idempotency",
+    "dead-letter",
+    "scheduler",
+    "archetype"
+  ],
+  "dependsOn": [
+    "event-bus-delivery-contract",
+    "k-tenancy"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "yönerge: docs/k-worker-taskqueue-directive.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The Job, Task and Schedule triple is human-approved as the closed execution shape before any implementation begins, with Job carrying tenant_id, job_type, task_name, payload and idempotency_key.",
+        "job_type is fixed to the declared workload set ai_enrichment|sync|media|export|analytics, so a caller cannot invent a new class of background work at runtime.",
+        "The Job state set is fixed as queued|running|succeeded|failed|dead with attempt/max_attempts and run_after driving every transition.",
+        "idempotency_key semantics are fixed so a duplicate submission never produces a second effect, and a Job is never deleted once it reaches dead.",
+        "The exclusion set is explicit: no business action authority, no business rule/computation ownership, no saga/BPMN workflow orchestration and no Event Bus replacement.",
+        "[DOC-APPLY:task-handoff] Worker Job Execution Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Worker Job Execution Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover the full queued|running|succeeded|failed|dead progression for each job_type in ai_enrichment|sync|media|export|analytics.",
+        "Planned negatives prove retry uses exponential backoff with jitter, honours attempt/max_attempts and run_after, and routes an exhausted Job to the dead-letter queue rather than dropping it.",
+        "Planned negatives prove a repeated idempotency_key produces no second effect and that DLQ replay is explicit, audited and never automatic.",
+        "Planned negatives prove circuit breaker opening, visibility_timeout_s expiry re-delivery and overlap_policy enforcement on a cron/interval Schedule.",
+        "Planned tenant isolation negatives cover cross-tenant Job reads, submissions and noisy-neighbor pressure against the tenant-scoped queue and rate-limit.",
+        "[DOC-APPLY:high-risk-dod] Worker Job Execution Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Worker Job Execution Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Worker Job Execution Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Worker Job Execution Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] worker-job-execution-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] worker-job-execution-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] worker-job-execution-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The Job, Task and Schedule records with tenant_id, job_type, task_name, payload, idempotency_key, attempt/max_attempts, run_after and visibility_timeout_s are specified as shapes without creating storage.",
+        "Enqueue-with-outbox same commit semantics are specified as a planning rule so a Job and its originating write cannot diverge; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Worker Job Execution Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove at-least-once delivery with idempotency_key deduplication, correct dead-letter routing and audited DLQ replay.",
+        "Future tests prove the tenant-scoped queue and rate-limit contains a noisy-neighbor workload and that the kill-switch halts a job_type without data loss."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.16.1, dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Worker Job Execution Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] worker-job-execution-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] worker-job-execution-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Worker Job Execution Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] worker-job-execution-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed negative/security/performance evidence.",
+        "Rollback removes only D12 data/projections, restores 33/11/22 and the 628-node hash a2c589bf3d39a0c8aff68968be65a67bd89a5bb19e0dc2f18c9625fd458ad64a, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] worker-job-execution-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Worker Job Execution Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Worker Job Execution Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Worker Job Execution Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Worker Job Execution Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Worker Job Execution Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only execution shape: Job, Task and Schedule as the closed triple, where Job carries tenant_id, job_type, task_name, payload and idempotency_key and job_type is limited to ai_enrichment|sync|media|export|analytics.",
+    "Planning-only state contract: the queued|running|succeeded|failed|dead progression driven by attempt/max_attempts and run_after, with retry using exponential backoff plus jitter.",
+    "Planning-only durability contract: an exhausted Job lands in the dead-letter queue and is never deleted, while DLQ replay stays an explicit audited human action.",
+    "Planning-only resilience contract: circuit breaker, visibility_timeout_s re-delivery, cron/interval scheduling with an overlap_policy and a kill-switch per job_type.",
+    "Planning-only isolation contract: a tenant-scoped queue and rate-limit that contains a noisy-neighbor workload, enqueue with outbox same commit, and ai_cost_scope bounding AI-driven job spend per tenant.",
+    "Explicit human approval gate with fixed exclusions: no business action authority, no business rule/computation ownership, no saga/BPMN workflow orchestration, no Event Bus replacement and no forcing synchronous request-response into the queue.",
+    "[DOC-APPLY:high-risk-dod] worker-job-execution-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Worker Job Execution Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] worker-job-execution-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] worker-job-execution-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Worker Job Execution Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Worker Job Execution Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Worker Job Execution Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly worker-job-execution-contract, WBS 36.16.1, archetype, parent k-worker, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly event-bus-delivery-contract and k-tenancy in that order; blocks and related are empty and the parent-only k-authz, k-bus, k-sequence, scale-invariant and k-boyut1-ops-panel edges are not inherited.",
+    "A Job carries tenant_id, job_type, task_name, payload and idempotency_key; a Task names the executable unit and a Schedule expresses its cron/interval recurrence.",
+    "job_type is restricted to ai_enrichment|sync|media|export|analytics and an unrecognised value is rejected at submission rather than queued.",
+    "The Job state set is exactly queued|running|succeeded|failed|dead, and attempt/max_attempts with run_after govern every retry transition.",
+    "retry uses exponential backoff with jitter; a Job that exhausts max_attempts moves to the dead-letter queue and is never deleted.",
+    "DLQ replay is explicit, audited and human-initiated; no automatic replay path may drain the dead-letter queue.",
+    "A repeated idempotency_key never produces a second effect, and enqueue happens with the originating write in the outbox same commit so a Job cannot be lost or orphaned.",
+    "A circuit breaker opens on sustained downstream failure, visibility_timeout_s expiry re-delivers a stalled Job, and overlap_policy prevents a scheduled run from overlapping itself.",
+    "The tenant-scoped queue and rate-limit contains a noisy-neighbor workload so one tenant cannot starve another, and ai_cost_scope bounds AI-driven job spend per tenant.",
+    "A kill-switch can halt a job_type without deleting queued work, and every halt is recorded for audit.",
+    "Exclusions hold: no business action authority, no business rule/computation ownership, no saga/BPMN workflow orchestration, no Event Bus replacement and no forcing synchronous request-response into the queue.",
+    "Human approval is mandatory before any worker activation or implementation; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-worker: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Worker Job Execution Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] worker-job-execution-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] worker-job-execution-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Worker Job Execution Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Worker Job Execution Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] worker-job-execution-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Worker Job Execution Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] worker-job-execution-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Worker Job Execution Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-wje-cross-tenant-job",
+      "desc": "A Job processed without its tenant_id scope would let one tenant's payload be enriched, exported or synced into another tenant's data.",
+      "severity": "critical",
+      "mitigation": "Require tenant_id on every Job and a tenant-scoped queue and rate-limit, with cross-tenant submission and read negatives before human-approved implementation."
+    },
+    {
+      "id": "r-wje-duplicate-effect",
+      "desc": "At-least-once delivery without idempotency_key deduplication would double-charge, double-export or double-post on every retry.",
+      "severity": "critical",
+      "mitigation": "Fix idempotency_key semantics and outbox same commit enqueue, and prove a repeated key yields no second effect before implementation."
+    },
+    {
+      "id": "r-wje-silent-job-loss",
+      "desc": "Dropping an exhausted Job instead of routing it to the dead-letter queue would lose work silently with no operator signal.",
+      "severity": "high",
+      "mitigation": "Require dead-letter routing where a Job is never deleted, plus explicit audited DLQ replay and a visibility_timeout_s re-delivery path."
+    },
+    {
+      "id": "r-wje-scope-expansion",
+      "desc": "A job execution primitive could be misread as authority to decide business actions, own computation rules or replace the Event Bus and workflow engine.",
+      "severity": "high",
+      "mitigation": "Keep no business action authority, no business rule/computation ownership, no saga/BPMN workflow orchestration and no Event Bus replacement explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove worker-job-execution-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/11/22, 628 nodes, contributor 132 and node-set hash a2c589bf3d39a0c8aff68968be65a67bd89a5bb19e0dc2f18c9625fd458ad64a; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-worker-job-execution-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "worker-job-execution-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-worker-job-execution-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "worker-job-execution-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-worker-job-execution-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "worker-job-execution-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-worker-job-execution-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "worker-job-execution-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-worker-job-execution-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "worker-job-execution-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The execution shape is the closed triple Job, Task and Schedule: a Job carries tenant_id, job_type, task_name, payload and idempotency_key, a Task names the unit of work and a Schedule expresses cron/interval recurrence.",
+        "job_type is limited to ai_enrichment|sync|media|export|analytics, and the Job state set is exactly queued|running|succeeded|failed|dead driven by attempt/max_attempts and run_after.",
+        "retry applies exponential backoff with jitter; once max_attempts is exhausted the Job moves to the dead-letter queue and is never deleted, and DLQ replay stays an explicit audited action.",
+        "circuit breaker, visibility_timeout_s re-delivery and overlap_policy keep a stalled or overlapping run from corrupting the queue.",
+        "A tenant-scoped queue and rate-limit bounds noisy-neighbor pressure ve bu birim business action authority üstlenmez."
+      ],
+      "notes": "worker-job-execution-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract featureDefs kapsamı. Kapsa: Job/Task/Schedule shape with tenant_id, job_type, task_name, payload and idempotency_key; the ai_enrichment|sync|media|export|analytics workload set; queued|running|succeeded|failed|dead states with attempt/max_attempts and run_after; retry with exponential backoff and jitter; dead-letter with audited DLQ replay; circuit breaker, visibility_timeout_s and overlap_policy; tenant-scoped queue and rate-limit. Exclude business action authority, business rule/computation ownership, saga/BPMN workflow orchestration and Event Bus replacement. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Every Job carries tenant_id and runs behind a tenant-scoped queue and rate-limit, so a missing tenant context rejects the submission instead of widening it.",
+        "A worker executes a Task under the submitter's scoped authority and never elevates itself; business action authority stays with the calling domain.",
+        "ai_cost_scope bounds AI-driven job spend per tenant and a kill-switch can halt a job_type without deleting queued work or losing dead-letter history.",
+        "payload contents are treated as sensitive: they are never logged verbatim, and an immutable audit records each state transition and every DLQ replay.",
+        "[DOC-APPLY:high-risk-dod] worker-job-execution-contract: worker-job-execution-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] worker-job-execution-contract: Worker Job Execution Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] worker-job-execution-contract: worker-job-execution-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] worker-job-execution-contract: worker-job-execution-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] worker-job-execution-contract: Worker Job Execution Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] worker-job-execution-contract: Worker Job Execution Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] worker-job-execution-contract: Worker Job Execution Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "worker-job-execution-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract security kapsamı. Kapsa: tenant_id scoping and rate-limit, no worker self-elevation, ai_cost_scope and kill-switch, payload redaction and immutable transition audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- worker-job-execution-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Worker Job Execution Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- worker-job-execution-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Worker Job Execution Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- worker-job-execution-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Worker Job Execution Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- worker-job-execution-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Worker Job Execution Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- worker-job-execution-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- worker-job-execution-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Worker Job Execution Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- worker-job-execution-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Worker Job Execution Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Worker Job Execution Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Worker Job Execution Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: worker-job-execution-contract — Worker Job Execution Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Worker Job Execution Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one Job dispatcher keyed by job_type instead of per-workload queues and bespoke retry code, with a short-code bütçe sınırı and katman separation.",
+        "Backoff, jitter and run_after computation stay pure and deterministic so a retry schedule can be asserted without a live broker.",
+        "Queue and reliability standards are referenced through standardRefs rather than restated inside this contract."
+      ],
+      "notes": "worker-job-execution-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract codeOptimization kapsamı. Kapsa: single job_type dispatcher, deterministic backoff computation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Boundary validation allowlists job_type and task_name before a Job is accepted; an unknown workload class is refused rather than queued for later triage.",
+        "Least-privilege separates submission, execution and DLQ replay: a submitter cannot replay the dead-letter queue and a worker cannot rewrite its own attempt counter.",
+        "Immutable audit records each queued|running|succeeded|failed|dead transition together with the actor who triggered a replay or a kill-switch."
+      ],
+      "notes": "worker-job-execution-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract securityOptimization kapsamı. Kapsa: job_type allowlist, submission/execution/replay separation, immutable transition audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "Queue depth and wait time targets must be declared per job_type with an explicit p95 budget, since an ai_enrichment Job and an analytics Job have very different acceptable latencies; no measurement is claimed here.",
+        "visibility_timeout_s must exceed the realistic execution time of its Task so a slow run is not re-delivered while still healthy.",
+        "Performance evidence must cover noisy-neighbor containment, dead-letter growth under sustained failure and N+1 avoidance during job payload hydration before any readiness claim."
+      ],
+      "notes": "worker-job-execution-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract performance kapsamı. Kapsa: per-job_type queue depth and latency targets, visibility_timeout_s sizing, noisy-neighbor and DLQ growth evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobile or web caller submits a Job and receives an acknowledgement, never a synchronous result; forcing synchronous request-response into the queue is not permitted.",
+        "A client polls or subscribes for the queued|running|succeeded|failed|dead state, tolerates offline gaps, and must treat a repeated submission with the same idempotency_key as the same Job.",
+        "No mobile monitoring surface is introduced; presenting job state stays a separate consumer responsibility."
+      ],
+      "notes": "worker-job-execution-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract mobileApps kapsamı. Kapsa: asynchronous submission acknowledgement, client state polling with idempotency_key, no monitoring surface here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future operations console must expose job state and attempt/max_attempts as accessible text rather than by color-coded badge alone.",
+        "A long-running Job must expose progress through an aria live region without stealing focus, stay keyboard reachable with a visible focus ring and meet the AAA contrast threshold.",
+        "Because this contract renders nothing, all accessibility outcomes stay planned and none may be recorded as met at this node."
+      ],
+      "notes": "worker-job-execution-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract wcag kapsamı. Kapsa: accessible job state text, non-intrusive progress announcement, nothing rendered here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Docker/Kubernetes worker pool, broker and scheduler topology remains human-developer work.",
+        "A future deployment must drain queued work before replacing a worker, since a Job in the dead-letter queue is never deleted and must survive a rollout.",
+        "Undoing this shard touches only the planning contract and its deterministic projections; runtimeDataImpact stays none and the verdict stays NO-GO."
+      ],
+      "notes": "worker-job-execution-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract deployment kapsamı. Kapsa: no release or deploy here, drain-before-replace rollout expectation, bounded undo. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "This contract is execution plumbing, not decision automation: a Job transition may emit a planned event but no ruleset decides business outcomes here.",
+        "saga/BPMN workflow orchestration stays outside this scope; chaining Jobs into a business process belongs to the workflow authority.",
+        "Automation may record a planned approval request but cannot replay the dead-letter queue, disable a circuit breaker or claim successful runtime execution."
+      ],
+      "notes": "worker-job-execution-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract eca kapsamı. Kapsa: transition events only, workflow orchestration excluded, no automated DLQ replay or breaker override. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read the execution contract and suggest a changeset, but submitting a Job, replaying the dead-letter queue, raising max_attempts and bypassing tenant scope are forbidden actions ve yasak kalır.",
+        "Any activation or implementation waits on explicit insan onayı; an AI lane holds no auto-apply route, no admin override and no delegated-admin standing over the queue.",
+        "AI-driven enrichment work stays inside ai_cost_scope, and neither prompt text nor repository content may widen this shard's fixed D01 scope or manufacture executed-test evidence."
+      ],
+      "notes": "worker-job-execution-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, forbidden job submission and DLQ replay, ai_cost_scope containment, mandatory human approval. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases run each job_type in ai_enrichment|sync|media|export|analytics through queued|running|succeeded and through the failed path to dead, as unit and integration matrices.",
+        "Planned negatives prove exponential backoff with jitter, attempt/max_attempts exhaustion into the dead-letter queue and that a dead Job is never deleted.",
+        "Planned negatives prove a duplicate idempotency_key has no second effect, that enqueue and its originating write share the outbox same commit, and that DLQ replay is explicit and audited.",
+        "Planned negatives cover circuit breaker opening, visibility_timeout_s expiry re-delivery, overlap_policy on a cron/interval Schedule and kill-switch behaviour.",
+        "Planned tenant isolation negatives exercise cross-tenant Job access and noisy-neighbor pressure against the tenant-scoped queue and rate-limit."
+      ],
+      "notes": "worker-job-execution-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract testing kapsamı. Kapsa: per-job_type state progression, backoff and DLQ negatives, idempotency and outbox proof, breaker/timeout/overlap/kill-switch cases, tenant isolation and noisy-neighbor negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by scoping every Job to tenant_id, applying payload validation at submission and refusing worker self-elevation beyond the submitter's authority.",
+        "OWASP A04 insecure design is modeled through idempotency_key deduplication, dead-letter durability and circuit breaker containment instead of unbounded retry.",
+        "OWASP A09 security logging and monitoring failure is modeled by requiring an immutable audit of every state transition, DLQ replay and kill-switch action."
+      ],
+      "notes": "worker-job-execution-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract owasp kapsamı. Kapsa: A01 tenant scoping and no self-elevation, A04 idempotency and bounded retry design, A09 immutable transition auditing. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-agent-runtime with contributionKind specification, targetProviderIds [k-tenancy, k-authz, k-bus] and runtimeProviderClaimAllowed=false.",
+        "Each publicBoundary flag stays false, so a job submitter reaches no kernel internal, no kernel database and no cross-context write path.",
+        "This schedule is only a planning window; predecessor event-bus-delivery-contract ends 2026-09-10, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly event-bus-delivery-contract and k-tenancy and does not inherit the parent-only k-authz, k-bus, k-sequence, scale-invariant and k-boyut1-ops-panel edges.",
+        "Scope stays inside the execution layer: no business action authority, no business rule/computation ownership, no saga/BPMN workflow orchestration and no Event Bus replacement."
+      ],
+      "notes": "worker-job-execution-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract integration kapsamı. Kapsa: contributor routing under areaId k-agent-runtime, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module submits a Job with its tenant_id and idempotency_key and cannot run its own thread or cron in place of this primitive.",
+        "A consumer must tolerate at-least-once delivery and make its Task effect idempotent rather than assuming exactly-once execution.",
+        "Deciding whether a business action should happen at all remains the calling domain's authority, never the worker's."
+      ],
+      "notes": "worker-job-execution-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract moduleUsage kapsamı. Kapsa: consumer job submission, at-least-once tolerance and idempotent task effects, business decision authority excluded. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A Job payload may carry PII, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Dead-letter entries are never deleted by the worker itself, so their retention window and disposal path need an explicit human-approved policy.",
+        "Completed Job records and their payloads are purged on a declared tenant-scoped schedule; no long-term business data store is created by this node."
+      ],
+      "notes": "worker-job-execution-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract dataLifecycle kapsamı. Kapsa: payload personal-data classification, dead-letter retention policy, tenant-scoped purge of completed jobs, no store created here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include queue depth and wait time by job_type, retry rate, dead-letter arrival rate, circuit breaker open time and kill-switch activations on tenant-safe labels.",
+        "Logs and traces carry job id, job_type, attempt and tenant scope with payload redaction; idempotency_key and payload contents are never metric labels.",
+        "Alerts cover a dead-letter growth spike, a stuck running Job past visibility_timeout_s, a noisy-neighbor rate-limit breach and an ai_cost_scope overrun; thresholds require human approval."
+      ],
+      "notes": "worker-job-execution-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract observability kapsamı. Kapsa: queue depth and retry SLIs, redacted job labels, dead-letter and stuck-job alerts, ai_cost_scope overrun. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is a downstream outage during a Task; it degrades to retry with exponential backoff, then a circuit breaker, then the dead-letter queue, never to silent success.",
+        "Delivery is at-least-once, so the same Job and idempotency_key must always converge on the same effect regardless of how many attempts occur.",
+        "A worker restart or redeploy re-delivers an in-flight Job after visibility_timeout_s rather than losing it, and dead-letter history survives the rollout."
+      ],
+      "notes": "worker-job-execution-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Worker Job Execution Contract reliability kapsamı. Kapsa: graded degradation from retry to breaker to dead-letter, at-least-once convergence, restart re-delivery and history survival. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "replay-dead-letter",
+      "bypass-tenant-scope"
+    ],
+    "stepUp": [
+      "replay-dead-letter",
+      "change-max-attempts",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "enterpriseDeliveryRef": "enterprise-delivery",
+    "sdkDevelopmentRef": "sdk-development",
+    "decisionGradeRef": "decision-grade-data",
+    "i14yRef": "i14y",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "worker-job-execution-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:worker-job-execution-contract:kernel-public-contract",
+      "planned-test:worker-job-execution-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-agent-runtime",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-tenancy",
+      "k-authz",
+      "k-bus"
+    ]
+  }
+}

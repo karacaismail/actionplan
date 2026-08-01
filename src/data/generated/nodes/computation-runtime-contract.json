@@ -1,0 +1,742 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "computation-runtime-contract",
+  "wbsCode": "36.15.1",
+  "level": "archetype",
+  "title": "Computation Runtime Contract",
+  "slug": "computation-runtime-contract",
+  "aliases": [],
+  "summary": "Execute deterministic derivation DAGs that produce values; validation rules and free JavaScript or SQL are excluded.",
+  "parentId": "k-computation",
+  "order": 1,
+  "icon": "ph-calculator",
+  "tags": [
+    "computation",
+    "derivation-dag",
+    "deterministic",
+    "memoization",
+    "pricing",
+    "tax",
+    "payroll",
+    "archetype"
+  ],
+  "dependsOn": [
+    "archetype-computation-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/computation-derivation-contract.md",
+    "adr: docs/adr-A4-computation.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The engine resolves a declared derivation DAG in topological order and returns the produced value together with the inputs used and the graph version that produced it.",
+        "Evaluation is deterministic: the same inputs against the same graph version always evaluate to the same value, so a recomputation can be compared against a stored result.",
+        "The trigger surface is exactly on_write, on_query and batch, and memoization is declared per node so a repeated evaluate call reuses a cached intermediate rather than recomputing it.",
+        "Supported workloads are pricing, tax, BOM explosion and payroll, all expressed through the declared graph rather than through free JavaScript or SQL, which is excluded.",
+        "The exclusion set is explicit: a validation rule is not a derivation, ECA automation is a separate authority and graph declaration ownership stays with archetype-computation-contract.",
+        "[DOC-APPLY:task-handoff] Computation Runtime Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Computation Runtime Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover an on_write, an on_query and a batch evaluate over the same derivation DAG producing identical values and identical inputs used.",
+        "Planned negatives prove a graph carrying free JavaScript or SQL, or an operator outside the operator allowlist, is refused before evaluation begins.",
+        "Planned negatives prove a cycle in the DAG is detected at load time and that no partially evaluated value is ever persisted.",
+        "Planned negatives prove a cross-tenant input reference is refused, so an evaluation in one tenant can never read another tenant's values.",
+        "Planned determinism cases replay a pricing, tax, BOM explosion and payroll graph against a fixed graph version and compare the value plus the recorded inputs used.",
+        "[DOC-APPLY:high-risk-dod] Computation Runtime Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Computation Runtime Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Computation Runtime Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Computation Runtime Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] computation-runtime-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] computation-runtime-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] computation-runtime-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The evaluation record with its value, inputs used, graph version and tenant scope, plus the memoization cache key shape, are specified as typed metadata without creating storage here.",
+        "Materialised derived values evolve by expand-contract so an earlier graph version stays explainable; no migration and no evaluator is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor archetype-computation-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Computation Runtime Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove memoization never changes a result: an evaluate served from cache and a cold recomputation must return the same value and the same inputs used.",
+        "Future tests prove the operator allowlist, the cycle check and tenant scoping all hold under an adversarial derivation DAG."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.15.1, the single dependency, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Computation Runtime Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] computation-runtime-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] computation-runtime-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Computation Runtime Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] computation-runtime-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed determinism, isolation and financial-correctness evidence.",
+        "Rollback removes only D20 data/projections, restores 33/19/14 and the 636-node hash b9dc5ad04fc84bf4584eff95805606b8966ad92bcc34176bdbcc2c0bbd096d46, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] computation-runtime-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Computation Runtime Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Computation Runtime Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Computation Runtime Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Computation Runtime Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Computation Runtime Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only execution shape: one engine that resolves a declared derivation DAG in topological order and returns a value with the inputs used and the graph version attached.",
+    "Planning-only determinism contract: the same inputs against the same graph version always produce the same value, making a recomputation comparable to a stored result.",
+    "Planning-only trigger contract: exactly on_write, on_query and batch entry points, with declared memoization so a repeated evaluate reuses an intermediate instead of recomputing it.",
+    "Planning-only workload coverage: pricing, tax, BOM explosion and payroll served by the same engine, with free JavaScript or SQL evaluation excluded by construction.",
+    "Planning-only safety contract: an operator allowlist, a load-time cycle check, declared cost bounds and tenant scoping that refuses any cross-tenant input.",
+    "Explicit human approval gate with a fixed boundary: a validation rule is not a derivation, ECA automation is separate, and graph declaration ownership stays with archetype-computation-contract.",
+    "[DOC-APPLY:high-risk-dod] computation-runtime-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Computation Runtime Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] computation-runtime-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] computation-runtime-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Computation Runtime Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Computation Runtime Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Computation Runtime Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly computation-runtime-contract, WBS 36.15.1, archetype, parent k-computation, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly archetype-computation-contract; blocks and related are empty and the parent-only k-schema edge and its related list are not inherited.",
+    "An evaluate call resolves the derivation DAG in topological order and returns the value, the inputs used and the graph version in one result.",
+    "Evaluation is deterministic: identical inputs at an identical graph version always yield an identical value, so a recomputation can be diffed against the stored result.",
+    "The trigger surface is exactly on_write, on_query and batch; no other entry point may evaluate a graph.",
+    "memoization is declared per graph node and may only cache within one graph version and one tenant; a cache hit must be indistinguishable from a cold recomputation.",
+    "pricing, tax, BOM explosion and payroll are all expressed through the declared graph; free JavaScript or SQL evaluation is excluded and rejected at load time.",
+    "Only operators inside the declared operator allowlist are admissible, and a graph containing an unknown operator is refused before evaluation.",
+    "A cycle in the DAG is detected at load time and refused; a partially evaluated graph never persists a value.",
+    "Every evaluation is scoped to one tenant, and a cross-tenant input reference is refused rather than silently filtered.",
+    "A validation rule is not a derivation: this engine produces values and never decides whether a record is admissible.",
+    "ECA automation is a separate authority; a derivation may be triggered by an event but may never itself perform a business action.",
+    "graph declaration ownership stays with archetype-computation-contract; this contract executes what that contract declares and never redefines it.",
+    "Human approval is mandatory before any graph is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-computation: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor archetype-computation-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Computation Runtime Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] computation-runtime-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] computation-runtime-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Computation Runtime Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Computation Runtime Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] computation-runtime-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Computation Runtime Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] computation-runtime-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Computation Runtime Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-crt-nondeterministic-value",
+      "desc": "An evaluation whose result depends on ambient state or cache age would make a stored pricing, tax, BOM explosion or payroll figure unreproducible and unauditable.",
+      "severity": "critical",
+      "mitigation": "Fix determinism against the graph version, record the inputs used with every value and require a cold-versus-memoized replay as evidence."
+    },
+    {
+      "id": "r-crt-arbitrary-execution",
+      "desc": "Admitting free JavaScript or SQL into an evaluation would turn the derivation engine into a code-execution surface reachable from data.",
+      "severity": "critical",
+      "mitigation": "Restrict evaluation to an operator allowlist over the declared graph, reject script and query bodies at load time and prove rejection with negatives."
+    },
+    {
+      "id": "r-crt-cross-tenant-input",
+      "desc": "A graph that resolves an input outside its tenant would leak another tenant's values through a derived figure that looks locally computed.",
+      "severity": "high",
+      "mitigation": "Scope every evaluation and every memoization key to one tenant and keep cross-tenant refusal as a fixed negative-test axis."
+    },
+    {
+      "id": "r-crt-scope-expansion",
+      "desc": "A computation runtime could be misread as authority over validation rules, ECA automation or the ownership of graph declarations.",
+      "severity": "high",
+      "mitigation": "Keep the validation rule, ECA automation and graph declaration ownership exclusions explicit in every phase, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove computation-runtime-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/19/14, 636 nodes, contributor 140 and node-set hash b9dc5ad04fc84bf4584eff95805606b8966ad92bcc34176bdbcc2c0bbd096d46; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-computation-runtime-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "computation-runtime-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-computation-runtime-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "computation-runtime-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-computation-runtime-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "computation-runtime-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-computation-runtime-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "computation-runtime-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-computation-runtime-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "computation-runtime-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The engine resolves a derivation DAG in topological order and is deterministic against a pinned graph version.",
+        "Girdi is the declared input set plus a tenant scope; çıktı is a value bundled with the inputs used and the graph version that produced it.",
+        "The trigger surface is exactly on_write, on_query and batch, and memoization keeps a repeated evaluate cheap without changing what a recomputation would return.",
+        "Workload coverage spans pricing, tax, BOM explosion and payroll through one declared vocabulary; free JavaScript or SQL is refused, so the engine is not a script host.",
+        "Kapsam sınırı gereği a validation rule is not a derivation, ECA automation is separate and graph declaration ownership stays with archetype-computation-contract."
+      ],
+      "notes": "computation-runtime-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract featureDefs kapsamı. Kapsa: topological DAG resolution, deterministic evaluation with inputs used and graph version, on_write/on_query/batch triggers with memoization, pricing/tax/BOM/payroll coverage. Exclude free JavaScript or SQL, validation rules, ECA automation and graph declaration ownership. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Refusing free JavaScript or SQL is the primary control: evaluation is confined to an operator allowlist, so data cannot escalate into code execution.",
+        "Every evaluation and every memoization key is bound to one tenant, so a cross-tenant input is refused rather than filtered, which preserves izolasyon.",
+        "The engine has no ambient erişim: it reads only the declared input set, which keeps a derived value attributable and keeps least privilege enforceable.",
+        "A money-bearing derivation is integrity-critical, so the value, the inputs used and the graph version are recorded together as an auditable denetim triple.",
+        "[DOC-APPLY:high-risk-dod] computation-runtime-contract: computation-runtime-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] computation-runtime-contract: Computation Runtime Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] computation-runtime-contract: computation-runtime-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] computation-runtime-contract: computation-runtime-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] computation-runtime-contract: Computation Runtime Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] computation-runtime-contract: Computation Runtime Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] computation-runtime-contract: Computation Runtime Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "computation-runtime-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract security kapsamı. Kapsa: allowlist-only evaluation without code execution, tenant-bound evaluation and cache keys, declared-input-only access, auditable value provenance. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- computation-runtime-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Computation Runtime Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- computation-runtime-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Computation Runtime Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- computation-runtime-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Computation Runtime Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- computation-runtime-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Computation Runtime Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- computation-runtime-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- computation-runtime-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Computation Runtime Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- computation-runtime-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Computation Runtime Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Computation Runtime Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Computation Runtime Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: computation-runtime-contract — Computation Runtime Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Computation Runtime Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed evaluator katman for every workload instead of a pricing engine beside a payroll engine, so behaviour cannot diverge between them.",
+        "Topological ordering, cycle detection and memoization key derivation stay pure functions with low cyclomatic complexity, testable without a datastore.",
+        "Declaration and execution stay separated; ölü kod and speculative per-domain evaluators are refused, and engineering rules are reached through standardRefs rather than restated here."
+      ],
+      "notes": "computation-runtime-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract codeOptimization kapsamı. Kapsa: one typed evaluator for all workloads, pure ordering and memoization logic, declaration/execution separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The operator allowlist is closed and versioned, so adding an operator is a reviewed change rather than a runtime capability the caller can request.",
+        "Least ayrıcalık applies to triggers: a batch evaluation may not read a wider input set than the on_write path for the same graph, and no secret is reachable from an operator.",
+        "Cost bounds on depth, node count and evaluation time are enforced per tenant with rate limits, so a crafted graph cannot exhaust the shared evaluator."
+      ],
+      "notes": "computation-runtime-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract securityOptimization kapsamı. Kapsa: closed versioned operator allowlist, least-privilege triggers without secret reach, per-tenant cost bounds and rate limits. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for an on_write evaluation of a representative graph and a separate throughput hedef for a batch run; no measurement is claimed here.",
+        "memoization is the primary optimisation: an intermediate is cached per graph version and tenant, and a cache miss must never change the returned value.",
+        "Input resolution must avoid N+1 lookups; the declared input set is fetched once per evaluation rather than once per DAG node."
+      ],
+      "notes": "computation-runtime-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract performance kapsamı. Kapsa: per-trigger p95 and batch throughput budgets, version-scoped memoization that cannot change results, N+1-free input resolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client consumes a derived value produced by the engine; a cihaz may not evaluate the graph locally and submit its own figure as authoritative.",
+        "An offline client displays the last synchronised derived value as stale together with its graph version, rather than recomputing a money figure on device.",
+        "No mobile calculation surface is introduced here; rendering a derived value and its provenance stays a separate consumer responsibility."
+      ],
+      "notes": "computation-runtime-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract mobileApps kapsamı. Kapsa: server-authoritative derived values, stale offline display with graph version, no calculation surface here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future explain-this-value surface must present the inputs used and the graph version as keyboard navigable content with a visible odak ring at the AAA kontrast threshold.",
+        "An evaluation refusal, such as a cycle or an unknown operator, must be announced through an aria live region naming the offending graph node.",
+        "This contract defines execution semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "computation-runtime-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract wcag kapsamı. Kapsa: keyboard-navigable value provenance, announced evaluation refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Kubernetes topology for an evaluator service or a batch worker pool remains human-developer work.",
+        "Activating a new graph version is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous version.",
+        "Reversing this shard touches only the planning contract and the deterministic projections derived from it, which keeps runtimeDataImpact at none and leaves NO-GO in force."
+      ],
+      "notes": "computation-runtime-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract deployment kapsamı. Kapsa: no release or deploy here, graph version activation as an approved data change, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "An on_write olay may trigger a recomputation, but ECA automation stays a separate authority and an evaluation may never perform a business action of its own.",
+        "A derived value that feeds another derived value forms a chain that stops at maxChainDepth 6, so recomputation cannot cascade without bound.",
+        "Re-delivering the same trigger for the same input version must be idempotent, and activating a new graph version always requires an explicit onay."
+      ],
+      "notes": "computation-runtime-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract eca kapsamı. Kapsa: events trigger recomputation without acting, depth-bounded derived chains, idempotent replay and approval-gated activation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay forbidden actions ve yasak kalır.",
+        "AI cannot activate a graph version, cannot execute an evaluation and cannot widen the operator allowlist; each of those needs insan onayı, and a money-bearing graph additionally requires a step-up review.",
+        "Any derivation proposal reaching the lane as sub_prompt is untrusted, the kill switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 scope or claim an unexecuted test result."
+      ],
+      "notes": "computation-runtime-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from activating graph versions, executing evaluations or widening the operator allowlist, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases evaluate the same derivation DAG through on_write, on_query and batch and compare value, inputs used and graph version, as unit and integration matrices.",
+        "Planned negatives prove free JavaScript or SQL, and an operator outside the operator allowlist, are refused at load time.",
+        "Planned negatives prove a cycle is detected before evaluation and that a cross-tenant input reference is refused.",
+        "Planned determinism cases replay pricing, tax, BOM explosion and payroll graphs cold and memoized and require identical results as reproducible evidence.",
+        "No result may be recorded before a real human-approved run exists; a planned matrix is never counted as a passing test."
+      ],
+      "notes": "computation-runtime-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract testing kapsamı. Kapsa: trigger-parity positives, load-time rejection negatives, cycle and cross-tenant negatives, cold-versus-memoized determinism evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A03 injection is modeled by excluding free JavaScript or SQL and admitting only the operator allowlist, with strict doğrulama of every graph node before load.",
+        "OWASP A01 broken access control is modeled by binding each evaluation and each memoization key to one tenant, so a cross-tenant read cannot occur.",
+        "OWASP A04 insecure design is modeled by declaring determinism, cycle detection and cost bounds up front, so an expensive graph cannot become a denial-of-service vector."
+      ],
+      "notes": "computation-runtime-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract owasp kapsamı. Kapsa: A03 via allowlist and load-time validation, A01 via tenant-bound evaluation and caching, A04 via determinism, cycle detection and cost bounds. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-computation with contributionKind specification, targetProviderIds [k-computation] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so an evaluation touches no kernel internal, no kernel database and no cross-context write path; a recomputation need arrives as an olay instead.",
+        "This schedule is only a planning window; predecessor archetype-computation-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly archetype-computation-contract, and the parent-only k-schema bağımlılık edge and its related list are not inherited.",
+        "Scope stays inside the execution layer: a validation rule is not a derivation, ECA automation is separate and graph declaration ownership stays with archetype-computation-contract."
+      ],
+      "notes": "computation-runtime-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-computation to k-computation, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir a derived value through this engine and may not re-implement the same arithmetic locally or reach a doğrudan tablo for the inputs.",
+        "A consumer must carry the graph version alongside a stored derived value, so a later audit can tell which composition produced the figure.",
+        "Declaring the graph belongs to archetype-computation-contract and deciding admissibility belongs to the validation authority; this contract executes only."
+      ],
+      "notes": "computation-runtime-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract moduleUsage kapsamı. Kapsa: engine-mediated derived values without local arithmetic or direct table reads, graph version carried with stored values, excluded declaration and validation authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A derived value such as a payroll figure exposes PII indirectly, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "A memoized intermediate inherits the shortest saklama süresi among its inputs, and erasing a source input must invalidate every cached intermediate that depends on it.",
+        "Graph versions and evaluation records are retained append-only so a historical money figure stays explainable, and stored derivations evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "computation-runtime-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract dataLifecycle kapsamı. Kapsa: indirect PII in derived values, cache retention bounded by inputs with erasure-driven invalidation, append-only version history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include evaluation latency percentiles by trigger, memoization hit ratio, load-time rejection counts by rule and cost-bound breach counts on tenant-safe labels.",
+        "Structured log and trace records carry the graph id, graph version and trigger kind; input values and derived money figures are redacted and never become metric labels.",
+        "Alerts cover a determinism mismatch between a cold and a memoized evaluation, a rejection spike after a graph change and repeated cost-bound breaches; thresholds and the runbook require human approval."
+      ],
+      "notes": "computation-runtime-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract observability kapsamı. Kapsa: evaluation and memoization SLIs, redacted graph-scoped traces, determinism-mismatch and cost-bound alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unresolvable input or a cost-bound breach mid-evaluation; the engine degrades to an explicit refusal with the prior value intact, never to a silent partial result.",
+        "Recomputation is idempotent by construction: the same inputs at the same graph version return the same value, so a retry with bounded backoff cannot drift the figure.",
+        "A repeatedly failing batch evaluation is routed to a dead-letter path for human review rather than retried forever, and a circuit breaker protects the shared evaluator."
+      ],
+      "notes": "computation-runtime-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Computation Runtime Contract reliability kapsamı. Kapsa: explicit refusal on unresolvable input or cost breach, idempotent recomputation with bounded retry, dead-letter routing and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "activate-graph-version",
+      "widen-operator-allowlist"
+    ],
+    "stepUp": [
+      "activate-graph-version",
+      "widen-operator-allowlist",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "financeModelRef": "finance-money-model"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "computation-runtime-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:computation-runtime-contract:kernel-public-contract",
+      "planned-test:computation-runtime-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-computation",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-computation"
+    ]
+  }
+}

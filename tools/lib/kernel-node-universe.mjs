@@ -1,4 +1,36 @@
 import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// The effective-authority chain is the single source of the D01 authorityBoundary; this module
+// never keeps a local copy of it. The import stays dynamic only so that deliberately partial tool
+// sandboxes (reindex/materializer fixtures copying this file alone into a bare temp root) can
+// still resolve. A complete Actionplan checkout is identified by BOTH canonical root markers and
+// there the chain is mandatory: an absent or throwing chain fails closed, never silently skipped.
+const ACTIONPLAN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const COMPLETE_CHECKOUT_MARKERS = ["AGENTS.md", "package.json"];
+export const D01_EFFECTIVE_AUTHORITY_CHAIN_REF =
+  "reports/kernel-effective-authority-chain-2026-07-31.json";
+const CHAIN_MISSING = `effective-authority-chain-missing:${D01_EFFECTIVE_AUTHORITY_CHAIN_REF}`;
+const isCompleteCheckout = () =>
+  COMPLETE_CHECKOUT_MARKERS.every((marker) => fs.existsSync(path.join(ACTIONPLAN_ROOT, marker)));
+
+let authorityChain = null;
+try {
+  authorityChain = await import("./kernel-effective-authority-chain.mjs");
+} catch {
+  authorityChain = null;
+}
+
+const resolveEffectiveAuthority = () => {
+  if (!authorityChain) return null;
+  try {
+    return authorityChain.effectiveD01Authority();
+  } catch {
+    return null;
+  }
+};
 
 export const PRE_D01_SOURCE_COMMIT = "09f0a1fb52d4141092add22a54df1a6204c155a4";
 export const PRE_D01_EXPECTED_NODE_COUNT = 617;
@@ -13,24 +45,10 @@ export const D01_APPROVED_ID_SET_SHA256 =
 export const D01_NORMALIZED_SELECTION_SHA256 =
   "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6";
 
-const AUTHORITY_BOUNDARY = {
-  actionplanWriter: "codex-governance-only",
-  kernelWriter: "claude-only-fail-closed",
-  claudeAuthGate: {
-    loggedIn: true,
-    authMethod: "claude.ai",
-    apiProvider: "firstParty",
-    subscriptionType: "max",
-    perInvocation: true,
-    cachedEvidenceAllowed: false,
-  },
-  platformProductWriter: "human-developer-only",
-  gitExecutor: "codex",
-  codeStartAllowed: false,
-  runtimeCodeAllowed: false,
-  releaseAllowed: false,
-  deployAllowed: false,
-  verdict: "NO-GO",
+export const resolveD01AuthorityBoundary = () => {
+  const effective = resolveEffectiveAuthority();
+  if (!effective) throw new Error(CHAIN_MISSING);
+  return effective.boundary;
 };
 
 const sha256 = (bytes) => createHash("sha256").update(bytes, "utf8").digest("hex");
@@ -141,6 +159,15 @@ export function validateKernelNodeUniverse({ records = [], handoff = {} }) {
   if (approval.authority !== "user-admin") errors.push("approval-authority-drift");
   if (approval.normalizedSelectionSha256 !== D01_NORMALIZED_SELECTION_SHA256)
     errors.push("approval-normalized-selection-digest-drift");
+  const binding = provenance.effectiveAuthority ?? {};
+  if (authorityChain) {
+    if (binding.ref !== authorityChain.EFFECTIVE_AUTHORITY_CHAIN_REF)
+      errors.push("effective-authority-ref-drift");
+    if (binding.normalizedTextSha256 !== authorityChain.EPOCH02_TEXT_SHA256)
+      errors.push("effective-authority-text-digest-drift");
+    if (D01_EFFECTIVE_AUTHORITY_CHAIN_REF !== authorityChain.EFFECTIVE_AUTHORITY_CHAIN_REF)
+      errors.push("effective-authority-ref-constant-drift");
+  }
 
   for (const row of ledger) {
     const id = String(row?.selectedDescendantId ?? "");
@@ -183,7 +210,17 @@ export function validateKernelNodeUniverse({ records = [], handoff = {} }) {
     errors.push("application-status-root-drift");
   if (handoff.gapClosed !== false) errors.push("gap-closed-drift");
   const boundary = handoff.authorityBoundary ?? {};
-  if (!exactObject(boundary, AUTHORITY_BOUNDARY)) errors.push("authority-boundary-drift");
+  const effective = resolveEffectiveAuthority();
+  if (effective) {
+    if (!exactObject(boundary, effective.boundary)) errors.push("authority-boundary-drift");
+    if (binding.seq !== effective.seq) errors.push("effective-authority-seq-drift");
+    if (binding.chainHeadSha256 !== effective.chainHeadSha256)
+      errors.push("effective-authority-chain-head-drift");
+  } else if (isCompleteCheckout()) {
+    // Complete checkout without a resolvable chain: fail closed, never bypass.
+    errors.push(CHAIN_MISSING);
+    errors.push("authority-boundary-drift");
+  }
 
   return {
     errors: uniqueSorted(errors),

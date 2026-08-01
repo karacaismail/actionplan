@@ -48,6 +48,12 @@ const registry = JSON.parse(
   exactMergePairs: Array<{ canonicalId: string; legacyId: string }>;
 };
 
+// The live D01 ledger is fully applied (33/33/0). The fixture deliberately withdraws this already
+// applied row so an approved-but-not-applied (stale) target exists again, and re-materializes the
+// row below from a stripped node. Live ledger, node set and registries stay untouched.
+const WITHDRAWN_APPLIED_DESCENDANT_ID = "worker-job-execution-contract";
+const MATERIALIZED_APPLIED_DESCENDANT_ID = "ops-control-plane-contract";
+
 const readNode = (id: string) =>
   JSON.parse(fs.readFileSync(path.join(nodeDir, `${id}.json`), "utf8")) as Record<string, unknown>;
 
@@ -84,21 +90,24 @@ describe("enterprise SDK app/module catalog materialization", () => {
       copy(launcherRef);
       const handoffRef = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
       const fixtureHandoff = readFixture(handoffRef);
-      const row = fixtureHandoff.ledger.find(
-        (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
+      const staleRow = fixtureHandoff.ledger.find(
+        (candidate: { selectedDescendantId: string }) =>
+          candidate.selectedDescendantId === WITHDRAWN_APPLIED_DESCENDANT_ID,
       );
-      const nextApplied = fixtureHandoff.applicationSummary.applied + 1;
-      const nextRemaining = fixtureHandoff.applicationSummary.remaining - 1;
-      row.applicationStatus = "applied";
+      const row = fixtureHandoff.ledger.find(
+        (candidate: { selectedDescendantId: string }) =>
+          candidate.selectedDescendantId === MATERIALIZED_APPLIED_DESCENDANT_ID,
+      );
+      staleRow.applicationStatus = "pending";
+      const nextApplied = fixtureHandoff.applicationSummary.applied - 1;
+      const nextRemaining = fixtureHandoff.applicationSummary.remaining + 1;
       fixtureHandoff.applicationSummary = {
         approved: 33,
         applied: nextApplied,
         remaining: nextRemaining,
       };
       writeFixture(handoffRef, fixtureHandoff);
-      const staleRow = fixtureHandoff.ledger.find(
-        (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
-      );
+      fs.rmSync(fixturePath(`src/data/generated/nodes/${staleRow.selectedDescendantId}.json`));
       const fixtureAppRegistry = readFixture("src/data/app-catalog-decisions.json");
       // biome-ignore format: the seeded stale row is an exact pending delivery-task decision.
       fixtureAppRegistry.entries[staleRow.selectedDescendantId] = { profile: "delivery-task", canonicalId: staleRow.selectedDescendantId, canonicalSlug: staleRow.selectedDescendantId, aliases: [] };
@@ -146,9 +155,11 @@ describe("enterprise SDK app/module catalog materialization", () => {
         fixtureHandoff.measurement.preD01Baseline.expectedNodeCount + nextApplied;
       const nextNodeSetSha256 = nodeIdSetSha256(ids);
       expect(ids).toHaveLength(nextExpectedNodeCount);
+      expect(ids).not.toContain(staleRow.selectedDescendantId);
       expect(Object.keys(appEntries).sort()).toEqual(ids);
       expect(Object.keys(kernelEntries).sort()).toEqual(ids);
       expect(appEntries[staleRow.selectedDescendantId]).toBeUndefined();
+      expect(kernelEntries[staleRow.selectedDescendantId]).toBeUndefined();
       expect(appEntries[childId].profile).toBe("delivery-task");
       expect(appRegistry.materializedSnapshot.expectedNodeCount).toBe(nextExpectedNodeCount);
       // biome-ignore format: both registry snapshots must pin the exact synthetic next-applied set.
@@ -158,7 +169,7 @@ describe("enterprise SDK app/module catalog materialization", () => {
       // biome-ignore format: only contributor grows over the immutable pre-D01 role baseline.
       expect(roles).toEqual(expectedKernelRoleCounts(nextApplied));
       // biome-ignore format: the complete fail-closed child registry contract stays one assertion.
-      expect(kernelEntries[childId]).toMatchObject({ role: "contributor", areaId: "k-archetype-fieldtypes", contributionKind: "specification", targetProviderIds: ["k-party"], runtimeProviderClaimAllowed: false, publicBoundary: { directKernelInternalsAllowed: false, directKernelDatabaseAccessAllowed: false, crossContextWritesAllowed: false } });
+      expect(kernelEntries[childId]).toMatchObject({ role: "contributor", areaId: "k-control-planes", contributionKind: "specification", targetProviderIds: ["k-control-planes"], runtimeProviderClaimAllowed: false, publicBoundary: { directKernelInternalsAllowed: false, directKernelDatabaseAccessAllowed: false, crossContextWritesAllowed: false } });
       expect(materializedChild.artifactKind).toBe("delivery-task");
       expect(materializedChild.deliveryContext.applicability).toBe("not-applicable");
       expect(materializedChild.kernelIntegration).toEqual(kernelEntries[childId]);

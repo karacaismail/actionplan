@@ -2,9 +2,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  EFFECTIVE_AUTHORITY_CHAIN_REF,
+  validateKernelEffectiveAuthorityChain,
+} from "../lib/kernel-effective-authority-chain.mjs";
 import { validateKernelGovernance } from "../lib/kernel-governance-audit.mjs";
 import { validateKernelGovernanceAuthorization } from "../lib/kernel-governance-authorization-audit.mjs";
-import { validateKernelNodeUniverse } from "../lib/kernel-node-universe.mjs";
+import {
+  resolveD01AuthorityBoundary,
+  validateKernelNodeUniverse,
+} from "../lib/kernel-node-universe.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const readJson = (relative) => JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
@@ -31,9 +38,23 @@ const pack = fs.readFileSync(
   "utf8",
 );
 const scripts = readJson("package.json").scripts;
+const chainPath = path.join(ROOT, EFFECTIVE_AUTHORITY_CHAIN_REF);
+const chain = fs.existsSync(chainPath) ? readJson(EFFECTIVE_AUTHORITY_CHAIN_REF) : null;
+let universeBoundary;
+try {
+  universeBoundary = resolveD01AuthorityBoundary();
+} catch {
+  universeBoundary = undefined;
+}
 const errors = [
   ...validateKernelGovernance({ nodes, queue, report, artifacts }),
   ...validateKernelGovernanceAuthorization({ authority, registry, pack, scripts }),
+  ...validateKernelEffectiveAuthorityChain({
+    chain,
+    closure: authority,
+    handoff,
+    universeBoundary,
+  }),
   ...validateKernelNodeUniverse({ records: nodeRecords, handoff }).errors,
 ];
 

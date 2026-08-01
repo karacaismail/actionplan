@@ -1,0 +1,757 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "mode-profile-composition-contract",
+  "wbsCode": "36.13.1",
+  "level": "archetype",
+  "title": "Mode Profile Composition Contract",
+  "slug": "mode-profile-composition-contract",
+  "aliases": [],
+  "summary": "Compose B2B, B2C, C2C, D2C and B4B capability and policy profiles with safe transitions; editions stay separate.",
+  "parentId": "k-mode",
+  "order": 1,
+  "icon": "ph-sliders-horizontal",
+  "tags": [
+    "mode-profile",
+    "composition",
+    "capability",
+    "policy",
+    "transition",
+    "rollback",
+    "tenant",
+    "archetype"
+  ],
+  "dependsOn": [
+    "archetype-mode-profile-contract",
+    "party-role-context-contract",
+    "policy-decision-point-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "mode profile composition binds an active capability set plus the pricing, checkout, tax and permission decisions that a business model implies into one tenant and channel scoped profile.",
+        "The supported business models are B2B, B2C, C2C, D2C and B4B, and a tenant may run more than one of them on separate channels without cloning its data.",
+        "Composition is a versioned composition: a profile carries a version, and a transition moves a tenant and channel from one pinned version to another rather than mutating in place.",
+        "The transition chain is preview, dry-run, validate, publish and rollback; publish is reachable only after validate succeeds and rollback returns to the previously published version.",
+        "live data preservation is invariant across every transition: switching a mode changes capability flags and decisions, never the tenant's stored records.",
+        "ArcheType-scoped mode profile ownership stays with archetype-mode-profile-contract; this contract composes tenant and channel level profiles from what that contract defines.",
+        "capability catalog definition is excluded, authorization decision is excluded and editions and packaging are excluded; each is named without asserting that it is decided here.",
+        "[DOC-APPLY:task-handoff] Mode Profile Composition Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Mode Profile Composition Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices compose a profile per business model and assert that the resulting active capability set is exactly the declared one for each of B2B, B2C, C2C, D2C and B4B.",
+        "Planned negatives prove publish without a successful validate is refused, and that a preview or dry-run never mutates a live tenant profile.",
+        "Planned negatives prove rollback restores the previously published version exactly, and that live data preservation holds across a forward transition followed by a rollback.",
+        "Planned negatives prove tenant isolation: composing a profile for one tenant and channel never changes another tenant's active capability set.",
+        "Planned negatives prove a profile cannot grant a capability that the capability catalog does not define and cannot override an authorization decision returned by the PDP.",
+        "[DOC-APPLY:high-risk-dod] Mode Profile Composition Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Mode Profile Composition Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Mode Profile Composition Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Mode Profile Composition Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] mode-profile-composition-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] mode-profile-composition-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] mode-profile-composition-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The versioned composition record, its tenant and channel scope key and the transition history are specified as typed metadata; no storage, migration or table is produced in Actionplan.",
+        "Profile versions and transitions are append-only so a historical composition stays reconstructable, and stored profiles evolve by expand-contract rather than in-place rewrite."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-04-30; predecessor archetype-mode-profile-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "pricing, checkout and tax execution are excluded: the profile decides which of them apply, and the engines that perform them stay outside this contract.",
+        "[DOC-APPLY:ready-for-dev] Mode Profile Composition Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove a mode transition under concurrent traffic leaves no tenant on a half-composed profile and that the active capability set flips atomically.",
+        "Future tests prove a narrowing transition removes capabilities without destroying the records those capabilities created, preserving live data preservation."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 36.13.1, the three dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Mode Profile Composition Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] mode-profile-composition-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] mode-profile-composition-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Mode Profile Composition Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] mode-profile-composition-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed transition, rollback and data-preservation evidence.",
+        "Rollback removes only D30 data/projections, restores 33/29/4 and the 646-node hash e8df8a0a8bc94ca325a69ddc2fcb9f383ba7fb3f1f3367c93ca1d7ad8ddc3034, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] mode-profile-composition-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Mode Profile Composition Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Mode Profile Composition Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Mode Profile Composition Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Mode Profile Composition Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Mode Profile Composition Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-04-30",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-04-30"
+  },
+  "deliverables": [
+    "Planning-only composition shape: a tenant and channel scoped profile that binds an active capability set and the pricing, checkout, tax and permission decisions a business model implies.",
+    "Planning-only model coverage: B2B, B2C, C2C, D2C and B4B compositions declared explicitly, with more than one model allowed per tenant across separate channels.",
+    "Planning-only transition contract: a versioned composition moved through preview, dry-run, validate, publish and rollback, where publish requires a successful validate.",
+    "Planning-only invariant: live data preservation across every transition, so a mode change alters capability flags and decisions but never the tenant's stored records.",
+    "Planning-only seam statement: ArcheType-scoped mode profile ownership stays with archetype-mode-profile-contract and this contract composes only above it.",
+    "Explicit human approval gate with a fixed boundary: capability catalog definition is excluded, authorization decision is excluded, editions and packaging are excluded and pricing, checkout and tax execution are excluded.",
+    "[DOC-APPLY:high-risk-dod] mode-profile-composition-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Mode Profile Composition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] mode-profile-composition-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] mode-profile-composition-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Mode Profile Composition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Mode Profile Composition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Mode Profile Composition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly mode-profile-composition-contract, WBS 36.13.1, archetype, parent k-mode, owner platform-ekibi, delivery-task and layer0 cluster.",
+    "dependsOn is exactly archetype-mode-profile-contract, party-role-context-contract and policy-decision-point-contract in that order; blocks and related are empty and the parent-only k-capability edge and the parent related list are not inherited.",
+    "mode profile composition produces a tenant and channel scoped profile carrying the active capability set for the selected business model.",
+    "B2B, B2C, C2C, D2C and B4B are each composable, and a tenant may run more than one across separate channels without duplicating its records.",
+    "Every profile is a versioned composition: a transition pins a new version rather than editing a published one in place.",
+    "The transition chain is preview, dry-run, validate, publish and rollback, and publish is unreachable until validate has succeeded.",
+    "rollback restores the previously published version exactly, including the active capability set it carried.",
+    "live data preservation holds across every transition: a mode change alters capability flags and decisions and never destroys or rewrites tenant records.",
+    "tenant isolation holds: composing or transitioning a profile for one tenant and channel cannot change another tenant's active profile.",
+    "ArcheType-scoped mode profile ownership stays with archetype-mode-profile-contract, and this contract never redefines what that contract declares.",
+    "capability catalog definition is excluded: a profile may activate only capabilities the catalog already defines and can never invent one.",
+    "authorization decision is excluded: the PDP remains the deciding authority and a profile is one input to that decision rather than a substitute for it.",
+    "editions and packaging are excluded, and pricing, checkout and tax execution are excluded; the profile selects which apply and never performs them.",
+    "human approval is mandatory before any publish or rollback is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-mode: 2026-07-01 through 2028-04-30 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor archetype-mode-profile-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Mode Profile Composition Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] mode-profile-composition-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] mode-profile-composition-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Mode Profile Composition Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Mode Profile Composition Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] mode-profile-composition-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Mode Profile Composition Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] mode-profile-composition-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Mode Profile Composition Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-mpc-data-destroying-transition",
+      "desc": "A mode transition implemented as a reconfiguration rather than a versioned composition could drop the records created under the previous capability set, which is unrecoverable for a live tenant.",
+      "severity": "critical",
+      "mitigation": "Pin every profile as a version, require validate before publish and prove live data preservation across a forward transition followed by a rollback."
+    },
+    {
+      "id": "r-mpc-capability-invention",
+      "desc": "Allowing a profile to declare a capability the catalog does not define would create an ungoverned permission surface that no authorization decision can evaluate.",
+      "severity": "critical",
+      "mitigation": "Keep capability catalog definition excluded, admit only catalog-defined ids into a composition and refuse an unknown capability id fail-closed."
+    },
+    {
+      "id": "r-mpc-authority-overlap",
+      "desc": "A composed profile could be misread as deciding access, duplicating the PDP and producing two conflicting answers for the same request.",
+      "severity": "high",
+      "mitigation": "State that authorization decision is excluded, treat the profile as one input to the PDP and prove a profile cannot override a returned decision."
+    },
+    {
+      "id": "r-mpc-edition-drift",
+      "desc": "Composition could drift into commercial packaging and start acting as an edition or pricing engine, duplicating an authority that lives outside the kernel.",
+      "severity": "high",
+      "mitigation": "Keep editions and packaging excluded and pricing, checkout and tax execution excluded, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove mode-profile-composition-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/29/4, 646 nodes, contributor 150 and node-set hash e8df8a0a8bc94ca325a69ddc2fcb9f383ba7fb3f1f3367c93ca1d7ad8ddc3034; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-mode-profile-composition-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "mode-profile-composition-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-mode-profile-composition-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "mode-profile-composition-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-mode-profile-composition-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "mode-profile-composition-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-mode-profile-composition-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "mode-profile-composition-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-mode-profile-composition-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "mode-profile-composition-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "mode profile composition sağlar a tenant and channel scoped profile that binds an active capability set to the business model a tenant actually runs.",
+        "Girdi is a selected business model among B2B, B2C, C2C, D2C and B4B plus the tenant and channel scope; çıktı is a versioned composition carrying the active capability set and the decisions it implies.",
+        "The transition chain is preview, dry-run, validate, publish and rollback, and publish is unreachable until validate has succeeded.",
+        "live data preservation is invariant: a transition changes capability flags and decisions and never destroys or rewrites tenant records, and tenant isolation holds throughout.",
+        "Kapsam sınırı gereği capability catalog definition is excluded, authorization decision is excluded, editions and packaging are excluded and pricing, checkout and tax execution are excluded."
+      ],
+      "notes": "mode-profile-composition-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract featureDefs kapsamı. Kapsa: tenant and channel scoped composition, the five business models, versioned transitions through preview, dry-run, validate, publish and rollback, live data preservation. Exclude capability catalog definition, authorization decision, editions and packaging, pricing, checkout and tax execution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "A composition changes yetki surface, so tenant isolation is the primary control: a profile transition for one tenant and channel can never widen another tenant's active capability set.",
+        "capability catalog definition is excluded, so a profile may activate only catalog-defined capability ids and an unknown id is refused fail-closed rather than created.",
+        "authorization decision is excluded: the PDP stays the deciding authority, the profile is one input, and a composition can never override a returned deny.",
+        "Publish and rollback are privileged transitions guarded by explicit approval, and each leaves an append-only denetim izi carrying tenant, channel, previous version and new version.",
+        "A preview or dry-run runs against an isolated evaluation copy, so inspecting a candidate profile cannot leak or alter the live active capability set."
+      ],
+      "notes": "mode-profile-composition-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract security kapsamı. Kapsa: tenant isolation across transitions, catalog-only capability activation, PDP as the deciding authority, approval-gated publish and rollback with append-only audit, isolated preview evaluation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one tipli composition katman so the five business models cannot develop divergent transition rules per model.",
+        "Composition and validation stay pure functions with low karmaşıklık, evaluated against a candidate version without touching the published one.",
+        "Ölü kod and speculative per-model branches are refused, the short-code bütçe is respected, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] mode-profile-composition-contract: mode-profile-composition-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] mode-profile-composition-contract: Mode Profile Composition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] mode-profile-composition-contract: mode-profile-composition-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] mode-profile-composition-contract: mode-profile-composition-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] mode-profile-composition-contract: Mode Profile Composition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] mode-profile-composition-contract: Mode Profile Composition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] mode-profile-composition-contract: Mode Profile Composition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "mode-profile-composition-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract codeOptimization kapsamı. Kapsa: one typed composition layer, pure low-complexity composition and validation, candidate versus published separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- mode-profile-composition-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Mode Profile Composition Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- mode-profile-composition-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Mode Profile Composition Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- mode-profile-composition-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Mode Profile Composition Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- mode-profile-composition-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Mode Profile Composition Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- mode-profile-composition-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- mode-profile-composition-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Mode Profile Composition Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- mode-profile-composition-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Mode Profile Composition Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Mode Profile Composition Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Mode Profile Composition Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: mode-profile-composition-contract — Mode Profile Composition Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Mode Profile Composition Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "En az ayrıcalık applies to transitions: composing a candidate is a lower privilege than publishing it, and rollback authority is granted separately from publish authority.",
+        "The composable model set is an allowlist of B2B, B2C, C2C, D2C and B4B, so an unknown model string is refused rather than treated as a permissive default.",
+        "The activation yüzey stays kapalı: a profile can only narrow or widen within the capability catalog, and no transition path can reach an editions or pricing authority.",
+        "Publish rate is bounded per tenant and channel so a transition loop cannot be used to churn the active capability set or mask an unauthorized widening."
+      ],
+      "notes": "mode-profile-composition-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract securityOptimization kapsamı. Kapsa: separated compose, publish and rollback privileges, allowlisted business models, closed activation surface within the catalog, bounded publish rate. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for resolving the active capability set on the request path and a separate budget for a full validate pass before publish; no measurement is claimed here.",
+        "The published composition is read through a bounded önbellek keyed by tenant, channel and version and invalidated on publish or rollback, so resolution is not recomputed per request.",
+        "Validation must avoid N+1 access: the candidate profile is checked against the capability catalog in one pass rather than once per capability."
+      ],
+      "notes": "mode-profile-composition-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract performance kapsamı. Kapsa: p95 budgets for capability-set resolution and full validate, version-keyed cache invalidated on publish and rollback, single-pass catalog validation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client resolves the same active capability set as the web surface for its tenant and channel; a cihaz may not cache a profile past a publish or rollback.",
+        "An offline client shows the last resolved profile version as stale and refuses to queue a transition for later replay, since publish requires a live validate.",
+        "No mobile-only mode or capability is introduced here; rendering a composed profile stays a separate consumer responsibility."
+      ],
+      "notes": "mode-profile-composition-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract mobileApps kapsamı. Kapsa: identical capability-set resolution on mobile, no caching past a transition, stale offline display without queued transitions, no mobile-only mode. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future transition surface must convey the difference between a preview, a validated candidate and a published profile through text rather than colour alone, at the WCAG AAA kontrast threshold with a visible odak ring.",
+        "A validate failure or a rollback must be announced through an aria live region naming the version and the outcome, so a klavye-only operator is never left guessing.",
+        "This contract defines composition semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "mode-profile-composition-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract wcag kapsamı. Kapsa: non-colour-only distinction between preview, candidate and published at AAA contrast, announced validate failures and rollbacks, keyboard-first operation, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; the hosting topology and container dağıtım of any composition service remain human-developer work behind ops-plane authority.",
+        "Publishing a new profile version is a data-level change behind human approval and must not require a redeploy; rollback returns to the previous version without touching tenant data.",
+        "Reverting this composition shard changes the planning contract and the projections derived from it, never a live tenant profile, so runtimeDataImpact stays none and NO-GO remains in force."
+      ],
+      "notes": "mode-profile-composition-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract deployment kapsamı. Kapsa: no release or deploy here, hosting owned by the ops plane, data-level publish without redeploy, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A publish or rollback olay may be announced so consumers refresh their resolved capability set, but this contract never performs a business action on the tenant's behalf.",
+        "A reaction chain raised from a transition olay stops at maxChainDepth 6, so a publish cannot cascade into an unbounded revalidation storm.",
+        "Re-delivering the same transition olay must be idempotent, and every publish or rollback requires an explicit onay before it takes effect."
+      ],
+      "notes": "mode-profile-composition-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract eca kapsamı. Kapsa: transition events without acting for the tenant, depth-bounded reaction chains, idempotent replay and approval-gated publish and rollback. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay yasak.",
+        "AI cannot publish a profile version, cannot roll one back and cannot widen an active capability set; each of those needs insan onayı with a step-up review.",
+        "Any tenant-supplied payload reaching the lane as sub_prompt is güvenilmez, the kill-switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 sınır or claim an unexecuted test result."
+      ],
+      "notes": "mode-profile-composition-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from publishing, rolling back or widening a capability set, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases compose one profile per business model and assert the resulting active capability set matches the declaration, as birim and entegrasyon matrices.",
+        "Planned negatif cases prove publish without a successful validate is refused and that a preview or dry-run never mutates a live profile.",
+        "Planned negatif cases prove rollback restores the previously published version exactly and that live data preservation holds across a forward transition followed by a rollback.",
+        "Planned negatif cases prove a profile cannot activate an undefined capability and cannot override an authorization decision returned by the PDP.",
+        "Composition results are recordable only from a human-approved run that truly executed, so the planned matrices here are never counted as passing tests."
+      ],
+      "notes": "mode-profile-composition-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract testing kapsamı. Kapsa: per-model composition positives, validate-before-publish negatives, rollback and data-preservation negatives, undefined-capability and PDP-override negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is the defining axis: a composition changes what a tenant may do, so an unauthorized transition is an access control failure rather than a configuration error.",
+        "OWASP A04 insecure design is modeled by requiring validate before publish and by keeping capability activation inside the catalog, so no transition path can invent a permission.",
+        "OWASP A08 software and data integrity failures is modeled by versioned compositions and append-only transition history, so a published profile cannot be silently rewritten.",
+        "Girdi doğrulama applies to the composition request: the business model, tenant, channel and capability ids are validated against allowlists before a candidate is built, and every transition leaves a denetim izi."
+      ],
+      "notes": "mode-profile-composition-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract owasp kapsamı. Kapsa: A01 via transition authorization, A04 via validate-before-publish and catalog-bound activation, A08 via versioning and append-only history, allowlist input validation with audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-mode-profile with contributionKind specification, targetProviderIds [k-mode] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a composition touches no kernel internal, no kernel database and no cross-context write path; a transition is announced as an olay instead.",
+        "This schedule is only a planning window; predecessor archetype-mode-profile-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "Bağımlılık yönü stays exactly archetype-mode-profile-contract, party-role-context-contract and policy-decision-point-contract, and the parent-only k-capability edge and the parent related list are not inherited.",
+        "Scope stays inside the composition sözleşme: capability catalog definition, authorization decision, editions and packaging and pricing, checkout and tax execution all stay outside."
+      ],
+      "notes": "mode-profile-composition-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-mode-profile to provider k-mode, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir the active capability set through this contract and may not reach a doğrudan tablo for profile or capability rows.",
+        "A consumer must carry the resolved profile version with any cached decision, so a stale capability set cannot outlive the publish that replaced it.",
+        "Owning the capability catalog, the authorization decision and the commercial edition belongs elsewhere; this sözleşme composes and never defines them."
+      ],
+      "notes": "mode-profile-composition-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract moduleUsage kapsamı. Kapsa: contract-mediated capability-set consumption without direct table reads, profile version carried with cached decisions, externally owned catalog, authorization and editions. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A composition names the tenant and the operator who published it, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir for the operator identity carried in the transition history.",
+        "The transition history has its own saklama süresi, separate from the tenant business data it governs, because a rolled-back profile must still leave a defensible record of what was active when.",
+        "Profile versions and transitions are retained append-only so a historical capability state stays explainable, and stored profiles evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "mode-profile-composition-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract dataLifecycle kapsamı. Kapsa: operator identity PII in transition history with KVKK/GDPR classification and DSAR path, a separate transition-history retention window, append-only versions and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrik set includes capability-set resolution latency, validate failure rate, publish and rollback counts and time spent on a candidate version, on tenant-safe labels.",
+        "Structured log and trace records carry the tenant class, channel, previous version and new version; operator names and record contents are redacted and never become metric labels.",
+        "Alarm coverage includes a rollback spike, a validate failure surge after a catalog change and a tenant stuck on a candidate version; thresholds and the runbook require human approval."
+      ],
+      "notes": "mode-profile-composition-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract observability kapsamı. Kapsa: resolution latency and validate failure SLIs, redacted version-scoped traces, rollback and stuck-candidate alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The dominant failure mode is a partially applied transition; the previously published version stays authoritative until publish completes, so a tenant is never left on a half-composed profile.",
+        "Publish and rollback are idempotent by construction: replaying the same transition for the same tenant, channel and target version yields the same published state under a bounded retry with backoff.",
+        "A repeatedly failing transition is routed to a dead-letter path for human review rather than blocking the tenant's queue, and a circuit breaker protects the shared composition path."
+      ],
+      "notes": "mode-profile-composition-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Mode Profile Composition Contract reliability kapsamı. Kapsa: authoritative previous version during transition, idempotent publish and rollback with bounded retry, dead-letter routing without head-of-line blocking and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "publish-mode-profile",
+      "rollback-mode-profile",
+      "widen-capability-set"
+    ],
+    "stepUp": [
+      "publish-mode-profile",
+      "rollback-mode-profile",
+      "widen-capability-set",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "financeModelRef": "finance-money-model"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "mode-profile-composition-contract",
+    "granularity": "archetype",
+    "cluster": "layer0"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:mode-profile-composition-contract:kernel-public-contract",
+      "planned-test:mode-profile-composition-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-mode-profile",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-mode"
+    ]
+  }
+}

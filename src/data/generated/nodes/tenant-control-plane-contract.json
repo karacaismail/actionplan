@@ -1,0 +1,755 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "tenant-control-plane-contract",
+  "wbsCode": "12.3.3.1",
+  "level": "archetype",
+  "title": "Tenant Control Plane Contract",
+  "slug": "tenant-control-plane-contract",
+  "aliases": [],
+  "summary": "Project tenant-isolated administration under user, capability and plan intersection; cross-tenant access remains denied.",
+  "parentId": "k-boyut3-tenant-panel",
+  "order": 1,
+  "icon": "ph-buildings",
+  "tags": [
+    "control-plane",
+    "tenant",
+    "TenantContext",
+    "capability",
+    "plan",
+    "isolation",
+    "default-deny",
+    "archetype"
+  ],
+  "dependsOn": [
+    "control-plane-taxonomy-contract",
+    "agent-tool-execution-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 13,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The tenant control plane is the surface on which a SaaS customer administers its own business, and every request on it is bound to exactly one trusted TenantContext that the plane may never widen.",
+        "Effective authority is an intersection over user ∩ capability ∩ plan; effective authority is an intersection rather than a union, so no leg can grant what another leg withholds.",
+        "A missing, unknown or malformed leg resolves to deny rather than being skipped, which keeps the plane default-deny under partial context.",
+        "A context-absent request returns zero rows instead of an unscoped result set, so an unbound query can never leak a neighbouring tenant's data.",
+        "cross-tenant read and write are denied and the denial reason discloses nothing about the neighbouring tenant, not even whether the resource exists.",
+        "The plane is a projection and is not a security boundary by itself: every decision is still evaluated by the PDP, and control-plane-taxonomy-contract owns the plane vocabulary this contract consumes.",
+        "plan entitlement is consumed, not owned: the plane reads an entitlement input and never becomes a plan or billing engine.",
+        "[DOC-APPLY:task-handoff] Tenant Control Plane Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Tenant Control Plane Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices prove a tenant administrator reading and writing inside its own TenantContext succeeds when all three intersection legs are present.",
+        "Planned negatives prove a tenant A actor reading or writing a tenant B resource is denied and that the denial reason discloses nothing about the neighbouring tenant.",
+        "Planned negatives prove a context-absent request returns zero rows rather than an unscoped set, and that a user leg without a capability leg or without a plan leg still resolves to deny.",
+        "Planned negatives prove developer-plane structural mutation is excluded and ops-plane hosting action is excluded by plane, before any capability check is reached.",
+        "Planned negatives prove an agent tool call originating on this plane cannot exceed the invoking user's intersection, since agent-tool-execution-contract binds the caller's effective set.",
+        "[DOC-APPLY:high-risk-dod] Tenant Control Plane Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Tenant Control Plane Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Tenant Control Plane Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Tenant Control Plane Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] tenant-control-plane-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] tenant-control-plane-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] tenant-control-plane-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "TenantContext, the capability leg and the consumed plan entitlement leg are specified as typed metadata for the human developer; no storage, migration or table is produced in Actionplan.",
+        "Every administrative decision on the plane leaves an append-only audit record carrying tenant, actor, action and the deciding policy reference, evolved by expand-contract only."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2028-05-21 to 2028-06-09; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "panel implementation, surface schema ownership, identity/authentication lifecycle and ECA/ruleset automation stay outside this contract and belong to their own authorities.",
+        "[DOC-APPLY:ready-for-dev] Tenant Control Plane Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove tenant isolation holds under an adversarial actor that supplies a forged or widened tenant identifier on every administrative entry point.",
+        "Future tests prove the intersection is evaluated consistently for human and agent callers, and that a plan downgrade narrows the effective set without destroying tenant data."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.3.3.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Tenant Control Plane Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] tenant-control-plane-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] tenant-control-plane-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Tenant Control Plane Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] tenant-control-plane-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed isolation, intersection and denial-reason evidence.",
+        "Rollback removes only D22 data/projections, restores 33/28/5 and the 645-node hash ef56d1e97368fcee223a0caff476d49e12a2221d0ee758976d3b374845de8274, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] tenant-control-plane-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Tenant Control Plane Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Tenant Control Plane Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Tenant Control Plane Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Tenant Control Plane Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Tenant Control Plane Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2028-05-21",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2028-05-21",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only boundary shape: a tenant control plane on which a customer administers only its own business, bound to one trusted TenantContext that the plane never widens.",
+    "Planning-only authority contract: effective authority is an intersection of user ∩ capability ∩ plan, where a missing, unknown or malformed leg resolves to deny rather than being skipped.",
+    "Planning-only isolation contract: cross-tenant read and write are denied, a context-absent request yields zero rows, and the denial reason discloses nothing about the neighbouring tenant.",
+    "Planning-only plane-exclusion contract: developer-plane structural mutation is excluded and ops-plane hosting action is excluded before any capability check, so the plane cannot be widened by permission alone.",
+    "Planning-only delegation contract: an agent tool call raised from this plane is capped by the invoking user's intersection, since agent-tool-execution-contract owns the agent side of that boundary.",
+    "Explicit human approval gate with a fixed boundary: panel implementation, surface schema, identity/authentication lifecycle, policy authoring and storage and ECA/ruleset automation all stay outside.",
+    "[DOC-APPLY:high-risk-dod] tenant-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Tenant Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] tenant-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] tenant-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Tenant Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Tenant Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Tenant Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly tenant-control-plane-contract, WBS 12.3.3.1, archetype, parent k-boyut3-tenant-panel, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly control-plane-taxonomy-contract and agent-tool-execution-contract; blocks and related are empty and the parent-only k-agent-runtime, k-tenancy and adr-0015 edges and the parent related list are not inherited.",
+    "Every request on the tenant control plane is bound to exactly one trusted TenantContext, and the plane never widens that boundary on its own authority.",
+    "effective authority is an intersection over user ∩ capability ∩ plan, evaluated as a narrowing operation rather than an additive one.",
+    "A missing, unknown or malformed leg resolves to deny, never to skip, so partial context can never behave like full authority.",
+    "cross-tenant read and write are denied, and the denial reason discloses nothing about the neighbouring tenant, including its existence.",
+    "A context-absent request returns zero rows rather than an unscoped result set, so an unbound query degrades to empty rather than to global.",
+    "The plane stays default-deny: an action with no matching capability is refused rather than allowed by omission.",
+    "The plane is a projection and is not a security boundary on its own; the PDP remains the deciding authority and this contract only carries the plane context into that decision.",
+    "plan entitlement is consumed, not owned: the plane reads a plan/entitlement input and never becomes a plan engine, a pricing surface or a billing authority.",
+    "developer-plane structural mutation is excluded and ops-plane hosting action is excluded by plane, and both refusals occur before any capability check.",
+    "An agent tool invocation raised from this plane cannot exceed the invoking user's intersection, and agent-tool-execution-contract keeps ownership of the agent-side envelope.",
+    "panel implementation, surface schema, identity/authentication lifecycle, policy authoring and storage and ECA/ruleset automation are excluded and are named without claiming they are decided here.",
+    "human approval is mandatory before any tenant plane behaviour is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-boyut3-tenant-panel: 2028-05-21 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Tenant Control Plane Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] tenant-control-plane-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] tenant-control-plane-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Tenant Control Plane Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Tenant Control Plane Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] tenant-control-plane-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Tenant Control Plane Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] tenant-control-plane-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Tenant Control Plane Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-tcp-cross-tenant-leak",
+      "desc": "A tenant administration surface that resolves an absent or forged context to an unscoped query would expose one customer's records to another, which is the single most damaging failure a SaaS control plane can have.",
+      "severity": "critical",
+      "mitigation": "Bind every request to one TenantContext, return zero rows when the context is absent and prove cross-tenant refusal with a dedicated negative for both read and write."
+    },
+    {
+      "id": "r-tcp-intersection-shortcut",
+      "desc": "Treating the intersection as a union, or skipping an unavailable leg, would silently promote a partially authorized user to full tenant administration.",
+      "severity": "critical",
+      "mitigation": "Define the effective set as a narrowing intersection and resolve any missing, unknown or malformed leg to deny, with a negative per omitted leg."
+    },
+    {
+      "id": "r-tcp-plane-widening",
+      "desc": "A tenant administrator could reach developer-plane structural mutation or an ops-plane hosting action if the plane boundary were enforced only by capability configuration.",
+      "severity": "high",
+      "mitigation": "Refuse both by plane before any capability check so that no permission grant can widen the plane, and keep the taxonomy vocabulary owned by control-plane-taxonomy-contract."
+    },
+    {
+      "id": "r-tcp-plan-engine-drift",
+      "desc": "Consuming a plan entitlement could drift into owning plan definition, pricing or billing inside the tenant plane and duplicate an authority that lives elsewhere.",
+      "severity": "high",
+      "mitigation": "State that plan entitlement is consumed, not owned, keep the entitlement input read-only on this plane and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove tenant-control-plane-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/28/5, 645 nodes, contributor 149 and node-set hash ef56d1e97368fcee223a0caff476d49e12a2221d0ee758976d3b374845de8274; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-tenant-control-plane-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "tenant-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-tenant-control-plane-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "tenant-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-tenant-control-plane-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "tenant-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-tenant-control-plane-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "tenant-control-plane-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-tenant-control-plane-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "tenant-control-plane-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The tenant control plane sağlar a customer-facing administration surface for one tenant only, and every entry point on it is bound to exactly one trusted TenantContext.",
+        "Girdi is an authenticated actor plus a TenantContext, a capability set and a consumed plan entitlement; çıktı is an allow or deny decision carrying the plane, the tenant and the deciding policy reference.",
+        "effective authority is an intersection of user ∩ capability ∩ plan, and a missing, unknown or malformed leg resolves to deny rather than being skipped.",
+        "A context-absent request returns zero rows instead of an unscoped result set, and cross-tenant read and write stay denied under every plane state.",
+        "Kapsam sınırı gereği panel implementation, surface schema, identity/authentication lifecycle, policy authoring and storage and ECA/ruleset automation all stay outside."
+      ],
+      "notes": "tenant-control-plane-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract featureDefs kapsamı. Kapsa: one-tenant administration surface, trusted TenantContext binding, the user ∩ capability ∩ plan intersection, deny on a missing leg, zero rows when context is absent. Exclude panel implementation, surface schema, identity lifecycle, policy authoring and ECA automation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Tenant izolasyon is the primary control: erişim is bound to one TenantContext, and a cross-tenant read or write is denied rather than rescoped.",
+        "The denial reason discloses nothing about the neighbouring tenant, so an attacker cannot use deny messages to enumerate resources that belong to someone else.",
+        "The plane stays default-deny: an action with no matching capability is refused, and a missing, unknown or malformed leg resolves to deny instead of being skipped.",
+        "The plane is not a security boundary on its own; the PDP remains the deciding authority and every administrative decision leaves an append-only denetim izi carrying tenant, actor, action and policy reference.",
+        "An agent tool call raised on this plane inherits the invoking user's intersection and can never exceed it, so delegation cannot become privilege escalation."
+      ],
+      "notes": "tenant-control-plane-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract security kapsamı. Kapsa: one-tenant binding and cross-tenant denial, non-disclosing denial reasons, default-deny under partial context, PDP as decider with append-only audit, capped agent delegation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one tipli intersection katman so the user, capability and plan legs cannot develop divergent evaluation rules across entry points.",
+        "Intersection evaluation stays a pure function with low karmaşıklık, testable without a tenant fixture, and the plane check stays separate from the capability check.",
+        "Ölü kod and speculative per-tenant branches are refused, the short-code bütçe is respected, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] tenant-control-plane-contract: tenant-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] tenant-control-plane-contract: Tenant Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] tenant-control-plane-contract: tenant-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] tenant-control-plane-contract: tenant-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] tenant-control-plane-contract: Tenant Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] tenant-control-plane-contract: Tenant Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] tenant-control-plane-contract: Tenant Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "tenant-control-plane-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract codeOptimization kapsamı. Kapsa: one typed intersection layer, pure low-complexity evaluation, plane check separated from capability check, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- tenant-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Tenant Control Plane Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- tenant-control-plane-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- tenant-control-plane-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Tenant Control Plane Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- tenant-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Tenant Control Plane Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- tenant-control-plane-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- tenant-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Tenant Control Plane Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- tenant-control-plane-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Tenant Control Plane Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: tenant-control-plane-contract — Tenant Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Tenant Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "En az ayrıcalık applies per tenant: a plane credential grants no read into another tenant's data and cannot be widened by configuration alone.",
+        "The administrative yüzey stays kapalı: the accepted action set is an allowlist rather than whatever a caller requests, and an unknown action is refused.",
+        "A tenant-scoped rate-limit bounds administrative calls, so one noisy tenant cannot exhaust shared capacity for the others.",
+        "Plane-crossing attempts toward developer or ops actions are refused before any capability check, so a misconfigured grant never becomes an escalation path."
+      ],
+      "notes": "tenant-control-plane-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract securityOptimization kapsamı. Kapsa: per-tenant least privilege, closed allowlisted action surface, tenant-scoped rate limits, plane-first refusal of cross-plane actions. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for the intersection evaluation on the administrative path and a separate budget for a tenant-scoped list query; no measurement is claimed here.",
+        "The capability and plan legs are read through a bounded önbellek keyed by tenant and invalidated on entitlement change, so the intersection is not recomputed from scratch per row.",
+        "Tenant-scoped listing must avoid N+1 access: the tenant predicate is applied in the query rather than filtered after fetch."
+      ],
+      "notes": "tenant-control-plane-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract performance kapsamı. Kapsa: p95 budgets for intersection evaluation and tenant-scoped listing, tenant-keyed cache with entitlement invalidation, N+1 avoidance through in-query tenant predicates. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client administering a tenant carries the same TenantContext binding as the web surface; a cihaz may not widen the plane or carry a second tenant in one session.",
+        "An offline mobile client shows the last synchronized administrative state as stale and refuses to queue a plane-crossing action for later replay.",
+        "No mobile-only administrative capability is introduced here; rendering the plane stays a separate consumer responsibility."
+      ],
+      "notes": "tenant-control-plane-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract mobileApps kapsamı. Kapsa: identical TenantContext binding on mobile, no second tenant per session, stale offline display without queued plane-crossing actions. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future tenant administration surface must convey a denied action and its reason through text rather than colour alone, at the WCAG AAA kontrast threshold with a visible odak ring.",
+        "A denial must be announced through an aria live region naming the action and the plane, so a klavye-only operator learns the outcome without a visual cue.",
+        "This contract defines plane semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "tenant-control-plane-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract wcag kapsamı. Kapsa: non-colour-only denial conveyance at AAA contrast, announced denials through live regions, keyboard-first operation, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; the hosting topology of any tenant panel and its container dağıtım remain human-developer work behind ops-plane authority.",
+        "Changing a capability or plan mapping is a data-level change behind human approval and must not require a redeploy; rollback returns to the previous mapping without touching tenant data.",
+        "Reverting this plane shard changes the planning contract and the projections derived from it, never a live tenant record, so runtimeDataImpact stays none and NO-GO remains in force."
+      ],
+      "notes": "tenant-control-plane-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract deployment kapsamı. Kapsa: no release or deploy here, hosting owned by the ops plane, data-level mapping changes without redeploy, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "An administrative decision olay may be published for audit and downstream reaction, but this plane never executes a business action on the tenant's behalf.",
+        "A reaction chain raised from a plane olay stops at maxChainDepth 6, so an administrative burst cannot cascade without bound.",
+        "Re-delivering the same administrative olay must be idempotent, and changing a capability or plan mapping always requires an explicit onay; ECA/ruleset automation itself stays outside this contract."
+      ],
+      "notes": "tenant-control-plane-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract eca kapsamı. Kapsa: audit events without acting for the tenant, depth-bounded reaction chains, idempotent replay and approval-gated mapping changes, excluded ruleset automation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay yasak.",
+        "An agent tool call raised on this plane can never exceed the invoking user's intersection, and widening a tenant capability or plan mapping requires insan onayı with a step-up review.",
+        "Any tenant-supplied payload reaching the lane as sub_prompt is güvenilmez, the kill-switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 sınır or claim an unexecuted test result."
+      ],
+      "notes": "tenant-control-plane-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, agent calls capped by the caller's intersection, step-up for capability or plan widening, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases prove a tenant administrator acting inside its own TenantContext with all three legs present succeeds, as birim and entegrasyon matrices.",
+        "Planned negatif cases prove tenant A reading or writing a tenant B resource is denied and that the denial reason discloses nothing about the neighbouring tenant.",
+        "Planned negatif cases prove a context-absent request returns zero rows, and that omitting the capability leg or the plan leg still resolves to deny.",
+        "Planned negatif cases prove developer-plane structural mutation is excluded and ops-plane hosting action is excluded by plane before any capability check.",
+        "Plane results are recordable only from a human-approved run that truly executed, so the planned matrices here are never counted as passing tests."
+      ],
+      "notes": "tenant-control-plane-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract testing kapsamı. Kapsa: in-context positives, cross-tenant and non-disclosing denial negatives, context-absent zero-row negatives, missing-leg negatives, plane-first exclusion negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is the defining axis: binding every request to one TenantContext and denying cross-tenant access by construction is what keeps one customer out of another's records.",
+        "OWASP A04 insecure design is modeled by making the plane exclusion structural, so developer-plane structural mutation and ops-plane hosting action cannot be re-enabled by a permission grant.",
+        "OWASP A09 security logging and monitoring failures is modeled by an append-only denetim izi on every allow and deny, carrying tenant, actor, action and policy reference.",
+        "Girdi doğrulama applies to the context itself: a tenant identifier supplied by the caller is validated against the trusted TenantContext and never trusted as provided."
+      ],
+      "notes": "tenant-control-plane-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract owasp kapsamı. Kapsa: A01 via one-context binding and cross-tenant denial, A04 via structural plane exclusion, A09 via append-only audit, caller-supplied tenant identifier validation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-control-planes with contributionKind specification, targetProviderIds [k-control-planes] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so an administrative decision touches no kernel internal, no kernel database and no cross-context write path; it is announced as an olay instead.",
+        "This schedule is only a planning window; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "Bağımlılık yönü stays exactly control-plane-taxonomy-contract and agent-tool-execution-contract, and the parent-only k-agent-runtime, k-tenancy and adr-0015 edges and the parent related list are not inherited.",
+        "Scope stays inside the plane sözleşme: panel implementation, surface schema, identity/authentication lifecycle, policy authoring and storage and ECA/ruleset automation all stay outside."
+      ],
+      "notes": "tenant-control-plane-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract integration kapsamı. Kapsa: contributor routing under areaId k-control-planes to the same provider, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir tenant administration through this contract's capability surface and may not reach a doğrudan tablo for tenant-scoped records.",
+        "A consumer must carry the TenantContext with every derived read and write, so a cached or aggregated view cannot outlive the context that authorized it.",
+        "Owning the plan or entitlement definition belongs elsewhere: plan entitlement is consumed, not owned, and this sözleşme only reads it as one intersection leg."
+      ],
+      "notes": "tenant-control-plane-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract moduleUsage kapsamı. Kapsa: contract-mediated administration without direct table reads, TenantContext carried into derived reads and writes, consumed rather than owned plan entitlement. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Tenant administration records identify named people and therefore carry PII directly, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "The audit trail of allow and deny decisions has its own saklama süresi, separate from the tenant business data it describes, because a deleted record must still leave a defensible decision history.",
+        "Administrative decisions are retained append-only so a historical authority state stays explainable, and stored records evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "tenant-control-plane-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract dataLifecycle kapsamı. Kapsa: direct PII in administration records with KVKK/GDPR classification and DSAR path, a separate audit retention window, append-only decision history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrik set includes intersection evaluation latency, deny rate by leg, cross-tenant refusal counts and context-absent request counts on tenant-safe labels.",
+        "Structured log and trace records carry the tenant identifier class, the plane and the deciding policy reference; actor names and record contents are redacted and never become metric labels.",
+        "Alarm coverage includes a cross-tenant refusal spike, a context-absent surge suggesting a broken caller and an unusual deny-by-plan rate after an entitlement change; thresholds and the runbook require human approval."
+      ],
+      "notes": "tenant-control-plane-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract observability kapsamı. Kapsa: intersection latency and deny-by-leg SLIs, redacted tenant-scoped traces, cross-tenant and context-absent alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The dominant failure mode is an unavailable capability or plan source; the plane resolves the missing leg to deny and degrades to read-only rather than assuming prior authority.",
+        "Administrative writes are idempotent by construction: replaying the same decision for the same request key yields the same stored state, so a retry with bounded backoff cannot double-apply a grant.",
+        "A repeatedly failing administrative action is routed to a dead-letter path for human review rather than blocking the tenant's queue, and a circuit breaker protects the shared decision path."
+      ],
+      "notes": "tenant-control-plane-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Tenant Control Plane Contract reliability kapsamı. Kapsa: deny-on-missing-leg degradation, idempotent administrative writes with bounded retry, dead-letter routing without head-of-line blocking and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "widen-tenant-context",
+      "grant-tenant-capability",
+      "change-plan-entitlement"
+    ],
+    "stepUp": [
+      "widen-tenant-context",
+      "grant-tenant-capability",
+      "change-plan-entitlement",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "tenant-control-plane-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:tenant-control-plane-contract:kernel-public-contract",
+      "planned-test:tenant-control-plane-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-control-planes",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-control-planes"
+    ]
+  }
+}

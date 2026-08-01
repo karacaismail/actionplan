@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "archetype-lifecycle-flags-contract",
+  "wbsCode": "12.2.1",
+  "level": "archetype",
+  "title": "ArcheType Lifecycle Flags Contract",
+  "slug": "archetype-lifecycle-flags-contract",
+  "aliases": [],
+  "summary": "Declare and enforce bitemporal, PII, retention and audit lifecycle flags without redesigning the general schema engine.",
+  "parentId": "k-archetype-bayraklari",
+  "order": 1,
+  "icon": "ph-flag",
+  "tags": [
+    "lifecycle flag",
+    "bitemporal",
+    "pii",
+    "retention",
+    "audit",
+    "declaration",
+    "tenant",
+    "archetype"
+  ],
+  "dependsOn": [
+    "schema-metadata-engine-contract",
+    "sus-bitemporal"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "An ArcheType declares exactly four lifecycle flag families: bitemporal, pii, retention and audit, each with a declared value and a declaring version.",
+        "A lifecycle flag declaration is separated from its enforcement: this contract fixes what a flag means and what enforcement it obliges, while the engine that stores records applies it.",
+        "Flag defaults are default-restrictive: an undeclared pii or retention flag is treated as the most protective value, never as unrestricted.",
+        "A bitemporal declaration obliges valid-time and transaction-time preservation, so an update never destroys the prior state of a flagged ArcheType.",
+        "Every flag declaration is tenant-aware, and a flag may only be relaxed by an explicit approved change, never as a side effect of a schema edit.",
+        "schema engine redesign is excluded: this contract adds a flag vocabulary over the existing engine and never redefines field typing, storage or projection.",
+        "[DOC-APPLY:task-handoff] ArcheType Lifecycle Flags Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Lifecycle Flags Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices declare bitemporal, pii, retention and audit flags on an ArcheType and assert each obliged enforcement is reported back with its declaring version.",
+        "Planned negatives prove an undeclared pii or retention flag resolves to the default-restrictive value rather than to unrestricted.",
+        "Planned negatives prove relaxing a flag without an explicit approved change is refused, so a schema edit can never silently weaken protection.",
+        "Planned negatives prove a bitemporal-flagged ArcheType cannot be updated in a way that destroys prior valid-time or transaction-time state.",
+        "Planned negatives prove a cross-tenant flag read or override is refused rather than silently applied.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Lifecycle Flags Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] ArcheType Lifecycle Flags Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Lifecycle Flags Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] ArcheType Lifecycle Flags Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] archetype-lifecycle-flags-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] archetype-lifecycle-flags-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] archetype-lifecycle-flags-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The lifecycle flag declaration with its ArcheType reference, flag family, declared value, declaring version and tenant awareness is specified as typed metadata without creating storage here.",
+        "Flag declarations evolve append-only under expand-contract so an earlier declared protection stays explainable; no migration and no enforcement engine is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-09 to 2026-07-28; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Lifecycle Flags Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove a flag relaxation always requires an approved change and always leaves an audit record naming the prior and new value.",
+        "Future tests prove default-restrictive resolution and bitemporal preservation hold under an adversarial ArcheType declaration."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.2.1, the two dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] ArcheType Lifecycle Flags Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] archetype-lifecycle-flags-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] archetype-lifecycle-flags-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] ArcheType Lifecycle Flags Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] archetype-lifecycle-flags-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed default-restrictive, bitemporal and audit evidence.",
+        "Rollback removes only D26 data/projections, restores 33/24/9 and the 641-node hash 6b3d951f06a445ed6aca4834d8cd86597d0a2ec81e7d9a2a7c8f3b5403768709, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] archetype-lifecycle-flags-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] ArcheType Lifecycle Flags Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] ArcheType Lifecycle Flags Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] ArcheType Lifecycle Flags Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] ArcheType Lifecycle Flags Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] ArcheType Lifecycle Flags Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-09",
+    "end": "2026-07-28",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-09",
+    "baselineEnd": "2026-07-28"
+  },
+  "deliverables": [
+    "Planning-only flag vocabulary: exactly four lifecycle flag families, bitemporal, pii, retention and audit, each with a declared value and a declaring version.",
+    "Planning-only declaration and enforcement split: what each flag obliges of the engine that stores records, without this contract performing enforcement itself.",
+    "Planning-only default contract: an undeclared pii or retention flag resolves default-restrictive rather than unrestricted.",
+    "Planning-only bitemporal contract: valid-time and transaction-time preservation for a flagged ArcheType, so an update never destroys prior state.",
+    "Planning-only change contract: a flag may be relaxed only through an explicit approved change that leaves an audit record of the prior and new value.",
+    "Explicit human approval gate with a fixed boundary: schema engine redesign, field typing, storage and projection ownership all stay outside.",
+    "[DOC-APPLY:high-risk-dod] archetype-lifecycle-flags-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] ArcheType Lifecycle Flags Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] archetype-lifecycle-flags-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] archetype-lifecycle-flags-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Lifecycle Flags Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] ArcheType Lifecycle Flags Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] ArcheType Lifecycle Flags Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly archetype-lifecycle-flags-contract, WBS 12.2.1, archetype, parent k-archetype-bayraklari, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly schema-metadata-engine-contract and sus-bitemporal; blocks and related are empty and the parent's related list is not inherited.",
+    "The flag vocabulary is exactly bitemporal, pii, retention and audit; adding a fifth family is a reviewed contract change and never an ad hoc declaration.",
+    "Each lifecycle flag declaration carries a declared value and a declaring version, so the protection in force at any past time is reconstructable.",
+    "Flag declaration and enforcement are separated: this contract states what a flag obliges, and the storage engine applies it.",
+    "Resolution is default-restrictive: an undeclared pii or retention flag resolves to the most protective value and never to unrestricted.",
+    "A bitemporal flag obliges valid-time and transaction-time preservation, so an update to a flagged ArcheType never destroys prior state.",
+    "An audit flag obliges an append-only record of every change to a flagged ArcheType, including the flag change itself.",
+    "Relaxing any flag requires an explicit approved change with an audit record naming the prior and new value; a schema edit can never silently weaken a flag.",
+    "Flag declarations are tenant-aware, and a cross-tenant flag read or override is refused rather than silently applied.",
+    "schema engine redesign is excluded: field typing, storage layout and projection ownership stay with schema-metadata-engine-contract.",
+    "Human approval is mandatory before any flag model is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-archetype-bayraklari: 2026-07-09 through 2026-07-28 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] ArcheType Lifecycle Flags Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] archetype-lifecycle-flags-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] archetype-lifecycle-flags-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] ArcheType Lifecycle Flags Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] ArcheType Lifecycle Flags Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] archetype-lifecycle-flags-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] ArcheType Lifecycle Flags Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] archetype-lifecycle-flags-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] ArcheType Lifecycle Flags Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-alf-silent-relaxation",
+      "desc": "A schema edit that quietly clears a pii, retention or audit flag would remove a legal protection from live data without any review or record.",
+      "severity": "critical",
+      "mitigation": "Require an explicit approved change with an audit record for every relaxation, and prove refusal of an unreviewed relaxation with a dedicated negative."
+    },
+    {
+      "id": "r-alf-permissive-default",
+      "desc": "Treating an undeclared pii or retention flag as unrestricted would leave newly created ArcheTypes unprotected precisely when nobody has reviewed them.",
+      "severity": "critical",
+      "mitigation": "Fix resolution at default-restrictive for every undeclared flag and prove the protective default with a dedicated negative."
+    },
+    {
+      "id": "r-alf-bitemporal-loss",
+      "desc": "An in-place update on a bitemporal-flagged ArcheType would destroy the prior valid-time or transaction-time state that an audit or dispute depends on.",
+      "severity": "high",
+      "mitigation": "Bind the bitemporal flag to valid-time and transaction-time preservation, keep declarations append-only and require a replay comparison as evidence."
+    },
+    {
+      "id": "r-alf-engine-absorption",
+      "desc": "A lifecycle flag contract could be misread as authority to redesign field typing, storage or projection, duplicating the schema engine.",
+      "severity": "high",
+      "mitigation": "Keep schema engine redesign an explicit exclusion in every phase, declare flags over the existing engine only, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove archetype-lifecycle-flags-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/24/9, 641 nodes, contributor 145 and node-set hash 6b3d951f06a445ed6aca4834d8cd86597d0a2ec81e7d9a2a7c8f3b5403768709; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-archetype-lifecycle-flags-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "archetype-lifecycle-flags-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-lifecycle-flags-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "archetype-lifecycle-flags-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-lifecycle-flags-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "archetype-lifecycle-flags-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-archetype-lifecycle-flags-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "archetype-lifecycle-flags-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-archetype-lifecycle-flags-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "archetype-lifecycle-flags-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "An ArcheType declares exactly four lifecycle flag families, bitemporal, pii, retention and audit, each with a declared value and a declaring version.",
+        "Girdi is an ArcheType reference plus a tenant context; çıktı is the resolved flag set with the enforcement each flag obliges of the storage engine.",
+        "Declaration and enforcement are split: this contract fixes what a flag means, and the engine that stores records applies it.",
+        "Resolution is default-restrictive, so an undeclared pii or retention flag yields the most protective value rather than unrestricted access.",
+        "Kapsam sınırı gereği schema engine redesign stays outside: field typing, storage layout and projection ownership remain with the schema engine."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract featureDefs kapsamı. Kapsa: the four flag families, declared value and declaring version, declaration versus enforcement split, default-restrictive resolution. Exclude schema engine redesign. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "Default-restrictive resolution is the primary control: an undeclared pii or retention flag is treated as the most protective value, so an unreviewed ArcheType is never unprotected.",
+        "Relaxing a flag requires an explicit approved change with an audit record of the prior and new value, so protection cannot be weakened as a side effect of a schema edit.",
+        "The audit flag obliges an append-only record of every change to a flagged ArcheType, including the flag change itself, which keeps a protection history as a denetim trail.",
+        "Flag declarations are tenant-aware, so a cross-tenant flag read or override is refused rather than silently applied, which preserves izolasyon.",
+        "The pii flag is the entry point for KVKK/GDPR obligations, so it drives classification, minimisation and erasure duties rather than being a descriptive label."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract security kapsamı. Kapsa: default-restrictive flag resolution, approval-gated relaxation with audit, append-only protection history, tenant-aware declarations, pii flag as compliance entry point. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed flag resolution katman for all four families rather than a separate resolver per family, so defaults cannot diverge.",
+        "Flag resolution and default application stay pure functions with low cyclomatic complexity, testable without a datastore.",
+        "Declaration and enforcement stay separated; ölü kod and speculative extra flag families are refused, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] archetype-lifecycle-flags-contract: archetype-lifecycle-flags-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] archetype-lifecycle-flags-contract: ArcheType Lifecycle Flags Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] archetype-lifecycle-flags-contract: archetype-lifecycle-flags-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] archetype-lifecycle-flags-contract: archetype-lifecycle-flags-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] archetype-lifecycle-flags-contract: ArcheType Lifecycle Flags Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] archetype-lifecycle-flags-contract: ArcheType Lifecycle Flags Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] archetype-lifecycle-flags-contract: ArcheType Lifecycle Flags Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract codeOptimization kapsamı. Kapsa: one typed flag resolver, pure default application, declaration versus enforcement separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-lifecycle-flags-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- ArcheType Lifecycle Flags Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- archetype-lifecycle-flags-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Lifecycle Flags Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- archetype-lifecycle-flags-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- ArcheType Lifecycle Flags Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-lifecycle-flags-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- ArcheType Lifecycle Flags Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- archetype-lifecycle-flags-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- archetype-lifecycle-flags-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- ArcheType Lifecycle Flags Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- archetype-lifecycle-flags-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Lifecycle Flags Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- ArcheType Lifecycle Flags Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Lifecycle Flags Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: archetype-lifecycle-flags-contract — ArcheType Lifecycle Flags Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- ArcheType Lifecycle Flags Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The flag family set is closed and versioned, so introducing a new family is a reviewed contract change rather than something a declaration can invent.",
+        "Least ayrıcalık applies to flag changes: tightening a flag may follow the ordinary review path while relaxing one always requires a step-up approval.",
+        "A flag resolution is cheap and cacheable per ArcheType version, so enforcement is never skipped for performance reasons on a hot write path.",
+        "The declaration yüzey stays kapalı: flag values come from a closed enum with no free-text escape, and the resolver has no egress path that could import a flag value from outside the reviewed declaration."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract securityOptimization kapsamı. Kapsa: closed versioned flag family set, asymmetric tighten versus relax approval, cacheable resolution so enforcement is never skipped. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for resolving the full flag set of one ArcheType version; no measurement is claimed here.",
+        "Flag resolution sits on every write path for a flagged ArcheType, so the budget treats it as a hot lookup cached per ArcheType version.",
+        "Resolution must avoid N+1 access; the four flag families are resolved in one lookup rather than once per family."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract performance kapsamı. Kapsa: p95 budget for full flag-set resolution, version-cached hot path, N+1-free family resolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client must honour a pii or retention flag on data it caches; a cihaz may not retain flagged content beyond the declared retention value.",
+        "An offline client treats a bitemporal-flagged record as read-mostly and marks it stale rather than resolving a conflicting update locally.",
+        "No mobile flag administration surface is introduced here; rendering a flag state stays a separate consumer responsibility."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract mobileApps kapsamı. Kapsa: device-side honouring of pii and retention flags, stale handling of bitemporal records, no mobile flag administration. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future flag administration surface must present each declared flag and its declaring version as keyboard navigable content with a visible odak ring at the AAA kontrast threshold.",
+        "A refused flag relaxation must be announced through an aria live region naming the flag and the approval it requires, not merely disabled without explanation.",
+        "This contract defines declaration semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract wcag kapsamı. Kapsa: keyboard-navigable flag presentation, announced relaxation refusals, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future topology for a flag resolution service remains human-developer work.",
+        "Declaring or tightening a flag is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous declaring version.",
+        "A rollback here withdraws flag-declaration planning text and the projections generated from it and nothing else, so no enforced record is affected, runtimeDataImpact reads none and the NO-GO verdict does not move."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract deployment kapsamı. Kapsa: no release or deploy here, flag declaration as an approved data change, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A flag change olay may notify the storage engine to re-evaluate enforcement, but this contract never performs a business action of its own.",
+        "A flag change that triggers a downstream re-evaluation forms a chain that stops at maxChainDepth 6, so a protection change cannot cascade without bound.",
+        "Re-delivering the same flag change event for the same declaring version must be idempotent, and any relaxation always requires an explicit onay."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract eca kapsamı. Kapsa: flag change events without acting, depth-bounded re-evaluation chains, idempotent replay and approval-gated relaxation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay forbidden actions ve yasak kalır.",
+        "AI cannot relax a lifecycle flag, cannot clear a pii or audit declaration and cannot shorten a retention value; each of those needs insan onayı, and a relaxation additionally requires a step-up review.",
+        "Any flag proposal reaching the lane as sub_prompt is untrusted, the kill switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 scope or claim an unexecuted test result."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from relaxing flags, clearing pii or audit declarations or shortening retention, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases declare all four flag families on an ArcheType and assert each obliged enforcement is reported with its declaring version, as unit and integration matrices.",
+        "Planned negatives prove an undeclared pii or retention flag resolves default-restrictive rather than unrestricted.",
+        "Planned negatives prove an unapproved relaxation is refused and that a schema edit cannot clear a flag as a side effect.",
+        "Planned negatives prove a bitemporal-flagged update cannot destroy prior valid-time or transaction-time state, and that a cross-tenant override is refused.",
+        "No flag matrix may be reported as satisfied before a human-approved execution has actually happened, because planned coverage is not evidence."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract testing kapsamı. Kapsa: four-family declaration positives, default-restrictive negatives, unapproved relaxation negatives, bitemporal preservation and cross-tenant negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A04 insecure design is the defining axis: default-restrictive resolution and approval-gated relaxation are declared up front rather than added after an incident.",
+        "OWASP A01 broken access control is modeled by keeping flag declarations tenant-aware and refusing a cross-tenant flag override.",
+        "OWASP A09 security logging failures is modeled by the audit flag, which obliges an append-only record of every change including the flag change itself.",
+        "Girdi doğrulama applies to every flag declaration: the family, value and declaring version are validated against the closed vocabulary before storage, and the audit flag guarantees a denetim izi for every change."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract owasp kapsamı. Kapsa: A04 via default-restrictive approval-gated design, A01 via tenant-aware declarations, A09 via the audit flag's append-only obligation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-archetype-bayraklari with contributionKind specification, targetProviderIds [k-archetype-bayraklari] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a flag declaration touches no kernel internal, no kernel database and no cross-context write path; enforcement is requested as an olay instead.",
+        "This schedule is only a planning window from 2026-07-09 to 2026-07-28; predecessor schema-metadata-engine-contract ends 2028-03-15, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly schema-metadata-engine-contract and sus-bitemporal, and the parent's related list is not inherited.",
+        "Scope stays inside the declaration layer: schema engine redesign, field typing, storage layout and projection ownership all stay outside."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract integration kapsamı. Kapsa: contributor routing under areaId k-archetype-bayraklari to the same provider, closed public boundary, exact dependsOn, short planning window marker and the schema engine exclusion. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir the resolved flag set through this contract and may not keep its own privacy or retention table or reach a doğrudan tablo for declarations.",
+        "A consumer must carry the declaring version alongside any stored decision that depended on a flag, so a later audit can tell which protection was in force.",
+        "Typing a field and storing a record belong to schema-metadata-engine-contract; this contract declares lifecycle obligations only."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract moduleUsage kapsamı. Kapsa: contract-mediated flag resolution without local privacy tables or direct table reads, declaring version carried with stored decisions, excluded typing and storage authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "This contract is the platform's lifecycle compliance anchor, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are expressed as declared flags; DSAR silme veya anonimleştirme yolu istenir.",
+        "The retention flag sets the saklama süresi for a flagged ArcheType, and the pii flag obliges classification and minimisation before any record is created under it.",
+        "Flag declarations are retained append-only so a historical protection level stays explainable, and stored declarations evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract dataLifecycle kapsamı. Kapsa: flags as the compliance anchor, retention and pii obligations, append-only declaration history and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include flag resolution latency percentiles, default-restrictive fallback counts by family and refused relaxation counts on tenant-safe labels.",
+        "Structured log and trace records carry the ArcheType reference and declaring version; flagged record content and pii payloads are redacted and never become metric labels.",
+        "Alerts cover a spike in default-restrictive fallbacks after a schema change, any relaxation attempt without approval and any bitemporal enforcement failure; thresholds and the runbook require human approval."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract observability kapsamı. Kapsa: resolution and fallback SLIs, redacted version-scoped traces, unapproved-relaxation and bitemporal-failure alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unreachable declaration store during resolution; the contract degrades to the default-restrictive value, never to an unrestricted one.",
+        "Resolution is idempotent by construction: the same ArcheType at the same declaring version always resolves to the same flag set, so a retry with bounded backoff cannot weaken protection.",
+        "A repeatedly failing flag change is routed to a dead-letter path for human review rather than retried forever, and a circuit breaker protects the shared resolver."
+      ],
+      "notes": "archetype-lifecycle-flags-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "ArcheType Lifecycle Flags Contract reliability kapsamı. Kapsa: fail-restrictive degradation on store failure, idempotent resolution with bounded retry, dead-letter routing and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "relax-lifecycle-flag",
+      "clear-pii-declaration",
+      "shorten-retention"
+    ],
+    "stepUp": [
+      "relax-lifecycle-flag",
+      "clear-pii-declaration",
+      "shorten-retention",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "decisionGradeRef": "decision-grade-data",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "archetype-lifecycle-flags-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:archetype-lifecycle-flags-contract:kernel-public-contract",
+      "planned-test:archetype-lifecycle-flags-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-archetype-bayraklari",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-archetype-bayraklari"
+    ]
+  }
+}

@@ -17,14 +17,15 @@ const META_PATH = path.join(ROOT, "src/data/generated/meta.json");
 const HANDOFF_PATH = path.join(ROOT, "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json");
 // biome-ignore format: the closed role enum stays compact.
 const EXPECTED_ROLES = new Set(["root", "provider", "sdk-bridge", "consumer", "contributor", "not-applicable"]);
-const EXPECTED_NODE_SET_SHA256 = "79fc84f28ca660ce0964ef56984c3055d7c46a76e35186274707a77c0e435bda";
-// biome-ignore format: D4 projection pins remain while D5 adds the exact catalog-derived routing tuple.
-const APPLIED_PROJECTION_SPECS = { "schema-metadata-engine-contract": { parentId: "k-schema", wbsCode: "36.7.1", areaId: "k-sozlesme", targetProviderIds: ["k-schema"] }, "party-role-context-contract": { parentId: "k-party", wbsCode: "36.12.1", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"] } } as const;
+const EXPECTED_NODE_SET_SHA256 = "a13061fbc1767c9c26d5f720319209b664450fd1d3b67d3b7da46a41bd906f6d";
+const TARGET = "master-data-golden-record-contract";
+// biome-ignore format: D4-D32 projection pins remain while D33 adds the final provider-parent derived-area routing tuple.
+const APPLIED_PROJECTION_SPECS = { "schema-metadata-engine-contract": { parentId: "k-schema", wbsCode: "36.7.1", areaId: "k-sozlesme", targetProviderIds: ["k-schema"], cluster: "layer0" }, "party-role-context-contract": { parentId: "k-party", wbsCode: "36.12.1", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"], cluster: "layer0" }, "authorization-decision-contract": { parentId: "k-authz", wbsCode: "36.2.1", areaId: "k-sozlesme", targetProviderIds: ["k-authz"], cluster: "layer0" }, "policy-decision-point-contract": { parentId: "k-policy-pdp", wbsCode: "36.11.1", areaId: "k-sozlesme", targetProviderIds: ["k-policy-pdp"], cluster: "layer0" }, "archetype-field-type-contract": { parentId: "k-archetype-fieldtypes", wbsCode: "12.10.1", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-archetype-fieldtypes"], cluster: "kernel" }, "surface-projection-contract": { parentId: "k-surface", wbsCode: "12.6.1", areaId: "k-surface", targetProviderIds: ["k-surface"], cluster: "kernel" }, "control-plane-taxonomy-contract": { parentId: "k-control-planes", wbsCode: "12.3.4", areaId: "k-control-planes", targetProviderIds: ["k-control-planes"], cluster: "kernel" }, "module-registry-manifest-contract": { parentId: "k-mod-l", wbsCode: "36.5.1", areaId: "k-sozlesme", targetProviderIds: ["k-mod-l"], cluster: "layer0" }, "worker-job-execution-contract": { parentId: "k-worker", wbsCode: "36.16.1", areaId: "k-agent-runtime", targetProviderIds: ["k-tenancy", "k-authz", "k-bus"], cluster: "layer0" }, "search-index-query-contract": { parentId: "k-search", wbsCode: "36.17.1", areaId: "k-surface", targetProviderIds: ["k-search"], cluster: "layer0" }, "agent-tool-execution-contract": { parentId: "k-agent-runtime", wbsCode: "12.1.1", areaId: "k-agent-runtime", targetProviderIds: ["k-tenancy", "k-authz", "k-bus", "k-party", "k-policy-pdp"], cluster: "kernel" }, "archetype-computation-contract": { parentId: "k-archetype-computation", wbsCode: "12.9.1", areaId: "k-archetype-computation", targetProviderIds: ["k-computation"], cluster: "kernel" }, "ops-control-plane-contract": { parentId: "k-boyut1-ops-panel", wbsCode: "12.3.1.1", areaId: "k-control-planes", targetProviderIds: ["k-control-planes"], cluster: "kernel" }, "developer-control-plane-contract": { parentId: "k-boyut2-developer-panel", wbsCode: "12.3.2.1", areaId: "k-control-planes", targetProviderIds: ["k-control-planes"], cluster: "kernel" }, "consumer-surface-render-contract": { parentId: "k-surface-consumer", wbsCode: "12.11.1", areaId: "k-surface-consumer", targetProviderIds: ["k-surface-consumer"], cluster: "kernel" }, "archetype-mode-profile-contract": { parentId: "k-archetype-mode-profile", wbsCode: "12.8.1", areaId: "k-archetype-mode-profile", targetProviderIds: ["k-mode"], cluster: "kernel" }, "computation-runtime-contract": { parentId: "k-computation", wbsCode: "36.15.1", areaId: "k-archetype-computation", targetProviderIds: ["k-computation"], cluster: "layer0" }, "plugin-registry-manifest-contract": { parentId: "k-plugin", wbsCode: "36.6.1", areaId: "k-sozlesme", targetProviderIds: ["k-plugin"], cluster: "layer0" }, "actor-role-binding-contract": { parentId: "k-actor", wbsCode: "36.9.1", areaId: "k-archetype-fieldtypes", targetProviderIds: ["k-party"], cluster: "layer0" }, "jurisdiction-resolution-contract": { parentId: "k-jurisdiction", wbsCode: "36.21.1", areaId: "k-archetype-bayraklari", targetProviderIds: ["k-jurisdiction"], cluster: "layer0" }, "genealogy-graph-contract": { parentId: "k-genealogy-graph", wbsCode: "36.20.1", areaId: "k-archetype-computation", targetProviderIds: ["k-genealogy-graph"], cluster: "layer0" }, "archetype-lifecycle-flags-contract": { parentId: "k-archetype-bayraklari", wbsCode: "12.2.1", areaId: "k-archetype-bayraklari", targetProviderIds: ["k-archetype-bayraklari"], cluster: "kernel" }, "sequence-allocation-contract": { parentId: "k-sequence", wbsCode: "36.19.1", areaId: "k-archetype-computation", targetProviderIds: ["k-sequence"], cluster: "layer0" }, "digital-asset-storage-contract": { parentId: "k-storage", wbsCode: "36.14.1", areaId: "k-sozlesme", targetProviderIds: ["k-storage"], cluster: "layer0" }, "edge-gateway-sync-contract": { parentId: "k-edge-gateway", wbsCode: "12.12.1", areaId: "k-edge-gateway", targetProviderIds: ["k-edge-gateway"], cluster: "kernel" }, "tenant-control-plane-contract": { parentId: "k-boyut3-tenant-panel", wbsCode: "12.3.3.1", areaId: "k-control-planes", targetProviderIds: ["k-control-planes"], cluster: "kernel" }, "mode-profile-composition-contract": { parentId: "k-mode", wbsCode: "36.13.1", areaId: "k-archetype-mode-profile", targetProviderIds: ["k-mode"], cluster: "layer0" }, "kpi-formula-registry-contract": { parentId: "k-kpi-registry", wbsCode: "12.13.1", areaId: "k-kpi-registry", targetProviderIds: ["k-kpi-registry"], cluster: "kernel" }, "calendar-capacity-contract": { parentId: "k-calendar-capacity", wbsCode: "12.14.1", areaId: "k-calendar-capacity", targetProviderIds: ["k-calendar-capacity"], cluster: "kernel" }, "master-data-golden-record-contract": { parentId: "k-mdm", wbsCode: "36.18.1", areaId: "k-archetype-computation", targetProviderIds: ["k-mdm"], cluster: "layer0" } } as const;
 
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
 type RawNode = { id: string; wbsCode?: string; level?: string; parentId?: string | null; owner?: string; artifactKind?: string; dependsOn?: string[]; blocks?: string[]; related?: string[]; source?: { cluster?: string }; deliveryContext?: { applicability?: string }; kernelIntegration?: { role?: string }; appDefinition?: { manifest?: { kernelPrimitiveIds?: string[] } } };
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
-type RegistryEntry = { profile?: string; role?: string; reason?: string; areaId?: string; providedPrimitiveIds?: string[]; targetProviderIds?: string[]; contributionKind?: string; runtimeProviderClaimAllowed?: boolean; publicBoundary?: { directKernelInternalsAllowed?: boolean; directKernelDatabaseAccessAllowed?: boolean; crossContextWritesAllowed?: boolean } };
+type RegistryEntry = { profile?: string; role?: string; reason?: string; kernelRef?: string; contractRefs?: string[]; plannedTestRefs?: string[]; areaId?: string; providedPrimitiveIds?: string[]; targetProviderIds?: string[]; contributionKind?: string; runtimeProviderClaimAllowed?: boolean; publicBoundary?: { directKernelInternalsAllowed?: boolean; directKernelDatabaseAccessAllowed?: boolean; crossContextWritesAllowed?: boolean } };
 // biome-ignore format: audited fixture types stay compact to preserve the test source budget.
 type KernelRegistry = { snapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; sourceSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; materializedSnapshot?: { expectedNodeCount?: number; nodeSetSha256?: string }; decisionProfiles?: Record<string, RegistryEntry>; profiles?: Record<string, RegistryEntry>; entries?: Record<string, RegistryEntry> };
 
@@ -48,7 +49,7 @@ const kernelCatalog = readKernelCatalog(ROOT);
 
 const appliedFixture = (parentId?: string) => {
   const fixtureHandoff = structuredClone(handoff);
-  const targetParentId = parentId ?? "k-party";
+  const targetParentId = parentId ?? "k-mdm";
   const row = fixtureHandoff.ledger.find(
     (candidate: { parentId: string; applicationStatus: string }) =>
       candidate.parentId === targetParentId,
@@ -138,7 +139,15 @@ describe("kernel integration registry coverage", () => {
       index.length,
       meta.counts.total,
       appRegistry.materializedSnapshot.expectedNodeCount,
-    ]).toEqual([622, 622, 622, 622, 622]);
+    ]).toEqual([650, 650, 650, 650, 650]);
+    expect([
+      meta.counts.byLevel.archetype,
+      meta.counts.byArtifactKind["delivery-task"],
+      meta.counts.byCluster.layer0,
+      meta.counts.byCluster.kernel,
+      meta.counts.byStatus.backlog,
+      meta.counts.filledExample,
+    ]).toEqual([62, 228, 41, 38, 650, 650]);
     expect(idsOf(publicNodes)).toEqual(nodeIds);
     expect(idsOf(index)).toEqual(nodeIds);
     expect(idsOf(flatNavigation)).toEqual(
@@ -163,7 +172,7 @@ describe("kernel integration registry coverage", () => {
         parentId: spec.parentId,
         level: "archetype",
         wbsCode: spec.wbsCode,
-        cluster: "layer0",
+        cluster: spec.cluster,
       });
       expect(publicMatches[0]).toMatchObject({
         id: targetId,
@@ -179,6 +188,7 @@ describe("kernel integration registry coverage", () => {
       expect(navigationMatches[0]).toMatchObject({ id: targetId, wbsCode: spec.wbsCode });
       expect(resolveEntry(value, targetId)).toMatchObject({
         role: "contributor",
+        kernelRef: "app-kernel",
         areaId: spec.areaId,
         contributionKind: "specification",
         targetProviderIds: spec.targetProviderIds,
@@ -188,6 +198,16 @@ describe("kernel integration registry coverage", () => {
           directKernelDatabaseAccessAllowed: false,
           crossContextWritesAllowed: false,
         },
+        contractRefs: [
+          "docs/adr-K1-kernel-kimlik.md",
+          "docs/core-contract-pack.md",
+          "docs/kernel-sdk-app-delivery-sequence.md",
+          "docs/surface-spec.md",
+        ],
+        plannedTestRefs: [
+          `planned-test:${targetId}:kernel-public-contract`,
+          `planned-test:${targetId}:kernel-boundary-negative`,
+        ],
       });
     }
   });
@@ -210,10 +230,10 @@ describe("kernel integration registry coverage", () => {
       const ids = (items: Array<{ id: string }>) => items.map(({ id }) => id).sort();
       const nav = flattenNavigation(state.navigation);
       if (
-        state.app.materializedSnapshot.expectedNodeCount !== 622 ||
-        snapshot?.expectedNodeCount !== 622 ||
-        Object.keys(state.app.entries).length !== 622 ||
-        Object.keys(state.kernel.entries ?? {}).length !== 622
+        state.app.materializedSnapshot.expectedNodeCount !== 650 ||
+        snapshot?.expectedNodeCount !== 650 ||
+        Object.keys(state.app.entries).length !== 650 ||
+        Object.keys(state.kernel.entries ?? {}).length !== 650
       )
         errors.push("registry-count-drift");
       if (
@@ -250,7 +270,7 @@ describe("kernel integration registry coverage", () => {
       [
         "registry-count-drift",
         (state) => {
-          state.app.materializedSnapshot.expectedNodeCount = 621;
+          state.app.materializedSnapshot.expectedNodeCount = 649;
         },
       ],
       [
@@ -261,23 +281,22 @@ describe("kernel integration registry coverage", () => {
       ],
       ["projection-id-set-drift", (state) => void state.index.pop()],
       [
-        "projection-target-count-drift:party-role-context-contract",
+        `projection-target-count-drift:${TARGET}`,
         (state) =>
           void flattenNavigation(state.navigation)
-            .find(({ id }) => id === "k-party")
-            ?.children?.push({ id: "party-role-context-contract" }),
+            .find(({ id }) => id === "k-mdm")
+            ?.children?.push({ id: TARGET }),
       ],
       [
-        "projection-parent-drift:party-role-context-contract",
+        `projection-parent-drift:${TARGET}`,
         (state) =>
-          void Object.assign(
-            state.index.find(({ id }) => id === "party-role-context-contract") ?? {},
-            { parentId: "k-actor" },
-          ),
+          void Object.assign(state.index.find(({ id }) => id === TARGET) ?? {}, {
+            parentId: "k-computation",
+          }),
       ],
       [
-        "registry-target-missing:party-role-context-contract",
-        (state) => void Reflect.deleteProperty(state.app.entries, "party-role-context-contract"),
+        `registry-target-missing:${TARGET}`,
+        (state) => void Reflect.deleteProperty(state.app.entries, TARGET),
       ],
     ];
     for (const [error, mutate] of cases) {
@@ -306,7 +325,8 @@ describe("kernel integration registry coverage", () => {
       return counts;
     }, {});
     expect(counts).toEqual(expectedKernelRoleCounts(liveUniverse.appliedRows.length));
-    expect(counts.contributor).toBe(126);
+    expect(counts.contributor).toBe(154);
+    expect(liveUniverse.appliedRows.length).toBe(33);
   });
 
   it("classifies app-kernel as root and preserves the duplicate/contributor decisions", () => {
@@ -467,16 +487,16 @@ describe("kernel integration registry coverage", () => {
       kernelEntries: { ...value.entries, [fixture.node.id]: kernelEntry },
       kernelCatalog,
     };
-    expect(universe.expectedNodeCount).toBe(622);
+    expect(universe.expectedNodeCount).toBe(650);
     expect(validateAppliedD01RegistryDelta(valid)).toEqual([]);
-    expect(expectedKernelRoleCounts(universe.appliedRows.length).contributor).toBe(126);
+    expect(expectedKernelRoleCounts(universe.appliedRows.length).contributor).toBe(154);
 
     const pending = appliedFixture();
     pending.row.applicationStatus = "pending";
     pending.handoff.applicationSummary = {
       approved: 33,
-      applied: liveUniverse.appliedRows.length,
-      remaining: 33 - liveUniverse.appliedRows.length,
+      applied: liveUniverse.appliedRows.length - 1,
+      remaining: 34 - liveUniverse.appliedRows.length,
     };
     expect(() => resolveD01NodeUniverse(pending)).toThrow(/pending-node-present/);
     const unapproved = structuredClone(nodeRecords);
@@ -485,15 +505,28 @@ describe("kernel integration registry coverage", () => {
     // biome-ignore format: the fail-closed assertion stays compact.
     expect(() => resolveD01NodeUniverse({ records: unapproved, handoff })).toThrow(/unapproved-extra/);
     const wrongParent = appliedFixture();
-    wrongParent.records.at(-1)!.node.parentId = "k-mode";
+    wrongParent.records.at(-1)!.node.parentId = "k-edge-gateway";
     expect(() => resolveD01NodeUniverse(wrongParent)).toThrow(/applied-node-parent-drift/);
-    const pendingId = handoff.ledger.find(
+    // At 33/33 no row is pending on disk, so the stale-entry fixture withdraws one other
+    // approved row itself; the reconciliation contract under test is unchanged.
+    const stale = appliedFixture();
+    const staleRow = stale.handoff.ledger.find(
       (row: { applicationStatus: string; selectedDescendantId: string }) =>
-        row.applicationStatus === "pending" && row.selectedDescendantId !== fixture.node.id,
-    ).selectedDescendantId;
+        row.applicationStatus === "applied" && row.selectedDescendantId !== fixture.node.id,
+    );
+    staleRow.applicationStatus = "pending";
+    stale.handoff.applicationSummary = {
+      approved: 33,
+      applied: liveUniverse.appliedRows.length - 1,
+      remaining: 34 - liveUniverse.appliedRows.length,
+    };
+    stale.records = stale.records.filter(
+      ({ node }: { node: RawNode }) => node.id !== staleRow.selectedDescendantId,
+    );
+    const pendingId = staleRow.selectedDescendantId;
     // biome-ignore format: stale and applied entries form one exact reconciliation fixture.
     const entries = { [pendingId]: { profile: "delivery-task" }, [fixture.node.id]: { profile: "foundation-component" } };
-    reconcileD01AppEntries(entries, resolveD01NodeUniverse(fixture));
+    reconcileD01AppEntries(entries, resolveD01NodeUniverse(stale));
     expect(entries[pendingId]).toBeUndefined();
     expect(entries[fixture.node.id]).toEqual(appEntry);
     // biome-ignore format: the wrong-role mutation stays compact.

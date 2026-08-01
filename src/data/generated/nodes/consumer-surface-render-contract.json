@@ -1,0 +1,741 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "consumer-surface-render-contract",
+  "wbsCode": "12.11.1",
+  "level": "archetype",
+  "title": "Consumer Surface Render Contract",
+  "slug": "consumer-surface-render-contract",
+  "aliases": [],
+  "summary": "Render projected or governed custom consumer surfaces under cache, CWV and accessibility contracts; admin surfaces are excluded.",
+  "parentId": "k-surface-consumer",
+  "order": 1,
+  "icon": "ph-layout",
+  "tags": [
+    "surface",
+    "consumer",
+    "render",
+    "cache",
+    "core-web-vitals",
+    "accessibility",
+    "governed-custom",
+    "archetype"
+  ],
+  "dependsOn": [
+    "surface-projection-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "sözleşme: docs/surface-spec.md",
+    "yönerge: docs/surface-v2-directive.md",
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "A consumer surface declares exactly one renderStrategy: projected, where the platform draws the surface, or custom, where a bespoke renderer draws it.",
+        "custom is an escape hatch for presentation only and never an escape from governance: the same permission/audit/i18n/a11y gate applies to both strategies.",
+        "The render contract binds each surface to a cache policy plus CWV budgets expressed as LCP, INP and CLS targets, and to a WCAG 2.2 AA accessibility contract baseline.",
+        "An aiSurface block is pdpGated and carries humanApproval by default, so a generated view can never act on its own behalf.",
+        "The exclusion set is explicit: admin surfaces are excluded, surface definition ownership is excluded, authorization decision is excluded and panel implementation stays outside.",
+        "[DOC-APPLY:task-handoff] Consumer Surface Render Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Consumer Surface Render Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover the same consumer surface rendered under renderStrategy projected and under custom with identical permission and audit outcomes.",
+        "Planned negatives prove a custom renderer cannot bypass the permission/audit/i18n/a11y gate, read an unauthorized field or suppress an audit record.",
+        "Planned negatives prove tenant isolation holds across a cached render, so a cache key collision can never serve one tenant's surface to another.",
+        "Planned negatives prove an aiSurface block without pdpGated or with humanApproval disabled is refused at declaration time.",
+        "Planned budget cases assert the declared LCP, INP and CLS targets and the WCAG 2.2 AA accessibility contract on a representative consumer surface.",
+        "[DOC-APPLY:high-risk-dod] Consumer Surface Render Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Consumer Surface Render Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Consumer Surface Render Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Consumer Surface Render Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] consumer-surface-render-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] consumer-surface-render-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] consumer-surface-render-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The render descriptor, its cache policy and its CWV budget record are specified as typed read-side metadata bound to a surface definition, without creating storage here.",
+        "Any change to the retained render descriptor shape is specified as an expand-contract evolution owned by the surface definition contract; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Consumer Surface Render Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove a projected and a custom render of the same surface expose the same field set, the same audit trail and the same i18n resolution.",
+        "Future tests prove cache invalidation, tenant isolation and the CWV and accessibility contract budgets hold under a realistic consumer load."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.11.1, the single dependency, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Consumer Surface Render Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] consumer-surface-render-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] consumer-surface-render-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Consumer Surface Render Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] consumer-surface-render-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed cache, CWV and accessibility evidence.",
+        "Rollback removes only D18 data/projections, restores 33/17/16 and the 634-node hash 7c91d412f021591da6ecd0da261642ffc5dd1d2b82bb339da56f327e0454e24e, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] consumer-surface-render-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Consumer Surface Render Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Consumer Surface Render Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Consumer Surface Render Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Consumer Surface Render Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Consumer Surface Render Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only strategy contract: every consumer surface declares one renderStrategy, either projected or custom, and the choice is presentation-level rather than authority-level.",
+    "Planning-only governance parity: a custom renderer passes the same permission/audit/i18n/a11y gate as a projected one, so bespoke rendering never becomes an escape from governance.",
+    "Planning-only cache contract: an explicit cache key, scope and invalidation trigger per surface, with tenant isolation built into the key rather than layered on afterwards.",
+    "Planning-only performance contract: CWV budgets declared as LCP, INP and CLS targets for a representative consumer surface, with evidence required before any readiness claim.",
+    "Planning-only accessibility contract: a WCAG 2.2 AA baseline for both render strategies, so a custom surface cannot ship with a lower accessibility floor than a projected one.",
+    "Explicit human approval gate with fixed exclusions: admin surfaces are excluded, surface definition ownership is excluded, authorization decision is excluded and panel implementation stays outside.",
+    "[DOC-APPLY:high-risk-dod] consumer-surface-render-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Consumer Surface Render Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] consumer-surface-render-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] consumer-surface-render-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Consumer Surface Render Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Consumer Surface Render Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Consumer Surface Render Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly consumer-surface-render-contract, WBS 12.11.1, archetype, parent k-surface-consumer, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly surface-projection-contract; blocks and related are empty and the parent-only k-surface edge and its related list are not inherited.",
+    "Each consumer surface declares exactly one renderStrategy, projected or custom; an undeclared or dual strategy is refused.",
+    "A custom renderer is subject to the identical permission/audit/i18n/a11y gate as a projected one, and it may not widen the field set the surface definition allows.",
+    "The render contract declares a cache key, cache scope and invalidation trigger, and tenant isolation is part of the key so no cached render crosses a tenant.",
+    "CWV budgets are declared as explicit LCP, INP and CLS targets per surface family, and a budget breach blocks a readiness claim rather than being recorded as a note.",
+    "The accessibility contract fixes a WCAG 2.2 AA baseline for both render strategies, with keyboard operability and visible focus required regardless of renderer.",
+    "An aiSurface block is pdpGated and defaults to humanApproval; a generated view may propose but never apply, and disabling either flag is refused.",
+    "admin surfaces are excluded from this contract; an operator or structure administration surface is served by its own control plane instead.",
+    "surface definition ownership is excluded: the field set, validation and visibility rules stay with the surface definition contract, and this node only renders them.",
+    "authorization decision is excluded: the renderer consumes a decision, never computes one, and it cannot display a field the decision withheld.",
+    "Human approval is mandatory before any consumer surface is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-surface-consumer: 2026-07-01 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Consumer Surface Render Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] consumer-surface-render-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] consumer-surface-render-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Consumer Surface Render Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Consumer Surface Render Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] consumer-surface-render-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Consumer Surface Render Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] consumer-surface-render-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Consumer Surface Render Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-csr-custom-governance-escape",
+      "desc": "Treating a custom renderer as exempt from the shared gate would let a bespoke consumer surface expose unauthorized fields or skip its audit trail entirely.",
+      "severity": "critical",
+      "mitigation": "Bind both render strategies to the same permission/audit/i18n/a11y gate and prove parity with negatives before human-approved implementation."
+    },
+    {
+      "id": "r-csr-cache-tenant-bleed",
+      "desc": "A cache key that omits the tenant would serve one tenant's rendered surface to another through a path that looks like an ordinary cache hit.",
+      "severity": "critical",
+      "mitigation": "Make tenant isolation part of the cache key and scope, and require cross-tenant cache negatives as a fixed test axis."
+    },
+    {
+      "id": "r-csr-ai-surface-autonomy",
+      "desc": "An aiSurface block without pdpGated or humanApproval would let a generated view act on the user's behalf without a decision or a human in the loop.",
+      "severity": "high",
+      "mitigation": "Require pdpGated and humanApproval by default, refuse a declaration that disables either, and prove refusal with negatives."
+    },
+    {
+      "id": "r-csr-scope-expansion",
+      "desc": "A render contract could be misread as authority over surface definitions, authorization decisions, admin surfaces or panel implementation.",
+      "severity": "high",
+      "mitigation": "Keep the admin surfaces, surface definition ownership, authorization decision and panel implementation exclusions explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove consumer-surface-render-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/17/16, 634 nodes, contributor 138 and node-set hash 7c91d412f021591da6ecd0da261642ffc5dd1d2b82bb339da56f327e0454e24e; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-consumer-surface-render-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "consumer-surface-render-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-consumer-surface-render-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "consumer-surface-render-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-consumer-surface-render-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "consumer-surface-render-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-consumer-surface-render-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "consumer-surface-render-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-consumer-surface-render-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "consumer-surface-render-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "Every consumer surface declares one renderStrategy, projected or custom, and the declaration is a presentation choice rather than an authority choice.",
+        "Girdi is a surface definition plus an authorization decision; çıktı is a rendered consumer surface bound to a cache policy, CWV budgets and an accessibility contract.",
+        "The custom escape hatch keeps the same permission/audit/i18n/a11y gate as the projected path, so bespoke rendering does not create a second governance regime.",
+        "An aiSurface block is pdpGated with humanApproval by default, so the durum path for a generated view is propose, approve, then render.",
+        "Kapsam sınırı gereği admin surfaces are excluded, surface definition ownership is excluded, authorization decision is excluded and panel implementation stays outside."
+      ],
+      "notes": "consumer-surface-render-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract featureDefs kapsamı. Kapsa: renderStrategy projected|custom, shared governance gate, cache and CWV and accessibility binding, pdpGated aiSurface with human approval. Exclude admin surfaces, surface definition ownership, authorization decision and panel implementation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "A custom renderer holds no extra yetki: the permission/audit/i18n/a11y gate is identical for both strategies, so bespoke code cannot widen the exposed field set.",
+        "tenant isolation is part of the cache key and cache scope, so a cached render is structurally unable to cross a tenant erişim boundary.",
+        "The renderer consumes a decision and never computes one; authorization decision is excluded, so a withheld field is absent from the render rather than hidden by CSS.",
+        "Consumer surfaces are public-facing, so PII exposure is deliberate and audited: an aiSurface stays pdpGated with humanApproval and every render decision is auditable.",
+        "[DOC-APPLY:high-risk-dod] consumer-surface-render-contract: consumer-surface-render-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] consumer-surface-render-contract: Consumer Surface Render Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] consumer-surface-render-contract: consumer-surface-render-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] consumer-surface-render-contract: consumer-surface-render-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] consumer-surface-render-contract: Consumer Surface Render Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] consumer-surface-render-contract: Consumer Surface Render Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] consumer-surface-render-contract: Consumer Surface Render Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "consumer-surface-render-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract security kapsamı. Kapsa: equal gate for custom and projected renderers, tenant-keyed cache isolation, decision consumption without computation, audited pdpGated AI surfaces. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- consumer-surface-render-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Consumer Surface Render Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- consumer-surface-render-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Consumer Surface Render Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- consumer-surface-render-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Consumer Surface Render Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- consumer-surface-render-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Consumer Surface Render Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- consumer-surface-render-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- consumer-surface-render-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Consumer Surface Render Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- consumer-surface-render-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Consumer Surface Render Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Consumer Surface Render Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Consumer Surface Render Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: consumer-surface-render-contract — Consumer Surface Render Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Consumer Surface Render Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed render descriptor and one gate katman shared by both strategies, instead of duplicating governance inside every custom renderer.",
+        "Cache key derivation, budget evaluation and field-set filtering stay pure functions with low cyclomatic complexity, testable without a browser.",
+        "Rendering and surface definition stay separated; ölü kod and per-surface bespoke abstractions are refused, and engineering rules are reached through standardRefs rather than restated here."
+      ],
+      "notes": "consumer-surface-render-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract codeOptimization kapsamı. Kapsa: shared typed render descriptor and gate layer, pure cache and budget logic, render/definition separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A public consumer surface runs under a strict CSP with a closed egress yüzey, so a custom renderer cannot pull an unreviewed third-party bundle at render time.",
+        "The custom renderer bundle is allowlisted and integrity-checked with an imza, and least ayrıcalık keeps it without any credential of its own.",
+        "Render endpoints are rate-limited per tenant and per surface, so a cache-busting request pattern cannot be used to exhaust the render path."
+      ],
+      "notes": "consumer-surface-render-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract securityOptimization kapsamı. Kapsa: strict CSP and closed egress, allowlisted signed custom bundles without credentials, per-tenant render rate limits. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "CWV budgets are declared as explicit LCP, INP and CLS hedef values per consumer surface family, and a p95 render budget is stated; no measurement is claimed here.",
+        "The cache policy defines key, scope and invalidation so a repeat visitor is served from önbellek rather than re-rendering, and a stale entry is bounded rather than indefinite.",
+        "List-style consumer surfaces page through a cursor and must avoid N+1 lookups when hydrating each item from the projected surface."
+      ],
+      "notes": "consumer-surface-render-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract performance kapsamı. Kapsa: declared LCP/INP/CLS budgets and p95 render target, bounded cache with explicit invalidation, cursor paging and N+1-free hydration. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "Mobil and desktop consumers share one render contract; a responsive surface adapts layout but may not add a field or a control the definition does not allow.",
+        "CWV budgets are stated for a constrained cihaz profile as well as a fast one, because a custom renderer typically regresses INP first on low-end hardware.",
+        "Offline behaviour is a labelled stale cache read rather than a local re-render, and no consumer surface may queue an unapproved write while disconnected."
+      ],
+      "notes": "consumer-surface-render-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract mobileApps kapsamı. Kapsa: one render contract across devices, constrained-device CWV budgets, labelled stale offline reads without local re-render. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "The accessibility contract fixes a WCAG 2.2 AA floor for every consumer surface, with full klavye operability and a visible focus ring on both render strategies.",
+        "A custom renderer must supply the same semantics a projected surface derives automatically: accessible names, roles, live-region announcements and a kontrast level at or above the declared threshold.",
+        "This contract defines render semantics only, so no accessibility conformance may be recorded here; an axe or manual audit result stays planned until a real run exists."
+      ],
+      "notes": "consumer-surface-render-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract wcag kapsamı. Kapsa: WCAG 2.2 AA floor for both strategies, custom renderers supplying equivalent semantics, semantics-only scope with planned audit results. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future container or edge hosting topology for a consumer render path remains human-developer work.",
+        "Changing a cache policy or a CWV budget is a config-level change behind human approval, and rollback returns to the previous declared budget rather than disabling the gate.",
+        "Withdrawing this shard affects only the planning contract and its deterministic projections, so runtimeDataImpact remains none and NO-GO stands."
+      ],
+      "notes": "consumer-surface-render-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract deployment kapsamı. Kapsa: no release or deploy here, cache and budget changes as approved config, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A surface change olay invalidates a cached render rather than triggering a business action; this contract listens, it does not automate.",
+        "An aiSurface proposal requires humanApproval before it renders as an actionable view, and a triggered chain stops at maxChainDepth 6.",
+        "Re-delivering the same invalidation event must be idempotent so a retry does not stampede the render path or duplicate a cache warm."
+      ],
+      "notes": "consumer-surface-render-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract eca kapsamı. Kapsa: events invalidate caches rather than act, human-approved AI surfaces, depth-bounded chains and idempotent invalidation replay. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read this contract and suggest a changeset, but generating or updating an app or module, overriding a ruleset and writing directly to production are forbidden actions ve yasak kalır.",
+        "An aiSurface stays pdpGated with humanApproval, so a generated view proposes and never applies; publishing a consumer surface or relaxing a CWV or accessibility budget needs insan onayı.",
+        "sub_prompt is treated as untrusted input, the kill switch stays available, and no prompt or repository text may widen this shard's fixed D01 scope or fabricate executed-test evidence."
+      ],
+      "notes": "consumer-surface-render-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, pdpGated AI surfaces that propose rather than apply, human-approved publishing and budget changes, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases render the same surface under both strategies and compare field set, audit trail and i18n resolution, as unit and integration matrices.",
+        "Planned negatives prove a custom renderer cannot bypass the gate, expose a withheld field or suppress an audit record.",
+        "Planned negatives prove a cache key without a tenant component is refused and that a cross-tenant cache hit is impossible.",
+        "Planned negatives prove an aiSurface declared without pdpGated or with humanApproval disabled is rejected at declaration time.",
+        "Planned budget cases assert LCP, INP and CLS targets plus a WCAG 2.2 AA audit as expected evidence; no result may be recorded before a real human-approved run exists."
+      ],
+      "notes": "consumer-surface-render-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract testing kapsamı. Kapsa: strategy-parity positives, gate-bypass and field-exposure negatives, tenant cache negatives, AI surface declaration negatives, CWV and accessibility evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by consuming the authorization decision rather than computing one, so a withheld field never reaches the render tree.",
+        "OWASP A03 injection is modeled by treating surface content as data with strict output doğrulama and encoding, so a custom renderer cannot introduce a script sink.",
+        "OWASP A05 security misconfiguration is modeled by a strict CSP, a closed egress surface and a tenant-scoped cache key, since a public consumer surface is the most exposed plane."
+      ],
+      "notes": "consumer-surface-render-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract owasp kapsamı. Kapsa: A01 via decision consumption, A03 via strict output validation and encoding, A05 via CSP, closed egress and tenant-scoped caching. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-surface-consumer with contributionKind specification, targetProviderIds [k-surface-consumer] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so a consumer render touches no kernel internal, no kernel database and no cross-context write path; invalidation arrives as an olay instead.",
+        "This schedule is only a planning window; predecessor surface-projection-contract ends 2027-12-17, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly surface-projection-contract, and the parent-only k-surface bağımlılık edge and its related list are not inherited.",
+        "Scope stays inside the render layer: admin surfaces are excluded, surface definition ownership is excluded, authorization decision is excluded and panel implementation stays outside."
+      ],
+      "notes": "consumer-surface-render-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract integration kapsamı. Kapsa: contributor routing under areaId k-surface-consumer, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming app tüketir a projected surface through this render contract and may register a custom renderer, but never by a doğrudan veritabanı read behind the gate.",
+        "A consumer must preserve the declared cache key, CWV budgets and accessibility contract; it cannot relax them locally for one surface.",
+        "Defining the surface belongs to the surface definition contract and deciding access belongs to the authorization contract; this contract renders, it neither defines nor decides."
+      ],
+      "notes": "consumer-surface-render-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract moduleUsage kapsamı. Kapsa: gate-mediated consumption without direct database reads, preserved cache and budget declarations, excluded definition and decision authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A rendered consumer surface and its cached copy may contain PII, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Cache retention is bounded and shorter than the source record's saklama süresi, and an erasure in the canonical store must invalidate every cached render that contains the erased data.",
+        "A custom renderer may not persist a local copy of surface data, and any change to the retained render descriptor follows an expand-contract migration."
+      ],
+      "notes": "consumer-surface-render-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract dataLifecycle kapsamı. Kapsa: PII in rendered and cached surfaces, bounded cache retention with erasure-driven invalidation, no local persistence by custom renderers, expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include render latency percentiles by strategy, cache hit ratio, field-set refusal counts and field LCP, INP and CLS distributions on tenant-safe labels.",
+        "Structured log and trace records carry the surface id, render strategy and tenant scope; rendered content, PII and user-supplied text are redacted and never become metric labels.",
+        "Alerts cover a CWV budget breach, a cache hit-ratio collapse that signals a broken invalidation and any accessibility regression detected in a scheduled audit; thresholds and the runbook require human approval."
+      ],
+      "notes": "consumer-surface-render-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract observability kapsamı. Kapsa: render and CWV SLIs, redacted surface-scoped traces, budget-breach and cache-collapse alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unavailable surface definition or a failing custom renderer; the surface degrades to the projected strategy or an explicit error, never to an ungoverned partial render.",
+        "Cache warming and invalidation are idempotent by construction, so a repeated invalidation event produces the same cache state and retries use bounded backoff.",
+        "A custom renderer failure is isolated behind a circuit breaker so one bespoke surface cannot take down the shared render path for other tenants."
+      ],
+      "notes": "consumer-surface-render-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Consumer Surface Render Contract reliability kapsamı. Kapsa: degradation to the projected strategy or explicit error, idempotent cache invalidation with bounded retry, circuit-breaker isolation of custom renderers. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "register-custom-renderer",
+      "relax-render-budget"
+    ],
+    "stepUp": [
+      "register-custom-renderer",
+      "relax-render-budget",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "c12nRef": "c12n",
+    "p13nRef": "p13n"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "consumer-surface-render-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:consumer-surface-render-contract:kernel-public-contract",
+      "planned-test:consumer-surface-render-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-surface-consumer",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-surface-consumer"
+    ]
+  }
+}

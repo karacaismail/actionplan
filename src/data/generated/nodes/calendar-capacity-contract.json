@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "calendar-capacity-contract",
+  "wbsCode": "12.14.1",
+  "level": "archetype",
+  "title": "Calendar Capacity Contract",
+  "slug": "calendar-capacity-contract",
+  "aliases": [],
+  "summary": "Resolve shifts, holidays, work-center capacity and business-time calculations without taking workforce product ownership.",
+  "parentId": "k-calendar-capacity",
+  "order": 1,
+  "icon": "ph-calendar-check",
+  "tags": [
+    "calendar",
+    "capacity",
+    "shift",
+    "holiday",
+    "business-time",
+    "work-center",
+    "timezone",
+    "archetype"
+  ],
+  "dependsOn": [
+    "computation-runtime-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The contract resolves one versioned calendar from a shift pattern, a holiday set, a planned downtime set and a work-center capacity declaration, rather than leaving each consumer to assemble its own.",
+        "business-time is the primitive the platform actually needs: a question such as X business days later is answered from the resolved calendar instead of from wall-clock arithmetic.",
+        "A resolve call is deterministic for a given calendar version, so an APS input and a promise date computed at different moments agree when they name the same version.",
+        "timezone and daylight saving transitions are part of the declaration, so a shift that crosses a transition boundary is neither duplicated nor lost.",
+        "overlapping calendar precedence is declared explicitly: when a site, a work-center and a tenant calendar disagree, the resolution order is fixed rather than emergent.",
+        "Evaluation is delegated: computation graph ownership stays with computation-runtime-contract, and this contract supplies calendar semantics rather than an execution engine.",
+        "workforce product ownership is excluded and shift roster and staffing assignment are excluded; the kernel primitive describes time and capacity, not people management.",
+        "[DOC-APPLY:task-handoff] Calendar Capacity Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Calendar Capacity Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices resolve a calendar from a shift pattern, a holiday set and a planned downtime set, then assert an X business days later result against a hand-checked expectation.",
+        "Planned negatives prove a work-center capacity request without a calendar version is refused rather than resolved against an implicit current calendar.",
+        "Planned negatives prove a shift crossing a daylight saving transition is neither duplicated nor dropped, and that a timezone-naive input is refused.",
+        "Planned negatives prove overlapping calendar precedence is applied deterministically when a site, work-center and tenant calendar disagree.",
+        "Planned negatives prove tenant isolation: a holiday or downtime declared for one tenant never shortens another tenant's business-time result.",
+        "[DOC-APPLY:high-risk-dod] Calendar Capacity Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Calendar Capacity Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Calendar Capacity Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Calendar Capacity Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] calendar-capacity-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] calendar-capacity-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] calendar-capacity-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The calendar version, shift pattern, holiday set, planned downtime set, work-center capacity declaration and precedence order are specified as typed metadata; no storage, migration or table is produced in Actionplan.",
+        "Calendar versions are append-only so a past promise date stays reproducible against the calendar that produced it, and entries evolve by expand-contract rather than in-place rewrite."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-06-09; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "scheduling and sequencing execution are excluded, jurisdiction resolution is excluded and jurisdiction-resolution-contract is not a dependency, and bitemporal as-of restatement is excluded.",
+        "[DOC-APPLY:ready-for-dev] Calendar Capacity Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove business-time arithmetic stays stable across a year boundary, a leap day and a daylight saving transition in both directions.",
+        "Future tests prove that adding a holiday to a new calendar version changes future results without retroactively altering a previously promised date."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.14.1, the single dependency, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Calendar Capacity Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] calendar-capacity-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] calendar-capacity-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Calendar Capacity Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] calendar-capacity-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed determinism, timezone and precedence evidence.",
+        "Rollback removes only D32 data/projections, restores 33/31/2 and the 648-node hash 0a4ee2ddf3263495a0b28e1c84e2c9438517b8609ca9ce487aa0c74b2e1ef61c, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] calendar-capacity-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Calendar Capacity Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Calendar Capacity Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Calendar Capacity Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Calendar Capacity Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Calendar Capacity Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only calendar shape: one versioned calendar resolved from a shift pattern, a holiday set, a planned downtime set and a work-center capacity declaration.",
+    "Planning-only business-time contract: X business days later answered from the resolved calendar rather than from wall-clock arithmetic, as an APS input and a promise date source.",
+    "Planning-only determinism contract: a resolve call is reproducible for a given calendar version, including across timezone and daylight saving transitions.",
+    "Planning-only precedence contract: overlapping calendar precedence declared explicitly so a site, work-center and tenant calendar disagreement resolves the same way every time.",
+    "Planning-only seam statement: computation graph ownership stays with computation-runtime-contract, and this contract supplies calendar semantics rather than execution.",
+    "Explicit human approval gate with a fixed boundary: workforce product ownership is excluded, shift roster and staffing assignment are excluded, scheduling and sequencing execution are excluded, jurisdiction resolution is excluded and jurisdiction-resolution-contract is not a dependency, and bitemporal as-of restatement is excluded.",
+    "[DOC-APPLY:high-risk-dod] calendar-capacity-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Calendar Capacity Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] calendar-capacity-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] calendar-capacity-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Calendar Capacity Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Calendar Capacity Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Calendar Capacity Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly calendar-capacity-contract, WBS 12.14.1, archetype, parent k-calendar-capacity, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly computation-runtime-contract; blocks and related are empty and the parent-only k-archetype-computation edge and the parent related list are not inherited.",
+    "One versioned calendar resolves from a shift pattern, a holiday set, a planned downtime set and a work-center capacity declaration.",
+    "business-time is answerable from the resolved calendar: X business days later returns the same instant for the same calendar version and starting point.",
+    "A resolve call names a calendar version explicitly; a request without one is refused rather than answered against an implicit current calendar.",
+    "The result is usable as an APS input and as the basis of a promise date without either consumer re-deriving the calendar.",
+    "timezone is declared per calendar and a daylight saving transition neither duplicates nor drops a shift that crosses it.",
+    "overlapping calendar precedence is declared, so a site, work-center and tenant calendar disagreement resolves deterministically rather than by evaluation order.",
+    "tenant isolation holds: a holiday or planned downtime declared by one tenant never changes another tenant's business-time result.",
+    "computation graph ownership stays with computation-runtime-contract: this contract declares calendar semantics and never becomes an execution engine.",
+    "workforce product ownership is excluded and shift roster and staffing assignment are excluded; the primitive describes time and capacity rather than staffing people.",
+    "scheduling and sequencing execution are excluded: the contract supplies capacity and business-time and never sequences work orders.",
+    "jurisdiction resolution is excluded and jurisdiction-resolution-contract is not a dependency; a locale-driven holiday set is supplied as input rather than derived here.",
+    "bitemporal as-of restatement is excluded and is named as an adjacent undecided area without implying it is decided here.",
+    "human approval is mandatory before any calendar version is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-calendar-capacity: 2026-07-01 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Calendar Capacity Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] calendar-capacity-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] calendar-capacity-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Calendar Capacity Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Calendar Capacity Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] calendar-capacity-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Calendar Capacity Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] calendar-capacity-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Calendar Capacity Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-cc-implicit-calendar",
+      "desc": "Resolving against an implicit current calendar would make a promise date irreproducible: the same query would return different answers before and after a holiday was added.",
+      "severity": "critical",
+      "mitigation": "Require an explicit calendar version on every resolve, keep versions append-only and prove that adding a holiday does not retroactively move an existing promise."
+    },
+    {
+      "id": "r-cc-timezone-loss",
+      "desc": "A shift crossing a daylight saving transition can be silently duplicated or dropped, which shifts every downstream capacity and delivery figure by an hour without any error.",
+      "severity": "critical",
+      "mitigation": "Declare timezone per calendar, model both transition directions explicitly and prove no duplication or loss with dedicated negatives."
+    },
+    {
+      "id": "r-cc-precedence-ambiguity",
+      "desc": "If a site, work-center and tenant calendar can disagree without a declared precedence, the answer depends on evaluation order and becomes unstable across callers.",
+      "severity": "high",
+      "mitigation": "Declare overlapping calendar precedence explicitly and prove deterministic resolution under a three-way disagreement."
+    },
+    {
+      "id": "r-cc-scope-expansion",
+      "desc": "A calendar and capacity primitive is easily misread as owning workforce management, shift rostering, sequencing or jurisdiction resolution.",
+      "severity": "high",
+      "mitigation": "Keep all exclusions explicit in every phase, take a locale-driven holiday set as input, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove calendar-capacity-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/31/2, 648 nodes, contributor 152 and node-set hash 0a4ee2ddf3263495a0b28e1c84e2c9438517b8609ca9ce487aa0c74b2e1ef61c; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-calendar-capacity-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "calendar-capacity-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-calendar-capacity-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "calendar-capacity-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-calendar-capacity-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "calendar-capacity-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-calendar-capacity-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "calendar-capacity-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-calendar-capacity-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "calendar-capacity-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The contract sağlar one versioned calendar resolved from a shift pattern, a holiday set, a planned downtime set and a work-center capacity declaration.",
+        "Girdi is a calendar version plus a starting instant and a duration expressed in business terms; çıktı is a resolved instant, an available capacity figure or a refusal.",
+        "business-time answers X business days later from the resolved calendar rather than from wall-clock arithmetic, which is what an APS input and a promise date both require.",
+        "timezone and daylight saving handling and overlapping calendar precedence are declared, so a shift crossing a transition is neither duplicated nor lost and a three-way disagreement resolves deterministically.",
+        "Kapsam sınırı gereği workforce product ownership is excluded, shift roster and staffing assignment are excluded, scheduling and sequencing execution are excluded, jurisdiction resolution is excluded and bitemporal as-of restatement is excluded."
+      ],
+      "notes": "calendar-capacity-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract featureDefs kapsamı. Kapsa: one versioned calendar from shifts, holidays, downtime and work-center capacity, business-time resolution, timezone and daylight saving handling, declared precedence. Exclude workforce ownership, rostering, sequencing, jurisdiction resolution and as-of restatement. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "A calendar decides delivery commitments and available capacity, so declaring or publishing a calendar version is a privileged action gated by explicit yetki rather than open to any consumer.",
+        "tenant izolasyon holds: a holiday or planned downtime declared by one tenant never shortens another tenant's business-time result, and a cross-tenant calendar read is denied.",
+        "A published calendar version is immutable, so a promise date stays defensible; a change creates a new version and leaves a denetim izi naming the operator.",
+        "Erişim is read-mostly: resolving business-time requires no write capability, which keeps the declaration surface small and reviewable.",
+        "A work-center capacity figure is exposed only to callers already authorized for that site, so the calendar never becomes a side channel for operational intelligence."
+      ],
+      "notes": "calendar-capacity-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract security kapsamı. Kapsa: privileged declaration and publication, tenant-isolated holidays and downtime, immutable versions with audit, read-mostly resolution, site-scoped capacity exposure. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one tipli calendar katman so shift, holiday, downtime and capacity inputs cannot develop divergent resolution rules.",
+        "business-time resolution stays a pure function with low karmaşıklık, testable from a fixed calendar version without a scheduler, and declaration stays separated from execution.",
+        "Ölü kod and speculative per-industry calendar variants are refused, the short-code bütçe is respected, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] calendar-capacity-contract: calendar-capacity-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] calendar-capacity-contract: Calendar Capacity Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] calendar-capacity-contract: calendar-capacity-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] calendar-capacity-contract: calendar-capacity-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] calendar-capacity-contract: Calendar Capacity Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] calendar-capacity-contract: Calendar Capacity Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] calendar-capacity-contract: Calendar Capacity Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "calendar-capacity-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract codeOptimization kapsamı. Kapsa: one typed calendar layer, pure low-complexity business-time resolution, declaration separated from execution, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- calendar-capacity-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Calendar Capacity Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- calendar-capacity-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Calendar Capacity Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- calendar-capacity-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Calendar Capacity Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- calendar-capacity-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Calendar Capacity Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- calendar-capacity-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- calendar-capacity-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Calendar Capacity Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- calendar-capacity-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Calendar Capacity Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Calendar Capacity Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Calendar Capacity Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: calendar-capacity-contract — Calendar Capacity Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Calendar Capacity Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "En az ayrıcalık separates declaring a calendar, publishing a version and resolving business-time, so a planning consumer never holds calendar authority.",
+        "The accepted timezone and shift-pattern vocabulary is an allowlist, so an unrecognised zone or pattern is refused rather than silently normalised.",
+        "The declaration yüzey stays kapalı: a calendar composes only registered shift patterns, holiday sets and downtime windows, with no free expression evaluation.",
+        "Calendar publication is rate-bounded per tenant, so a rapid churn of versions cannot be used to obscure a change that moves committed delivery dates."
+      ],
+      "notes": "calendar-capacity-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract securityOptimization kapsamı. Kapsa: separated declare, publish and resolve privileges, allowlisted timezones and shift patterns, closed declaration surface, bounded publication rate. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for a single business-time resolve and a separate budget for a bulk capacity query over a planning horizon; no measurement is claimed here.",
+        "A resolved calendar version is read through a bounded önbellek keyed by version and scope, which is safe precisely because published versions are immutable.",
+        "Bulk planning queries must avoid N+1 access: a horizon is resolved in one pass rather than one resolve call per day or per work-center."
+      ],
+      "notes": "calendar-capacity-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract performance kapsamı. Kapsa: p95 budgets for single resolve and bulk horizon queries, version-keyed cache justified by immutability, single-pass horizon resolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client reads a business-time result together with the calendar version that produced it; a cihaz may not compute business days from its own local clock.",
+        "An offline client shows the last synchronised calendar version as stale and refuses to promise a date, since a promise requires a live version reference.",
+        "No mobile-only shift or holiday source is introduced here; rendering a calendar stays a separate consumer responsibility."
+      ],
+      "notes": "calendar-capacity-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract mobileApps kapsamı. Kapsa: result plus calendar version on mobile, no device-side business-day arithmetic, stale offline display without promising dates, no mobile-only calendar source. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future calendar surface must convey a non-working day, a planned downtime and a capacity shortfall through text and shape rather than colour alone, at the WCAG AAA kontrast threshold with a visible odak ring.",
+        "A resolved date must be announced with its timezone and calendar version through an aria description, so a klavye-only or screen-reader user is never given a bare date.",
+        "This contract defines calendar semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "calendar-capacity-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract wcag kapsamı. Kapsa: non-colour-only conveyance of non-working days, downtime and shortfalls at AAA contrast, timezone and version announced with the date, keyboard-first operation, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; the hosting topology and container dağıtım of any calendar service remain human-developer work behind ops-plane authority.",
+        "Publishing a new calendar version is a data-level change behind human approval and must not require a redeploy; rollback pins consumers back to the previous version.",
+        "Reverting this calendar shard changes the planning contract and the projections derived from it, never a committed delivery date, so runtimeDataImpact stays none and NO-GO remains in force."
+      ],
+      "notes": "calendar-capacity-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract deployment kapsamı. Kapsa: no release or deploy here, hosting owned by the ops plane, data-level version publish without redeploy, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A published calendar version olay may be announced so planning consumers repin, but this contract never reschedules work or issues a business action on its own.",
+        "A reaction chain raised from a publication olay stops at maxChainDepth 6, so a calendar change cannot cascade into an unbounded replanning storm.",
+        "Re-delivering the same publication olay must be idempoten, and changing a holiday set or a precedence order always requires an explicit onay."
+      ],
+      "notes": "calendar-capacity-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract eca kapsamı. Kapsa: publication events without rescheduling, depth-bounded reaction chains, idempotent replay and approval-gated holiday and precedence changes. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay yasak.",
+        "AI cannot publish a calendar version, cannot declare a holiday or downtime and cannot change a precedence order; each of those needs insan onayı with a step-up review.",
+        "Any externally supplied calendar feed reaching the lane as sub_prompt is güvenilmez, the kill-switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 sınır or claim an unexecuted test result."
+      ],
+      "notes": "calendar-capacity-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from publishing versions, declaring holidays or changing precedence, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases resolve a calendar from a shift pattern, a holiday set and a planned downtime set and assert an X business days later result, as birim and entegrasyon matrices.",
+        "Planned negatif cases prove a resolve without an explicit calendar version is refused rather than answered against an implicit current calendar.",
+        "Planned negatif cases prove a shift crossing a daylight saving transition is neither duplicated nor dropped and that a timezone-naive input is refused.",
+        "Planned negatif cases prove overlapping calendar precedence resolves deterministically under a site, work-center and tenant disagreement, and that tenant isolation holds.",
+        "Calendar results are recordable only from a human-approved run that truly executed, so the planned matrices here are never counted as passing tests."
+      ],
+      "notes": "calendar-capacity-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract testing kapsamı. Kapsa: business-time positives from a resolved calendar, missing-version negatives, daylight saving and timezone negatives, precedence and tenant isolation negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A08 software and data integrity failures is the defining axis: immutable calendar versions are what stop a committed delivery date from being retroactively redefined.",
+        "OWASP A01 broken access control is modeled by separating calendar declaration authority from resolution access and by scoping capacity figures to authorized sites.",
+        "OWASP A04 insecure design is modeled by refusing an implicit current calendar, so no caller can obtain a result that cannot be reproduced later.",
+        "Girdi doğrulama applies to every declaration: timezone, shift pattern, holiday set and precedence order are validated against allowlists, and each publication leaves a denetim izi."
+      ],
+      "notes": "calendar-capacity-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract owasp kapsamı. Kapsa: A08 via immutable versions, A01 via separated declaration authority and site-scoped capacity, A04 via refusing implicit calendars, allowlist validation with audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-calendar-capacity with contributionKind specification, targetProviderIds [k-calendar-capacity] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so resolving a calendar touches no kernel internal, no kernel database and no cross-context write path; a publication is announced as an olay instead.",
+        "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "Bağımlılık yönü stays exactly computation-runtime-contract; jurisdiction resolution is excluded and jurisdiction-resolution-contract is not a dependency, and the parent-only k-archetype-computation edge and the parent related list are not inherited.",
+        "Scope stays inside the calendar sözleşme: workforce product ownership, shift roster and staffing assignment, scheduling and sequencing execution and bitemporal as-of restatement all stay outside."
+      ],
+      "notes": "calendar-capacity-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract integration kapsamı. Kapsa: contributor routing under areaId k-calendar-capacity to the same provider, closed public boundary, exact dependsOn without jurisdiction, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir business-time and capacity through this contract and may not implement its own business-day arithmetic or reach a doğrudan tablo for shift rows.",
+        "A consumer must carry the calendar version with any stored promise date, so a later audit can tell which calendar produced the commitment.",
+        "Owning workforce management, the shift roster and the sequencing engine belongs elsewhere; this sözleşme resolves time and capacity and never assigns people or orders work."
+      ],
+      "notes": "calendar-capacity-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract moduleUsage kapsamı. Kapsa: contract-mediated business-time consumption without local arithmetic or direct table reads, calendar version carried with promise dates, externally owned workforce, rostering and sequencing. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A shift pattern combined with a small work-center can identify individuals indirectly, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir for any operator identity carried in a downtime record.",
+        "Published calendar versions have their own saklama süresi, longer than the promises they produced, because a delivery commitment is only defensible while the calendar behind it is still readable.",
+        "Calendar versions are retained append-only so a past promise stays reproducible, and declarations evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "calendar-capacity-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract dataLifecycle kapsamı. Kapsa: indirect PII through small work-center shift patterns with KVKK/GDPR classification and DSAR path, calendar retention longer than the promises, append-only versions and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrik set includes resolve latency, bulk horizon query latency, refusal rate by cause and the share of consumers pinned to a superseded calendar version, on tenant-safe labels.",
+        "Structured log and trace records carry the calendar version, scope and timezone; capacity figures and operator identities are redacted and never become metric labels.",
+        "Alarm coverage includes a refusal spike after a calendar publication, a surge of consumers stuck on a superseded version and a precedence conflict rate above its bound; thresholds and the runbook require human approval."
+      ],
+      "notes": "calendar-capacity-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract observability kapsamı. Kapsa: resolve and horizon latency SLIs, refusal-cause metrics, redacted version-scoped traces, superseded-version and precedence-conflict alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The dominant failure mode is an unresolvable calendar version; the contract refuses the request rather than falling back to a wall-clock approximation that would silently move a promise.",
+        "Resolution is idempoten by construction: the same calendar version, starting instant and duration yield the same result, so a retry with bounded backoff changes nothing.",
+        "A repeatedly failing bulk horizon query is routed to a dead-letter path for human review rather than blocking the planning queue, and a circuit breaker protects the shared resolution path."
+      ],
+      "notes": "calendar-capacity-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Calendar Capacity Contract reliability kapsamı. Kapsa: refusal instead of wall-clock fallback, idempotent resolution with bounded retry, dead-letter routing without head-of-line blocking and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "publish-calendar-version",
+      "declare-holiday-or-downtime",
+      "change-calendar-precedence"
+    ],
+    "stepUp": [
+      "publish-calendar-version",
+      "declare-holiday-or-downtime",
+      "change-calendar-precedence",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "decisionGradeRef": "decision-grade-data",
+    "globalMarketReadinessRef": "global-market-readiness"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "calendar-capacity-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:calendar-capacity-contract:kernel-public-contract",
+      "planned-test:calendar-capacity-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-calendar-capacity",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-calendar-capacity"
+    ]
+  }
+}

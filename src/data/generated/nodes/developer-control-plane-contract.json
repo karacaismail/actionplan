@@ -1,0 +1,744 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "developer-control-plane-contract",
+  "wbsCode": "12.3.2.1",
+  "level": "archetype",
+  "title": "Developer Control Plane Contract",
+  "slug": "developer-control-plane-contract",
+  "aliases": [],
+  "summary": "Project versioned ArcheType structure administration with preview, dry-run and approval; tenant record editing is excluded.",
+  "parentId": "k-boyut2-developer-panel",
+  "order": 1,
+  "icon": "ph-tree-structure",
+  "tags": [
+    "control-plane",
+    "developer",
+    "archetype-structure",
+    "versioning",
+    "preview",
+    "dry-run",
+    "approval",
+    "archetype"
+  ],
+  "dependsOn": [
+    "control-plane-taxonomy-contract",
+    "schema-metadata-engine-contract",
+    "surface-projection-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "platform-ekibi",
+  "assignees": [
+    "platform-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The audience of the developer plane is the structure administrator, and its subject is ArcheType structure rather than any tenant business record.",
+        "Every structural change is versioned: a definition edit produces a new version instead of mutating the active one, so the previous shape stays reconstructable.",
+        "The change path is fixed as preview, then dry-run against representative data, then explicit approval; no step may be skipped for a structural change.",
+        "The plane is a projection and not a security boundary: authority is decided by PDP through policy-decision-point-contract, and the projection never becomes the enforcement point.",
+        "The exclusion set is explicit: tenant record editing stays out, and panel implementation, Surface schema ownership, migration semantics, identity/authentication lifecycle and ECA/ruleset automation are each owned elsewhere.",
+        "[DOC-APPLY:task-handoff] Developer Control Plane Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] Developer Control Plane Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices cover a versioned ArcheType structure change moving through preview, dry-run and approval with the resulting projection unchanged until approval lands.",
+        "Planned negatives prove an approval cannot be granted without a preceding dry-run result, and that a stale dry-run against an older version is refused.",
+        "Planned negatives prove tenant record editing is unreachable from the developer plane, so a structure administrator cannot alter business data through it.",
+        "Planned negatives prove a PDP deny from policy-decision-point-contract is terminal and that the projection cannot grant what the decision refused.",
+        "Planned negatives prove the plane neither owns Surface schema nor executes migration semantics; it may only request the owning contract to act.",
+        "[DOC-APPLY:high-risk-dod] Developer Control Plane Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] Developer Control Plane Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] Developer Control Plane Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] Developer Control Plane Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] developer-control-plane-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] developer-control-plane-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] developer-control-plane-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The developer projection view, the structure version record and the preview or dry-run result shape are specified as typed read-side metadata, without creating storage here.",
+        "Any change to the retained projection shape is specified as an expand-contract evolution owned by schema-metadata-engine-contract; no migration is produced in Actionplan."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "[DOC-APPLY:ready-for-dev] Developer Control Plane Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove that the same structure administrator sees an identical projection regardless of which client renders it, since panel implementation is out of scope.",
+        "Future tests prove version, preview, dry-run and approval ordering holds under concurrent structural edits by two administrators."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.3.2.1, the three dependencies, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] Developer Control Plane Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] developer-control-plane-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] developer-control-plane-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] Developer Control Plane Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] developer-control-plane-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed version, dry-run and cross-plane isolation evidence.",
+        "Rollback removes only D17 data/projections, restores 33/16/17 and the 633-node hash 3e101bc95ef54383ad7df2e0c4eb455635837a1e60ce630587b18c40da28b64d, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] developer-control-plane-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] Developer Control Plane Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] Developer Control Plane Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] Developer Control Plane Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Developer Control Plane Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] Developer Control Plane Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2028-03-16",
+    "end": "2028-04-04",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2028-03-16",
+    "baselineEnd": "2028-04-04"
+  },
+  "deliverables": [
+    "Planning-only audience contract: the developer plane serves the structure administrator and describes ArcheType structure, never tenant business records.",
+    "Planning-only versioning contract: every structural edit produces a new versioned definition rather than mutating the active one, so an earlier shape stays reconstructable.",
+    "Planning-only change path: preview, then dry-run against representative data, then explicit human approval before a structural change becomes active.",
+    "Planning-only boundary statement: the plane is a projection and not a security boundary; policy-decision-point-contract owns the decision and control-plane-taxonomy-contract owns the plane taxonomy.",
+    "Planning-only delegation map: schema-metadata-engine-contract owns definitions and surface-projection-contract owns Surface schema, so this plane requests rather than performs those changes.",
+    "Explicit human approval gate with fixed exclusions: tenant record editing, panel implementation, migration semantics, identity/authentication lifecycle and ECA/ruleset automation are all outside this contract.",
+    "[DOC-APPLY:high-risk-dod] developer-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] Developer Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] developer-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] developer-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] Developer Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] Developer Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] Developer Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly developer-control-plane-contract, WBS 12.3.2.1, archetype, parent k-boyut2-developer-panel, owner platform-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly control-plane-taxonomy-contract, schema-metadata-engine-contract and surface-projection-contract in that order; blocks and related are empty and the parent-only k-schema, k-surface, adr-0022 and adr-0016 edges are not inherited.",
+    "The developer plane administers ArcheType structure for a structure administrator; a tenant business record is never reachable through it.",
+    "Every structural change is versioned: an edit creates a new version and never mutates an active definition in place.",
+    "A change reaches the active projection only after preview, then dry-run, then explicit approval by a human; skipping any step is refused.",
+    "A dry-run result is bound to the exact version it was produced against, so an approval based on a stale dry-run is rejected.",
+    "The plane is not a security boundary: every request is decided through policy-decision-point-contract, a deny is terminal, and the projection cannot widen it.",
+    "tenant record editing is excluded and enforced rather than only documented; the developer plane cannot become a data-editing surface.",
+    "Definition ownership stays with schema-metadata-engine-contract and Surface schema ownership stays with surface-projection-contract; this plane requests changes and does not own them.",
+    "migration semantics are excluded: the plane may show that a change implies a migration but never plans, executes or approves the migration itself.",
+    "Exclusions hold: panel implementation, identity/authentication lifecycle and ECA/ruleset automation are each owned elsewhere and are not defined here.",
+    "Human approval is mandatory before any structural change is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-boyut2-developer-panel: 2028-03-16 through 2028-04-04 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] Developer Control Plane Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] developer-control-plane-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] developer-control-plane-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] Developer Control Plane Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] Developer Control Plane Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] developer-control-plane-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] Developer Control Plane Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] developer-control-plane-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Developer Control Plane Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-dcp-unpreviewed-structure-change",
+      "desc": "Activating an ArcheType structure change without a version, a preview and a dry-run would break every consuming surface and leave no earlier shape to return to.",
+      "severity": "critical",
+      "mitigation": "Require versioned definitions plus a preview and dry-run bound to that exact version before approval, and prove the ordering with negatives."
+    },
+    {
+      "id": "r-dcp-tenant-data-reach",
+      "desc": "A developer plane that can reach tenant records would let a structure administrator edit business data under a structural pretext, bypassing the tenant plane entirely.",
+      "severity": "critical",
+      "mitigation": "Keep tenant record editing excluded as an enforced boundary and prove unreachability with cross-plane negatives rather than with documentation."
+    },
+    {
+      "id": "r-dcp-plane-confusion",
+      "desc": "Treating the developer projection as an enforcement point would let a projection bug become an authorization bypass across planes.",
+      "severity": "high",
+      "mitigation": "State that the plane is not a security boundary, delegate every decision to policy-decision-point-contract and prove that a deny is terminal."
+    },
+    {
+      "id": "r-dcp-scope-expansion",
+      "desc": "A developer plane contract could be misread as authority over Surface schema, migration semantics, panel implementation or identity lifecycle.",
+      "severity": "high",
+      "mitigation": "Keep the Surface schema, migration semantics, panel implementation, identity/authentication lifecycle and ECA/ruleset automation exclusions explicit, and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove developer-control-plane-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/16/17, 633 nodes, contributor 137 and node-set hash 3e101bc95ef54383ad7df2e0c4eb455635837a1e60ce630587b18c40da28b64d; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-developer-control-plane-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "developer-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-developer-control-plane-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "developer-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-developer-control-plane-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "developer-control-plane-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-developer-control-plane-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "developer-control-plane-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-developer-control-plane-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "developer-control-plane-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The developer plane is the structure administrator's view of ArcheType structure; its subject is the definition, never a tenant business record.",
+        "Girdi is a proposed structural edit; çıktı is a new versioned definition plus a preview and a dry-run result bound to that version.",
+        "The durum path is preview, dry-run, approval, activate, and no structural change reaches the active projection before the approval step completes.",
+        "Delegation is explicit: schema-metadata-engine-contract owns definitions, surface-projection-contract owns Surface schema, and control-plane-taxonomy-contract fixes the plane taxonomy.",
+        "Kapsam sınırı gereği bu plane not a security boundary and defers to policy-decision-point-contract; tenant record editing, panel implementation and migration semantics stay outside."
+      ],
+      "notes": "developer-control-plane-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract featureDefs kapsamı. Kapsa: structure administrator audience, versioned definitions, preview and dry-run before approval, delegation to schema and surface contracts. Exclude tenant record editing, panel implementation, Surface schema ownership and migration semantics. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "erişim to the developer plane is a distinct rol from the ops and tenant planes, and cross-plane borrowing is refused rather than merely discouraged.",
+        "The plane is not a security boundary: every request is decided through policy-decision-point-contract, so a projection defect cannot become an authorization bypass.",
+        "tenant record editing is excluded as an enforced izolasyon rule, so a structure administrator cannot reach business data or PII through a structural path.",
+        "Every version, preview, dry-run and approval is written to an append-only denetim record, and least privilege keeps activation separate from authoring.",
+        "[DOC-APPLY:high-risk-dod] developer-control-plane-contract: developer-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] developer-control-plane-contract: Developer Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] developer-control-plane-contract: developer-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] developer-control-plane-contract: developer-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] developer-control-plane-contract: Developer Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] developer-control-plane-contract: Developer Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] developer-control-plane-contract: Developer Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "developer-control-plane-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract security kapsamı. Kapsa: distinct plane role without cross-plane borrowing, PDP-delegated decisions, enforced exclusion of tenant record editing, audited change trail with author/approver separation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- developer-control-plane-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- Developer Control Plane Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- developer-control-plane-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Developer Control Plane Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- developer-control-plane-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- Developer Control Plane Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- developer-control-plane-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- Developer Control Plane Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- developer-control-plane-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- developer-control-plane-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- Developer Control Plane Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- developer-control-plane-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Developer Control Plane Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- Developer Control Plane Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Developer Control Plane Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: developer-control-plane-contract — Developer Control Plane Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- Developer Control Plane Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one typed projection model per control-plane katman rather than a bespoke developer client, so the four planes share a validated shape.",
+        "Version comparison, preview rendering and dry-run diffing stay pure functions with low cyclomatic complexity, testable without a live schema engine.",
+        "Projection and enforcement stay separated; ölü kod and speculative admin abstractions are refused, and engineering rules are reached through standardRefs rather than restated here."
+      ],
+      "notes": "developer-control-plane-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract codeOptimization kapsamı. Kapsa: shared typed projection model, pure version and diff logic, projection/enforcement separation, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The set of admissible structural operations is an allowlist; anything outside it is unavailable in the plane rather than hidden from the projection.",
+        "Least ayrıcalık separates authoring from activation: the identity that proposes a version may not be the identity that approves it.",
+        "Version records and approval decisions are integrity-protected with an imza, so an approval cannot be back-dated onto a different version after the fact."
+      ],
+      "notes": "developer-control-plane-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract securityOptimization kapsamı. Kapsa: allowlisted structural operations, author/approver separation, signed version and approval records. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for rendering the structure projection and for producing a dry-run result over a realistic definition size; no measurement is claimed here.",
+        "Version listings page through a cursor rather than loading every historical definition, since a long-lived ArcheType accumulates many versions.",
+        "Preview and diff computation must avoid N+1 lookups against the schema engine; the definition graph is fetched once per preview rather than per field."
+      ],
+      "notes": "developer-control-plane-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract performance kapsamı. Kapsa: p95 budgets for projection and dry-run, cursor-paged version history, N+1-free preview computation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil developer session sees the same projection and the same approval gates as a desktop one; a cihaz may not carry a widened operation set.",
+        "Offline use is read-only: a cached structure view is labelled stale, and no approval may be queued for later replay from a disconnected client.",
+        "No developer panel implementation is introduced here; rendering the plane, its diffs and its approval prompts stays a separate consumer responsibility."
+      ],
+      "notes": "developer-control-plane-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract mobileApps kapsamı. Kapsa: identical projection and gates across devices, read-only offline with stale labelling, no panel implementation here. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future structure editor must expose the version diff as keyboard navigable content with a visible odak ring at the AAA kontrast threshold, not as a drag-only tree canvas.",
+        "A dry-run outcome and an approval refusal must be announced through an aria live region and must not rely on colour alone to signal a blocking result.",
+        "This contract defines projection semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "developer-control-plane-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract wcag kapsamı. Kapsa: keyboard-navigable version diffs, announced dry-run and refusal outcomes without colour-only signalling, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; any future Kubernetes topology for a structure administration service remains human-developer work.",
+        "Activating an approved definition version is a data-level change behind human approval and must not require a container rebuild; rollback returns to the previous version.",
+        "Withdrawing this shard affects only the planning contract and its deterministic projections, so runtimeDataImpact remains none and NO-GO stands."
+      ],
+      "notes": "developer-control-plane-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract deployment kapsamı. Kapsa: no release or deploy here, version activation as an approved data change with version rollback, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A structural olay may open a proposal in the plane, but ECA/ruleset automation is owned elsewhere and no rule may approve or activate a version by itself.",
+        "An automated proposal still requires a human onay after a dry-run, and a triggered chain stops at maxChainDepth 6 so one structure change cannot cascade unbounded.",
+        "Re-emitting the same event must be idempotent, so a retry does not create a duplicate version or a duplicate approval claim."
+      ],
+      "notes": "developer-control-plane-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract eca kapsamı. Kapsa: events open proposals only, human approval retained after dry-run, depth-bounded chains and idempotent replay. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "AI may read this contract and suggest a changeset, but generating or updating an app or module, overriding a ruleset and writing directly to production are forbidden actions ve yasak kalır.",
+        "AI can never approve or activate a structure version, cannot publish a schema and cannot apply a migration; every such step needs insan onayı after a real dry-run.",
+        "sub_prompt is treated as untrusted input, the kill switch stays available, and no prompt or repository text may widen this shard's fixed D01 scope or fabricate executed-test evidence."
+      ],
+      "notes": "developer-control-plane-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract aiAgents kapsamı. Kapsa: read and suggest-changeset only, AI barred from approving or activating versions and from schema publish or migration apply, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases cover a versioned structure change moving through preview, dry-run and approval, as unit and integration matrices.",
+        "Planned negatives prove an approval without a preceding dry-run, and an approval based on a dry-run bound to an older version, are both refused.",
+        "Planned negatives prove tenant record editing is unreachable and that cross-plane borrowing from the ops or tenant plane fails.",
+        "Planned negatives prove a PDP deny is terminal and that the plane cannot own Surface schema or execute migration semantics.",
+        "Planned concurrency cases prove two administrators editing the same definition cannot both activate; no result may be recorded before a real human-approved run exists."
+      ],
+      "notes": "developer-control-plane-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract testing kapsamı. Kapsa: version-preview-dry-run-approval positives, stale dry-run and missing approval negatives, cross-plane and tenant-edit negatives, terminal PDP deny, concurrency evidence. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A01 broken access control is modeled by delegating every decision to policy-decision-point-contract and keeping the plane explicitly not a security boundary.",
+        "OWASP A04 insecure design is modeled by requiring version, preview and dry-run before approval, so a structural change cannot reach production unexamined.",
+        "OWASP A08 software and data integrity failures are modeled by signed version records and strict doğrulama that an approval matches the exact version it was issued against."
+      ],
+      "notes": "developer-control-plane-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract owasp kapsamı. Kapsa: A01 via PDP delegation, A04 via mandatory preview and dry-run, A08 via signed version records and approval-version validation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-control-planes with contributionKind specification, targetProviderIds [k-control-planes] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so the developer plane touches no kernel internal, no kernel database and no cross-context write path; change requests travel as an olay instead.",
+        "This schedule is only a planning window; predecessor control-plane-taxonomy-contract ends 2028-06-09, so no executable-order or readiness claim is allowed.",
+        "dependsOn stays exactly control-plane-taxonomy-contract, schema-metadata-engine-contract and surface-projection-contract, and the parent-only k-schema, k-surface, adr-0022 and adr-0016 bağımlılık edges are not inherited.",
+        "Scope stays inside the projection layer: tenant record editing, panel implementation, Surface schema ownership, migration semantics, identity/authentication lifecycle and ECA/ruleset automation all stay outside."
+      ],
+      "notes": "developer-control-plane-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract integration kapsamı. Kapsa: contributor routing under areaId k-control-planes, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A structure administration module tüketir this projection through its declared contract rather than issuing a doğrudan veritabanı read against definition tables.",
+        "A consumer must preserve the plane's audience and approval semantics; it cannot re-expose a structural operation inside a tenant-facing product surface.",
+        "Owning the definition belongs to schema-metadata-engine-contract and rendering belongs to panel implementation; this contract projects, it neither owns nor renders."
+      ],
+      "notes": "developer-control-plane-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract moduleUsage kapsamı. Kapsa: contract-mediated consumption without direct database reads, preserved audience and approval semantics, excluded definition ownership and rendering. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "Administrator identity, version authorship and approval records are kişisel veri, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir.",
+        "Definition versions are retained on their own saklama takvimi so an earlier structural shape stays reconstructable; erasure is expressed as author anonymisation rather than version deletion.",
+        "A dry-run must not persist tenant sample data beyond its evaluation, and any change to the retained projection shape follows an expand-contract migration owned elsewhere."
+      ],
+      "notes": "developer-control-plane-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract dataLifecycle kapsamı. Kapsa: administrator personal-data classification, version retention with author anonymisation, non-persistent dry-run samples and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrics include dry-run duration percentiles, approval latency, the share of proposals refused at each gate and PDP deny counts on tenant-safe labels.",
+        "Structured log and trace records carry the definition id, its version and the acting administrator; tenant sample data used in a dry-run is redacted and never becomes a metric label.",
+        "Alerts cover an approval attempted without a matching dry-run, a spike in refused structural proposals and an unusually long-lived unapproved version; thresholds and the runbook require human approval."
+      ],
+      "notes": "developer-control-plane-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract observability kapsamı. Kapsa: dry-run and approval SLIs, redacted version-scoped traces, mismatched-approval and refusal-spike alerts with a human-approved runbook. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The primary failure mode is an unavailable schema engine or PDP; the plane degrades to a read-only, explicitly stale projection rather than to a permissive fallback.",
+        "Version activation is idempotent by construction: re-applying the same approved version must not create a second version, and retries use bounded backoff.",
+        "A failed activation leaves the previous version active, so the plane always has a known-good structure to fall back to and never persists a half-applied definition."
+      ],
+      "notes": "developer-control-plane-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "Developer Control Plane Contract reliability kapsamı. Kapsa: read-only stale degradation, idempotent version activation with bounded retry, previous-version fallback on failed activation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "publish-schema-version",
+      "apply-migration"
+    ],
+    "stepUp": [
+      "publish-schema-version",
+      "apply-migration",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "ssoRef": "sso",
+    "oidcRef": "oidc",
+    "mfaRef": "mfa",
+    "authzRef": "authz-rbac-abac",
+    "identityDataRef": "identity-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "developer-control-plane-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:developer-control-plane-contract:kernel-public-contract",
+      "planned-test:developer-control-plane-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-control-planes",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-control-planes"
+    ]
+  }
+}

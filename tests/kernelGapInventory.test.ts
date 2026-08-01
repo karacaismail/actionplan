@@ -12,6 +12,9 @@ const nodes = live.nodes;
 const kPrefixedNodes = nodes.filter((node) => node.id.startsWith("k-"));
 const report = readJson(REPORT);
 const sorted = (values: string[]) => [...values].sort();
+// The live D01 ledger is fully applied (33/33/0). The pending path is exercised on a clone that
+// deliberately withdraws this already-applied row; the live ledger and node set stay untouched.
+const WITHDRAWN_APPLIED_DESCENDANT_ID = "worker-job-execution-contract";
 const CODE_BEARING_LEVELS = new Set([
   "archetype",
   "feature",
@@ -127,11 +130,19 @@ describe("repo-wide kernel gap inventory", () => {
     const historicalGap = report.structuralGaps.find(
       (item: { id: string }) => item.id === "KGA-G01",
     );
-    const row = live.handoff.ledger.find(
-      (candidate: { applicationStatus: string }) => candidate.applicationStatus === "pending",
+    const handoff = structuredClone(live.handoff);
+    const row = handoff.ledger.find(
+      (candidate: { selectedDescendantId: string }) =>
+        candidate.selectedDescendantId === WITHDRAWN_APPLIED_DESCENDANT_ID,
     );
+    row.applicationStatus = "pending";
+    handoff.applicationSummary = { approved: 33, applied: 32, remaining: 1 };
+    const withdrawnNodes = structuredClone(nodes).filter(
+      (node) => node.id !== row.selectedDescendantId,
+    );
+    const withdrawnMissing = missingCodeBearingParentIds(withdrawnNodes);
     const firstAppliedNodes = [
-      ...structuredClone(nodes),
+      ...withdrawnNodes,
       {
         id: row.selectedDescendantId,
         level: "archetype",
@@ -142,7 +153,9 @@ describe("repo-wide kernel gap inventory", () => {
 
     expect(historicalGap).toMatchObject({ count: 33 });
     expect(historicalGap.nodeIds).toContain(row.parentId);
-    expect(currentMissing).toHaveLength(live.handoff.applicationSummary.remaining - 1);
+    expect(withdrawnMissing).toHaveLength(handoff.applicationSummary.remaining);
+    expect(withdrawnMissing).toContain(row.parentId);
+    expect(currentMissing).toHaveLength(handoff.applicationSummary.remaining - 1);
     expect(currentMissing).not.toContain(row.parentId);
   });
 

@@ -1,0 +1,751 @@
+{
+  "schemaVersion": "1.1.0",
+  "id": "kpi-formula-registry-contract",
+  "wbsCode": "12.13.1",
+  "level": "archetype",
+  "title": "KPI Formula Registry Contract",
+  "slug": "kpi-formula-registry-contract",
+  "aliases": [],
+  "summary": "Version KPI formulas, units and time behavior consistently without taking ownership of dashboard presentation.",
+  "parentId": "k-kpi-registry",
+  "order": 1,
+  "icon": "ph-gauge",
+  "tags": [
+    "kpi",
+    "formula",
+    "ISO 22400",
+    "OEE",
+    "unit",
+    "aggregation",
+    "versioning",
+    "archetype"
+  ],
+  "dependsOn": [
+    "computation-runtime-contract"
+  ],
+  "blocks": [],
+  "related": [],
+  "refs": [
+    "doc-apply:high-risk-dod: docs/dod-evidence-schema-directive.md",
+    "doc-apply:task-handoff: docs/task-to-code-contract.md",
+    "doc-apply:ready-for-dev: docs/ready-for-dev-gate.md",
+    "doc-apply:evidence-dod: docs/evidence-taxonomy.md",
+    "doc-apply:evidence-writeback-runbook: docs/evidence-update-runbook.md",
+    "doc-apply:waterfall-handoff: docs/waterfall-developer-handoff.md",
+    "doc-apply:enterprise-dod: docs/enterprise-dod.md"
+  ],
+  "criticalPath": false,
+  "status": "backlog",
+  "priority": "high",
+  "owner": "veri-ekibi",
+  "assignees": [
+    "veri-ekibi"
+  ],
+  "effort": {
+    "estimate": 8,
+    "unit": "sp",
+    "spent": 0
+  },
+  "progress": 0,
+  "phase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "criteria": [
+        "The KPI formula registry is a sector-neutral catalogue in which every indicator is declared as a formula rather than assembled ad hoc inside a report.",
+        "ISO 22400 is the reference frame for the manufacturing indicators, and OEE is declared explicitly as availability times performance times quality rather than left to each consumer.",
+        "Every entry carries a formula version, a unit and a time behavior, so the same KPI computes identically everywhere and definition drift becomes impossible rather than merely discouraged.",
+        "The aggregation window is part of the declaration: an indicator states whether it sums, averages or recomputes over a period, so a daily and a monthly figure cannot disagree by construction.",
+        "Evaluation is delegated: computation graph ownership stays with computation-runtime-contract, and this registry declares what to compute while that contract decides how it is executed.",
+        "Every registered formula is tenant scoped for overrides, so a tenant-specific variant is an explicit versioned entry rather than a silent local edit.",
+        "dashboard presentation is excluded and chart or widget rendering is excluded; the registry produces values and definitions, never a visual surface.",
+        "[DOC-APPLY:task-handoff] KPI Formula Registry Contract kapsamındaki her doküman yükümlülüğü için uygulanır/uygulanmaz kararı, görev sınırı ve insan geliştirici teslimatı refs[] kaynaklarıyla izlenebilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] Evidence update başlamadan implementation PR merge'i ile staging/deploy doğrulaması birlikte mevcut olmalı; AI yalnız boş değerli patch taslağı önerebilir.",
+        "[DOC-APPLY:waterfall-handoff] KPI Formula Registry Contract için her fazın girdisini, çıktısını, sorumlusunu ve bir sonraki fazı açan ölçülebilir exit kriterini kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-plan": {
+      "status": "pending",
+      "criteria": [
+        "Planned positive matrices register an ISO 22400 indicator, evaluate OEE from availability, performance and quality inputs and assert the same result across two independent consumers.",
+        "Planned negatives prove a formula without a unit or without a declared time behavior is refused at registration rather than defaulted.",
+        "Planned negatives prove a unit mismatch between an input and the declared output unit is refused, so a rate can never be summed as a count.",
+        "Planned negatives prove a formula version cannot be edited in place once published, and that changing a definition requires a new formula version.",
+        "Planned negatives prove a tenant override cannot leak into another tenant's evaluation and cannot silently replace the base definition.",
+        "[DOC-APPLY:high-risk-dod] KPI Formula Registry Contract riskine karşı happy-path dışı negatif corpus ve implementation bozulduğunda testi kırmızı yapan mutation kontrolü tanımlanır.",
+        "[DOC-APPLY:task-handoff] KPI Formula Registry Contract kabul kriterlerini development öncesi davranışsal kırmızı/negatif testlere eşle; gerçek repoPath ve testCommand doğrulanamıyorsa bunları uydurma ve handoff'u blocker durumunda bırak.",
+        "[DOC-APPLY:ready-for-dev] KPI Formula Registry Contract için önce davranışsal assertion içeren kırmızı test ve negatif senaryo tanımlanır; test komutu development başlamadan kaydedilir.",
+        "[DOC-APPLY:evidence-dod] KPI Formula Registry Contract acceptanceCriteria maddelerini beklenen kanıt türü ile repoPath/testCommand'a eşle ve test dosyasının önce kırmızı olacağını tanımla; actual evidence yalnız gerçek çalıştırmadan sonra yazılır.",
+        "[DOC-APPLY:evidence-writeback-runbook] kpi-formula-registry-contract writeback'i için placeholder PR/SHA/tarih, AC'ye bağlanmayan test, eksik deploy/smoke ve yanlış top-level implementationStatus girişlerini reddeden kontrol listesini önce tanımla; gerçek değerleri çalıştırma öncesi doldurma.",
+        "[DOC-APPLY:waterfall-handoff] kpi-formula-registry-contract acceptanceCriteria maddelerini test stratejisi, kırmızı test dosyası taslağı, testCommand ve beklenen evidence türüne eşle; production kodu başlamadan negatif/failure senaryosunu tanımla.",
+        "[DOC-APPLY:enterprise-dod] kpi-formula-registry-contract için yalnız uygulanabilir DoD katmanlarını AC'lere ve pozitif/negatif testlere eşle; tenant/authz/migration/API/UI/audit/observability/a11y/deploy/rollback eksenlerinde seçilen her eşik için beklenen rapor türünü koddan önce tanımla."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "db-schema": {
+      "status": "pending",
+      "criteria": [
+        "The registry entry with formula version, unit, time behavior, aggregation window and tenant scope is specified as typed metadata; no storage, migration or table is produced in Actionplan.",
+        "Formula versions are append-only so a historical figure stays reproducible against the definition that produced it, and entries evolve by expand-contract rather than in-place rewrite."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "development": {
+      "status": "pending",
+      "criteria": [
+        "Human developer may start only after predecessor evidence and explicit human approval; this node itself remains requirements/backlog.",
+        "This schedule is only a planning window from 2026-07-01 to 2028-06-09; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "alerting and threshold ownership is excluded, bitemporal as-of restatement is excluded and timeseries storage ownership is excluded; each stays an adjacent undecided area rather than a claim made here.",
+        "[DOC-APPLY:ready-for-dev] KPI Formula Registry Contract yalnız onaylı allowed-files içinde, kırmızı testten sonra ve kayıtlı non-goal sınırını aşmadan başlatılır; kapsam genişlemesi ayrı insan onayı ister."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "test-qa": {
+      "status": "pending",
+      "criteria": [
+        "Future tests prove that two consumers reading the same formula version and the same inputs produce identical values, including at period boundaries.",
+        "Future tests prove that publishing a new formula version leaves previously computed figures attributable to the version that produced them."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "verification": {
+      "status": "pending",
+      "criteria": [
+        "Exact row, WBS 12.13.1, the single dependency, six schedule fields, registry/projection hashes, planning-only state and NO-GO authority are independently verified.",
+        "No implementation, traceability, runtime, release or deploy evidence may be inferred from governance tests.",
+        "[DOC-APPLY:high-risk-dod] KPI Formula Registry Contract kanıtı risk ekseniyle aynı türdedir; para, PII, tenant-cross, AI-mutasyon, imza veya migration kanıtı birbirinin yerine sayılmaz.",
+        "[DOC-APPLY:task-handoff] kpi-formula-registry-contract için level/phase/status, dependsOn kapısı, traceability hedefleri ve üretilen artefakt bağlantılarını gerçek diff/test çıktısına karşı denetle; doküman veya plan tek başına PASS sayılmaz.",
+        "[DOC-APPLY:ready-for-dev] kpi-formula-registry-contract code-start kararını readiness kontrolüyle yeniden üret; owner, AC-test eşleşmesi, predecessor, repoPath/testCommand ve uygulanabilir UI story veya URL registry bağlarından biri eksikse PASS yazma.",
+        "[DOC-APPLY:evidence-dod] KPI Formula Registry Contract done olmadan kabul kriterlerini doğrulayan açılabilir PR/CI/test/log veya rapor kanıtı bağımsız denetçi tarafından doğrulanır; metin iddiası evidence sayılmaz.",
+        "[DOC-APPLY:evidence-writeback-runbook] İnsan reviewer kaynakları açıp AC eşleşmesini denetler; kanıt yalnız kanonik node'a yazılır ve aggregate dosyalar gen:reindex ile üretilir.",
+        "[DOC-APPLY:waterfall-handoff] Faz geçişlerini gerçek diff/test/evidence ile denetle; doküman handoff'u tek başına code-start veya done kanıtı sayma.",
+        "[DOC-APPLY:enterprise-dod] kpi-formula-registry-contract için applicable DoD satırlarını gerçek PR/CI/test/report işaretleriyle doğrula; instruction-ready sonucu runtime veya GA done'a yükseltme."
+      ],
+      "passed": false,
+      "notes": ""
+    },
+    "release-maintenance": {
+      "status": "pending",
+      "criteria": [
+        "No release or deploy is authorized; any future change requires human approval and renewed determinism, unit-safety and version-attribution evidence.",
+        "Rollback removes only D31 data/projections, restores 33/30/3 and the 647-node hash 159dbe016bd8f81bab0749aac912b38dead7f7c2b34433b2c098427c8b810846, preserves runtimeDataImpact none and NO-GO.",
+        "[DOC-APPLY:high-risk-dod] kpi-formula-registry-contract risk girdisi, şema, kontrol veya migration değiştiğinde eski kanıtı geçersiz kılar; ilgili negatif/mutation/rollback kontrolünü ve owner-insan review'unu yeniden ister, sonuçları çalıştırılmadan uydurmaz.",
+        "[DOC-APPLY:task-handoff] KPI Formula Registry Contract teslimat seviyesine göre deploy/release-train davranışını, rollback tetikleyicisini, sahibini ve doğrulama kontrolünü kaydet; work_unit/micro_step'i üst branch ve üst kanıt zincirinden koparma.",
+        "[DOC-APPLY:ready-for-dev] KPI Formula Registry Contract repo hedefi, test komutu, predecessor veya implementation sözleşmesi değiştiğinde önceki code-start kararını geçersiz kıl ve readiness kapısını yeniden çalıştır; gerçek çıktı olmadan evidence üretme.",
+        "[DOC-APPLY:evidence-dod] KPI Formula Registry Contract için geri-alma tetikleyicisi, uygulanacak rollback adımı, doğrulama kontrolü ve bakım sahibi yayın öncesi kaydedilir.",
+        "[DOC-APPLY:evidence-writeback-runbook] KPI Formula Registry Contract kanıt patch'inden sonra kanonik node'u reindex et ve data/exec/ready/waterfall/content/dimensions/vibecoding/secrets/CI zincirini yeniden çalıştır; başarısız veya erişilemeyen kaynak varken verified/done durumunu koruma.",
+        "[DOC-APPLY:waterfall-handoff] KPI Formula Registry Contract için prod yayın, rollback drill'i, runbook ve izleme sahibini kaydet; verification geçmeden veya açılabilir release/rollback kanıtı olmadan done yazma.",
+        "[DOC-APPLY:enterprise-dod] Rollback sahibi, tetikleyici, runbook ve yeniden doğrulama tarihini applicable DoD katmanlarıyla birlikte kaydet."
+      ],
+      "passed": false,
+      "notes": ""
+    }
+  },
+  "milestone": null,
+  "schedule": {
+    "start": "2026-07-01",
+    "end": "2028-06-09",
+    "actualStart": null,
+    "actualEnd": null,
+    "baselineStart": "2026-07-01",
+    "baselineEnd": "2028-06-09"
+  },
+  "deliverables": [
+    "Planning-only registry shape: a sector-neutral KPI formula registry in which each indicator is a declared formula rather than a report-local expression.",
+    "Planning-only reference frame: ISO 22400 indicators declared explicitly, with OEE stated as availability times performance times quality.",
+    "Planning-only versioning contract: every entry carries a formula version, a unit and a time behavior, plus the aggregation window it is valid for.",
+    "Planning-only determinism guarantee: the same KPI computes identically everywhere, so definition drift between two consumers cannot occur silently.",
+    "Planning-only seam statement: computation graph ownership stays with computation-runtime-contract, and the registry declares what to compute rather than executing it.",
+    "Explicit human approval gate with a fixed boundary: dashboard presentation is excluded, chart or widget rendering is excluded, alerting and threshold ownership is excluded, bitemporal as-of restatement is excluded and timeseries storage ownership is excluded.",
+    "[DOC-APPLY:high-risk-dod] kpi-formula-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.",
+    "[DOC-APPLY:task-handoff] KPI Formula Registry Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.",
+    "[DOC-APPLY:ready-for-dev] kpi-formula-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.",
+    "[DOC-APPLY:evidence-dod] kpi-formula-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.",
+    "[DOC-APPLY:evidence-writeback-runbook] KPI Formula Registry Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.",
+    "[DOC-APPLY:waterfall-handoff] KPI Formula Registry Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.",
+    "[DOC-APPLY:enterprise-dod] KPI Formula Registry Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+  ],
+  "acceptanceCriteria": [
+    "Node identity is exactly kpi-formula-registry-contract, WBS 12.13.1, archetype, parent k-kpi-registry, owner veri-ekibi, delivery-task and kernel cluster.",
+    "dependsOn is exactly computation-runtime-contract; blocks and related are empty and the parent-only k-archetype-computation edge and the parent related list are not inherited.",
+    "The KPI formula registry is sector-neutral: an indicator is declared once and is not redefined per vertical or per report.",
+    "ISO 22400 is the declared reference frame for manufacturing indicators, and OEE is defined as availability times performance times quality.",
+    "Every entry carries a formula version, a unit and a time behavior; an entry missing any of these is refused at registration rather than defaulted.",
+    "The aggregation window is declared per indicator, so a period rollup cannot silently disagree with the figures it aggregates.",
+    "the same KPI computes identically everywhere: two consumers resolving the same formula version and inputs must produce the same value.",
+    "definition drift is structurally prevented: a published formula version is immutable and a changed definition becomes a new version.",
+    "computation graph ownership stays with computation-runtime-contract: this registry declares indicators and never becomes an execution engine.",
+    "A tenant override is an explicit versioned entry scoped to that tenant and can never leak into another tenant's evaluation.",
+    "A unit mismatch between an input and the declared output unit is refused, so an incompatible quantity is never coerced.",
+    "dashboard presentation is excluded and chart or widget rendering is excluded; the registry emits values and definitions rather than a surface.",
+    "alerting and threshold ownership is excluded, bitemporal as-of restatement is excluded and timeseries storage ownership is excluded; all three are named as adjacent undecided areas without implying they are decided here.",
+    "human approval is mandatory before any formula version is activated or implemented; AI has no apply, override, bypass or admin authority.",
+    "All six schedule fields exactly inherit k-kpi-registry: 2026-07-01 through 2028-06-09 with actualStart and actualEnd null.",
+    "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+    "The node remains requirements/backlog, progress 0, with no implementationStatus, traceability, runtime evidence, release or deploy claim.",
+    "[DOC-APPLY:high-risk-dod] KPI Formula Registry Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.",
+    "[DOC-APPLY:high-risk-dod] kpi-formula-registry-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.",
+    "[DOC-APPLY:task-handoff] kpi-formula-registry-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.",
+    "[DOC-APPLY:task-handoff] KPI Formula Registry Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.",
+    "[DOC-APPLY:ready-for-dev] KPI Formula Registry Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.",
+    "[DOC-APPLY:ready-for-dev] kpi-formula-registry-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.",
+    "[DOC-APPLY:evidence-dod] KPI Formula Registry Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.",
+    "[DOC-APPLY:evidence-dod] kpi-formula-registry-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] KPI Formula Registry Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.",
+    "[DOC-APPLY:evidence-writeback-runbook] Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.",
+    "[DOC-APPLY:waterfall-handoff] Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.",
+    "[DOC-APPLY:waterfall-handoff] RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.",
+    "[DOC-APPLY:enterprise-dod] Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.",
+    "[DOC-APPLY:enterprise-dod] Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır."
+  ],
+  "risks": [
+    {
+      "id": "r-kfr-definition-drift",
+      "desc": "If the same indicator is expressed differently in two consumers, two reports disagree about the same reality and every decision built on them becomes unsafe.",
+      "severity": "critical",
+      "mitigation": "Declare each indicator once with a formula version, unit and time behavior, make published versions immutable and prove cross-consumer determinism."
+    },
+    {
+      "id": "r-kfr-unit-coercion",
+      "desc": "Silently coercing a rate into a count, or summing an average, produces a plausible but wrong figure that no downstream check will catch.",
+      "severity": "critical",
+      "mitigation": "Require a declared unit and time behavior on every entry and refuse a unit mismatch at registration rather than at read time."
+    },
+    {
+      "id": "r-kfr-engine-duplication",
+      "desc": "A registry that starts evaluating formulas would duplicate the computation runtime and produce a second, divergent execution semantics.",
+      "severity": "high",
+      "mitigation": "State that computation graph ownership stays with computation-runtime-contract and keep the registry declarative, delegating every evaluation."
+    },
+    {
+      "id": "r-kfr-scope-expansion",
+      "desc": "A KPI registry is easily misread as owning dashboards, alert thresholds, as-of restatement or timeseries storage.",
+      "severity": "high",
+      "mitigation": "Keep all four exclusions explicit in every phase and preserve NO-GO without new human authority."
+    }
+  ],
+  "rollback": "Remove kpi-formula-registry-contract and its app/kernel registry, index, navigation, meta, public and doc-matrix projections; set only its D01 row pending; restore exactly 33/30/3, 647 nodes, contributor 151 and node-set hash 159dbe016bd8f81bab0749aac912b38dead7f7c2b34433b2c098427c8b810846; runtimeDataImpact remains none and NO-GO is preserved.",
+  "evidence": [],
+  "metrics": [],
+  "ecaRules": [
+    {
+      "id": "eca-kpi-formula-registry-contract-ai-app-module-deny",
+      "event": "ai.generation.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-generate-app-or-module",
+          "node": "kpi-formula-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-kpi-formula-registry-contract-ai-app-module-update-deny",
+      "event": "ai.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "in",
+          "value": [
+            "app",
+            "module"
+          ]
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-update-app-or-module",
+          "node": "kpi-formula-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-kpi-formula-registry-contract-ruleset-override-deny",
+      "event": "ai.ruleset.override.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        }
+      ],
+      "then": {
+        "type": "deny",
+        "params": {
+          "reason": "ai-cannot-override-rulesets",
+          "node": "kpi-formula-registry-contract"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": false
+    },
+    {
+      "id": "eca-kpi-formula-registry-contract-archetype-draft-allow",
+      "event": "ai.archetype.generate.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "in",
+          "value": [
+            "draft",
+            "staging"
+          ]
+        }
+      ],
+      "then": {
+        "type": "create-archetype-draft",
+        "params": {
+          "node": "kpi-formula-registry-contract",
+          "level": "archetype"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    },
+    {
+      "id": "eca-kpi-formula-registry-contract-archetype-prod-update-gated",
+      "event": "ai.archetype.update.requested",
+      "when": [
+        {
+          "field": "actor",
+          "op": "eq",
+          "value": "ai"
+        },
+        {
+          "field": "targetLevel",
+          "op": "eq",
+          "value": "archetype"
+        },
+        {
+          "field": "environment",
+          "op": "eq",
+          "value": "production"
+        },
+        {
+          "field": "historyPreserved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "snapshotCreated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "rollbackReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "compatibilityChecked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "migrationMode",
+          "op": "in",
+          "value": [
+            "append-only",
+            "expand-contract"
+          ]
+        }
+      ],
+      "then": {
+        "type": "propose-archetype-prod-update",
+        "params": {
+          "node": "kpi-formula-registry-contract",
+          "history": "preserved"
+        }
+      },
+      "maxChainDepth": 6,
+      "requiresApproval": true
+    }
+  ],
+  "dimensions": {
+    "featureDefs": {
+      "key": "featureDefs",
+      "title": "Özellik Tanımları",
+      "status": "filled",
+      "items": [
+        "The KPI formula registry sağlar one sector-neutral definition per indicator, so an organisation reads a single declared formula rather than a report-local expression.",
+        "Girdi is an indicator declaration carrying a formula version, a unit, a time behavior and an aggregation window; çıktı is a resolvable definition plus the value produced from it.",
+        "ISO 22400 is the reference frame for manufacturing indicators, and OEE is stated as availability times performance times quality rather than reinvented per consumer.",
+        "the same KPI computes identically everywhere because a published formula version is immutable, which makes definition drift structurally impossible.",
+        "Kapsam sınırı gereği dashboard presentation is excluded, chart or widget rendering is excluded, alerting and threshold ownership is excluded, bitemporal as-of restatement is excluded and timeseries storage ownership is excluded."
+      ],
+      "notes": "kpi-formula-registry-contract/featureDefs: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract featureDefs kapsamı. Kapsa: sector-neutral indicator declarations, ISO 22400 and OEE, formula version, unit, time behavior and aggregation window, immutable published versions. Exclude dashboards, rendering, alert thresholds, as-of restatement and timeseries storage. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "security": {
+      "key": "security",
+      "title": "Güvenlik Önlemleri",
+      "status": "filled",
+      "items": [
+        "A KPI figure drives commercial and operational decisions, so registering or changing a definition is a privileged action gated by explicit yetki rather than open to any consumer.",
+        "tenant izolasyon holds for overrides: a tenant-scoped variant is visible only inside that tenant and can never replace the base definition another tenant resolves.",
+        "A published formula version is immutable, so an attacker cannot quietly change what a number means; a redefinition creates a new version and leaves a denetim izi.",
+        "Erişim to the registry is read-mostly: evaluating an indicator requires no write capability, which keeps the definition surface small.",
+        "Input values feeding a formula stay under the caller's own authorization scope, so the registry never becomes a path to read data the caller could not otherwise see."
+      ],
+      "notes": "kpi-formula-registry-contract/security: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract security kapsamı. Kapsa: privileged registration and change, tenant-isolated overrides, immutable published versions with audit, read-mostly access, caller-scoped input authorization. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "codeOptimization": {
+      "key": "codeOptimization",
+      "title": "Kod Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "The planned handoff keeps one tipli declaration katman so a formula, its unit and its time behavior cannot be represented two different ways.",
+        "Registration validation stays a pure function with low karmaşıklık, checkable without an evaluation engine, and declaration stays separated from execution.",
+        "Ölü kod and speculative per-industry indicator sets are refused, the short-code bütçe is respected, and engineering rules are reached through standardRefs rather than restated here.",
+        "[DOC-APPLY:high-risk-dod] kpi-formula-registry-contract: kpi-formula-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n[DOC-APPLY:task-handoff] kpi-formula-registry-contract: KPI Formula Registry Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n[DOC-APPLY:ready-for-dev] kpi-formula-registry-contract: kpi-formula-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n[DOC-APPLY:evidence-dod] kpi-formula-registry-contract: kpi-formula-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n[DOC-APPLY:evidence-writeback-runbook] kpi-formula-registry-contract: KPI Formula Registry Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n[DOC-APPLY:waterfall-handoff] kpi-formula-registry-contract: KPI Formula Registry Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n[DOC-APPLY:enterprise-dod] kpi-formula-registry-contract: KPI Formula Registry Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi."
+      ],
+      "notes": "kpi-formula-registry-contract/codeOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract codeOptimization kapsamı. Kapsa: one typed declaration layer, pure low-complexity registration validation, declaration separated from execution, referenced standards. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.\n\n[DOC-APPLY:high-risk-dod]\nKaynak: docs/dod-evidence-schema-directive.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- kpi-formula-registry-contract için yüksek-risk kapanış kaydı: para/PII/tenant-cross/AI-mutasyon/imza-kanıt/migration ekseni, tek owner, ölçülebilir AC, eksene uygun birim/entegrasyon negatif testi, beklenen kanıt türü ve rollback yolu.\n- KPI Formula Registry Contract yüksek-risk ekseni için owner, ölçülebilir kabul, negatif test, kırmızı→yeşil kayıt ve riske uygun kanıt olmadan done yapılamaz.\n- kpi-formula-registry-contract için her negatif test davranışsal assertion ve mutation-check taşır; bir risk ekseninin kanıtı diğerinin yerine geçmez, gerçek insan doğrulaması olmadan test yeşil veya görev done ilan edilmez.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:high-risk-dod]\n\n[DOC-APPLY:task-handoff]\nKaynak: docs/task-to-code-contract.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- KPI Formula Registry Contract için archetype seviyesine uygun geliştirici handoff paketi: allowed-files, en az bir non-goal, hedef çalışma alanı, bağımlılık yönü, tipli API/sözleşme girdi-çıktısı ve test komutu taslağı.\n- kpi-formula-registry-contract handoff'u level, mevcut phase, status ve dependsOn kapılarından tam birini seçerek insan geliştiriciye tek sonraki eylemi verir; blocked veya önceki fazı geçmemiş görevde kod başlatmaz.\n- KPI Formula Registry Contract için her kabul kriteri repoPath/testCommand ve beklenen kanıt sınıfına eşlenir; doğrulanmamış hedef yol, komut veya predecessor uydurulmaz ve NO-GO olarak görünür kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:task-handoff]\n\n[DOC-APPLY:ready-for-dev]\nKaynak: docs/ready-for-dev-gate.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- kpi-formula-registry-contract için development code-start karar kartı: phase/status, owner, tamamlanmış predecessor'lar, traceability.repoPath, traceability.testCommand ve implementationStatus; UI/URL etkisi varsa ilgili ek kapı girdileri.\n- KPI Formula Registry Contract development kapısına yalnız owner, acceptanceCriteria-test eşlemesi, traceability.repoPath, traceability.testCommand, tamamlanmış bağımlılıklar ve merkezi platform write-policy checker PASS ile geçer.\n- kpi-formula-registry-contract phase=development değilse, blocked ise, implementationStatus=not-started ise veya zorunlu traceability alanı eksikse code-start kararı NO-GO kalır; requirements/test-plan backlog'unda boş execution evidence sahte kanıtla doldurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:ready-for-dev]\n\n[DOC-APPLY:evidence-dod]\nKaynak: docs/evidence-taxonomy.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- kpi-formula-registry-contract için faz-bazlı kanıt planı: her kabul kriterinin beklenen URL/dosya yolu/rapor/log türü, sahibi ve bağımsız doğrulama yöntemi; çalıştırılmamış kanıt alanı planlı/boş kalır.\n- KPI Formula Registry Contract evidence girdilerinin her biri bağımsız açılabilir URL, dosya yolu, rapor veya logdur ve üretildiği fazın kriterini doğrular; prose iddiası, planlanan kanıt, local-only sonuç, tek ekran görüntüsü, skipped/red çıktı veya kırık bağ reddedilir.\n- kpi-formula-registry-contract yalnız gerekli faz kanıtı ve verification birlikte doğrulandığında done/passed olabilir; sonraki faz kanıtı önceki fazın eksik kanıtının yerine geçmez ve gerçek çalıştırma öncesi sonuç uydurulmaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-dod]\n\n[DOC-APPLY:evidence-writeback-runbook]\nKaynak: docs/evidence-update-runbook.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- KPI Formula Registry Contract için merge ve staging/deploy doğrulamasından sonra gerçek PR, CI, test, smoke ve rollback kaynaklarını kanonik node'a yazan insan-onaylı evidence patch'i.\n- KPI Formula Registry Contract evidence writeback'i placeholder URL/SHA/tarih/test sonucu taşımaz; implementation merge'i ile staging veya deploy doğrulaması birlikte yoksa durum verified/done yapılmaz.\n- Her acceptance criterion gerçek test adı/rapor yolu ve CI referansına bağlanır; PR, merge commit, deploy/smoke ve rollback kaynağı olmayan görev done olamaz.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:evidence-writeback-runbook]\n\n[DOC-APPLY:waterfall-handoff]\nKaynak: docs/waterfall-developer-handoff.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- KPI Formula Registry Contract kapsamı ve faz sözleşmesi için yedi waterfall aşamasının giriş/çıkış koşulu, exact predecessor, ilk-30-dakika geliştirici adımı ve beklenen kanıtını gösteren faz devir kartı.\n- Plan-start, code-start ve done eşikleri ayrı tanımlıdır; requirements/test-plan/db-schema tamamlanmadan development başlamaz.\n- RepoPath, testCommand, predecessor evidence veya allowed-files bilinmiyorsa değer uydurulmaz ve görev açık blocker olarak kalır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:waterfall-handoff]\n\n[DOC-APPLY:enterprise-dod]\nKaynak: docs/enterprise-dod.md\nGörev bağlamı: kpi-formula-registry-contract — KPI Formula Registry Contract\nBu kaynak yönergesini aşağıdaki ölçülebilir task sözleşmesiyle uygula:\n- KPI Formula Registry Contract için uygulanabilir enterprise DoD katmanlarını owner, acceptance, evidence, rollback ve gerekçeli N/A ile gösteren görev-özgü kapanış matrisi.\n- Her görev yalnız uygulanabilir DoD katmanını sahiplenir; 18 katmanın tamamı mikro göreve körlemesine kopyalanmaz ve N/A gerekçesiz bırakılamaz.\n- Security, performance, a11y, operability, migration, observability ve rollback katmanlarından uygulanabilir olanların her biri kendi türünde açılabilir kanıt taşır.\nGerçek PR, test veya çalışma çıktısı yoksa evidence üretme ve sonucu geçmiş gibi gösterme.\n[/DOC-APPLY:enterprise-dod]",
+      "provenance": "human",
+      "promptVersion": "doc-task-content-v2"
+    },
+    "securityOptimization": {
+      "key": "securityOptimization",
+      "title": "Güvenlik Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "En az ayrıcalık separates registering a definition, publishing a version and reading a value, so a reporting consumer never holds definition authority.",
+        "The accepted unit and time behavior set is an allowlist, so an unrecognised unit is refused rather than passed through as free text.",
+        "The definition yüzey stays kapalı: a formula composes only registered inputs and declared operators, with no free expression evaluation.",
+        "Override registration is rate-bounded per tenant so a churn of tenant variants cannot be used to obscure a change to a headline indicator."
+      ],
+      "notes": "kpi-formula-registry-contract/securityOptimization: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract securityOptimization kapsamı. Kapsa: separated register, publish and read privileges, allowlisted units and time behaviors, closed definition surface without free expressions, bounded override registration. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "performance": {
+      "key": "performance",
+      "title": "Performans Optimizasyonu",
+      "status": "filled",
+      "items": [
+        "A p95 budget is declared for resolving a formula version and a separate budget for a period rollup over a declared aggregation window; no measurement is claimed here.",
+        "Resolved definitions are read through a bounded önbellek keyed by formula version, which is safe precisely because published versions are immutable.",
+        "Rollup evaluation must avoid N+1 access: an aggregation window is computed in one pass rather than once per contributing interval."
+      ],
+      "notes": "kpi-formula-registry-contract/performance: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract performance kapsamı. Kapsa: p95 budgets for version resolution and period rollup, version-keyed cache justified by immutability, single-pass window aggregation. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "mobileApps": {
+      "key": "mobileApps",
+      "title": "Mobil Uygulama Uyumu",
+      "status": "filled",
+      "items": [
+        "A mobil client reads a KPI value together with the formula version that produced it; a cihaz may not recompute an indicator with its own local expression.",
+        "An offline client shows the last synchronised value as stale together with its aggregation window, so an operator can tell what period the figure covers.",
+        "No mobile-only indicator or unit is introduced here; rendering a KPI stays a separate consumer responsibility."
+      ],
+      "notes": "kpi-formula-registry-contract/mobileApps: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract mobileApps kapsamı. Kapsa: value plus formula version on mobile, no device-side recomputation, stale offline display with the aggregation window, no mobile-only indicator. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "wcag": {
+      "key": "wcag",
+      "title": "WCAG 2.2 AAA",
+      "status": "filled",
+      "items": [
+        "Any future indicator surface must convey a stale or partial figure through text rather than colour alone, at the WCAG AAA kontrast threshold with a visible odak ring.",
+        "A unit and an aggregation window must be announced with the value through an aria description, so a klavye-only or screen-reader user is never given a bare number.",
+        "This contract defines registry semantics only, so no accessibility conformance may be recorded here and every such result stays planned."
+      ],
+      "notes": "kpi-formula-registry-contract/wcag: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract wcag kapsamı. Kapsa: non-colour-only staleness conveyance at AAA contrast, unit and window announced with the value, keyboard-first operation, semantics-only scope. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "deployment": {
+      "key": "deployment",
+      "title": "Dağıtım (Swarm/K8s/Shared)",
+      "status": "filled",
+      "items": [
+        "This shard performs no release or deploy; the hosting topology and container dağıtım of any registry service remain human-developer work behind ops-plane authority.",
+        "Publishing a new formula version is a data-level change behind human approval and must not require a redeploy; rollback pins consumers back to the previous version.",
+        "Reverting this registry shard changes the planning contract and the projections derived from it, never a computed figure, so runtimeDataImpact stays none and NO-GO remains in force."
+      ],
+      "notes": "kpi-formula-registry-contract/deployment: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract deployment kapsamı. Kapsa: no release or deploy here, hosting owned by the ops plane, data-level version publish without redeploy, bounded withdrawal. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "eca": {
+      "key": "eca",
+      "title": "ECA Kuralları",
+      "status": "filled",
+      "items": [
+        "A published formula version olay may be announced so consumers repin their definitions, but this contract never raises a business action from a KPI value.",
+        "A reaction chain raised from a publication olay stops at maxChainDepth 6, so repinning cannot cascade into an unbounded recomputation storm.",
+        "Re-delivering the same publication olay must be idempoten, and alerting and threshold ownership is excluded, so a value crossing a bound triggers no rule here without an explicit onay elsewhere."
+      ],
+      "notes": "kpi-formula-registry-contract/eca: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract eca kapsamı. Kapsa: publication events without business actions, depth-bounded reaction chains, idempotent replay, excluded alerting and thresholds. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "aiAgents": {
+      "key": "aiAgents",
+      "title": "AI Ajan Davranışı",
+      "status": "filled",
+      "items": [
+        "An AI lane is limited to reading this contract and drafting a changeset; app or module generation, app or module update, ruleset override and direct production write all stay yasak.",
+        "AI cannot register a formula, cannot publish a version and cannot change a unit or time behavior; each of those needs insan onayı with a step-up review.",
+        "Any externally supplied indicator text reaching the lane as sub_prompt is güvenilmez, the kill-switch stays reachable, and no prompt or repository prose may widen this shard's fixed D01 sınır or claim an unexecuted test result."
+      ],
+      "notes": "kpi-formula-registry-contract/aiAgents: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract aiAgents kapsamı. Kapsa: read and draft-changeset only, AI barred from registering, publishing or changing units, untrusted sub_prompt and kill switch. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "testing": {
+      "key": "testing",
+      "title": "Testler & QA",
+      "status": "filled",
+      "items": [
+        "Planned positive cases register an ISO 22400 indicator, evaluate OEE from availability, performance and quality and assert cross-consumer equality, as birim and entegrasyon matrices.",
+        "Planned negatif cases prove a formula without a unit or a declared time behavior is refused at registration rather than defaulted.",
+        "Planned negatif cases prove a unit mismatch between an input and the declared output unit is refused, so a rate is never summed as a count.",
+        "Planned negatif cases prove a published formula version cannot be edited in place and that a tenant override cannot leak into another tenant's evaluation.",
+        "Registry results are recordable only from a human-approved run that truly executed, so the planned matrices here are never counted as passing tests."
+      ],
+      "notes": "kpi-formula-registry-contract/testing: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract testing kapsamı. Kapsa: ISO 22400 and OEE positives with cross-consumer equality, missing unit or time behavior negatives, unit mismatch negatives, immutability and tenant override negatives. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "owasp": {
+      "key": "owasp",
+      "title": "OWASP & Standartlar",
+      "status": "filled",
+      "items": [
+        "OWASP A08 software and data integrity failures is the defining axis: an immutable published formula version is what stops a decision-bearing number from being silently redefined.",
+        "OWASP A01 broken access control is modeled by separating definition authority from read access and by scoping tenant overrides to their own tenant.",
+        "OWASP A03 injection is modeled by refusing free expression evaluation: a formula composes only registered inputs and declared operators.",
+        "Girdi doğrulama applies at registration: unit, time behavior and aggregation window are validated against allowlists, and every registration or publication leaves a denetim izi."
+      ],
+      "notes": "kpi-formula-registry-contract/owasp: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract owasp kapsamı. Kapsa: A08 via immutable versions, A01 via separated definition authority and tenant-scoped overrides, A03 via no free expression evaluation, allowlist registration validation with audit. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "integration": {
+      "key": "integration",
+      "title": "Kernel/Core Entegrasyonu",
+      "status": "filled",
+      "items": [
+        "Kernel integration is contributor -> app-kernel/k-kpi-registry with contributionKind specification, targetProviderIds [k-kpi-registry] and runtimeProviderClaimAllowed=false.",
+        "All three publicBoundary flags stay false, so resolving an indicator touches no kernel internal, no kernel database and no cross-context write path; a publication is announced as an olay instead.",
+        "This schedule is only a planning window; predecessor computation-runtime-contract ends 2028-04-30, so no executable-order or readiness claim is allowed.",
+        "Bağımlılık yönü stays exactly computation-runtime-contract, and the parent-only k-archetype-computation edge and the parent related list are not inherited.",
+        "Scope stays inside the declaration sözleşme: dashboard presentation, chart or widget rendering, alerting and threshold ownership, bitemporal as-of restatement and timeseries storage ownership all stay outside."
+      ],
+      "notes": "kpi-formula-registry-contract/integration: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract integration kapsamı. Kapsa: contributor routing under areaId k-kpi-registry to the same provider, closed public boundary, exact dependsOn, planning window marker and the fixed exclusion set. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "moduleUsage": {
+      "key": "moduleUsage",
+      "title": "Modül Kullanımı",
+      "status": "filled",
+      "items": [
+        "A consuming module tüketir an indicator through this registry and may not restate the formula locally or reach a doğrudan tablo for the underlying series.",
+        "A consumer must carry the formula version and the aggregation window alongside any stored figure, so a later audit can tell which definition produced it.",
+        "Owning the execution graph, the dashboard and the alert threshold belongs elsewhere; this sözleşme declares indicators and never renders or watches them."
+      ],
+      "notes": "kpi-formula-registry-contract/moduleUsage: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract moduleUsage kapsamı. Kapsa: registry-mediated indicator consumption without local restatement or direct table reads, formula version and window carried with stored figures, externally owned execution, dashboards and alerts. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "dataLifecycle": {
+      "key": "dataLifecycle",
+      "title": "Veri Yaşam Döngüsü & Uyum",
+      "status": "filled",
+      "items": [
+        "A workforce or operator indicator can expose PII indirectly through small-population aggregates, so KVKK/GDPR veri sınıflandırması, purpose, owner and retention approval are required before implementation; DSAR silme veya anonimleştirme yolu istenir and a minimum aggregation population is declared.",
+        "Published formula versions have their own saklama süresi, longer than the figures they produced, because a historical number is only defensible while its definition is still readable.",
+        "Formula versions are retained append-only so a past figure stays reproducible, and registry entries evolve by expand-contract rather than in-place rewrite."
+      ],
+      "notes": "kpi-formula-registry-contract/dataLifecycle: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract dataLifecycle kapsamı. Kapsa: indirect PII through small-population aggregates with KVKK/GDPR classification and DSAR path, definition retention longer than figures, append-only versions and expand-contract evolution. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "observability": {
+      "key": "observability",
+      "title": "Gözlemlenebilirlik & Operasyon",
+      "status": "filled",
+      "items": [
+        "Planned SLI/SLO metrik set includes formula resolution latency, rollup evaluation latency, registration rejection rate by cause and the share of consumers pinned to a superseded version, on tenant-safe labels.",
+        "Structured log and trace records carry the formula version, unit and aggregation window; indicator values and operator identities are redacted and never become metric labels.",
+        "Alarm coverage includes a registration rejection spike, a surge of consumers stuck on a superseded version and a divergence between two consumers of the same version; thresholds and the runbook require human approval.",
+        "This observability plan measures the registry itself and does not make it an alerting authority, since alerting and threshold ownership is excluded."
+      ],
+      "notes": "kpi-formula-registry-contract/observability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract observability kapsamı. Kapsa: resolution and rollup latency SLIs, rejection-cause metrics, redacted version-scoped traces, superseded-version and divergence alerts with a human-approved runbook, no alerting authority. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    },
+    "reliability": {
+      "key": "reliability",
+      "title": "Dayanıklılık & Süreklilik",
+      "status": "filled",
+      "items": [
+        "The dominant failure mode is an unavailable input series; the indicator reports insufficient data rather than substituting a partial figure that looks complete.",
+        "Evaluation is idempoten by construction: the same formula version over the same inputs and window yields the same value, so a retry with bounded backoff changes nothing.",
+        "A repeatedly failing rollup is routed to a dead-letter path for human review rather than blocking the whole indicator set, and a circuit breaker protects the shared evaluation path."
+      ],
+      "notes": "kpi-formula-registry-contract/reliability: planning-only governance contract; no runtime evidence or readiness claim.",
+      "prompt": "KPI Formula Registry Contract reliability kapsamı. Kapsa: insufficient-data reporting instead of partial figures, idempotent evaluation with bounded retry, dead-letter routing without head-of-line blocking and circuit-breaker protection. Güvenlik sınırı: fixed exclusions and NO-GO cannot be relaxed. Çıktı: Produce planning evidence only.",
+      "provenance": "human"
+    }
+  },
+  "agentPolicy": {
+    "autonomy": "none",
+    "capabilities": [
+      "read",
+      "suggest-changeset"
+    ],
+    "allowedTargets": [],
+    "forbiddenTargets": [
+      "app",
+      "module"
+    ],
+    "allowedActions": [
+      "read",
+      "suggest-changeset"
+    ],
+    "forbiddenActions": [
+      "generate-app",
+      "generate-module",
+      "update-app",
+      "update-module",
+      "publish-public",
+      "disable-ruleset",
+      "override-ruleset",
+      "rewrite-history",
+      "direct-prod-write",
+      "register-kpi-formula",
+      "publish-formula-version",
+      "change-formula-unit"
+    ],
+    "stepUp": [
+      "register-kpi-formula",
+      "publish-formula-version",
+      "change-formula-unit",
+      "change-retention",
+      "migrate-data"
+    ],
+    "rulesetBoundary": {
+      "enforced": true,
+      "canOverride": false,
+      "backendOnly": true,
+      "version": "ai-archetype-eca-v1"
+    },
+    "prodDataPolicy": {
+      "preserveHistory": true,
+      "migrationModes": [
+        "append-only",
+        "expand-contract"
+      ],
+      "requireSnapshot": true,
+      "requireRollback": true,
+      "requireCompatibilityCheck": true
+    },
+    "subPromptUntrusted": true,
+    "killSwitch": true
+  },
+  "standardRefs": {
+    "architectureRef": "architecture",
+    "codingStandardRef": "coding-standards",
+    "shortCodeRef": "short-code",
+    "dataApiContractRef": "data-api-contract",
+    "testingStandardRef": "testing-strategy",
+    "qualityGateRef": "quality-gates",
+    "observabilityRef": "observability",
+    "releasePolicyRef": "release-versioning",
+    "aiGovernanceRef": "ai-governance",
+    "i18nRef": "i18n-standards",
+    "tenancyRef": "tenancy",
+    "privacyRef": "privacy",
+    "decisionGradeRef": "decision-grade-data"
+  },
+  "applicability": {},
+  "waivers": [],
+  "source": {
+    "corpus": "synthetic",
+    "originalId": "kpi-formula-registry-contract",
+    "granularity": "archetype",
+    "cluster": "kernel"
+  },
+  "state": "taslak",
+  "lastUpdated": "2026-08-01",
+  "artifactKind": "delivery-task",
+  "deliveryContext": {
+    "applicability": "not-applicable",
+    "reason": "Bu teslimat görevi bağımsız bir sellable app ağacına bağlı değildir."
+  },
+  "kernelIntegration": {
+    "role": "contributor",
+    "kernelRef": "app-kernel",
+    "contractRefs": [
+      "docs/adr-K1-kernel-kimlik.md",
+      "docs/core-contract-pack.md",
+      "docs/kernel-sdk-app-delivery-sequence.md",
+      "docs/surface-spec.md"
+    ],
+    "publicBoundary": {
+      "directKernelInternalsAllowed": false,
+      "directKernelDatabaseAccessAllowed": false,
+      "crossContextWritesAllowed": false
+    },
+    "plannedTestRefs": [
+      "planned-test:kpi-formula-registry-contract:kernel-public-contract",
+      "planned-test:kpi-formula-registry-contract:kernel-boundary-negative"
+    ],
+    "runtimeProviderClaimAllowed": false,
+    "areaId": "k-kpi-registry",
+    "contributionKind": "specification",
+    "targetProviderIds": [
+      "k-kpi-registry"
+    ]
+  }
+}

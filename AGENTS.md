@@ -1,6 +1,6 @@
 # AGENTS.md — Bu Repoda Çalışan AI Ajan(lar) İçin Bağlayıcı Çalışma Sözleşmesi
 
-Sürüm: 1.3 · Tarih: 2026-07-14
+Sürüm: 1.4 · Tarih: 2026-07-31 (§7 yazar yetkisi etkin yetki zinciri EPOCH-02 ile güncellendi)
 Durum: Kanonik, bağlayıcı. Bu dosyayla çelişen her ajan davranışı geçersizdir.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm).
 
@@ -188,7 +188,9 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 - `src/schemas/*.ts` (şema = TS tiplerinin tek kaynağı)
 - `src/data/standards/*.json` + `src/data/tech-profiles.json` (standart sözleşmeleri)
 
-Yetki sınırı: Bu kanonik dosyalar ve bu `AGENTS.md` yalnız **Açık Kullanıcı/Admin yetkisi** ile değiştirilebilir. Bu açık yetki varsa Actionplan changeset'ini uygulayıp test ve PR teslimini yapabilen tek AI rolü yalnız Codex'tir; PM, uzman ve Claude yalnız ara çıktı/changeset önerir. Açık yetki yoksa Codex de dosyayı değiştirmez. Bu istisna platform ürün koduna, app/module kapsam kararına veya platform Git işlemlerine yazma yetkisi vermez.
+Yetki sınırı: Bu kanonik dosyalar ve bu `AGENTS.md` yalnız **Açık Kullanıcı/Admin yetkisi** ile değiştirilebilir. Bu açık yetki varsa dış directive'i yazan, kapsamı kilitleyen, bağımsız son doğrulamayı yapan ve Git teslimini yürüten rol yalnız Codex'tir; Actionplan changeset'ini dosyaya uygulayan tek yazar ise Codex'in sınırladığı tek Claude writer lease'idir (`ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED`, tek paylaşılan yazar). PM, uzman ve Claude ajanları bu yazar kiralamasının dışında yalnız ara çıktı/changeset önerir ve hiçbiri kendi alt ajanını başlatamaz. Açık yetki yoksa Codex de dosyayı değiştirmez. Bu istisna platform ürün koduna (`human-developer-only`), app/module kapsam kararına veya platform Git işlemlerine yazma yetkisi vermez; Git yürütmesi yalnız Codex'te ve yalnız göreve özel açık kullanıcı yetkisiyle kalır.
+
+Etkin yetki zinciri (append-only, hash-bağlı) bu rol dağılımının tek doğruluk kaynağıdır: `reports/kernel-effective-authority-chain-2026-07-31.json`. EPOCH-02 `EFFECTIVE`; tarihsel GATE-01 EPOCH-01 kaydı yalnız referans olarak korunur ve mutasyona kapalıdır. Çelişki halinde bu zincir esas alınır; `codeStart`, `runtime`, `release`, `deploy` kapalı ve verdict `NO-GO` kalır.
 
 Standartların gezinme indeksi `docs/engineering-standards-index.md` altında toplanmıştır; standart listesi için bu dosyanın Bölüm 2'si yerine o hub'ı, `src/schemas/task.ts` içindeki `StandardRefsSchema`'yı ve `src/data/standards/` dizinini kaynak al.
 
