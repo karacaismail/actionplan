@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
+const APPLICATION_STATE = "reports/kernel-governance-application-state-2026-08-01.json";
 const same = (actual, expected) => JSON.stringify(actual) === JSON.stringify(expected);
 // biome-ignore format: exact 691-byte selection stays compact for the shard budget
 const NORMALIZED_SELECTION = "GATE-01 APPROVED; SCOPE=FULL_CANONICAL_KERNEL; D01=38_PARENTS_5_EXISTING_33_APPROVED_DESCENDANT_LEDGER; D02=EDITION_APP_TO_SDK_TO_KERNEL; D03=SPLIT_MODULE_REGISTRY_AND_CAPABILITY; D04_D09=REJECT_13_GHOSTS; D05=SCAFFOLD_AND_WALKING_SKELETON_ONLY; D06=EARLY_MINIMAL_DB; D07=FIX_KERNEL8_SPLIT_NONKERNEL38; D08=QUARANTINE_AMBIGUOUS_ADRS; D10=SHARED_SCHEMA_TENANT_ID_FORCE_RLS; CROSSCUT=RECOMMENDED; DOCREFS=14_BIND_2_CREATE_1_DEFER; TOPOLOGY=STANDALONE_CLEAN_START_NO_EXTRACTION; ACTIONPLAN_WRITER=CODEX_GOVERNANCE_ONLY; KERNEL_WRITER=CLAUDE_ONLY_FAIL_CLOSED; GIT_EXECUTOR=CODEX; COMMIT_PUSH_PR_MERGE=YES_NONFORCE_NO_TAGS_CI_GATED; TECHNICAL_DECISIONS=CODEX_EVIDENCE_BASED; RELEASE=NO; DEPLOY=NO";
@@ -33,7 +34,7 @@ const PACK_SECTION = `${PACK_HEADING}\n\nUser/Admin GATE-01 onayı \`reports/ker
 // biome-ignore format: exact registry root and parent gate stay compact for the shard budget
 const REGISTRY_ROOT = { schemaVersion: "1.0.0", id: "kernel-governance-decision-registry-2026-07-15", generatedAt: "2026-07-15", status: "pending-human-decisions-no-go", authority: { finalAuthority: "codex", successorCoordinator: "project_manager", specialists: "bounded-audit-and-handoff-only", claude: "worker-slave-codex-invocation-only", runtimeExecutor: "human-developer-only" }, sourceReports: ["reports/kernel-gap-inventory-2026-07-14.json", "reports/kernel-governance-gap-addendum-2026-07-15.json"], invariants: ["KGA-D01 through KGA-D10 are globally unique and ordered.", "This registry discovers decisions; it does not select or close them.", "No pending decision permits code start or runtime readiness claims."], rollback: { trigger: "source decisions drift, duplicate IDs appear, or the registry implies a selected option", action: "revert the registry, decision-pack additions, gate wiring and their tests as one shard", runtimeDataImpact: "none" }, finalDecision: { verdict: "NO-GO", kernelReady: false, sdkReady: false, appBuildable: false, codeStartAllowed: false, nextActionable: "PR-01" } };
 // biome-ignore format: exact package command stays compact for the shard budget
-const PARENT_GATE = "node tools/agents/check-kernel-governance.mjs && vitest run tests/kernelGapInventory.test.ts tests/kernelCodeBearingDescendantHandoff.test.ts tests/kernelDbSubstrateQueueHandoff.test.ts tests/kernelGovernanceGapAddendum.test.ts tests/kernelGovernanceDecisionRegistry.test.ts tests/kernelGovernanceDecisionPack.test.ts tests/kernelAdrCollisionSourceBindings.test.ts tests/kernelGhostWbsDirectiveBindings.test.ts tests/kernelTenancyAuthorityInventory.test.ts tests/kernelCrosscutHandoff.test.ts tests/kernelMissingDocRefPlacement.test.ts tests/kernelSurfaceDependencyOrderHandoff.test.ts tests/kernelRuntimeSuccessorPolicy.test.ts && npm run qa:kernel-governance-authority";
+const PARENT_GATE = "node tools/agents/check-kernel-governance.mjs && vitest run tests/kernelGapInventory.test.ts tests/kernelCodeBearingDescendantHandoff.test.ts tests/kernelDbSubstrateQueueHandoff.test.ts tests/kernelGovernanceGapAddendum.test.ts tests/kernelGovernanceDecisionRegistry.test.ts tests/kernelGovernanceDecisionPack.test.ts tests/kernelAdrCollisionSourceBindings.test.ts tests/kernelGhostWbsDirectiveBindings.test.ts tests/kernelTenancyAuthorityInventory.test.ts tests/kernelCrosscutHandoff.test.ts tests/kernelMissingDocRefPlacement.test.ts tests/kernelSurfaceDependencyOrderHandoff.test.ts tests/kernelRuntimeSuccessorPolicy.test.ts tests/kernelGovernanceApplicationState.test.ts && npm run qa:kernel-governance-authority";
 
 // biome-ignore format: fail-closed contract stays compact for the shard budget
 export function validateKernelGovernanceAuthorization({ authority = {}, registry = {}, pack = "", scripts = {} } = {}) {
@@ -60,7 +61,8 @@ export function validateKernelGovernanceAuthorization({ authority = {}, registry
   exact(authority.nonGoals, NON_GOALS, "non-goals");
   exact(authority.rollback, ROLLBACK, "rollback");
   if (registry.authorizationRef !== AUTHORITY || registry.closureStateRef !== `${AUTHORITY}#application`) errors.push("registry authorization refs drift");
-  const registryRoot = Object.fromEntries(Object.entries(registry).filter(([key]) => !["authorizationRef", "closureStateRef", "decisions"].includes(key)));
+  if (registry.applicationStateRef !== APPLICATION_STATE) errors.push("registry application state ref drift");
+  const registryRoot = Object.fromEntries(Object.entries(registry).filter(([key]) => !["applicationStateRef", "authorizationRef", "closureStateRef", "decisions"].includes(key)));
   exact(registryRoot, REGISTRY_ROOT, "registry root contract");
   const decisions = Array.isArray(registry.decisions) ? registry.decisions : [];
   if (createHash("sha256").update(JSON.stringify(decisions)).digest("hex") !== DECISIONS_SHA256) errors.push("registry decisions digest drift");

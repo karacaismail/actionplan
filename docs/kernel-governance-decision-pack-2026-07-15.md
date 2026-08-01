@@ -192,6 +192,25 @@ ile approved-application-pending olarak kaydedildi. Bu ref kanonik uygulama veya
 kapanışı değildir: registry pending/unselected, `codeStartAllowed=false` ve
 `runtimeCodeAllowed=false` kalır.
 
+## Application State Ledger — Partial Application, NO-GO
+
+`reports/kernel-governance-application-state-2026-08-01.json` GATE-01 intake'ini
+değiştirmeden gerçek kanonik uygulama durumunu tutar. Her satır bir `applicationScope`
+taşır ve bir satır yalnız kendi `applicationScope`'u içinde canonical'dır; kapsam
+dışındaki hiçbir şey applied veya canonical değildir. `KGA-D01`: applied, kapsamı
+approved-descendant-materialization. `KGA-D02`: applied, kapsamı yalnız
+governance-semantics-record; kanonik edge application deferred-to-KGA-D07 kalır, burada
+ne applied ne canonical'dır. `KGA-D03`–`KGA-D10` pending'dir ve `applicationScope`
+değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
+sözleşmesiyle durur: birebir artifact ref'i, birebir application summary'si,
+approved-application-pending kök statüsü ve 691 baytlık GATE-01 approval digest'i.
+Sözleşmesi olmayan bir karar, JSON'u ne kadar applied görünürse görünsün applied
+olamaz; pending satır tamamlanma iddia edemez. Ledger canlı EPOCH-03 zincir başına
+bağlanır; EPOCH-02, eksik veya bayat damga fail-closed reddedilir. Kısmi uygulama gap
+kapanışı değildir: `gapClosed=false`, `codeStartAllowed=false`,
+`runtimeCodeAllowed=false`, `readinessAllowed=false`, release/deploy false ve
+verdict NO-GO kalır; registry `KGA-D01`..`KGA-D10` sırasını pending/unselected tutar.
+
 ## Uygulanan Güvenli Sıra
 
 1. Weak-content analizini import sırasında rapor yazmayan saf kütüphaneye ayır.
