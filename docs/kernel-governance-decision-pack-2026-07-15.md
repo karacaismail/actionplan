@@ -119,6 +119,19 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 Base envanterdeki yedi directive adayı için mevcut owner'a bağlama veya yeni WBS kimliği
 kararı gerekir. Geniş hayalet-WBS ledger'ı D09 altında kalır; bu bölüm node oluşturmaz.
 
+GATE-01 `D04_D09=REJECT_13_GHOSTS` token'ı D04 ile D09 arasında paylaşılır. Bu kayıt
+token'ın yalnız candidate-owner-identity-rejection payını tüketir: KGA-G05'in yedi aday
+kimliği (`k-evidence-seal`, `k-kms`, `k-legal-hold`, `k-migration-bridge`, `k-obligation`,
+`k-provider-adapter`, `k-signature-trust`) `rejected-no-node-creation` olarak reddedilir.
+Her satır kaynak hayalet id'sini ve iddiayı doğuran directive'i D09 ledger'ından türeterek
+bağlar; hiçbir node üretilmez, hiçbir modül yeniden adlandırılmaz ve hiçbir
+`ownerAssignment` yazılmaz — tümü null kalır. Reddetme sahiplik ataması değildir: KGA-G05
+P0 açık gap olarak kalır, ownership çözümü `human-WBS-owner-decision` durumundadır ve
+`gapClosed=false` sürer. On üç satırlık D09 ledger'ı yalnız salt-okunur kanıttır; bayt
+kimliği, `candidate-unselected` ve `pending` durumu korunur, ledger'daki on üç hayalet
+için create/alias/fold/reject dispositions'ın tamamı açık ve D09'a ertelenmiş kalır. Ayrıntı:
+`reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json`.
+
 ### KGA-D05 — PR-10 / PR-11 Exit Semantiği
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -219,7 +232,13 @@ diğerini soğurmaz, node/edge/owner yazılmaz ve birleşik PR-07 belgeleri
 source-evidence-only kalır. Bu satır canlı graph sahipliğinin zaten ayrıştığı anlamına
 gelmez: `capability-registry-contract` hâlâ `k-capability` altında birleşik kapsamla
 durur, `graphProjectionApplied=false`, `nodeRescopeComplete=false` ve
-`canonicalNodeApplication=deferred-to-pr07-pre-execution-node-rescope` kalır. `KGA-D04`–`KGA-D10` pending'dir ve `applicationScope`
+`canonicalNodeApplication=deferred-to-pr07-pre-execution-node-rescope` kalır. `KGA-D04`:
+applied, kapsamı yalnız unowned-directive-ownership-disposition-record ve kanıtı
+`reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json`'dır; KGA-G05'in
+yedi aday owner kimliği reddedilir, node oluşturulmaz ve owner atanmaz. Bu satır KGA-G05
+kapanışı değildir: gap P0 açık kalır, ownership çözümü `human-WBS-owner-decision`
+durumundadır ve on üç satırlık D09 hayalet ledger'ı bayt-aynı, `candidate-unselected` ve
+pending kalarak `ghostLedgerDisposition=deferred-to-KGA-D09` ile ertelenir. `KGA-D05`–`KGA-D10` pending'dir ve `applicationScope`
 değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
@@ -290,6 +309,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; node, edge, owner, queue, registry, closure ve
 EPOCH-03 hiç değişmediği ve `capability-registry-contract` yalnız unresolved olarak
 kaydedildiği için semantic data veya projection rollback'i yoktur.
+KGA-D04 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir aday kimlik için node, owner veya edge
+yazılmadığı ve D09 hayalet ledger'ı bayt-aynı bırakıldığı için semantic data, ghost ledger
+veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 

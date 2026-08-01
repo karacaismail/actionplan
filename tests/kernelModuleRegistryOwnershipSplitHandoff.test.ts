@@ -16,6 +16,8 @@ const PR07_PACK = "docs/platform-pr07-capability-registry-agent-pack-2026-07-09.
 const PR_EXECUTION = "docs/platform-initial-11-pr-execution-handoff-2026-07-09.md";
 const SELECTION_SHA256 = "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6";
 const SCOPE = "ownership-split-governance-record";
+const D04_SCOPE = "unowned-directive-ownership-disposition-record";
+const D04_RECORD = "reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json";
 const NODES = "src/data/generated/nodes";
 const COMBINED_NODE = "src/data/generated/nodes/capability-registry-contract.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
@@ -143,9 +145,12 @@ describe("KGA-D03 module registry ownership split handoff", () => {
 
     // biome-ignore format: D03 becomes applied and canonical only inside the ownership split scope
     expect(row).toEqual({ id: "KGA-D03", applicationStatus: "applied", applicationScope: SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, HANDOFF] });
-    expect(state.summary).toEqual({ total: 10, applied: 3, pending: 7, canonical: 3 });
-    // biome-ignore format: D04..D10 stay pending with no scope while the global gate stays NO-GO
-    for (const pending of state.rows.slice(3)) expect(pending).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false });
+    expect(state.summary).toEqual({ total: 10, applied: 4, pending: 6, canonical: 4 });
+    // D04 is applied alongside D03, but only inside its own scoped disposition record.
+    // biome-ignore format: the neighbouring D04 row is pinned exactly, never skipped
+    expect(state.rows.find((item: { id: string }) => item.id === "KGA-D04")).toEqual({ id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] });
+    // biome-ignore format: D05..D10 stay pending with no scope while the global gate stays NO-GO
+    for (const pending of state.rows.slice(4)) expect(pending).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending", gapClosed: false });
     // biome-ignore format: partial application never unlocks code, runtime, readiness, release or deploy
     expect(state.gate).toMatchObject({ gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" });
     // The promotion is only legal because the validator gained a deliberate D03 contract.
@@ -168,7 +173,7 @@ describe("KGA-D03 module registry ownership split handoff", () => {
       (candidate) => { candidate.state.rows[2].canonicalStatus = "pending"; },
       (candidate) => { candidate.state.rows[2].evidenceRefs = [INVENTORY]; },
       (candidate) => { candidate.state.summary = { total: 10, applied: 2, pending: 8, canonical: 2 }; },
-      (candidate) => { candidate.state.summary.canonical = 4; },
+      (candidate) => { candidate.state.summary.canonical = 3; },
       (candidate) => { candidate.evidence[HANDOFF].id = "kernel-module-registry-ownership-split-handoff-2026-08-02"; },
       (candidate) => { candidate.evidence[HANDOFF].decisionId = "KGA-D04"; },
       (candidate) => { candidate.evidence[HANDOFF].status = "applied-and-closed"; },
