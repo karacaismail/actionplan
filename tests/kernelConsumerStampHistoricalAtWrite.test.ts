@@ -49,6 +49,7 @@ const PINNED: Array<[string, string]> = [
   ["tests/kernelEffectiveAuthorityChain.test.ts", "EPOCH02_ENTRY_SHA256"],
   ["tests/kernelRuntimeSuccessorPolicy.test.ts", "EPOCH02_ENTRY_SHA256"],
   ['tests/kernelSurfaceDependencyOrderHandoff.test.ts', 'epochId === "AUTHORITY-SUPERSESSION-02"'],
+  ["tests/kernelEpoch04AppendExecution.test.ts", "EPOCH04_ENTRY"],
 ];
 // Tier 3, HEAD_TRACKING: the application-state ledger is root-level state deliberately bound to the
 // head. It carries no provenance stamp at all — asserted below, not assumed — so it is correctly
@@ -261,7 +262,7 @@ describe("consumer provenance stamps are historical-at-write", () => {
     const MENTIONS = /(^|[^A-Za-z0-9_])effectiveAuthority([^A-Za-z0-9_]|$)/;
     // biome-ignore format: the dynamic three-tier discovery sweep stays compact for the shard budget
     const discovered = fs.readdirSync(path.join(ROOT, "tests")).filter((file) => file.endsWith(".test.ts")).map((file) => `tests/${file}`).filter((file) => file !== SELF && MENTIONS.test(stripComments(read(file)))).sort();
-    expect(discovered.length, "consumer-discovery-count-drift").toBe(13);
+    expect(discovered.length, "consumer-discovery-count-drift").toBe(14);
     // biome-ignore format: the registry must close exactly over the three tiers
     expect(discovered, "consumer-registry-out-of-sync").toEqual([...CONSUMERS.map(([test]) => test), ...PINNED.map(([test]) => test), ...HEAD_TRACKING].sort());
     // Neither a stamped consumer nor a pinned reader may couple to the live head.
