@@ -124,11 +124,9 @@ describe("KGA-D05 scaffold and walking-skeleton exit semantics", () => {
     // biome-ignore format: the exact approved-not-applied decision binding stays compact
     expect(report.decision).toMatchObject({ topic: "PR-10 scaffold-only and PR-11 walking-skeleton exit semantics", status: "approved-not-applied", decisionOwner: "user-admin", coordinator: "project_manager", finalAuthority: "codex", selectedOption: "scaffold-only-and-walking-skeleton-only", approvalRef: `${CLOSURE}#/approval`, approvalToken: TOKEN });
     expect(report.provenance.approval.normalizedSelectionSha256).toBe(SELECTION_SHA256);
-    // A record written under EPOCH-03 stamps the live head, never a superseded epoch.
-    // biome-ignore format: the live EPOCH-03 stamp binding stays compact
-    // Historical-at-write: the stamp names the sealed entry that governed when this record was
-    // authored. It is resolved by that entry digest and only bounded by the live head, so
-    // appending an epoch never invalidates it and the head is never copied into the stamp.
+    // The record preserves the authority that was effective when it was generated; it does not
+    // track the live head. Historical-at-write status is governed by the sealed entry digest
+    // and bounded by the head, so appending an epoch leaves the stamp resolvable, unchanged.
     // biome-ignore format: the sealed-entry stamp resolution stays compact for the shard budget
     const stamp = chain.entries.find((entry: { entrySha256: string }) => entry.entrySha256 === report.provenance.effectiveAuthority.chainHeadSha256);
     expect(stamp, "consumer-stamp-unresolvable").toBeDefined();
