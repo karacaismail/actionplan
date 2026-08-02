@@ -11,6 +11,7 @@ const ROOT = process.cwd();
 const PACK = "docs/kernel-governance-decision-pack-2026-07-15.md";
 const AUTHORITY = "reports/kernel-governance-closure-authority-2026-07-31.json";
 const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
+const CHAIN = "reports/kernel-effective-authority-chain-2026-07-31.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 // The live D01 ledger is fully applied (33/33/0). The synthetic next-applied universe is built on
 // a clone that deliberately withdraws this already-applied row; live data is never mutated.
@@ -199,13 +200,19 @@ describe("kernel governance decision pack", () => {
       expect(pack).not.toContain(obsolete);
     const handoff = JSON.parse(read(HANDOFF));
     const currentLive = readD01LiveUniverse();
+    // The handoff mirrors the boundary in force, so those three values are derived from the chain
+    // rather than pinned to one epoch; exactly two tuples are legal and the polarity tracks the head.
+    const boundary = JSON.parse(read(CHAIN)).effectiveAuthorityBoundary;
+    // biome-ignore format: the two legal boundary tuples stay compact for the shard budget
+    expect([boundary.codeStartAllowed, boundary.runtimeCodeAllowed, boundary.verdict]).toEqual(boundary.verdict === "NO-GO" ? [false, false, "NO-GO"] : [true, true, "GO-KERNEL-DEVELOPMENT-ONLY"]);
+    expect(boundary.verdict === "NO-GO").toBe(JSON.parse(read(CHAIN)).chainHeadSeq < 4);
     expect(handoff).toMatchObject({
       status: "approved-application-pending",
       gapClosed: false,
       authorityBoundary: {
-        codeStartAllowed: false,
-        runtimeCodeAllowed: false,
-        verdict: "NO-GO",
+        codeStartAllowed: boundary.codeStartAllowed,
+        runtimeCodeAllowed: boundary.runtimeCodeAllowed,
+        verdict: boundary.verdict,
       },
     });
     expect(handoff.ledger).toHaveLength(33);
@@ -271,5 +278,59 @@ describe("kernel governance decision pack", () => {
     for (const decision of governance.decisions) expect(pack).toContain(`### ${decision.id}`);
     expect(governance.structuralFindings.ghostWbsClaims.missingNodeIds).toHaveLength(13);
     expect(governance.structuralFindings.tenancyPhysicalStrategy.physicalStrategy).toBeNull();
+  });
+
+  it("keeps every D-report gate assertion derived from the canonical boundary, never literal", () => {
+    // The application-state gate and the handoff boundary mirror both track the effective-authority
+    // chain. A literal [false, false, "NO-GO"] tuple pins one epoch and silently breaks on the next
+    // append, so every D-report must derive those three values from the chain instead. The four
+    // immovable floors stay literal: they are the invariant these reports actually own.
+    // biome-ignore format: the closed prep-shard registry stays compact for the shard budget
+    const GATED = ["tests/kernelAdrIdentityQuarantine.test.ts", "tests/kernelEarlyMinimalDbSubstrate.test.ts", "tests/kernelGhostWbsIdentityRejection.test.ts", "tests/kernelGovernanceDecisionPack.test.ts", "tests/kernelModuleRegistryOwnershipSplitHandoff.test.ts", "tests/kernelRelationDirectionConflictDisposition.test.ts", "tests/kernelScaffoldWalkingSkeletonExitSemantics.test.ts", "tests/kernelTenancyPhysicalStrategyDisposition.test.ts", "tests/kernelUnownedDirectiveOwnershipDisposition.test.ts"];
+    expect(GATED).toHaveLength(9);
+    for (const file of GATED)
+      expect(fs.existsSync(path.join(ROOT, file)), `gated-report-missing:${file}`).toBe(true);
+    // Comments and quoted detector fixtures are stripped, so neither an example nor this test's own
+    // probe rows can be mistaken for a live assertion.
+    // biome-ignore format: the comment and fixture stripper stays compact for the shard budget
+    const strip = (source: string) => source.split("\n").filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("['") && !line.trim().startsWith('["')).join("\n");
+    // Whitespace is collapsed after stripping, so the detector is formatting-insensitive: the real
+    // multiline handoff form and a hand-compressed one normalize to the same text and cannot differ.
+    const executable = (source: string) => strip(source).replace(/\s+/g, " ");
+    // Scoped to the LIVE artifacts only: the application-state gate and the code-bearing handoff
+    // mirror both track the chain. A D-report's own authorityBoundary is frozen historical evidence
+    // of what governed when it was written, so it stays literal and is deliberately not matched.
+    // biome-ignore format: the live-artifact literal-tuple detector stays compact for the shard budget
+    // The window spans the real multiline forms once whitespace is collapsed: the handoff mirror
+    // needs 96 normalized characters between the receiver and the tuple, so a tight window would let
+    // the multiline literal through. 320 covers both artifacts with margin and still binds the tuple
+    // to its own assertion rather than matching across unrelated statements.
+    const LITERAL = /expect\((?:state\.gate|handoff)\)[\s\S]{0,320}?codeStartAllowed:\s*(?:false|true)\s*,\s*runtimeCodeAllowed:\s*(?:false|true)\s*,[\s\S]{0,200}?verdict:\s*"(?:NO-GO|GO-KERNEL-DEVELOPMENT-ONLY)"/;
+    // The detector is proven on synthetic sources before it is trusted against the real reports.
+    // biome-ignore format: the adversarial detector matrix stays compact for the shard budget
+    const PROBE: Array<[string, boolean]> = [
+      // The exact multiline handoff mirror this shard replaced: 96 normalized chars to the tuple.
+      ['expect(handoff).toMatchObject({\n  status: "approved-application-pending",\n  gapClosed: false,\n  authorityBoundary: {\n    codeStartAllowed: false,\n    runtimeCodeAllowed: false,\n    verdict: "NO-GO",\n  },\n});', true],
+      // The exact multiline state.gate form, and its post-append polarity.
+      ['expect(state.gate).toMatchObject({\n  gapClosed: false,\n  codeStartAllowed: false,\n  runtimeCodeAllowed: false,\n  readinessAllowed: false,\n  releaseAllowed: false,\n  deployAllowed: false,\n  verdict: "NO-GO",\n});', true],
+      ['expect(state.gate).toMatchObject({\n  codeStartAllowed: true,\n  runtimeCodeAllowed: true,\n  verdict: "GO-KERNEL-DEVELOPMENT-ONLY",\n});', true],
+      // The compressed one-liners must still be caught, so neither formatting hides a literal.
+      ['expect(state.gate).toMatchObject({ gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" });', true],
+      ['expect(handoff).toMatchObject({ authorityBoundary: { codeStartAllowed: false, runtimeCodeAllowed: false, verdict: "NO-GO" } });', true],
+      // The safe derived forms, multiline and compressed, must not be flagged.
+      ['expect(state.gate).toMatchObject({\n  gapClosed: false,\n  readinessAllowed: false,\n  releaseAllowed: false,\n  deployAllowed: false,\n  codeStartAllowed: boundary.codeStartAllowed,\n  runtimeCodeAllowed: boundary.runtimeCodeAllowed,\n  verdict: boundary.verdict,\n});', false],
+      ['expect(handoff).toMatchObject({\n  authorityBoundary: {\n    codeStartAllowed: boundary.codeStartAllowed,\n    runtimeCodeAllowed: boundary.runtimeCodeAllowed,\n    verdict: boundary.verdict,\n  },\n});', false],
+      ['expect(state.gate).toMatchObject({ gapClosed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false });', false],
+      // A D-report's own frozen boundary is historical evidence and stays literal by design.
+      ['expect(report.authorityBoundary).toMatchObject({ codeStartAllowed: false, runtimeCodeAllowed: false, verdict: "NO-GO" });', false],
+    ];
+    // biome-ignore format: the detector driver stays compact for the shard budget
+    for (const [snippet, flagged] of PROBE) expect(LITERAL.test(executable(snippet)), snippet.slice(0, 70)).toBe(flagged);
+    // biome-ignore format: every report still pinning the epoch-bound triple is named exactly
+    const pinned = GATED.filter((file) => LITERAL.test(executable(read(file)))).map((file) => `application-state-gate-literal-pin:${file}`);
+    expect(pinned).toEqual([]);
+    // Non-vacuity: each report must actually read the chain boundary it now derives from.
+    // biome-ignore format: the positive derivation requirement stays compact for the shard budget
+    for (const file of GATED) expect(executable(read(file)), `gate-derivation-missing:${file}`).toContain("effectiveAuthorityBoundary");
   });
 });
