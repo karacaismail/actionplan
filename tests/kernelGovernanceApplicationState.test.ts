@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
+// @ts-expect-error -- the JavaScript governance helper intentionally has no declaration file.
+import { UNQUALIFIED_LIVE_CLAIMS } from "../tools/lib/kernel-governance-authorization-audit.mjs";
 
 const ROOT = process.cwd();
 const LEDGER = "reports/kernel-governance-application-state-2026-08-01.json";
@@ -23,7 +25,10 @@ const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf050
 const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
 const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
 const EPOCH02_TEXT_SHA256 = "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
-const DECLARATION_SHA256 = "d7055cd1fc3322468a93c9668c7d5512bce30a039bac1f6673d22c8089901330";
+// Re-pinned after the change boundary was corrected from eight files to the exact twelve this shard
+// touches. The invariants and non-goals are unchanged; only the boundary moved, and it moved to
+// match the real package rather than to widen it.
+const DECLARATION_SHA256 = "a47ca29b842ad4b7a417242265d77bb50d26ec74c9b15b6c57840b420caf7692";
 const D01_SCOPE = "approved-descendant-materialization";
 const D02_SCOPE = "governance-semantics-record";
 const D03_SCOPE = "ownership-split-governance-record";
@@ -41,7 +46,9 @@ const D06_SCOPE = "early-minimal-db-substrate-record";
 const D06_RECORD = "reports/kernel-early-minimal-db-substrate-2026-08-02.json";
 const D07_SCOPE = "relation-direction-conflict-disposition-record";
 const D07_RECORD = "reports/kernel-relation-direction-conflict-disposition-2026-08-02.json";
-const PACK_HEADING = "## Application State Ledger — Partial Application, NO-GO";
+// The heading states what the ledger records — ten applied rows with the gap still open — rather
+// than an unqualified live NO-GO verdict, which only the effective-authority chain may state.
+const PACK_HEADING = "## Application State Ledger — Ten Rows Applied, Gap Open";
 const SELF = "tests/kernelGovernanceApplicationState.test.ts";
 const QUOTES = ["'", '"', "`"];
 const LEDGER_SIBLING_FLOOR = 5;
@@ -59,12 +66,22 @@ const INTAKE = { closureRef: CLOSURE, registryRef: REGISTRY, normalizedSelection
 // biome-ignore format: the exact live head stamp stays compact for the shard budget
 const STAMP = { ref: CHAIN, seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 };
 // biome-ignore format: the ledger-owned change boundary stays compact for the shard budget
-const ALLOWED_FILES = ["tests/kernelRelationDirectionConflictDisposition.test.ts", D07_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs"];
+const ALLOWED_FILES = ["tests/kernelRelationDirectionConflictDisposition.test.ts", D07_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs", GATE_SCRIPT, "tools/lib/kernel-node-universe.mjs", "tests/kernelGovernanceClosureAuthority.test.ts", "tests/kernelGovernanceDecisionPack.test.ts"];
 // biome-ignore format: the exact closed root and row key sets stay compact for the shard budget
 const ROOT_KEYS = ["changeBoundary", "effectiveAuthority", "gate", "generatedAt", "id", "intakeBinding", "invariants", "nonGoals", "rollback", "rows", "schemaVersion", "status", "summary"];
 // biome-ignore format: the exact closed row key set stays compact for the shard budget
 const ROW_KEYS = ["applicationScope", "applicationStatus", "canonicalStatus", "evidenceRefs", "gapClosed", "id"];
-const PACK_SECTION_SHA256 = "2c84fed8f167cdedda9062e3752994df21949f9bd6aaf709c9f817affb93e915";
+const PACK_SECTION_SHA256 = "95ee4993707aadc3a94efeb8265be5e6876247d6845ac5e322099d22a31b1cdd";
+// The ledger section may quote its own recorded status as at-write evidence, but it may not state
+// today's gate polarity or verdict, and it may not describe the pinned gate block as derived. The
+// denylist itself is imported from the gate module so this suite cannot drift from the validator.
+// These clauses are section-local: they state the four-way distinction the ledger section owns —
+// at-write record, pinned-and-restamped literal, the one BINDING chain derivation, and the
+// report-only banner derivation. The section used to call kernel-node-universe the only place that
+// derives from the chain at all, which the gate script's own chain-read banner contradicts; the
+// clauses below keep the two kinds named and separated so the claim cannot silently collapse back.
+// biome-ignore format: the required ledger-section semantics stay compact for the shard budget
+const SECTION_CLAUSES = ["at-write kayıt değeridir", "türetilmez", "birebir sabitlenmiş (pinned literal)", "elle birlikte yeniden damgalanır", "Bağlayıcı boundary türetimini", "tools/lib/kernel-node-universe.mjs", "tools/agents/check-kernel-governance.mjs", "rapor amaçlı türetimdir", "bu iki türetimin hiçbirini yapmaz", "runtime implementasyonu başlamamıştır"];
 
 describe("kernel governance application state ledger", () => {
   it("records real canonical application state without mutating the GATE-01 intake", () => {
@@ -96,6 +113,16 @@ describe("kernel governance application state ledger", () => {
     expect(state.gate.unlockCondition).toBe("all-ten-rows-applied-canonical-with-human-runtime-evidence");
     // The ledger owns its own change boundary; the frozen closure boundary is never widened.
     expect(state.changeBoundary).toEqual({ allowedFiles: ALLOWED_FILES });
+    // Exactly twelve real, distinct files: a thirteenth entry or a silent swap is a different
+    // package, and a padded or fictional entry can no longer inflate the count.
+    expect(state.changeBoundary.allowedFiles).toHaveLength(12);
+    expect(new Set(ALLOWED_FILES).size).toBe(ALLOWED_FILES.length);
+    // biome-ignore format: the boundary existence proof names each missing file exactly
+    expect(ALLOWED_FILES.filter((file) => !fs.existsSync(path.join(ROOT, file))).map((file) => `allowed-file-missing:${file}`)).toEqual([]);
+    // Self-coverage: the artifacts this shard actually moves must be inside the boundary that
+    // bounds it, so a boundary excluding its own work is a named failure rather than an omission.
+    // biome-ignore format: the self-coverage proof stays compact for the shard budget
+    for (const file of [LEDGER, VALIDATOR, SELF, PACK, GATE_SCRIPT]) expect(ALLOWED_FILES, `ledger-artifact-outside-boundary:${file}`).toContain(file);
     expect(closure.changeBoundary.allowedFiles).not.toContain(LEDGER);
     // biome-ignore format: the exact invariant and non-goal content is pinned by digest
     expect(createHash("sha256").update(JSON.stringify({ changeBoundary: state.changeBoundary, invariants: state.invariants, nonGoals: state.nonGoals })).digest("hex")).toBe(DECLARATION_SHA256);
@@ -157,7 +184,18 @@ describe("kernel governance application state ledger", () => {
     // biome-ignore format: the exact normalized application-state pack section stays compact
     const section = pack.slice(pack.indexOf(PACK_HEADING)).split("\n## ")[0].replaceAll("\r\n", "\n").trim();
     // biome-ignore format: the pack section is ratcheted by exact normalized bytes and digest
-    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([5427, PACK_SECTION_SHA256]);
+    expect([Buffer.byteLength(section, "utf8"), createHash("sha256").update(section, "utf8").digest("hex")]).toEqual([7004, PACK_SECTION_SHA256]);
+    // The exact-bytes pin proves the section did not move; these two prove WHAT it may say. The
+    // ledger's own recorded status stays quotable as at-write evidence, while the live gate polarity
+    // and verdict are read from the chain head, so no unqualified live claim survives here.
+    // biome-ignore format: each banned live claim is named by its own shared rule id
+    for (const rule of UNQUALIFIED_LIVE_CLAIMS) expect(section, `section-unqualified-live-claim:${rule.id}`).not.toMatch(rule.pattern);
+    // biome-ignore format: the positive ledger-section requirement stays compact for the shard budget
+    for (const clause of SECTION_CLAUSES) expect(section, `section-clause-missing:${clause}`).toContain(clause);
+    // Non-vacuity: the section still quotes the ledger's own status field as dated evidence, and it
+    // still points at the validator constant that actually pins the gate block.
+    expect(section).toContain("`partial-application-no-go`");
+    expect(section).toContain(VALIDATOR);
   });
 
   it("fails closed on forged intake, stale stamps, unbacked application and unwired gates", async () => {
