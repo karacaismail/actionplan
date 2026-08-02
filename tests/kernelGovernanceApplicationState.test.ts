@@ -419,11 +419,44 @@ describe("kernel governance application state ledger", () => {
     // adversarial snippets above, so the owner is identified by its exact normalized literal.
     // biome-ignore format: the exactly-one authoritative owner pin check stays compact
     expect(pins(source(SELF)).filter((call) => call.body.includes(OWNER_SUMMARY_LITERAL))).toHaveLength(1);
-    // Nothing was dropped: each KGA-Dxx sibling still asserts its own row by id and scope together.
+    // A ledger-touching sibling is one of exactly two kinds. Decision tests own exactly one KGA-Dxx
+    // id and must prove their own row. Non-decision consumers own none; they are named here by path
+    // AND must carry the marker literal in their own source, so neither the list nor the marker can
+    // create a free pass alone. Any other sibling is fail-closed at exactly-one.
+    const CONSUMERS = ["tests/kernelEpoch04ActivationPolicy.test.ts"];
+    const MARKER = 'APPLICATION_STATE_ROLE = "non-decision-consumer"';
+    // The named consumers must actually be discovered, or the classification is vacuous.
+    expect(CONSUMERS.filter((file) => !siblings.includes(file))).toEqual([]);
+    // The marker set and the named set must be identical in both directions: a named file without
+    // the marker is not exempt, and a file that stamps itself without being named is not exempt.
+    // biome-ignore format: the two-way consumer classification proof stays compact
+    expect(siblings.filter((file) => source(file).includes(MARKER)).sort()).toEqual([...CONSUMERS].sort());
+    // biome-ignore format: a declared consumer may not also claim a decision identity
+    expect(CONSUMERS.filter((file) => ownIds(source(file)).length !== 0)).toEqual([]);
+    // Every other ledger-touching sibling owns exactly one decision id — never zero, never two.
+    const decisionSiblings = siblings.filter((file) => !CONSUMERS.includes(file));
+    // biome-ignore format: the restored fail-closed exactly-one ownership contract stays compact
+    expect(decisionSiblings.filter((file) => ownIds(source(file)).length !== 1).map((file) => `application-state-sibling-ownership-drift:${file}`)).toEqual([]);
+    // Nothing was dropped: each decision sibling still asserts its own row by id and scope together.
     // biome-ignore format: the assertion-anchored own-row proof stays compact for the shard budget
-    const dropped = siblings.flatMap((file) => { const ids = ownIds(source(file)); if (ids.length !== 1) return []; return assertsOwnRow(source(file), ids[0]) ? [] : [`application-state-sibling-row-assertion-missing:${file}`]; });
-    expect(dropped).toEqual([]);
-    // biome-ignore format: and every discovered sibling really does name exactly one decision id
-    expect(siblings.filter((file) => ownIds(source(file)).length !== 1)).toEqual([]);
+    expect(decisionSiblings.flatMap((file) => (assertsOwnRow(source(file), ownIds(source(file))[0]) ? [] : [`application-state-sibling-row-assertion-missing:${file}`]))).toEqual([]);
+    // Non-vacuity: the decision-sibling partition must be the larger, populated one.
+    expect(decisionSiblings.length).toBeGreaterThanOrEqual(LEDGER_SIBLING_FLOOR - CONSUMERS.length);
+    // The ownership detector itself is proven against evasion attempts before it is trusted above:
+    // whitespace padding still resolves, comments and assignments never mint an identity, and a
+    // second distinct id is always visible rather than collapsing to one.
+    // biome-ignore format: the adversarial ownership detector matrix stays compact
+    const OWNERSHIP: Array<[string, number]> = [
+      ['expect(report).toMatchObject({ schemaVersion: "1.0.0", decisionId: "KGA-D07" });', 1],
+      ['expect(report).toMatchObject({ schemaVersion: "1.0.0", decisionId  :  "KGA-D07" });', 1],
+      ['expect(report).toMatchObject({\n  schemaVersion: "1.0.0",\n  decisionId: "KGA-D07",\n});', 1],
+      ['// expect(report).toMatchObject({ schemaVersion: "1.0.0", decisionId: "KGA-D07" });', 0],
+      ['/* expect(report).toMatchObject({ schemaVersion: "1.0.0", decisionId: "KGA-D07" }); */', 0],
+      ['const decisionId = "KGA-D07";', 0],
+      ['expect(report).toMatchObject({ decisionId: "KGA-D07" });', 0],
+      ['expect(a).toMatchObject({ schemaVersion: "1.0.0", decisionId: "KGA-D07" }); expect(b).toMatchObject({ schemaVersion: "1.0.0", decisionId: "KGA-D08" });', 2],
+    ];
+    // biome-ignore format: the ownership detector driver stays compact for the shard budget
+    for (const [snippet, count] of OWNERSHIP) expect(ownIds(snippet).length, `ownership-detector-mismatch: ${snippet}`).toBe(count);
   });
 });
