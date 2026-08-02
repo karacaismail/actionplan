@@ -36,6 +36,11 @@ const D08_RECORD = "reports/kernel-adr-identity-quarantine-2026-08-02.json";
 const D09_SCOPE = "ghost-wbs-identity-rejection-record";
 const D09_RECORD = "reports/kernel-ghost-wbs-identity-rejection-2026-08-02.json";
 const PACK_HEADING = "## Application State Ledger — Partial Application, NO-GO";
+const SELF = "tests/kernelGovernanceApplicationState.test.ts";
+const QUOTES = ["'", '"', "`"];
+const LEDGER_SIBLING_FLOOR = 5;
+// The sole authoritative global summary, in the exact shape a normalized matcher body carries.
+const OWNER_SUMMARY_LITERAL = "summary: { total: 10, applied: 7, pending: 3, canonical: 7 }";
 const readJson = (relative: string) =>
   JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
 
@@ -68,6 +73,14 @@ describe("kernel governance application state ledger", () => {
     // biome-ignore format: the exact ledger contract stays compact for the shard budget
     expect(state).toMatchObject({ schemaVersion: "1.0.0", id: "kernel-governance-application-state-2026-08-01", generatedAt: "2026-08-01", status: "partial-application-no-go", intakeBinding: INTAKE, effectiveAuthority: STAMP, rows: ROWS, summary: { total: 10, applied: 7, pending: 3, canonical: 7 }, gate: GATE });
     for (const row of state.rows) expect(Object.keys(row).sort()).toEqual(ROW_KEYS);
+    // This test is the sole owner of the exact pending-id set: it is derived from the pinned rows,
+    // checked against the live ledger and reconciled with the summary, so no sibling restates it.
+    // biome-ignore format: the pending ids are derived, never restated as a second literal ratchet
+    const pendingIds = ROWS.filter((item) => item.applicationStatus === "pending").map((item) => item.id);
+    // biome-ignore format: the live ledger must present exactly those pending ids, in row order
+    expect(state.rows.filter((item: { applicationStatus: string }) => item.applicationStatus === "pending").map((item: { id: string }) => item.id)).toEqual(pendingIds);
+    expect(pendingIds).toEqual(["KGA-D06", "KGA-D07", "KGA-D10"]);
+    expect(state.summary.pending).toBe(pendingIds.length);
     // The ledger owns its own change boundary; the frozen closure boundary is never widened.
     expect(state.changeBoundary).toEqual({ allowedFiles: ALLOWED_FILES });
     expect(closure.changeBoundary.allowedFiles).not.toContain(LEDGER);
@@ -280,5 +293,69 @@ describe("kernel governance application state ledger", () => {
     ];
     // biome-ignore format: the negative matrix driver stays compact for the shard budget
     for (const mutate of mutations) { const candidate = structuredClone(input); mutate(candidate); expect(validateKernelGovernanceApplicationState(candidate).length).toBeGreaterThan(0); }
+  });
+
+  it("owns the global ledger summary pin and lets no sibling governance test restate it", () => {
+    // The ledger-wide summary belongs to this test. A sibling that re-pins it turns every future
+    // decision promotion into a multi-file edit, which has already blocked three shards in a row.
+    // Detection is source-structural, not line-based: comments are stripped, whitespace is
+    // normalized so multiline pins collapse, and each expect() call site is read with balanced
+    // parens so extra matcher arguments and nested calls cannot hide a pin.
+    const source = (file: string) => fs.readFileSync(path.join(ROOT, file), "utf8");
+    // biome-ignore format: the string-aware comment stripper stays compact for the shard budget
+    const stripComments = (text: string) => { let out = ""; let mode = "code"; for (let i = 0; i < text.length; i += 1) { const c = text[i]; const n = text[i + 1]; if (mode === "code") { if (c === "/" && n === "/") { mode = "line"; i += 1; continue; } if (c === "/" && n === "*") { mode = "block"; i += 1; continue; } if (QUOTES.includes(c)) mode = c; out += c; continue; } if (mode === "line") { if (c === "\n") { mode = "code"; out += c; } continue; } if (mode === "block") { if (c === "*" && n === "/") { mode = "code"; i += 1; } continue; } if (c === "\\") { out += c + (n ?? ""); i += 1; continue; } if (c === mode) mode = "code"; out += c; } return out; };
+    // biome-ignore format: the balanced-paren reader stays compact for the shard budget
+    const balanced = (text: string, open: number) => { let depth = 0; for (let i = open; i < text.length; i += 1) { if (text[i] === "(") depth += 1; else if (text[i] === ")") { depth -= 1; if (depth === 0) return { body: text.slice(open + 1, i), end: i }; } } return { body: "", end: text.length }; };
+    // biome-ignore format: every expect() call site is returned as its argument list plus matcher body
+    const calls = (raw: string) => { const text = stripComments(raw).replace(/\s+/g, " "); const out: Array<{ arg: string; body: string }> = []; for (let i = text.indexOf("expect("); i !== -1; i = text.indexOf("expect(", i + 1)) { const arg = balanced(text, i + 6); const tail = text.slice(arg.end + 1, arg.end + 1400); const matcher = /^\s*\.\w+\(/.exec(tail); const body = matcher ? balanced(tail, tail.indexOf("(")).body : ""; out.push({ arg: arg.body, body }); } return out; };
+    // A pin is an assertion on a resolved .summary carrying a literal row total, or any matcher
+    // body nesting summary: { total: ... }. Negative-matrix clones assign instead of asserting.
+    // biome-ignore format: the deterministic global-summary pin detector stays compact
+    const pins = (raw: string) => calls(raw).filter((call) => (/\.summary\b/.test(call.arg) && /\btotal\s*:\s*\d+/.test(call.body)) || /\bsummary\s*:\s*\{[^{}]*\btotal\s*:\s*\d+/.test(call.body));
+    // A sibling's own decision id is the one it asserts in its artifact identity expect.
+    // biome-ignore format: the artifact-identity decision id derivation stays compact
+    const ownIds = (raw: string) => { const ids = new Set<string>(); for (const call of calls(raw)) { if (!call.body.includes("schemaVersion")) continue; const id = /decisionId\s*:\s*"(KGA-D\d\d)"/.exec(call.body); if (id) ids.add(id[1]); } return [...ids]; };
+    // biome-ignore format: an own-row assertion names the sibling's decision id and its scope together
+    const assertsOwnRow = (raw: string, id: string) => calls(raw).some((call) => `${call.arg} ${call.body}`.includes(id) && `${call.arg} ${call.body}`.includes("applicationScope"));
+
+    // The detector is proven against synthetic pins before it is trusted against real siblings.
+    // biome-ignore format: the adversarial detector matrix stays compact for the shard budget
+    const ADVERSARIAL: Array<[string, boolean]> = [
+      ["expect(state.summary).toEqual({ total: 10, applied: 7 });", true],
+      ["expect(state.summary, `pin`).toEqual({ total: 10, applied: 7 });", true],
+      ["expect(readJson(LEDGER).summary).toEqual({ total: 10, applied: 7 });", true],
+      ["expect(state).toMatchObject({ rows: ROWS, summary: { total: 10, applied: 7 }, gate: GATE });", true],
+      ["expect(\n  state.summary,\n).toEqual({\n  total: 10,\n  applied: 7,\n});", true],
+      ["// expect(state.summary).toEqual({ total: 10 });", false],
+      ["/* expect(state.summary).toEqual({ total: 10 }); */", false],
+      ["(candidate) => { candidate.state.summary = { total: 10, applied: 7 }; },", false],
+      ["(candidate) => { candidate.state.summary.canonical = 3; },", false],
+      ["expect(report.applicationSummary).toEqual({ approved: 1, applied: 1 });", false],
+      ["expect(state.gate).toMatchObject({ verdict: 'NO-GO' });", false],
+      ["expect(rows.filter((r) => r.applicationStatus === 'pending')).toEqual(ids);", false],
+    ];
+    // biome-ignore format: the adversarial driver stays compact for the shard budget
+    for (const [snippet, flagged] of ADVERSARIAL) expect(pins(snippet).length > 0, `detector-mismatch: ${snippet}`).toBe(flagged);
+
+    // Every sibling that actually reads the ledger is discovered, so D04, D05 and any future
+    // D06/D07/D10 ledger test is covered without this list ever being restated by hand.
+    // biome-ignore format: the dynamic ledger-touching sibling discovery stays compact
+    const siblings = fs.readdirSync(path.join(ROOT, "tests")).filter((file) => file.endsWith(".test.ts")).map((file) => `tests/${file}`).filter((file) => file !== SELF && source(file).includes(LEDGER)).sort();
+    // Discovery may never silently degrade to an empty set and pass vacuously.
+    expect(siblings.length).toBeGreaterThanOrEqual(LEDGER_SIBLING_FLOOR);
+    // biome-ignore format: every leaking sibling is reported by exact path for a one-look diagnosis
+    const leaks = siblings.filter((file) => pins(source(file)).length > 0).map((file) => `application-state-global-summary-pin-leak:${file}`);
+    expect(leaks).toEqual([]);
+
+    // The relocation must keep exactly one owner. Counting any pin here would also count the
+    // adversarial snippets above, so the owner is identified by its exact normalized literal.
+    // biome-ignore format: the exactly-one authoritative owner pin check stays compact
+    expect(pins(source(SELF)).filter((call) => call.body.includes(OWNER_SUMMARY_LITERAL))).toHaveLength(1);
+    // Nothing was dropped: each KGA-Dxx sibling still asserts its own row by id and scope together.
+    // biome-ignore format: the assertion-anchored own-row proof stays compact for the shard budget
+    const dropped = siblings.flatMap((file) => { const ids = ownIds(source(file)); if (ids.length !== 1) return []; return assertsOwnRow(source(file), ids[0]) ? [] : [`application-state-sibling-row-assertion-missing:${file}`]; });
+    expect(dropped).toEqual([]);
+    // biome-ignore format: and every discovered sibling really does name exactly one decision id
+    expect(siblings.filter((file) => ownIds(source(file)).length !== 1)).toEqual([]);
   });
 });
