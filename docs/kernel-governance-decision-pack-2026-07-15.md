@@ -1,8 +1,18 @@
 # Kernel Governance Decision Pack
 
-Tarih: 2026-07-15  
-Durum: DIRECTIVE-ONLY; runtime NO-GO  
-Yetki zinciri: Codex → PM → uzman ajanlar → Claude workers/slaves
+- Tarih: 2026-07-15 (at-write snapshot)
+- Durum: DIRECTIVE-ONLY; 2026-07-15 at-write runtime NO-GO
+- Yetki zinciri: Codex → PM → uzman ajanlar → Claude workers/slaves
+
+Zaman kapsamı: Bu belgedeki tarihli ölçüm, GATE-01 intake'i ve at-write yetki değerleri
+yazıldıkları güne ait kanıttır; canlı yetki iddiası değildir. Güncel canlı yetki, kapı
+polaritesi ve verdict her zaman etkin yetki zincirinden okunur —
+`reports/kernel-effective-authority-chain-2026-07-31.json`. Zincirin
+`nonSupersedableFloors` tabanı `release` ve `deploy`u NO tutar ve `EXCLUDED_TARGETS`
+SDK/APP_CORE/APP/MODULE'ü kapalı tutar. Runtime implementasyonu başlamamıştır: bu, bu
+paketin bir zincir tabanı iddiası değil, `platform` yüzeyinde DB, migration, kernel paketi
+ve SDK bulunmadığına dair harici kanıtla doğrulanan bir olgudur; zincir başı bir
+`RUNTIME_IMPLEMENTATION_START` token'ı taşıdığı anda bağlayıcı kaynak o token olur.
 
 ## Kısa Durum
 
@@ -14,7 +24,10 @@ kapsamındadır.
 
 ## Repo Gerçeği
 
-| Kaynak | Doğrulanan durum | Sonuç |
+Bu tablo 2026-07-15 at-write ölçümüdür; satırlardaki sonuç o güne aittir ve güncel canlı
+yetki için etkin yetki zinciri okunur.
+
+| Kaynak | Doğrulanan durum | Sonuç (2026-07-15 at-write) |
 |---|---|---|
 | actionplan | 2026-07-15 pre-D01 snapshot: 617 düğüm, 41 `k-*` kimliği, 787 SP; kernel evidence sayısı 0 | Tarihsel plan/sözleşme kanıtı; current-live toplam için authority değildir |
 | platform | FastAPI health/ping ve UI SurfaceRenderer iskeleti; DB, migration, kernel paketi ve SDK yok | Runtime NO-GO |
@@ -80,7 +93,10 @@ Makine-okunur `reports/kernel-code-bearing-descendant-handoff-2026-07-15.json`, 
 graph'taki 38/6/5/33 snapshot'ını ve exact 33 seçimi bağlar. Current-live application özeti,
 pending/applied satırları ve beklenen node toplamı `resolveD01NodeUniverse` ile doğrulanır;
 handoff `gapClosed=false` taşıdığı sürece D01 kapanmış değildir.
-`codeStartAllowed=false`, `runtimeCodeAllowed=false` ve runtime verdict `NO-GO` kalır.
+Bu bölümün 2026-07-15 at-write anında `codeStartAllowed=false`, `runtimeCodeAllowed=false`
+ve runtime verdict `NO-GO` idi; bu üçü o tarihli kanıttır, canlı yetki değildir. Handoff'un
+`authorityBoundary` aynası ve güncel verdict etkin yetki zincirinden okunur; `release` ve
+`deploy` zincir tabanında NO kalır ve runtime implementasyonu başlamamıştır.
 
 ### KGA-D02 — k-surface Dependency ve SDK Sırası
 
@@ -260,14 +276,15 @@ migration veya runtime kodu yazılmaz. Ayrıntı:
 ## P0 Bağlayıcı Ledger'lar
 
 Aşağıdaki beş P0 ledger D01'i approval-aware, D06 ve D08/D09/D10 pending/unselected
-makine-okunur snapshot olarak bağlar; runtime NO-GO sürer ve bu ledger'lar kanonik ADR
-topic, WBS owner/disposition veya tenancy topolojisini seçmez. D01 handoff exact 33
+makine-okunur snapshot olarak bağlar; hepsi 2026-07-15 at-write runtime NO-GO taşır ve
+bu ledger'lar kanonik ADR topic, WBS owner/disposition veya tenancy topolojisini seçmez.
+Durum sütunu at-write kayıttır; güncel verdict etkin yetki zincirinden okunur. D01 handoff exact 33
 descendant seçimini ve current application state'i kaydeder; resolver bu state'in live node
 evreniyle eşleşmesini fail-closed doğrular.
 
 | Karar | P0 ledger | Durum |
 |---|---|---|
-| KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | approved; application state resolver-validated; gap açık; NO-GO |
+| KGA-D01 | reports/kernel-code-bearing-descendant-handoff-2026-07-15.json | approved; application state resolver-validated; gap açık; at-write NO-GO |
 | KGA-D06 | reports/kernel-db-substrate-queue-handoff-2026-07-15.json | pending; iki seçenek candidate-unselected, queuePatch null |
 | KGA-D08 | reports/kernel-adr-collision-source-bindings-2026-07-15.json | pending; ADR kimlikleri ambiguous, canonicalTopic null |
 | KGA-D09 | reports/kernel-ghost-wbs-directive-bindings-2026-07-15.json | pending; 13 hayalet binding candidate-unselected |
@@ -284,10 +301,13 @@ evreniyle eşleşmesini fail-closed doğrular.
 
 User/Admin GATE-01 onayı `reports/kernel-governance-closure-authority-2026-07-31.json`
 ile approved-application-pending olarak kaydedildi. Bu ref kanonik uygulama veya karar
-kapanışı değildir: registry pending/unselected, `codeStartAllowed=false` ve
-`runtimeCodeAllowed=false` kalır.
+kapanışı değildir: registry pending/unselected kalır. Güncel canlı yetki ve verdict bu
+bölümden değil, her zaman etkin yetki zincirinden okunur; `release` ve `deploy` zincirin
+supersede edilemez tabanında NO kalır ve runtime implementasyonu başlamamıştır. Intake'in
+kendi 2026-07-31 at-write snapshot'ı dokunulmaz kanıttır ve canlı kapı polaritesi
+değildir; o snapshot içinde `codeStartAllowed=false` ve `runtimeCodeAllowed=false` kalır.
 
-## Application State Ledger — Partial Application, NO-GO
+## Application State Ledger — Ten Rows Applied, Gap Open
 
 `reports/kernel-governance-application-state-2026-08-01.json` GATE-01 intake'ini
 değiştirmeden gerçek kanonik uygulama durumunu tutar. Her satır bir `applicationScope`
@@ -349,17 +369,37 @@ sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, bire
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
 approval digest'i.
 Sözleşmesi olmayan bir karar, JSON'u ne kadar applied görünürse görünsün applied
-olamaz; pending satır tamamlanma iddia edemez. Ledger canlı EPOCH-03 zincir başına
-bağlanır; EPOCH-02, eksik veya bayat damga fail-closed reddedilir. Kısmi uygulama gap
-kapanışı değildir: `gapClosed=false`, `codeStartAllowed=false`,
-`runtimeCodeAllowed=false`, `readinessAllowed=false`, release/deploy false ve
-verdict NO-GO kalır; registry `KGA-D01`..`KGA-D10` sırasını pending/unselected tutar.
+olamaz; pending satır tamamlanma iddia edemez. On satırın uygulanması gap kapanışı
+değildir: `gapClosed=false` sürer ve registry `KGA-D01`..`KGA-D10` sırasını
+pending/unselected tutar. Ledger'ın kendi `status` alanı yazıldığı gibi
+`partial-application-no-go` kalır; bu at-write kayıt değeridir, canlı verdict iddiası
+değildir.
+
+Ledger'ın `gate` bloğu türetilmez. `tools/lib/kernel-governance-application-state.mjs`
+içindeki `GATE` sabiti birebir sabitlenmiş (pinned literal) bir kayıttır ve validator
+ledger'ın `gate` bloğunu bu sabitle alan alan karşılaştırır. Zincire bağ ayrı bir
+mekanizmadır: ledger'ın `effectiveAuthority` damgası canlı zincir başının `seq`, `epochId`,
+`entrySha256` ve `normalizedTextSha256` değerleriyle bire bir eşleşmek zorundadır ve
+superseded, eksik veya bayat damga fail-closed reddedilir. Zincir başı ilerlediğinde bu
+sabit ile ledger elle birlikte yeniden damgalanır; damgalanmazsa kapı kapanır. Yani ledger
+"canlı yetkinin türevi" değil, "canlı başa mühürlenmiş kayıt"tır. Bu pakette zincirden
+türetim iki ayrı biçimde geçer ve ikisi eşdeğer değildir. Bağlayıcı boundary türetimini
+yapan tek yer `tools/lib/kernel-node-universe.mjs` (`resolveD01AuthorityBoundary`) D01
+boundary çözümleyicisidir: zincirden çözdüğü sınır D01 evrenini fiilen kapatır ve
+çözülemeyen zincir fail-closed reddedilir. `tools/agents/check-kernel-governance.mjs`
+banner'ı ise zincirin kendi `effectiveAuthorityBoundary` alanını okuyup bildirir; bu
+rapor amaçlı türetimdir, hiçbir kaydı veya kapıyı bağlamaz, tanınmayan verdict'te
+fail-closed çıkar ve kendisi boundary üretmez. Application-state ledger'ı ise
+bu iki türetimin hiçbirini yapmaz. Ledger `gate` bloğunda hangi kayıt damgalı olursa
+olsun `gapClosed`, `readinessAllowed`, `kernelReady`, `sdkReady`, `appBuildable`,
+`releaseAllowed` ve `deployAllowed` false kalır ve runtime implementasyonu başlamamıştır.
 
 ## Uygulanan Güvenli Sıra
 
 1. Weak-content analizini import sırasında rapor yazmayan saf kütüphaneye ayır.
 2. Üç eski platform writer'ını fail-closed karantinaya al.
-3. Kernel governance sayımlarını ve runtime NO-GO sonucunu machine-readable kapıya bağla.
+3. Kernel governance sayımlarını ve at-write runtime NO-GO sonucunu machine-readable kapıya
+   bağla; kapının bildirdiği canlı verdict etkin yetki zincirinden türetilir.
 4. Açık insan kararlarını bu paketle görünür kıl; WBS, queue, ADR veya tenancy
    kararlarını otomatik uygulama.
 
@@ -385,9 +425,10 @@ verdict NO-GO kalır; registry `KGA-D01`..`KGA-D10` sırasını pending/unselect
   seçilmemiş seçenekleri ve fail-closed code-start durumunu doğrular.
 - D01 handoff testi immutable pre-D01 graph'tan 38 module parent, 6 doğrudan-child sahibi,
   5 covered ve 33 açık seçimi doğrular; current-live application state, referential integrity,
-  DAG ve NO-GO sınırını kanonik resolver ile zorlar.
-- D06 handoff testi canlı PR-01..11 zincirini, DB bağımlılık sınıflarını, iki tarafsız
-  seçeneği, değişmemiş base queue'yu ve NO-GO yetki sınırını zorlar.
+  DAG ve zincirden türetilen güncel yetki sınırını kanonik resolver ile zorlar.
+- D06 handoff testi 2026-07-15 at-write PR-01..11 kuyruğunu, DB bağımlılık sınıflarını, iki
+  tarafsız seçeneği, değişmemiş base queue'yu ve o tarihli at-write NO-GO yetki sınırını
+  zorlar; bu satır tarihsel kuyruk kanıtıdır, canlı yetki beyanı değildir.
 - Runtime kernel yalnız gerçek Postgres RLS, transaction/outbox/audit, PR/CI ve
   rollback drill evidence ile yeniden değerlendirilir.
 
@@ -452,7 +493,10 @@ projeksiyon veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
-Runtime kernel için NO-GO sürer. Actionplan tarafında yalnız fail-closed tooling,
+Bu belgenin 2026-07-15 at-write kararı runtime kernel için NO-GO idi. Güncel canlı verdict
+bu paragraftan değil, etkin yetki zincirinden okunur; `release` ve `deploy` zincirin
+supersede edilemez tabanında NO kalır, `EXCLUDED_TARGETS` SDK/APP_CORE/APP/MODULE'ü kapalı
+tutar ve runtime implementasyonu başlamamıştır. Actionplan tarafında yalnız fail-closed tooling,
 kanıtlı gap kaydı ve insan-karar paketi uygulanabilir. Şu anda yalnız PR-01
 next-actionable konumundadır. PR-01 next-actionable bir code-start izni değildir;
 KGA-D01..D10 kapanmadan kernel-ready, SDK-ready veya app-buildable kararı verilmez.

@@ -102,10 +102,14 @@ const exactObject = (actual, expected) =>
 
 // Naming a sealed entry is necessary but not sufficient: a stamp stays valid only while the
 // authority it named still governs. The D01 boundary derived from the chain prefix ending at the
-// stamped entry must equal the boundary in force now. An append that leaves the boundary
-// byte-identical keeps every earlier stamp valid — the live EPOCH-02 stamps survive the EPOCH-03
-// head untouched — while a sealed but pre-supersession entry binds a boundary that no longer holds
-// and fails closed. An unresolvable or erroring derivation is a rejection, never a bypass.
+// stamped entry must equal the boundary in force now. Whether a stamp survives an append is decided
+// by the boundary, not by the epoch number: an append that leaves the derived boundary
+// byte-identical keeps every earlier stamp governing, while an append that moves any mapped
+// dimension supersedes every stamp behind it, so a consumer bound to the live boundary must be
+// restamped onto the head. Either way a sealed stamp stays historically RESOLVABLE — that is a
+// separate question, answered by sealedStamp above. A sealed but superseded entry binds a boundary
+// that no longer holds and fails closed here. An unresolvable or erroring derivation is a
+// rejection, never a bypass.
 const stampGoverns = (stamped, effective) => {
   const entries = sealedChainEntries();
   const index = entries?.indexOf(stamped) ?? -1;

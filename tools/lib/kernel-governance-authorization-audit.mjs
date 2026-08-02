@@ -30,7 +30,25 @@ const NON_GOALS = ["do not mutate canonical decisions, handoffs, nodes, queues, 
 // biome-ignore format: exact rollback stays compact for the shard budget
 const ROLLBACK = { trigger: "approval evidence, selected disposition, authority boundary or fail-closed application state drifts", action: "revert this approval-intake artifact, its traceability refs, validator, tests and package gate as one shard", runtimeDataImpact: "none" };
 const PACK_HEADING = "## GATE-01 Approval Intake — Application Pending";
-const PACK_SECTION = `${PACK_HEADING}\n\nUser/Admin GATE-01 onayı \`reports/kernel-governance-closure-authority-2026-07-31.json\`\nile approved-application-pending olarak kaydedildi. Bu ref kanonik uygulama veya karar\nkapanışı değildir: registry pending/unselected, \`codeStartAllowed=false\` ve\n\`runtimeCodeAllowed=false\` kalır.`;
+// biome-ignore format: the exact time-scoped GATE-01 intake mirror stays compact for the shard budget
+const PACK_SECTION = `${PACK_HEADING}\n\nUser/Admin GATE-01 onayı \`reports/kernel-governance-closure-authority-2026-07-31.json\`\nile approved-application-pending olarak kaydedildi. Bu ref kanonik uygulama veya karar\nkapanışı değildir: registry pending/unselected kalır. Güncel canlı yetki ve verdict bu\nbölümden değil, her zaman etkin yetki zincirinden okunur; \`release\` ve \`deploy\` zincirin\nsupersede edilemez tabanında NO kalır ve runtime implementasyonu başlamamıştır. Intake'in\nkendi 2026-07-31 at-write snapshot'ı dokunulmaz kanıttır ve canlı kapı polaritesi\ndeğildir; o snapshot içinde \`codeStartAllowed=false\` ve \`runtimeCodeAllowed=false\` kalır.`;
+// The pack is a dated at-write snapshot, so it may record what governed on its own date but may
+// never state today's authority. Every rule below carries the exact prohibited sentence it bans, so
+// a consumer can reinstate a real claim instead of a synthetic one and a pattern that stopped
+// matching its own sample is a dead rule rather than a silently passing one. These two lists are the
+// single source for the pack-wide rule: the gate and the pack/ledger tests all import them, so the
+// denylist cannot drift between the validator and the suites that assert it.
+// biome-ignore format: the closed unqualified-live-claim registry stays compact for the shard budget
+export const UNQUALIFIED_LIVE_CLAIMS = [{ id: "status-header-live-no-go", pattern: /Durum: DIRECTIVE-ONLY; runtime NO-GO/, sample: "Durum: DIRECTIVE-ONLY; runtime NO-GO" }, { id: "final-decision-live-no-go", pattern: /Runtime kernel için NO-GO sürer/, sample: "Runtime kernel için NO-GO sürer." }, { id: "d01-live-runtime-verdict", pattern: /runtime verdict `NO-GO` kalır/, sample: "runtime verdict `NO-GO` kalır" }, { id: "ledger-live-verdict", pattern: /verdict NO-GO kalır/, sample: "verdict NO-GO kalır" }, { id: "ledger-heading-live-no-go", pattern: /Partial Application, NO-GO/, sample: "## Application State Ledger — Partial Application, NO-GO" }, { id: "ledger-pinned-epoch-binding", pattern: /canlı EPOCH-0\d zincir başına/, sample: "Ledger canlı EPOCH-03 zincir başına bağlanır" }, { id: "derived-ledger-gate", pattern: /canlı zincir başından türetilir/, sample: "Ledger `gate` bloğu canlı zincir başından türetilir" }, { id: "unconditional-runtime-start-floor", pattern: /zincir (?:hangi verdict'i verirse versin|ne verirse versin)/, sample: "zincir ne verirse versin `RUNTIME_IMPLEMENTATION_START` NO kalır" }];
+// The positive half: each clause is a full sentence fragment carrying one required distinction, not
+// a bare identifier that could satisfy the rule by appearing in any code fence.
+// biome-ignore format: the required time-scope clause registry stays compact for the shard budget
+export const TIME_SCOPE_CLAUSES = [{ id: "dated-snapshot-label", clause: "2026-07-15 at-write" }, { id: "live-authority-source", clause: "etkin yetki zincirinden okunur" }, { id: "chain-named-by-path", clause: "reports/kernel-effective-authority-chain-2026-07-31.json" }, { id: "runtime-start-external-fact", clause: "runtime implementasyonu başlamamıştır" }];
+// The two shared predicates the gate and the suites both call, so no consumer re-implements the walk.
+export const unqualifiedLiveClaims = (text) =>
+  UNQUALIFIED_LIVE_CLAIMS.filter((rule) => rule.pattern.test(text)).map((rule) => rule.id);
+export const missingTimeScopeClauses = (text) =>
+  TIME_SCOPE_CLAUSES.filter((rule) => !text.includes(rule.clause)).map((rule) => rule.id);
 // biome-ignore format: exact registry root and parent gate stay compact for the shard budget
 const REGISTRY_ROOT = { schemaVersion: "1.0.0", id: "kernel-governance-decision-registry-2026-07-15", generatedAt: "2026-07-15", status: "pending-human-decisions-no-go", authority: { finalAuthority: "codex", successorCoordinator: "project_manager", specialists: "bounded-audit-and-handoff-only", claude: "worker-slave-codex-invocation-only", runtimeExecutor: "human-developer-only" }, sourceReports: ["reports/kernel-gap-inventory-2026-07-14.json", "reports/kernel-governance-gap-addendum-2026-07-15.json"], invariants: ["KGA-D01 through KGA-D10 are globally unique and ordered.", "This registry discovers decisions; it does not select or close them.", "No pending decision permits code start or runtime readiness claims."], rollback: { trigger: "source decisions drift, duplicate IDs appear, or the registry implies a selected option", action: "revert the registry, decision-pack additions, gate wiring and their tests as one shard", runtimeDataImpact: "none" }, finalDecision: { verdict: "NO-GO", kernelReady: false, sdkReady: false, appBuildable: false, codeStartAllowed: false, nextActionable: "PR-01" } };
 // biome-ignore format: exact package command stays compact for the shard budget
@@ -71,6 +89,10 @@ export function validateKernelGovernanceAuthorization({ authority = {}, registry
   const nextHeading = packTail.indexOf("\n## ", 1);
   const packSection = (nextHeading < 0 ? packTail : packTail.slice(0, nextHeading)).replaceAll("\r\n", "\n").trim();
   if (pack.split(PACK_HEADING).length !== 2 || packSection !== PACK_SECTION) errors.push("pack GATE-01 section drift");
+  // biome-ignore format: the unqualified live-claim rejection stays compact for the shard budget
+  for (const id of unqualifiedLiveClaims(pack)) errors.push(`pack unqualified live authority claim: ${id}`);
+  // biome-ignore format: the positive time-scope requirement stays compact for the shard budget
+  for (const id of missingTimeScopeClauses(pack)) errors.push(`pack time-scope clause missing: ${id}`);
   if (scripts["qa:kernel-governance-authority"] !== "vitest run tests/kernelGovernanceClosureAuthority.test.ts" || scripts["qa:kernel-governance"] !== PARENT_GATE) errors.push("named gate drift");
   return errors;
 }

@@ -3,6 +3,9 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error -- the JavaScript governance helpers intentionally have no declaration files.
 import { validateKernelGovernance } from "../tools/lib/kernel-governance-audit.mjs";
+// biome-ignore format: the suppression must sit on the same statement as the module specifier
+// @ts-expect-error -- the JavaScript governance helpers intentionally have no declaration files.
+import { TIME_SCOPE_CLAUSES, UNQUALIFIED_LIVE_CLAIMS } from "../tools/lib/kernel-governance-authorization-audit.mjs";
 // @ts-expect-error -- the JavaScript governance helper intentionally has no declaration file.
 import { resolveD01NodeUniverse } from "../tools/lib/kernel-node-universe.mjs";
 import { readD01LiveUniverse } from "./helpers/d01LiveUniverse";
@@ -187,6 +190,25 @@ describe("kernel governance decision pack", () => {
       "`runtimeCodeAllowed=false`",
     ])
       expect(normalizedPack).toContain(approvalAware);
+    // The pack is a dated at-write snapshot: it may record what governed on its own date, but it may
+    // never state today's authority. Both rule tables come from the gate module itself, so this
+    // suite, the ledger suite and the validator all read one denylist instead of three copies.
+    // biome-ignore format: every banned live claim is named by its own rule id
+    for (const rule of UNQUALIFIED_LIVE_CLAIMS) expect(pack, `pack-unqualified-live-claim:${rule.id}`).not.toMatch(rule.pattern);
+    // Non-vacuity: NO-GO still stands in the pack as dated evidence, so the bans above remove an
+    // unqualified claim rather than the token itself.
+    expect(pack).toContain("2026-07-15 at-write runtime NO-GO");
+    // And the distinction is required positively: the dated snapshot, the live source of authority
+    // named by path, and runtime-not-started stated as external fact rather than as a chain floor.
+    // biome-ignore format: every required scope clause is named by its own rule id
+    for (const rule of TIME_SCOPE_CLAUSES) expect(normalizedPack, `pack-time-scope-missing:${rule.id}`).toContain(rule.clause);
+    // The chain is the only live authority, so it must still be named by path.
+    expect(normalizedPack).toContain(CHAIN);
+    // RUNTIME_IMPLEMENTATION_START is named only as a chain token that may bind the external fact
+    // once the head seals it — never as a floor this pack asserts on the chain's behalf.
+    expect(normalizedPack).toContain(
+      "zincir başı bir `RUNTIME_IMPLEMENTATION_START` token'ı taşıdığı anda bağlayıcı kaynak o token olur",
+    );
     for (const obsolete of [
       "D01 handoff ayrıca code-bearing descendant seçmez",
       "Aday listeleri boştur",
