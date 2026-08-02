@@ -30,7 +30,18 @@ export const AUTHORITY_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "
 // biome-ignore format: the exact EPOCH-03 effective token floor stays compact for the shard budget.
 export const EPOCH03_TOKEN_FLOOR = { SOURCE: "DIRECT_USER_ADMIN_INSTRUCTION", SUPERSEDES: "EPOCH-02", SCOPE: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", CODEX: "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR", KERNEL_RUNTIME_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", ACTIONPLAN_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", KERNEL_REVIEWER: "CLAUDE_ONLY_FAIL_CLOSED", RELEASE_ALLOWED: "false", DEPLOY_ALLOWED: "false", DIRECT_MAIN_WRITE: "false", FORCE_GIT: "false", TAGGING: "false", EXCLUDED_TARGETS: "SDK,APP_CORE,APP,MODULE", CODE_START: "NO", RUNTIME_CODE: "NO", VERDICT: "NO-GO" };
 // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
-export const NON_SUPERSEDABLE_FLOORS = { claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", codeStart: "NO", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO", runtimeCode: "NO", verdict: "NO-GO" };
+// codeStart, runtimeCode and verdict were superseded by direct User/Admin instruction for the
+// approved EPOCH-04 kernel-development activation, so they are no longer labeled non-supersedable.
+// The remaining six floors stay immovable, and every sealed entry keeps its own recorded values.
+export const NON_SUPERSEDABLE_FLOORS = { claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO" };
+export const SUPERSEDED_FLOORS = ["codeStart", "runtimeCode", "verdict"];
+export const SUPERSESSION_AUTHORITY = "direct-user-admin-instruction";
+// The digest of this file at actionplan@7312ac0, the base the Kernel readiness candidate pinned.
+// biome-ignore format: the disclosed predecessor chain-file digest and its base stay compact.
+export const PREDECESSOR_CHAIN_FILE_SHA256 = "8d7f6a79342101397d925ff5f4861f5422c354e2f35ca0b3823e1f4f8c204715";
+export const PREDECESSOR_CHAIN_FILE_SOURCE = "actionplan@7312ac0b17bbddf3bd92d9aa53a73c6a9578f45d";
+export const APPEND_WRITER = "claude-only-fail-closed";
+export const APPEND_INVOCATION = "pane-visible-agent-claude";
 // biome-ignore format: the Git floor table stays compact for the shard budget.
 export const GIT_FLOOR = { authorizedNow: false, ciRequired: true, directDefaultBranchPush: false, force: false, reviewRequired: true, tags: false, workerGitMutationAllowed: false };
 // biome-ignore format: the Claude-only role dimensions stay compact for the shard budget.
@@ -189,6 +200,35 @@ const validateHead = (chain, errors) => {
 const validateFloors = (chain, closure, resolved, errors) => {
   if (!same(chain.nonSupersedableFloors, NON_SUPERSEDABLE_FLOORS))
     errors.push("floor-registry-drift");
+  // A floor may leave the non-supersedable projection only with a named superseding epoch and
+  // explicit direct-user-admin authority, and only for the three approved dimensions.
+  const projection = chain.supersessionProjection ?? {};
+  // biome-ignore format: the exact supersession projection contract stays compact for the shard budget.
+  if (!same(projection.supersededFloors, SUPERSEDED_FLOORS)) errors.push("superseded-floor-registry-drift");
+  // biome-ignore format: the named authority and superseding epoch stay compact.
+  if (projection.supersessionAuthority !== SUPERSESSION_AUTHORITY) errors.push("superseded-floor-authority-drift");
+  if (projection.supersedingEpoch !== "AUTHORITY-SUPERSESSION-04")
+    errors.push("superseding-epoch-drift");
+  // biome-ignore format: neither a sealed entry nor the historical approval may be claimed mutated.
+  if (projection.sealedEntriesMutated !== false || projection.historicalApprovalMutated !== false) errors.push("supersession-projection-mutation-claim");
+  // Reachability matters: this reads the document's own projection against the document's own floor
+  // table, so a fixture that re-pins a superseded floor is caught. Comparing the two module
+  // constants instead could never fail for any input and would be a dead branch.
+  // biome-ignore format: the dynamic re-pinning check stays compact for the shard budget.
+  for (const key of projection.supersededFloors ?? []) if (Object.hasOwn(chain.nonSupersedableFloors ?? {}, key)) errors.push(`superseded-floor-still-pinned:${key}`);
+  // The predecessor chain-file digest is the one the Kernel candidate pinned at its base commit: a
+  // past version of this file, so disclosing it is evidence, not self-hashing. Appending the
+  // approved successor is a Claude writer action; Codex writes no file and only commits after it.
+  // biome-ignore format: the disclosed predecessor digest and its base stay compact.
+  if (projection.predecessorChainFileSha256 !== PREDECESSOR_CHAIN_FILE_SHA256) errors.push("predecessor-chain-file-digest-drift");
+  // biome-ignore format: the predecessor source and corrected append roles stay compact.
+  if (projection.predecessorChainFileSource !== PREDECESSOR_CHAIN_FILE_SOURCE) errors.push("predecessor-chain-file-source-drift");
+  if (projection.appendWriter !== APPEND_WRITER) errors.push("append-writer-drift");
+  if (projection.appendInvocation !== APPEND_INVOCATION) errors.push("append-invocation-drift");
+  if (projection.appendGitExecutor !== "codex") errors.push("append-git-executor-drift");
+  // No key may ever hold this file's own current digest; only the predecessor digest is disclosed.
+  // biome-ignore format: the self-digest circularity guard stays compact for the shard budget.
+  for (const key of Object.keys(projection)) if (/^chainFileSha256$|SelfSha256$|^currentChainFileSha256$/.test(key)) errors.push(`chain-file-self-digest-circularity:${key}`);
   for (const [key, value] of Object.entries(NON_SUPERSEDABLE_FLOORS))
     if (resolved[key]?.value !== value) errors.push(`authority-floor-violation:${key}`);
   for (const [key, value] of Object.entries(GIT_FLOOR))

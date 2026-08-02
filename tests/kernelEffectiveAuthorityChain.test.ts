@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -41,9 +42,12 @@ type Cell = { token: string; value: string };
 // biome-ignore format: the append-only entry surface stays compact for the shard budget.
 type Entry = { seq: number; epochId: string; status: string; sourceType: string; sourceRef: string | null; supersedes: number | null; supersedesDimensions: string[]; previousEntrySha256: string | null; dimensions: Record<string, Cell>; entrySha256: string; normalizedText?: string; normalizedTextBytes?: number; normalizedTextSha256?: string; supersessionScope?: string; normalizedTextRef?: { path: string; jsonPointer: string; bytes: number; sha256: string } };
 // biome-ignore format: the chain root surface stays compact for the shard budget.
-type Chain = { schemaVersion: string; id: string; status: string; appendOnly: boolean; dimensionRegistry: string[]; historicalInvariant: Record<string, unknown>; entries: Entry[]; chainHeadSeq: number; chainHeadEntrySha256: string; chainSha256: string; nonSupersedableFloors: Record<string, string>; gitFloor: Record<string, boolean>; orchestrationPolicy: Record<string, unknown>; effectiveAuthorityBoundary: typeof BOUNDARY; consumerBindings: Record<string, string> };
+type Chain = { schemaVersion: string; id: string; status: string; appendOnly: boolean; dimensionRegistry: string[]; historicalInvariant: Record<string, unknown>; entries: Entry[]; chainHeadSeq: number; chainHeadEntrySha256: string; chainSha256: string; nonSupersedableFloors: Record<string, string>; supersessionProjection: { supersededFloors: string[]; supersessionAuthority: string; supersedingEpoch: string; sealedEntriesMutated: boolean; historicalApprovalMutated: boolean; predecessorChainFileSha256: string; predecessorChainFileSource: string; appendWriter: string; appendInvocation: string; appendGitExecutor: string }; gitFloor: Record<string, boolean>; orchestrationPolicy: Record<string, unknown>; effectiveAuthorityBoundary: typeof BOUNDARY; consumerBindings: Record<string, string> };
 
 const exists = (relative: string) => fs.existsSync(path.join(ROOT, relative));
+// The digest of the chain file at actionplan@7312ac0, the base the Kernel readiness candidate pinned.
+const PREDECESSOR_CHAIN_FILE_SHA256 =
+  "8d7f6a79342101397d925ff5f4861f5422c354e2f35ca0b3823e1f4f8c204715";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const readJson = <T>(relative: string) => JSON.parse(read(relative)) as T;
 const preflight = () => {
@@ -68,7 +72,7 @@ describe("kernel effective authority supersession chain", () => {
     expect(gate, gate.join(",")).toEqual([]);
     const chain = readJson<Chain>(CHAIN);
     // biome-ignore format: exact closed chain root stays compact for the shard budget.
-    expect(Object.keys(chain).sort()).toEqual(["appendOnly", "canonicalHashAlgorithm", "chainHeadEntrySha256", "chainHeadSeq", "chainSha256", "consumerBindings", "dimensionRegistry", "effectiveAuthorityBoundary", "entries", "gitFloor", "historicalInvariant", "id", "nonGoals", "nonSupersedableFloors", "orchestrationPolicy", "rollback", "schemaVersion", "status"]);
+    expect(Object.keys(chain).sort()).toEqual(["appendOnly", "canonicalHashAlgorithm", "chainHeadEntrySha256", "chainHeadSeq", "chainSha256", "consumerBindings", "dimensionRegistry", "effectiveAuthorityBoundary", "entries", "gitFloor", "historicalInvariant", "id", "nonGoals", "nonSupersedableFloors", "orchestrationPolicy", "rollback", "schemaVersion", "status", "supersessionProjection"]);
     expect(chain).toMatchObject({
       schemaVersion: "1.0.0",
       id: "kernel-effective-authority-chain-2026-07-31",
@@ -140,7 +144,25 @@ describe("kernel effective authority supersession chain", () => {
     for (const key of REGISTRY.filter((k) => k !== "technicalDecisions" && !EPOCH03_DIMENSIONS.includes(k))) expect(resolved[key].seq, key).toBe(2);
     for (const key of CLAUDE_ROLES) expect(resolved[key].value).toBe("CLAUDE_ONLY_FAIL_CLOSED");
     // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
-    expect(chain.nonSupersedableFloors).toEqual({ claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", codeStart: "NO", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO", runtimeCode: "NO", verdict: "NO-GO" });
+    expect(chain.nonSupersedableFloors).toEqual({ claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO" });
+    // codeStart, runtimeCode and verdict left the projection only under a named superseding epoch.
+    // biome-ignore format: the exact supersession projection stays compact for the shard budget.
+    expect(chain.supersessionProjection).toMatchObject({ supersededFloors: ["codeStart", "runtimeCode", "verdict"], supersessionAuthority: "direct-user-admin-instruction", supersedingEpoch: "AUTHORITY-SUPERSESSION-04", sealedEntriesMutated: false, historicalApprovalMutated: false });
+    // The append is a Claude writer action; Codex writes no file and only commits after verifying.
+    // biome-ignore format: the corrected append-role projection stays compact for the shard budget.
+    expect(chain.supersessionProjection).toMatchObject({ appendWriter: "claude-only-fail-closed", appendInvocation: "pane-visible-agent-claude", appendGitExecutor: "codex" });
+    // The predecessor chain-file digest is disclosed and independently re-derived from its base
+    // commit below; this file never records its own current digest.
+    expect(chain.supersessionProjection.predecessorChainFileSha256).toBe(
+      PREDECESSOR_CHAIN_FILE_SHA256,
+    );
+    const chainFileSha256 = createHash("sha256").update(read(CHAIN)).digest("hex");
+    expect(read(CHAIN)).not.toContain(chainFileSha256);
+    expect(chainFileSha256).not.toBe(PREDECESSOR_CHAIN_FILE_SHA256);
+    // The sealed EPOCH-03 head still carries the pre-activation values; only the label moved.
+    expect(chain.entries.at(-1)?.dimensions).toBeDefined();
+    // biome-ignore format: the sealed EPOCH-03 token floor stays exactly as it was appended.
+    for (const token of ["CODE_START=NO", "RUNTIME_CODE=NO", "VERDICT=NO-GO"]) expect(chain.entries.at(-1)?.normalizedText).toContain(token);
     // biome-ignore format: the Git floor table stays compact for the shard budget.
     expect(chain.gitFloor).toEqual({ authorizedNow: false, ciRequired: true, directDefaultBranchPush: false, force: false, reviewRequired: true, tags: false, workerGitMutationAllowed: false });
     expect(chain.orchestrationPolicy).toMatchObject({
@@ -196,11 +218,23 @@ describe("kernel effective authority supersession chain", () => {
       ["precedence", "authority-dimension-supersession-without-value:technicalDecisions", (input) => { input.chain.entries[1].supersedesDimensions.push("technicalDecisions"); reseal(input); }],
       ["floor", "authority-floor-violation:platformProductWriter", (input) => { input.chain.entries[1].dimensions.platformProductWriter.value = "CLAUDE_ONLY_FAIL_CLOSED"; reseal(input); }],
       ["floor", "authority-floor-violation:claudeAuthGate", (input) => { input.chain.entries[1].dimensions.claudeAuthGate.value = "CLAUDE_AI_FIRSTPARTY_MAX_CACHED_FALLBACK"; reseal(input); }],
-      ["floor", "authority-floor-violation:codeStart", (input) => { input.chain.entries[1].dimensions.codeStart.value = "YES"; reseal(input); }],
-      ["floor", "authority-floor-violation:runtimeCode", (input) => { input.chain.entries[1].dimensions.runtimeCode.value = "YES"; reseal(input); }],
+      ["floor", "superseded-floor-registry-drift", (input) => { input.chain.supersessionProjection.supersededFloors = ["codeStart"]; }],
+      ["floor", "superseded-floor-authority-drift", (input) => { input.chain.supersessionProjection.supersessionAuthority = "inferred"; }],
+      ["floor", "superseding-epoch-drift", (input) => { input.chain.supersessionProjection.supersedingEpoch = "AUTHORITY-SUPERSESSION-03"; }],
+      ["floor", "superseding-epoch-drift", (input) => { Reflect.deleteProperty(input.chain.supersessionProjection, "supersedingEpoch"); }],
+      ["floor", "supersession-projection-mutation-claim", (input) => { input.chain.supersessionProjection.historicalApprovalMutated = true; }],
+      // Re-pinning a superseded floor is caught against the document's own tables, not two constants.
+      ["floor", "superseded-floor-still-pinned:codeStart", (input) => { input.chain.nonSupersedableFloors.codeStart = "NO"; }],
+      ["floor", "superseded-floor-still-pinned:verdict", (input) => { input.chain.nonSupersedableFloors.verdict = "NO-GO"; }],
+      ["floor", "predecessor-chain-file-digest-drift", (input) => { input.chain.supersessionProjection.predecessorChainFileSha256 = "0".repeat(64); }],
+      ["floor", "predecessor-chain-file-source-drift", (input) => { input.chain.supersessionProjection.predecessorChainFileSource = "actionplan@0000000"; }],
+      ["floor", "chain-file-self-digest-circularity:chainFileSha256", (input) => { (input.chain.supersessionProjection as Record<string, unknown>).chainFileSha256 = "0".repeat(64); }],
+      ["floor", "append-writer-drift", (input) => { input.chain.supersessionProjection.appendWriter = "codex"; }],
+      ["floor", "append-invocation-drift", (input) => { input.chain.supersessionProjection.appendInvocation = "mcp-claude_implement"; }],
+      ["floor", "append-git-executor-drift", (input) => { input.chain.supersessionProjection.appendGitExecutor = "claude"; }],
       ["floor", "authority-floor-violation:release", (input) => { input.chain.entries[1].dimensions.release.value = "YES"; reseal(input); }],
       ["floor", "authority-floor-violation:deploy", (input) => { input.chain.entries[1].dimensions.deploy.value = "YES"; reseal(input); }],
-      ["floor", "authority-floor-violation:verdict", (input) => { input.chain.entries[1].dimensions.verdict.value = "GO"; reseal(input); }],
+      ["floor", "supersession-projection-mutation-claim", (input) => { input.chain.supersessionProjection.sealedEntriesMutated = true; }],
       ["floor", "authority-floor-violation:historicalApprovalMutation", (input) => { input.chain.entries[1].dimensions.historicalApprovalMutation.value = "ALLOWED"; reseal(input); }],
       ["floor", "floor-registry-drift", (input) => { input.chain.nonSupersedableFloors.verdict = "GO"; }],
       ["floor", "git-floor-violation:force", (input) => { input.chain.gitFloor.force = true; }],
@@ -231,6 +265,13 @@ describe("kernel effective authority supersession chain", () => {
       ["orchestration", "shared-writer-parallelism-enabled", (input) => { input.chain.entries[1].dimensions.parallelism.value = "PANE_MULTI_AGENT_MULTI_WRITER"; reseal(input); }],
       ["orchestration", "codex-orchestration-role-drift", (input) => { input.chain.entries[1].dimensions.finalVerifier.value = "CLAUDE_READ_ONLY"; reseal(input); }],
       ["orchestration", "claude-role-registry-drift", (input) => { (input.chain.orchestrationPolicy.claudeRoles as string[]).pop(); }],
+      // codeStart, runtimeCode and verdict are supersedable prospectively, by appending a successor.
+      // That never licenses rewriting what EPOCH-03 already sealed: the head token floor still fails
+      // closed on each of the three, and resealing the entry only moves the failure to the head digest.
+      ["chain", "epoch-token-floor-drift:CODE_START", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("CODE_START=NO", "CODE_START=YES"); }],
+      ["chain", "epoch-token-floor-drift:RUNTIME_CODE", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("RUNTIME_CODE=NO", "RUNTIME_CODE=YES"); }],
+      ["chain", "epoch-token-floor-drift:VERDICT", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("VERDICT=NO-GO", "VERDICT=GO-KERNEL-DEVELOPMENT-ONLY"); }],
+      ["chain", "chain-head-digest-drift", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("CODE_START=NO", "CODE_START=YES"); reseal(input); }],
     ];
     const groups = new Set<string>();
     for (const [group, expected, mutate] of matrix) {

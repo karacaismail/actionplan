@@ -128,14 +128,29 @@ describe("KGA-D02 surface dependency order application handoff", () => {
     });
     expect(chain.status).toBe("effective");
     expect(chain.appendOnly).toBe(true);
+    // Current/effective immovable floor projection after the approved EPOCH-04 activation.
     expect(chain.nonSupersedableFloors).toMatchObject({
-      codeStart: "NO",
-      runtimeCode: "NO",
       release: "NO",
       deploy: "NO",
-      verdict: "NO-GO",
       historicalApprovalMutation: "FORBIDDEN",
+      platformProductWriter: "HUMAN_DEVELOPER_ONLY",
+      claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK",
+      gitMode: "NONFORCE_NO_TAGS_CI_GATED",
     });
+    // codeStart, runtimeCode and verdict left that projection only under a named superseding
+    // epoch and explicit direct-user-admin authority; they are not silently dropped.
+    expect(chain.supersessionProjection).toMatchObject({
+      supersededFloors: ["codeStart", "runtimeCode", "verdict"],
+      supersessionAuthority: "direct-user-admin-instruction",
+      supersedingEpoch: "AUTHORITY-SUPERSESSION-04",
+      sealedEntriesMutated: false,
+      historicalApprovalMutated: false,
+    });
+    // The sealed EPOCH-02 entry this handoff is stamped against still carries the pre-activation
+    // values, so the historical binding above remains exactly what it always was.
+    expect(stamp.dimensions.codeStart.value).toBe("NO");
+    expect(stamp.dimensions.runtimeCode.value).toBe("NO");
+    expect(stamp.dimensions.verdict.value).toBe("NO-GO");
   });
 
   it("leaves every registry decision pending and unselected", () => {
