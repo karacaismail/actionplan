@@ -218,6 +218,19 @@ PostgreSQL RLS deny-by-default kabul edilmiş invarianttır; fakat ortak şema, 
 başına şema veya hybrid seçiminde physicalStrategy = null durumundadır. ADR-0026
 frontend teknoloji profilleridir; tenancy kararı olarak kullanılamaz.
 
+GATE-01 `D10=SHARED_SCHEMA_TENANT_ID_FORCE_RLS` token'ı ile fiziksel topoloji
+`shared-schema`, tenant anahtarı `tenant_id` olarak seçilir. Kayıt `PLANNING_ONLY`,
+`VALID_BLOCKED` ve `NO_GO` durumundadır. Zorunlu `FORCE RLS` deny-by-default aynen
+korunur; ortak şema izolasyonu gevşetmez. Topoloji sabit olduğu için tenant-sayısı eşiği
+yoktur (`not-applicable-fixed-topology`) ve `automaticPromotion=false` ile başka bir
+stratejiye kendiliğinden geçilmez. Seçim uygulama değildir: `runtimeEnforcement`,
+`schemaApplied`, `policyApplied` ve `migrationApplied` false kalır, executor
+`human-developer-only`dır ve uygulama `deferred-to-KGA-D06-substrate` olarak ertelenir.
+Tenancy authority inventory bayt-aynı salt-okunur kanıttır ve `physicalStrategy=null`
+kalır; ADR-0026 tenancy otoritesi olmamaya devam eder. Generated node, generator, queue,
+migration veya runtime kodu yazılmaz. Ayrıntı:
+`reports/kernel-tenancy-physical-strategy-selection-2026-08-02.json`.
+
 ## P0 Bağlayıcı Ledger'lar
 
 Aşağıdaki beş P0 ledger D01'i approval-aware, D06 ve D08/D09/D10 pending/unselected
@@ -288,8 +301,13 @@ applied, kapsamı yalnız ghost-wbs-identity-rejection-record ve kanıtı
 `reports/kernel-ghost-wbs-identity-rejection-2026-08-02.json`'dır; 13 hayalet WBS kimliği
 tek tek reddedilir, create/alias/fold false kalır, 650 düğümlük evren değişmez ve 13
 directive ref'i `residualDirectiveReferenceDisposition=deferred-to-human-directive-text-decision`
-ile açık kalır. `KGA-D06`, `KGA-D07` ve `KGA-D10` pending'dir ve `applicationScope`
-değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
+ile açık kalır. `KGA-D10`: applied, kapsamı yalnız
+tenancy-physical-strategy-selection-record ve kanıtı
+`reports/kernel-tenancy-physical-strategy-selection-2026-08-02.json`'dır; `shared-schema`
++ `tenant_id` seçilir, `FORCE RLS` deny-by-default korunur, eşik ve otomatik terfi yoktur
+ve `runtimeIsolationImplementation=deferred-no-code-start` ile uygulama
+`deferred-to-KGA-D06-substrate` kalır. `KGA-D06` ve `KGA-D07` pending'dir ve
+`applicationScope` değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
 approval digest'i.
@@ -379,6 +397,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; hiçbir hayalet kimlik için node, alias, fold,
 owner veya module parent yazılmadığı, 13 directive belgesi düzenlenmediği ve ghost ledger
 bayt-aynı bırakıldığı için node, WBS kimliği, doküman veya runtime rollback'i yoktur.
+KGA-D10 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir şema, RLS policy, migration veya runtime
+izolasyonu uygulanmadığı ve tenancy inventory bayt-aynı bırakıldığı için veritabanı,
+migration veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 

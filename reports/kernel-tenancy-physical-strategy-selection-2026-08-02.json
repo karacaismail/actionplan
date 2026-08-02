@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0", "id": "kernel-tenancy-physical-strategy-selection-2026-08-02", "generatedAt": "2026-08-02", "decisionId": "KGA-D10", "status": "approved-application-pending", "gapClosed": false,
+  "decision": { "topic": "tenancy physical storage and isolation strategy", "status": "approved-not-applied", "decisionOwner": "user-admin", "coordinator": "project_manager", "finalAuthority": "codex", "selectedOption": "shared-schema", "approvalRef": "reports/kernel-governance-closure-authority-2026-07-31.json#/approval", "approvalToken": "D10=SHARED_SCHEMA_TENANT_ID_FORCE_RLS", "note": "The approved option fixes the tenancy topology as a governance selection. It is not a schema, a policy, a migration or an enforcement: nothing is applied to any database, and the substrate work stays KGA-D06." },
+  "dispositionState": { "mode": "PLANNING_ONLY", "validity": "VALID_BLOCKED", "gate": "NO_GO" },
+  "provenance": { "approval": { "gateId": "GATE-01", "authority": "user-admin", "normalizedSelectionSha256": "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6" }, "effectiveAuthority": { "ref": "reports/kernel-effective-authority-chain-2026-07-31.json", "seq": 3, "epochId": "AUTHORITY-SUPERSESSION-03", "chainHeadSha256": "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c", "normalizedTextSha256": "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5" }, "immutableRefs": { "closureRef": "reports/kernel-governance-closure-authority-2026-07-31.json", "chainRef": "reports/kernel-effective-authority-chain-2026-07-31.json", "registryRef": "reports/kernel-governance-decision-registry-2026-07-15.json", "addendumRef": "reports/kernel-governance-gap-addendum-2026-07-15.json", "inventoryRef": "reports/kernel-tenancy-authority-inventory-2026-07-15.json", "adrRef": "docs/adr-0026-tech-profiles.md", "mutationAllowed": false, "note": "Approval intake, EPOCH-03 chain, registry, gap addendum, the tenancy authority inventory and ADR-0026 are read by digest only; application state lives in the application-state ledger." } },
+  "selection": { "physicalStrategy": "shared-schema", "tenantKey": "tenant_id", "rowLevelSecurity": "FORCE RLS", "denyByDefault": true, "thresholdDisposition": "not-applicable-fixed-topology", "automaticPromotion": false },
+  "enforcementBoundary": { "runtimeEnforcement": false, "schemaApplied": false, "policyApplied": false, "migrationApplied": false, "resolution": "deferred-to-KGA-D06-substrate", "executor": "human-developer-only" },
+  "inventoryBoundary": { "ref": "reports/kernel-tenancy-authority-inventory-2026-07-15.json", "sha256": "fe060b16a8a00e647ef98c72866db67de172b20bf59ee9059991e87b9bd7a399", "bytes": 6844, "decisionStatus": "pending", "physicalStrategy": null, "tenantStrategyNonNull": 27, "mutationAllowed": false, "appliedByThisRecord": false },
+  "sourceRefs": ["reports/kernel-tenancy-authority-inventory-2026-07-15.json", "reports/kernel-governance-gap-addendum-2026-07-15.json", "reports/kernel-governance-closure-authority-2026-07-31.json", "reports/kernel-effective-authority-chain-2026-07-31.json", "reports/kernel-governance-decision-registry-2026-07-15.json", "docs/adr-0026-tech-profiles.md", "docs/kernel-governance-decision-pack-2026-07-15.md"],
+  "applicationSummary": { "approved": 1, "applied": 1, "remaining": 0, "applicationScope": "tenancy-physical-strategy-selection-record", "physicalStrategySelected": "shared-schema", "runtimeIsolationImplementation": "deferred-no-code-start" },
+  "mutationBoundary": { "baseQueue": false, "closureAuthority": false, "effectiveAuthorityChain": false, "generatedNodes": false, "generator": false, "migrations": false, "platformCode": false, "registryDecisions": false, "runtime": false, "tenancyAuthorityInventory": false },
+  "authorityBoundary": { "actionplanWriter": "claude-only-fail-closed", "gitExecutor": "codex", "runtimeExecutor": "human-developer-only", "workerGitMutationAllowed": false, "codeStartAllowed": false, "runtimeCodeAllowed": false, "readinessAllowed": false, "releaseAllowed": false, "deployAllowed": false, "kernelReady": false, "sdkReady": false, "appBuildable": false, "verdict": "NO-GO" },
+  "invariants": [
+    "The approved topology is a governance selection only: shared schema keyed by tenant_id, recorded PLANNING_ONLY, VALID_BLOCKED and gated NO_GO.",
+    "Mandatory PostgreSQL RLS deny-by-default survives the selection unchanged: FORCE RLS stays required and denyByDefault stays true; a shared schema never relaxes isolation.",
+    "Selecting a topology is not enforcing it: runtimeEnforcement, schemaApplied, policyApplied and migrationApplied all stay false and the executor stays human-developer-only.",
+    "Enforcement is deferred to the KGA-D06 substrate decision; no schema, policy, migration or RLS statement is written, generated or scheduled here.",
+    "The topology is fixed, so there is no tenant-count threshold and no automatic promotion to schema-per-tenant or hybrid.",
+    "The tenancy authority inventory stays byte-identical read-only evidence with physicalStrategy null and threshold null: this record carries the selection, the inventory never gains one.",
+    "ADR-0026 remains a frontend tech-profile document and is still not the tenancy authority.",
+    "The registry keeps all ten decisions pending and unselected; the closure intake and EPOCH-03 chain are read by digest only.",
+    "No planning artifact here is runtime implementation evidence, a code-start permit or a readiness claim."
+  ],
+  "nonGoals": [
+    "do not write, generate or apply any schema, RLS policy, migration, seed or database object for the selected topology",
+    "do not claim runtime tenant isolation, enforcement or verification from a recorded selection",
+    "do not set a tenant-count threshold or allow automatic promotion to another physical strategy",
+    "do not weaken mandatory RLS deny-by-default, change tenant_id as the tenant key, or re-open the topology without a new human decision",
+    "do not mutate the tenancy authority inventory, the generated nodes, the generator, the base queue, any registry decision or the closure intake",
+    "do not treat ADR-0026 as tenancy authority, and do not write runtime, platform or kernel product code"
+  ],
+  "rollback": { "trigger": "the selected topology, tenant key or RLS floor drifts, an enforcement flag flips to applied, a threshold or automatic promotion appears, the tenancy inventory bytes or its null strategy change, or a fail-closed gate flag flips", "action": "revert this selection record, its application-state row, the attestation contract, tests, pack sections and gate wiring as one shard", "runtimeDataImpact": "none" }
+}
