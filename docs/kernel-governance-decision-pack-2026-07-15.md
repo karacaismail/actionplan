@@ -163,6 +163,20 @@ Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
 Base queue insan kararı olmadan değiştirilmez. Machine-readable karar handoff'u:
 `reports/kernel-db-substrate-queue-handoff-2026-07-15.json`.
 
+GATE-01 `D06=EARLY_MINIMAL_DB` token'ı ile `early-minimal-db` kanıt kuralı seçilir: PR-02
+durable isolation, PR-04 outbox ve PR-06 audit iddiaları açıkça onaylanmış erken bir DB
+zemini üzerinde yürütülür. Kayıt `PLANNING_ONLY`, `VALID_BLOCKED` ve `NO_GO` durumundadır.
+Zemini onaylamak onu kurmak değildir: şema oluşturulmaz, RLS policy uygulanmaz, migration
+yazılmaz veya çalıştırılmaz, transaction/outbox/audit implementasyonu yoktur, runtime
+başlatılmaz ve code start verilmez; zemin kurulduğunda executor `human-developer-only`
+olur. Zemini sıraya alacak queue amendment ayrı bir User/Admin kararıdır: `queuePatch`
+null kalır, amendment üretilmez, base queue bayt-aynıdır ve `PR-01` tek next-actionable
+olarak sürer. PR-08 base queue'da DB zemini sahibi ve blocked kalır; etkilenen yedi item'ın
+hiçbiri açılmaz. D06 handoff'u bayt-aynı salt-okunur kanıttır ve iki seçeneği de
+candidate-unselected kalır. KGA-D10 kanıtı korunur: `shared-schema` + `FORCE RLS`
+deny-by-default sürer ve D10'un bu zemine ertelediği enforcement bu kayıtla kapatılmaz.
+Ayrıntı: `reports/kernel-early-minimal-db-substrate-2026-08-02.json`.
+
 ### KGA-D07 — Dependency/Blocks Semantiği
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -306,8 +320,12 @@ tenancy-physical-strategy-selection-record ve kanıtı
 `reports/kernel-tenancy-physical-strategy-selection-2026-08-02.json`'dır; `shared-schema`
 + `tenant_id` seçilir, `FORCE RLS` deny-by-default korunur, eşik ve otomatik terfi yoktur
 ve `runtimeIsolationImplementation=deferred-no-code-start` ile uygulama
-`deferred-to-KGA-D06-substrate` kalır. `KGA-D06` ve `KGA-D07` pending'dir ve
-`applicationScope` değerleri null'dır. Applied satır yalnız validator'daki kapalı attestation
+`deferred-to-KGA-D06-substrate` kalır. `KGA-D06`: applied, kapsamı yalnız
+early-minimal-db-substrate-record ve kanıtı gap addendum, D06 handoff'u ve
+`reports/kernel-early-minimal-db-substrate-2026-08-02.json` üçlüsüdür; şema, RLS policy,
+migration, transaction, outbox, audit veya runtime uygulanmaz, queue amendment
+`deferred-to-human-approved-amendment` kalır ve D10 enforcement ertelemesi kapatılmaz.
+Yalnız `KGA-D07` pending'dir ve `applicationScope` değeri null'dır. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
 approval digest'i.
@@ -402,6 +420,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; hiçbir şema, RLS policy, migration veya runtime
 izolasyonu uygulanmadığı ve tenancy inventory bayt-aynı bırakıldığı için veritabanı,
 migration veya runtime rollback'i yoktur.
+KGA-D06 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir şema, migration, transaction, outbox
+veya audit kurulmadığı, queue amendment üretilmediği ve base queue ile D06 handoff'u
+bayt-aynı bırakıldığı için queue, veritabanı veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
