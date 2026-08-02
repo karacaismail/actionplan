@@ -23,9 +23,21 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # EPOCH-04 kanıt modu JOB seviyesinde tanımlanır: yalnız governance adımı değil, sonradan çalışan
+    # `npm test` de aynı testi keşfeder. Runner'da Kernel deposu bulunmadığı için dış merge-object
+    # kanıtı toplanamaz; pins-only bunu açıkça beyan eder ve yine de bütün yerel pin, ayna,
+    # çift-digest ve naive-append doğrulamalarını çalıştırır. Kernel erişilebilirken pins-only
+    # beyan etmek `kernel-evidence-mode-misdeclared` ile fail eder, yani mod bir kaçış yolu değildir.
+    # Yerel geliştirici makinesinde değişken tanımsızdır ve varsayılan `full` olarak kalır.
+    env:
+      KERNEL_EVIDENCE_MODE: pins-only
     steps:
       - name: Depoyu çek
         uses: actions/checkout@v4
+        with:
+          # Actionplan predecessor chain-file digest'i sabitlenmiş base commit'ten türetilir;
+          # sığ klon o commit'i içermediği için tam geçmiş zorunludur.
+          fetch-depth: 0
 
       - name: Node 20 kurulumu
         uses: actions/setup-node@v4
