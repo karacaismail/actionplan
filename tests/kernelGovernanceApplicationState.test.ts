@@ -21,8 +21,9 @@ const D02_HANDOFF = "reports/kernel-surface-dependency-order-handoff-2026-08-01.
 const D03_HANDOFF = "reports/kernel-module-registry-ownership-split-handoff-2026-08-01.json";
 const D06_HANDOFF = "reports/kernel-db-substrate-queue-handoff-2026-07-15.json";
 const SELECTION_SHA256 = "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6";
-const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c";
-const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
+// EPOCH-03 is a sealed predecessor now; only the head digests are pinned here.
+const EPOCH04_ENTRY_SHA256 = "90a0a9ba795fcff67d48829d9d0083cbac956e4d1b277527862fa19586228c37";
+const EPOCH04_TEXT_SHA256 = "f7b92d21da22dccf0ca99e0efbebc5e9f0556ba5b2a96657737e057848c2953d";
 const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
 const EPOCH02_TEXT_SHA256 = "239711dc77b396dd51bc64a02fab9f32a47804c885490e3c644b487b2343c2df";
 // Re-pinned after the change boundary was corrected from eight files to the exact twelve this shard
@@ -60,11 +61,11 @@ const readJson = (relative: string) =>
 // biome-ignore format: the exact application-state row ledger stays compact for the shard budget
 const ROWS = [{ id: "KGA-D01", applicationStatus: "applied", applicationScope: D01_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D01_HANDOFF] }, { id: "KGA-D02", applicationStatus: "applied", applicationScope: D02_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D02_HANDOFF] }, { id: "KGA-D03", applicationStatus: "applied", applicationScope: D03_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D03_HANDOFF] }, { id: "KGA-D04", applicationStatus: "applied", applicationScope: D04_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D04_RECORD] }, { id: "KGA-D05", applicationStatus: "applied", applicationScope: D05_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [INVENTORY, D05_RECORD] }, { id: "KGA-D06", applicationStatus: "applied", applicationScope: D06_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D06_HANDOFF, D06_RECORD] }, { id: "KGA-D07", applicationStatus: "applied", applicationScope: D07_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D07_RECORD] }, { id: "KGA-D08", applicationStatus: "applied", applicationScope: D08_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D08_RECORD] }, { id: "KGA-D09", applicationStatus: "applied", applicationScope: D09_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D09_RECORD] }, { id: "KGA-D10", applicationStatus: "applied", applicationScope: D10_SCOPE, canonicalStatus: "canonical", gapClosed: false, evidenceRefs: [ADDENDUM, D10_RECORD] }];
 // biome-ignore format: the exact fail-closed gate block stays compact for the shard budget
-const GATE = { gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, kernelReady: false, sdkReady: false, appBuildable: false, verdict: "NO-GO", unlockCondition: "all-ten-rows-applied-canonical-with-human-runtime-evidence" };
-// biome-ignore format: the exact intake binding and live EPOCH-03 stamp stay compact
+const GATE = { gapClosed: false, codeStartAllowed: true, runtimeCodeAllowed: true, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, kernelReady: false, sdkReady: false, appBuildable: false, verdict: "GO-KERNEL-DEVELOPMENT-ONLY", unlockCondition: "all-ten-rows-applied-canonical-with-human-runtime-evidence" };
+// biome-ignore format: the exact intake binding stays compact for the shard budget
 const INTAKE = { closureRef: CLOSURE, registryRef: REGISTRY, normalizedSelectionPointer: "/approval/normalizedSelection", normalizedSelectionBytes: 691, normalizedSelectionSha256: SELECTION_SHA256, intakeMutationAllowed: false };
 // biome-ignore format: the exact live head stamp stays compact for the shard budget
-const STAMP = { ref: CHAIN, seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 };
+const STAMP = { ref: CHAIN, seq: 4, epochId: "AUTHORITY-SUPERSESSION-04", chainHeadSha256: EPOCH04_ENTRY_SHA256, normalizedTextSha256: EPOCH04_TEXT_SHA256 };
 // biome-ignore format: the ledger-owned change boundary stays compact for the shard budget
 const ALLOWED_FILES = ["tests/kernelRelationDirectionConflictDisposition.test.ts", D07_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs", GATE_SCRIPT, "tools/lib/kernel-node-universe.mjs", "tests/kernelGovernanceClosureAuthority.test.ts", "tests/kernelGovernanceDecisionPack.test.ts"];
 // biome-ignore format: the exact closed root and row key sets stay compact for the shard budget
@@ -165,7 +166,7 @@ describe("kernel governance application state ledger", () => {
     // D06 is the only row whose registry entry carries a handoffRef, so it cites three refs.
     // biome-ignore format: the three-ref canonical evidence binding stays compact
     expect(state.rows.find((item: { id: string }) => item.id === "KGA-D06").evidenceRefs).toEqual([ADDENDUM, D06_HANDOFF, D06_RECORD]);
-    // The stamp binds the live EPOCH-03 head, not the superseded EPOCH-02 stamp its evidence uses.
+    // The stamp binds the live EPOCH-04 head, not the superseded stamps its evidence artifacts use.
     expect(state.effectiveAuthority.seq).toBe(chain.chainHeadSeq);
     expect(state.effectiveAuthority.chainHeadSha256).toBe(chain.chainHeadEntrySha256);
     expect(state.effectiveAuthority.chainHeadSha256).not.toBe(EPOCH02_ENTRY_SHA256);
@@ -373,12 +374,12 @@ describe("kernel governance application state ledger", () => {
       (candidate) => { candidate.state.summary.canonical = 3; },
       (candidate) => { candidate.state.summary.total = 11; },
       (candidate) => { candidate.state.gate.gapClosed = true; },
-      (candidate) => { candidate.state.gate.codeStartAllowed = true; },
-      (candidate) => { candidate.state.gate.runtimeCodeAllowed = true; },
+      (candidate) => { candidate.state.gate.codeStartAllowed = false; },
+      (candidate) => { candidate.state.gate.runtimeCodeAllowed = false; },
       (candidate) => { candidate.state.gate.readinessAllowed = true; },
       (candidate) => { candidate.state.gate.releaseAllowed = true; },
       (candidate) => { candidate.state.gate.deployAllowed = true; },
-      (candidate) => { candidate.state.gate.verdict = "GO"; },
+      (candidate) => { candidate.state.gate.verdict = "NO-GO"; },
       (candidate) => { candidate.state.status = "complete"; },
       (candidate) => { candidate.state.id = "kernel-governance-application-state-2026-08-02"; },
       (candidate) => { candidate.state.runtimeReady = true; },
@@ -461,7 +462,8 @@ describe("kernel governance application state ledger", () => {
     // id and must prove their own row. Non-decision consumers own none; they are named here by path
     // AND must carry the marker literal in their own source, so neither the list nor the marker can
     // create a free pass alone. Any other sibling is fail-closed at exactly-one.
-    const CONSUMERS = ["tests/kernelEpoch04ActivationPolicy.test.ts"];
+    // biome-ignore format: the named non-decision ledger consumers stay compact for the shard budget
+    const CONSUMERS = ["tests/kernelConsumerStampHistoricalAtWrite.test.ts", "tests/kernelEpoch04ActivationPolicy.test.ts"];
     const MARKER = 'APPLICATION_STATE_ROLE = "non-decision-consumer"';
     // The named consumers must actually be discovered, or the classification is vacuous.
     expect(CONSUMERS.filter((file) => !siblings.includes(file))).toEqual([]);

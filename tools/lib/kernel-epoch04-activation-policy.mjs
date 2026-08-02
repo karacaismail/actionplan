@@ -14,9 +14,9 @@ export const { EPOCH01_ENTRY_SHA256, EPOCH02_ENTRY_SHA256, EPOCH03_ENTRY_SHA256,
 // The pinned scalars: the 691-byte GATE-01 approval, the epoch and verdict identity, the current
 // invocation and its forbidden MCP counterpart, and the base the predecessor digest comes from.
 // biome-ignore format: the closed scalar surface stays compact for the shard budget
-const S = { APPROVAL_SHA256: "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6", APPROVAL_BYTES: 691, EPOCH04: "AUTHORITY-SUPERSESSION-04", VERDICT: "GO-KERNEL-DEVELOPMENT-ONLY", INVOCATION: "pane-visible-agent-claude", FORBIDDEN_INVOCATION: "mcp-claude_implement", PREDECESSOR_CHAIN_BASE: "7312ac0b17bbddf3bd92d9aa53a73c6a9578f45d", EPOCH04_TEXT_BYTES: 898, EPOCH04_TEXT_SHA256: "f7b92d21da22dccf0ca99e0efbebc5e9f0556ba5b2a96657737e057848c2953d", INHERITED_TOKENS: ["EXCLUDED_TARGETS"] };
+const S = { APPROVAL_SHA256: "da499d6d9393745424f745809c035b8ad208c8f5731a8865a76dd005a4f893d6", APPROVAL_BYTES: 691, EPOCH04: "AUTHORITY-SUPERSESSION-04", VERDICT: "GO-KERNEL-DEVELOPMENT-ONLY", INVOCATION: "pane-visible-agent-claude", FORBIDDEN_INVOCATION: "mcp-claude_implement", PREDECESSOR_CHAIN_BASE: "7312ac0b17bbddf3bd92d9aa53a73c6a9578f45d", PRE_APPEND_CHAIN_BASE: "d47943ea001e205a99d1ae67435b7354a2b98a5f", EPOCH04_TEXT_BYTES: 898, EPOCH04_TEXT_SHA256: "f7b92d21da22dccf0ca99e0efbebc5e9f0556ba5b2a96657737e057848c2953d", INHERITED_TOKENS: ["EXCLUDED_TARGETS"] };
 // biome-ignore format: the closed scalar export surface stays compact for the shard budget
-export const { APPROVAL_SHA256, APPROVAL_BYTES, EPOCH04, VERDICT, INVOCATION, FORBIDDEN_INVOCATION, PREDECESSOR_CHAIN_BASE, EPOCH04_TEXT_BYTES, EPOCH04_TEXT_SHA256, INHERITED_TOKENS } = S;
+export const { APPROVAL_SHA256, APPROVAL_BYTES, EPOCH04, VERDICT, INVOCATION, FORBIDDEN_INVOCATION, PREDECESSOR_CHAIN_BASE, PRE_APPEND_CHAIN_BASE, EPOCH04_TEXT_BYTES, EPOCH04_TEXT_SHA256, INHERITED_TOKENS } = S;
 // The closed contract surface: every key set and value table the record is judged against. ROOT/
 // ENTRY/SCOPE/EVIDENCE/IMMUTABILITY are exact key sets; APPEND_PREREQUISITE names the amendments a
 // real append still needs, none performed here. Kernel development opens; every downstream stage

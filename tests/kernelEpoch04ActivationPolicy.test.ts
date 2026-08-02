@@ -94,13 +94,18 @@ describe("EPOCH-04 kernel development activation policy", () => {
     expect(validateEpoch04Activation({ ...record, successorEntry: { ...record.successorEntry, entrySha256: "0".repeat(64) } })).toContain("successor entry digest drift");
     // biome-ignore format: EXCLUDED_TARGETS stays inherited, never redeclared as superseded
     expect(validateEpoch04Activation({ ...record, successorEntry: { ...record.successorEntry, supersedesDimensions: [...record.successorEntry.supersedesDimensions, "EXCLUDED_TARGETS"] } })).toContain("inherited token claimed superseded:EXCLUDED_TARGETS");
-    // The successor is genuinely a successor: seq 4 chained onto the live EPOCH-03 head.
-    expect(record.successorEntry.seq).toBe(chain.chainHeadSeq + 1);
-    expect(record.successorEntry.previousEntrySha256).toBe(chain.chainHeadEntrySha256);
-    expect(record.successorEntry.supersedes).toBe(chain.chainHeadSeq);
+    // The record is historical pre-append evidence: it approved this successor while EPOCH-03 was
+    // still the head. The successor has since been appended, so it IS the canonical head now — its
+    // recorded link still names EPOCH-03 as its predecessor, which is what makes it a successor.
+    expect(record.successorEntry.seq).toBe(chain.chainHeadSeq);
+    expect(record.successorEntry.entrySha256).toBe(chain.chainHeadEntrySha256);
+    expect(record.successorEntry.supersedes).toBe(chain.chainHeadSeq - 1);
+    expect(record.successorEntry.previousEntrySha256).toBe(chain.entries.at(-2).entrySha256);
+    // The appended head is byte-identical to the approved successor: nothing was altered on the way.
+    expect(chain.entries.at(-1)).toEqual(record.successorEntry);
     // Predecessor entries in the live chain are untouched by this activation.
     // biome-ignore format: the append-only chain keeps EPOCH-01..03 exactly as recorded
-    expect(chain.entries.map((entry: { seq: number; entrySha256: string }) => [entry.seq, entry.entrySha256])).toEqual([[1, EPOCH01_ENTRY_SHA256], [2, EPOCH02_ENTRY_SHA256], [3, EPOCH03_ENTRY_SHA256]]);
+    expect(chain.entries.slice(0, 3).map((entry: { seq: number; entrySha256: string }) => [entry.seq, entry.entrySha256])).toEqual([[1, EPOCH01_ENTRY_SHA256], [2, EPOCH02_ENTRY_SHA256], [3, EPOCH03_ENTRY_SHA256]]);
     expect(chain.appendOnly).toBe(true);
     // biome-ignore format: the historical invariant mirror stays compact
     expect(chain.historicalInvariant).toMatchObject({ sha256: APPROVAL_SHA256, bytes: APPROVAL_BYTES, mutation: "FORBIDDEN" });
@@ -108,9 +113,15 @@ describe("EPOCH-04 kernel development activation policy", () => {
     const selection = readJson(CLOSURE_REF).approval.normalizedSelection;
     expect(Buffer.byteLength(selection, "utf8")).toBe(APPROVAL_BYTES);
     expect(createHash("sha256").update(selection).digest("hex")).toBe(APPROVAL_SHA256);
-    // Still declared, never appended: the live chain stays at seq 3 and NO-GO.
-    expect([chain.chainHeadSeq, chain.effectiveAuthorityBoundary.verdict]).toEqual([3, "NO-GO"]);
-    expect(chain.effectiveAuthorityBoundary.codeStartAllowed).toBe(false);
+    // Appended and in force: the live chain now heads at seq 4 with kernel development open.
+    expect([chain.chainHeadSeq, chain.effectiveAuthorityBoundary.verdict]).toEqual([
+      4,
+      "GO-KERNEL-DEVELOPMENT-ONLY",
+    ]);
+    expect(chain.effectiveAuthorityBoundary.codeStartAllowed).toBe(true);
+    // Still planning only: the record never claimed runtime start, and nothing downstream opened.
+    expect(chain.effectiveAuthorityBoundary.releaseAllowed).toBe(false);
+    expect(record.activationScope.runtimeImplementationStart).toBe("NO");
     // Floors that survive the activation are still the ones the chain recorded.
     // biome-ignore format: the surviving non-supersedable floors stay compact
     expect(chain.nonSupersedableFloors).toMatchObject(IMMOVABLE_FLOORS);
