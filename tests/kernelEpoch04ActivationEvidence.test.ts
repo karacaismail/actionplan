@@ -157,7 +157,7 @@ describe("EPOCH-04 activation adversarial and external evidence", () => {
 
   it("re-reads the bound Kernel candidate and both chain-file digests from canonical objects", async () => {
     // biome-ignore format: the shared contract surface stays compact for the shard budget
-    const { RECORD_REF, CHAIN_REF, KERNEL_MERGE, READINESS_PATH, READINESS_SHA256, PREDECESSOR_CHAIN_SHA256, PREDECESSOR_CHAIN_BASE } = await load(POLICY);
+    const { RECORD_REF, CHAIN_REF, KERNEL_MERGE, READINESS_PATH, READINESS_SHA256, PREDECESSOR_CHAIN_SHA256, PREDECESSOR_CHAIN_BASE, PRE_APPEND_CHAIN_BASE } = await load(POLICY);
     const record = readJson(RECORD_REF);
     // Identity is repository+commit+digest. The object store is located only by fixed repository
     // layout — never by an environment variable — so nothing outside the repo can redirect the read,
@@ -176,14 +176,20 @@ describe("EPOCH-04 activation adversarial and external evidence", () => {
     const predecessorSha256 = createHash("sha256")
       .update(git(ROOT, ["show", `${PREDECESSOR_CHAIN_BASE}:${CHAIN_REF}`]))
       .digest("hex");
-    const projectedSha256 = createHash("sha256")
+    // The record's projected digest is historical from the EPOCH-04 append onwards: the live chain
+    // file has moved, so it is re-derived from the pre-append base rather than the working tree.
+    // biome-ignore format: the historical projected digest is re-derived from the pinned base
+    const projectedSha256 = createHash("sha256").update(git(ROOT, ["show", `${PRE_APPEND_CHAIN_BASE}:${CHAIN_REF}`])).digest("hex");
+    // The live chain file is now a third, different digest, which is what the append produced.
+    const liveSha256 = createHash("sha256")
       .update(fs.readFileSync(path.join(ROOT, CHAIN_REF)))
       .digest("hex");
+    expect(liveSha256).not.toBe(projectedSha256);
     expect(predecessorSha256).toBe(PREDECESSOR_CHAIN_SHA256);
     // biome-ignore format: both disclosed digests are the measured ones, and they are not the same
     expect([record.chainBinding.predecessorChainFileSha256, record.chainBinding.projectedChainFileSha256, readJson(CHAIN_REF).supersessionProjection.predecessorChainFileSha256]).toEqual([predecessorSha256, projectedSha256, predecessorSha256]);
     expect(projectedSha256).not.toBe(predecessorSha256);
-    expect(read(CHAIN_REF)).not.toContain(projectedSha256);
+    expect(read(CHAIN_REF)).not.toContain(liveSha256);
     // biome-ignore format: the record never records its own current digest either
     expect(read(RECORD_REF)).not.toContain(createHash("sha256").update(fs.readFileSync(path.join(ROOT, RECORD_REF))).digest("hex"));
 
@@ -194,25 +200,25 @@ describe("EPOCH-04 activation adversarial and external evidence", () => {
     // biome-ignore format: the sealed-entry surface matches the live head exactly
     expect(Object.keys(record.successorEntry).sort()).toEqual(Object.keys(readJson(CHAIN_REF).entries.at(-1)).sort());
 
-    // Completeness is provably not appendability. Appending the entry as it stands is rejected by the
-    // live validator, which is exactly what appendPrerequisites says, so the record cannot overclaim.
+    // The entry is appended and in force, so the forward-looking proof becomes a replay proof: a
+    // naive re-append of the same sealed entry is rejected whether or not the head is moved with it.
     const closure = readJson("reports/kernel-governance-closure-authority-2026-07-31.json");
-    // biome-ignore format: a naive append, with and without moving the chain head, stays compact
-    const naiveAppend = (moveHead: boolean) => { const naive = readJson(CHAIN_REF); naive.entries.push(structuredClone(record.successorEntry)); if (moveHead) { naive.chainHeadSeq = 4; naive.chainHeadEntrySha256 = record.successorEntry.entrySha256; } return validateKernelEffectiveAuthorityChain({ chain: naive, closure }); };
-    // Leaving the head where it is fails the head/seq/digest contract.
+    // biome-ignore format: a duplicate append, with and without moving the head, stays compact
+    const naiveAppend = (moveHead: boolean) => { const naive = readJson(CHAIN_REF); naive.entries.push(structuredClone(record.successorEntry)); if (moveHead) { naive.chainHeadSeq = 5; naive.chainHeadEntrySha256 = record.successorEntry.entrySha256; } return validateKernelEffectiveAuthorityChain({ chain: naive, closure }); };
     const keptHead = naiveAppend(false);
-    // biome-ignore format: the unmoved head is rejected on identity, sequence and chain digest
-    for (const error of ["effective-epoch-not-head", "chain-head-seq-drift", "chain-digest-drift"]) expect(keptHead, "naive-append-kept-head").toContain(error);
-    // Moving the head exposes the head-identity pin and the EPOCH-03 token floor still in force.
+    // biome-ignore format: the unmoved head is rejected on duplicate sequence, link and chain digest
+    for (const error of ["effective-epoch-not-head", "duplicate-epoch-seq:4", "broken-previous-link:4", "chain-digest-drift"]) expect(keptHead, "naive-append-kept-head").toContain(error);
     const movedHead = naiveAppend(true);
-    // biome-ignore format: the moved head is rejected on the EPOCH-03 identity and token-floor pins
-    for (const error of ["epoch-identity-drift", "epoch-text-digest-drift", "epoch-token-floor-drift:CODE_START", "epoch-token-floor-drift:RUNTIME_CODE", "epoch-token-floor-drift:VERDICT"]) expect(movedHead, "naive-append-moved-head").toContain(error);
-    // Either way the boundary map has no YES/GO mapping, so the derivation itself refuses.
-    // biome-ignore format: the unmapped successor boundary values are rejected in both shapes
-    for (const rejected of [keptHead, movedHead]) for (const error of ["derived-boundary-unmapped:codeStart:YES", "derived-boundary-unmapped:runtimeCode:YES", "derived-boundary-unmapped:verdict:GO-KERNEL-DEVELOPMENT-ONLY"]) expect(rejected).toContain(error);
-    // The live chain is untouched by that probe: still seq 3, still NO-GO, still unappended.
-    // biome-ignore format: the unappended live head stays exactly where this shard found it
-    expect([readJson(CHAIN_REF).chainHeadSeq, readJson(CHAIN_REF).effectiveAuthorityBoundary.verdict, record.chainBinding.appendExecutedHere]).toEqual([3, "NO-GO", false]);
+    // biome-ignore format: moving the head onto the duplicate additionally fails the root head fields
+    for (const error of ["duplicate-epoch-seq:4", "epoch-supersession-fork:4", "chain-head-seq-drift", "chain-head-digest-drift"]) expect(movedHead, "naive-append-moved-head").toContain(error);
+    // The appended head itself validates cleanly, so the rejections above are about the replay only.
+    expect(validateKernelEffectiveAuthorityChain({ chain: readJson(CHAIN_REF), closure })).toEqual(
+      [],
+    );
+    // The live chain is untouched by the replay probe: still seq 4, and this record still
+    // performed no append itself.
+    // biome-ignore format: the appended seq-4 live head stays exactly where this shard found it
+    expect([readJson(CHAIN_REF).chainHeadSeq, readJson(CHAIN_REF).effectiveAuthorityBoundary.verdict, record.chainBinding.appendExecutedHere]).toEqual([4, "GO-KERNEL-DEVELOPMENT-ONLY", false]);
 
     // Only now, after every local proof above has run, may the declared mode be consulted. This
     // ordering is the contract: pins-only can never skip a local assertion, only the external read.

@@ -18,8 +18,11 @@ export const EPOCH02_TEXT_SHA256 =
 export const EPOCH03_TEXT_BYTES = 524;
 export const EPOCH03_TEXT_SHA256 =
   "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
+export const EPOCH04_TEXT_BYTES = 898;
+export const EPOCH04_TEXT_SHA256 =
+  "f7b92d21da22dccf0ca99e0efbebc5e9f0556ba5b2a96657737e057848c2953d";
 // biome-ignore format: the pinned sealed predecessor entry digests stay compact for the shard budget.
-export const SEALED_ENTRY_DIGESTS = { 1: "367cf0579654a82b2d056a2dd1f9aeb0d68b181fbf4d2bc5892244db0786cd99", 2: "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029" };
+export const SEALED_ENTRY_DIGESTS = { 1: "367cf0579654a82b2d056a2dd1f9aeb0d68b181fbf4d2bc5892244db0786cd99", 2: "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029", 3: "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c" };
 const HANDOFF_REF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
 const UNIVERSE_REF = "tools/lib/kernel-node-universe.mjs";
 const GATE_REF = "tools/agents/check-kernel-governance.mjs";
@@ -29,6 +32,8 @@ const CONTRACT_REF = "AGENTS.md";
 export const AUTHORITY_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
 // biome-ignore format: the exact EPOCH-03 effective token floor stays compact for the shard budget.
 export const EPOCH03_TOKEN_FLOOR = { SOURCE: "DIRECT_USER_ADMIN_INSTRUCTION", SUPERSEDES: "EPOCH-02", SCOPE: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", CODEX: "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR", KERNEL_RUNTIME_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", ACTIONPLAN_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", KERNEL_REVIEWER: "CLAUDE_ONLY_FAIL_CLOSED", RELEASE_ALLOWED: "false", DEPLOY_ALLOWED: "false", DIRECT_MAIN_WRITE: "false", FORCE_GIT: "false", TAGGING: "false", EXCLUDED_TARGETS: "SDK,APP_CORE,APP,MODULE", CODE_START: "NO", RUNTIME_CODE: "NO", VERDICT: "NO-GO" };
+// biome-ignore format: the exact EPOCH-04 effective token floor stays compact for the shard budget.
+export const EPOCH04_TOKEN_FLOOR = { SOURCE: "DIRECT_USER_ADMIN_INSTRUCTION", SUPERSEDES: "EPOCH-03", SCOPE: "KERNEL_DEVELOPMENT_ACTIVATION_ONLY", CODEX: "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR", KERNEL_RUNTIME_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", ACTIONPLAN_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", KERNEL_REVIEWER: "CLAUDE_ONLY_FAIL_CLOSED", CLAUDE_INVOCATION: "PANE_VISIBLE_AGENT_CLAUDE", FORBIDDEN_INVOCATION: "MCP_CLAUDE_IMPLEMENT", PLATFORM_PRODUCT_WRITER: "HUMAN_DEVELOPER_ONLY", KERNEL_MERGE: "f62dc8e8cbacaa510aea1187212dc7171cbffa0a", READINESS_ARTIFACT_SHA256: "532b780bac4049b852def1a76298b0e1ac63cc27c8748a786b65c509b137f297", CODE_START: "YES", RUNTIME_CODE: "YES", RUNTIME_IMPLEMENTATION_START: "NO", SDK_READY: "false", APP_BUILDABLE: "false", RELEASE_ALLOWED: "false", DEPLOY_ALLOWED: "false", DIRECT_MAIN_WRITE: "false", FORCE_GIT: "false", TAGGING: "false", EXCLUDED_TARGETS: "SDK,APP_CORE,APP,MODULE", VERDICT: "GO-KERNEL-DEVELOPMENT-ONLY" };
 // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
 // codeStart, runtimeCode and verdict were superseded by direct User/Admin instruction for the
 // approved EPOCH-04 kernel-development activation, so they are no longer labeled non-supersedable.
@@ -47,7 +52,7 @@ export const GIT_FLOOR = { authorizedNow: false, ciRequired: true, directDefault
 // biome-ignore format: the Claude-only role dimensions stay compact for the shard budget.
 export const CLAUDE_ROLE_DIMENSIONS = ["actionplanReviewer", "actionplanWriter", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "requirementsFirstPass", "workerAgentPool"];
 // biome-ignore format: the deterministic epoch-token to D01 boundary mapping stays compact.
-const BOUNDARY_MAP = { actionplanWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, kernelWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, claudeAuthGate: { CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false } }, platformProductWriter: { HUMAN_DEVELOPER_ONLY: "human-developer-only" }, gitExecutor: { CODEX_EXPLICIT_USER_AUTH_ONLY: "codex" }, codeStart: { NO: false }, runtimeCode: { NO: false }, release: { NO: false }, deploy: { NO: false }, verdict: { "NO-GO": "NO-GO" } };
+const BOUNDARY_MAP = { actionplanWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, kernelWriter: { CLAUDE_ONLY_FAIL_CLOSED: "claude-only-fail-closed" }, claudeAuthGate: { CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false } }, platformProductWriter: { HUMAN_DEVELOPER_ONLY: "human-developer-only" }, gitExecutor: { CODEX_EXPLICIT_USER_AUTH_ONLY: "codex" }, codeStart: { NO: false, YES: true }, runtimeCode: { NO: false, YES: true }, release: { NO: false }, deploy: { NO: false }, verdict: { "NO-GO": "NO-GO", "GO-KERNEL-DEVELOPMENT-ONLY": "GO-KERNEL-DEVELOPMENT-ONLY" } };
 // biome-ignore format: the derived boundary key order matches the applied D7 contract byte order.
 const BOUNDARY_KEYS = { actionplanWriter: "actionplanWriter", kernelWriter: "kernelWriter", claudeAuthGate: "claudeAuthGate", platformProductWriter: "platformProductWriter", gitExecutor: "gitExecutor", codeStart: "codeStartAllowed", runtimeCode: "runtimeCodeAllowed", release: "releaseAllowed", deploy: "deployAllowed", verdict: "verdict" };
 
@@ -178,18 +183,18 @@ const validateHead = (chain, errors) => {
   if (!head || terminal.length !== 1 || terminal[0] !== head || head.status !== "effective")
     errors.push("effective-epoch-not-head");
   if (!head) return null;
-  if (head.epochId !== "AUTHORITY-SUPERSESSION-03") errors.push("epoch-identity-drift");
+  if (head.epochId !== "AUTHORITY-SUPERSESSION-04") errors.push("epoch-identity-drift");
   const text = head.normalizedText;
   if (typeof text !== "string") {
     errors.push("epoch-text-missing");
     return head;
   }
   // biome-ignore format: the exact head byte-count floor stays compact for the shard budget.
-  if (Buffer.byteLength(text, "utf8") !== EPOCH03_TEXT_BYTES || head.normalizedTextBytes !== EPOCH03_TEXT_BYTES) errors.push("epoch-text-bytes-drift");
-  if (sha256(text) !== EPOCH03_TEXT_SHA256 || head.normalizedTextSha256 !== EPOCH03_TEXT_SHA256)
+  if (Buffer.byteLength(text, "utf8") !== EPOCH04_TEXT_BYTES || head.normalizedTextBytes !== EPOCH04_TEXT_BYTES) errors.push("epoch-text-bytes-drift");
+  if (sha256(text) !== EPOCH04_TEXT_SHA256 || head.normalizedTextSha256 !== EPOCH04_TEXT_SHA256)
     errors.push("epoch-text-digest-drift");
   const tokens = tokenMap(text);
-  for (const [token, value] of Object.entries(EPOCH03_TOKEN_FLOOR))
+  for (const [token, value] of Object.entries(EPOCH04_TOKEN_FLOOR))
     if (tokens.get(token) !== value) errors.push(`epoch-token-floor-drift:${token}`);
   if (head.sourceType !== "direct-user-admin-instruction") errors.push("epoch-source-type-drift");
   if (head.sourceRef !== null) errors.push("epoch-source-ref-fabricated");
@@ -276,8 +281,9 @@ const sealedTextSha256 = (entry) => {
 // Naming a sealed entry is necessary but not sufficient: a stamp stays valid only while the
 // authority it named still governs. The boundary derived from the chain prefix ending at the stamped
 // entry must equal the boundary in force now. An append that leaves the boundary byte-identical
-// keeps every earlier stamp valid — the live EPOCH-02 stamps survive the EPOCH-03 head untouched —
-// while a sealed but pre-supersession entry binds a boundary that no longer holds and fails closed.
+// keeps every earlier stamp valid, but the EPOCH-04 append moved it: predecessor stamps still
+// resolve to their sealed entry historically while no longer governing, and only consumers
+// restamped onto the seq-4 head govern. A stamp binding a boundary that no longer holds fails closed.
 // An unresolvable or erroring derivation is a rejection, never a bypass.
 const stampGoverns = (chain, stamped, boundary) => {
   const index = chain.entries.indexOf(stamped);
@@ -301,7 +307,9 @@ const validateConsumers = (chain, handoff, universeBoundary, boundary, errors) =
   if (!effective) errors.push("handoff-effective-authority-missing");
   else {
     // A consumer stamp is historical-at-write: it must name a sealed entry of this chain, not
-    // necessarily the current head, so appending an epoch never invalidates an earlier handoff.
+    // necessarily the current head, so a sealed stamp stays historically resolvable after an append.
+    // Resolvable is not governing: an append that moves the boundary supersedes the stamp it named,
+    // so a consumer bound to the live boundary must be restamped onto the head to keep governing.
     const stamped = sealedStamp(chain, effective);
     const sealedDigest = sealedTextSha256(stamped);
     if (effective.ref !== EFFECTIVE_AUTHORITY_CHAIN_REF)

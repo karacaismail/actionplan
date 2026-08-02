@@ -1,6 +1,6 @@
 # AGENTS.md — Bu Repoda Çalışan AI Ajan(lar) İçin Bağlayıcı Çalışma Sözleşmesi
 
-Sürüm: 1.5 · Tarih: 2026-08-01 (§7 yazar yetkisi etkin yetki zinciri EPOCH-03 ile güncellendi)
+Sürüm: 1.5 · Tarih: 2026-08-01 (§7 yazar yetkisi etkin yetki zinciri EPOCH-04 ile güncellendi)
 Durum: Kanonik, bağlayıcı. Bu dosyayla çelişen her ajan davranışı geçersizdir.
 Kapsam: `actionplan` reposunda çalışan tüm AI ajanları (tek ajan veya paralel swarm).
 
@@ -10,7 +10,9 @@ Bu dosya bir öğretici değildir; bir sözleşmedir. Aşağıdaki maddeler "ön
 
 ## 0. Kalıcı Rol Sınırı — Dokümantasyon Bakımı
 
-Codex, Claude, Cursor, Aider, Windsurf ve bu repo bağlamında çalışan başka hiçbir AI ajanı **proje, platform, kernel, SDK, app-core, module veya app geliştirmez**. AI erişimi `read-only-audit`, platform ürün kodu yazarı `human-developer-only`dır. AI'nın işi insan geliştiricinin tüketebileceği dokümantasyon ve directive sistemini yeterli seviyeye getirmektir.
+Codex, Claude, Cursor, Aider, Windsurf ve bu repo bağlamında çalışan başka hiçbir AI ajanı **bu `actionplan` reposunda proje, platform, kernel, SDK, app-core, module veya app ürün/runtime kodu yazmaz**. AI erişimi `read-only-audit`, platform ürün kodu yazarı `human-developer-only`dır. AI'nın işi insan geliştiricinin tüketebileceği dokümantasyon ve directive sistemini yeterli seviyeye getirmektir.
+
+Bu yasağın tek istisnası §0.2'deki kernel şeridi olup o şerit **bu repoda değil, ayrı `metaframer-kernel` reposunda** yürür; `actionplan` her koşulda dokümantasyon/sözleşme katmanı kalır.
 
 Bağlayıcı yorum:
 - Dokümanlardaki "kod yaz", "Claude Code'a ver", "Agent Prompt'u uygula" gibi eski ifadeler AI'ya yazma yetkisi vermez; insan geliştirici için directive'e dönüştürülür.
@@ -30,6 +32,16 @@ Operasyonel sıra: **Codex → PM → uzman ajanlar → Claude workers/slaves**.
 - **Claude = worker/slave:** yalnız Codex'in açıkça sınırladığı `claude_review` veya `claude_implement` alt görevini yapar; PM ve uzmanlar Claude çağıramaz.
 - Claude çağrısı yalnız `claude.ai / firstParty / max` doğrulanınca çalışır; API/provider fallback yasaktır ve doğrulama yoksa süreç fail-closed durur.
 - Tüm ara çıktılar öneridir; Codex gerçek dosya, diff ve deterministik testlerle bağımsız doğrulamadan kabul edemez.
+
+### 0.2 Tek istisna — EPOCH-04 kernel-only şeridi (daha yüksek öncelikli, kalıcı)
+
+Etkin yetki zinciri başı EPOCH-04 (`VERDICT=GO-KERNEL-DEVELOPMENT-ONLY`) yalnız **kernel geliştirme yetkisini** açar. Çelişki halinde bu madde §0'ın üstündedir; §0'ın kalan yasakları aynen yürürlüktedir.
+
+- Şerit yalnız ayrı **`metaframer-kernel`** reposunda geçerlidir. `actionplan` reposunda hiçbir ürün/runtime kodu yazılmaz; bu repodaki iş dokümantasyon, directive, evidence ve repo-tooling ile sınırlıdır.
+- Şeridin MASTER'ı Pane-içi Codex'tir (repo salt-okunur, Git executor, nihai doğrulayıcı); tek yazarı `KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED` tek Claude worker'dır. Auth kapısı sağlanmazsa iş fail-closed durur.
+- `EXCLUDED_TARGETS=SDK,APP_CORE,APP,MODULE` kapalıdır; `sdkReady=false`, `appBuildable=false`, `releaseAllowed=false`, `deployAllowed=false`, `DIRECT_MAIN_WRITE=false`, `FORCE_GIT=false`, `TAGGING=false`.
+- `RUNTIME_IMPLEMENTATION_START=NO`: kernel runtime implementasyonu **başlamamıştır**; yetkinin açılması başlamış sayılmaz.
+- Bu istisna platform ürün koduna yazma yetkisi **vermez**; platform yazarı `human-developer-only` olarak kalır ve §4.4 kilidi gevşemez.
 
 ---
 
@@ -120,8 +132,10 @@ Bu kilitler ADR'lerle sabitlenmiştir; ajan bunları gevşetemez.
 
 ### 4.4 AI yetki sınırı kilidi (`src/data/platform-product-code-write-policy.json`)
 - AI platform üzerinde yalnız `read-only-audit` yapar ve actionplan içinde `DIRECTIVE-ONLY` handoff üretir.
-- AI ürün kodu, test, migration, Storybook/config dosyası yazamaz; branch/commit/push/PR oluşturamaz.
-- Platform ürün kodu yazarı `human-developer-only`dır.
+- Ürün kodu, test, migration, Storybook/config ve generated output yasağı `platform` yüzeyine aittir: AI bu dosyaların hiçbirini yazamaz.
+- `actionplan` yüzeyinde de ürün/runtime kodu yazılmaz. Tek istisna, §3 test-önce zorunluluğu ve §7 yazar kiralaması (`ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED`) altında yürüyen governance, directive, evidence, test ve repo-tooling yazımıdır; bu istisna ürün/runtime koduna genişlemez.
+- Branch, commit, push, PR ve merge her iki yüzeyde de yalnız Codex'tedir; worker (Claude dâhil) hiçbir Git mutasyonu yapamaz.
+- Platform ürün kodu yazarı `human-developer-only`dır; §0.2 kernel istisnası bu iki yüzeyi kapsamaz, platform yasağını gevşetmez ve Git yürütmesini açmaz.
 - AI **app/module üretemez, app/module güncelleyemez**, ruleset'i devre dışı bırakamaz/override edemez, doğrudan prod write yapamaz, geçmişi rewrite edemez.
 - `forbiddenTargets` varsayılanı `["app", "module"]`. Tetiklenen ECA zinciri maksimum derinliği **6**.
 
@@ -190,7 +204,7 @@ Aşağıdaki dosyalar **kanonik sözleşmedir**; içerikleri tek doğruluk kayna
 
 Yetki sınırı: Bu kanonik dosyalar ve bu `AGENTS.md` yalnız **Açık Kullanıcı/Admin yetkisi** ile değiştirilebilir. Bu açık yetki varsa dış directive'i yazan, kapsamı kilitleyen, bağımsız son doğrulamayı yapan ve Git teslimini yürüten rol yalnız Codex'tir; Actionplan changeset'ini dosyaya uygulayan tek yazar ise Codex'in sınırladığı tek Claude writer lease'idir (`ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED`, tek paylaşılan yazar). PM, uzman ve Claude ajanları bu yazar kiralamasının dışında yalnız ara çıktı/changeset önerir ve hiçbiri kendi alt ajanını başlatamaz. Açık yetki yoksa Codex de dosyayı değiştirmez. Bu istisna platform ürün koduna (`human-developer-only`), app/module kapsam kararına veya platform Git işlemlerine yazma yetkisi vermez; Git yürütmesi yalnız Codex'te ve yalnız göreve özel açık kullanıcı yetkisiyle kalır.
 
-Etkin yetki zinciri (append-only, hash-bağlı) bu rol dağılımının tek doğruluk kaynağıdır: `reports/kernel-effective-authority-chain-2026-07-31.json`. Güncel baş EPOCH-03'tür (`SCOPE=KERNEL_RUNTIME_APPROVED_SHARDS_ONLY`, `CODEX=MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR`, `KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED`, `EXCLUDED_TARGETS=SDK,APP_CORE,APP,MODULE`). Güncel baş `chainHeadSeq` ve `supersedes` bağıntısından türetilir; mühürlenmiş EPOCH-01 ve EPOCH-02 kayıtları bayt/hash olarak dokunulmazdır ve yazıldıkları `status` değeri değiştirilmez. Çelişki halinde bu zincir esas alınır; `codeStart`, `runtime`, `release`, `deploy`, `DIRECT_MAIN_WRITE`, `FORCE_GIT`, `TAGGING` kapalı ve verdict `NO-GO` kalır.
+Etkin yetki zinciri (append-only, hash-bağlı) bu rol dağılımının tek doğruluk kaynağıdır: `reports/kernel-effective-authority-chain-2026-07-31.json`. Güncel baş EPOCH-04'tür (`SCOPE=KERNEL_DEVELOPMENT_ACTIVATION_ONLY`, `CODEX=MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR`, `KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED`, `EXCLUDED_TARGETS=SDK,APP_CORE,APP,MODULE`); EPOCH-01, EPOCH-02 ve EPOCH-03 mühürlenmiş öncüllerdir. Güncel baş `chainHeadSeq` ve `supersedes` bağıntısından türetilir; mühürlenmiş EPOCH-01, EPOCH-02 ve EPOCH-03 kayıtları bayt/hash olarak dokunulmazdır ve yazıldıkları `status` değeri değiştirilmez. Çelişki halinde bu zincir esas alınır; `release`, `deploy`, `DIRECT_MAIN_WRITE`, `FORCE_GIT`, `TAGGING` kapalı kalır; `codeStart` ve `runtimeCode` yalnız kernel geliştirme için açıktır (runtime başlatılmadı) ve verdict `GO-KERNEL-DEVELOPMENT-ONLY`dir.
 
 Standartların gezinme indeksi `docs/engineering-standards-index.md` altında toplanmıştır; standart listesi için bu dosyanın Bölüm 2'si yerine o hub'ı, `src/schemas/task.ts` içindeki `StandardRefsSchema`'yı ve `src/data/standards/` dizinini kaynak al.
 

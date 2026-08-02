@@ -21,12 +21,16 @@ const EPOCH01_ENTRY_SHA256 = "367cf0579654a82b2d056a2dd1f9aeb0d68b181fbf4d2bc589
 const EPOCH02_ENTRY_SHA256 = "782ef3c5b92455b79a76ae715864b585b4302f24ad7355d7fe606b35330c5029";
 const EPOCH03_TEXT_SHA256 = "4f00c2d3f3af743b975dcb29b8f54a913bc2b2de00df575469dc3598ef0d3aa5";
 const EPOCH03_ENTRY_SHA256 = "9ce36513271352f891c5c73963ce1e7db94b316063587cf0506c8ff270a0984c";
+const EPOCH04_ENTRY_SHA256 = "90a0a9ba795fcff67d48829d9d0083cbac956e4d1b277527862fa19586228c37";
+const EPOCH04_TEXT_SHA256 = "f7b92d21da22dccf0ca99e0efbebc5e9f0556ba5b2a96657737e057848c2953d";
+// biome-ignore format: EPOCH-04 supersedes exactly the three approved activation dimensions.
+const EPOCH04_SUPERSEDES = ["codeStart", "runtimeCode", "verdict"];
 // biome-ignore format: the exact 524-byte Codex-approved EPOCH-03 text stays on one immutable line.
 const EPOCH03_TEXT = "AUTHORITY-SUPERSESSION-03 EFFECTIVE; SOURCE=DIRECT_USER_ADMIN_INSTRUCTION; SUPERSEDES=EPOCH-02; SCOPE=KERNEL_RUNTIME_APPROVED_SHARDS_ONLY; CODEX=MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR; KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED; ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED; KERNEL_REVIEWER=CLAUDE_ONLY_FAIL_CLOSED; RELEASE_ALLOWED=false; DEPLOY_ALLOWED=false; DIRECT_MAIN_WRITE=false; FORCE_GIT=false; TAGGING=false; EXCLUDED_TARGETS=SDK,APP_CORE,APP,MODULE; CODE_START=NO; RUNTIME_CODE=NO; VERDICT=NO-GO";
 // biome-ignore format: the closed authority dimension registry stays compact for the shard budget.
 const REGISTRY = ["actionplanReviewer", "actionplanWriter", "claudeAuthGate", "codeStart", "deploy", "finalVerifier", "gitExecutor", "gitMode", "historicalApprovalMutation", "kernelReviewer", "kernelRuntimeWriter", "kernelWriter", "orchestrator", "parallelism", "platformProductWriter", "release", "requirementsFirstPass", "runtimeCode", "technicalDecisions", "verdict", "workerAgentPool"];
 // biome-ignore format: the derived D01 boundary stays byte-identical to the applied D7 contract.
-const BOUNDARY = { actionplanWriter: "claude-only-fail-closed", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: false, runtimeCodeAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" };
+const BOUNDARY = { actionplanWriter: "claude-only-fail-closed", kernelWriter: "claude-only-fail-closed", claudeAuthGate: { loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", perInvocation: true, cachedEvidenceAllowed: false }, platformProductWriter: "human-developer-only", gitExecutor: "codex", codeStartAllowed: true, runtimeCodeAllowed: true, releaseAllowed: false, deployAllowed: false, verdict: "GO-KERNEL-DEVELOPMENT-ONLY" };
 // biome-ignore format: EPOCH-01 keeps the only dimensions its 691-byte GATE-01 text actually encodes.
 const EPOCH01_DIMENSIONS = ["actionplanWriter", "deploy", "gitExecutor", "gitMode", "kernelWriter", "release", "technicalDecisions"];
 // biome-ignore format: EPOCH-02 supersedes exactly six EPOCH-01 dimensions and adds thirteen new ones.
@@ -78,7 +82,7 @@ describe("kernel effective authority supersession chain", () => {
       id: "kernel-effective-authority-chain-2026-07-31",
       status: "effective",
       appendOnly: true,
-      chainHeadSeq: 3,
+      chainHeadSeq: 4,
       dimensionRegistry: REGISTRY,
       effectiveAuthorityBoundary: BOUNDARY,
       historicalInvariant: {
@@ -89,8 +93,8 @@ describe("kernel effective authority supersession chain", () => {
         mutation: "FORBIDDEN",
       },
     });
-    expect(chain.entries).toHaveLength(3);
-    const [genesis, epoch02, head] = chain.entries;
+    expect(chain.entries).toHaveLength(4);
+    const [genesis, epoch02, epoch03, head] = chain.entries;
     expect(genesis).toMatchObject({
       seq: 1,
       status: "superseded",
@@ -112,10 +116,16 @@ describe("kernel effective authority supersession chain", () => {
     expect(epoch02).toMatchObject({ seq: 2, epochId: "AUTHORITY-SUPERSESSION-02", status: "effective", supersedes: 1, supersedesDimensions: EPOCH02_SUPERSEDES, supersessionScope: "ROLE_ASSIGNMENT_AND_EXECUTION_PROTOCOL_ONLY", normalizedText: EPOCH_TEXT, normalizedTextBytes: 870, normalizedTextSha256: EPOCH_TEXT_SHA256, previousEntrySha256: EPOCH01_ENTRY_SHA256, entrySha256: EPOCH02_ENTRY_SHA256 });
     expect(genesis.entrySha256).toBe(EPOCH01_ENTRY_SHA256);
     expect(Object.keys(epoch02.dimensions)).toHaveLength(19);
-    // biome-ignore format: the EPOCH-03 head surface stays compact for the shard budget.
-    expect(head).toMatchObject({ seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", status: "effective", sourceType: "direct-user-admin-instruction", sourceRef: null, supersedes: 2, supersedesDimensions: EPOCH03_SUPERSEDES, supersessionScope: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", normalizedText: EPOCH03_TEXT, normalizedTextBytes: 524, normalizedTextSha256: EPOCH03_TEXT_SHA256, previousEntrySha256: EPOCH02_ENTRY_SHA256 });
-    expect(Buffer.byteLength(head.normalizedText ?? "", "utf8")).toBe(524);
-    expect(Object.keys(head.dimensions).sort()).toEqual(EPOCH03_DIMENSIONS);
+    // EPOCH-03 is now a sealed predecessor, byte-identical to how it was appended.
+    // biome-ignore format: the sealed EPOCH-03 surface stays compact for the shard budget.
+    expect(epoch03).toMatchObject({ seq: 3, epochId: "AUTHORITY-SUPERSESSION-03", status: "effective", sourceType: "direct-user-admin-instruction", sourceRef: null, supersedes: 2, supersedesDimensions: EPOCH03_SUPERSEDES, supersessionScope: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", normalizedText: EPOCH03_TEXT, normalizedTextBytes: 524, normalizedTextSha256: EPOCH03_TEXT_SHA256, previousEntrySha256: EPOCH02_ENTRY_SHA256 });
+    expect(Buffer.byteLength(epoch03.normalizedText ?? "", "utf8")).toBe(524);
+    expect(Object.keys(epoch03.dimensions).sort()).toEqual(EPOCH03_DIMENSIONS);
+    // The appended EPOCH-04 head supersedes exactly the three approved activation dimensions.
+    // biome-ignore format: the EPOCH-04 head surface stays compact for the shard budget.
+    expect(head).toMatchObject({ seq: 4, epochId: "AUTHORITY-SUPERSESSION-04", status: "effective", sourceType: "direct-user-admin-instruction", sourceRef: null, supersedes: 3, supersedesDimensions: EPOCH04_SUPERSEDES, supersessionScope: "KERNEL_DEVELOPMENT_ACTIVATION_ONLY", normalizedTextBytes: 898, normalizedTextSha256: EPOCH04_TEXT_SHA256, previousEntrySha256: EPOCH03_ENTRY_SHA256, entrySha256: EPOCH04_ENTRY_SHA256 });
+    expect(Buffer.byteLength(head.normalizedText ?? "", "utf8")).toBe(898);
+    expect(Object.keys(head.dimensions).sort()).toEqual(EPOCH04_SUPERSEDES);
   });
 
   it("recomputes historical, epoch, entry and chain digests deterministically", async () => {
@@ -124,7 +134,7 @@ describe("kernel effective authority supersession chain", () => {
     const chain = readJson<Chain>(CHAIN);
     expect(canonicalJson({ b: 1, a: [2, { d: 3, c: 4 }] })).toBe('{"a":[2,{"c":4,"d":3}],"b":1}');
     for (const entry of chain.entries) expect(entryDigest(entry)).toBe(entry.entrySha256);
-    expect(chain.chainHeadEntrySha256).toBe(chain.entries[2].entrySha256);
+    expect(chain.chainHeadEntrySha256).toBe(chain.entries[3].entrySha256);
     expect(chain.chainSha256).toBe(chainDigest(chain.entries));
     expect(validateSelf(await lib(), fixture())).toEqual([]);
   });
@@ -141,7 +151,9 @@ describe("kernel effective authority supersession chain", () => {
     expect(resolved.technicalDecisions.seq).toBe(1);
     for (const key of EPOCH03_DIMENSIONS) expect(resolved[key].seq, key).toBe(3);
     // biome-ignore format: the EPOCH-02 remainder stays one deterministic expression.
-    for (const key of REGISTRY.filter((k) => k !== "technicalDecisions" && !EPOCH03_DIMENSIONS.includes(k))) expect(resolved[key].seq, key).toBe(2);
+    for (const key of REGISTRY.filter((k) => k !== "technicalDecisions" && !EPOCH03_DIMENSIONS.includes(k) && !EPOCH04_SUPERSEDES.includes(k))) expect(resolved[key].seq, key).toBe(2);
+    // EPOCH-04 redeclares exactly the three activation dimensions, so they resolve from the head.
+    for (const key of EPOCH04_SUPERSEDES) expect(resolved[key].seq, key).toBe(4);
     for (const key of CLAUDE_ROLES) expect(resolved[key].value).toBe("CLAUDE_ONLY_FAIL_CLOSED");
     // biome-ignore format: the non-supersedable floor table stays compact for the shard budget.
     expect(chain.nonSupersedableFloors).toEqual({ claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", deploy: "NO", gitMode: "NONFORCE_NO_TAGS_CI_GATED", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", release: "NO" });
@@ -159,10 +171,14 @@ describe("kernel effective authority supersession chain", () => {
     const chainFileSha256 = createHash("sha256").update(read(CHAIN)).digest("hex");
     expect(read(CHAIN)).not.toContain(chainFileSha256);
     expect(chainFileSha256).not.toBe(PREDECESSOR_CHAIN_FILE_SHA256);
-    // The sealed EPOCH-03 head still carries the pre-activation values; only the label moved.
+    // The appended EPOCH-04 head carries its own dimensions; the pre-activation values stay sealed
+    // in entries[2], the EPOCH-03 predecessor, which the token proof below reads.
     expect(chain.entries.at(-1)?.dimensions).toBeDefined();
     // biome-ignore format: the sealed EPOCH-03 token floor stays exactly as it was appended.
-    for (const token of ["CODE_START=NO", "RUNTIME_CODE=NO", "VERDICT=NO-GO"]) expect(chain.entries.at(-1)?.normalizedText).toContain(token);
+    for (const token of ["CODE_START=NO", "RUNTIME_CODE=NO", "VERDICT=NO-GO"]) expect(chain.entries[2]?.normalizedText).toContain(token);
+    // ...while the appended head carries the activated values.
+    // biome-ignore format: the EPOCH-04 head token proof stays compact for the shard budget.
+    for (const token of ["CODE_START=YES", "RUNTIME_CODE=YES", "VERDICT=GO-KERNEL-DEVELOPMENT-ONLY"]) expect(chain.entries.at(-1)?.normalizedText).toContain(token);
     // biome-ignore format: the Git floor table stays compact for the shard budget.
     expect(chain.gitFloor).toEqual({ authorizedNow: false, ciRequired: true, directDefaultBranchPush: false, force: false, reviewRequired: true, tags: false, workerGitMutationAllowed: false });
     expect(chain.orchestrationPolicy).toMatchObject({
@@ -195,8 +211,8 @@ describe("kernel effective authority supersession chain", () => {
       ["history", "genesis-reference-replacement", (input) => { input.chain.entries[0].sourceRef = HANDOFF; }],
       ["history", "genesis-text-copy-forbidden", (input) => { input.chain.entries[0].normalizedText = (input.closure.approval as { normalizedSelection: string }).normalizedSelection; }],
       ["history", "historical-invariant-drift", (input) => { (input.chain.historicalInvariant as { mutation: string }).mutation = "ALLOWED"; }],
-      ["chain", "epoch-text-bytes-drift", (input) => { input.chain.entries[2].normalizedText += "."; }],
-      ["chain", "epoch-text-digest-drift", (input) => { input.chain.entries[2].normalizedTextSha256 = HISTORICAL_SHA256; }],
+      ["chain", "epoch-text-bytes-drift", (input) => { input.chain.entries[3].normalizedText += "."; }],
+      ["chain", "epoch-text-digest-drift", (input) => { input.chain.entries[3].normalizedTextSha256 = HISTORICAL_SHA256; }],
       ["chain", "sealed-entry-digest-drift:2", (input) => { input.chain.entries[1].normalizedText += "."; reseal(input); }],
       ["chain", "entry-digest-drift:1", (input) => { input.chain.entries[0].entrySha256 = HISTORICAL_SHA256; }],
       ["chain", "broken-previous-link:2", (input) => { input.chain.entries[1].previousEntrySha256 = HISTORICAL_SHA256; }],
@@ -210,7 +226,7 @@ describe("kernel effective authority supersession chain", () => {
       ["chain", "chain-digest-drift", (input) => { input.chain.chainSha256 = HISTORICAL_SHA256; }],
       ["chain", "sealed-entry-digest-drift:1", (input) => { input.chain.entries[0].status = "effective"; reseal(input); }],
       ["chain", "effective-epoch-not-head", (input) => { input.chain.entries[2].supersedes = 1; reseal(input); }],
-      ["precedence", "authority-dimension-omission:verdict", (input) => { Reflect.deleteProperty(input.chain.entries[1].dimensions, "verdict"); reseal(input); }],
+      ["precedence", "authority-dimension-omission:verdict", (input) => { Reflect.deleteProperty(input.chain.entries[1].dimensions, "verdict"); Reflect.deleteProperty(input.chain.entries[3].dimensions, "verdict"); input.chain.entries[3].supersedesDimensions = ["codeStart", "runtimeCode"]; reseal(input); }],
       ["precedence", "authority-dimension-overlap:kernelWriter", (input) => { input.chain.entries[1].supersedesDimensions = []; reseal(input); }],
       ["precedence", "authority-dimension-orphan:inventedAuthority", (input) => { input.chain.entries[1].dimensions.inventedAuthority = { token: "INVENTED", value: "YES" }; reseal(input); }],
       ["precedence", "authority-dimension-unresolved-value:verdict", (input) => { input.chain.entries[1].dimensions.verdict.value = "TBD"; reseal(input); }],
@@ -268,10 +284,10 @@ describe("kernel effective authority supersession chain", () => {
       // codeStart, runtimeCode and verdict are supersedable prospectively, by appending a successor.
       // That never licenses rewriting what EPOCH-03 already sealed: the head token floor still fails
       // closed on each of the three, and resealing the entry only moves the failure to the head digest.
-      ["chain", "epoch-token-floor-drift:CODE_START", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("CODE_START=NO", "CODE_START=YES"); }],
-      ["chain", "epoch-token-floor-drift:RUNTIME_CODE", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("RUNTIME_CODE=NO", "RUNTIME_CODE=YES"); }],
-      ["chain", "epoch-token-floor-drift:VERDICT", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("VERDICT=NO-GO", "VERDICT=GO-KERNEL-DEVELOPMENT-ONLY"); }],
-      ["chain", "chain-head-digest-drift", (input) => { input.chain.entries[2].normalizedText = String(input.chain.entries[2].normalizedText).replace("CODE_START=NO", "CODE_START=YES"); reseal(input); }],
+      ["chain", "epoch-token-floor-drift:CODE_START", (input) => { input.chain.entries[3].normalizedText = String(input.chain.entries[3].normalizedText).replace("CODE_START=YES", "CODE_START=NO"); }],
+      ["chain", "epoch-token-floor-drift:RUNTIME_CODE", (input) => { input.chain.entries[3].normalizedText = String(input.chain.entries[3].normalizedText).replace("RUNTIME_CODE=YES", "RUNTIME_CODE=NO"); }],
+      ["chain", "epoch-token-floor-drift:VERDICT", (input) => { input.chain.entries[3].normalizedText = String(input.chain.entries[3].normalizedText).replace("VERDICT=GO-KERNEL-DEVELOPMENT-ONLY", "VERDICT=NO-GO"); }],
+      ["chain", "chain-head-digest-drift", (input) => { input.chain.entries[3].normalizedText = String(input.chain.entries[3].normalizedText).replace("CODE_START=YES", "CODE_START=NO"); reseal(input); }],
     ];
     const groups = new Set<string>();
     for (const [group, expected, mutate] of matrix) {
@@ -311,16 +327,17 @@ describe("kernel effective authority supersession chain", () => {
     // The genuine normalizedTextRef digest resolves, so only the superseded boundary rejects it.
     // biome-ignore format: the genuine genesis-ref stamp stays compact for the shard budget.
     expect(restamp({ ref: CHAIN, seq: 1, chainHeadSha256: EPOCH01_ENTRY_SHA256, normalizedTextSha256: HISTORICAL_SHA256 })).toEqual(["handoff-effective-authority-stamp-superseded"]);
-    // Appending EPOCH-03 left the derived boundary byte-identical, so the live EPOCH-02 stamp and
-    // the current head stamp both stay valid — historical-at-write is preserved, not weakened.
-    // biome-ignore format: the live EPOCH-02 consumer stamp stays compact for the shard budget.
-    expect(restamp({ ref: CHAIN, seq: 2, chainHeadSha256: EPOCH02_ENTRY_SHA256, normalizedTextSha256: EPOCH_TEXT_SHA256 })).toEqual([]);
-    // biome-ignore format: the current EPOCH-03 head stamp stays compact for the shard budget.
-    expect(restamp({ ref: CHAIN, seq: 3, chainHeadSha256: EPOCH03_ENTRY_SHA256, normalizedTextSha256: EPOCH03_TEXT_SHA256 })).toEqual([]);
+    // Appending EPOCH-04 moved the derived boundary, so a predecessor stamp still RESOLVES to its
+    // sealed entry but no longer GOVERNS. The rule is preserved, not weakened: only the head governs.
+    // biome-ignore format: the superseded EPOCH-02 consumer stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 2, chainHeadSha256: EPOCH02_ENTRY_SHA256, normalizedTextSha256: EPOCH_TEXT_SHA256 })).toEqual(["handoff-effective-authority-stamp-superseded"]);
+    // biome-ignore format: the current EPOCH-04 head stamp stays compact for the shard budget.
+    expect(restamp({ ref: CHAIN, seq: 4, chainHeadSha256: EPOCH04_ENTRY_SHA256, normalizedTextSha256: EPOCH04_TEXT_SHA256 })).toEqual([]);
     // A forged digest naming no sealed entry still fails closed on both the head and the text.
     // biome-ignore format: the forged future stamp stays compact for the shard budget.
     expect(restamp({ ref: CHAIN, seq: 4, chainHeadSha256: "f".repeat(64), normalizedTextSha256: EPOCH03_TEXT_SHA256 })).toEqual(["handoff-effective-authority-chain-head-drift", "handoff-effective-authority-text-digest-drift"]);
     expect(readJson<Chain>(CHAIN).entries[2].entrySha256).toBe(EPOCH03_ENTRY_SHA256);
+    expect(readJson<Chain>(CHAIN).entries[3].entrySha256).toBe(EPOCH04_ENTRY_SHA256);
   });
 
   it("binds AGENTS.md, the handoff, the node universe and the governance gate to the chain", async () => {
@@ -342,17 +359,19 @@ describe("kernel effective authority supersession chain", () => {
       HANDOFF,
     ).provenance;
     expect(provenance.approval.normalizedSelectionSha256).toBe(HISTORICAL_SHA256);
-    // The handoff stamp is historical-at-write: it stays pinned to the sealed EPOCH-02 entry it
-    // was authored against, so appending EPOCH-03 never rewrites a downstream consumer artifact.
+    // The handoff mirrors the boundary in force, so the EPOCH-04 append restamped it onto the seq-4
+    // head; consumers that only resolve a stamp stay pinned to the entry they were authored against.
     expect(provenance.effectiveAuthority).toEqual({
       ref: CHAIN,
-      seq: 2,
-      chainHeadSha256: EPOCH02_ENTRY_SHA256,
-      normalizedTextSha256: EPOCH_TEXT_SHA256,
+      seq: 4,
+      chainHeadSha256: EPOCH04_ENTRY_SHA256,
+      normalizedTextSha256: EPOCH04_TEXT_SHA256,
     });
     expect(chain.entries[1].entrySha256).toBe(EPOCH02_ENTRY_SHA256);
     const agents = read("AGENTS.md");
     expect(agents).toContain(CHAIN);
+    expect(agents).toContain("EPOCH-04");
+    // EPOCH-03 stays named as the sealed predecessor it now is.
     expect(agents).toContain("EPOCH-03");
     expect(agents).toContain("KERNEL_RUNTIME_WRITER=CLAUDE_ONLY_FAIL_CLOSED");
     expect(agents).toContain("ACTIONPLAN_WRITER=CLAUDE_ONLY_FAIL_CLOSED");

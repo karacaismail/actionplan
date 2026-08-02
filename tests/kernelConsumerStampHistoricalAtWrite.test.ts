@@ -11,12 +11,23 @@ import { describe, expect, it } from "vitest";
 // Tier1 and PINNED may not couple to the head; only Tier1 must resolve. Proven here: (1) no Tier1 or
 // PINNED test asserts against the head, (2) every stamp still RESOLVES to its sealed entry under an
 // appended seq-4, (3) resolving is NOT governing — that is stampGoverns in
-// tools/lib/kernel-effective-authority-chain.mjs, mirrored by the third test. No library is changed
-// and no entry is appended.
+// tools/lib/kernel-effective-authority-chain.mjs, mirrored by the third test. The seq-4 entry is
+// appended and in force; this file changes no library and appends nothing itself.
 const ROOT = process.cwd();
 const CHAIN = "reports/kernel-effective-authority-chain-2026-07-31.json";
 const CHAIN_LIB = "tools/lib/kernel-effective-authority-chain.mjs";
 const ACTIVATION = "reports/kernel-epoch-04-activation-2026-08-02.json";
+const EXECUTION = "reports/kernel-epoch-04-append-execution-2026-08-02.json";
+// The two consumers the append execution record restamped onto the seq-4 head. The handoff carries a
+// provenance stamp; the ledger is root-level head-tracking state. Reading the ledger makes this file
+// a ledger-touching sibling of tests/kernelGovernanceApplicationState.test.ts, which classifies such
+// files by this exact literal: it owns no KGA-Dxx decision row, so it declares itself a consumer.
+// The declaration is the contract — referenced, not asserted, since a literal equalling itself
+// proves nothing.
+const APPLICATION_STATE_ROLE = "non-decision-consumer";
+void APPLICATION_STATE_ROLE;
+const HANDOFF = "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json";
+const STATE = "reports/kernel-governance-application-state-2026-08-01.json";
 const SELF = "tests/kernelConsumerStampHistoricalAtWrite.test.ts";
 // biome-ignore format: the closed consumer test-to-report registry stays compact for the shard budget
 const CONSUMERS: Array<[string, string]> = [
@@ -34,7 +45,7 @@ const CONSUMERS: Array<[string, string]> = [
 // to the live head, and each must keep its exact pin.
 // biome-ignore format: the closed pinned-epoch registry stays compact for the shard budget
 const PINNED: Array<[string, string]> = [
-  ["tests/kernelCodeBearingDescendantHandoff.test.ts", "entry.seq === 2"],
+  ["tests/kernelCodeBearingDescendantHandoff.test.ts", "entry.seq === 4"],
   ["tests/kernelEffectiveAuthorityChain.test.ts", "EPOCH02_ENTRY_SHA256"],
   ["tests/kernelRuntimeSuccessorPolicy.test.ts", "EPOCH02_ENTRY_SHA256"],
   ['tests/kernelSurfaceDependencyOrderHandoff.test.ts', 'epochId === "AUTHORITY-SUPERSESSION-02"'],
@@ -43,9 +54,11 @@ const PINNED: Array<[string, string]> = [
 // head. It carries no provenance stamp at all — asserted below, not assumed — so it is correctly
 // outside the rule rather than an unexplained exemption.
 const HEAD_TRACKING = ["tests/kernelGovernanceApplicationState.test.ts"];
-// Already historical-at-write at seq 2, kept so the resolver is proven against non-head stamps too.
-// biome-ignore format: the seq-2 consumer reports stay compact for the shard budget
-const SEQ2_CONSUMERS = ["reports/kernel-surface-dependency-order-handoff-2026-08-01.json", "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"];
+// Consumers outside the Tier1 registry: the surface handoff is still sealed at seq 2 and the
+// code-bearing handoff was restamped to the seq-4 head, so the resolver is proven against both a
+// non-head stamp and a head stamp.
+// biome-ignore format: the extra consumer reports stay compact for the shard budget
+const EXTRA_CONSUMERS = ["reports/kernel-surface-dependency-order-handoff-2026-08-01.json", HANDOFF];
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const readJson = (relative: string) => JSON.parse(read(relative));
 // biome-ignore lint/suspicious/noExplicitAny: the shipped pure JavaScript validator has no declaration file.
@@ -264,19 +277,22 @@ describe("consumer provenance stamps are historical-at-write", () => {
     for (const [test] of CONSUMERS) expect(read(test), `consumer-stamp-resolver-missing:${test}`).toContain("entrySha256 === ");
   });
 
-  it("keeps every stamp resolvable to its own sealed entry under a synthetic seq-4 successor", async () => {
+  it("keeps every stamp resolvable to its own sealed entry on the appended seq-4 chain", async () => {
     const chain = readJson(CHAIN);
     const { entryDigest } = await load(CHAIN_LIB);
     const live: Entry[] = chain.entries;
     const headSeq: number = chain.chainHeadSeq;
     // The successor is assembled in memory only; the chain file on disk is never touched, the entry
-    // is never appended, and no claim is made that it is in force.
+    // is a replay of the already-appended entry, used only to prove a duplicate append is rejected.
     const successor = readJson(ACTIVATION).successorEntry;
     expect(successor.entrySha256).toBe(entryDigest(successor));
     const seq4: Entry[] = [...live, successor];
-    expect([live.length, seq4.length, headSeq]).toEqual([3, 4, 3]);
+    // The append has happened: the live chain IS the seq-4 chain, so the synthetic successor is
+    // already present and appending it again is the drift case, not the forward-looking one.
+    expect([live.length, headSeq]).toEqual([4, 4]);
+    expect(live.at(-1)?.entrySha256).toBe(successor.entrySha256);
 
-    const reports = [...CONSUMERS.map(([, report]) => report), ...SEQ2_CONSUMERS];
+    const reports = [...CONSUMERS.map(([, report]) => report), ...EXTRA_CONSUMERS];
     for (const report of reports) {
       const stamp: Stamp = readJson(report).provenance.effectiveAuthority;
       // Resolves cleanly today, and resolves to the identical sealed entry once seq 4 exists.
@@ -288,18 +304,31 @@ describe("consumer provenance stamps are historical-at-write", () => {
         resolve(live, stamp),
       );
       // The stamp names a predecessor, never the appended successor: it did not follow the head.
-      expect(resolve(seq4, stamp)?.seq, `stamp-followed-head-under-seq4:${report}`).toBeLessThan(4);
+      // A restamped consumer names the head; a historical one names a predecessor. Neither may
+      // ever name an entry above the head.
+      expect(resolve(seq4, stamp)?.seq, `stamp-above-head:${report}`).toBeLessThanOrEqual(headSeq);
     }
-    // Non-vacuity: two consumers are sealed at seq 2, so the resolver is genuinely digest-driven
+    // Non-vacuity: the stamped seq set spans 2, 3 and 4, so the resolver is genuinely digest-driven
     // rather than accidentally agreeing with whatever currently heads the chain.
     expect(
       [...new Set(reports.map((r) => readJson(r).provenance.effectiveAuthority.seq))].sort(),
-    ).toEqual([2, 3]);
+    ).toEqual([2, 3, 4]);
 
     // Falsifiable rejections. Each mutation is applied to a real stamp and must produce its exact
     // error, so none of these can pass for a reason unrelated to what it claims to test.
     const base: Stamp = readJson(CONSUMERS[0][1]).provenance.effectiveAuthority;
     const entry = resolve(live, base) as Entry;
+    // The stamp-above-live-head arm used to be unreachable: every entry a real stamp can resolve to
+    // already sits at or below the head, so no input could ever produce that error and the branch was
+    // dead. A synthetic seq-5 entry restores it. It is assembled in memory for this array only — the
+    // chain file is never written, no library changes, and production still rejects a future-head
+    // stamp exactly as it did — so the proof costs nothing outside this test.
+    const aheadEntryDigest = "a".repeat(64);
+    const aheadTextDigest = "b".repeat(64);
+    // biome-ignore format: the in-memory above-head entry stays compact for the shard budget
+    const ahead: Entry = { seq: headSeq + 1, entrySha256: aheadEntryDigest, normalizedTextSha256: aheadTextDigest };
+    // biome-ignore format: the forged future-head stamp mirrors that entry exactly, so only its height is wrong
+    const aheadStamp: Stamp = { ref: CHAIN, seq: ahead.seq, chainHeadSha256: aheadEntryDigest, normalizedTextSha256: aheadTextDigest };
     // biome-ignore format: the falsifiable stamp-rejection matrix stays compact for the shard budget
     const REJECT: Array<[string, Stamp, Entry[], string[]]> = [
       ["forged digest", { ...base, chainHeadSha256: "0".repeat(64) }, seq4, ["stamp-unresolvable"]],
@@ -307,26 +336,33 @@ describe("consumer provenance stamps are historical-at-write", () => {
       ["wrong seq", { ...base, seq: entry.seq + 1 }, seq4, ["stamp-seq-mismatch"]],
       ["wrong normalized text", { ...base, normalizedTextSha256: "0".repeat(64) }, seq4, ["stamp-text-digest-mismatch"]],
       ["wrong ref", { ...base, ref: ACTIVATION }, seq4, ["stamp-ref-drift"]],
-      // A stamp naming the not-yet-appended successor is unresolvable against the live chain...
-      ["successor under live head", { ...base, chainHeadSha256: successor.entrySha256 }, live, ["stamp-unresolvable"]],
+      // A stamp naming the appended successor now resolves at the head, so its seq and text must follow...
+      ["successor now resolves at the head", { ...base, chainHeadSha256: successor.entrySha256 }, live, ["stamp-seq-mismatch", "stamp-text-digest-mismatch"]],
       // ...and against a seq-4 chain it resolves but sits above the live head, so it still rejects.
-      ["future head above live head", { ...base, seq: 4, normalizedTextSha256: successor.normalizedTextSha256, chainHeadSha256: successor.entrySha256 }, seq4, ["stamp-above-live-head"]],
+      ["head stamp is consistent once seq and text follow it", { ...base, seq: 4, normalizedTextSha256: successor.normalizedTextSha256, chainHeadSha256: successor.entrySha256 }, seq4, []],
+      // The restored arm: a stamp that resolves and mirrors its entry perfectly, yet names an entry
+      // ABOVE the live head. Nothing else is wrong with it, so this error is the only one raised.
+      ["stamp names an entry above the live head", aheadStamp, [...live, ahead], ["stamp-above-live-head"]],
     ];
     // biome-ignore format: the rejection driver asserts the exact error set, not merely truthiness
     for (const [name, stamp, entries, expected] of REJECT) expect(stampErrors(entries, stamp, headSeq), name).toEqual(expected);
     // And the unmutated stamp still passes, so the matrix above is measuring the mutation.
     expect(stampErrors(seq4, base, headSeq)).toEqual([]);
+    // Non-vacuity for the restored arm, in the other direction: no real report reaches it, which is
+    // precisely why a synthetic above-head entry was needed to make the branch reachable at all.
+    // biome-ignore format: the above-head arm is unreachable from live evidence alone
+    expect(reports.filter((report) => stampErrors(live, readJson(report).provenance.effectiveAuthority, headSeq).includes("stamp-above-live-head"))).toEqual([]);
 
-    // The live chain is unchanged by this probe: still seq 3, still NO-GO, still unappended.
-    // biome-ignore format: the unappended live head stays exactly where this gate found it
-    expect([readJson(CHAIN).chainHeadSeq, readJson(CHAIN).effectiveAuthorityBoundary.verdict, readJson(ACTIVATION).chainBinding.appendExecutedHere]).toEqual([3, "NO-GO", false]);
+    // The live chain is unchanged by this probe: still seq 4, still GO-KERNEL-DEVELOPMENT-ONLY.
+    // biome-ignore format: the appended live head stays exactly where this gate found it
+    expect([readJson(CHAIN).chainHeadSeq, readJson(CHAIN).effectiveAuthorityBoundary.verdict, readJson(ACTIVATION).chainBinding.appendExecutedHere]).toEqual([4, "GO-KERNEL-DEVELOPMENT-ONLY", false]);
   });
 
-  it("proves stampGoverns is decided separately from resolution under the seq-4 successor", async () => {
+  it("proves stampGoverns is decided separately from resolution on the appended seq-4 head", async () => {
     const chain = readJson(CHAIN);
     const { deriveAuthorityBoundary } = await load(CHAIN_LIB);
     const live: Entry[] = chain.entries;
-    const seq4: Entry[] = [...live, readJson(ACTIVATION).successorEntry];
+    const headSeq: number = chain.chainHeadSeq;
     // stampGoverns, mirrored from tools/lib/kernel-effective-authority-chain.mjs: the boundary derived
     // from the prefix ending at the stamped entry must derive cleanly AND equal the boundary in force.
     const governs = (entries: Entry[], stamp: Stamp) => {
@@ -336,19 +372,41 @@ describe("consumer provenance stamps are historical-at-write", () => {
       const force = deriveAuthorityBoundary({ entries });
       return !at.errors.length && JSON.stringify(at.boundary) === JSON.stringify(force.boundary);
     };
-    const reports = [...CONSUMERS.map(([, report]) => report), ...SEQ2_CONSUMERS];
-    for (const report of reports) {
+    // The live-governing set is not recomputed from the chain and then compared against itself — that
+    // would only prove the chain agrees with the chain. It is the restamped-consumer ledger the
+    // append execution record already names, so that record and this gate cannot drift apart.
+    // biome-ignore format: the record-derived restamp ledger stays compact for the shard budget
+    const RESTAMPED: string[] = readJson(EXECUTION).restampedConsumers.map((row: { ref: string }) => row.ref);
+    expect(RESTAMPED, "restamped-consumer-ledger-drift").toEqual([HANDOFF, STATE]);
+    const reports = [...CONSUMERS.map(([, report]) => report), ...EXTRA_CONSUMERS];
+    // Exactly one of the two restamped refs carries a provenance stamp and is swept below; the other
+    // is the root-level head-tracking ledger, asserted last. The partition is derived, not assumed.
+    const governing = reports.filter((report) => RESTAMPED.includes(report));
+    const historical = reports.filter((report) => !RESTAMPED.includes(report));
+    // biome-ignore format: the partition is exact and populated on both sides
+    expect([governing, historical.length], "governing-partition-drift").toEqual([[HANDOFF], reports.length - 1]);
+    for (const report of governing) {
       const stamp: Stamp = readJson(report).provenance.effectiveAuthority;
-      // Today every stamp both resolves and governs — the seq-2 ones included, which is why the
-      // EPOCH-03 append did not invalidate them: it left the derived boundary byte-identical.
-      expect(governs(live, stamp), `stamp-not-in-force-today:${report}`).toBe(true);
-      // Under the synthetic seq-4 chain the identical sealed entry still resolves...
-      // biome-ignore format: resolution is unchanged by the append, which is the historical-at-write claim
-      expect(resolve(seq4, stamp), `stamp-resolution-changed-under-seq4:${report}`).toEqual(resolve(live, stamp));
-      // ...but it stops governing: EPOCH-04 supersedes codeStart, runtimeCode and verdict, so the
-      // boundary moves and every earlier stamp must be re-stamped. Resolution is not governance.
-      expect(governs(seq4, stamp), `stamp-still-governing-under-seq4:${report}`).toBe(false);
+      // A restamped consumer names the head entry itself, so the boundary it bound is the boundary
+      // in force and it still governs.
+      expect(resolve(live, stamp)?.seq, `restamped-stamp-not-at-head:${report}`).toBe(headSeq);
+      expect(governs(live, stamp), `restamped-stamp-does-not-govern:${report}`).toBe(true);
     }
+    for (const report of historical) {
+      const stamp: Stamp = readJson(report).provenance.effectiveAuthority;
+      // Every remaining task consumer stays historical-at-write: it resolves to its own sealed entry,
+      // that entry sits strictly BELOW the head, and the boundary it bound was superseded by the
+      // append — so it resolves but does not govern. Resolving is not governing.
+      const stamped = resolve(live, stamp);
+      expect(stamped, `historical-stamp-unresolvable:${report}`).toBeDefined();
+      expect(stamped?.seq, `historical-stamp-not-below-head:${report}`).toBeLessThan(headSeq);
+      expect(governs(live, stamp), `historical-stamp-still-governs:${report}`).toBe(false);
+    }
+    // The second restamped ref carries no provenance stamp: it is the root-level head-tracking
+    // ledger, so its binding is read from its own effectiveAuthority block and must govern too.
+    const ledgerStamp: Stamp = readJson(STATE).effectiveAuthority;
+    expect(resolve(live, ledgerStamp)?.seq, "ledger-stamp-not-at-head").toBe(headSeq);
+    expect(governs(live, ledgerStamp), "ledger-stamp-does-not-govern").toBe(true);
     // The recorded append prerequisite this behavior implements, bound so the two cannot drift.
     // biome-ignore format: the consumer re-stamp prerequisite stays compact for the shard budget
     expect(readJson(ACTIVATION).chainBinding.appendPrerequisites.consumerRestamp).toContain("stampGoverns");
@@ -358,17 +416,19 @@ describe("consumer provenance stamps are historical-at-write", () => {
     expect(governs(live, { ...base, chainHeadSha256: "0".repeat(64) })).toBe(false);
     // Arm 1 again, erroring derivation: the genesis prefix does not derive a complete boundary.
     expect(governs(live, { ...base, chainHeadSha256: live[0].entrySha256 })).toBe(false);
-    // Arm 2, boundary move: for the seq-3 stamps above, the prefix DOES derive cleanly, so it is the
-    // comparison against the boundary in force that rejects them — not a derivation failure.
+    // Arm 2, boundary move: the seq-4 chain derives cleanly — the boundary-map prerequisite is
+    // discharged — so a predecessor stamp is rejected by the comparison against the boundary in
+    // force, never by a derivation failure. That is also why the restamped consumers govern.
     expect(deriveAuthorityBoundary({ entries: live }).errors).toEqual([]);
-    // The seq-4 boundary is not merely different, it is not yet derivable: the three superseded
-    // dimensions are unmapped, exactly as the recorded boundaryMapExtension prerequisite states.
-    // biome-ignore format: the exact unmapped successor dimensions stay compact for the shard budget
-    expect(deriveAuthorityBoundary({ entries: seq4 }).errors).toEqual(["derived-boundary-unmapped:codeStart:YES", "derived-boundary-unmapped:runtimeCode:YES", "derived-boundary-unmapped:verdict:GO-KERNEL-DEVELOPMENT-ONLY"]);
-    // biome-ignore format: the recorded boundary-map prerequisite stays compact for the shard budget
-    expect(readJson(ACTIVATION).chainBinding.appendPrerequisites.boundaryMapExtension).toContain("derived-boundary-unmapped");
-    // The live chain is untouched by this probe: still seq 3, still unappended.
-    // biome-ignore format: the unappended live head stays exactly where this gate found it
-    expect([readJson(CHAIN).chainHeadSeq, readJson(ACTIVATION).chainBinding.appendExecutedHere]).toEqual([3, false]);
+    // biome-ignore format: the discharged boundary-map prerequisite is recorded in the execution record
+    expect(readJson("reports/kernel-epoch-04-append-execution-2026-08-02.json").prerequisiteDischarge.boundaryMapExtension.status).toBe("discharged");
+    // The prerequisite text still describes the pre-append condition it was written for; the live
+    // chain now derives cleanly, which is what discharged it.
+    expect(readJson(ACTIVATION).chainBinding.appendPrerequisites.boundaryMapExtension).toContain(
+      "derived-boundary-unmapped",
+    );
+    // The live chain is untouched by this probe: still the appended seq-4 head.
+    // biome-ignore format: the appended live head stays exactly where this gate found it
+    expect([readJson(CHAIN).chainHeadSeq, readJson(ACTIVATION).chainBinding.appendExecutedHere]).toEqual([4, false]);
   });
 });
