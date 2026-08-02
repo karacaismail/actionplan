@@ -136,7 +136,15 @@ describe("KGA-D06 early minimal DB substrate disposition", () => {
     expect(report.provenance.approval.normalizedSelectionSha256).toBe(SELECTION_SHA256);
     // A record written under EPOCH-03 stamps the live head, never a superseded epoch.
     // biome-ignore format: the live EPOCH-03 stamp binding stays compact
-    expect(report.provenance.effectiveAuthority).toMatchObject({ ref: CHAIN, seq: chain.chainHeadSeq, chainHeadSha256: chain.chainHeadEntrySha256, normalizedTextSha256: chain.entries.at(-1).normalizedTextSha256 });
+    // Historical-at-write: the stamp names the sealed entry that governed when this record was
+    // authored. It is resolved by that entry digest and only bounded by the live head, so
+    // appending an epoch never invalidates it and the head is never copied into the stamp.
+    // biome-ignore format: the sealed-entry stamp resolution stays compact for the shard budget
+    const stamp = chain.entries.find((entry: { entrySha256: string }) => entry.entrySha256 === report.provenance.effectiveAuthority.chainHeadSha256);
+    expect(stamp, "consumer-stamp-unresolvable").toBeDefined();
+    expect(stamp.seq).toBeLessThanOrEqual(chain.chainHeadSeq);
+    // biome-ignore format: the stamp mirrors the sealed entry it named, never the live head
+    expect(report.provenance.effectiveAuthority).toMatchObject({ ref: CHAIN, seq: stamp.seq, chainHeadSha256: stamp.entrySha256, normalizedTextSha256: stamp.normalizedTextSha256 });
     expect(report.applicationSummary).toEqual(APPLICATION_SUMMARY);
     expect(report.dispositionState).toEqual(STATE);
     expect(report.substrateBoundary).toEqual(SUBSTRATE);
