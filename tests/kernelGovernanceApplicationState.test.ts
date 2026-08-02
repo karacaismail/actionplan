@@ -66,6 +66,9 @@ const GATE = { gapClosed: false, codeStartAllowed: true, runtimeCodeAllowed: tru
 const INTAKE = { closureRef: CLOSURE, registryRef: REGISTRY, normalizedSelectionPointer: "/approval/normalizedSelection", normalizedSelectionBytes: 691, normalizedSelectionSha256: SELECTION_SHA256, intakeMutationAllowed: false };
 // biome-ignore format: the exact live head stamp stays compact for the shard budget
 const STAMP = { ref: CHAIN, seq: 4, epochId: "AUTHORITY-SUPERSESSION-04", chainHeadSha256: EPOCH04_ENTRY_SHA256, normalizedTextSha256: EPOCH04_TEXT_SHA256 };
+// The exact twelve-file PR-1 package. The last four were omitted while the shard really touched
+// them, which made the boundary read narrower than the change it bounds; they are named here rather
+// than covered by a wildcard, so the boundary stays a closed list and not a widened one.
 // biome-ignore format: the ledger-owned change boundary stays compact for the shard budget
 const ALLOWED_FILES = ["tests/kernelRelationDirectionConflictDisposition.test.ts", D07_RECORD, LEDGER, VALIDATOR, "tests/kernelGovernanceApplicationState.test.ts", PACK, "package.json", "tools/lib/kernel-governance-authorization-audit.mjs", GATE_SCRIPT, "tools/lib/kernel-node-universe.mjs", "tests/kernelGovernanceClosureAuthority.test.ts", "tests/kernelGovernanceDecisionPack.test.ts"];
 // biome-ignore format: the exact closed root and row key sets stay compact for the shard budget
@@ -463,7 +466,7 @@ describe("kernel governance application state ledger", () => {
     // AND must carry the marker literal in their own source, so neither the list nor the marker can
     // create a free pass alone. Any other sibling is fail-closed at exactly-one.
     // biome-ignore format: the named non-decision ledger consumers stay compact for the shard budget
-    const CONSUMERS = ["tests/kernelConsumerStampHistoricalAtWrite.test.ts", "tests/kernelEpoch04ActivationPolicy.test.ts"];
+    const CONSUMERS = ["tests/kernelConsumerStampHistoricalAtWrite.test.ts", "tests/kernelEpoch04ActivationPolicy.test.ts", "tests/kernelEpoch04AppendExecution.test.ts"];
     const MARKER = 'APPLICATION_STATE_ROLE = "non-decision-consumer"';
     // The named consumers must actually be discovered, or the classification is vacuous.
     expect(CONSUMERS.filter((file) => !siblings.includes(file))).toEqual([]);

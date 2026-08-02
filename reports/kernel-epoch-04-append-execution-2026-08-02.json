@@ -38,7 +38,13 @@
     "sdkReady": false,
     "appBuildable": false,
     "releaseAllowed": false,
-    "deployAllowed": false
+    "deployAllowed": false,
+    "excludedTargets": [
+      "SDK",
+      "APP_CORE",
+      "APP",
+      "MODULE"
+    ]
   },
   "prerequisiteDischarge": {
     "headIdentityPin": {
@@ -88,6 +94,52 @@
     "mutationAllowed": false
   },
   "changeBoundary": {
+    "scope": "logical-epoch-04-allowlist",
+    "isSinglePullRequestFileCount": false,
+    "splitPackages": [
+      "prep",
+      "append",
+      "evidence"
+    ],
+    "packageAssignment": {
+      "prep": [
+        "reports/kernel-governance-application-state-2026-08-01.json",
+        "tests/kernelGovernanceApplicationState.test.ts",
+        "tools/agents/check-kernel-governance.mjs",
+        "tools/lib/kernel-governance-application-state.mjs",
+        "tools/lib/kernel-governance-authorization-audit.mjs"
+      ],
+      "append": [
+        "AGENTS.md",
+        "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json",
+        "reports/kernel-effective-authority-chain-2026-07-31.json",
+        "reports/kernel-epoch-04-append-execution-2026-08-02.json",
+        "reports/kernel-governance-application-state-2026-08-01.json",
+        "tests/kernelCodeBearingDescendantHandoff.test.ts",
+        "tests/kernelConsumerStampHistoricalAtWrite.test.ts",
+        "tests/kernelEffectiveAuthorityChain.test.ts",
+        "tests/kernelEpoch04ActivationEvidence.test.ts",
+        "tests/kernelEpoch04ActivationPolicy.test.ts",
+        "tests/kernelGovernanceApplicationState.test.ts",
+        "tests/kernelRuntimeSuccessorPolicy.test.ts",
+        "tools/lib/kernel-effective-authority-chain.mjs",
+        "tools/lib/kernel-epoch04-activation-policy.mjs",
+        "tools/lib/kernel-governance-application-state.mjs"
+      ],
+      "evidence": [
+        "package.json",
+        "reports/kernel-epoch-04-append-execution-2026-08-02.json",
+        "tests/kernelConsumerStampHistoricalAtWrite.test.ts",
+        "tests/kernelEpoch04AppendExecution.test.ts",
+        "tests/kernelGovernanceApplicationState.test.ts",
+        "tools/lib/kernel-governance-authorization-audit.mjs"
+      ]
+    },
+    "gateScriptInclusion": {
+      "file": "tools/agents/check-kernel-governance.mjs",
+      "shippedIn": "prep",
+      "reason": "the gate carries no EPOCH-04 hunk in the append or evidence package; it is inside the allowlist because the EPOCH-04 reporting behavior it exercises — resolveLiveAuthorityBanner reading the sealed head verdict and the RUNTIME_IMPLEMENTATION_START token — shipped in the prep package"
+    },
     "allowedFiles": [
       "AGENTS.md",
       "package.json",
@@ -112,7 +164,9 @@
   },
   "invariants": [
     "EPOCH-01, EPOCH-02 and EPOCH-03 stay byte-identical through the append; only a new seq-4 entry was added.",
-    "This package is exactly the nineteen files in changeBoundary.allowedFiles. Three of them — AGENTS.md, the application-state test and the authorization audit — also carry hunks that belong to the separate governance-prep package; only their EPOCH-04 append hunks ship here.",
+    "changeBoundary.allowedFiles is the logical EPOCH-04 allowlist — the union of the prep, append and evidence packages the split shipped — and not the physical file count of any one pull request: the append package moved fifteen files and the evidence package six, while the union closes at nineteen.",
+    "A file may sit in more than one package and then carries only that package's hunks, which is why the packages sum to twenty-six placements but the allowlist closes at nineteen distinct files.",
+    "tools/agents/check-kernel-governance.mjs carries no EPOCH-04 hunk in the append or evidence package. It is inside the allowlist because the EPOCH-04 reporting behavior it owns — the live-authority verdict banner and the RUNTIME_IMPLEMENTATION_START token read — shipped in the prep package.",
     "The appended entry is byte-identical to the successor the activation record approved; nothing was altered on the way.",
     "Kernel development opens; runtime implementation has not started and sdkReady, appBuildable, releaseAllowed and deployAllowed stay false.",
     "The append was written by the Claude writer under the Pane-visible fail-closed invocation; Codex writes no repository file and only verifies, commits, pushes and merges.",
@@ -122,7 +176,8 @@
     "do not start runtime implementation, open the SDK or app, or allow release or deploy",
     "do not rewrite any sealed EPOCH-01..03 entry, dimension, digest or the historical approval",
     "do not treat kernel-development activation as gap closure: gapClosed stays false and the deferrals stay undischarged",
-    "do not widen changeBoundary.allowedFiles beyond these nineteen files: the governance decision pack, its test and the node-universe stamp-semantics comment are prep work for a separate package and never ship inside this append",
+    "do not widen changeBoundary.allowedFiles beyond these nineteen files: the governance decision pack, its test, the closure-authority test and the node-universe stamp-semantics comment are prep-package work outside the EPOCH-04 allowlist and never enter it",
+    "do not read the nineteen as a pull-request size, a review budget or a completion metric: it counts distinct files across the split, and no single pull request in the split moved that many",
     "do not widen any other artifact's change boundary to carry this append: the application-state ledger boundary belongs to the KGA-D07 row shard and stays untouched"
   ],
   "rollback": {
