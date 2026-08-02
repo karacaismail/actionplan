@@ -166,7 +166,16 @@ describe("KGA-D10 tenancy physical strategy disposition", () => {
     // biome-ignore format: otherwise D10 stays pending with no scope at all
     else expect(row).toMatchObject({ applicationStatus: "pending", applicationScope: null, canonicalStatus: "pending" });
     // biome-ignore format: selecting a topology never unlocks code, runtime, readiness, release or deploy
-    expect(state.gate).toMatchObject({ gapClosed: false, codeStartAllowed: false, runtimeCodeAllowed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, verdict: "NO-GO" });
+    // The gate tracks the effective-authority chain, so the three moving values are derived from
+    // it rather than pinned to one epoch. Exactly two tuples are legal — pre-append and
+    // post-append — and the polarity must match the head, so a mixed or invented state fails.
+    const boundary = readJson(CHAIN).effectiveAuthorityBoundary;
+    // biome-ignore format: the two legal boundary tuples stay compact for the shard budget
+    expect([boundary.codeStartAllowed, boundary.runtimeCodeAllowed, boundary.verdict]).toEqual(boundary.verdict === "NO-GO" ? [false, false, "NO-GO"] : [true, true, "GO-KERNEL-DEVELOPMENT-ONLY"]);
+    expect(boundary.verdict === "NO-GO").toBe(readJson(CHAIN).chainHeadSeq < 4);
+    // The four floors this report owns stay literal; only the chain-tracked three derive.
+    // biome-ignore format: the immovable gate floors stay compact for the shard budget
+    expect(state.gate).toMatchObject({ gapClosed: false, readinessAllowed: false, releaseAllowed: false, deployAllowed: false, codeStartAllowed: boundary.codeStartAllowed, runtimeCodeAllowed: boundary.runtimeCodeAllowed, verdict: boundary.verdict });
 
     // biome-ignore format: the negative tenancy-selection matrix stays compact for the shard budget
     // biome-ignore lint/suspicious/noExplicitAny: negative clones intentionally mutate JSON.
