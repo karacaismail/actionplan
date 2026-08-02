@@ -29,7 +29,14 @@ const BOUNDARY = { actionplanWriter: "claude-only-fail-closed", kernelWriter: "c
 // biome-ignore format: the exact EPOCH-03 effective token/scope contract stays compact for the shard budget.
 const EPOCH03_TOKENS: Record<string, string> = { SOURCE: "DIRECT_USER_ADMIN_INSTRUCTION", SUPERSEDES: "EPOCH-02", SCOPE: "KERNEL_RUNTIME_APPROVED_SHARDS_ONLY", CODEX: "MASTER_READ_ONLY_ORCHESTRATOR_FINAL_VERIFIER_GIT_EXECUTOR", KERNEL_RUNTIME_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", ACTIONPLAN_WRITER: "CLAUDE_ONLY_FAIL_CLOSED", KERNEL_REVIEWER: "CLAUDE_ONLY_FAIL_CLOSED", RELEASE_ALLOWED: "false", DEPLOY_ALLOWED: "false", DIRECT_MAIN_WRITE: "false", FORCE_GIT: "false", TAGGING: "false", EXCLUDED_TARGETS: "SDK,APP_CORE,APP,MODULE", CODE_START: "NO", RUNTIME_CODE: "NO", VERDICT: "NO-GO" };
 // biome-ignore format: the non-supersedable floors EPOCH-03 must carry forward untouched.
-const CARRIED_FLOORS: Record<string, string> = { claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", codeStart: "NO", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY", runtimeCode: "NO", verdict: "NO-GO" };
+const CARRIED_FLOORS: Record<string, string> = { claudeAuthGate: "CLAUDE_AI_FIRSTPARTY_MAX_PER_INVOCATION_NO_FALLBACK", historicalApprovalMutation: "FORBIDDEN", platformProductWriter: "HUMAN_DEVELOPER_ONLY" };
+// codeStart, runtimeCode and verdict stay sealed at their EPOCH-03 values while the approved
+// EPOCH-04 successor is pending; they are simply no longer labeled non-supersedable.
+const SEALED_PENDING_SUPERSESSION: Record<string, string> = {
+  codeStart: "NO",
+  runtimeCode: "NO",
+  verdict: "NO-GO",
+};
 
 type Cell = { token: string; value: string };
 // biome-ignore format: the append-only entry surface stays compact for the shard budget.
@@ -159,6 +166,8 @@ describe("kernel runtime successor policy (EPOCH-03)", () => {
     expect(errors).toEqual([]);
     for (const [key, value] of Object.entries(CARRIED_FLOORS))
       expect(resolved[key]?.value, `carried floor ${key}`).toBe(value);
+    for (const [key, value] of Object.entries(SEALED_PENDING_SUPERSESSION))
+      expect(resolved[key]?.value, `sealed pending supersession ${key}`).toBe(value);
     expect(resolved.actionplanWriter?.seq).toBe(3);
     expect(resolved.kernelReviewer?.seq).toBe(3);
     expect(resolved.orchestrator?.seq).toBe(3);
