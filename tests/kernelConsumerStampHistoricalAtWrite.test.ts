@@ -3,22 +3,21 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// Scope, stated exactly. A consumer provenance stamp is historical-at-write: it names the sealed
-// entry that governed when the record was authored, never "whatever currently heads the chain".
-// This gate proves three things and no more:
-//   1. no consumer test asserts its stamp against the live head (decoupling),
-//   2. every recorded stamp still RESOLVES to the same sealed entry when a seq-4 entry is appended,
-//   3. and that resolving is NOT governing, shown explicitly rather than left as a caveat.
-// Whether a resolved stamp is still IN FORCE is the separate stampGoverns question in
-// tools/lib/kernel-effective-authority-chain.mjs: the boundary derived at the stamped entry must
-// equal the boundary in force now. The third test mirrors that predicate and proves both outcomes —
-// every stamp governs under the live chain, and none governs under the synthetic seq-4 chain, which
-// is precisely the recorded consumer re-stamp prerequisite. This file changes no library, appends no
-// entry and never claims a superseded stamp still governs or that EPOCH-04 is in force.
+// A consumer provenance stamp is historical-at-write: it names the sealed entry that governed when
+// the record was authored, never whatever heads the chain now. Every tests/*.test.ts mentioning
+// effectiveAuthority is discovered and must fall in exactly one tier, so the registry is closed:
+// Tier1 CONSUMERS resolve a stamp by sealed digest (resolver and assertion checks apply); PINNED pin
+// a sealed epoch by token; HEAD_TRACKING is root-level state bound to the head with no stamp at all.
+// Tier1 and PINNED may not couple to the head; only Tier1 must resolve. Proven here: (1) no Tier1 or
+// PINNED test asserts against the head, (2) every stamp still RESOLVES to its sealed entry under an
+// appended seq-4, (3) resolving is NOT governing — that is stampGoverns in
+// tools/lib/kernel-effective-authority-chain.mjs, mirrored by the third test. No library is changed
+// and no entry is appended.
 const ROOT = process.cwd();
 const CHAIN = "reports/kernel-effective-authority-chain-2026-07-31.json";
 const CHAIN_LIB = "tools/lib/kernel-effective-authority-chain.mjs";
 const ACTIVATION = "reports/kernel-epoch-04-activation-2026-08-02.json";
+const SELF = "tests/kernelConsumerStampHistoricalAtWrite.test.ts";
 // biome-ignore format: the closed consumer test-to-report registry stays compact for the shard budget
 const CONSUMERS: Array<[string, string]> = [
   ["tests/kernelAdrIdentityQuarantine.test.ts", "reports/kernel-adr-identity-quarantine-2026-08-02.json"],
@@ -30,6 +29,20 @@ const CONSUMERS: Array<[string, string]> = [
   ["tests/kernelTenancyPhysicalStrategyDisposition.test.ts", "reports/kernel-tenancy-physical-strategy-selection-2026-08-02.json"],
   ["tests/kernelUnownedDirectiveOwnershipDisposition.test.ts", "reports/kernel-unowned-directive-ownership-disposition-2026-08-01.json"],
 ];
+// Tier 2, PINNED: these read effectiveAuthority but pin a sealed epoch by an explicit token rather
+// than resolving a stamp, so resolver and assertion checks do not apply. They still may not couple
+// to the live head, and each must keep its exact pin.
+// biome-ignore format: the closed pinned-epoch registry stays compact for the shard budget
+const PINNED: Array<[string, string]> = [
+  ["tests/kernelCodeBearingDescendantHandoff.test.ts", "entry.seq === 2"],
+  ["tests/kernelEffectiveAuthorityChain.test.ts", "EPOCH02_ENTRY_SHA256"],
+  ["tests/kernelRuntimeSuccessorPolicy.test.ts", "EPOCH02_ENTRY_SHA256"],
+  ['tests/kernelSurfaceDependencyOrderHandoff.test.ts', 'epochId === "AUTHORITY-SUPERSESSION-02"'],
+];
+// Tier 3, HEAD_TRACKING: the application-state ledger is root-level state deliberately bound to the
+// head. It carries no provenance stamp at all — asserted below, not assumed — so it is correctly
+// outside the rule rather than an unexplained exemption.
+const HEAD_TRACKING = ["tests/kernelGovernanceApplicationState.test.ts"];
 // Already historical-at-write at seq 2, kept so the resolver is proven against non-head stamps too.
 // biome-ignore format: the seq-2 consumer reports stay compact for the shard budget
 const SEQ2_CONSUMERS = ["reports/kernel-surface-dependency-order-handoff-2026-08-01.json", "reports/kernel-code-bearing-descendant-handoff-2026-07-15.json"];
@@ -51,8 +64,8 @@ const sealedText = (entry: Entry | undefined) =>
   entry?.normalizedTextSha256 ?? entry?.normalizedTextRef?.sha256;
 
 // A falsifiable predicate, so every negative below is a real rejection rather than a comparison that
-// could never have been true. It answers only: does this stamp resolve to a sealed entry at or below
-// the live head, and does it mirror that entry exactly? It does NOT answer whether it still governs.
+// could never have been true. It answers only whether the stamp resolves to a sealed entry at or
+// below the head and mirrors it exactly; it does NOT answer whether it still governs.
 const stampErrors = (entries: Entry[], stamp: Stamp, headSeq: number): string[] => {
   const errors: string[] = [];
   if (stamp.ref !== CHAIN) errors.push("stamp-ref-drift");
@@ -64,44 +77,78 @@ const stampErrors = (entries: Entry[], stamp: Stamp, headSeq: number): string[] 
   return errors;
 };
 
-// The head-reading forms the chain document exposes. Reading any of these to BUILD a stamp couples
-// the consumer to the head. Bounding a resolved stamp at or below the head is a different thing and
-// is explicitly whitelisted below, because it constrains the stamp instead of copying the head.
+// Head reads the chain document exposes, plus equivalent index forms. Reading any of these to BUILD
+// a stamp couples to the head; BOUNDING a resolved stamp at or below it stays legal.
 // biome-ignore format: the closed head-coupling token set stays compact for the shard budget
-const COUPLED = ["chainHeadSeq", "chainHeadEntrySha256", "entries.at(-1)", "entries[chain.entries.length - 1]"];
-// biome-ignore format: full-line comments are dropped so commented-out code is never flagged
-const stripComments = (source: string) => source.split("\n").filter((line) => !line.trim().startsWith("//")).join("\n");
+const COUPLED = ["chainHeadSeq", "chainHeadEntrySha256", "entries.at(-1)", "entries[chain.entries.length - 1]", "entries[chain.chainHeadSeq - 1]", "entries.slice(-1)", "entries.findLast("];
+// Comment handling, stated exactly and now true: one pass removes block and line comments in code,
+// while `//` inside a quoted string or template literal is preserved, so a URL in an assertion is
+// never mistaken for a comment. Escapes are honoured in code and strings, which also stops a regex
+// literal such as `\//` opening a phantom comment. A trailing `// ...` is therefore truly removed.
+// biome-ignore format: the comment stripper state machine stays compact for the shard budget
+const stripComments = (source: string): string => {
+  let out = ""; let mode = "code";
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i]; const next = source[i + 1] ?? "";
+    if (mode === "line") { if (ch === "\n") { mode = "code"; out += ch; } continue; }
+    if (mode === "block") { if (ch === "\n") out += ch; else if (ch === "*" && next === "/") { mode = "code"; i += 1; } continue; }
+    if (mode !== "code") { out += ch; if (ch === "\\") { out += next; i += 1; } else if (ch === mode) mode = "code"; continue; }
+    if (ch === "\\") { out += ch + next; i += 1; continue; }
+    if (ch === "/" && next === "/") { mode = "line"; continue; }
+    if (ch === "/" && next === "*") { mode = "block"; continue; }
+    if (ch === "'" || ch === '"' || ch === "`") mode = ch;
+    out += ch;
+  }
+  return out;
+};
+// Optional chaining and non-null assertions are the same read written differently, so they are
+// normalised away before the path is matched rather than being three separate patterns.
+const normalise = (text: string) => text.replace(/\?\./g, ".").replace(/!/g, "");
 // biome-ignore format: the balanced-paren reader stays compact for the shard budget
 const balanced = (text: string, open: number) => { let depth = 0; for (let i = open; i < text.length; i += 1) { if (text[i] === "(") depth += 1; else if (text[i] === ")") { depth -= 1; if (depth === 0) return { body: text.slice(open + 1, i), end: i }; } } return { body: "", end: text.length }; };
-// EVERY equality assertion made on provenance.effectiveAuthority — the object or one of its fields —
-// not just the first mention of that path. Anchoring on the first mention let a resolver line shadow
-// a later re-coupled assertion, so each expect() call site is read independently and its matcher body
-// collected, multiline included.
-// The whitelist is the matcher set, stated once: only these four EQUALITY matchers are collected.
-// `toBeLessThanOrEqual(chain.chainHeadSeq)` — the legitimate "at or below the live head" bound — is
-// not one of them and is therefore never flagged. `toBe(` cannot match `toBeLessThanOrEqual(` or
-// `toBeDefined(` because the open paren must follow immediately. Whitelisting the bound does not
-// weaken the future-head prohibition: that prohibition is enforced by the bound itself and, at
-// runtime, by the stamp-above-live-head rejection in stampErrors.
-// Dot access and bracket access are the same read written two ways, so both forms of the one-level
-// field step are matched; otherwise `effectiveAuthority["seq"]` would slip past a dot-only pattern.
-const STAMP_PATH =
-  /\.provenance\.effectiveAuthority(\.[A-Za-z0-9_]+|\[\s*["'][A-Za-z0-9_]+["']\s*\])?\s*$/;
-const EQUALITY = /^\s*\.(toBe|toEqual|toMatchObject|toStrictEqual)\(/;
+// expect(value, "message") must be judged on `value`: only the first top-level argument is the
+// subject, so a message argument can never push the path off the end of the anchored pattern.
+// biome-ignore format: the first-argument splitter stays compact for the shard budget
+const firstArg = (body: string) => { let depth = 0; for (let i = 0; i < body.length; i += 1) { const ch = body[i]; if ("([{".includes(ch)) depth += 1; else if (")]}".includes(ch)) depth -= 1; else if (ch === "," && depth === 0) return body.slice(0, i); } return body; };
+// A head read stored in a local and used later is the same coupling one step removed, so simple
+// head-derived aliases are collected and treated as head tokens for that source.
+// biome-ignore format: the head-alias collector stays compact for the shard budget
+const aliases = (text: string) => [...text.matchAll(/\b(?:const|let|var)\s+([A-Za-z0-9_]+)\s*=\s*([^;]+);/g)].filter((match) => COUPLED.some((token) => match[2].includes(token))).map((match) => match[1]);
+// `(?:^|\.)` rather than a bare `\.`: a destructured `provenance.effectiveAuthority` is the same read
+// and must be detected, while `myprovenance.effectiveAuthority` and `state.effectiveAuthority` are not.
+// biome-ignore format: the stamp path pattern stays compact for the shard budget
+const STAMP_PATH = /(?:^|\.)provenance\.effectiveAuthority(\.[A-Za-z0-9_]+|\[\s*["'][A-Za-z0-9_]+["']\s*\])?\s*$/;
+// Matchers that PIN the stamp to a value. Equality pins directly; a lower bound pins from below,
+// because `toBeGreaterThanOrEqual(head)` alongside the legal `toBeLessThanOrEqual(head)` forces
+// seq === head, which is the coupling written as two inequalities. `toBeLessThanOrEqual` alone
+// stays legal: it bounds the stamp without fixing it to the head. Matcher-side modifiers such as
+// `.not` and `.resolves` are deliberately out of scope; nothing here depends on them.
+// biome-ignore format: the closed pinning-matcher set stays compact for the shard budget
+const PINNING = /^\s*\.(toBe|toEqual|toMatchObject|toStrictEqual|toBeGreaterThanOrEqual|toBeGreaterThan)\(/;
+// The Vitest receiver, matched as a token rather than the literal text "expect(": `expect.soft(` and
+// `expect (` are the same call, while `myexpect(` is a different function and must not be scanned.
+const RECEIVER = /\bexpect(?:\.soft)?\s*\(/g;
+// EVERY pinning assertion on provenance.effectiveAuthority — the object or one field — not just the
+// first mention. The matcher is read from the character after the call closes, uncapped, so a long
+// body cannot fail open.
 const stampAssertions = (source: string): string[] => {
-  const text = stripComments(source).replace(/\s+/g, " ");
+  const text = normalise(stripComments(source)).replace(/\s+/g, " ");
   const bodies: string[] = [];
-  for (let i = text.indexOf("expect("); i !== -1; i = text.indexOf("expect(", i + 1)) {
-    const arg = balanced(text, i + 6);
-    if (!STAMP_PATH.test(arg.body)) continue;
-    const tail = text.slice(arg.end + 1, arg.end + 1400);
-    if (!EQUALITY.test(tail)) continue;
-    bodies.push(balanced(tail, tail.indexOf("(")).body);
+  RECEIVER.lastIndex = 0;
+  for (let hit = RECEIVER.exec(text); hit !== null; hit = RECEIVER.exec(text)) {
+    const arg = balanced(text, hit.index + hit[0].length - 1);
+    if (!STAMP_PATH.test(firstArg(arg.body))) continue;
+    const tail = text.slice(arg.end + 1);
+    const matcher = PINNING.exec(tail);
+    if (!matcher) continue;
+    bodies.push(balanced(tail, matcher[0].length - 1).body);
   }
   return bodies;
 };
-const coupledIn = (source: string) =>
-  stampAssertions(source).some((body) => COUPLED.some((token) => body.includes(token)));
+const coupledIn = (source: string) => {
+  const tokens = [...COUPLED, ...aliases(normalise(stripComments(source)))];
+  return stampAssertions(source).some((body) => tokens.some((token) => body.includes(token)));
+};
 
 describe("consumer provenance stamps are historical-at-write", () => {
   it("never couples a consumer stamp assertion to the live chain head", () => {
@@ -140,16 +187,79 @@ describe("consumer provenance stamps are historical-at-write", () => {
       // The one whitelisted head read: BOUNDING the stamped seq at or below the head. A bound is not
       // an equality coupling, and it is what keeps a future-head stamp rejected, so it stays legal.
       ["expect(report.provenance.effectiveAuthority.seq).toBeLessThanOrEqual(chain.chainHeadSeq);", false],
+      // F3: a lower bound against the head pins the stamp from below. Combined with the legal upper
+      // bound it forces seq === head, so both greater-than forms are coupling.
+      ["expect(report.provenance.effectiveAuthority.seq).toBeGreaterThanOrEqual(chain.chainHeadSeq);", true],
+      ["expect(report.provenance.effectiveAuthority.seq).toBeGreaterThan(chain.chainHeadSeq);", true],
+      // F4: the receiver is matched as a token, so these are the same call and are scanned...
+      [`${RESOLVER}expect.soft(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      [`${RESOLVER}expect (report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      // ...while a different function that merely ends in "expect" is not scanned at all.
+      ["myexpect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });", false],
+      // Destructuring the report does not change the read, so coupling through it is still caught.
+      [`${RESOLVER}expect(provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      // ...and the clean destructured form stays legal.
+      [`${RESOLVER}expect(provenance.effectiveAuthority).toMatchObject({ seq: stamp.seq });`, false],
+      // Lookalike paths are a different object and must never be flagged.
+      ["expect(myprovenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });", false],
+      ["expect(state.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });", false],
+      // The two-argument form: a message argument must not push the path off the anchor.
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority, "stamp").toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      // Optional chaining and a trailing non-null assertion are the same read, normalised away.
+      [`${RESOLVER}expect(report.provenance?.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority!).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority?.seq).toBe(chain.chainHeadSeq);`, true],
+      // A matcher body longer than any fixed scan window must not truncate and fail open: the old
+      // 1400-character cap made balanced() return an empty body, so the coupling inside went unseen.
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ note: "${"x".repeat(1500)}", seq: chain.chainHeadSeq });`, true],
+      // Equivalent index forms of the same head read.
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ normalizedTextSha256: chain.entries[chain.entries.length - 1].normalizedTextSha256 });`, true],
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.entries.slice(-1)[0].seq });`, true],
+      // A head read stored in a local first is the same coupling one step removed.
+      [`const head = chain.chainHeadSeq;\n    ${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ seq: head });`, true],
+      // RED: dead code after a TRAILING // is still dead code and must not be flagged.
+      [`${RESOLVER}expect(stamp.seq).toBe(2); // expect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, false],
+      // RED: but a // inside a string literal is not a comment, so the real coupling after it stands.
+      [`${RESOLVER}expect(report.sourceRef).toBe("https://kernel.invalid/a"); expect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, true],
+      // A trailing // comment is a comment too: the assertion after it is real, the one inside is not.
+      [`${RESOLVER}expect(stamp.seq).toBe(2); // expect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq });`, false],
+      // But `//` inside a quoted string is not a comment, so the real assertion still counts.
+      [`${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ source: "https://kernel.test/a", seq: chain.chainHeadSeq });`, true],
+      // A block-commented coupled assertion is dead code, matching the stripper's stated claim.
+      [`${RESOLVER}/* expect(report.provenance.effectiveAuthority).toMatchObject({ seq: chain.chainHeadSeq }); */`, false],
+      // A local that is NOT head-derived must not be mistaken for an alias.
+      [`const wanted = stamp.seq;\n    ${RESOLVER}expect(report.provenance.effectiveAuthority).toMatchObject({ seq: wanted });`, false],
     ];
     // biome-ignore format: the detector driver stays compact for the shard budget
-    for (const [snippet, flagged] of PROBE) expect(coupledIn(snippet), snippet.slice(-90)).toBe(flagged);
-    // The detector must actually see an assertion in every real consumer, or it is vacuous.
-    // biome-ignore format: every consumer must expose at least one collected stamp assertion
-    for (const [test] of CONSUMERS) expect(stampAssertions(read(test)).length, `stamp-assertion-undetected:${test}`).toBeGreaterThan(0);
+    expect(PROBE.filter(([snippet, flagged]) => coupledIn(snippet) !== flagged).map(([snippet]) => snippet.slice(-90))).toEqual([]);
+    // A coupling sweep proves nothing where the detector sees no assertion, so the exact set of
+    // readers it does see is asserted; the fixture builder pins a stamp rather than asserting one.
+    // biome-ignore format: the registered readers the coupling sweep applies to stay compact
+    const READERS = [...CONSUMERS.map(([t]) => t), ...PINNED.map(([t]) => t)];
+    // biome-ignore format: the fixture builder is the only registered reader with no stamp assertion
+    expect(READERS.filter((t) => stampAssertions(read(t)).length > 0).sort(), "stamp-assertion-undetected").toEqual(READERS.filter((t) => t !== "tests/kernelCodeBearingDescendantHandoff.test.ts").sort());
 
     // biome-ignore format: every coupled consumer is reported by exact path for a one-look diagnosis
     const coupled = CONSUMERS.filter(([test]) => coupledIn(read(test))).map(([test]) => `consumer-stamp-live-head-coupled:${test}`);
     expect(coupled).toEqual([]);
+    // Discovery, not a hand-written list: any tests/*.test.ts mentioning effectiveAuthority is in
+    // scope, so a reader cannot hide behind a different variable name. Comments are stripped and the
+    // oracle excluded; the discovered set must close exactly over the three tiers.
+    const MENTIONS = /(^|[^A-Za-z0-9_])effectiveAuthority([^A-Za-z0-9_]|$)/;
+    // biome-ignore format: the dynamic three-tier discovery sweep stays compact for the shard budget
+    const discovered = fs.readdirSync(path.join(ROOT, "tests")).filter((file) => file.endsWith(".test.ts")).map((file) => `tests/${file}`).filter((file) => file !== SELF && MENTIONS.test(stripComments(read(file)))).sort();
+    expect(discovered.length, "consumer-discovery-count-drift").toBe(13);
+    // biome-ignore format: the registry must close exactly over the three tiers
+    expect(discovered, "consumer-registry-out-of-sync").toEqual([...CONSUMERS.map(([test]) => test), ...PINNED.map(([test]) => test), ...HEAD_TRACKING].sort());
+    // Neither a stamped consumer nor a pinned reader may couple to the live head.
+    // biome-ignore format: the coupling sweep spans both stamped and pinned readers
+    for (const test of [...CONSUMERS.map(([t]) => t), ...PINNED.map(([t]) => t)]) expect(coupledIn(read(test)), `consumer-stamp-live-head-coupled:${test}`).toBe(false);
+    // Each pinned reader keeps its exact sealed-epoch token.
+    // biome-ignore format: the pinned-token proof names the exact missing pin
+    for (const [test, token] of PINNED) expect(read(test), `pinned-epoch-token-missing:${test}:${token}`).toContain(token);
+    // The head-tracking ledger genuinely carries no provenance stamp, so it is out of scope by fact.
+    // biome-ignore format: the head-tracking exemption is proven, not assumed
+    for (const test of HEAD_TRACKING) expect(read(test).includes("provenance.effectiveAuthority"), `head-tracking-carries-stamp:${test}`).toBe(false);
     // biome-ignore format: and each consumer must resolve by digest rather than merely avoid the tokens
     for (const [test] of CONSUMERS) expect(read(test), `consumer-stamp-resolver-missing:${test}`).toContain("entrySha256 === ");
   });
@@ -217,9 +327,8 @@ describe("consumer provenance stamps are historical-at-write", () => {
     const { deriveAuthorityBoundary } = await load(CHAIN_LIB);
     const live: Entry[] = chain.entries;
     const seq4: Entry[] = [...live, readJson(ACTIVATION).successorEntry];
-    // stampGoverns, mirrored from tools/lib/kernel-effective-authority-chain.mjs: the boundary
-    // derived from the chain prefix ending at the stamped entry must derive cleanly AND equal the
-    // boundary in force now. An unresolvable stamp or an erroring derivation is a rejection.
+    // stampGoverns, mirrored from tools/lib/kernel-effective-authority-chain.mjs: the boundary derived
+    // from the prefix ending at the stamped entry must derive cleanly AND equal the boundary in force.
     const governs = (entries: Entry[], stamp: Stamp) => {
       const index = entries.indexOf(resolve(entries, stamp) as Entry);
       if (index < 0) return false;
@@ -237,8 +346,7 @@ describe("consumer provenance stamps are historical-at-write", () => {
       // biome-ignore format: resolution is unchanged by the append, which is the historical-at-write claim
       expect(resolve(seq4, stamp), `stamp-resolution-changed-under-seq4:${report}`).toEqual(resolve(live, stamp));
       // ...but it stops governing: EPOCH-04 supersedes codeStart, runtimeCode and verdict, so the
-      // boundary in force moves and every earlier stamp must be re-stamped. Resolution is not
-      // governance, and this gate never claims a superseded stamp is still in force.
+      // boundary moves and every earlier stamp must be re-stamped. Resolution is not governance.
       expect(governs(seq4, stamp), `stamp-still-governing-under-seq4:${report}`).toBe(false);
     }
     // The recorded append prerequisite this behavior implements, bound so the two cannot drift.
@@ -253,9 +361,8 @@ describe("consumer provenance stamps are historical-at-write", () => {
     // Arm 2, boundary move: for the seq-3 stamps above, the prefix DOES derive cleanly, so it is the
     // comparison against the boundary in force that rejects them — not a derivation failure.
     expect(deriveAuthorityBoundary({ entries: live }).errors).toEqual([]);
-    // And the seq-4 boundary in force is not merely different, it is not yet derivable: the three
-    // superseded dimensions are unmapped, exactly as the recorded boundaryMapExtension prerequisite
-    // states. That is why this gate proves the append is blocked, never that EPOCH-04 is in force.
+    // The seq-4 boundary is not merely different, it is not yet derivable: the three superseded
+    // dimensions are unmapped, exactly as the recorded boundaryMapExtension prerequisite states.
     // biome-ignore format: the exact unmapped successor dimensions stay compact for the shard budget
     expect(deriveAuthorityBoundary({ entries: seq4 }).errors).toEqual(["derived-boundary-unmapped:codeStart:YES", "derived-boundary-unmapped:runtimeCode:YES", "derived-boundary-unmapped:verdict:GO-KERNEL-DEVELOPMENT-ONLY"]);
     // biome-ignore format: the recorded boundary-map prerequisite stays compact for the shard budget
