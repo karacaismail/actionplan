@@ -186,6 +186,18 @@ kenar için blocks yönü, reciprocity ve birleşik precedence anlamı kararlaş
 Bu ölçüm yalnız aynı node içindeki dependsOn ∩ blocks kesişimidir. Karar gelmeden
 otomatik edge düzeltmesi yapılmaz.
 
+GATE-01 `D07=FIX_KERNEL8_SPLIT_NONKERNEL38` token'ı ile 46 çelişkili kenar ikiye ayrılır:
+8 kernel kenarı onarıma alınır, 38 kernel-dışı kenar ayrı bir gap'e taşınır. Kayıt
+`PLANNING_ONLY`, `VALID_BLOCKED` ve `NO_GO` durumundadır. Onarımı planlamak onarmak
+değildir: `edgesRepaired=0` kalır, hiçbir kenar yeniden yazılmaz, hiçbir `dependsOn` veya
+`blocks` yönü ters çevrilmez, 650 düğümlük generated evren değişmez ve source extraction
+yapılmaz. 38 kernel-dışı kenarı tutacak ayrı gap burada kaydedilmez: `gapCreated=false`,
+`gapId=null` ve `deferred-to-human-gap-registration` sürer. KGA-D02 bayt-aynı kalır;
+kanonik edge application'ı `deferred-to-KGA-D07` olarak açıktır ve bu kayıtla kapatılmaz.
+KGA-G04 P0 açık gap olarak sürer. Onarım yapıldığında executor `human-developer-only`
+olur; code start, runtime veya readiness verilmez. Ayrıntı:
+`reports/kernel-relation-direction-conflict-disposition-2026-08-02.json`.
+
 ### KGA-D08 — ADR Kimlikleri
 
 Karar sahibi: User/Admin · Koordinatör: PM · Teslim yetkilisi: Codex
@@ -325,7 +337,14 @@ early-minimal-db-substrate-record ve kanıtı gap addendum, D06 handoff'u ve
 `reports/kernel-early-minimal-db-substrate-2026-08-02.json` üçlüsüdür; şema, RLS policy,
 migration, transaction, outbox, audit veya runtime uygulanmaz, queue amendment
 `deferred-to-human-approved-amendment` kalır ve D10 enforcement ertelemesi kapatılmaz.
-Yalnız `KGA-D07` pending'dir ve `applicationScope` değeri null'dır. Applied satır yalnız validator'daki kapalı attestation
+`KGA-D07`: applied, kapsamı yalnız relation-direction-conflict-disposition-record ve
+kanıtı `reports/kernel-relation-direction-conflict-disposition-2026-08-02.json`'dır;
+46 kenar 8 kernel onarımı + 38 kernel-dışı taşıma olarak ayrılır, hiçbir kenar onarılmaz
+veya yeniden yazılmaz, generated evren değişmez, ayrı gap kaydedilmez ve KGA-D02
+ertelemesi açık kalır. On satırın tamamı applied/canonical'dır; pending satır kalmaz.
+Bu, gap kapanışı değildir: `unlockCondition` değişmeden
+`all-ten-rows-applied-canonical-with-human-runtime-evidence` kalır ve insan runtime
+kanıtı gelmeden hiçbir bayrak açılmaz. Applied satır yalnız validator'daki kapalı attestation
 sözleşmesiyle durur: birebir artifact ref'i, birebir artifact kök id'si, birebir
 application summary'si, approved-application-pending kök statüsü ve 691 baytlık GATE-01
 approval digest'i.
@@ -425,6 +444,11 @@ audit parent-gate aynası, sonra application-state satırı, attestation sözle�
 report+test çifti geri alınarak kapatılır; hiçbir şema, migration, transaction, outbox
 veya audit kurulmadığı, queue amendment üretilmediği ve base queue ile D06 handoff'u
 bayt-aynı bırakıldığı için queue, veritabanı veya runtime rollback'i yoktur.
+KGA-D07 application shard'ı önce decision pack bölümleri, package gate ve authorization
+audit parent-gate aynası, sonra application-state satırı, attestation sözleşmesi ve
+report+test çifti geri alınarak kapatılır; hiçbir kenar onarılmadığı, generated node
+değişmediği, ayrı gap kaydedilmediği ve KGA-D02 bayt-aynı bırakıldığı için edge, node,
+projeksiyon veya runtime rollback'i yoktur.
 
 ## Codex Nihai Kararı
 
