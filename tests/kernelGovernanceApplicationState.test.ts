@@ -466,7 +466,7 @@ describe("kernel governance application state ledger", () => {
     // AND must carry the marker literal in their own source, so neither the list nor the marker can
     // create a free pass alone. Any other sibling is fail-closed at exactly-one.
     // biome-ignore format: the named non-decision ledger consumers stay compact for the shard budget
-    const CONSUMERS = ["tests/kernelConsumerStampHistoricalAtWrite.test.ts", "tests/kernelEpoch04ActivationPolicy.test.ts", "tests/kernelEpoch04AppendExecution.test.ts"];
+    const CONSUMERS = ["tests/kernelConsumerStampHistoricalAtWrite.test.ts", "tests/kernelEpoch04ActivationPolicy.test.ts", "tests/kernelEpoch04AppendExecution.test.ts", "tests/kernelRuntimePilotPromotionContract.test.ts"];
     const MARKER = 'APPLICATION_STATE_ROLE = "non-decision-consumer"';
     // The named consumers must actually be discovered, or the classification is vacuous.
     expect(CONSUMERS.filter((file) => !siblings.includes(file))).toEqual([]);

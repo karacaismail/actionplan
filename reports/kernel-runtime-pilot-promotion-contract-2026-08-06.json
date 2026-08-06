@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0", "id": "kernel-runtime-pilot-promotion-contract-2026-08-06", "generatedAt": "2026-08-06", "frozen": true, "status": "frozen-promotion-contract-not-promoted",
+  "gateSetSha256": "3f8c98150e66d2e9b4ea4f453eff58045fc0c16d069a4fa8d0f5d1650881b4f6",
+  "gates": [{ "order": 1, "id": "GRP-01", "definition": "authority/consumer sync" }, { "order": 2, "id": "GRP-02", "definition": "contract, dependency and Onion boundary lock" }, { "order": 3, "id": "GRP-03", "definition": "one pilot app/module/archetype scope" }, { "order": 4, "id": "GRP-04", "definition": "baseline, SLO, RTO, RPO" }, { "order": 5, "id": "GRP-05", "definition": "PostgreSQL, RLS, transaction, outbox, audit baseline" }, { "order": 6, "id": "GRP-06", "definition": "typed action/envelope, PDP, primitive contracts" }, { "order": 7, "id": "GRP-07", "definition": "generated SDK" }, { "order": 8, "id": "GRP-08", "definition": "golden-slice end-to-end evidence" }, { "order": 9, "id": "GRP-09", "definition": "security, rollback, independent verification" }, { "order": 10, "id": "GRP-10", "definition": "atomic promotion and human countersign" }],
+  "authorityBinding": { "actionplanCommit": "673a23c3093cf254d9d59b5c109f065f93416d29", "chainRef": "reports/kernel-effective-authority-chain-2026-07-31.json", "chainHeadSeq": 4, "chainHeadEntrySha256": "90a0a9ba795fcff67d48829d9d0083cbac956e4d1b277527862fa19586228c37", "chainSha256": "f2315ba09192e3614e272bb7256ae41a288f1a6fdc435cb67aca74954ec3a1b8", "stateRef": "reports/kernel-governance-application-state-2026-08-01.json", "kernelRepository": "metaframer-kernel", "kernelCommit": "f62dc8e8cbacaa510aea1187212dc7171cbffa0a", "kernelAccess": "read-only", "currentVerdict": "GO-KERNEL-DEVELOPMENT-ONLY" },
+  "promotionRule": { "requiredGreenGates": 10, "requiresIndependentVerifier": true, "requiresHumanCountersign": true, "humanCountersignDefault": false, "writerMaySelfClose": false, "writerMaySelfVerify": false, "targetVerdict": "GO-RUNTIME-PILOT", "impliesProduction": false, "gateAdditionAllowed": false },
+  "currentStatus": {
+    "greenGates": 0, "promotionAllowed": false, "humanCountersign": false, "independentVerifierRecorded": false, "verdict": "GO-KERNEL-DEVELOPMENT-ONLY", "runtimeImplementationStarted": false, "sdkReady": false, "appBuildable": false, "releaseAllowed": false, "deployAllowed": false, "productionAllowed": false, "gapClosed": false,
+    "gates": [
+      { "id": "GRP-01", "status": "RED", "reason": "the Kernel consumer is stale: metaframer-kernel@f62dc8e8cbacaa510aea1187212dc7171cbffa0a still pins the predecessor Actionplan chain-file digest 8d7f6a79342101397d925ff5f4861f5422c354e2f35ca0b3823e1f4f8c204715 from actionplan@7312ac0b17bbddf3bd92d9aa53a73c6a9578f45d, which predates the appended EPOCH-04 head, so authority and consumer are not in sync" },
+      { "id": "GRP-02", "status": "NOT-EVIDENCED", "reason": "no contract, dependency or Onion boundary lock evidence is recorded against this frozen gate" },
+      { "id": "GRP-03", "status": "NOT-EVIDENCED", "reason": "no single pilot app, module or archetype scope has been selected as evidence" },
+      { "id": "GRP-04", "status": "NOT-EVIDENCED", "reason": "no baseline, SLO, RTO or RPO evidence is recorded" },
+      { "id": "GRP-05", "status": "NOT-EVIDENCED", "reason": "KGA-D06 and KGA-D10 stay PLANNING_ONLY and VALID_BLOCKED; no schema, RLS policy, transaction, outbox or audit baseline is implemented" },
+      { "id": "GRP-06", "status": "NOT-EVIDENCED", "reason": "no typed action/envelope, PDP or primitive contract evidence is recorded" },
+      { "id": "GRP-07", "status": "NOT-EVIDENCED", "reason": "SDK_READY stays false at the EPOCH-04 head and SDK is an excluded target; no generated SDK evidence exists" },
+      { "id": "GRP-08", "status": "NOT-EVIDENCED", "reason": "runtime implementation has not started, so no golden-slice end-to-end evidence can exist" },
+      { "id": "GRP-09", "status": "NOT-EVIDENCED", "reason": "no security, rollback or independent verification evidence is recorded" },
+      { "id": "GRP-10", "status": "NOT-EVIDENCED", "reason": "atomic promotion has not been attempted and no human countersign exists" }
+    ]
+  },
+  "laterTopicPolicy": { "classifications": ["existing-gate-evidence", "post-pilot-backlog", "production-blocker"], "newGateAllowed": false, "gateSetClosedAt": 10 },
+  "nextChangePackage": { "subject": "kernel-consumer-sync", "separatePackage": true, "blocksGate": "GRP-01", "includedInThisPackage": false, "reason": "the Kernel consumer stamp is stale against the appended EPOCH-04 head and must be resynchronised in its own change package, written by its own authorised writer under Codex; this contract only records that GRP-01 is not GREEN and never performs the sync" },
+  "invariants": [
+    "GO-RUNTIME-PILOT is never GO-PRODUCTION: promoting this contract at 10/10 GREEN authorises one bounded runtime pilot and opens no release, deploy or production path, and no evaluation may return GO-PRODUCTION.",
+    "The gate set is frozen at exactly GRP-01..GRP-10 in this order with these definitions, bound by gateSetSha256 over the ordered [order, id, definition] triples; a renamed, reordered or redefined gate is a different contract and fails closed.",
+    "Promotion requires 10/10 GREEN plus an independent verifier plus a human countersign together; any one of them alone promotes nothing and the countersign defaults false.",
+    "The writer can never self-close: a verifier identical to the writer, or one that does not declare independence, is refused as self-verification rather than accepted.",
+    "This contract pins one Actionplan commit, one authority chain head and one read-only Kernel commit; drift in any pin, in the frozen gate hash or in the authority head fails closed rather than degrading to a warning.",
+    "A topic found after this freeze is classified only as existing-gate-evidence, post-pilot-backlog or an explicit production blocker; it can never create an eleventh promotion gate.",
+    "Freezing a promotion contract is not promoting: this artifact records that GRP-01 is not GREEN because the Kernel consumer is stale, and it promotes nothing by itself."
+  ],
+  "nonGoals": [
+    "do not read this frozen contract as a promotion, as an approval to promote, or as evidence that any gate is GREEN",
+    "do not read it as opening GO-PRODUCTION, release, deploy, SDK, app-core, app or module; every downstream stage stays shut and production is not reachable from this contract",
+    "do not start runtime implementation, write runtime, platform or Kernel product code, or treat GO-KERNEL-DEVELOPMENT-ONLY as superseded",
+    "do not perform the Kernel consumer sync here; it is the next separate change package and GRP-01 stays RED until it lands",
+    "do not add, rename, reorder or redefine a gate, and do not mutate the authority chain, the application-state ledger, the GATE-01 approval intake or any sealed EPOCH-01..04 entry",
+    "do not stage, commit, push, tag, merge or otherwise mutate Git from this shard"
+  ],
+  "rollback": { "owner": "codex-master", "trigger": "the frozen gate hash, an authority or Kernel pin, the promotion rule, the fail-closed evaluator or the not-promoted current status drifts", "action": "revert this contract, its evaluator and its test as one logical shard; nothing else depends on it and no authority, ledger or sealed epoch entry was touched", "runtimeDataImpact": "none" }
+}
