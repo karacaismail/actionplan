@@ -30,7 +30,7 @@ Current-live toplam `resolveD01NodeUniverse` ile doğrulanır; tablo live-count 
 | Tarihsel pre-D01 aktif WBS kaydı (legacy alias hariç) | 612 |
 | Legacy alias / yönlendirme kaydı | 5 |
 | Source-specific materyalizasyon kuralı | 250 |
-| Canonical standard sözleşmesi | 38 |
+| Canonical standard sözleşmesi | 39 |
 | Çözülmüş standard / tech-profile ref | 9.474 |
 
 2026-07-13 refs/materialization dalgasındaki `290/290` executable raw projection,
