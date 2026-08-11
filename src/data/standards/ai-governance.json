@@ -1,10 +1,10 @@
 {
   "id": "ai-governance",
   "name": "Yapay Zeka Yönetişimi Standardı",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "family": "ai",
   "basedOnAdr": ["adr-0027"],
-  "summary": "Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon/çıktı doğrulama (Zod), maliyet/rate limit, human-in-the-loop onayı, kill-switch, PII redaksiyonu, platformda AI ürün-kodu yazma yasağı (read-only-audit; human-developer-only) ve openclaw + n8n otomasyon sınırı için somut ve zorlanabilir kurallar.",
+  "summary": "Prompt registry + sürümleme, model/araç allowlist, eval seti + regresyon kapısı, halüsinasyon/çıktı doğrulama (Zod), maliyet/rate limit, human-in-the-loop onayı, kill-switch, PII redaksiyonu, platformda AI ürün-kodu yazma yasağı (read-only-audit; human-developer-only), openclaw + n8n otomasyon sınırı ve sahip anlayışı/teknoloji kanıtı yükümlülüğü (sade Türkçe beş alanlı rapor, normatif olmayan metafor, capability NONE çevirisi, insan/teknik karar sınırı, yedi boyutlu teknoloji kanıtı) için somut ve zorlanabilir kurallar.",
   "appliesTo": [],
   "rules": [
     {
@@ -69,6 +69,48 @@
       "rationale": "Otomasyonu onaylı araçlara ve en-az-ayrıcalığa hapsetmek yan-kanal ve sır sızıntısı riskini düşürür; denetim günlüğü izlenebilirlik sağlar.",
       "severity": "must",
       "check": "n8n iş akışı sürüm kontrolü + secret-store taraması + audit log denetimi"
+    },
+    {
+      "id": "owner-comprehension-phase-report-fields",
+      "rule": "Teknik doğruluk zorunlu kalır; buna ek olarak her önemli mimari karar ve her faz/nihai rapor sade Türkçe beş alanı taşır: `once` (önce ne yapılamıyordu veya garanti edilmiyordu), `simdi` (şimdi ne yapılabiliyor veya garanti ediliyor), `fark` (bir önceki aşamaya göre gerçek fark), `kullaniciYolculugu` (somut CRM/HRMS/e-ticaret/ilan/iş birliği/PWA SaaS kullanıcı yolculuğu) ve `kalanEngel` (hâlâ yapılamayan, kalan blokaj). Alanlardan biri eksik veya jenerik ise rapor kabul edilmez.",
+      "rationale": "Sahip mühendis değildir ve kararı ancak yolculuk diline çevrilmiş doğru bilgiyle verebilir; çevirisi olmayan doğru rapor karar üretmez.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + rapor kabul incelemesi"
+    },
+    {
+      "id": "owner-metaphor-non-normative",
+      "rule": "Gerçek dünya metaforu (ör. garson → mutfak → kasa) yalnız açıklama için eklenir ve normatif değildir; invariant, sözleşme, kabul ölçütü veya testin yerine geçemez. Metafor ile test çeliştiğinde test kazanır ve metafor düzeltilir; metafor kanıt, kapı veya acceptance criteria olarak kullanılamaz.",
+      "rationale": "Metafor anlamayı hızlandırır fakat normatifleşirse sözleşmeyi sessizce gevşetir; sınır yazılı olmazsa açıklama kurala dönüşür.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + review"
+    },
+    {
+      "id": "owner-capability-none-not-product",
+      "rule": "`capability delta = NONE` her raporda sade Türkçeye çevrilir (çalışan üründe yeni bir şey açılmadı; yalnız kural, sözleşme veya kanıt yazılı ve denetlenebilir hâle geldi) ve asla yeni bir runtime/ürün yeteneği, readiness, release veya tamamlanma iddiası olarak sunulmaz.",
+      "rationale": "Çevrilmemiş NONE sahip tarafında ilerleme sanılır; yönetişim değişikliğinin ürün yeteneği sayılması sahte tamamlanma üretir.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + teslim raporu denetimi"
+    },
+    {
+      "id": "owner-technical-decision-boundary",
+      "rule": "Sahibin değerlendiremeyeceği geri alınabilir teknik uygulama ayrıntıları sahibe onaylatılmaz; teknik otorite bunları repo gerçekliği, sözleşme ve test davranışı, küçük geri alınabilir deney ve bağımsız review ile çözer ve gerekçesini kaydeder. Sahibe yalnız ürün/marka kapsamı, geri alınamaz etki, dış maliyet ve güvenlik risk iştahı sorulur.",
+      "rationale": "Kanıtı olmayan tarafa seçim yaptırmak güvenlik kontrolü değil sorumluluk kaydırmasıdır; karar kanıtın bulunduğu yerde verilir.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + karar kaydı review"
+    },
+    {
+      "id": "tech-evidence-global-scale-proof",
+      "rule": "Bir teknoloji için `küresel ölçekte kanıtlı` iddiası popülerliğe (yıldız, indirme, trend) dayanamaz; yedi kanıt boyutu kaydedilir: `populariteKanitDegil`, `bagimsizUretimKullanimi`, `aktifBakimVeGuvenlikYaniti`, `performansVeOperasyonKaniti`, `standartBirlikteCalisabilirlik`, `saglayiciBagimsizligi`, `cikisVeRollbackStratejisi`. Kaydı olmayan boyut kanıt sayılmaz ve ölçek iddiası uydurulamaz.",
+      "rationale": "Popülerlik dayanıklılığı ölçmez; bağımsız üretim kullanımı, bakım/güvenlik yanıtı ve çıkış yolu olmadan seçim geri alınamaz bir bağımlılığa dönüşür.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + teknoloji kanıt kaydı review"
+    },
+    {
+      "id": "tech-evidence-conditional-experimental",
+      "rule": "Yedi boyutun kanıtı yoksa teknoloji `deneysel` veya `koşullu` etiketlenir. Yeni/niş teknoloji otomatik yasak değildir; sabit arayüz ve tek noktalı bağımlılıkla sözleşme arkasında izole edilir ve kabulünden önce geri dönüşün gerçekten çalıştığını gösteren bir rollback deneyi kaydedilir.",
+      "rationale": "Kanıt eksikliğini yasak yerine etiket ve izolasyonla yönetmek yeniliği kapatmadan geri dönüşü garanti eder.",
+      "severity": "must",
+      "check": "vitest run tests/ownerComprehensionContract.test.ts + rollback deneyi kanıtı"
     }
   ],
   "banned": [
@@ -80,7 +122,12 @@
     "non-allowlisted-model-or-tool",
     "autonomous-irreversible-action",
     "ad-hoc-automation",
-    "ai-writes-platform-product-code"
+    "ai-writes-platform-product-code",
+    "popularity-as-technology-evidence",
+    "fabricated-global-scale-claim",
+    "owner-approval-for-reversible-technical-detail",
+    "capability-none-presented-as-product-capability",
+    "normative-metaphor"
   ],
   "allowed": [
     "versioned-prompt-registry",
@@ -90,10 +137,15 @@
     "kill-switch",
     "pii-redaction",
     "openclaw-n8n-automation",
-    "ai-produces-actionplan-directive"
+    "ai-produces-actionplan-directive",
+    "plain-language-phase-report",
+    "non-normative-real-world-metaphor",
+    "conditional-experimental-technology-with-rollback",
+    "owner-scope-cost-security-decisions"
   ],
   "references": [
     "docs/adr-0027-engineering-standards.md",
-    "docs/platform-product-code-write-prohibition-directive.md"
+    "docs/platform-product-code-write-prohibition-directive.md",
+    "docs/adr-0027-engineering-standards.md#sahip-anlayışı-ve-teknoloji-kanıtı-sözleşmesi-ap-oc1"
   ]
 }
