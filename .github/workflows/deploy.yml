@@ -9,6 +9,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # Etiketler PR satır bütçesi kapısının SINIF ve KANIT girdisidir: etiket eklemek/çıkarmak
+    # kararı değiştirebilir, o yüzden `labeled`/`unlabeled` de kapıyı YENİDEN koşturur. Aksi
+    # halde bir paket kırmızı kapının üstüne etiket ekleyip yeşil görünebilirdi.
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
   workflow_dispatch:
 
 permissions:
@@ -43,6 +47,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      # PR satır bütçesi kapısı (BLOKLAYICI, yalnız pull_request). Adaptör olay dosyasını YALNIZ
+      # koşucunun verdiği GITHUB_EVENT_PATH ortamından okur: PR başlığı, gövdesi ve etiketi hiçbir
+      # workflow ifadesiyle bu adıma gömülmez, yani PR'ı açan burada metin çalıştıramaz. Kurulumdan
+      # ÖNCE koşar; kapı yalnız Node ve tam depo geçmişi ister, aşırı büyük paket en ucuz noktada
+      # kapanır. Push ve workflow_dispatch koşularında adım atlanır, build/deploy semantiği aynıdır.
+      - name: PR satır bütçesi kapısı (change-package sınırı)
+        if: github.event_name == 'pull_request'
+        run: npm run qa:pr-size-ci
 
       - name: Bağımlılıkları kur
         run: npm install --no-audit --no-fund

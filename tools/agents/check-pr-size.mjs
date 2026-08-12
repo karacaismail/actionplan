@@ -10,10 +10,11 @@
  * raporu ve çıkış kodu eşlemesi. Bu dosyada ikinci bir eşik/bant/sınıf/kanıt kopyası YOKTUR,
  * ikinci bir git argv mantığı KURULMAZ ve hiçbir alt süreç doğrudan çağrılmaz.
  *
- * KAPSAM DÜRÜST: kapı hiçbir CI adımına bağlı DEĞİLdir (P3); süreç stdin'e yaslanmaz ve hiçbir
- * kapıyı bloklamaz. Raporun `inputMode`, `collectsGitRange`, `collectsWorkingTree` ve `ciEnforced`
- * alanları bunu makine-okunur biçimde söyler; toplama beyanı ayrı bir İDDİA değil, provenansın
- * VARLIĞIDIR.
+ * KAPSAM DÜRÜST: kapı P3b'de bu deponun ZORUNLU `build` işine bağlandı ve gerçekten bloklar; süreç
+ * yine stdin'e yaslanmaz. Raporun `inputMode`, `collectsGitRange`, `collectsWorkingTree` ve
+ * `ciEnforced` alanları bunu makine-okunur biçimde söyler. İkisi ayrı cinstendir: toplama beyanı
+ * provenansın VARLIĞIDIR, `ciEnforced` ise bu DEPODAKİ kurulum gerçeğidir — çağrı biçimine göre
+ * değişmez ve tek bir koşunun bloklandığını değil, kapının bağlı olduğunu söyler.
  *
  * FAIL-CLOSED: bozuk argv, karışık/eksik girdi kaynağı, güvensiz/okunamayan/boş fixture,
  * toplanamayan aralık ya da ağaç, güvenilmez kanonik alan ve süreç-içi hata KARAR YERİNE
@@ -29,8 +30,8 @@ import { collectRange } from "../lib/pr-size-git-range.mjs";
 import { collectWorkingTree } from "../lib/pr-size-git-working-tree.mjs";
 
 export const CLI_SCHEMA = "pr-size-check/1";
-/** Çalışma ağacı modu GERİYE UYUMLU bir eklemedir: şema sabit, MINOR hane yükselir. */
-export const CLI_VERSION = "1.2.0";
+/** CI'a bağlanma da GERİYE UYUMLUdur: alan/şema biçimi sabit, yalnız MINOR hane yükselir. */
+export const CLI_VERSION = "1.3.0";
 export const INPUT_MODE = "numstat-z-file";
 export const RANGE_MODE = "git-range";
 export const WORKING_TREE_MODE = "working-tree";
@@ -242,14 +243,15 @@ const workingTreeSource = () => {
  * Zarf minimaldir ve saf karar raporunu DEĞİŞTİRMEDEN taşır; anahtar sırası sözleşmedir.
  * `collectsGitRange` ve `collectsWorkingTree` ayrı bir İDDİA değil, provenansın VARLIĞIDIR: kaynak
  * gerçekten toplanıp karara dönüşmediyse alan da beyan da yoktur, yani kapı ölçmediğini ölçtüm
- * diyemez.
+ * diyemez. `ciEnforced` ise KURULUM gerçeğidir: bu depoda kapı zorunlu `build` işinden çağrılır,
+ * bu yüzden sabittir — ölçümden, çağrandan ve kaynaktan türetilemez.
  */
 // biome-ignore format: the machine-readable envelope contract stays compact for the shard budget
 const envelope = ({ mode = null, status, fixture = null, range = null, workingTree = null,
   error = null, decisionReport = null }) => ({
   schema: CLI_SCHEMA, version: CLI_VERSION, inputMode: mode,
   canonicalStandard: CANONICAL_STANDARD, collectsGitRange: range !== null,
-  collectsWorkingTree: workingTree !== null, ciEnforced: false,
+  collectsWorkingTree: workingTree !== null, ciEnforced: true,
   status, exitCode: EXIT_CODE[status] ?? EXIT_CODE[INTERNAL],
   fixture, range, workingTree, error, decisionReport,
 });

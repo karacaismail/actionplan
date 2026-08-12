@@ -10,10 +10,11 @@ import { afterAll, describe, expect, it } from "vitest";
 // fail-closed ve sızıntısız olduğudur: argv dilbilgisi, TEK kaynak kuralı, fixture tipi/sınırı,
 // kanonik config'in ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un
 // HER yolda yalnız tam JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi
-// kanonikten türetilir. KAPSAM DÜRÜST: gerçek aralık ve çalışma ağacı artık toplanır, ama kapı
-// hiçbir CI adımına bağlı DEĞİLdir (P3); bu paket enforcement İDDİA ETMEZ.
+// kanonikten türetilir. KAPSAM DÜRÜST: gerçek aralık ve çalışma ağacı toplanır ve kapı P3b'de
+// ZORUNLU `build` işine bağlandı; `ciEnforced` artık bir KURULUM gerçeğidir, ölçüm iddiası değil.
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
+const ADAPTER = "tools/agents/check-pr-size-ci.mjs";
 const SELF = "tests/prSizeCheckerGovernance.test.ts";
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const CORE = "tools/lib/pr-size-core.mjs";
@@ -447,12 +448,13 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
     expect(result.report.version).toBe(SURFACE.version);
     expect(result.report.inputMode).toBe(SURFACE.inputMode);
     expect(result.report.canonicalStandard).toBe(CANONICAL);
-    // Dürüstlük: fixture yolunda ne aralık ne ağaç TOPLANIR ve hiçbir yolda CI bloklaması yoktur.
+    // Dürüstlük: fixture yolunda ne aralık ne ağaç TOPLANIR; `ciEnforced` ise KURULUM gerçeğidir
+    // (kapı zorunlu `build` işine bağlıdır) ve çağrı biçimine göre değişmez.
     expect([
       result.report.collectsGitRange,
       result.report.collectsWorkingTree,
       result.report.ciEnforced,
-    ]).toEqual([false, false, false]);
+    ]).toEqual([false, false, true]);
     expect(result.report.range, "fixture yolunda aralık provenansı uyduruldu").toBeNull();
     expect(result.report.workingTree, "fixture yolunda ağaç provenansı uyduruldu").toBeNull();
     expect(result.report.exitCode).toBe(result.status);
@@ -631,7 +633,7 @@ describe("pr-size süreç kapısı — gerçek Git aralığı izole bir depoda t
       accepted.report.collectsGitRange,
       accepted.report.collectsWorkingTree,
       accepted.report.ciEnforced,
-    ]).toEqual([true, false, false]);
+    ]).toEqual([true, false, true]);
     expect(accepted.report.fixture, "aralık yolunda fixture provenansı uyduruldu").toBeNull();
     expect(accepted.report.workingTree, "aralık yolunda ağaç provenansı uyduruldu").toBeNull();
     expect(Object.keys(accepted.report.range)).toEqual([
@@ -820,7 +822,7 @@ describe("pr-size süreç kapısı — gerçek çalışma ağacı izole bir depo
       result.report.collectsWorkingTree,
       result.report.collectsGitRange,
       result.report.ciEnforced,
-    ]).toEqual([true, false, false]);
+    ]).toEqual([true, false, true]);
     expect(result.report.fixture, "ağaç yolunda fixture provenansı uyduruldu").toBeNull();
     expect(result.report.range, "ağaç yolunda aralık provenansı uyduruldu").toBeNull();
     expect(Object.keys(result.report.workingTree)).toEqual(["head", "bytes", "sha256"]);
@@ -955,9 +957,9 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
       "parseArgv",
       "runCheck",
     ]);
-    // Yeni mod GERİYE UYUMLU bir eklemedir: şema aynı kalır, sürümün MINOR hanesi yükselir.
+    // Kurulum gerçeğinin değişmesi (CI enforcement) GERİYE UYUMLUdur: şema aynı kalır, MINOR yükselir.
     expect(SURFACE.schema).toBe("pr-size-check/1");
-    expect(SURFACE.version, "CLI sürümü yükselmedi").toMatch(/^1\.2\./);
+    expect(SURFACE.version, "CLI sürümü yükselmedi").toMatch(/^1\.3\./);
   });
 
   it("CLI ve bu test ikinci eşik/bant/sınıf/kanıt kopyası taşımaz", () => {
@@ -982,7 +984,7 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
     }
   });
 
-  it("kanonik kapı beyanı dürüsttür: kapı ARALIK ve AĞAÇ TOPLAR ama hiçbir yere BAĞLI DEĞİL", () => {
+  it("kanonik kapı beyanı dürüsttür: kapı ARALIK/AĞAÇ TOPLAR ve ZORUNLU işe BAĞLIdır", () => {
     expect(budget.checker.path).toBe(CLI);
     // Kapı artık gerçek aralığı topluyor (bu dosyadaki gerçek depo kanıtı); not aksini diyemez.
     expect(budget.checker.note, "not gerçek aralığı yok sayıyor").not.toMatch(
@@ -1002,11 +1004,18 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
         resolvable.some((cli: string) => cli === mode || cli.endsWith(`-${mode}`)),
         `kapıda karşılığı olmayan mod: ${mode}`,
       ).toBe(true);
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks, "bağlı kapı bloklamadığını söylüyor").toBe(true);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
-    // İddia YANLIŞLANABİLİR: "wired değil" demek, hiçbir script/CI adımının kapıyı çağırmaması demek.
-    const wiring = [read("package.json"), read(".github/workflows/deploy.yml")].join("\n");
-    expect(wiring, "kapı bağlanmış ama durum bunu söylemiyor").not.toContain(CLI);
+    // İddia YANLIŞLANABİLİR: "bağlıdır" demek, adaptörün adlandırılmış bir script üzerinden gerçek
+    // bir CI adımından çağrılması demektir. Kapıyı CI'da adaptör temsil eder; doğrudan CLI çağrısı
+    // ikinci bir giriş noktası olurdu ve workflow'da YOKTUR.
+    const scripts = JSON.parse(read("package.json")).scripts as Record<string, string>;
+    expect(scripts["qa:pr-size-ci"], "adaptör adlandırılmış script'te değil").toContain(ADAPTER);
+    const workflow = read(".github/workflows/deploy.yml");
+    expect(workflow, "kapı hiçbir CI adımından çağrılmıyor").toContain(
+      "run: npm run qa:pr-size-ci",
+    );
+    expect(workflow, "CI kapıyı script dışından çağırıyor").not.toContain(CLI);
   });
 });

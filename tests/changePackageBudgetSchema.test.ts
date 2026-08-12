@@ -73,10 +73,10 @@ const REJECTS: Record<string, (b: Dict) => unknown> = {
   "churn-guard-unknown-band": (b) => set(b.churnGuard, { appliesWhenNetAtOrBelowBand: "made-up" }),
   "churn-gross-max-decoupled": (b) => set(b.churnGuard, { grossMaxFromBand: "waiver" }),
   "churn-guard-credits-deletions": (b) => set(b.churnGuard, { netCreditFloor: -1000 }),
-  // CI'a bağlanmamış kapı "bloklar" diye beyan edilemez; blocks yalnız CI durumunda true olabilir.
-  "checker-claims-blocking-before-ci": (b) => set(b.checker, { blocks: true }),
-  // Ters yön de RED: durum CI'a atlarken blocks geride kalamaz (ikisi tek bir gerçeği söyler).
-  "checker-status-ahead-of-blocks": (b) => set(b.checker, { status: "ci-enforced-blocking" }),
+  // İki alan TEK gerçeği söyler: bağlı kapı "bloklamıyorum" diyemez, geri düşen durum da
+  // `blocks` bayrağını yukarıda bırakamaz. Her iki yön de şemada RED kalır.
+  "checker-drops-blocking-while-wired": (b) => set(b.checker, { blocks: false }),
+  "checker-status-behind-blocks": (b) => set(b.checker, { status: "implemented-not-wired" }),
   "unknown-checker-status": (b) => set(b.checker, { status: "bloklar" }),
 };
 
@@ -86,9 +86,9 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect([parsed.id, parsed.family]).toEqual(["short-code", "engineering"]);
     expect(parsed.version.startsWith("1.")).toBe(true);
     expect(parsed.version, "sürüm yükselmedi").not.toBe("1.0.0");
-    // Kapı beyanı GERİYE UYUMLU biçimde genişledi (working-tree modu): MINOR hane yükselmeden
-    // bu yeni gerçek yayımlanamaz; şema/alan biçimi değişmediği için MAJOR sabit kalır.
-    expect(parsed.version, "yeni mod beyanı sürümsüz yayımlandı").toMatch(/^1\.3\./);
+    // Kapı beyanı GERİYE UYUMLU biçimde değişti (CI enforcement): MINOR hane yükselmeden bu yeni
+    // gerçek yayımlanamaz; şema/alan biçimi değişmediği için MAJOR sabit kalır.
+    expect(parsed.version, "enforcement beyanı sürümsüz yayımlandı").toMatch(/^1\.4\./);
     // Alan şemaya girmemişse zod onu sessizce atar; bu eşitlik tam da onu yakalar.
     expect((parsed as unknown as Dict).changePackageBudget).toEqual(budget);
   });
@@ -120,20 +120,20 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: fixture/aralık/çalışma ağacı ölçülür, enforcement hâlâ YOK", () => {
+  it("kapı beyanı dürüsttür: fixture/aralık/ağaç ölçülür ve enforcement ARTIK gerçektir", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
-    // P2B2b gerçeği: working-tree modu ARTIK kapıda VAR; kalan TEK boşluk CI/P3 bağlanmasıdır.
-    for (const named of [/--working-tree=true/, /CI/, /P3/])
-      expect(budget.checker.note, `kalan gerçek adıyla sayılmıyor: ${named}`).toMatch(named);
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks, "bağlı kapı bloklamadığını söylüyor").toBe(true);
+    // P3b gerçeği: kapı ZORUNLU `build` işinden çağrılır ve etiket olayları onu yeniden koşturur.
+    for (const named of [/--working-tree=true/, /build/, /etiket/i])
+      expect(budget.checker.note, `gerçek adıyla sayılmıyor: ${named}`).toMatch(named);
     expect(budget.checker.note, "var olan mod eksik ilan edildi").not.toMatch(
       /working-tree[^.]*(yoktur|YOKTUR)/,
     );
     // Ölçüm modlarının hepsi kapıda gerçekten çağrılabilir; beyan modları geride bırakamaz.
     expect(budget.measurement.modes.join()).toBe("range,working-tree");
-    // Bloklama iddiası hâlâ YASAK: enforcement CI'ya bağlanana kadar açıkça yok sayılır.
-    expect(budget.checker.note, "bağlanmamış kapı enforcement iddia ediyor").toMatch(
+    // Eski "enforcement yok" cümlesi artık YANLIŞ olurdu: not onu taşıyamaz.
+    expect(budget.checker.note, "bağlı kapı enforcement yok diyor").not.toMatch(
       /enforcement hâlâ YOKTUR/,
     );
     // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
@@ -141,7 +141,8 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
       budget.checker.status !== "planned-not-implemented",
     );
     expect(EXTRA_RULES, "eşiğin tek kural sahibi olmalı").toEqual([]);
-    expect(RULE.check, "olmayan kapı 'bloklar' deniyor").not.toMatch(/blok/i);
+    // Kapı ARTIK bloklar: kural metni bunu söyler ve makine sahibini göstermeye devam eder.
+    expect(RULE.check, "bağlı kapı bloklamayı anmıyor").toMatch(/blok/i);
     expect(RULE.check).toContain("changePackageBudget.checker");
   });
 

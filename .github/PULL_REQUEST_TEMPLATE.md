@@ -51,6 +51,18 @@ Bu liste deploy.yml'daki gercek kapi adlariyla bire-bir eslesmektedir.
 - [ ] `Bagimlilik politikasi` yesil (`node tools/agents/check-dependency-policy.mjs`)
 - [ ] `UI standartlari` yesil (`node tools/agents/check-ui-standards.mjs`)
 
+## PR satır bütçesi
+
+Bu kapı zorunlu `build` işinde koşar ve PR gövdesini AYRIŞTIRMAZ; yalnız PR ETİKETLERİNİ okur.
+
+- Sınıf etiketi yoksa paket kanonik varsayılan üretim sınıfına düşer.
+- Test, security, adversarial ve conformance paketi `pr-size:class:security-test-conformance`
+  etiketini taşır.
+- Kanıt etiketi `pr-size:evidence:<kanonik-id>` biçimindedir; geçerli kimlikler YALNIZ
+  `src/data/standards/short-code.json` dosyasının `changePackageBudget` alanından gelir.
+- Birden çok sınıf etiketi ya da eksik zorunlu kanıt fail-closed sonuç verir: kapı kırmızı olur.
+- Etiket eklemek/çıkarmak zorunlu `build` koşusunu YENİDEN başlatır.
+
 ## Standart uyumu (ADR-0027)
 
 - [ ] Dokundugum dugum(ler) ilgili standardlari `standardRefs` ile REFERANS veriyor (yeniden yazmiyor)

@@ -509,10 +509,10 @@ describe("pr-size karar motoru — kararlı sözleşme ve ikinci eşik kopyası 
     }
   });
 
-  it("kanonik kapı beyanı: kapı dosyası YAZILDI ama CI YOK, enforcement hâlâ YOK", () => {
-    // Motor bir kapı değildir; kapı dosyasını P2A-2c yazdı, CI bağlantısını (P3) hâlâ kimse yazmadı.
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks).toBe(false);
+  it("kanonik kapı beyanı: kapı ZORUNLU CI işine bağlandı ve gerçekten bloklar", () => {
+    // Motor bir kapı değildir; kapı dosyasını P2A-2c yazdı, CI bağlantısını P3b tamamladı.
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks).toBe(true);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
   });
 });

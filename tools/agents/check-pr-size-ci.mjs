@@ -12,8 +12,10 @@
  * alt süreç/kabuk/ağ/token/Git çağrısı yoktur ve workflow ifade genişletmesi (PR denetimindeki
  * metnin adıma gömülmesi) hiçbir yola giremez.
  *
- * KAPSAM DÜRÜST: bu paket workflow'a BAĞLI DEĞİLdir (P3b). Kapının `ciEnforced` alanı `false`,
- * kanonik durumu `implemented-not-wired` kalır; hiçbir merge burada bloklanmaz.
+ * KAPSAM DÜRÜST: P3b bu adaptörü deponun ZORUNLU `build` işine, yalnız `pull_request` olayında
+ * koşan bloklayıcı bir adım olarak bağladı; etiket eklemek/çıkarmak adımı yeniden koşturur ve
+ * yerel toplu kapı onu ÇAĞIRMAZ (orada bir olay dosyası yoktur). Çeviri sözleşmesi değişmedi:
+ * `ciEnforced` alanı kapının kendi kurulum gerçeğidir ve buraya MİRAS gelir, burada üretilmez.
  *
  * FAIL-CLOSED: eksik ortam, okunamayan/düzensiz/boş/tavanı aşan dosya, geçersiz UTF-8/JSON, bozuk
  * olay yapısı, geçersiz commit kimliği, bozuk etiket şekli ve çakışan sınıf etiketi KARAR YERİNE

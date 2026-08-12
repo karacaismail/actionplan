@@ -10,8 +10,8 @@ import { afterAll, describe, expect, it } from "vitest";
 // kanıtlanan tek şey ÇEVİRİNİN güvenli ve deterministik olduğudur: olay dosyası GÜVENİLMEZ yapısal
 // veridir, yalnız iki namespace'li etiket argv'yi etkiler, başlık/gövde HİÇ okunmaz, hiçbir komut
 // METNİ kurulmaz ve bozuk her girdi sızıntısız kapanır. Ölçüm, eşik, sınıf/kanıt sözlüğü ve karar
-// burada YOKTUR; hepsi kabul edilmiş CLI/motorundadır. KAPSAM DÜRÜST: bu paket workflow'a BAĞLI
-// DEĞİLdir (P3b), enforcement İDDİA ETMEZ ve hiçbir merge'ü bloklamaz.
+// burada YOKTUR; hepsi kabul edilmiş CLI/motorundadır. KAPSAM DÜRÜST: P3b bu adaptörü ZORUNLU
+// `build` işine bağladı; çeviri sözleşmesi BAYT AYNI kaldı, değişen tek şey kurulum gerçeğidir.
 const ROOT = process.cwd();
 const ADAPTER = "tools/agents/check-pr-size-ci.mjs";
 const CLI = "tools/agents/check-pr-size.mjs";
@@ -257,7 +257,7 @@ describe("pr-size CI adaptörü — gerçek süreç yalnız tek JSON ve mevcut �
       },
     });
 
-  it("kabul edilen paket: stdout TEK JSON, çıkış 0 ve kapı hâlâ bağlı DEĞİL", () => {
+  it("kabul edilen paket: stdout TEK JSON, çıkış 0 ve kapı ZORUNLU işe bağlı", () => {
     const result = run({ file: eventFor(small), cli: small.cli });
     expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
     expect(result.status).toBe(0);
@@ -269,7 +269,8 @@ describe("pr-size CI adaptörü — gerçek süreç yalnız tek JSON ve mevcut �
     expect(result.stdout).toBe(`${JSON.stringify(result.report)}\n`);
     expect(result.stdout, "stdout ANSI kaçışı taşıyor").not.toContain("\u001b");
     expect(result.stderr.trim(), "insan satırı stderr'de yok").not.toBe("");
-    expect(result.report.ciEnforced, "bağlanmamış kapı enforcement iddia etti").toBe(false);
+    // `ciEnforced` KURULUM gerçeğidir ve CLI'dan MİRAS alınır: adaptör onu ayrıca hesaplamaz.
+    expect(result.report.ciEnforced, "bağlı kapı enforcement'ı yok saydı").toBe(true);
     noLeak(result, [HOSTILE, "rm -rf", small.root, TMP]);
   });
 
@@ -464,20 +465,29 @@ describe("pr-size CI adaptörü — yapısal sınırlar ve dürüst kapı beyan�
     );
   });
 
-  it("script BAĞLANMAMIŞtır: adaptör adıyla çağrılır ama toplu kapılara girmez", () => {
+  it("script ZORUNLU işe BAĞLIdır ama YEREL toplu kapıya girmez", () => {
     const scripts = JSON.parse(read("package.json")).scripts as Record<string, string>;
     expect(scripts["qa:pr-size-ci"]).toBe(`node ${ADAPTER}`);
+    // Yerel toplu kapıda bir pull_request olay dosyası YOKTUR: eklenirse her koşu fail-closed olurdu.
     expect(scripts["qa:ci"], "yerel toplu kapıda pull_request olayı yoktur").not.toContain(
       "qa:pr-size-ci",
     );
-    // Workflow BAĞLAMA bu pakette YOKTUR: adaptör hiçbir CI adımından çağrılmaz.
-    expect(read(".github/workflows/deploy.yml")).not.toContain("pr-size");
+    // Workflow BAĞLAMASI artık VARDIR ve yalnız pull_request olayında koşar.
+    const workflow = read(".github/workflows/deploy.yml");
+    expect(workflow).toContain("run: npm run qa:pr-size-ci");
+    expect(workflow).toContain("if: github.event_name == 'pull_request'");
   });
 
-  it("kanonik kapı beyanı DEĞİŞMEDİ: kapı hâlâ bağlı değil ve hiçbir şeyi bloklamaz", () => {
+  it("kanonik beyan ve adaptör yorumu BAĞLI gerçeği söyler: eski 'bağlı değil' cümlesi kalmaz", () => {
     expect(budget.checker.path).toBe(CLI);
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks, "bağlı kapı bloklamadığını söylüyor").toBe(true);
     expect(fs.existsSync(path.join(ROOT, ADAPTER))).toBe(true);
+    // Yorum bir belgelemedir ama YANLIŞ belgeleme yanlış güven üretir: eski kapsam cümlesi gider.
+    for (const stale of [/BAĞLI DEĞİL/i, /implemented-not-wired/, /hiçbir merge burada bloklanmaz/])
+      expect(source, `adaptör yorumu eski 'bağlı değil' iddiasını taşıyor: ${stale}`).not.toMatch(
+        stale,
+      );
+    expect(source, "adaptör yorumu zorunlu işi anmıyor").toMatch(/build/);
   });
 });
