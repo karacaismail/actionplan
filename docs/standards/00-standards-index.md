@@ -2,7 +2,9 @@
 
 Sürüm: 1.0 — 2026-07-01
 Durum: `docs/standards/` klasörünün giriş noktası. Kanonik hub `docs/engineering-standards-index.md`'yi *tamamlar*, yerini almaz.
-Amaç: Tüm standartları — makine-sözleşmeleri (`src/data/standards/*.json`; çekirdek 15 + eklenen 9 = **24 sözleşme**, 2026-07-01 RECONCILE) ve bu klasördeki anlatı standartları (01-14) — tek yerde listelemek.
+Amaç: Tüm standartları — makine-sözleşmeleri (`src/data/standards/*.json`; çekirdek 15 + eklenen 9 = **24 sözleşme**, 2026-07-01 RECONCILE) ve bu klasördeki anlatı standartları (01-15) — tek yerde listelemek.
+
+**Güncel makine-sözleşmesi sayısı (canlı):** 39 dosya. Bu sayı `src/data/standards/*.json` dizininden türetilir ve `tests/kernelDeliveryBoundaryDocumentation.test.ts` ile canlı dosya sayısına karşı doğrulanır. Aşağıdaki 15 / 24 / 28 sayıları kendi tarihlerinin kayıtlarıdır; güncel toplam değildir ve "current" diye okunmaz.
 
 ---
 
@@ -78,6 +80,18 @@ Aşağıdaki anlatı standartları `numeronym-siniflandirma.md` §4 MUST/SHOULD 
 Not: `AuthN/AuthZ/RBAC/ABAC/IAM/o11y/i18n/l10n/API/GraphQL/E2E` için ayrı yeni anlatı standardı üretilmez — bunlar mevcut sözleşmeler veya boyut (`dimensions.security/wcag`) tarafından kapsanır; `authz-rbac-abac` ve `a11y` ise ayrı makine-sözleşmesine bağlandı (yukarıda VAR). Sınıflandırma detayı `numeronym-siniflandirma.md` §2'dedir.
 
 RECONCILE notu (2026-07-01, güncellendi): CI kapıları `check-i18n`, `check-core-contract` ve `check-scale-invariant` **yazıldı** — `tools/agents/` altında mevcut, `deploy.yml`'e eklendi; her biri boş/uyumlu durumda exit 0, ihlalde exit 1 verecek şekilde doğrulandı. Böylece g11n/i14y/scale-invariant sözleşmeleri artık CI ile zorlanır. Ayrıntı: `14-enterprise-readiness-checklist.md` ve `enterprise-standards-audit-2026-07-01.md`.
+
+---
+
+## 3.1 Reference-only Anlatı Standardı (15) — Kernel Delivery Sınırı
+
+Aşağıdaki satır §3'teki listeden ayrı sınıflandırılır: **reference-only**'dir. §3'ün aksine kendi makine-sözleşmesini hedeflemez, düğüme bağlanan bir `standardRefs` anahtarı üretmez ve hiçbir bağlayıcı değerin sahibi değildir. Kararın tek kanonik sahibi karar kaydı ve onun doğrulayıcısıdır; anlatı ile katalog girişi yalnız o zincire işaret eder.
+
+| standart | family | sınıf | makine-kontratı | kanonik karar sahibi |
+|---|---|---|---|---|
+| 15 kernel-delivery-boundary (`docs/standards/15-kernel-delivery-boundary-standard.md`) | engineering | **reference-only** anlatı; `standardRef` anahtarı YOK | `src/data/standards/kernel-delivery-boundary.json` (reference-only katalog girişi) | `reports/kernel-asgi-core-profile-decision-2026-08-11.json` + doğrulayıcı `tools/lib/kernel-asgi-core-profile.mjs` |
+
+Kapılar: `tests/kernelDeliveryBoundaryDocumentation.test.ts` (anlatı + indeks bütünlüğü), `tests/kernelDeliveryBoundaryStandard.test.ts` (katalog girişi kopya/overclaim taraması), `tests/kernelAsgiCoreProfileDecision.test.ts` (karar kaydı sapma süpürmesi). Bu satır çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
 
 ---
 
