@@ -21,13 +21,18 @@
  * sertleştirmesi (shell:false, sabit `cwd`, sınırlı süre/tampon, TAM ortam allowlist'i)
  * `pr-size-git-range.mjs` ile ORTAKtır: birinde kapanan kaçak diğerinde açık kalamaz.
  *
- * KAPANMAMIŞ SINIR (dürüst beyan): burada yalnız SÜREÇ BAŞINA zaman aşımı ve izlenmeyen SÜREÇ
- * SAYISI tavanı vardır. Uçtan uca TOPLAM duvar-saati son tarihi bu pakette KAPANMAMIŞTIR; o sınır
- * CLI entegrasyon paketi P2B2b'ye aittir ve bu modül onu kapatmış gibi bir bütçe ihraç ETMEZ.
+ * TOPLAM SÜRE (P2B2b-1): süreç başına zaman aşımı ve süreç SAYISI tavanının yanında, ÇAĞIRANIN
+ * verdiği uçtan uca toplam süre bütçesi de burada UYGULANIR — her alt süreçten önce kalan süre
+ * hesaplanır, süreç süresi `min(süreç başına, kalan)` ile kısılır ve son komuttan sonra bütçe
+ * yeniden denetlenir. SABİT politika değeri bu modülde YOKTUR ve ihraç EDİLMEZ: o değeri CLI
+ * entegrasyon paketi P2B2b sahiplenir ve henüz VERMEMİŞTİR. Bütçe verilmediğinde davranış eskisiyle
+ * birebir aynıdır ve saat HİÇ okunmaz. Sınırlı okumada saat de bir GÜVEN sınırıdır: ATAN, sonlu
+ * OLMAYAN veya GERİYE giden okuma adlandırılmış saat arızası verir ve sonraki süreci doğurmaz.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { parseNumstatZ, safePath } from "./pr-size-core.mjs";
 import { defaultExecutor, sanitizeEnv, validateRepoRoot } from "./pr-size-git-range.mjs";
 
@@ -46,6 +51,36 @@ const TOPLEVEL_PATH = /^\/[^\0\n]*$/;
 const DIFF_BASE = ["diff", "--no-ext-diff", "--no-textconv", "--numstat", "-z"];
 const fail = (id, detail) => ({ ok: false, error: { id, detail } });
 const utf8 = new TextDecoder("utf-8", { fatal: true });
+
+const DEADLINE_ID = "working-tree-deadline-exceeded";
+const CLOCK_UNREADABLE_ID = "working-tree-clock-unreadable";
+const CLOCK_BACKWARDS_ID = "working-tree-clock-backwards";
+const deadlineExceeded = () => fail(DEADLINE_ID, "toplam toplama süresi bütçesi aşıldı");
+/**
+ * Bütçe arızaları ADIYLA yaşamalıdır: bazı adımlar her arızayı `repo-not-found`,
+ * `root-not-worktree-toplevel` veya `head-unborn` gibi tek bir duruma indirger ve aşım ya da saat
+ * arızası o indirgemeye kapılırsa gerçek neden (kaynak sınırı / bozuk saat) kaybolur.
+ */
+const HALT_IDS = new Set([DEADLINE_ID, CLOCK_UNREADABLE_ID, CLOCK_BACKWARDS_ID]);
+const halted = (result) => !result.ok && HALT_IDS.has(result.error.id);
+
+/**
+ * Sınırlı HER saat okuması kuşatılır. Çağıranın saati ATABİLİR, sonlu olmayan değer dönebilir ya da
+ * GERİYE gidebilir; üçü de "bütçe daha geniş" demek DEĞİLdir. Geriye giden okuma sessizce kalan
+ * süreyi büyütür ve son tarihi süresiz erteler, o yüzden monotonluk okuma başına DOĞRULANIR ve
+ * ihlal fail-closed durur. Ayrıntı ham istisnayı, zaman damgasını, yolu veya sayısal değeri TAŞIMAZ.
+ */
+const readClock = (now, floor) => {
+  let value;
+  try {
+    value = now();
+  } catch {
+    return fail(CLOCK_UNREADABLE_ID, "saat kaynağı okunamadı");
+  }
+  if (!Number.isFinite(value)) return fail(CLOCK_UNREADABLE_ID, "saat okuması sonlu sayı değil");
+  if (floor !== null && value < floor) return fail(CLOCK_BACKWARDS_ID, "saat kaynağı geriye gitti");
+  return { ok: true, value };
+};
 
 /** Yürütücü sonucu tek bir sınıfa indirgenir; sınıf adı raporun TEK içeriğidir, ham neden DEĞİL. */
 const CLASS_ERROR_ID = {
@@ -132,6 +167,7 @@ const byPathBytes = (a, b) =>
  */
 const readToplevel = (run) => {
   const result = run(["rev-parse", "--show-toplevel"]);
+  if (halted(result)) return result;
   if (!result.ok)
     return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
   const read = decode(result.stdout, "worktree-toplevel-output-invalid", "tepe yanıtı UTF-8 değil");
@@ -221,6 +257,9 @@ const readUntracked = (run, repoRoot, trackedFiles) => {
   return { ok: true, rows };
 };
 
+/** Saat ENJEKTE edilebilir ve varsayılanı MONOTONdur: sistem saati geri alınsa bile bütçe kaymaz. */
+const defaultNow = () => performance.now();
+
 /**
  * Tek deterministik toplama: kök biçimi → depo/sığlık → HEAD commit'i → çakışma → izlenen tel →
  * izlenmeyen tel → tek kanonik çerçeve. Her adım fail-closed durur; kısmi sonuç ASLA sızmaz.
@@ -230,14 +269,61 @@ export const collectWorkingTree = ({
   executor = defaultExecutor,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   maxBufferBytes = DEFAULT_MAX_BUFFER_BYTES,
+  totalTimeoutMs,
+  now = defaultNow,
 } = {}) => {
   const rootError = validateRepoRoot(repoRoot);
   if (rootError) return fail(rootError, "repoRoot biçimi geçersiz");
+  /**
+   * Bütçe ÇAĞIRANINDIR ve KATI doğrulanır: milisaniye cinsinden sonlu, güvenli, POZİTİF tamsayı.
+   * Geçersiz değer ölçümü "sınırsız"a düşürmez — hiçbir alt süreç doğmadan fail-closed durur.
+   */
+  const bounded = totalTimeoutMs !== undefined;
+  if (bounded && !(Number.isSafeInteger(totalTimeoutMs) && totalTimeoutMs > 0))
+    return fail("working-tree-total-timeout-invalid", "toplam süre bütçesi geçersiz");
+  if (typeof now !== "function")
+    return fail("working-tree-clock-invalid", "saat kaynağı çağrılabilir değil");
+
+  /** Monotonluk taban değeri SON okumadır: ileri gidip sonra geri dönen saat de yakalanır. */
+  let lastAt = null;
+  const tick = () => {
+    const read = readClock(now, lastAt);
+    if (read.ok) lastAt = read.value;
+    return read;
+  };
+  // Son tarih girişte TEK kez başlar; sonraki her ölçüm bu başlangıca göredir. Sınırsız çağrıda
+  // saat HİÇ okunmaz: eski davranış, atan bir saat verilse bile birebir korunur.
+  const startedAt = bounded ? tick() : null;
+  if (startedAt && !startedAt.ok) return startedAt;
+  /** `null` = bütçe YOK (eski davranış birebir); nesne = adlandırılmış saat arızası. */
+  const remainingMs = () => {
+    if (!bounded) return null;
+    const read = tick();
+    return read.ok ? totalTimeoutMs - (read.value - startedAt.value) : read;
+  };
+
   const opts = { cwd: repoRoot, env: sanitizeEnv(process.env), timeoutMs, maxBufferBytes };
-  const run = (args, allowed) => runGit(executor, args, opts, allowed);
+  /**
+   * Her süreçten ÖNCE kalan süre bakılır: kalan yoksa süreç HİÇ doğmaz. Doğduğunda süresi
+   * `min(süreç başına, kalan)`dır, yani tek yavaş komut toplam bütçeyi AŞAMAZ. Zaman aşımı yalnız
+   * kalan bütçe DAHA DAR sınırken son tarihe yazılır; sıradan süreç aşımı `git-timeout` KALIR.
+   */
+  const run = (args, allowed) => {
+    const left = remainingMs();
+    if (left === null) return runGit(executor, args, opts, allowed);
+    // Saat arızası da süreçten ÖNCE durur: bozuk bir saatle ölçülen bütçe bütçe değildir.
+    if (typeof left === "object") return left;
+    if (left <= 0) return deadlineExceeded();
+    const capped = Math.min(timeoutMs, Math.max(1, Math.floor(left)));
+    const result = runGit(executor, args, { ...opts, timeoutMs: capped }, allowed);
+    if (!result.ok && result.error.id === "git-timeout" && capped < timeoutMs)
+      return deadlineExceeded();
+    return result;
+  };
   const text = (result) => result.stdout.toString("utf8").trim();
 
   const inside = run(["rev-parse", "--is-inside-work-tree"]);
+  if (halted(inside)) return inside;
   if (!inside.ok || text(inside) !== "true")
     return fail("repo-not-found", "verilen kök geçerli bir git deposu değil");
   // Kök TAM OLARAK tepe olmalı: alt dizinde `diff` yolu KÖKE, `ls-files --others` yolu CWD'ye
@@ -248,12 +334,14 @@ export const collectWorkingTree = ({
     return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
 
   const shallow = run(["rev-parse", "--is-shallow-repository"]);
+  if (halted(shallow)) return shallow;
   if (!shallow.ok) return fail("repo-not-found", "verilen kök geçerli bir git deposu değil");
   if (text(shallow) !== "false")
     return fail("repo-shallow", "sığ (shallow) veya tamamlanmamış depo reddedildi");
 
   /** Doğmamış dalda `HEAD^{commit}` çözülmez; bu bir git arızası değil, ÖLÇÜLEMEZ bir durumdur. */
   const resolved = run(["rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
+  if (halted(resolved)) return resolved;
   const head = resolved.ok ? text(resolved) : "";
   if (!HEX_COMMIT.test(head))
     return fail("head-unborn", "HEAD tek bir commit'e çözülemedi (doğmamış dal)");
@@ -268,6 +356,13 @@ export const collectWorkingTree = ({
   if (!tracked.ok) return tracked;
   const untracked = readUntracked(run, repoRoot, new Set(tracked.rows.map((row) => row.file)));
   if (!untracked.ok) return untracked;
+
+  // Son komut bütçeden SONRA dönmüş olabilir; başarı üretmeden önce son tarih yeniden denetlenir.
+  const left = remainingMs();
+  if (left !== null) {
+    if (typeof left === "object") return left;
+    if (left <= 0) return deadlineExceeded();
+  }
 
   const numstatZ = frame([...tracked.rows, ...untracked.rows].sort(byPathBytes));
   const bytes = Buffer.from(numstatZ, "utf8");
