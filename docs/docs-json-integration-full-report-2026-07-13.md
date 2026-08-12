@@ -20,10 +20,10 @@ Current-live toplam `resolveD01NodeUniverse` ile doğrulanır; tablo live-count 
 
 | Ölçüm | Değer |
 |---|---|
-| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 295 |
+| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 296 |
 | Task içeriğine materyalize edilen | 218 |
 | İnsan sahiplik kararı bekleyen | 10 |
-| Canonical standard / arşiv / kök indeks kaynağı | 67 |
+| Canonical standard / arşiv / kök indeks kaynağı | 68 |
 | Sınıfsız / erişilemeyen | 0 |
 | App kimlik kaynak snapshot'ı | 496 |
 | Tarihsel pre-D01 materialized fiziksel WBS JSON'u / görev sayfası | 617 |
