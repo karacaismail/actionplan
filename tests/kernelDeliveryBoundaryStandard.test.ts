@@ -24,12 +24,16 @@ const ANCHOR =
   "docs/adr-0027-engineering-standards.md#sahip-anlayışı-ve-teknoloji-kanıtı-sözleşmesi-ap-oc1";
 const GOVERNANCE = "src/data/standards/ai-governance.json";
 const MANIFEST = "src/data/workspace-manifest.json";
-const REFERENCES = [DECISION, VALIDATOR, DECISION_TEST, ANCHOR, GOVERNANCE];
+/** A2A2: bu girişin sahiplendiği reference-only anlatı. Sahiplik BURADA durur; anlatı bağlayıcı
+ *  değer taşımaz, bu yüzden yol yalnız işaretçi olarak referans listesine girer. */
+const OWNED_DOC = "docs/standards/15-kernel-delivery-boundary-standard.md";
+const OWNER_DIR = "src/data/standards";
+const REFERENCES = [DECISION, VALIDATOR, DECISION_TEST, ANCHOR, GOVERNANCE, OWNED_DOC];
 /** StandardContractSchema'nın kök anahtarları, birebir. Şema fazlalığı sessizce strip eder. */
 const ROOT_KEYS =
   "id,name,version,family,basedOnAdr,summary,appliesTo,rules,banned,allowed,references";
 /** Görünür projeksiyonun kendinden türetilmeyen sabit pini: masum ya da kötü her drift RED. */
-const VISIBLE_SHA = "3564bcdc1120c3eadc9e37416e2d3b7ffd45a45eecd954e89fb58541c68b0c52";
+const VISIBLE_SHA = "ae86b923b95269c0c59fa4912eb76ab33295579f1d7aa4acd8e148076d0ba503";
 type Doc = Record<string, unknown>;
 type Evaluate = (input: { decision: unknown; manifest: unknown }) => {
   accepted: boolean;
@@ -79,6 +83,21 @@ const visible = (doc: Doc) =>
 const copied = (doc: Doc) => SOURCE_VALUES.filter((v) => normative(doc).includes(v));
 const sha = (doc: Doc) => crypto.createHash("sha256").update(visible(doc), "utf8").digest("hex");
 const rootKeys = (doc: Doc) => Object.keys(doc).join(",");
+/**
+ * Kanonik JSON sahipliği tek dosyadan değil TÜM standard sözleşmelerinin birleşiminden çözülür
+ * (`engineeringStandardSourceOwnership` ile aynı kapsam). Anchor'lu ref yol saymaz ve eşleşme tam
+ * yol sınırındadır. `override` yalnız BELLEKTEKİ listeye uygulanır; canlı dosya hiç değişmez.
+ */
+const ownersOf = (docPath: string, override?: string[]): string[] =>
+  fs
+    .readdirSync(path.join(ROOT, OWNER_DIR))
+    .filter((file) => file.endsWith(".json"))
+    .filter((file) => {
+      const live = (readJson(`${OWNER_DIR}/${file}`).references ?? []) as string[];
+      const refs = override && file === path.basename(JSON_PATH) ? override : live;
+      return refs.some((ref) => ref.split("#")[0] === docPath);
+    })
+    .map((file) => path.basename(file, ".json"));
 /** Görünür metnin asla söyleyemeyeceği cümleler: overclaim ve taşıma rolü yeniden beyanı. */
 const OVERCLAIMS: ReadonlyArray<readonly [RegExp, string]> = [
   [/ürün\s+hazır/i, "prose-claims-readiness"],
@@ -176,6 +195,21 @@ describe("A1-G2 Delivery sınırı reference-only katalog girişi", () => {
     expect(copied(canonical), "duplicated-delivery-decision-values").toEqual([]);
     expect(overclaims(canonical), "runtime-readiness-overclaim").toEqual([]);
     expect(sha(canonical), "visible-projection-drift").toBe(VISIBLE_SHA);
+  });
+
+  it("anlatının kanonik JSON sahibi bu giriştir; sahiplik referansı düşerse kapsam kırılır", () => {
+    expect(ownersOf(OWNED_DOC), "narrative-owner-not-canonical").toEqual([
+      path.basename(JSON_PATH, ".json"),
+    ]);
+    // Omission: anlatıyı kapsayan başka sözleşme YOK; referans düşerse kapsam gerçekten kırılır.
+    const omitted = REFERENCES.filter((ref) => ref !== OWNED_DOC);
+    expect(ownersOf(OWNED_DOC, omitted), "owner-omission-undetected").toEqual([]);
+    // Drift: eşleşme substring değil tam yol sınırıdır; `.backup` uzantısı sahiplik saymaz.
+    const drifted = REFERENCES.map((ref) => (ref === OWNED_DOC ? `${OWNED_DOC}.backup` : ref));
+    expect(ownersOf(OWNED_DOC, drifted), "owner-drift-undetected").toEqual([]);
+    const unowned = clone(canonical);
+    unowned.references = omitted;
+    expect(sha(unowned), "owner-omission-passes-visible-pin").not.toBe(VISIBLE_SHA);
   });
 
   it("kaynak karar + manifest doğrulayıcıda kabul edilir (accepted=true, errors=[])", async () => {

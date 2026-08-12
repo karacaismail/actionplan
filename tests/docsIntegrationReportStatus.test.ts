@@ -29,18 +29,18 @@ describe("docs JSON integration report current status", () => {
     expect(nodes).toHaveLength(liveExpectedNodeCount);
     expect(META.counts.byArtifactKind?.["legacy-alias"]).toBe(5);
     expect(STANDARD_COUNT).toBe(39);
-    expect(CLASSIFICATION).toHaveLength(295);
+    expect(CLASSIFICATION).toHaveLength(296);
     expect(CLASSIFICATION.filter((entry) => entry.decision === "task-materialize")).toHaveLength(
       218,
     );
     expect(CLASSIFICATION.filter((entry) => entry.decision === "human-decision")).toHaveLength(10);
-    expect(CLASSIFICATION.filter((entry) => entry.decision === "reference-only")).toHaveLength(67);
+    expect(CLASSIFICATION.filter((entry) => entry.decision === "reference-only")).toHaveLength(68);
 
     expect(REPORT).toContain("**Durum:** UYGULANDI");
-    expect(REPORT).toContain("| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 295 |");
+    expect(REPORT).toContain("| Entegrasyon sınıflandırmasındaki Markdown kaynağı | 296 |");
     expect(REPORT).toContain("| Task içeriğine materyalize edilen | 218 |");
     expect(REPORT).toContain("| İnsan sahiplik kararı bekleyen | 10 |");
-    expect(REPORT).toContain("| Canonical standard / arşiv / kök indeks kaynağı | 67 |");
+    expect(REPORT).toContain("| Canonical standard / arşiv / kök indeks kaynağı | 68 |");
     expect(REPORT).toContain("| Sınıfsız / erişilemeyen | 0 |");
     expect(REPORT).toContain("| App kimlik kaynak snapshot'ı | 496 |");
     expect(REPORT).toContain(

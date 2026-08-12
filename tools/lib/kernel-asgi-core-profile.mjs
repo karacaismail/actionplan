@@ -5,10 +5,12 @@
 // comprehension paragraphs, capability delta, MCP contract, non-goals, rollback pair, manifest
 // pointer and platform stack are pinned HERE, so restating shape never passes and no binding field
 // or binding SENTENCE drifts while the gate still accepts. Explanatory prose (`rule`, `reason`,
-// `description`, `note`, `testHook`, `enforcementObligation`, `evidence.*` and every `scope` OUTSIDE
-// the manifest pointer) is deliberately NOT frozen: each has a machine-readable twin, so it may be
-// reworded freely but may never reverse that twin — which the prose-contradiction sweep refuses
-// wherever in the record the reversal is written.
+// `description`, `note`, `testHook`, `enforcementObligation` and `evidence.*`) is deliberately NOT
+// frozen: each has a machine-readable twin, so it may be reworded freely but may never reverse that
+// twin — which the prose-contradiction sweep refuses wherever in the record the reversal is written.
+// `scope` is NOT in that unpinned list: every `scope` is pinned — the capability-policy and
+// inner-ring scopes by exact value in POLICY_PINS, and the pointer scope inside the whole-object
+// RECORD_MANIFEST_POINTER pin.
 export const DECISION_REF = "reports/kernel-asgi-core-profile-decision-2026-08-11.json";
 export const MANIFEST_REF = "src/data/workspace-manifest.json";
 export const MANIFEST_POINTER_KEY = "kernelDeliveryBoundaryDecision";
