@@ -1000,6 +1000,76 @@ describe("P3F: sekiz canlı doküman tüketicisi kanonik paket bütçesine yönl
   });
 });
 
+/**
+ * P3G: `commerce-test-first-handoff` KAYNAK içerik kuralı ve onun s-sales / s-inventory düğüm
+ * projeksiyonları ile public projeksiyonu paket bütçesini artık KENDİ metninde TANIMLAMAZ;
+ * kanonik makine sahibine işaret eder. Denetim yalnız bu kuralın DOC-APPLY damgasını taşıyan
+ * metinlere bakar: aynı dosyadaki başka kuralların ve başka düğümlerin metinleri bu paketin
+ * kapsamı DIŞINDADIR, temizlenmez ve kalan tüketici-migrasyon borcu olarak açık kalır.
+ */
+const P3G_RULE = "commerce-test-first-handoff";
+const P3G_SOURCE = "src/data/doc-task-content-rules/domain-surface-handoff.json";
+const P3G_PROJECTIONS = [
+  "src/data/generated/nodes/s-sales.json",
+  "src/data/generated/nodes/s-inventory.json",
+  "public/data/nodes.json",
+];
+/** Migrasyonda ZAYIFLAMAMASI gereken sözleşme semantiği: kopya gider, sınır kalır. */
+const P3G_KEEPS = ["temiz base", "worktree", "14 zorunlu alan", "non-goal", "predecessor"];
+const stringsOf = (value: Any): string[] =>
+  typeof value === "string"
+    ? [value]
+    : value && typeof value === "object"
+      ? Object.values(value).flatMap(stringsOf)
+      : [];
+const offenders = (texts: string[]) => texts.filter((text) => thresholdCopy.test(text));
+const p3gApplied = (file: string) =>
+  stringsOf(JSON.parse(read(file))).filter((text) => text.includes(`DOC-APPLY:${P3G_RULE}`));
+const shortPrSizeRule = () =>
+  (canonical.rules as Array<{ id: string; rule: string }>).find((e) => e.id === "short-pr-size")
+    ?.rule as string;
+
+describe("P3G: commerce-test-first-handoff kaynağı ve projeksiyonları kanonik bütçeye bağlanır", () => {
+  const sourceTexts = stringsOf(
+    (JSON.parse(read(P3G_SOURCE)).rules as Array<{ id: string }>).find(
+      (entry) => entry.id === P3G_RULE,
+    ) as Any,
+  );
+
+  it("kaynak kural bağımsız sayısal eşik tanımlamaz, kanonik alana işaret eder", () => {
+    expect(sourceTexts.length, "kaynak kural bulunamadı").toBeGreaterThan(0);
+    expect(offenders(sourceTexts), "kaynakta eşik kopyası").toEqual([]);
+    const joined = sourceTexts.join("\n");
+    expect(joined, "kaynak kanonik alana işaret etmiyor").toContain(CANONICAL_FIELD);
+    for (const id of EVIDENCE_VOCABULARY)
+      expect(joined, `kaynakta kanıt sözlüğü kopyası: ${id}`).not.toContain(id);
+    for (const token of P3G_KEEPS)
+      expect(joined.toLowerCase(), `kaynak semantiği kayboldu: ${token}`).toContain(token);
+  });
+
+  it.each(P3G_PROJECTIONS)("%s projeksiyonu kaynakla AYNI sözleşmeyi taşır", (file) => {
+    const applied = p3gApplied(file);
+    expect(applied.length, `${file}: kural projeksiyonu yok`).toBeGreaterThan(0);
+    expect(offenders(applied), `${file}: eşik kopyası`).toEqual([]);
+    const joined = applied.join("\n");
+    expect(joined, `${file}: kanonik alana işaret etmiyor`).toContain(CANONICAL_FIELD);
+    for (const id of EVIDENCE_VOCABULARY)
+      expect(joined, `${file}: kanıt sözlüğü kopyası: ${id}`).not.toContain(id);
+    for (const token of P3G_KEEPS)
+      expect(joined.toLowerCase(), `${file}: semantik kayboldu: ${token}`).toContain(token);
+  });
+
+  it("kanonik prose P3G'yi DÜRÜST anlatır: kaynak+projeksiyon taşındı, borç kapanmadı", () => {
+    const rule = shortPrSizeRule();
+    expect(rule, "P3G migrasyonu prose'da yok").toContain("P3G");
+    expect(rule, "kaynak/projeksiyon taşıması anlatılmıyor").toMatch(/projeksiyon/i);
+    expect(rule, "kalan borç gizlendi").toMatch(/bor[cç]/i);
+    expect(rule, "prose eşik sayısı taşıyor").not.toMatch(
+      new RegExp(`\\b(?:${PACKAGE_THRESHOLDS.join("|")})\\b`),
+    );
+  });
+});
+
 describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı beyanı", () => {
   const source = read(CLI);
 
