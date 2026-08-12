@@ -1,30 +1,34 @@
 #!/usr/bin/env node
 /**
- * check-pr-size (ADR-0027 / short-code `short-pr-size`) — change-package SÜREÇ yüzeyi (P2A-2c).
+ * check-pr-size (ADR-0027 / short-code `short-pr-size`) — SÜREÇ yüzeyi (P2A-2c + P2B1b).
  *
- * ÖLÇÜM ve KARAR burada DEĞİLdir: `pr-size-core.mjs` teli okur, `pr-size-decision.mjs` kanonik
- * `changePackageBudget` alanından kararı üretir. Burada yalnız SÜREÇ vardır — argv dilbilgisi,
- * fixture'ın güvenli okunması, kanonik alanın yüklenmesi, tek JSON raporu ve çıkış kodu eşlemesi.
- * Bu dosyada ikinci bir eşik/bant/sınıf/kanıt kopyası YOKTUR; hepsi kanonik alandan gelir.
+ * ÖLÇÜM, KARAR ve ARALIK TOPLAMA burada DEĞİLdir: `pr-size-core.mjs` teli okur,
+ * `pr-size-decision.mjs` kanonik `changePackageBudget` alanından kararı üretir,
+ * `pr-size-git-range.mjs` iki commit arasındaki teli güvenle toplar. Burada yalnız SÜREÇ vardır —
+ * argv dilbilgisi, TEK kaynak kuralı, fixture'ın güvenli okunması, kanonik alanın ve depo kökünün
+ * yüklenmesi, tek JSON raporu ve çıkış kodu eşlemesi. Bu dosyada ikinci bir eşik/bant/sınıf/kanıt
+ * kopyası YOKTUR ve hiçbir alt süreç çağrılmaz; hepsi kanonik alandan ve toplayıcıdan gelir.
  *
- * KAPSAM DÜRÜST: gerçek aralık/çalışma-ağacı toplama P2B'nin, CI'a bağlanma P3'ün işidir. Bu yüzey
- * yalnız deterministik `--numstat-z-input` dosyasını kabul eder, hiçbir alt süreç/kabuk çağırmaz,
- * stdin'e yaslanmaz ve hiçbir kapıyı bloklamaz; raporun `collectsGitRange`/`ciEnforced` alanları
- * bunu makine-okunur biçimde söyler.
+ * KAPSAM DÜRÜST: çalışma-ağacı modu YOKTUR ve kapı hiçbir CI adımına bağlı DEĞİLdir (P3); süreç
+ * stdin'e yaslanmaz ve hiçbir kapıyı bloklamaz. Raporun `inputMode`, `collectsGitRange` ve
+ * `ciEnforced` alanları bunu makine-okunur biçimde söyler.
  *
- * FAIL-CLOSED: bozuk argv, güvensiz/okunamayan/boş fixture, güvenilmez kanonik alan ve süreç-içi
- * hata KARAR YERİNE adlandırılmış bir rapor ve kendine ait bir çıkış kodu üretir. stdout HER yolda
- * yalnız tam JSON'dur; insan satırı stderr'e gider ve raporu kirletemez.
+ * FAIL-CLOSED: bozuk argv, karışık/eksik girdi kaynağı, güvensiz/okunamayan/boş fixture,
+ * toplanamayan aralık, güvenilmez kanonik alan ve süreç-içi hata KARAR YERİNE adlandırılmış bir
+ * rapor ve kendine ait bir çıkış kodu üretir. stdout HER yolda yalnız tam JSON'dur; insan satırı
+ * stderr'e gider ve raporu kirletemez.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { writeAllSync } from "../lib/pr-size-core.mjs";
 import { DECISION, ERROR_KIND, decide } from "../lib/pr-size-decision.mjs";
+import { collectRange } from "../lib/pr-size-git-range.mjs";
 
 export const CLI_SCHEMA = "pr-size-check/1";
-export const CLI_VERSION = "1.0.0";
+export const CLI_VERSION = "1.1.0";
 export const INPUT_MODE = "numstat-z-file";
+export const RANGE_MODE = "git-range";
 /** Süreç-içi hata sınıfı motorda YOKTUR: fırlayan hata ve sinyal bu yüzeyin sorumluluğudur. */
 export const INTERNAL = "internal-error";
 export const CANONICAL_STANDARD = "src/data/standards/short-code.json";
@@ -46,10 +50,20 @@ export const EXIT_CODE = Object.freeze({
 });
 
 const INPUT_FLAG = "--numstat-z-input";
+const BASE_FLAG = "--base";
+const HEAD_FLAG = "--head";
 const CLASS_FLAG = "--class";
 const EVIDENCE_FLAG = "--evidence";
-const KNOWN_FLAGS = { [INPUT_FLAG]: true, [CLASS_FLAG]: true, [EVIDENCE_FLAG]: true };
+const KNOWN_FLAGS = Object.fromEntries(
+  [INPUT_FLAG, BASE_FLAG, HEAD_FLAG, CLASS_FLAG, EVIDENCE_FLAG].map((flag) => [flag, true]),
+);
 const CANONICAL_URL = new URL(`../../${CANONICAL_STANDARD}`, import.meta.url);
+/**
+ * Depo kökü ÇAĞIRANIN cwd'sinden DEĞİL, kanonik alanla aynı biçimde bu modülün KENDİ konumundan
+ * çözülür: kapı nereden ve hangi takma adla çağrılırsa çağrılsın aynı depoyu ölçer, cwd raporu
+ * değiştiremez. Yolun kendisi rapora hiç girmez; provenans yalnız toplayıcının çözdüğü commit'tir.
+ */
+const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url)).replace(/\/+$/, "") || "/";
 const fault = (id, kind, detail) => ({ ok: false, error: { id, kind, detail } });
 const caller = (id, detail) => fault(id, ERROR_KIND.caller, detail);
 
@@ -59,6 +73,10 @@ const caller = (id, detail) => fault(id, ERROR_KIND.caller, detail);
  * Bayrak adı `Object.hasOwn` ile aranır; `in` prototip zincirini de görüp uydurma bir bayrağı
  * geçirebilirdi. Kanıt kimliğinin kendisi (bilinmezlik/tekrar) kanonik sözlüğün işidir: motora
  * devredilir, burada ikinci kez tanımlanmaz.
+ *
+ * TEK KAYNAK KURALI: girdi ya deterministik fixture'dır ya da `--base`+`--head` aralığıdır.
+ * Karışık (`fixture` + aralık) ve EKSİK (yalnız bir uç) çağrı sessiz bir varsayılana düşmez;
+ * ikisi de kendi adıyla REDdir — aksi halde çağıran ölçtüğünü sandığından başka bir şeyi ölçerdi.
  */
 export const parseArgv = (argv) => {
   const seen = new Map();
@@ -75,13 +93,23 @@ export const parseArgv = (argv) => {
     if (value === "") return caller("flag-empty-value", `boş değer: ${name}`);
     seen.set(name, value);
   }
-  const missing = [INPUT_FLAG, CLASS_FLAG].filter((flag) => !seen.has(flag));
-  if (missing.length) return caller("flag-missing", `zorunlu bayrak yok: ${missing.join(", ")}`);
+  if (!seen.has(CLASS_FLAG)) return caller("flag-missing", `zorunlu bayrak yok: ${CLASS_FLAG}`);
+  const ends = [BASE_FLAG, HEAD_FLAG].filter((flag) => seen.has(flag));
+  const fixture = seen.has(INPUT_FLAG);
+  if (fixture && ends.length)
+    return caller("source-mixed", `tek kaynak: ${INPUT_FLAG} + ${ends.join(", ")} olmaz`);
+  if (!fixture && !ends.length)
+    return caller("source-missing", `kaynak yok: ${INPUT_FLAG} ya da ${BASE_FLAG}+${HEAD_FLAG}`);
+  if (!fixture && ends.length !== 2)
+    return caller("source-incomplete", `aralık eksik: ${BASE_FLAG} ve ${HEAD_FLAG} birlikte`);
   const raw = seen.get(EVIDENCE_FLAG);
   const evidence = raw === undefined ? [] : raw.split(",");
   if (evidence.some((id) => id === ""))
     return caller("evidence-empty-item", "kanıt listesinde boş kimlik var");
-  return { ok: true, input: seen.get(INPUT_FLAG), klass: seen.get(CLASS_FLAG), evidence };
+  // biome-ignore format: the resolved-source record stays compact for the shard budget
+  return { ok: true, source: fixture ? INPUT_MODE : RANGE_MODE,
+    input: seen.get(INPUT_FLAG), base: seen.get(BASE_FLAG), head: seen.get(HEAD_FLAG),
+    klass: seen.get(CLASS_FLAG), evidence };
 };
 
 /**
@@ -158,53 +186,71 @@ const readFixture = (file) => {
   }
 };
 
-/** Zarf minimaldir ve saf karar raporunu DEĞİŞTİRMEDEN taşır; anahtar sırası sözleşmedir. */
-const envelope = ({ status, fixture = null, error = null, decisionReport = null }) => ({
-  schema: CLI_SCHEMA,
-  version: CLI_VERSION,
-  inputMode: INPUT_MODE,
-  canonicalStandard: CANONICAL_STANDARD,
-  collectsGitRange: false,
-  ciEnforced: false,
-  status,
-  exitCode: EXIT_CODE[status] ?? EXIT_CODE[INTERNAL],
-  fixture,
-  error,
-  decisionReport,
+/** Fixture provenansı YOL DEĞİL, bayt sayısı + özettir; tel motora ham bayt olarak gider. */
+const fixtureSource = (file) => {
+  const source = readFixture(file);
+  if (!source.ok) return source;
+  const sha256 = crypto.createHash("sha256").update(source.bytes).digest("hex");
+  return { ok: true, wire: source.bytes, fixture: { bytes: source.bytes.length, sha256 } };
+};
+
+/**
+ * TOPLAMA burada DEĞİLdir: kabuk yasağı, sabit cwd, ortam allowlist'i, tek merge-base ve sızıntısız
+ * hata sınıflandırması kabul edilmiş toplayıcının sözleşmesidir. Bu yüzey kökü KENDİ konumundan
+ * verir, toplayıcının hatasını `range-` önekiyle ADLANDIRIR ve provenansı YALNIZ toplayıcının
+ * çözdüğü commit'lerden kurar: çağıranın ref metni ve mutlak yol rapora hiç girmez.
+ */
+const rangeSource = ({ base, head }) => {
+  const collected = collectRange({ repoRoot: REPO_ROOT, base, head });
+  if (!collected.ok)
+    return fault(`range-${collected.error.id}`, ERROR_KIND.input, collected.error.detail);
+  const { base: from, head: to, mergeBase, byteLength, sha256 } = collected.metadata;
+  const range = { base: from, head: to, mergeBase, bytes: byteLength, sha256 };
+  return { ok: true, wire: collected.numstatZ, range };
+};
+
+/**
+ * Zarf minimaldir ve saf karar raporunu DEĞİŞTİRMEDEN taşır; anahtar sırası sözleşmedir.
+ * `collectsGitRange` ayrı bir İDDİA değil, provenansın VARLIĞIDIR: aralık gerçekten toplanıp
+ * karara dönüşmediyse alan da beyan da yoktur, yani kapı ölçmediğini ölçtüm diyemez.
+ */
+// biome-ignore format: the machine-readable envelope contract stays compact for the shard budget
+const envelope = ({ mode = null, status, fixture = null, range = null,
+  error = null, decisionReport = null }) => ({
+  schema: CLI_SCHEMA, version: CLI_VERSION, inputMode: mode,
+  canonicalStandard: CANONICAL_STANDARD, collectsGitRange: range !== null, ciEnforced: false,
+  status, exitCode: EXIT_CODE[status] ?? EXIT_CODE[INTERNAL],
+  fixture, range, error, decisionReport,
 });
 
 /** Sinyal ve fırlayan hata ADLANDIRILIR; sebep yalnız kod/ad olarak taşınır, mesaj yankılanmaz. */
-export const internalEnvelope = (cause) =>
-  envelope({
+export const internalEnvelope = (cause) => {
+  const detail = `süreç adlandırılmış nedenle durdu: ${cause}`;
+  return envelope({
     status: INTERNAL,
-    error: {
-      id: "process-internal-error",
-      kind: INTERNAL,
-      detail: `süreç adlandırılmış nedenle durdu: ${cause}`,
-    },
+    error: { id: "process-internal-error", kind: INTERNAL, detail },
   });
+};
 
-/** Tek deterministik geçiş: argv → kanonik alan → fixture → saf karar → zarf. */
+/**
+ * Tek deterministik geçiş: argv → kanonik alan → tek kaynak (fixture ya da aralık) → saf karar →
+ * zarf. `inputMode` çözülen kaynağı SÖYLER; argv daha okunamadıysa hiçbir mod İDDİA EDİLMEZ.
+ * Aralık provenansı yalnız karar üretilen yolda taşınır: hata yolunda toplama beyanı yoktur.
+ */
 export const runCheck = (argv) => {
   const parsed = parseArgv(argv);
   if (!parsed.ok) return envelope({ status: parsed.error.kind, error: parsed.error });
+  const { source: mode, klass, evidence } = parsed;
   const config = loadBudget();
-  if (!config.ok) return envelope({ status: config.error.kind, error: config.error });
-  const source = readFixture(parsed.input);
-  if (!source.ok) return envelope({ status: source.error.kind, error: source.error });
-  const fixture = {
-    bytes: source.bytes.length,
-    sha256: crypto.createHash("sha256").update(source.bytes).digest("hex"),
-  };
-  const report = decide({
-    budget: config.budget,
-    numstatZ: source.bytes,
-    klass: parsed.klass,
-    evidence: parsed.evidence,
-  });
+  if (!config.ok) return envelope({ mode, status: config.error.kind, error: config.error });
+  const source = mode === RANGE_MODE ? rangeSource(parsed) : fixtureSource(parsed.input);
+  if (!source.ok) return envelope({ mode, status: source.error.kind, error: source.error });
+  const report = decide({ budget: config.budget, numstatZ: source.wire, klass, evidence });
   return envelope({
+    mode,
     status: report.ok ? report.decision : report.error.kind,
-    fixture,
+    fixture: source.fixture,
+    range: report.ok ? source.range : null,
     error: report.ok ? null : { ...report.error },
     decisionReport: report,
   });

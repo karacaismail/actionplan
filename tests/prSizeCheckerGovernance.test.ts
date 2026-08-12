@@ -5,17 +5,19 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
-// P2A-2c: kabul edilmiş SAF ölçüm/karar motorlarının çevresindeki DETERMİNİSTİK SÜREÇ yüzeyi.
-// Burada kanıtlanan tek şey sürecin dar, fail-closed ve sızıntısız olduğudur: argv dilbilgisi,
-// fixture tipi/sınırı, kanonik config'in cwd'den bağımsız yüklenmesi, çıkış kodu eşlemesi ve
-// stdout'un HER yolda yalnız tam JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez
-// YAZILMAZ; hepsi kanonikten türetilir. KAPSAM DÜRÜST: gerçek Git aralığı toplanmaz (P2B),
-// hiçbir CI adımına bağlı değildir (P3) ve bu paket enforcement İDDİA ETMEZ.
+// P2A-2c + P2B1b: kabul edilmiş SAF ölçüm/karar motorlarının ve GİT ARALIĞI toplayıcısının
+// çevresindeki DETERMİNİSTİK SÜREÇ yüzeyi. Burada kanıtlanan tek şey sürecin dar, fail-closed ve
+// sızıntısız olduğudur: argv dilbilgisi, TEK kaynak kuralı, fixture tipi/sınırı, kanonik config'in
+// ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un HER yolda yalnız tam
+// JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi kanonikten türetilir.
+// KAPSAM DÜRÜST: gerçek aralık artık toplanır, ama çalışma-ağacı modu hâlâ YOKTUR ve hiçbir CI
+// adımına bağlı DEĞİLdir (P3); bu paket enforcement İDDİA ETMEZ.
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
 const SELF = "tests/prSizeCheckerGovernance.test.ts";
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const CORE = "tools/lib/pr-size-core.mjs";
+const COLLECTOR = "tools/lib/pr-size-git-range.mjs";
 const CANONICAL = "src/data/standards/short-code.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const href = (relative: string) => pathToFileURL(path.join(ROOT, relative)).href;
@@ -62,7 +64,8 @@ const probe = (expression: string): Any => {
 };
 const SURFACE = probe(
   `{ schema: cli.CLI_SCHEMA, version: cli.CLI_VERSION, inputMode: cli.INPUT_MODE,
-     internal: cli.INTERNAL, maxFixtureBytes: cli.MAX_FIXTURE_BYTES, exit: cli.EXIT_CODE }`,
+     rangeMode: cli.RANGE_MODE, internal: cli.INTERNAL,
+     maxFixtureBytes: cli.MAX_FIXTURE_BYTES, exit: cli.EXIT_CODE }`,
 );
 const EXIT = SURFACE.exit as Record<string, number>;
 
@@ -118,25 +121,91 @@ const failure = (result: Run, id: string, kind: string) => {
  * CLI + iki kütüphane + kanonik JSON aynı göreli düzende kopyalanır; kopya CLI kanonik alanı kendi
  * modül URL'inden çözdüğü için lab config'i okur — cwd bağımsızlığının da kanıtıdır.
  */
-const lab = (makeConfig: (doc: Any) => string | null, engineSource?: string) => {
-  const root = at(`lab-${nextId()}`);
+const install = (root: string, makeConfig?: (doc: Any) => string | null) => {
   for (const dir of ["tools/agents", "tools/lib", "src/data/standards"])
     fs.mkdirSync(path.join(root, dir), { recursive: true });
-  for (const file of [CLI, CORE, ENGINE])
+  for (const file of [CLI, CORE, ENGINE, COLLECTOR])
     fs.copyFileSync(path.join(ROOT, file), path.join(root, file));
-  if (engineSource) fs.writeFileSync(path.join(root, ENGINE), engineSource);
-  const text = makeConfig(JSON.parse(read(CANONICAL)));
+  const text = makeConfig ? makeConfig(JSON.parse(read(CANONICAL))) : read(CANONICAL);
   if (text !== null) fs.writeFileSync(path.join(root, CANONICAL), text);
   return path.join(root, CLI);
 };
+const lab = (makeConfig: (doc: Any) => string | null, engineSource?: string) => {
+  const root = at(`lab-${nextId()}`);
+  const entry = install(root, makeConfig);
+  if (engineSource) fs.writeFileSync(path.join(root, ENGINE), engineSource);
+  return entry;
+};
+
+/**
+ * GERÇEK depo laboratuvarı: aralık yolu uydurma bir yürütücüyle değil, izole bir geçici depoda
+ * gerçek `git` ile kanıtlanır. Kapının kökü ÇAĞIRANIN cwd'si değil KENDİ konumu olduğu için CLI
+ * kopyası deponun içine aynı göreli düzende kurulur; kopya izlenmeyen kalır ve ölçülen aralığa
+ * giremez.
+ */
+const git = (cwd: string, args: string[]) => {
+  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`git ${args[0]} başarısız: ${result.stderr}`);
+  return result.stdout.trim();
+};
+const repoAt = (label: string) => {
+  const root = at(`repo-${label}-${nextId()}`);
+  fs.mkdirSync(root, { recursive: true });
+  git(root, ["init", "-q", "-b", "main"]);
+  git(root, ["config", "user.email", "pr-size@example.test"]);
+  git(root, ["config", "user.name", "pr-size"]);
+  return root;
+};
+const commit = (root: string, file: string, body: string, message: string) => {
+  fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+  fs.writeFileSync(path.join(root, file), body);
+  git(root, ["add", "--", file]);
+  git(root, ["commit", "-q", "-m", message]);
+  return git(root, ["rev-parse", "HEAD"]);
+};
+const body = (count: number) =>
+  `${Array.from({ length: count }, (_v, i) => `satir ${i}`).join("\n")}\n`;
+/** Ölçülen net; eşik kopyası değil, banttan bağımsız küçük bir sayıdır. */
+const RANGE_NET = 3;
+/**
+ * IRAKSAYAN tarih: fork noktasından sonra HEM dal HEM de taban ilerler. İki-nokta farkı tabanın
+ * işini de sayardı; toplayıcının merge-base'li aralığı saymaz — kanıt bu ayrımdadır.
+ */
+const divergentRepo = () => {
+  const root = repoAt("range");
+  commit(root, "README.md", "kok\n", "kok");
+  const forkPoint = commit(root, "src/pkg/taban.ts", body(1), "fork");
+  git(root, ["checkout", "-q", "-b", "feature"]);
+  const head = commit(root, GOVERNED, body(RANGE_NET), "dal ilerledi");
+  git(root, ["checkout", "-q", "main"]);
+  const base = commit(root, "src/pkg/baska.ts", body(RANGE_NET + 2), "taban ilerledi");
+  return { root, forkPoint, base, head, cli: install(root) };
+};
+const rangeArgs = (base: string, head: string, klass: string, ids: string[] = []) => [
+  `--base=${base}`,
+  `--head=${head}`,
+  `--class=${klass}`,
+  ...(ids.length ? [`--evidence=${ids.join(",")}`] : []),
+];
 
 describe("pr-size süreç kapısı — argv yalnız dar ve deterministik yüzeydir", () => {
   const OK_FIXTURE = wireFile(wireForNet(1), "argv-base.z");
   const flag = (name: string) => `--${name}`;
   const cases: Array<[string, string[], string]> = [
     ["bayrak yok", [], "flag-missing"],
-    ["fixture yok", [`--class=${TIGHT}`], "flag-missing"],
+    ["kaynak yok", [`--class=${TIGHT}`], "source-missing"],
     ["sınıf yok", [`--numstat-z-input=${OK_FIXTURE}`], "flag-missing"],
+    ["yalnız base", ["--base=main", `--class=${TIGHT}`], "source-incomplete"],
+    ["yalnız head", ["--head=main", `--class=${TIGHT}`], "source-incomplete"],
+    ["fixture + base", [...argsFor(OK_FIXTURE, TIGHT), "--base=main"], "source-mixed"],
+    ["fixture + head", [...argsFor(OK_FIXTURE, TIGHT), "--head=main"], "source-mixed"],
+    [
+      "fixture + tam aralık",
+      [...argsFor(OK_FIXTURE, TIGHT), "--base=main", "--head=main"],
+      "source-mixed",
+    ],
+    ["boş base değeri", ["--base=", "--head=main", `--class=${TIGHT}`], "flag-empty-value"],
+    ["çıplak head bayrağı", ["--base=main", "--head", `--class=${TIGHT}`], "flag-missing-value"],
     ["bilinmeyen bayrak", [...argsFor(OK_FIXTURE, TIGHT), "--range=HEAD~1"], "flag-unknown"],
     ["yardım bayrağı da dar yüzeye girmez", ["--help"], "flag-unknown"],
     ["çıplak bayrak", [`--numstat-z-input=${OK_FIXTURE}`, "--class"], "flag-missing-value"],
@@ -161,6 +230,14 @@ describe("pr-size süreç kapısı — argv yalnız dar ve deterministik yüzeyd
     failure(run(doubled), "flag-duplicate", KIND.caller);
   });
 
+  it.each(["base", "head"])("%s bayrağı tekrarlanamaz", (name) => {
+    failure(
+      run([...rangeArgs("main", "main", TIGHT), `${flag(name)}=main`]),
+      "flag-duplicate",
+      KIND.caller,
+    );
+  });
+
   it.each([
     [`${MID.requires[0]},,${MID.requires[1]}`, "evidence-empty-item"],
     [`${MID.requires[0]},`, "evidence-empty-item"],
@@ -180,8 +257,8 @@ describe("pr-size süreç kapısı — argv yalnız dar ve deterministik yüzeyd
     const accepted = check(wireForNet(LOW.maxNet), TIGHT);
     expect(accepted.report.status).toBe(DECISION.accepted);
     expect(accepted.report.decisionReport.measurement.budgetNet).toBe(LOW.maxNet);
-    // stdin geçerli bir tel taşısa bile fixture bayrağı yoksa süreç DURUR; stdin girdi değildir.
-    failure(run([`--class=${TIGHT}`]), "flag-missing", KIND.caller);
+    // stdin geçerli bir tel taşısa bile bildirilmiş bir kaynak yoksa süreç DURUR; stdin girdi değildir.
+    failure(run([`--class=${TIGHT}`]), "source-missing", KIND.caller);
   });
 });
 
@@ -306,6 +383,7 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
       "status",
       "exitCode",
       "fixture",
+      "range",
       "error",
       "decisionReport",
     ]);
@@ -313,8 +391,9 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
     expect(result.report.version).toBe(SURFACE.version);
     expect(result.report.inputMode).toBe(SURFACE.inputMode);
     expect(result.report.canonicalStandard).toBe(CANONICAL);
-    // Dürüstlük: bu yüzey gerçek Git aralığı toplamaz ve hiçbir CI adımını bloklamaz.
+    // Dürüstlük: fixture yolunda aralık TOPLANMAZ ve hiçbir yolda CI bloklaması İDDİA EDİLMEZ.
     expect([result.report.collectsGitRange, result.report.ciEnforced]).toEqual([false, false]);
+    expect(result.report.range, "fixture yolunda aralık provenansı uyduruldu").toBeNull();
     expect(result.report.exitCode).toBe(result.status);
     // Provenans yol DEĞİL, bayt sayısı + özet: mutlak yol rapora hiç girmez.
     expect(Object.keys(result.report.fixture)).toEqual(["bytes", "sha256"]);
@@ -472,10 +551,114 @@ describe("pr-size süreç kapısı — izole laboratuvarda kanonik ve süreç ha
   });
 });
 
+describe("pr-size süreç kapısı — gerçek Git aralığı izole bir depoda toplanır", () => {
+  const repo = divergentRepo();
+  const accepted = run(rangeArgs("main", "feature", TIGHT), { cli: repo.cli });
+
+  it("iraksayan tarihte merge-base'li aralık ölçülür, tabanın kendi işi sayılmaz", () => {
+    expect(accepted.report.status, JSON.stringify(accepted.report.error)).toBe(DECISION.accepted);
+    expect(accepted.status).toBe(0);
+    const m = accepted.report.decisionReport.measurement;
+    expect([m.grossAdditions, m.grossDeletions, m.governedFiles]).toEqual([RANGE_NET, 0, 1]);
+    // İki-nokta farkı taban dalının işini de sayardı; merge-base'li aralık onu HİÇ görmez.
+    expect(accepted.stdout, "taban dalının işi ölçüme girdi").not.toContain("baska.ts");
+  });
+
+  it("aralık provenansı YALNIZ toplayıcının çözdüğü commit'lerdir; ref ve yol sızmaz", () => {
+    expect(accepted.report.inputMode).toBe(SURFACE.rangeMode);
+    expect([accepted.report.collectsGitRange, accepted.report.ciEnforced]).toEqual([true, false]);
+    expect(accepted.report.fixture, "aralık yolunda fixture provenansı uyduruldu").toBeNull();
+    expect(Object.keys(accepted.report.range)).toEqual([
+      "base",
+      "head",
+      "mergeBase",
+      "bytes",
+      "sha256",
+    ]);
+    const { base, head, mergeBase, bytes, sha256 } = accepted.report.range;
+    expect([base, head, mergeBase]).toEqual([repo.base, repo.head, repo.forkPoint]);
+    expect(sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(bytes).toBeGreaterThan(0);
+    for (const secret of [repo.root, "feature", "refs/heads"])
+      expect(accepted.stdout, `çağıranın metni rapora sızdı: ${secret}`).not.toContain(secret);
+  });
+
+  it("aynı commit'ler farklı cwd ve takma adlarla BAYT AYNI raporu üretir", () => {
+    const aliases = [
+      rangeArgs("main", "feature", TIGHT),
+      rangeArgs(repo.base, repo.head, TIGHT),
+      rangeArgs("refs/heads/main", "refs/heads/feature", TIGHT),
+    ];
+    for (const cwd of [ROOT, TMP, repo.root])
+      for (const args of aliases)
+        expect(run(args, { cli: repo.cli, cwd }).stdout, `cwd=${cwd}`).toBe(accepted.stdout);
+  }, 60_000);
+
+  it.each([
+    ["çözülemeyen head", ["main", "yok-boyle-ref"], "range-head-ref-unresolved"],
+    ["bayrak görünümlü base", ["-x", "feature"], "range-base-ref-leading-dash"],
+  ])("%s adlandırılmış girdi hatasıdır ve hiçbir şey sızdırmaz", (_label, [base, head], id) => {
+    const result = run(rangeArgs(base, head, TIGHT), { cli: repo.cli });
+    failure(result, id, KIND.input);
+    expect([result.report.collectsGitRange, result.report.range]).toEqual([false, null]);
+    for (const secret of [repo.root, "yok-boyle-ref"])
+      expect(result.stdout, `sızıntı: ${secret}`).not.toContain(secret);
+  });
+
+  it.each([
+    [
+      "sığ depo",
+      (root: string) => {
+        fs.writeFileSync(path.join(root, ".git/shallow"), `${git(root, ["rev-parse", "HEAD"])}\n`);
+        return ["HEAD~1", "HEAD"];
+      },
+      "range-repo-shallow",
+    ],
+    [
+      // Çok anlamlı ad SIFIR çıkışla bir uyarı üretir: toplayıcı sessizce ölçmek yerine ref'i
+      // ÇÖZÜLEMEMİŞ sayar, yani yanlış commit hiçbir zaman karara dönüşmez.
+      "çok anlamlı ref",
+      (root: string) => {
+        git(root, ["branch", "amb"]);
+        git(root, ["tag", "amb"]);
+        return ["HEAD~1", "amb"];
+      },
+      "range-head-ref-unresolved",
+    ],
+    [
+      "ortak atası olmayan aralık",
+      (root: string) => {
+        git(root, ["checkout", "-q", "--orphan", "yalniz"]);
+        commit(root, "src/pkg/yalniz.ts", body(1), "yalniz kok");
+        return ["main", "yalniz"];
+      },
+      "range-merge-base-unresolved",
+    ],
+  ])("%s ölçülmez: karar YERİNE adlandırılmış hata gelir", (_label, prepare, id) => {
+    const root = repoAt("fail");
+    commit(root, "README.md", "kok\n", "kok");
+    commit(root, GOVERNED, body(RANGE_NET), "dal");
+    const [base, head] = prepare(root);
+    const result = run(rangeArgs(base, head, TIGHT), { cli: install(root) });
+    failure(result, id, KIND.input);
+    expect([result.report.collectsGitRange, result.report.range]).toEqual([false, null]);
+    expect(result.stdout, "depo yolu sızdı").not.toContain(root);
+  });
+
+  it("fixture yolu aralık kablolamasından etkilenmez: aynı çağrı aynı raporu verir", () => {
+    const args = argsFor(wireFile(wireForNet(LOW.maxNet), "uyum.z"), TIGHT);
+    const inside = run(args, { cli: repo.cli, cwd: repo.root });
+    expect(inside.report.inputMode).toBe(SURFACE.inputMode);
+    expect([inside.report.collectsGitRange, inside.report.range]).toEqual([false, null]);
+    expect(Object.keys(inside.report.fixture)).toEqual(["bytes", "sha256"]);
+    expect(inside.stdout, "fixture yolu aralık kablolamasıyla kaydı").toBe(run(args).stdout);
+  });
+});
+
 describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı beyanı", () => {
   const source = read(CLI);
 
-  it("CLI kabuk/alt süreç çalıştırmaz ve stdin okumaz", () => {
+  it("CLI kabuk/alt süreç çalıştırmaz, aralığı yalnız kabul edilmiş toplayıcıya sorar", () => {
     for (const forbidden of [
       /child_process/,
       /\bspawn/,
@@ -490,6 +673,7 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
       [
         "../lib/pr-size-core.mjs",
         "../lib/pr-size-decision.mjs",
+        COLLECTOR.replace("tools/lib/", "../lib/"),
         "node:crypto",
         "node:fs",
         "node:url",
@@ -519,8 +703,12 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
     }
   });
 
-  it("kanonik kapı beyanı dürüsttür: kapı YAZILDI ama hiçbir yere BAĞLI DEĞİL", () => {
+  it("kanonik kapı beyanı dürüsttür: kapı ARALIK TOPLAR ama hiçbir yere BAĞLI DEĞİL", () => {
     expect(budget.checker.path).toBe(CLI);
+    // Kapı artık gerçek aralığı topluyor (bu dosyadaki gerçek depo kanıtı); not aksini diyemez.
+    expect(budget.checker.note, "not gerçek aralığı yok sayıyor").not.toMatch(
+      /aralı[kğ]ı?[^.]*toplan?ma[zy]/i,
+    );
     expect(budget.checker.status).toBe("implemented-not-wired");
     expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
