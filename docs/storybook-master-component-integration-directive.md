@@ -414,7 +414,7 @@ Aşağıdaki durumda çalışmayı durdur ve blocker raporu ver:
 - Storybook config gerçekte yokken varmış gibi evidence isteniyorsa,
 - visual regression sağlayıcısı insan kararı gerektiriyorsa,
 - dirty worktree'de aynı kanonik dosyalara ait kullanıcı değişikliğiyle çakışma varsa,
-- değişiklik 20 dosya/400 satır bütçesini aşıyorsa atomik PR dalgalarına bölmeden ilerleme,
+- değişiklik kanonik paket bütçesini (`src/data/standards/short-code.json#changePackageBudget`) aşıyorsa atomik PR dalgalarına bölmeden ilerleme,
 - platform ürün kodu actionplan repo içine yazılmak üzereyse.
 
 Blocker olduğunda hayali URL, story, test, CI veya component üretme.

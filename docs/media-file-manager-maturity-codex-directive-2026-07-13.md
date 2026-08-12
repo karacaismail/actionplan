@@ -359,7 +359,7 @@ Numaralandırma `storybook-unknown-unknowns-gap-report.md` desenini izler. Her m
 
 ## 8. Codex iş planı — doküman güncelleme WBS'i (İş-1–İş-10)
 
-Okuma anahtarı: her iş **yalnız doküman üretir/günceller**; `allowed-files` dışına dokunmak ihlaldir (AGENTS.md §6). Bağımlılık sütunu, içerik tutarlılığı içindir (önce çekirdek şema hükümleri, sonra tüketici dokümanlar). Her işin PR'ı küçük tutulur (≤ 400 net satır hedefi aşılıyorsa iş bölünür); her PR en az bir non-goal beyan eder.
+Okuma anahtarı: her iş **yalnız doküman üretir/günceller**; `allowed-files` dışına dokunmak ihlaldir (AGENTS.md §6). Bağımlılık sütunu, içerik tutarlılığı içindir (önce çekirdek şema hükümleri, sonra tüketici dokümanlar). Her işin PR'ı küçük tutulur (kanonik paket bütçesi `src/data/standards/short-code.json#changePackageBudget` aşılıyorsa iş bölünür); her PR en az bir non-goal beyan eder.
 
 | İş | Çıktı dosyası (allowed-files) | Kapsam (bu yönergeden beslenen gereksinimler) | Bağımlılık | İnsan kapısı |
 |---|---|---|---|---|

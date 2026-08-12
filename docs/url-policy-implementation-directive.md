@@ -107,7 +107,8 @@ business/contract invariant nedeniyle fail etmelidir.
 - Branch: `task/URLP-XX-<kebab-slug>`.
 - Bir faz büyükse alt branch: `task/URLP-XXa-<contract|backend|frontend|migration>`.
 - Main/master'a doğrudan push yasaktır.
-- Her PR tek amaçlıdır, net değişiklik en çok 400 satır ve en çok 20 dosyadır.
+- Her PR tek amaçlıdır; net satır ve dosya sayısı bütçesi kanonik
+  `src/data/standards/short-code.json#changePackageBudget` alanından okunur.
 - Limit aşılırsa faz daha küçük PR'lara bölünür; acceptance scope daraltılmaz.
 - Her PR açıklaması `allowed-files`, en az bir `non-goal`, AC→test eşlemesi, risk,
   rollback, AI üretim notu ve gerçek evidence bağlantılarını taşır.

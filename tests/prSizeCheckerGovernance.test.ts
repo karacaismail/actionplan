@@ -910,6 +910,96 @@ describe("pr-size süreç kapısı — toplayıcıya verilen ve toplayıcıdan a
   });
 });
 
+/**
+ * P3F: aşağıdaki SEKİZ canlı doküman tüketicisi paket bütçesini artık kendi metninde TANIMLAMAZ;
+ * kanonik makine sahibine işaret eder. Arama BİLEREK DAR tutulur: yalnız kanonik paket eşiği olan
+ * bir sayının hemen ardından bir değişiklik-paketi BİRİMİ (net/satır/line/dosya/file) geldiği
+ * ifadeler aranır. Bu kalıp, bu sekiz dokümanda başka hiçbir sayısal bütçeye değmez: performans,
+ * gecikme, sayfa boyutu, HTTP durum kodu, kaynak-dosya uzunluğu ve karmaşıklık sayıları ayrı
+ * kanonik kurallardır, bu paketin kapsamı DIŞINDADIR ve korunur. Kapsam dürüst: generated
+ * artefaktlar ile domain-surface projeksiyonları bu pakette temizlenmez, kalan borçtur.
+ */
+const P3F_CONSUMERS: Array<{ doc: string; keeps: string[] }> = [
+  { doc: "docs/commerce-os-vibecoder-readiness-oracles.md", keeps: ["non-goal", "tek amaç"] },
+  { doc: "docs/commerce-os-stack-app-composition.md", keeps: ["tek-amaç", "böl"] },
+  {
+    doc: "docs/media-file-manager-maturity-codex-directive-2026-07-13.md",
+    keeps: ["non-goal", "bölün"],
+  },
+  { doc: "docs/url-policy-implementation-directive.md", keeps: ["non-goal", "tek amaç"] },
+  {
+    doc: "docs/commerce-os-vibecoder-task-packets.md",
+    keeps: ["non-goal", "single purpose", "split"],
+  },
+  {
+    doc: "docs/storybook-master-component-integration-directive.md",
+    keeps: ["non-goal", "atomik"],
+  },
+  {
+    doc: "docs/commerce-os-test-first-parallel-handoff.md",
+    keeps: ["non-goal", "single purpose", "split"],
+  },
+  { doc: "docs/commerce-os-kernel-sdk-gap-directive.md", keeps: ["non-goal", "atomik"] },
+];
+const CANONICAL_FIELD = `${CANONICAL}#changePackageBudget`;
+/** Eşik kümesi ve kanıt sözlüğü KANONİKTEN türetilir; bu dosya ikinci bir kopya yazmaz. */
+const PACKAGE_THRESHOLDS = [
+  ...new Set<number>([
+    ...BANDS.map((band) => band.maxNet),
+    ...CLASSES.map((klass) => klass.maxNet),
+    budget.splitRequiredAboveNet,
+    budget.maxChangedFiles,
+  ]),
+];
+const PACKAGE_UNIT = "net|satır|satir|line|lines|dosya|file|files";
+const thresholdCopy = new RegExp(
+  `\\b(?:${PACKAGE_THRESHOLDS.join("|")})\\s*\\*{0,2}\\s*(?:${PACKAGE_UNIT})`,
+  "i",
+);
+const EVIDENCE_VOCABULARY = [...BANDS.flatMap((band) => band.requires), ...CHURN.requires];
+const RELATIVE_LINK = /\]\((\.[^)\s#]+)/g;
+
+describe("P3F: sekiz canlı doküman tüketicisi kanonik paket bütçesine yönlendirilir", () => {
+  it.each(P3F_CONSUMERS.map(({ doc, keeps }) => [doc, keeps] as const))(
+    "%s eşiği KENDİ tanımlamaz, kanonik alana işaret eder ve kapsam frenini korur",
+    (doc, keeps) => {
+      const text = read(doc);
+      const offenders = text
+        .split("\n")
+        .map((line, index) => [index + 1, line] as const)
+        .filter(([, line]) => thresholdCopy.test(line));
+      expect(offenders, `${doc}: bağımsız eşik tanımı duruyor`).toEqual([]);
+      expect(text, `${doc}: kanonik alana işaret etmiyor`).toContain(CANONICAL_FIELD);
+      for (const id of EVIDENCE_VOCABULARY)
+        expect(text, `${doc}: kanıt sözlüğü kopyası ${id}`).not.toContain(id);
+      // Tek-amaç / bölme / non-goal niyeti migrasyonda ZAYIFLAMAZ: kopya gider, sınır kalır.
+      for (const token of keeps)
+        expect(text.toLowerCase(), `${doc}: kapsam freni kayboldu: ${token}`).toContain(token);
+    },
+  );
+
+  it.each(P3F_CONSUMERS.map(({ doc }) => doc))("%s göreli Markdown bağları çözülür", (doc) => {
+    const broken = [...read(doc).matchAll(RELATIVE_LINK)]
+      .map((match) => match[1])
+      .filter((target) => !fs.existsSync(path.resolve(path.dirname(path.join(ROOT, doc)), target)));
+    expect(broken, `${doc}: kırık bağ`).toEqual([]);
+  });
+
+  it("kanonik prose P3F'i DÜRÜST anlatır: sekiz doküman taşındı, tüm projeksiyonlar değil", () => {
+    const rule = (canonical.rules as Array<{ id: string; rule: string }>).find(
+      (entry) => entry.id === "short-pr-size",
+    )?.rule as string;
+    expect(rule, "P3F migrasyonu prose'da yok").toContain("P3F");
+    expect(rule, "taşınan tüketici sayısı belirsiz").toMatch(/sekiz/i);
+    // Dürüstlük freni: generated/projeksiyon borcu KALIR ve temizlendiği İDDİA EDİLMEZ.
+    expect(rule, "kalan projeksiyon borcu gizlendi").toMatch(/projeksiyon|generated/i);
+    expect(rule, "kanonik üstünlük kayboldu").toContain("üstün gelir");
+    expect(rule, "prose eşik sayısı taşıyor").not.toMatch(
+      new RegExp(`\\b(?:${PACKAGE_THRESHOLDS.join("|")})\\b`),
+    );
+  });
+});
+
 describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı beyanı", () => {
   const source = read(CLI);
 

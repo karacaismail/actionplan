@@ -129,7 +129,7 @@ Herhangi bir `src/data/generated/nodes/*.json` üretimi/değişimi **implementas
 | T4: `s-commerce` supersede eşleme changeset | T2 | ilgili `s-*` düğümleri (izole, tek-shard) | ADR-0030 §Sonraki-kapı onayı yoksa DUR |
 | T5: BC module düğümü açma | T1–T4 | app/module düğümü (**yalnız insan onayı**) | `AGENTS.md` §4.4 — AI app/module üretemez → DUR |
 
-Her changeset ≤400 net satır, ≤20 dosya (`AGENTS.md` §4.3); izole dosya yazımı, tek-amaç (§6). Migration/toplu-yeniden-yazma yasak; default'lu lazy migration korunur (`AGENTS.md` §6).
+Her changeset kanonik paket bütçesine uyar (`src/data/standards/short-code.json#changePackageBudget`; `AGENTS.md` §4.3): net satır ve dosya sayısı tavanı yalnız orada tanımlıdır, aşan iş bölünür. İzole dosya yazımı, tek-amaç (§6). Migration/toplu-yeniden-yazma yasak; default'lu lazy migration korunur (`AGENTS.md` §6).
 
 ## 9. App bağımsızlığı ve cross-app import yasağı
 

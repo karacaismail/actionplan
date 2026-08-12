@@ -41,7 +41,7 @@ Source: ADR-0031 §Safety invariants; BC-map §1.
 - **Single writer per path.** Every allowed-files pattern has exactly one owning packet/lane at a time; two writers never touch the same file, directory, or worktree ([`AGENTS.md`](../AGENTS.md) §6).
 - **Isolation.** Each lane = its own worktree + own branch. The only shared point is the integration lane (merge/DAG order).
 - **Max 4 parallel independent lanes**, and **only** where the phase DAG (§3) *and* disjoint file ownership both permit. This is an upper bound on *safe* concurrency, **not** a claim that four lanes are actually running.
-- **Per-packet budget:** ≤ 400 net lines, ≤ 20 files, single purpose, ≥ 1 non-goal, **separate PR per packet or smaller** ([`AGENTS.md`](../AGENTS.md) §4.3). Overflow ⇒ split into atomic PRs.
+- **Per-packet budget:** canonical `src/data/standards/short-code.json#changePackageBudget` (net-line band + changed-file ceiling; [`AGENTS.md`](../AGENTS.md) §4.3), single purpose, ≥ 1 non-goal, **separate PR per packet or smaller**. Overflow ⇒ split into atomic PRs.
 - **Test-first mandatory:** every packet starts with a RED test (fail-closed observed) before green implementation ([`task-to-code-contract`](./task-to-code-contract.md) §2–3).
 - **Waterfall packet içi kapı:** V5–V11 gibi veri taşıyan her paket `requirements → test-plan (RED) → db-schema/migration contract → development → test-qa` alt-sırasını izler. Migration/model kararı gereken işte test-plan ve geri-alınabilir schema/migration alt-PR'ı geçmeden production handler/service yazılmaz; tek paket bütçeyi aşarsa bu alt-fazlar ayrı, sıralı child PR'lara bölünür.
 
@@ -94,7 +94,7 @@ flowchart TD
 2. Within Wave A, pick any of V5/V6/V8/V9 whose directory you can own exclusively; never exceed 4 concurrent lanes.
 3. Never open an optional-edition packet — none exist in V0…V16 by design (§0.3.6).
 4. Never open a packet whose canonical RED family (F1–F16) is undefined for its slice.
-5. A packet that cannot fit ≤400 net lines / ≤20 files must be split before starting.
+5. A packet that cannot fit the canonical budget (`src/data/standards/short-code.json#changePackageBudget`) must be split before starting.
 
 ## 5. Evidence writeback
 
@@ -121,7 +121,7 @@ flowchart TD
 - **Ownership:** her shard'ın **tek yazarı insan geliştiricidir**; iki writer **aynı dosyaya veya aynı worktree'ye** yazmaz ([`AGENTS.md`](../AGENTS.md) §6). Codex MASTER her changeset'i bağımsız doğrular.
 - **İzolasyon:** her lane **ayrı worktree + ayrı branch**; paylaşılan tek nokta entegrasyon lane'idir (merge/DAG sırası).
 - **Entegrasyon lane:** shard'ları birleştiren tek yetkili writer; contract/regression kapılarını koşar, yeni iş mantığı yazmaz (sequence §App assembly). Birleştirme/commit/push ayrıca insan onayı ister.
-- **PR shard sınırı:** her PR **≤ 400 net satır, ≤ 20 dosya**, tek-amaç + en az bir `non-goal` ([`AGENTS.md`](../AGENTS.md) §4.3). Aşan iş atomik PR'lara bölünür.
+- **PR shard sınırı:** her PR kanonik paket bütçesine uyar (`src/data/standards/short-code.json#changePackageBudget`; [`AGENTS.md`](../AGENTS.md) §4.3), tek-amaç + en az bir `non-goal` taşır. Aşan iş atomik PR'lara bölünür.
 - **Araştırma ≠ backlog:** araştırma özellikleri (DRC/MAG item'ları, AGT2, provisional BC'ler) **anlık backlog değildir**; §2 triyajından geçmeden lane açılmaz.
 
 ## 8. Related documents

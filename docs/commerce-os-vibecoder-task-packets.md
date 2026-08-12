@@ -13,7 +13,7 @@
 
 Every packet carries all **14 oracle fields** ([`readiness-oracles`](./commerce-os-vibecoder-readiness-oracles.md) §3, O5) plus ≥1 **non-goal**: `id · objective · non-goal · inputs · allowed-files · forbidden-files · prerequisites · red-tests-first · implementation-steps · test-commands · acceptance-criteria · evidence · rollback · stop-conditions · budget`.
 
-- **Budget (all packets, canonical):** ≤ **400 net lines** · ≤ **20 files** · single purpose · one PR per packet or smaller ([`AGENTS.md`](../AGENTS.md) §4.3). Overflow ⇒ split, never stretch.
+- **Budget (all packets, canonical):** thresholds live only in `src/data/standards/short-code.json#changePackageBudget` (net-line band + changed-file ceiling; [`AGENTS.md`](../AGENTS.md) §4.3) · single purpose · one PR per packet or smaller. Overflow ⇒ split, never stretch.
 - **Test-first (all packets):** write the RED test, observe fail-closed, *then* implement ([`task-to-code-contract`](./task-to-code-contract.md) §2–3). RED family IDs (F1–F16) are defined in [`contract-test plan`](./commerce-os-contract-test-plan.md); packets reference them, not restate them.
 - **Waterfall (all data-bearing packets):** `requirements → test-plan/RED → db-schema/migration contract → development → test-qa`. V5–V11 production code cannot begin before its packet-local schema/migration decision and rollback are reviewed; gerektiğinde packet child PR'lara bölünür ama sıra atlanmaz.
 - **Forbidden-files (all packets, canonical):** this `actionplan` docs repo; the platform **dirty working tree**; any other packet's directories (single-writer, [`AGENTS.md`](../AGENTS.md) §6); any `*.json` node under `src/data/generated/nodes/**`; queue/schema/gate generators; git `commit/push/merge/reset/clean/stash`. Each packet lists only its *additional* forbidden paths.
@@ -137,7 +137,7 @@ Each writes only its own BC subdirectory under `apps/api/src/meta_api/apps/comme
 - **Test-commands:** `cd apps/api && uv run --python 3.12 pytest -q tests/commerce_os/catalog_governance` (expected after packet scaffold).
 - **Rollback:** remove only `catalog_governance/**`; retain shared V4 contracts.
 - **Stop-conditions:** cross-context write, price/stock authority, or BC→BC import appears ⇒ STOP.
-- **Budget:** canonical ≤400 net lines / ≤20 files; split before starting if exceeded.
+- **Budget:** canonical `src/data/standards/short-code.json#changePackageBudget`; split before starting if exceeded.
 
 ## V6 — Offer & Pricing (BC-02)
 - **Objective:** Offer/price-list/rule/CPQ authority publishing `PriceCalculated`/`OfferPublished`, consuming `ProductPublished`.
@@ -153,7 +153,7 @@ Each writes only its own BC subdirectory under `apps/api/src/meta_api/apps/comme
 - **Test-commands:** `cd apps/api && uv run --python 3.12 pytest -q tests/commerce_os/offer_pricing` (expected after packet scaffold).
 - **Rollback:** remove only `offer_pricing/**`; retain shared V4 contracts.
 - **Stop-conditions:** embedded tax/payment execution, Catalog store write, or BC→BC import appears ⇒ STOP.
-- **Budget:** canonical ≤400 net lines / ≤20 files; split before starting if exceeded.
+- **Budget:** canonical `src/data/standards/short-code.json#changePackageBudget`; split before starting if exceeded.
 
 ## V8 — Inventory & Availability (BC-05)
 - **Objective:** Stock/reservation (TTL owner)/ATP authority; consume `ReserveStock`/`ReleaseReservation`; publish `StockReserved`/`ReservationReleased`/`ReservationExpired`/`AvailabilityConfirmed`/`StockLevelChanged`.
@@ -169,7 +169,7 @@ Each writes only its own BC subdirectory under `apps/api/src/meta_api/apps/comme
 - **Test-commands:** `cd apps/api && uv run --python 3.12 pytest -q tests/commerce_os/inventory_availability` (expected after packet scaffold).
 - **Rollback:** remove only `inventory_availability/**`; retain shared V4 contracts.
 - **Stop-conditions:** order-state write, oversell invariant failure, or BC→BC import appears ⇒ STOP.
-- **Budget:** canonical ≤400 net lines / ≤20 files; split before starting if exceeded.
+- **Budget:** canonical `src/data/standards/short-code.json#changePackageBudget`; split before starting if exceeded.
 
 ## V9 — Payment & Adjustment provider-neutral orchestration (BC-07)
 - **Objective:** Payment-intent/txn/refund/adjustment authority; consume `AuthorizePayment`/`CapturePayment`/`RefundPayment`; publish `PaymentAuthorized`/`PaymentCaptured`/`PaymentFailed`/`PaymentRefunded`/`AdjustmentApplied`; **regulated execution stays behind an external provider port.**
@@ -185,7 +185,7 @@ Each writes only its own BC subdirectory under `apps/api/src/meta_api/apps/comme
 - **Test-commands:** `cd apps/api && uv run --python 3.12 pytest -q tests/commerce_os/payment_adjustment` (expected after packet scaffold).
 - **Rollback:** remove only `payment_adjustment/**`; retain provider port and shared V4 contracts.
 - **Stop-conditions:** licensed execution becomes canonical, double capture/refund occurs, or BC→BC import appears ⇒ STOP.
-- **Budget:** canonical ≤400 net lines / ≤20 files; split before starting if exceeded.
+- **Budget:** canonical `src/data/standards/short-code.json#changePackageBudget`; split before starting if exceeded.
 
 ---
 

@@ -36,7 +36,7 @@ Kontrol (AUTO): ADR-0030 §7 + BC-map BC-07/BC-17/BC-18 Provider satırları; [`
 
 **O5 — Implementation packet tamlığı.**
 RED: Herhangi bir packet şu **14 alandan** birini kaçırıyorsa RED: `packet id · objective · inputs · allowed-files patterns · forbidden files · prerequisites · red-tests-first · implementation steps · test commands/placeholders · acceptance criteria · evidence · rollback · stop conditions · max diff/file budget`.
-Kontrol (AUTO): her packet başlığı alanları sırayla taşır; budget ≤400 net satır & ≤20 dosya ([`../AGENTS.md`](../AGENTS.md) §4.3); test-önce sırası ([`task-to-code-contract.md`](./task-to-code-contract.md) §2–3) korunur.
+Kontrol (AUTO): her packet başlığı alanları sırayla taşır; budget kanonik `src/data/standards/short-code.json#changePackageBudget` alanından okunur (net satır ve dosya sayısı tavanı yalnız orada; [`../AGENTS.md`](../AGENTS.md) §4.3) ve aşan packet bölünür; test-önce sırası ([`task-to-code-contract.md`](./task-to-code-contract.md) §2–3) korunur.
 
 **O6 — Kernel → SDK → app-core → core-BC sırası.**
 RED: Sıra örtük/tersine; app-core tanımlanmadan BC packet'i açılıyor; kernel `check-core-contract` referansı yok. RED.
@@ -80,7 +80,7 @@ Test-commands: <komut/placeholder — mevcut olduğu iddia edilmez>
 Acceptance-criteria: <ölçülebilir>
 Evidence: <kırmızı→yeşil + audit/outbox izi konumu>
 Rollback: <geri-alma>            Stop-conditions: <DUR koşulları>
-Budget: ≤400 net satır · ≤20 dosya
+Budget: <kanonik `src/data/standards/short-code.json#changePackageBudget` — aşarsa bölünür>
 ```
 
 ## 4. RED→GREEN checklist

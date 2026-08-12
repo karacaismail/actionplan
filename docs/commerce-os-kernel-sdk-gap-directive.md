@@ -121,7 +121,7 @@ Her changeset **öneridir**; insan onayı + test-önce olmadan üretilmez. `allo
 | CS-D: Availability abstraction karar ADR taslağı | yeni `docs/adr-XXXX-availability-abstraction.md` | Envanter direktifini yeniden yazmak; jenerik portu zorlamak | §8-Q1 layer kararı yoksa DUR (YAGNI) |
 | CS-E: BC↔platform primitif tüketim eşleme matrisi | yeni `docs/commerce-os-primitive-consumption-map.md` | `s-*` düğümlerini değiştirmek; app/module düğümü açmak | ADR-0030 slug/BC insan onayı yoksa DUR |
 
-Her changeset ≤400 satır net, ≤20 dosya kalır (`AGENTS.md` §4.3); aşan iş atomik parçalara bölünür.
+Her changeset kanonik paket bütçesine uyar (`src/data/standards/short-code.json#changePackageBudget`; `AGENTS.md` §4.3); aşan iş atomik parçalara bölünür.
 
 ## İlgili doküman
 
