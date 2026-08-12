@@ -60,7 +60,7 @@ const prSizeStep = steps.find((step) => (field(step, "run") ?? "").includes(PR_S
 const template = fs.readFileSync(path.join(ROOT, ".github/PULL_REQUEST_TEMPLATE.md"), "utf8");
 const canonical = JSON.parse(
   fs.readFileSync(path.join(ROOT, "src/data/standards/short-code.json"), "utf8"),
-) as { changePackageBudget: Budget };
+) as { changePackageBudget: Budget; rules: Array<{ id: string; rule: string }> };
 type Budget = {
   maxChangedFiles: number;
   splitRequiredAboveNet: number;
@@ -156,5 +156,92 @@ describe("PR satır bütçesi kapısı ZORUNLU build işine bağlıdır", () => 
       expect(template, `şablonda eşik kopyası ${value}`).not.toMatch(new RegExp(`\\b${value}\\b`));
     for (const id of [...budget.bands.flatMap((b) => b.requires), ...budget.churnGuard.requires])
       expect(template, `şablonda kanıt sözlüğü kopyası ${id}`).not.toContain(id);
+  });
+});
+
+// P3c: repodaki CANLI talimat tüketicileri (AGENTS.md, CLAUDE.md) eşiği kopyalamayı bırakıp
+// kanonik alana bağlanır. Sayı araması BİLEREK DAR: yalnız paket eşikleri (bant net'leri, sınıf
+// tavanları, split sınırı, dosya sayısı tavanı) aranır. HTTP durum kodu, gecikme bütçesi,
+// erişilebilirlik zoom oranı ve kaynak-dosya/karmaşıklık sayıları bu kümenin DIŞINDADIR; onlar
+// ayrı kanonik kısa-kod kurallarıdır ve bu paket onları korur, silmez.
+const agentsMd = fs.readFileSync(path.join(ROOT, "AGENTS.md"), "utf8");
+const claudeMd = fs.readFileSync(path.join(ROOT, "CLAUDE.md"), "utf8");
+const CANONICAL_FIELD = "src/data/standards/short-code.json#changePackageBudget";
+const section = (text: string, start: string, end: string) =>
+  text.slice(text.indexOf(start), text.indexOf(end));
+const shortCodeLock = section(agentsMd, "### 4.3", "### 4.4");
+const smallPrSection = section(agentsMd, "\n## 6.", "\n## 7.");
+const packageThresholds = [
+  ...budget.bands.map((band) => band.maxNet),
+  ...budget.classes.map((klass) => klass.maxNet),
+  budget.splitRequiredAboveNet,
+  budget.maxChangedFiles,
+];
+const evidenceVocabulary = [
+  ...budget.bands.flatMap((band) => band.requires),
+  ...budget.churnGuard.requires,
+];
+const ruleOf = (id: string) => canonical.rules.find((rule) => rule.id === id)?.rule ?? "";
+const ruleCeiling = (id: string) => ruleOf(id).match(/≤ (\d+)/)?.[1] ?? "";
+
+describe("P3c: repo talimat tüketicileri kanonik kısa-PR alanına bağlıdır", () => {
+  it.each([
+    ["AGENTS.md §4.3", () => shortCodeLock],
+    ["AGENTS.md §6", () => smallPrSection],
+    ["CLAUDE.md", () => claudeMd],
+  ])("%s kanonik alana işaret eder ve paket eşiğini KOPYALAMAZ", (label, read) => {
+    const text = read();
+    expect(text, `${label} kanonik alana işaret etmiyor`).toContain(CANONICAL_FIELD);
+    for (const value of packageThresholds)
+      expect(text, `${label} eşik kopyası ${value}`).not.toMatch(new RegExp(`\\b${value}\\b`));
+    for (const id of evidenceVocabulary)
+      expect(text, `${label} kanıt sözlüğü kopyası ${id}`).not.toContain(id);
+  });
+
+  it("AGENTS.md kapıyı kabul edilmiş script ve ZORUNLU build üzerinden anlatır", () => {
+    for (const token of [`npm run ${PR_SIZE_SCRIPT}`, "build"])
+      expect(shortCodeLock, `§4.3 kapı gerçeğini anmıyor: ${token}`).toContain(token);
+    expect(shortCodeLock, "başka eşik türetme yasağı yok").toMatch(/(çıkar|türet|tahmin|tekrar)/);
+    expect(smallPrSection, "§6 kapıyı anmıyor").toContain(PR_SIZE_SCRIPT);
+  });
+
+  it("AGENTS.md ayrı kanonik dosya/karmaşıklık kurallarını ve kapsam frenlerini KORUR", () => {
+    // Bunlar paket eşiği DEĞİLDİR: `short-file-length` ve `short-cyclomatic-complexity` kendi
+    // kanonik kurallarıdır; migrasyon sırasında kazara silinmeleri regresyon olurdu.
+    expect(shortCodeLock).toContain(`${ruleCeiling("short-file-length")} satır`);
+    expect(shortCodeLock).toMatch(
+      new RegExp(`karmaşıklık ≤ \\*\\*${ruleCeiling("short-cyclomatic-complexity")}\\*\\*`),
+    );
+    for (const token of ["allowed-files", "non-goal"])
+      expect(shortCodeLock, `kapsam freni kayboldu: ${token}`).toContain(token);
+    expect(smallPrSection, "atomik/tek-amaçlı niyet kayboldu").toMatch(/tek-amaçlı/);
+  });
+
+  it("CLAUDE.md tüketici bölümü politikayı TEKRARLAMAZ, davranışı bağlar", () => {
+    const consumer = section(claudeMd, "## Short-PR consumer", "\n## Sahip anlayışı");
+    expect(consumer, "Short-PR consumer bölümü yok").toContain(CANONICAL_FIELD);
+    expect(consumer, "kapı çağrısı yok").toContain(`npm run ${PR_SIZE_SCRIPT}`);
+    for (const token of ["brüt", "net", "dosya sayısı", "sınıf", "kanıt", "rollback"])
+      expect(consumer, `rapor alanı eksik: ${token}`).toContain(token);
+    expect(consumer, "okuma yükümlülüğü yok").toMatch(/ÖNCE/);
+    expect(consumer, "tek paket / tek yazar kuralı yok").toMatch(/tek paket|tek yazar/i);
+    expect(consumer, "fail-closed yok").toContain("fail-closed");
+    // Sahip anlayışı sözleşmesi ve capability-delta gerçeği bu pakette DEĞİŞMEZ.
+    for (const field of ["once", "simdi", "fark", "kullaniciYolculugu", "kalanEngel"])
+      expect(claudeMd, `sahip anlayışı alanı kayboldu: ${field}`).toContain(field);
+    expect(claudeMd).toContain("capability delta = NONE");
+  });
+
+  it("kanonik kısa-kod prose'u canlı tüketiciler hakkında YANLIŞ konuşmaz", () => {
+    const rule = ruleOf("short-pr-size");
+    expect(rule, "prose hâlâ AGENTS.md'yi eski eşik kopyası sayıyor").not.toMatch(
+      /AGENTS\.md[^.]*(?:kopya|borc|borç)/,
+    );
+    expect(rule, "canlı tüketicilerin alana bağlandığı söylenmiyor").toMatch(
+      /AGENTS\.md ve CLAUDE\.md/,
+    );
+    // Kalan docs borcu ve kanonik üstünlük gerçeği KORUNUR: temizlendiği iddia edilmez.
+    expect(rule, "docs borcu gerçeği kayboldu").toMatch(/docs/);
+    expect(rule, "kanonik üstünlük kayboldu").toContain("üstün gelir");
   });
 });

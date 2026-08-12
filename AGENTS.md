@@ -126,8 +126,10 @@ Bu kilitler ADR'lerle sabitlenmiştir; ajan bunları gevşetemez.
 - Dokunma hedefi ≥ 44px; WCAG 2.2 AAA hedefi (kontrast ≥ 7:1, tam klavye, görünür odak).
 
 ### 4.3 Kısa-kod kilidi (`src/data/standards/short-code.json`)
-- PR net değişiklik ≤ **400 satır**; tek PR ≤ 20 dosya.
-- Kaynak dosya ≤ **300 satır**; fonksiyon döngüsel karmaşıklık ≤ **10**.
+- Değişiklik paketi bütçesinin tek kanonik sahibi `src/data/standards/short-code.json#changePackageBudget` alanıdır: sınıflar, bant merdiveni (varsayılan → koşullu → waiver), kanıt kimlikleri, dosya sayısı tavanı, churn freni ve split politikası orada makine-okunur yaşar. Bu dosya sayı taşımaz; ajan planlamadan önce alanı okur.
+- Kapıyı zorunlu GitHub `build` işi `npm run qa:pr-size-ci` ile koşturur; sınıf ve kanıt girdisi PR etiketlerinden gelir ve geçerli etiket kimlikleri yalnız kanonik alandan türer.
+- Hiçbir ajan başka bir eşik çıkaramaz, tahmin edemez veya prose'da tekrar edemez; kopya yetki vermez, çakışmada kanonik alan üstündür.
+- Kaynak dosya ≤ **300 satır**; fonksiyon döngüsel karmaşıklık ≤ **10** (ayrı kanonik kurallar: `short-file-length`, `short-cyclomatic-complexity`).
 - Ölü kod, spekülatif soyutlama (YAGNI), derin kalıtım yasak. Her görev/PR `allowed-files` + en az bir `non-goal` bildirir.
 
 ### 4.4 AI yetki sınırı kilidi (`src/data/platform-product-code-write-policy.json`)
@@ -185,7 +187,7 @@ Kural: **kırmızı kapıyı "sonra düzeltirim" diye bırakma.** Değişiklik, 
 
 - **Her ajan yalnız kendi shard'ına yazar.** Başka ajanın dosyasına dokunma; üst üste yazma çakışması üretme.
 - Migration/toplu-yeniden-yazma çalıştırma. Güncel node sayısı `src/data/generated/meta.json` içinden okunur; default'lu lazy migration sayesinde eski JSON'lar dosyaya dokunmadan parse olur, bir dosya yalnız gerçek değer atanınca yazılır.
-- Her PR **küçük ve tek-amaçlı**: kısa-kod bütçesine uy (≤ 400 satır net, ≤ 20 dosya). Aşan iş atomik PR'lara bölünür.
+- Her PR **küçük ve tek-amaçlı**: paket bütçesi `src/data/standards/short-code.json#changePackageBudget` alanından okunur ve zorunlu `build` işindeki `npm run qa:pr-size-ci` kapısıyla ölçülür. Bütçeyi aşan iş, aynı alandaki split politikasına göre atomik paketlere bölünür; buradaki hiçbir cümle eşik sayısı taşımaz.
 - Her görev/PR `allowed-files` listesini ve en az bir `non-goal`'ı bildirir; listede olmayan dosyaya dokunma.
 - Sokete-bağlı çalışmada (socket-drop) yazılmış dosyalar diske düşer; onları harvest et, kaybetme.
 

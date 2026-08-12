@@ -29,6 +29,20 @@ Claude:
 
 Platform yazma gerektiren istekte dur ve `DIRECTIVE-ONLY` handoff üret.
 
+## Short-PR consumer
+
+Kanonik alan: `src/data/standards/short-code.json#changePackageBudget`. Sınıf, bant, eşik ve
+kanıt sözlüğü yalnız orada yaşar; bu dosya hiçbir sayıyı veya kanıt kimliğini kopyalamaz.
+
+- Claude planlamadan ve yazmadan ÖNCE bu alanı okur; ezberden ya da eski prose kopyasından
+  eşik uygulamaz.
+- Kapıyı zorunlu GitHub `build` işi `npm run qa:pr-size-ci` ile koşturur; sınıf ve kanıt
+  girdisi PR etiketlerinden gelir.
+- Her paket raporu şunları taşır: brüt ekleme, brüt silme, net, dosya sayısı, sınıf ve kanıt,
+  rollback yolu, kapı sonucu.
+- Tek paket / tek yazar: Claude paketi kendiliğinden genişletmez ve yazdığı paketi review etmez.
+- Kanıt eksikse iş fail-closed durur; eksik kanıt "geçti" sayılmaz.
+
 ## Sahip anlayışı ve teknoloji kanıtı
 
 Kanonik sahipler (tam metin burada tekrarlanmaz):
