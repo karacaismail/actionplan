@@ -222,6 +222,68 @@ export const measure = ({ numstat, numstatZ, categories, sourceRoots = SOURCE_RO
 };
 
 /**
+ * Bayt kabulünün GENEL sonuç kümesi. Bunlar bir POLİTİKA sözlüğü değildir: hata kimliği, hata
+ * sınıfı, tanılama cümlesi ve tavan DEĞERİ çağıranın kendi sözleşmesinde kalır; burada yalnız
+ * "hangi mekanik nedenle okunmadı" söylenir. Böylece iki çağıran aynı okuyucuyu paylaşırken kendi
+ * kelime dağarcığını korur ve hiçbiri diğerininkini ikinci kez tanımlamaz.
+ */
+export const READ_FAULT = Object.freeze({
+  unreadable: "unreadable",
+  notRegularFile: "not-regular-file",
+  tooLarge: "too-large",
+  empty: "empty",
+});
+
+/**
+ * GÜVENLİK-KRİTİK okuma primitifi: senkron, SINIRLI, düzenli dosya. `lstat` bağı İZLEMEZ —
+ * sembolik bağ, dizin, aygıt ve FIFO daha okuma denenmeden REDdir. Tip/boyut kontrolü açılan
+ * tanıtıcı üzerinde `fstat` ile TEKRARLANIR; bu yalnız GERÇEKTEN AÇILAN tanıtıcının düzenli ve
+ * tavan içinde olduğunu güvenceye alır. inode/aygıt karşılaştırılmadığı için `lstat`–`open`
+ * penceresinde yolun aynı sınıftan (düzenli, tavan içinde) BAŞKA bir dosyayla değiştirilmesine
+ * karşı koruma İDDİA EDİLMEZ. Tam olarak bildirilen boy okunur (kısa okuma döngüyle tamamlanır,
+ * EOF ise REDdir), tanıtıcı `finally` içinde kapanır ve kapatma hatası sonucu değiştirmez.
+ * Sonuç YOL ya da İÇERİK taşımaz; `size` yalnız tavan aşımında ve yalnız çağıran istiyorsa
+ * tanılamaya girer.
+ */
+export const readBoundedFile = (file, maxBytes) => {
+  const deny = (fault, size) => ({ ok: false, fault, size });
+  const shaped = (stat) => {
+    if (!stat.isFile()) return deny(READ_FAULT.notRegularFile, stat.size);
+    return stat.size > maxBytes ? deny(READ_FAULT.tooLarge, stat.size) : null;
+  };
+  let opened;
+  try {
+    const denied = shaped(fs.lstatSync(file));
+    if (denied) return denied;
+    opened = fs.openSync(file, "r");
+  } catch {
+    return deny(READ_FAULT.unreadable);
+  }
+  try {
+    const stat = fs.fstatSync(opened);
+    const denied = shaped(stat);
+    if (denied) return denied;
+    if (stat.size === 0) return deny(READ_FAULT.empty, 0);
+    const bytes = Buffer.alloc(stat.size);
+    let read = 0;
+    while (read < bytes.length) {
+      const chunk = fs.readSync(opened, bytes, read, bytes.length - read, read);
+      if (chunk === 0) return deny(READ_FAULT.unreadable);
+      read += chunk;
+    }
+    return { ok: true, bytes };
+  } catch {
+    return deny(READ_FAULT.unreadable);
+  } finally {
+    try {
+      fs.closeSync(opened);
+    } catch {
+      /* kapatma hatası sonucu değiştirmez */
+    }
+  }
+};
+
+/**
  * Boru-güvenli TAM yazım. Node'da stdout bir pipe olduğunda `console.log` ASENKRONdur; hemen gelen
  * bir çıkış boşaltılmamış kuyruğu atar ve rapor tam da diff büyükken — kapının en çok gerektiği
  * anda — ortasından kesilir. Burada yazım senkron ve tamdır; non-blocking pipe EAGAIN döndürürse

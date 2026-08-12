@@ -23,7 +23,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { writeAllSync } from "../lib/pr-size-core.mjs";
+import { READ_FAULT, readBoundedFile, writeAllSync } from "../lib/pr-size-core.mjs";
 import { DECISION, ERROR_KIND, decide } from "../lib/pr-size-decision.mjs";
 import { collectRange } from "../lib/pr-size-git-range.mjs";
 import { collectWorkingTree } from "../lib/pr-size-git-working-tree.mjs";
@@ -170,53 +170,25 @@ const loadBudget = () => {
 };
 
 /**
- * Fixture FAIL-CLOSED okunur. `lstat` bağı İZLEMEZ: sembolik bağ, dizin, aygıt ve FIFO daha okuma
- * denenmeden REDdir. Tip/boyut kontrolü açılan tanıtıcı üzerinde `fstat` ile TEKRARLANIR; aradaki
- * pencerede yol değiştirilirse ölçüm yine yapılmaz. Bayt dizisi olarak okunur — katı UTF-8 kapısı
- * motorun sözleşmesidir. Tanılama içerik TAŞIMAZ ve yolu yankılamaz.
+ * Bayt kabulünün MEKANİĞİ burada değildir: bağ izlememe, düzenli dosya şartı, tavan, boş RED, tam
+ * sınırlı okuma ve `fstat` tekrarı çekirdeğin paylaşılan primitifinin sözleşmesidir. Bu yüzey ona
+ * yalnız KENDİ tavanını verir ve genel sonucu KENDİ kelime dağarcığına çevirir: kimlik, sınıf ve
+ * tanılama cümlesi burada kalır, ikinci bir okuyucu KURULMAZ. Tanılama içerik TAŞIMAZ, yolu
+ * yankılamaz; yalnız tavan aşımında ölçüyü açıklayan iki sayı görünür.
  */
+// biome-ignore format: the fixture fault vocabulary stays compact for the shard budget
+const FIXTURE_FAULT = Object.freeze({
+  [READ_FAULT.notRegularFile]: () => ["fixture-not-regular-file", "fixture düzenli bir dosya değil"],
+  [READ_FAULT.tooLarge]: (size) =>
+    ["fixture-too-large", `fixture ${size} bayt > güvenlik tavanı ${MAX_FIXTURE_BYTES}`],
+  [READ_FAULT.empty]: () => ["fixture-empty", "fixture boş: ölçülecek tel yok"],
+  [READ_FAULT.unreadable]: () => ["fixture-unreadable", "fixture okunamadı"],
+});
 const readFixture = (file) => {
-  const bad = (id, detail) => fault(id, ERROR_KIND.input, detail);
-  const unreadable = () => bad("fixture-unreadable", "fixture okunamadı");
-  const shaped = (stat) => {
-    if (!stat.isFile()) return bad("fixture-not-regular-file", "fixture düzenli bir dosya değil");
-    if (stat.size > MAX_FIXTURE_BYTES)
-      return bad(
-        "fixture-too-large",
-        `fixture ${stat.size} bayt > güvenlik tavanı ${MAX_FIXTURE_BYTES}`,
-      );
-    return null;
-  };
-  let opened;
-  try {
-    const denied = shaped(fs.lstatSync(file));
-    if (denied) return denied;
-    opened = fs.openSync(file, "r");
-  } catch {
-    return unreadable();
-  }
-  try {
-    const stat = fs.fstatSync(opened);
-    const denied = shaped(stat);
-    if (denied) return denied;
-    if (stat.size === 0) return bad("fixture-empty", "fixture boş: ölçülecek tel yok");
-    const bytes = Buffer.alloc(stat.size);
-    let read = 0;
-    while (read < bytes.length) {
-      const chunk = fs.readSync(opened, bytes, read, bytes.length - read, read);
-      if (chunk === 0) return unreadable();
-      read += chunk;
-    }
-    return { ok: true, bytes };
-  } catch {
-    return unreadable();
-  } finally {
-    try {
-      fs.closeSync(opened);
-    } catch {
-      /* kapatma hatası raporu değiştirmez */
-    }
-  }
+  const source = readBoundedFile(file, MAX_FIXTURE_BYTES);
+  if (source.ok) return source;
+  const [id, detail] = FIXTURE_FAULT[source.fault](source.size);
+  return fault(id, ERROR_KIND.input, detail);
 };
 
 /** Fixture provenansı YOL DEĞİL, bayt sayısı + özettir; tel motora ham bayt olarak gider. */
