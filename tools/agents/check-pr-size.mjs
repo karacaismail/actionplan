@@ -1,22 +1,24 @@
 #!/usr/bin/env node
 /**
- * check-pr-size (ADR-0027 / short-code `short-pr-size`) — SÜREÇ yüzeyi (P2A-2c + P2B1b).
+ * check-pr-size (ADR-0027 / short-code `short-pr-size`) — SÜREÇ yüzeyi (P2A-2c + P2B1b + P2B2b).
  *
- * ÖLÇÜM, KARAR ve ARALIK TOPLAMA burada DEĞİLdir: `pr-size-core.mjs` teli okur,
+ * ÖLÇÜM, KARAR ve TOPLAMA burada DEĞİLdir: `pr-size-core.mjs` teli okur,
  * `pr-size-decision.mjs` kanonik `changePackageBudget` alanından kararı üretir,
- * `pr-size-git-range.mjs` iki commit arasındaki teli güvenle toplar. Burada yalnız SÜREÇ vardır —
- * argv dilbilgisi, TEK kaynak kuralı, fixture'ın güvenli okunması, kanonik alanın ve depo kökünün
- * yüklenmesi, tek JSON raporu ve çıkış kodu eşlemesi. Bu dosyada ikinci bir eşik/bant/sınıf/kanıt
- * kopyası YOKTUR ve hiçbir alt süreç çağrılmaz; hepsi kanonik alandan ve toplayıcıdan gelir.
+ * `pr-size-git-range.mjs` iki commit arasındaki teli, `pr-size-git-working-tree.mjs` ise HEAD'e
+ * göre çalışma ağacının telini güvenle toplar. Burada yalnız SÜREÇ vardır — argv dilbilgisi, TEK
+ * kaynak kuralı, fixture'ın güvenli okunması, kanonik alanın ve depo kökünün yüklenmesi, tek JSON
+ * raporu ve çıkış kodu eşlemesi. Bu dosyada ikinci bir eşik/bant/sınıf/kanıt kopyası YOKTUR,
+ * ikinci bir git argv mantığı KURULMAZ ve hiçbir alt süreç doğrudan çağrılmaz.
  *
- * KAPSAM DÜRÜST: çalışma-ağacı modu YOKTUR ve kapı hiçbir CI adımına bağlı DEĞİLdir (P3); süreç
- * stdin'e yaslanmaz ve hiçbir kapıyı bloklamaz. Raporun `inputMode`, `collectsGitRange` ve
- * `ciEnforced` alanları bunu makine-okunur biçimde söyler.
+ * KAPSAM DÜRÜST: kapı hiçbir CI adımına bağlı DEĞİLdir (P3); süreç stdin'e yaslanmaz ve hiçbir
+ * kapıyı bloklamaz. Raporun `inputMode`, `collectsGitRange`, `collectsWorkingTree` ve `ciEnforced`
+ * alanları bunu makine-okunur biçimde söyler; toplama beyanı ayrı bir İDDİA değil, provenansın
+ * VARLIĞIDIR.
  *
  * FAIL-CLOSED: bozuk argv, karışık/eksik girdi kaynağı, güvensiz/okunamayan/boş fixture,
- * toplanamayan aralık, güvenilmez kanonik alan ve süreç-içi hata KARAR YERİNE adlandırılmış bir
- * rapor ve kendine ait bir çıkış kodu üretir. stdout HER yolda yalnız tam JSON'dur; insan satırı
- * stderr'e gider ve raporu kirletemez.
+ * toplanamayan aralık ya da ağaç, güvenilmez kanonik alan ve süreç-içi hata KARAR YERİNE
+ * adlandırılmış bir rapor ve kendine ait bir çıkış kodu üretir. stdout HER yolda yalnız tam
+ * JSON'dur; insan satırı stderr'e gider ve raporu kirletemez.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -24,11 +26,14 @@ import { fileURLToPath } from "node:url";
 import { writeAllSync } from "../lib/pr-size-core.mjs";
 import { DECISION, ERROR_KIND, decide } from "../lib/pr-size-decision.mjs";
 import { collectRange } from "../lib/pr-size-git-range.mjs";
+import { collectWorkingTree } from "../lib/pr-size-git-working-tree.mjs";
 
 export const CLI_SCHEMA = "pr-size-check/1";
-export const CLI_VERSION = "1.1.0";
+/** Çalışma ağacı modu GERİYE UYUMLU bir eklemedir: şema sabit, MINOR hane yükselir. */
+export const CLI_VERSION = "1.2.0";
 export const INPUT_MODE = "numstat-z-file";
 export const RANGE_MODE = "git-range";
+export const WORKING_TREE_MODE = "working-tree";
 /** Süreç-içi hata sınıfı motorda YOKTUR: fırlayan hata ve sinyal bu yüzeyin sorumluluğudur. */
 export const INTERNAL = "internal-error";
 export const CANONICAL_STANDARD = "src/data/standards/short-code.json";
@@ -37,6 +42,14 @@ export const CANONICAL_STANDARD = "src/data/standards/short-code.json";
  * sınırsız bir dosyayı belleğe almasını engeller; bant/sınıf tavanları kanonik alanda yaşar.
  */
 export const MAX_FIXTURE_BYTES = 4 * 1024 * 1024;
+/**
+ * UYGULAMA KAYNAK TAVANI — politika eşiği DEĞİLdir, bütçe bandı/sınıfı ile ilgisi YOKTUR ve bu
+ * yüzden kanonik alana, karar raporuna ve zarf metadata'sına KOPYALANMAZ. Yalnız çalışma ağacı
+ * toplamasının uçtan uca ne kadar sürebileceğini üstten kapatır; sabit MODÜL-ÖZELdir ve ihraç
+ * EDİLMEZ, çünkü yüzeye çıkan her sayı ikinci bir sözleşme gibi okunur. Değerin kendisi değil,
+ * "sınırlı bir bütçe geçiriliyor" davranışı sözleşmedir.
+ */
+const WORKING_TREE_TOTAL_TIMEOUT_MS = 30_000;
 
 /** Kararlı çıkış eşlemesi: sözlük motorun kararı/hata sınıfından türer, ikinci kez adlandırılmaz. */
 export const EXIT_CODE = Object.freeze({
@@ -54,8 +67,14 @@ const BASE_FLAG = "--base";
 const HEAD_FLAG = "--head";
 const CLASS_FLAG = "--class";
 const EVIDENCE_FLAG = "--evidence";
+const TREE_FLAG = "--working-tree";
+/** Ağaç kaynağı AÇIK bildirilir ve dilbilgisi DAR'dır: birebir bu değer dışında hiçbir şey geçmez. */
+const TREE_ON = "true";
 const KNOWN_FLAGS = Object.fromEntries(
-  [INPUT_FLAG, BASE_FLAG, HEAD_FLAG, CLASS_FLAG, EVIDENCE_FLAG].map((flag) => [flag, true]),
+  [INPUT_FLAG, BASE_FLAG, HEAD_FLAG, CLASS_FLAG, EVIDENCE_FLAG, TREE_FLAG].map((flag) => [
+    flag,
+    true,
+  ]),
 );
 const CANONICAL_URL = new URL(`../../${CANONICAL_STANDARD}`, import.meta.url);
 /**
@@ -74,9 +93,11 @@ const caller = (id, detail) => fault(id, ERROR_KIND.caller, detail);
  * geçirebilirdi. Kanıt kimliğinin kendisi (bilinmezlik/tekrar) kanonik sözlüğün işidir: motora
  * devredilir, burada ikinci kez tanımlanmaz.
  *
- * TEK KAYNAK KURALI: girdi ya deterministik fixture'dır ya da `--base`+`--head` aralığıdır.
- * Karışık (`fixture` + aralık) ve EKSİK (yalnız bir uç) çağrı sessiz bir varsayılana düşmez;
- * ikisi de kendi adıyla REDdir — aksi halde çağıran ölçtüğünü sandığından başka bir şeyi ölçerdi.
+ * TEK KAYNAK KURALI: girdi ya deterministik fixture'dır, ya `--base`+`--head` aralığıdır, ya da
+ * `--working-tree=true` ile bildirilen çalışma ağacıdır. Karışık (birden çok kaynak) ve EKSİK
+ * (yalnız bir aralık ucu) çağrı sessiz bir varsayılana düşmez; hepsi kendi adıyla REDdir — aksi
+ * halde çağıran ölçtüğünü sandığından başka bir şeyi ölçerdi. Ağaç bayrağı bir KAYNAK bildirimidir,
+ * eksik bir aralık ucunu TAMAMLAMAZ.
  */
 export const parseArgv = (argv) => {
   const seen = new Map();
@@ -93,21 +114,33 @@ export const parseArgv = (argv) => {
     if (value === "") return caller("flag-empty-value", `boş değer: ${name}`);
     seen.set(name, value);
   }
+  // Değer dilbilgisi token'ın KENDİ sözleşmesidir; `boş değer` gibi sınıf kapısından da öncedir.
+  // Reddedilen değer YANKILANMAZ: çağıran oraya bir yol ya da sır yazmış olabilir.
+  const tree = seen.has(TREE_FLAG);
+  if (tree && seen.get(TREE_FLAG) !== TREE_ON)
+    return caller("working-tree-value-invalid", `yalnız ${TREE_FLAG}=${TREE_ON} kabul edilir`);
   if (!seen.has(CLASS_FLAG)) return caller("flag-missing", `zorunlu bayrak yok: ${CLASS_FLAG}`);
   const ends = [BASE_FLAG, HEAD_FLAG].filter((flag) => seen.has(flag));
   const fixture = seen.has(INPUT_FLAG);
-  if (fixture && ends.length)
-    return caller("source-mixed", `tek kaynak: ${INPUT_FLAG} + ${ends.join(", ")} olmaz`);
-  if (!fixture && !ends.length)
-    return caller("source-missing", `kaynak yok: ${INPUT_FLAG} ya da ${BASE_FLAG}+${HEAD_FLAG}`);
-  if (!fixture && ends.length !== 2)
+  const sources = [fixture, tree, ends.length > 0].filter(Boolean).length;
+  if (sources > 1)
+    return caller(
+      "source-mixed",
+      `tek kaynak: ${INPUT_FLAG} / ${BASE_FLAG}+${HEAD_FLAG} / ${TREE_FLAG}`,
+    );
+  if (sources === 0)
+    return caller(
+      "source-missing",
+      `kaynak yok: ${INPUT_FLAG}, ${BASE_FLAG}+${HEAD_FLAG} ya da ${TREE_FLAG}`,
+    );
+  if (ends.length === 1)
     return caller("source-incomplete", `aralık eksik: ${BASE_FLAG} ve ${HEAD_FLAG} birlikte`);
   const raw = seen.get(EVIDENCE_FLAG);
   const evidence = raw === undefined ? [] : raw.split(",");
   if (evidence.some((id) => id === ""))
     return caller("evidence-empty-item", "kanıt listesinde boş kimlik var");
   // biome-ignore format: the resolved-source record stays compact for the shard budget
-  return { ok: true, source: fixture ? INPUT_MODE : RANGE_MODE,
+  return { ok: true, source: fixture ? INPUT_MODE : tree ? WORKING_TREE_MODE : RANGE_MODE,
     input: seen.get(INPUT_FLAG), base: seen.get(BASE_FLAG), head: seen.get(HEAD_FLAG),
     klass: seen.get(CLASS_FLAG), evidence };
 };
@@ -210,17 +243,43 @@ const rangeSource = ({ base, head }) => {
 };
 
 /**
+ * TOPLAMA yine burada DEĞİLdir: kabuk yasağı, sabit cwd, ortam allowlist'i, mutasyonsuzluk ve
+ * sızıntısız hata sınıflandırması kabul edilmiş çalışma ağacı toplayıcısının sözleşmesidir; kapı
+ * onu ÇAĞIRIR, kopyalamaz. Bu yüzey üç şey ekler: kökü ÇAĞIRANIN cwd'sinden değil KENDİ konumundan
+ * verir, uçtan uca SINIRLI bir süre bütçesi geçirir ve toplayıcının hatasını TEK bir ad alanına
+ * yerleştirir. Önek yalnız TAŞIMAYAN kimliğe eklenir: toplayıcı kimliğini kendi zaten
+ * adlandırdıysa `working-tree-working-tree-` gibi ikilenmiş bir kimlik üretilmez. Ayrıntı
+ * toplayıcının kendi genel cümlesidir; yol, ref, ham stderr, istisna, süre ve bütçe taşımaz.
+ */
+const workingTreeSource = () => {
+  const collected = collectWorkingTree({
+    repoRoot: REPO_ROOT,
+    totalTimeoutMs: WORKING_TREE_TOTAL_TIMEOUT_MS,
+  });
+  if (!collected.ok) {
+    const { id, detail } = collected.error;
+    const named = id.startsWith(`${WORKING_TREE_MODE}-`) ? id : `${WORKING_TREE_MODE}-${id}`;
+    return fault(named, ERROR_KIND.input, detail);
+  }
+  // Provenans MİNİMAL ve deterministiktir; toplayıcının başka her alanı zarfa GEÇMEZ.
+  const { head, byteLength, sha256 } = collected.metadata;
+  return { ok: true, wire: collected.numstatZ, workingTree: { head, bytes: byteLength, sha256 } };
+};
+
+/**
  * Zarf minimaldir ve saf karar raporunu DEĞİŞTİRMEDEN taşır; anahtar sırası sözleşmedir.
- * `collectsGitRange` ayrı bir İDDİA değil, provenansın VARLIĞIDIR: aralık gerçekten toplanıp
- * karara dönüşmediyse alan da beyan da yoktur, yani kapı ölçmediğini ölçtüm diyemez.
+ * `collectsGitRange` ve `collectsWorkingTree` ayrı bir İDDİA değil, provenansın VARLIĞIDIR: kaynak
+ * gerçekten toplanıp karara dönüşmediyse alan da beyan da yoktur, yani kapı ölçmediğini ölçtüm
+ * diyemez.
  */
 // biome-ignore format: the machine-readable envelope contract stays compact for the shard budget
-const envelope = ({ mode = null, status, fixture = null, range = null,
+const envelope = ({ mode = null, status, fixture = null, range = null, workingTree = null,
   error = null, decisionReport = null }) => ({
   schema: CLI_SCHEMA, version: CLI_VERSION, inputMode: mode,
-  canonicalStandard: CANONICAL_STANDARD, collectsGitRange: range !== null, ciEnforced: false,
+  canonicalStandard: CANONICAL_STANDARD, collectsGitRange: range !== null,
+  collectsWorkingTree: workingTree !== null, ciEnforced: false,
   status, exitCode: EXIT_CODE[status] ?? EXIT_CODE[INTERNAL],
-  fixture, range, error, decisionReport,
+  fixture, range, workingTree, error, decisionReport,
 });
 
 /** Sinyal ve fırlayan hata ADLANDIRILIR; sebep yalnız kod/ad olarak taşınır, mesaj yankılanmaz. */
@@ -232,10 +291,18 @@ export const internalEnvelope = (cause) => {
   });
 };
 
+/** Çözülen kaynak TEK bir toplayıcıya bağlanır; ikinci bir varsayılan dal YOKTUR. */
+const SOURCE_OF = {
+  [RANGE_MODE]: rangeSource,
+  [WORKING_TREE_MODE]: workingTreeSource,
+  [INPUT_MODE]: (parsed) => fixtureSource(parsed.input),
+};
+
 /**
- * Tek deterministik geçiş: argv → kanonik alan → tek kaynak (fixture ya da aralık) → saf karar →
- * zarf. `inputMode` çözülen kaynağı SÖYLER; argv daha okunamadıysa hiçbir mod İDDİA EDİLMEZ.
- * Aralık provenansı yalnız karar üretilen yolda taşınır: hata yolunda toplama beyanı yoktur.
+ * Tek deterministik geçiş: argv → kanonik alan → tek kaynak (fixture, aralık ya da çalışma ağacı)
+ * → saf karar → zarf. `inputMode` çözülen kaynağı SÖYLER; argv daha okunamadıysa hiçbir mod İDDİA
+ * EDİLMEZ. Toplama provenansı yalnız karar üretilen yolda taşınır: hata yolunda beyan yoktur.
+ * Toplanan tel motora DEĞİŞTİRİLMEDEN gider — aynı bayt/sınıf/kanıt her kaynakta aynı kararı verir.
  */
 export const runCheck = (argv) => {
   const parsed = parseArgv(argv);
@@ -243,7 +310,7 @@ export const runCheck = (argv) => {
   const { source: mode, klass, evidence } = parsed;
   const config = loadBudget();
   if (!config.ok) return envelope({ mode, status: config.error.kind, error: config.error });
-  const source = mode === RANGE_MODE ? rangeSource(parsed) : fixtureSource(parsed.input);
+  const source = SOURCE_OF[mode](parsed);
   if (!source.ok) return envelope({ mode, status: source.error.kind, error: source.error });
   const report = decide({ budget: config.budget, numstatZ: source.wire, klass, evidence });
   return envelope({
@@ -251,6 +318,7 @@ export const runCheck = (argv) => {
     status: report.ok ? report.decision : report.error.kind,
     fixture: source.fixture,
     range: report.ok ? source.range : null,
+    workingTree: report.ok ? source.workingTree : null,
     error: report.ok ? null : { ...report.error },
     decisionReport: report,
   });

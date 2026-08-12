@@ -5,19 +5,20 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
-// P2A-2c + P2B1b: kabul edilmiş SAF ölçüm/karar motorlarının ve GİT ARALIĞI toplayıcısının
-// çevresindeki DETERMİNİSTİK SÜREÇ yüzeyi. Burada kanıtlanan tek şey sürecin dar, fail-closed ve
-// sızıntısız olduğudur: argv dilbilgisi, TEK kaynak kuralı, fixture tipi/sınırı, kanonik config'in
-// ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un HER yolda yalnız tam
-// JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi kanonikten türetilir.
-// KAPSAM DÜRÜST: gerçek aralık artık toplanır, ama çalışma-ağacı modu hâlâ YOKTUR ve hiçbir CI
-// adımına bağlı DEĞİLdir (P3); bu paket enforcement İDDİA ETMEZ.
+// P2A-2c + P2B1b + P2B2b: kabul edilmiş SAF ölçüm/karar motorlarının, GİT ARALIĞI ve ÇALIŞMA AĞACI
+// toplayıcılarının çevresindeki DETERMİNİSTİK SÜREÇ yüzeyi. Burada kanıtlanan tek şey sürecin dar,
+// fail-closed ve sızıntısız olduğudur: argv dilbilgisi, TEK kaynak kuralı, fixture tipi/sınırı,
+// kanonik config'in ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un
+// HER yolda yalnız tam JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi
+// kanonikten türetilir. KAPSAM DÜRÜST: gerçek aralık ve çalışma ağacı artık toplanır, ama kapı
+// hiçbir CI adımına bağlı DEĞİLdir (P3); bu paket enforcement İDDİA ETMEZ.
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
 const SELF = "tests/prSizeCheckerGovernance.test.ts";
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const CORE = "tools/lib/pr-size-core.mjs";
 const COLLECTOR = "tools/lib/pr-size-git-range.mjs";
+const TREE_COLLECTOR = "tools/lib/pr-size-git-working-tree.mjs";
 const CANONICAL = "src/data/standards/short-code.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const href = (relative: string) => pathToFileURL(path.join(ROOT, relative)).href;
@@ -64,7 +65,7 @@ const probe = (expression: string): Any => {
 };
 const SURFACE = probe(
   `{ schema: cli.CLI_SCHEMA, version: cli.CLI_VERSION, inputMode: cli.INPUT_MODE,
-     rangeMode: cli.RANGE_MODE, internal: cli.INTERNAL,
+     rangeMode: cli.RANGE_MODE, treeMode: cli.WORKING_TREE_MODE, internal: cli.INTERNAL,
      maxFixtureBytes: cli.MAX_FIXTURE_BYTES, exit: cli.EXIT_CODE }`,
 );
 const EXIT = SURFACE.exit as Record<string, number>;
@@ -124,7 +125,7 @@ const failure = (result: Run, id: string, kind: string) => {
 const install = (root: string, makeConfig?: (doc: Any) => string | null) => {
   for (const dir of ["tools/agents", "tools/lib", "src/data/standards"])
     fs.mkdirSync(path.join(root, dir), { recursive: true });
-  for (const file of [CLI, CORE, ENGINE, COLLECTOR])
+  for (const file of [CLI, CORE, ENGINE, COLLECTOR, TREE_COLLECTOR])
     fs.copyFileSync(path.join(ROOT, file), path.join(root, file));
   const text = makeConfig ? makeConfig(JSON.parse(read(CANONICAL))) : read(CANONICAL);
   if (text !== null) fs.writeFileSync(path.join(root, CANONICAL), text);
@@ -187,6 +188,59 @@ const rangeArgs = (base: string, head: string, klass: string, ids: string[] = []
   `--class=${klass}`,
   ...(ids.length ? [`--evidence=${ids.join(",")}`] : []),
 ];
+
+/** Çalışma ağacı kaynağı AÇIK ve DAR bildirilir: tek kabul edilen değer birebir `true`'dur. */
+const TREE_FLAG = "--working-tree";
+const TREE_ON = `${TREE_FLAG}=true`;
+const treeArgs = (klass: string, ids: string[] = []) => [
+  TREE_ON,
+  `--class=${klass}`,
+  ...(ids.length ? [`--evidence=${ids.join(",")}`] : []),
+];
+const ANY_FIXTURE = wireFile(wireForNet(1), "tree-argv-base.z");
+
+/**
+ * ÇALIŞMA AĞACI laboratuvarı GERÇEK bir depodur. Kapı kopyası deponun içine kurulur ve HEMEN
+ * commit'lenir: kurulum dosyaları izlenmeyen kalsaydı ölçülen ağaca girip kanıtı kirletirdi.
+ * Ondan sonra kurulan durum (staged/unstaged/untracked) tek başına ölçülen şeydir.
+ */
+const TREE_STAGED = "src/pkg/staged.ts";
+const TREE_UNTRACKED = "src/pkg/untracked.ts";
+const treeRepo = (label: string) => {
+  const root = repoAt(`tree-${label}`);
+  commit(root, "README.md", "kok\n", "kok");
+  commit(root, GOVERNED, body(2), "izlenen taban");
+  const cli = install(root);
+  git(root, ["add", "-A"]);
+  git(root, ["commit", "-q", "-m", "kapi kurulumu"]);
+  return { root, cli, head: git(root, ["rev-parse", "HEAD"]) };
+};
+const put = (root: string, file: string, text: string) => {
+  fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+  fs.writeFileSync(path.join(root, file), text);
+};
+/**
+ * Toplayıcı YERİNE geçen sonda: kapının toplayıcıya NE verdiğini ve dönenden NE ürettiğini,
+ * gerçek gitten bağımsız biçimde görünür kılar. Sabit süre freni yüzeyde ihraç EDİLMEDİĞİ için
+ * kanıt davranış düzeyindedir — sonda yalnız bütçenin sınırlı/pozitif GELİP GELMEDİĞİNİ söyler.
+ */
+const treeLab = (stub: (root: string) => string) => {
+  const root = at(`tree-lab-${nextId()}`);
+  const entry = install(root);
+  fs.writeFileSync(path.join(root, TREE_COLLECTOR), stub(root));
+  return entry;
+};
+const probeStub = (labRoot: string) => `import fs from "node:fs";
+const same = (a, b) => { try { return fs.realpathSync(a) === fs.realpathSync(b); } catch { return false; } };
+export const collectWorkingTree = ({ repoRoot, totalTimeoutMs }) => {
+  const bounded = Number.isSafeInteger(totalTimeoutMs) && totalTimeoutMs > 0;
+  const own = same(repoRoot, ${JSON.stringify(labRoot)});
+  return { ok: false, error: {
+    id: \`sonda-\${bounded ? "sinirli" : "sinirsiz"}-\${own ? "kendi-kok" : "yabanci-kok"}\`,
+    detail: "sonda",
+  } };
+};
+`;
 
 describe("pr-size süreç kapısı — argv yalnız dar ve deterministik yüzeydir", () => {
   const OK_FIXTURE = wireFile(wireForNet(1), "argv-base.z");
@@ -379,11 +433,13 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
       "inputMode",
       "canonicalStandard",
       "collectsGitRange",
+      "collectsWorkingTree",
       "ciEnforced",
       "status",
       "exitCode",
       "fixture",
       "range",
+      "workingTree",
       "error",
       "decisionReport",
     ]);
@@ -391,9 +447,14 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
     expect(result.report.version).toBe(SURFACE.version);
     expect(result.report.inputMode).toBe(SURFACE.inputMode);
     expect(result.report.canonicalStandard).toBe(CANONICAL);
-    // Dürüstlük: fixture yolunda aralık TOPLANMAZ ve hiçbir yolda CI bloklaması İDDİA EDİLMEZ.
-    expect([result.report.collectsGitRange, result.report.ciEnforced]).toEqual([false, false]);
+    // Dürüstlük: fixture yolunda ne aralık ne ağaç TOPLANIR ve hiçbir yolda CI bloklaması yoktur.
+    expect([
+      result.report.collectsGitRange,
+      result.report.collectsWorkingTree,
+      result.report.ciEnforced,
+    ]).toEqual([false, false, false]);
     expect(result.report.range, "fixture yolunda aralık provenansı uyduruldu").toBeNull();
+    expect(result.report.workingTree, "fixture yolunda ağaç provenansı uyduruldu").toBeNull();
     expect(result.report.exitCode).toBe(result.status);
     // Provenans yol DEĞİL, bayt sayısı + özet: mutlak yol rapora hiç girmez.
     expect(Object.keys(result.report.fixture)).toEqual(["bytes", "sha256"]);
@@ -566,8 +627,13 @@ describe("pr-size süreç kapısı — gerçek Git aralığı izole bir depoda t
 
   it("aralık provenansı YALNIZ toplayıcının çözdüğü commit'lerdir; ref ve yol sızmaz", () => {
     expect(accepted.report.inputMode).toBe(SURFACE.rangeMode);
-    expect([accepted.report.collectsGitRange, accepted.report.ciEnforced]).toEqual([true, false]);
+    expect([
+      accepted.report.collectsGitRange,
+      accepted.report.collectsWorkingTree,
+      accepted.report.ciEnforced,
+    ]).toEqual([true, false, false]);
     expect(accepted.report.fixture, "aralık yolunda fixture provenansı uyduruldu").toBeNull();
+    expect(accepted.report.workingTree, "aralık yolunda ağaç provenansı uyduruldu").toBeNull();
     expect(Object.keys(accepted.report.range)).toEqual([
       "base",
       "head",
@@ -655,10 +721,197 @@ describe("pr-size süreç kapısı — gerçek Git aralığı izole bir depoda t
   });
 });
 
+describe("pr-size süreç kapısı — çalışma ağacı kaynağı yalnız dar dilbilgisiyle bildirilir", () => {
+  it.each([
+    ["çıplak bayrak", TREE_FLAG, "flag-missing-value"],
+    ["boş değer", `${TREE_FLAG}=`, "flag-empty-value"],
+    ["false", `${TREE_FLAG}=false`, "working-tree-value-invalid"],
+    ["büyük harf", `${TREE_FLAG}=TRUE`, "working-tree-value-invalid"],
+    ["sayı", `${TREE_FLAG}=1`, "working-tree-value-invalid"],
+    ["boşluk taşıyan", `${TREE_FLAG}=true `, "working-tree-value-invalid"],
+    ["eşanlamlı", `${TREE_FLAG}=yes`, "working-tree-value-invalid"],
+  ])("%s reddedilir", (_label, token, id) => {
+    failure(run([token, `--class=${TIGHT}`]), id, KIND.caller);
+  });
+
+  it("bayrak tekrarlanamaz ve konumsal argüman yanında da geçmez", () => {
+    failure(run([TREE_ON, TREE_ON, `--class=${TIGHT}`]), "flag-duplicate", KIND.caller);
+    failure(run([...treeArgs(TIGHT), "extra"]), "positional-argument", KIND.caller);
+  });
+
+  it("`--class` çalışma ağacında da ZORUNLUdur; dar değer kapısı ondan da öncedir", () => {
+    failure(run([TREE_ON]), "flag-missing", KIND.caller);
+    // Değer dilbilgisi token'ın KENDİ sözleşmesidir: sınıf hiç verilmese de önce o kapanır.
+    failure(run([`${TREE_FLAG}=false`]), "working-tree-value-invalid", KIND.caller);
+  });
+
+  it("reddedilen değer tanılamaya YANKILANMAZ: bayrak adı dışında hiçbir şey taşınmaz", () => {
+    const result = run([`${TREE_FLAG}=/etc/passwd`, `--class=${TIGHT}`]);
+    failure(result, "working-tree-value-invalid", KIND.caller);
+    expect(result.stdout, "çağıranın değeri rapora sızdı").not.toContain("/etc/passwd");
+  });
+
+  it.each([
+    ["fixture + ağaç", [...argsFor(ANY_FIXTURE, TIGHT), TREE_ON]],
+    ["base + ağaç", ["--base=main", TREE_ON, `--class=${TIGHT}`]],
+    ["head + ağaç", ["--head=main", TREE_ON, `--class=${TIGHT}`]],
+    ["tam aralık + ağaç", [...rangeArgs("main", "main", TIGHT), TREE_ON]],
+    ["üç kaynak birden", [...argsFor(ANY_FIXTURE, TIGHT), "--base=main", "--head=main", TREE_ON]],
+  ])("%s TEK kaynak kuralıyla reddedilir", (_label, args) => {
+    failure(run(args), "source-mixed", KIND.caller);
+  });
+
+  it("aralık uçları hâlâ birbirini ister; ağaç bayrağı eksik ucu TAMAMLAMAZ", () => {
+    failure(run(["--base=main", `--class=${TIGHT}`]), "source-incomplete", KIND.caller);
+    failure(run(["--head=main", `--class=${TIGHT}`]), "source-incomplete", KIND.caller);
+    failure(run([`--class=${TIGHT}`]), "source-missing", KIND.caller);
+  });
+});
+
+describe("pr-size süreç kapısı — gerçek çalışma ağacı izole bir depoda ölçülür", () => {
+  const clean = treeRepo("clean");
+  const dirty = treeRepo("dirty");
+  put(dirty.root, GOVERNED, body(3)); // unstaged: izlenen dosyaya bir satır
+  put(dirty.root, TREE_STAGED, body(1)); // staged: yeni dosya indekse alınır
+  git(dirty.root, ["add", "--", TREE_STAGED]);
+  put(dirty.root, TREE_UNTRACKED, body(1)); // untracked: hiç izlenmeyen dosya
+  const DIRTY_ROWS = 3;
+  const DIRTY_WIRE = [GOVERNED, TREE_STAGED, TREE_UNTRACKED]
+    .sort()
+    .map((file) => zRow(1, 0, file))
+    .join("");
+
+  it("temiz ağaç ölçülür: boş tel dürüstçe raporlanır, provenans yine de vardır", () => {
+    const result = run(treeArgs(TIGHT), { cli: clean.cli });
+    expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
+    expect(result.status).toBe(0);
+    const m = result.report.decisionReport.measurement;
+    expect([m.grossAdditions, m.grossDeletions, m.governedFiles]).toEqual([0, 0, 0]);
+    expect(result.report.workingTree.bytes).toBe(0);
+    expect(result.report.collectsWorkingTree, "toplandı denmedi").toBe(true);
+  });
+
+  it("staged, unstaged ve untracked TEK ağaç ölçümünde birleşir", () => {
+    const result = run(treeArgs(TIGHT), { cli: dirty.cli });
+    expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
+    const m = result.report.decisionReport.measurement;
+    expect([m.grossAdditions, m.grossDeletions, m.governedFiles]).toEqual([
+      DIRTY_ROWS,
+      0,
+      DIRTY_ROWS,
+    ]);
+  });
+
+  it("toplanan tel motora DEĞİŞMEDEN gider: karar fixture moduyla birebir aynıdır", () => {
+    const tree = run(treeArgs(TIGHT), { cli: dirty.cli });
+    const fixture = check(DIRTY_WIRE, TIGHT);
+    expect(JSON.stringify(tree.report.decisionReport), "ağaç kararı fixture'dan ayrıştı").toBe(
+      JSON.stringify(fixture.report.decisionReport),
+    );
+    // Aynı bayt/sınıf/kanıt aynı kararı verir: kaynak yalnız TELİ değiştirir, kuralı değil.
+    expect(tree.report.status).toBe(fixture.report.status);
+    expect(tree.status).toBe(fixture.status);
+  });
+
+  it("provenans minimaldir ve yol/cwd/ham tel içermez", () => {
+    const result = run(treeArgs(TIGHT), { cli: dirty.cli });
+    expect(result.report.inputMode).toBe(SURFACE.treeMode);
+    expect([
+      result.report.collectsWorkingTree,
+      result.report.collectsGitRange,
+      result.report.ciEnforced,
+    ]).toEqual([true, false, false]);
+    expect(result.report.fixture, "ağaç yolunda fixture provenansı uyduruldu").toBeNull();
+    expect(result.report.range, "ağaç yolunda aralık provenansı uyduruldu").toBeNull();
+    expect(Object.keys(result.report.workingTree)).toEqual(["head", "bytes", "sha256"]);
+    expect(result.report.workingTree.head).toBe(dirty.head.toLowerCase());
+    expect(result.report.workingTree.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(result.report.workingTree.bytes).toBeGreaterThan(0);
+    for (const secret of [dirty.root, TMP, "satir "])
+      expect(result.stdout, `sızıntı: ${secret}`).not.toContain(secret);
+  });
+
+  it("aynı ağaç, cwd'den bağımsız olarak BAYT AYNI ve TEK JSON raporu üretir", () => {
+    const first = run(treeArgs(TIGHT), { cli: dirty.cli });
+    for (const cwd of [ROOT, TMP, dirty.root]) {
+      const again = run(treeArgs(TIGHT), { cli: dirty.cli, cwd });
+      expect(again.stdout, `cwd=${cwd}`).toBe(first.stdout);
+      expect(again.stdout.trimEnd(), "stdout tek JSON nesnesi değil").toBe(
+        JSON.stringify(again.report),
+      );
+      expect(again.status).toBe(again.report.exitCode);
+    }
+  }, 60_000);
+
+  it("kanonik bant/kanıt kuralı ağaç yolunda da işler: kanıtsız geniş paket REDdir", () => {
+    const wide = treeRepo("wide");
+    put(wide.root, GOVERNED, body(MID.maxNet + 2));
+    const bare = run(treeArgs(WIDE), { cli: wide.cli });
+    expect(bare.report.decisionReport.band.id).toBe(MID.id);
+    expect(bare.status, "kanıtsız kabul edildi").toBe(EXIT[DECISION.rejected]);
+    expect(run(treeArgs(WIDE, MID.requires), { cli: wide.cli }).status).toBe(0);
+  }, 60_000);
+
+  it.each([
+    ["depo değil", () => at(`plain-${nextId()}`), "working-tree-repo-not-found"],
+    ["doğmamış HEAD", () => repoAt("unborn"), "working-tree-head-unborn"],
+  ])("%s: karar YERİNE adlandırılmış girdi hatası gelir", (_label, make, id) => {
+    const root = make();
+    const result = run(treeArgs(TIGHT), { cli: install(root) });
+    failure(result, id, KIND.input);
+    // Hata yolunda TOPLADIM denmez: yanıltıcı beyan da bir sızıntıdır.
+    expect([result.report.collectsWorkingTree, result.report.workingTree]).toEqual([false, null]);
+    expect(result.stdout, "depo yolu sızdı").not.toContain(root);
+  });
+});
+
+describe("pr-size süreç kapısı — toplayıcıya verilen ve toplayıcıdan alınan sözleşme", () => {
+  it("kök MODÜL konumundan gelir ve toplam süre freni SINIRLI bir bütçe olarak geçirilir", () => {
+    const entry = treeLab(probeStub);
+    for (const cwd of [ROOT, TMP]) {
+      const result = run(treeArgs(TIGHT), { cli: entry, cwd });
+      // `sinirli` = pozitif güvenli tamsayı bütçe verildi; `kendi-kok` = kök cwd'den DEĞİL kendi
+      // konumundan çözüldü. Sabit değerin KENDİSİ yüzeye çıkmaz; kanıt davranış düzeyindedir.
+      failure(result, "working-tree-sonda-sinirli-kendi-kok", KIND.input);
+    }
+  });
+
+  it("toplayıcı hatası TEK `working-tree-` alanına yerleşir; önek ikilenmez", () => {
+    const alreadyNamespaced = treeLab(
+      () =>
+        `export const collectWorkingTree = () => ({ ok: false,\n  error: { id: "working-tree-deadline-exceeded", detail: "sonda" } });\n`,
+    );
+    const result = run(treeArgs(TIGHT), { cli: alreadyNamespaced });
+    failure(result, "working-tree-deadline-exceeded", KIND.input);
+    expect(result.stdout, "önek ikilendi").not.toContain("working-tree-working-tree-");
+  });
+
+  it("toplayıcının fazladan alanları zarfa GEÇMEZ; tel motora değiştirilmeden gider", () => {
+    const wire = wireForNet(LOW.maxNet);
+    const entry = treeLab(
+      () => `export const collectWorkingTree = () => ({ ok: true,
+  numstatZ: ${JSON.stringify(wire)},
+  metadata: { source: "working-tree", head: ${JSON.stringify("a".repeat(40))},
+    byteLength: ${Buffer.byteLength(wire)}, sha256: ${JSON.stringify("b".repeat(64))},
+    absolutePath: "/gizli/kok", stderr: "SIZINTI", elapsedMs: 1234, budgetMs: 4321 } });
+`,
+    );
+    const result = run(treeArgs(TIGHT), { cli: entry });
+    expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
+    expect(Object.keys(result.report.workingTree)).toEqual(["head", "bytes", "sha256"]);
+    for (const secret of ["/gizli/kok", "SIZINTI", "elapsedMs", "budgetMs", "1234", "4321"])
+      expect(result.stdout, `sızıntı: ${secret}`).not.toContain(secret);
+    const pure = engine.decide({ budget, numstatZ: wire, klass: TIGHT, evidence: [] });
+    expect(JSON.stringify(result.report.decisionReport), "tel yolda değiştirildi").toBe(
+      JSON.stringify(pure),
+    );
+  });
+});
+
 describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı beyanı", () => {
   const source = read(CLI);
 
-  it("CLI kabuk/alt süreç çalıştırmaz, aralığı yalnız kabul edilmiş toplayıcıya sorar", () => {
+  it("CLI kabuk/alt süreç çalıştırmaz, toplamayı yalnız kabul edilmiş toplayıcılara sorar", () => {
     for (const forbidden of [
       /child_process/,
       /\bspawn/,
@@ -666,6 +919,11 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
       /process\.stdin/,
       /["']git["']/,
       /readFileSync\(0\b/,
+      // İKİNCİ bir git argv mantığı da yasaktır: komut/bayrak DİZİSİ yalnız toplayıcılarda kurulur
+      // (düz anlatım serbesttir; yasak olan git'e verilebilecek argüman LİTERALLERİdir).
+      /["'](diff|rev-parse|ls-files|merge-base|-z|--numstat|--no-index|--end-of-options)["']/,
+      /["'](--no-ext-diff|--no-textconv|--exclude-standard|--others|--unmerged|HEAD)["']/,
+      /HEAD\^\{commit\}/,
     ])
       expect(source, `CLI yasak yüzeyi kullandı: ${forbidden}`).not.toMatch(forbidden);
     const imports = [...source.matchAll(/^import .*from "(.+)";$/gm)].map((m) => m[1]);
@@ -674,11 +932,32 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
         "../lib/pr-size-core.mjs",
         "../lib/pr-size-decision.mjs",
         COLLECTOR.replace("tools/lib/", "../lib/"),
+        TREE_COLLECTOR.replace("tools/lib/", "../lib/"),
         "node:crypto",
         "node:fs",
         "node:url",
       ].sort(),
     );
+  });
+
+  it("süre freni MODÜL-ÖZELdir: yüzey yalnız sözleşme adlarını ihraç eder ve sürüm yükselir", () => {
+    expect(probe("Object.keys(cli)")).toEqual([
+      "CANONICAL_STANDARD",
+      "CLI_SCHEMA",
+      "CLI_VERSION",
+      "EXIT_CODE",
+      "INPUT_MODE",
+      "INTERNAL",
+      "MAX_FIXTURE_BYTES",
+      "RANGE_MODE",
+      "WORKING_TREE_MODE",
+      "internalEnvelope",
+      "parseArgv",
+      "runCheck",
+    ]);
+    // Yeni mod GERİYE UYUMLU bir eklemedir: şema aynı kalır, sürümün MINOR hanesi yükselir.
+    expect(SURFACE.schema).toBe("pr-size-check/1");
+    expect(SURFACE.version, "CLI sürümü yükselmedi").toMatch(/^1\.2\./);
   });
 
   it("CLI ve bu test ikinci eşik/bant/sınıf/kanıt kopyası taşımaz", () => {
@@ -703,12 +982,26 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
     }
   });
 
-  it("kanonik kapı beyanı dürüsttür: kapı ARALIK TOPLAR ama hiçbir yere BAĞLI DEĞİL", () => {
+  it("kanonik kapı beyanı dürüsttür: kapı ARALIK ve AĞAÇ TOPLAR ama hiçbir yere BAĞLI DEĞİL", () => {
     expect(budget.checker.path).toBe(CLI);
     // Kapı artık gerçek aralığı topluyor (bu dosyadaki gerçek depo kanıtı); not aksini diyemez.
     expect(budget.checker.note, "not gerçek aralığı yok sayıyor").not.toMatch(
       /aralı[kğ]ı?[^.]*toplan?ma[zy]/i,
     );
+    // Çalışma ağacı da artık GERÇEKTEN ölçülüyor: not onu eksik ilan edemez, çağrı biçimini anar.
+    expect(budget.checker.note, "not var olan modu yok sayıyor").not.toMatch(
+      /working-tree[^.]*(yoktur|YOKTUR)/,
+    );
+    expect(budget.checker.note).toContain(TREE_ON);
+    // Kanonik ölçüm modlarının HEPSİ kapıda gerçekten ÇÖZÜLEBİLİR bir moda karşılık gelir: ağaç
+    // modunun adı birebir aynıdır, aralık modu kapıda `git-` önekiyle taşınır. Beyan edilip
+    // kapıda karşılığı olmayan bir mod bu eşlemeden geçemez.
+    const resolvable = [SURFACE.rangeMode, SURFACE.treeMode];
+    for (const mode of budget.measurement.modes as string[])
+      expect(
+        resolvable.some((cli: string) => cli === mode || cli.endsWith(`-${mode}`)),
+        `kapıda karşılığı olmayan mod: ${mode}`,
+      ).toBe(true);
     expect(budget.checker.status).toBe("implemented-not-wired");
     expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
