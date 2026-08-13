@@ -16,15 +16,23 @@ import { describe, expect, it } from "vitest";
 // future contract, the non-goal list, the rollback pair and the closed root key set are pinned IN
 // THE VALIDATOR rather than only here: a static-test-only guard travels with this file, while the
 // portable gate is what other packages can run. Deliberately NON-authoritative and therefore left
-// unpinned: every `rule`, `reason`, `description`, `note`, `scope`, `testHook`, `enforcementObligation`
-// and the per-technology `evidence.*` texts. Each explains rather than decides — free to be reworded,
-// never to reverse that twin, which is what the prose-contradiction sweep refuses.
+// unpinned: every `rule`, `reason`, `description`, `note`, `testHook`, `enforcementObligation`, the
+// per-technology `evidence.*` texts and every `scope` OUTSIDE the manifest pointer. Each explains
+// rather than decides — free to be reworded, never to reverse that twin, which is what the
+// prose-contradiction sweep refuses. The record-side manifest pointer is the exception: it is a
+// pointer, not an explanation, so it is pinned whole — booleans and `scope` prose included.
 const ROOT = process.cwd();
 const RECORD = "reports/kernel-asgi-core-profile-decision-2026-08-11.json";
 const VALIDATOR = "tools/lib/kernel-asgi-core-profile.mjs";
 const MANIFEST = "src/data/workspace-manifest.json";
 const POINTER_KEY = "kernelDeliveryBoundaryDecision";
 const APPLICABILITY = "metaframer-kernel-delivery-boundary";
+// biome-ignore format: the closed record-side pointer field set, sorted; a shrunk pin surface is a diff
+const POINTER_FIELDS = ["applicability", "changesCurrentPlatformStack", "file", "key", "runtimeImplementedByThisRecord", "scope"];
+// The record-side pointer prose reversed: same shape and same tokens, the opposite claim about the
+// platform stack — the forgery a field-by-field pin on `file/key/applicability` never reads.
+// biome-ignore format: the reversed pointer scope stays one line next to the field set it forges
+const POINTER_SCOPE_REVERSED = "one minimal root-level scoped pointer; the platform workspace stack.backend list IS rewritten by this package";
 // biome-ignore format: the frozen mandatory matrix ids stay compact for the shard budget
 const MANDATORY = ["metaframer-asgi-uvicorn", "metaframer-asgi-hypercorn", "fastapi-hosted-metaframer-uvicorn", "fastapi-hosted-metaframer-hypercorn"];
 // biome-ignore format: the supplemental composition contract ids stay compact for the shard budget
@@ -226,8 +234,20 @@ const MANIFEST_DRIFTS: Drift[] = [
   ["m", "workspaces.0.stack.backend", ["MetaFramer ASGI"], "platform-backend-stack-mutated"],
   ["d", "manifestPointer.key", "somethingElse", "manifest-pointer-drift:record"],
 ];
+// The record side is pinned as one closed object, symmetric with the manifest side: a boolean that
+// contradicts the manifest, prose that reverses it, a dropped field and an unknown field are each
+// refused alone, and refused together. Key order is NOT in this table: it is not a decision.
+// biome-ignore format: the record-side pointer sweep stays one forgery per line
+const RECORD_POINTER_DRIFTS: Drift[] = [
+  ["d", "manifestPointer.changesCurrentPlatformStack", true, "manifest-pointer-drift:record"],
+  ["d", "manifestPointer.runtimeImplementedByThisRecord", true, "manifest-pointer-drift:record"],
+  ["d", "manifestPointer.scope", POINTER_SCOPE_REVERSED, "manifest-pointer-drift:record"],
+  ["d", "manifestPointer.runtimeReady", true, "manifest-pointer-drift:record"],
+  ["d", "manifestPointer.scope", DROP, "manifest-pointer-drift:record"],
+  ["d", "manifestPointer", (p: Record<string, unknown>) => ({ ...p, changesCurrentPlatformStack: true, runtimeImplementedByThisRecord: true, runtimeReady: true, scope: POINTER_SCOPE_REVERSED }), "manifest-pointer-drift:record"],
+];
 // biome-ignore format: the whole adversarial surface, evaluated in one sweep
-const DRIFTS: Drift[] = [...IDENTITY_DRIFTS, ...SERVER_DRIFTS, ...OWNERSHIP_DRIFTS, ...EQUALITY_DRIFTS, ...CLAIM_DRIFTS, ...NARRATION_DRIFTS, ...PROSE_DRIFTS, ...EVIDENCE_DRIFTS, ...MANIFEST_DRIFTS];
+const DRIFTS: Drift[] = [...IDENTITY_DRIFTS, ...SERVER_DRIFTS, ...OWNERSHIP_DRIFTS, ...EQUALITY_DRIFTS, ...CLAIM_DRIFTS, ...NARRATION_DRIFTS, ...PROSE_DRIFTS, ...EVIDENCE_DRIFTS, ...MANIFEST_DRIFTS, ...RECORD_POINTER_DRIFTS];
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const readJson = (relative: string) => JSON.parse(read(relative));
 const exists = (relative: string) => fs.existsSync(path.join(ROOT, relative));
@@ -315,7 +335,7 @@ describe("MetaFramer ASGI Core Profile decision record", () => {
       evaluateAsgiCoreProfileDecision, FALSE_PINS, VALUE_PINS, MATRIX_IDS, SERVER_IDS, RECORD_ROOT_KEYS,
       OUTCOME_DIMENSIONS, FORBIDDEN_INNER_RING_IMPORTS, METAFRAMER_OWNED_PORTS, EVIDENCE_DIMENSIONS,
       EVIDENCE_STATUSES, MISSING_EVIDENCE, OFFICIAL_SOURCES, NON_GOALS, OWNER_COMPREHENSION,
-      CAPABILITY_DELTA_SADE_TURKCE, MCP_FUTURE_CONTRACT,
+      CAPABILITY_DELTA_SADE_TURKCE, MCP_FUTURE_CONTRACT, RECORD_MANIFEST_POINTER,
     } = await load(VALIDATOR);
     // The positive control: without it, a validator that rejects everything would look correct.
     const clean = evaluateAsgiCoreProfileDecision({ decision, manifest });
@@ -381,8 +401,25 @@ describe("MetaFramer ASGI Core Profile decision record", () => {
     // The pointer is minimal, scoped and honest on both sides; the backend stack is what it found.
     // biome-ignore format: the minimal scoped manifest pointer stays compact for the shard budget
     expect(manifest[POINTER_KEY]).toMatchObject({ decisionRef: RECORD, applicability: APPLICABILITY, changesCurrentPlatformStack: false, runtimeImplementedByThisRecord: false });
-    // biome-ignore format: the record and the manifest name the same pointer from both sides
-    expect(decision.manifestPointer).toMatchObject({ file: MANIFEST, key: POINTER_KEY, applicability: APPLICABILITY });
+    // The record side is pinned as ONE closed object, so it cannot contradict the pointer it
+    // declares: exact equality, not three fields out of six.
+    // biome-ignore format: the record-side pointer is compared whole, never field by field
+    expect(decision.manifestPointer, "record-pointer-drift").toEqual(RECORD_MANIFEST_POINTER);
+    // biome-ignore format: the pin surface itself, so a field cannot be quietly dropped from the gate
+    expect(Object.keys(RECORD_MANIFEST_POINTER).sort(), "record-pointer-pin-surface-drift").toEqual(POINTER_FIELDS);
+    // The pin must be the honest one, so pinning can never be used to freeze a stack-changing claim.
+    // biome-ignore format: the pinned pointer names the same manifest key and claims nothing
+    expect(RECORD_MANIFEST_POINTER, "pinned-pointer-not-honest").toMatchObject({ file: MANIFEST, key: POINTER_KEY, applicability: APPLICABILITY, changesCurrentPlatformStack: false, runtimeImplementedByThisRecord: false });
+    // biome-ignore format: the pinned scope still says the platform stack is left alone
+    expect(RECORD_MANIFEST_POINTER.scope, "pinned-pointer-scope-not-honest").toContain("is not rewritten by this package");
+    // JSON objects carry no key order, so a reordered pointer is the SAME pointer and stays accepted:
+    // the gate refuses forgeries, not serialisation.
+    const reordered = clone(decision);
+    reordered.manifestPointer = Object.fromEntries(
+      Object.entries(reordered.manifestPointer).reverse(),
+    );
+    // biome-ignore format: key order is serialisation, never a decision
+    expect(evaluateAsgiCoreProfileDecision({ decision: reordered, manifest }).errors, "pointer-key-order-read-as-drift").toEqual([]);
     // biome-ignore format: the untouched platform backend stack is asserted directly as well
     expect(manifest.workspaces.find((w: { id: string }) => w.id === "platform").stack.backend, "platform-backend-stack-mutated").toEqual(BACKEND_STACK);
   });

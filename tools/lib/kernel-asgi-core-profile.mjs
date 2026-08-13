@@ -2,12 +2,13 @@
 // the workspace manifest as values, reads no file, and returns every named reason they fail rather
 // than only the first. The record is never its own authority either: the root key set, matrix rows,
 // server set, closed lists, owned ports, inner-ring ban, evidence table, equality statement, owner-
-// comprehension paragraphs, capability delta, MCP contract, non-goals, rollback pair and platform
-// stack are pinned HERE, so restating shape never passes and no binding field or binding SENTENCE
-// drifts while the gate still accepts. Explanatory prose (`rule`, `reason`, `description`, `note`,
-// `scope`, `testHook`, `enforcementObligation`, `evidence.*`) is deliberately NOT frozen: each has a
-// machine-readable twin, so it may be reworded freely but may never reverse that twin — which the
-// prose-contradiction sweep refuses wherever in the record the reversal is written.
+// comprehension paragraphs, capability delta, MCP contract, non-goals, rollback pair, manifest
+// pointer and platform stack are pinned HERE, so restating shape never passes and no binding field
+// or binding SENTENCE drifts while the gate still accepts. Explanatory prose (`rule`, `reason`,
+// `description`, `note`, `testHook`, `enforcementObligation`, `evidence.*` and every `scope` OUTSIDE
+// the manifest pointer) is deliberately NOT frozen: each has a machine-readable twin, so it may be
+// reworded freely but may never reverse that twin — which the prose-contradiction sweep refuses
+// wherever in the record the reversal is written.
 export const DECISION_REF = "reports/kernel-asgi-core-profile-decision-2026-08-11.json";
 export const MANIFEST_REF = "src/data/workspace-manifest.json";
 export const MANIFEST_POINTER_KEY = "kernelDeliveryBoundaryDecision";
@@ -141,6 +142,20 @@ export const PROSE_CONTRADICTIONS = [
 ];
 // biome-ignore format: the current platform implementation stack this decision does not own and may not rewrite
 export const PLATFORM_BACKEND_STACK = ["FastAPI", "GraphQL", "PostgreSQL", "SQLAlchemy 2.0", "SQLModel", "Alembic"];
+// The record's OWN copy of the pointer, pinned as one exact closed object — symmetric with the four
+// manifest-side fields and their unknown-key closure. A record side pinned on fewer fields lets the
+// record contradict itself: the manifest still says the stack is untouched and no runtime landed
+// while the record's own pointer claims both, and the owner reads the record, not the manifest.
+export const RECORD_MANIFEST_POINTER = {
+  file: MANIFEST_REF,
+  key: MANIFEST_POINTER_KEY,
+  applicability: APPLICABILITY,
+  changesCurrentPlatformStack: false,
+  runtimeImplementedByThisRecord: false,
+  scope:
+    "one minimal root-level scoped pointer; the platform workspace stack.backend list is not " +
+    "rewritten by this package",
+};
 // biome-ignore format: fields that must be exactly false, as [path, rejection]; absent reads as "not false" and fails
 export const FALSE_PINS = [
   ["coreProfile.subSpec.assumeUndeclaredOptionalCapability", "undeclared-optional-capability-assumed"],
@@ -198,6 +213,16 @@ export const TEXT_PINS = [
 ];
 export const VALUE_PINS = [...IDENTITY_PINS, ...POLICY_PINS, ...TEXT_PINS];
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// JSON object semantics carry no key order, so a whole object is compared over SORTED entries: a
+// reordered pointer is the same pointer and stays accepted, while a missing, extra, retyped or
+// reworded field is a different object. A non-object — string, null, array of the same entries —
+// is never equal to the pinned object, however equivalent it looks.
+const sortedEntries = (value) => Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1));
+const sameObject = (got, pinned) =>
+  !!got &&
+  typeof got === "object" &&
+  !Array.isArray(got) &&
+  same(sortedEntries(got), sortedEntries(pinned));
 const at = (root, path) => path.split(".").reduce((value, key) => value?.[key], root);
 // Every string anywhere in the record, so a reversal cannot hide in an unpinned corner of it.
 const allStrings = (node, out = []) => {
@@ -331,14 +356,11 @@ export function evaluateAsgiCoreProfileDecision({ decision, manifest } = {}) {
       if (pointer[key] !== value) add(`manifest-pointer-drift:${key}`);
     for (const key of Object.keys(pointer))
       if (!(key in expected) && key !== "note") add(`manifest-pointer-unknown-field:${key}`);
-    const declared = record.manifestPointer ?? {};
-    if (
-      declared.file !== MANIFEST_REF ||
-      declared.key !== MANIFEST_POINTER_KEY ||
-      declared.applicability !== APPLICABILITY
-    )
-      add("manifest-pointer-drift:record");
   }
+  // The record side is closed the same way and read whether or not the manifest side survives, so a
+  // dropped manifest pointer can no longer hide a record that contradicts it.
+  if (!sameObject(record.manifestPointer, RECORD_MANIFEST_POINTER))
+    add("manifest-pointer-drift:record");
   const platform = (manifest?.workspaces ?? []).find((entry) => entry?.id === "platform");
   if (!same(platform?.stack?.backend, PLATFORM_BACKEND_STACK))
     add("platform-backend-stack-mutated");
