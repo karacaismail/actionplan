@@ -1,0 +1,53 @@
+{
+  "id": "kernel-delivery-boundary",
+  "name": "MetaFramer Delivery Sınırı Katalog Girişi",
+  "version": "1.0.0",
+  "family": "engineering",
+  "basedOnAdr": ["adr-0027"],
+  "summary": "Delivery sınırı kararının reference-only katalog girişi. Bağlayıcı değerler burada tekrarlanmaz; tek kanonik sahip referans listesindeki karar kaydı ve onun doğrulayıcısıdır. Bu giriş yalnız yol gösterir: capability delta NONE.",
+  "appliesTo": ["metaframer-kernel", "delivery-boundary"],
+  "rules": [
+    {
+      "id": "kdb-canonical-decision-source-single",
+      "rule": "Delivery sınırı kararının tek kanonik sahibi referans listesindeki karar kaydı ve onun doğrulayıcısıdır. Bu katalog girişi kararı yeniden yazmaz ve bağlayıcı değerlerin ikinci bir kopyasını taşımaz.",
+      "rationale": "İkinci kopya kaynağındaki korumaları yanında getirmez, zamanla kaynaktan sapar ve zayıf kopya kanonik sanılır.",
+      "severity": "must",
+      "check": "vitest run tests/kernelDeliveryBoundaryStandard.test.ts (kaynaktan türetilen değer kopyası taraması)"
+    },
+    {
+      "id": "kdb-consumer-requires-accepted-source-validation",
+      "rule": "Bu girişi okuyan tüketici kararı doğrudan kullanamaz: önce referans listesindeki doğrulayıcı çalıştırılır ve yalnız `accepted=true` ile boş hata listesi döndüğünde karar kullanılabilir; aksi hâlde tüketici fail-closed durur.",
+      "rationale": "Doğrulayıcı atlanırsa kaynak kayıt sessizce sürüklenmiş olsa bile tüketici onu geçerli sayar.",
+      "severity": "must",
+      "check": "vitest run tests/kernelDeliveryBoundaryStandard.test.ts (accepted=true pozitif kontrolü + bileşik kaynak mutasyonu)"
+    },
+    {
+      "id": "kdb-catalog-entry-claims-nothing",
+      "rule": "Bu katalog girişi runtime, readiness, release, deploy, conformance süiti veya çalışan form üretmez ve bunların hiçbirini iddia etmez; capability delta NONE'dır.",
+      "rationale": "Bir yönetişim kaydı sessizce hazırlık iddiasına terfi ederse sahibe var olmayan bir yetenek vaat edilir.",
+      "severity": "must",
+      "check": "vitest run tests/kernelDeliveryBoundaryStandard.test.ts (görünür metin overclaim taraması)"
+    },
+    {
+      "id": "kdb-owner-comprehension-read-from-source",
+      "rule": "Sahip anlayışı beş alanı ve yedi boyutlu teknoloji kanıtı açıklaması bu girişte kopyalanmaz; referans listesindeki karar kaydından ve ADR-0027 AP-OC1 bölümünden okunur. Teknoloji seçimi popülerlikle gerekçelendirilemez.",
+      "rationale": "Sahibe giden metnin iki kopyası olursa biri düzeltilirken diğeri eski kalır ve hangisinin bağlayıcı olduğu belirsizleşir.",
+      "severity": "must",
+      "check": "vitest run tests/kernelDeliveryBoundaryStandard.test.ts (referans pinleri) + src/data/standards/ai-governance.json owner-*/tech-evidence-* kuralları"
+    }
+  ],
+  "banned": [
+    "duplicated-delivery-decision-values",
+    "consumer-bypasses-source-validator",
+    "runtime-readiness-overclaim",
+    "popularity-as-technology-evidence"
+  ],
+  "allowed": [],
+  "references": [
+    "reports/kernel-asgi-core-profile-decision-2026-08-11.json",
+    "tools/lib/kernel-asgi-core-profile.mjs",
+    "tests/kernelAsgiCoreProfileDecision.test.ts",
+    "docs/adr-0027-engineering-standards.md#sahip-anlayışı-ve-teknoloji-kanıtı-sözleşmesi-ap-oc1",
+    "src/data/standards/ai-governance.json"
+  ]
+}

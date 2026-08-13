@@ -39,11 +39,11 @@ interface ResolvedStandardShape {
 }
 
 describe("canonical standard contract projection", () => {
-  it("loads every one of the 36 canonical standard JSON contracts into STANDARDS", () => {
+  it("loads every one of the 39 canonical standard JSON contracts into STANDARDS", () => {
     const canonicalIds = standardFiles.map((file) => file.replace(/\.json$/, ""));
 
-    expect(standardFiles).toHaveLength(38);
-    expect(STANDARDS).toHaveLength(38);
+    expect(standardFiles).toHaveLength(39);
+    expect(STANDARDS).toHaveLength(39);
     expect(STANDARDS.map((standard) => standard.id).sort()).toEqual(canonicalIds);
   });
 

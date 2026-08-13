@@ -28,7 +28,7 @@ describe("docs JSON integration report current status", () => {
     expect(META.counts.total).toBe(liveExpectedNodeCount);
     expect(nodes).toHaveLength(liveExpectedNodeCount);
     expect(META.counts.byArtifactKind?.["legacy-alias"]).toBe(5);
-    expect(STANDARD_COUNT).toBe(38);
+    expect(STANDARD_COUNT).toBe(39);
     expect(CLASSIFICATION).toHaveLength(295);
     expect(CLASSIFICATION.filter((entry) => entry.decision === "task-materialize")).toHaveLength(
       218,
@@ -48,7 +48,7 @@ describe("docs JSON integration report current status", () => {
     );
     expect(REPORT).toContain("| Tarihsel pre-D01 aktif WBS kaydı (legacy alias hariç) | 612 |");
     expect(REPORT).toContain("| Legacy alias / yönlendirme kaydı | 5 |");
-    expect(REPORT).toContain("| Canonical standard sözleşmesi | 38 |");
+    expect(REPORT).toContain("| Canonical standard sözleşmesi | 39 |");
     expect(REPORT).toContain("496 düğümlük kaynak snapshot'ın tarihsel");
     expect(REPORT).toContain("Current-live toplam `resolveD01NodeUniverse` ile doğrulanır");
     expect(REPORT).not.toContain("güncel materialized katalog 617");
