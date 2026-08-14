@@ -117,10 +117,16 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: kapı yazıldı ama enforcement hâlâ YOK", () => {
+  it("kapı beyanı dürüsttür: aralık toplanır ama enforcement hâlâ YOK", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
     expect(budget.checker.status).toBe("implemented-not-wired");
     expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
+    // P2B gerçeği: aralık ARTIK toplanır — not bunu ne inkâr eder ne de fazlasını iddia eder.
+    for (const missing of [/working-tree/i, /CI/, /P3/])
+      expect(budget.checker.note, `kalan boşluk adıyla sayılmıyor: ${missing}`).toMatch(missing);
+    expect(budget.checker.note, "olmayan mod uygulanmış gibi").not.toMatch(
+      /working-tree[^.]*(ölçer|toplar|vardır)/i,
+    );
     // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(
       budget.checker.status !== "planned-not-implemented",
