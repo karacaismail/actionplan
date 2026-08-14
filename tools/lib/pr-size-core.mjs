@@ -16,9 +16,14 @@ import fs from "node:fs";
 export const SOURCE_ROOTS = ["src/", "tests/", "tools/", "docs/"];
 /** Kaynak kodu uzantıları: üretim dosyası kategori TAM YOLU olarak bütçeden gizlenemez. */
 // biome-ignore format: the closed source-extension vocabulary stays compact for the shard budget
-export const SOURCE_CODE_EXTENSIONS = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".go", ".rs",
-  ".java", ".kt", ".cs", ".php", ".rb", ".swift", ".vue", ".svelte"];
+export const SOURCE_CODE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts",
+  ".cts", ".py", ".go", ".rs", ".java", ".kt", ".cs", ".php", ".rb", ".swift", ".vue", ".svelte",
+  ".scss", ".sql"];
 export const NUMERIC_FIELD = /^(0|[1-9][0-9]*)$/; // işaretsiz ASCII tamsayı; sıfır dolgusu yasak
+
+/** Uzantı eşleşmesi büyük/küçük harf duyarsızdır; `App.SCSS` de kaynak kodudur. */
+export const isSourceCode = (file) =>
+  SOURCE_CODE_EXTENSIONS.some((ext) => file.toLowerCase().endsWith(ext));
 
 const fail = (id, detail) => ({ ok: false, error: { id, detail } });
 const quote = (value) => JSON.stringify(value);
@@ -47,10 +52,13 @@ export const renameTarget = (file) => {
 };
 
 /**
- * Satır biçimi `<ekleme>\t<silme>\t<yol>`. Sayısal alan DOĞRULANMADAN Number()'a verilmez:
+ * ESKİ/İZOLE düz biçim `<ekleme>\t<silme>\t<yol>`. Sayısal alan DOĞRULANMADAN Number()'a verilmez:
  * onaltılık, üstel, ondalık, boş, negatif, tam-genişlik ya da güvenli tamsayı aralığı dışındaki
- * bir alan sessizce kabul edilirse kapı "ölçemedim" yerine yanlış bir SAYI raporlar. `-` ikili
- * (satır olarak ölçülemeyen) değişikliktir: null KALIR, 0 OLMAZ.
+ * bir alan sessizce kabul edilirse kapı "ölçemedim" yerine yanlış bir SAYI raporlar.
+ *
+ * BU PARSER KAPIYA GİRDİ DEĞİLDİR: düz biçimde rename yalnız ` => ` metninden SEZİLİR, dolayısıyla
+ * `x => dist/bundle.js` gibi GERÇEK bir dosya adı rename sanılıp kategori kaçışına dönüşebilir.
+ * Deterministik CLI yalnız `parseNumstatZ` çerçevesini kabul eder; bu yüzey birim testi içindir.
  */
 export const parseNumstat = (text) => {
   const rows = [];
@@ -65,16 +73,58 @@ export const parseNumstat = (text) => {
       invalid.push({ line: i + 1, detail: `alan sayısı veya yol eksik: ${quote(line)}` });
       continue;
     }
-    const numeric = [parts[0], parts[1]];
-    const bad = numeric.filter(
-      (f) => f !== "-" && (!NUMERIC_FIELD.test(f) || !Number.isSafeInteger(Number(f))),
-    );
-    if (bad.length) {
-      invalid.push({ line: i + 1, detail: `sayısal alan geçersiz: ${bad.map(quote).join(", ")}` });
+    const counts = readCounts(parts[0], parts[1]);
+    if (counts.bad) invalid.push({ line: i + 1, detail: counts.bad });
+    else rows.push({ ...counts, file: renameTarget(file) });
+  }
+  return { rows, invalid };
+};
+
+/** Sayısal alan çifti tek yerde doğrulanır: `-` ikilidir (null KALIR), gerisi katı ASCII tamsayı. */
+const readCounts = (a, d) => {
+  const bad = [a, d].filter(
+    (f) => f !== "-" && (!NUMERIC_FIELD.test(f) || !Number.isSafeInteger(Number(f))),
+  );
+  if (bad.length) return { bad: `sayısal alan geçersiz: ${bad.map(quote).join(", ")}` };
+  return { additions: a === "-" ? null : Number(a), deletions: d === "-" ? null : Number(d) };
+};
+
+/**
+ * `git diff --numstat -z` TEL BİÇİMİ. Kayıt sınırı NUL'dur, satırsonu DEĞİL: ad içindeki `\n`,
+ * `\t`, boşluk, süslü parantez, ` => ` ve Unicode LİTERAL yol metnidir ve ASLA rename sözdizimi
+ * diye yorumlanmaz — düz parser'ın `x => dist/bundle.js` kaçışı burada yapısal olarak imkânsızdır.
+ * Sıradan kayıt `ekleme\tsilme\tyol\0`; rename/copy kaydı `ekleme\tsilme\t\0eski\0yeni\0` olup
+ * yalnız HEDEF bir kez sayılır. Kapanmamış, kesik veya fazladan çerçeve ölçüm yapılmadan durur:
+ * çerçeve hatası akışı kaydırdığı için ilk hatada okuma BİTER, quotePath çözümü YAPILMAZ.
+ */
+export const parseNumstatZ = (text) => {
+  const rows = [];
+  const invalid = [];
+  const stream = String(text);
+  if (stream === "") return { rows, invalid };
+  const stop = (line, detail) => {
+    invalid.push({ line, detail });
+    return { rows, invalid };
+  };
+  if (!stream.endsWith("\0")) return stop(rows.length + 1, "NUL çerçevesi kapanmadı (kesik akış)");
+  const fields = stream.slice(0, -1).split("\0");
+  for (let i = 0; i < fields.length; i += 1) {
+    const at = rows.length + invalid.length + 1;
+    const parts = fields[i].split("\t");
+    if (parts.length < 3) return stop(at, `kayıt alanı eksik: ${quote(fields[i])}`);
+    const counts = readCounts(parts[0], parts[1]);
+    const head = parts.slice(2).join("\t"); // ad içindeki TAB literal kalır
+    if (head !== "") {
+      if (counts.bad) invalid.push({ line: at, detail: counts.bad });
+      else rows.push({ additions: counts.additions, deletions: counts.deletions, file: head });
       continue;
     }
-    const [additions, deletions] = numeric.map((f) => (f === "-" ? null : Number(f)));
-    rows.push({ additions, deletions, file: renameTarget(file) });
+    const [from, to] = [fields[i + 1], fields[i + 2]];
+    if (from === undefined || to === undefined) return stop(at, "rename çerçevesi kesik");
+    if (from === "" || to === "") return stop(at, "rename çerçevesinde boş yol");
+    i += 2;
+    if (counts.bad) invalid.push({ line: at, detail: counts.bad });
+    else rows.push({ additions: counts.additions, deletions: counts.deletions, file: to });
   }
   return { rows, invalid };
 };
@@ -106,7 +156,7 @@ export const validateCategories = (categories, sourceRoots = SOURCE_ROOTS) => {
     for (const exact of paths) {
       const safe = safePath(exact);
       if (!safe) errors.push(`${id}: güvensiz tam yol ${quote(exact)}`);
-      else if (SOURCE_CODE_EXTENSIONS.some((ext) => safe.toLowerCase().endsWith(ext)))
+      else if (isSourceCode(safe))
         errors.push(`${id}: kaynak kodu tam yol olarak gizlenemez: ${safe}`);
     }
   }
@@ -134,28 +184,39 @@ export const accrue = (target, row) => {
 };
 
 /**
- * Tek deterministik ölçüm. Girdi, sözleşme veya yol güvenli değilse ÖLÇÜM YAPILMAZ ve hata kimliği
+ * Tek deterministik ölçüm; `numstatZ` verilirse NUL çerçevesi, verilmezse eski düz biçim okunur
+ * (kapı yalnız NUL çerçevesini geçirir). Girdi, sözleşme veya yol güvenli değilse ÖLÇÜM YAPILMAZ ve hata kimliği
  * ölçemediğini söyler. Muhasebe kapanır: her satır ya bir kategoriye ya bütçeye yazılır, ikisine
  * birden değil; `totals` ikisinin toplamıdır ve ikili satır her iki yanda da işaretli kalır.
  */
-export const measure = ({ numstat, categories, sourceRoots = SOURCE_ROOTS }) => {
+export const measure = ({ numstat, numstatZ, categories, sourceRoots = SOURCE_ROOTS }) => {
   const configErrors = validateCategories(categories, sourceRoots);
   if (configErrors.length) return fail("category-config-invalid", configErrors.join("; "));
-  const { rows, invalid } = parseNumstat(numstat);
+  const { rows, invalid } =
+    numstatZ === undefined ? parseNumstat(numstat) : parseNumstatZ(numstatZ);
   const badInput = invalid.map((i) => `satır ${i.line}: ${i.detail}`).join("; ");
   if (invalid.length) return fail("measurement-input-invalid", badInput);
   const unsafe = [...new Set(rows.filter((r) => !safePath(r.file)).map((r) => r.file))];
   if (unsafe.length) return fail("path-unsafe", `normalize edilemeyen yol: ${unsafe.join(", ")}`);
   const totals = bucket();
   const governed = bucket();
-  const byCategory = new Map(categories.map((c) => [c.id, { id: c.id, ...bucket() }]));
+  const byCategory = new Map(
+    categories.map((c) => [c.id, { id: c.id, ...bucket(), sourceCodeFiles: [] }]),
+  );
   const binaryFiles = [];
   for (const row of rows) {
     const file = safePath(row.file);
     accrue(totals, row);
     if (row.additions === null || row.deletions === null) binaryFiles.push(file);
     const category = categories.find((c) => inCategory(c, file));
-    accrue(category ? byCategory.get(category.id) : governed, row);
+    if (!category) {
+      accrue(governed, row);
+      continue;
+    }
+    const target = byCategory.get(category.id);
+    accrue(target, row);
+    // Ayrı raporlanan kutuya düşen kaynak kodu SESSİZCE yutulmaz; adıyla raporda görünür kalır.
+    if (isSourceCode(file)) target.sourceCodeFiles.push(file);
   }
   return { ok: true, totals, governed, categories: [...byCategory.values()], binaryFiles };
 };
