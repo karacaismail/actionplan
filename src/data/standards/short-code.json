@@ -1,7 +1,7 @@
 {
   "id": "short-code",
   "name": "Kısa Kod & Kapsam Frenleri Standardı",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "family": "engineering",
   "basedOnAdr": ["adr-0027"],
   "summary": "Küçük PR, dosya/fonksiyon boyut tavanı, döngüsel ve bilişsel karmaşıklık eşikleri, gereksiz soyutlama yasağı, zorunlu allowed-files + non-goals ile AI ajanın kapsam genişlemesini frenler.",
@@ -9,10 +9,10 @@
   "rules": [
     {
       "id": "short-pr-size",
-      "rule": "Bir PR'daki net değişiklik (üretilen/lock dosyaları hariç) ≤ 400 satırdır; aşan iş atomik PR'lara bölünür. Tek PR ≤ 20 dosyaya dokunur.",
-      "rationale": "Küçük PR gözden geçirilebilir, geri alınabilir ve regresyon yüzeyi küçüktür.",
+      "rule": "Bir değişiklik paketinin satır bütçesi bu dosyanın `changePackageBudget` alanında makine-okunur tanımlıdır. Bant merdiveni (varsayılan → koşullu istisna → waiver → split) her sınıf için AYNI eşiklerle işler; sınıf yalnız paketin varsayılan/gerekçeli tavanını sınıflandırır. Alan ayrıca dosya sayısı tavanını, churn (anlamsız silme) frenini ve ayrı raporlanan generated/lock/mekanik kategorilerini taşır. Eşiğin TEK kanonik makine sahibi bu alandır ve kural metni sayı taşımaz; tüketici alanı okur. AGENTS.md ve docs altındaki eski prose kopyaları hâlâ durur ve P3 tüketici-migrasyon borcudur: P3'e kadar çakışmada kanonik alan üstün gelir, eski kopya yeni yetki vermez ve bu standart onların temizlendiğini İDDİA ETMEZ.",
+      "rationale": "Tek kanonik makine sahibi, prose kopyası üzerinden sessiz eşik sapmasını (drift) ve satır uğruna test/güvenlik kanıtı kısmayı engeller; eski kopyalar P3'te alana yönlendirilene kadar üstünlük kanonik alandadır, böylece küçük paket gözden geçirilebilir ve geri alınabilir kalır.",
       "severity": "must",
-      "check": "check-pr-size CI kapısı (diff satır sayımı) bloklar"
+      "check": "P1'de yürürlükte olan tek kapı sözleşme+tip kapısıdır (StandardContractSchema). Diff kapısı henüz YAZILMADI ve hiçbir CI'a bağlı DEĞİL; makine-okunur durum changePackageBudget.checker (path/status/blocks) alanındadır."
     },
     {
       "id": "short-file-length",
@@ -78,5 +78,99 @@
     "scope-creep-outside-allowed-files"
   ],
   "allowed": ["atomic-pr", "composition", "early-return"],
-  "references": ["docs/adr-0027-engineering-standards.md"]
+  "references": ["docs/adr-0027-engineering-standards.md"],
+  "changePackageBudget": {
+    "unit": "change-package",
+    "netFormula": "additions-deletions",
+    "maxChangedFiles": 20,
+    "bands": [
+      {
+        "id": "default",
+        "maxNet": 400,
+        "requires": [],
+        "includesLowerBandRequirements": false,
+        "note": "Normal/varsayılan bant; her sınıf için aynıdır ve ek kanıt istemez."
+      },
+      {
+        "id": "conditional",
+        "maxNet": 800,
+        "requires": [
+          "single-narrow-problem",
+          "bounded-file-set",
+          "no-redundant-repetition",
+          "no-quality-tradeoff",
+          "full-green",
+          "fresh-reviewer-accept",
+          "explicit-rollback"
+        ],
+        "includesLowerBandRequirements": false,
+        "note": "Koşullu istisna bandı: yedi koşul birlikte aranır. Bu bantta waiver ZORUNLU DEĞİLDİR ve istenmesi yasaktır."
+      },
+      {
+        "id": "waiver",
+        "maxNet": 1200,
+        "requires": ["strong-technical-justification", "independent-review", "explicit-waiver"],
+        "includesLowerBandRequirements": false,
+        "note": "OWNER metni birebir: güçlü teknik gerekçe + bağımsız review + açık waiver kaydı. Alt bandın koşulları burada KENDİLİĞİNDEN aranmaz; kalıtım yalnız sahibi includesLowerBandRequirements=true yaparsa açılır."
+      }
+    ],
+    "splitRequiredAboveNet": 1200,
+    "classes": [
+      {
+        "id": "production",
+        "maxNet": 400,
+        "ceilingKind": "default",
+        "scope": "Normal üretim/runtime davranışı değiştiren değişiklik paketi; varsayılan sınır."
+      },
+      {
+        "id": "security-test-conformance",
+        "maxNet": 800,
+        "ceilingKind": "justified",
+        "scope": "Test, security, adversarial testing ve conformance paketi; gerekçeli üst sınır."
+      }
+    ],
+    "churnGuard": {
+      "netCreditFloor": 0,
+      "netCreditPolicy": "net-clamped-at-floor-deletions-earn-no-credit",
+      "grossMaxFromBand": "conditional",
+      "appliesWhenNetAtOrBelowBand": "default",
+      "requires": ["independent-review"],
+      "note": "Anlamsız silme bütçeye KREDİ yazamaz: bütçe hesabında net, netCreditFloor'un altına inmez; ölçülen gerçek net (additions-deletions) ayrıca raporlanır. Brüt tavan bağımsız bir sayı değildir, grossMaxFromBand'ın gösterdiği bandın maxNet'inden türetilir."
+    },
+    "separatelyReported": [
+      {
+        "id": "generated",
+        "paths": [],
+        "pathPrefixes": ["src/data/generated/", "public/data/", "dist/"]
+      },
+      {
+        "id": "lockfile",
+        "paths": ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"],
+        "pathPrefixes": []
+      },
+      {
+        "id": "mechanical-projection",
+        "paths": [
+          "src/data/standards-applicability.json",
+          "src/data/app-catalog-decisions.json",
+          "src/data/kernel-integration-catalog.json",
+          "src/data/kernel-integration-decisions.json"
+        ],
+        "pathPrefixes": ["tools/platform-content/"]
+      }
+    ],
+    "measurement": {
+      "defaultRange": "merge-base(base,head)..head",
+      "modes": ["range", "working-tree"],
+      "reports": ["gross-additions", "gross-deletions", "measured-net"],
+      "decomposesChainedPackages": false,
+      "honestScopeNote": "Ölçüm verilen aralığın TOPLAMIDIR. Aralık birden çok zincirli change-package içeriyorsa toplam, tek tek paketlerin kanıtı DEĞİLDİR; her paket kendi aralığıyla ayrı ölçülür."
+    },
+    "checker": {
+      "path": "tools/agents/check-pr-size.mjs",
+      "status": "planned-not-implemented",
+      "blocks": false,
+      "note": "P1 = sözleşme + tip kapısı; bu yol HENÜZ YOKTUR ve enforcement BEKLEMEDEDİR. P2 dosyayı yazınca status implemented-not-wired, P3 CI'a bağlayınca ci-enforced-blocking olur; blocks yalnız o son durumda true olabilir."
+    }
+  }
 }
