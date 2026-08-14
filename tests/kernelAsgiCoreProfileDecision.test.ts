@@ -16,11 +16,12 @@ import { describe, expect, it } from "vitest";
 // future contract, the non-goal list, the rollback pair and the closed root key set are pinned IN
 // THE VALIDATOR rather than only here: a static-test-only guard travels with this file, while the
 // portable gate is what other packages can run. Deliberately NON-authoritative and therefore left
-// unpinned: every `rule`, `reason`, `description`, `note`, `testHook`, `enforcementObligation`, the
-// per-technology `evidence.*` texts and every `scope` OUTSIDE the manifest pointer. Each explains
-// rather than decides — free to be reworded, never to reverse that twin, which is what the
-// prose-contradiction sweep refuses. The record-side manifest pointer is the exception: it is a
-// pointer, not an explanation, so it is pinned whole — booleans and `scope` prose included.
+// unpinned: every `rule`, `reason`, `description`, `note`, `testHook`, `enforcementObligation` and
+// the per-technology `evidence.*` texts. Each explains rather than decides — free to be reworded,
+// never to reverse that twin, which is what the prose-contradiction sweep refuses. `scope` is not
+// among them: every `scope` is pinned — the capability-policy and inner-ring scopes by exact value,
+// and the record-side pointer scope inside the whole-object pointer pin, because a pointer is not an
+// explanation but a claim about the manifest.
 const ROOT = process.cwd();
 const RECORD = "reports/kernel-asgi-core-profile-decision-2026-08-11.json";
 const VALIDATOR = "tools/lib/kernel-asgi-core-profile.mjs";

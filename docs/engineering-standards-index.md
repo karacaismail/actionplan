@@ -143,6 +143,21 @@ Bu dizin aşağıdaki kararlardan türemiştir ve onlarla birlikte okunmalıdır
 
 ---
 
+## 5.1 Reference-only Ek — Kernel Delivery Sınırı (§2 kataloğunun DIŞINDA)
+
+Aşağıdaki giriş §2'deki çekirdek katalogda **yer almaz** ve §3'te bir `standardRef` anahtarına **çözülmez**: sınıfı **reference-only**'dir. Bir düğüm buna bağlanmaz; katalog girişi ile anlatı yalnız kanonik karar zincirine işaret eder ve hiçbir bağlayıcı değeri ikinci kez yazmaz.
+
+| Katman | Yol | Rolü |
+|---|---|---|
+| Anlatı standardı | `docs/standards/15-kernel-delivery-boundary-standard.md` | **reference-only** insan-okur anlatı; kural üretmez, kararın sade anlamını verir |
+| Katalog girişi | `src/data/standards/kernel-delivery-boundary.json` | reference-only katalog girişi; bağlayıcı değer kopyası taşımaz |
+| Kanonik karar (sahip) | `reports/kernel-asgi-core-profile-decision-2026-08-11.json` | Bağlayıcı değerlerin tek sahibi |
+| Doğrulayıcı (fail-closed) | `tools/lib/kernel-asgi-core-profile.mjs` | `accepted=true` + boş hata listesi vermeden karar tüketilemez |
+
+Kapılar — bu commit'te aktif: `tests/kernelAsgiCoreProfileDecision.test.ts`, `tests/kernelDeliveryBoundaryStandard.test.ts`; planlanan: `tests/kernelDeliveryBoundaryDocumentation.test.ts` — M7-R1 paketinde eklenecek, bu commit'te mevcut değildir. Bu ek çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
+
+---
+
 ## 6. İlke — "Yeniden Yazma, Referans Ver"
 
 Bu hub'ın taşıdığı tek davranış kuralı: **bir düğümde standardın içeriğini tekrarlama.** Standardın kuralları, yasakları ve gerekçeleri yalnızca `src/data/standards/<id>.json` içinde yaşar. Düğüm o sözleşmeye `standardRefs` ile bağlanır; içeriği kopyalamaz.
