@@ -73,8 +73,10 @@ const REJECTS: Record<string, (b: Dict) => unknown> = {
   "churn-guard-unknown-band": (b) => set(b.churnGuard, { appliesWhenNetAtOrBelowBand: "made-up" }),
   "churn-gross-max-decoupled": (b) => set(b.churnGuard, { grossMaxFromBand: "waiver" }),
   "churn-guard-credits-deletions": (b) => set(b.churnGuard, { netCreditFloor: -1000 }),
-  // Yazılmamış kapı "bloklar" diye beyan edilemez; blocks yalnız CI durumunda true olabilir.
+  // CI'a bağlanmamış kapı "bloklar" diye beyan edilemez; blocks yalnız CI durumunda true olabilir.
   "checker-claims-blocking-before-ci": (b) => set(b.checker, { blocks: true }),
+  // Ters yön de RED: durum CI'a atlarken blocks geride kalamaz (ikisi tek bir gerçeği söyler).
+  "checker-status-ahead-of-blocks": (b) => set(b.checker, { status: "ci-enforced-blocking" }),
   "unknown-checker-status": (b) => set(b.checker, { status: "bloklar" }),
 };
 
@@ -115,11 +117,11 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: P1'de enforcement BEKLEMEDE, hiçbir şey bloklanmıyor", () => {
+  it("kapı beyanı dürüsttür: kapı yazıldı ama enforcement hâlâ YOK", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
-    expect(budget.checker.status).toBe("planned-not-implemented");
-    expect(budget.checker.blocks, "yazılmamış kapı bloklama iddia ediyor").toBe(false);
-    // Durum ↔ gerçeklik: `planned-not-implemented` iken dosya YOK; P2 yazınca durum ilerlemeli.
+    expect(budget.checker.status).toBe("implemented-not-wired");
+    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
+    // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(
       budget.checker.status !== "planned-not-implemented",
     );
