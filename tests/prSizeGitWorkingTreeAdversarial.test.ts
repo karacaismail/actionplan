@@ -249,3 +249,282 @@ describe("pr-size-git-working-tree — kapanmamış kalan sınır DÜRÜSTÇE be
       expect(copies(fs.readFileSync(path.join(ROOT, file), "utf8")), file).toBe(false);
   });
 });
+
+// B10 TOPLAM SÜRE FRENİ (test-önce RED). Yukarıdaki süit "uçtan uca duvar-saati son tarihi
+// KAPANMADI" diyordu; aşağıdaki iddialar o sınırın SÖZLEŞMESİni çiviler. Bütçe bir ÇAĞIRAN
+// SEÇENEĞİdir, ihraç edilen bir politika sabiti DEĞİL: yukarıdaki `TOTAL|DEADLINE|WALL` yasağı
+// aynen geçerli kalır. Saat ENJEKTE edilir; gerçek uyku, ağ ve süreç-zamanı bağımlılığı YOKTUR.
+const TOTAL_INVALID = "working-tree-total-timeout-invalid";
+const DEADLINE_EXCEEDED = "working-tree-deadline-exceeded";
+const CLOCK_INVALID = "working-tree-clock-invalid";
+const CLOCK_FAILED = "working-tree-clock-failed";
+const CLOCK_BACKWARDS = "working-tree-clock-not-monotonic";
+const STUB_ROOT = "/tmp/wt-stub";
+/** Bütçeye göre GENİŞ; bu değerle bütçe hiçbir zaman dar taraf olmaz. */
+const ROOMY_BUDGET = 60_000;
+
+/** Okumalar önceden verilen listeden gelir; liste bitince SON değer sabitlenir. Gerçek saat YOK. */
+const stepClock = (values: number[]) => {
+  let index = 0;
+  return vi.fn(() => values[Math.min(index++, values.length - 1)]);
+};
+/** Süre aşımı sınıfı `error.code === "ETIMEDOUT"` üzerinden tanınır; stub o şekli taşımalıdır. */
+const timedOut = () => ({
+  status: null,
+  signal: null,
+  stdout: buf(""),
+  stderr: buf(""),
+  error: { code: "ETIMEDOUT" },
+});
+/** TEMİZ bir koşunun süreç sayısı ÖLÇÜLÜR; sabit yazılmaz, böylece adım sırası değişse de yaşar. */
+const cleanRunCalls = () => {
+  const executor = gitStub();
+  wt.collectWorkingTree({ repoRoot: STUB_ROOT, executor });
+  return executor.mock.calls.length;
+};
+// biome-ignore lint/suspicious/noExplicitAny: the collector's failure shape has no declaration file.
+const expectNoPartialSuccess = (result: any) => {
+  expect(result.numstatZ, "başarısız ölçüm KISMİ tel sızdıramaz").toBeUndefined();
+  expect(result.metadata, "başarısız ölçüm KISMİ üstveri sızdıramaz").toBeUndefined();
+};
+
+describe("pr-size-git-working-tree — TOPLAM bütçe GİRDİSİ kendi başına doğrulanır", () => {
+  // Geçersiz bütçe SESSİZCE yok sayılırsa çağıran freni koyduğunu SANIR ve ölçüm sınırsız kalır.
+  // Bu yüzden doğrulama, ilk alt süreç DOĞMADAN ÖNCE fail-closed durmalıdır.
+  // biome-ignore format: the invalid-budget matrix stays one row per case for the shard budget
+  const invalid: Array<[string, unknown]> = [
+    ["sıfır", 0], ["negatif", -1], ["kesirli", 1.5], ["NaN", Number.NaN],
+    ["sonsuz", Number.POSITIVE_INFINITY], ["eksi sonsuz", Number.NEGATIVE_INFINITY],
+    ["metin", "5"], ["null", null], ["güvenli tamsayı dışı", Number.MAX_SAFE_INTEGER + 2],
+    ["nesne", {}], ["dizi", []], ["boolean", true],
+  ];
+
+  for (const [name, value] of invalid)
+    it(`${name} totalTimeoutMs → ${TOTAL_INVALID} ve HİÇ süreç doğmaz`, () => {
+      const executor = gitStub();
+      const result = wt.collectWorkingTree({
+        repoRoot: STUB_ROOT,
+        executor,
+        totalTimeoutMs: value,
+      });
+      expectFail(result, TOTAL_INVALID, `geçersiz toplam bütçe: ${name}`);
+      expect(executor.mock.calls.length, "doğrulama alt süreçten ÖNCE olmalı").toBe(0);
+    });
+});
+
+describe("pr-size-git-working-tree — ENJEKTE saat adlandırılmış hatalarla reddedilir", () => {
+  for (const [name, clock] of [
+    ["sayı", 5],
+    ["metin", "now"],
+    ["nesne", {}],
+  ] as Array<[string, unknown]>)
+    it(`çağrılamayan saat (${name}) → ${CLOCK_INVALID} ve HİÇ süreç doğmaz`, () => {
+      const executor = gitStub();
+      const result = wt.collectWorkingTree({
+        repoRoot: STUB_ROOT,
+        executor,
+        totalTimeoutMs: ROOMY_BUDGET,
+        clock,
+      });
+      expectFail(result, CLOCK_INVALID, `çağrılamayan saat: ${name}`);
+      expect(executor.mock.calls.length).toBe(0);
+    });
+
+  it(`ATAN saat → ${CLOCK_FAILED}; ham neden rapora TAŞINMAZ`, () => {
+    const executor = gitStub();
+    const clock = () => {
+      throw new Error("saat okunamadı");
+    };
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      totalTimeoutMs: ROOMY_BUDGET,
+      clock,
+    });
+    expectFail(result, CLOCK_FAILED, "atan saat");
+    expect(JSON.stringify(result)).not.toContain("saat okunamadı");
+    expect(executor.mock.calls.length).toBe(0);
+  });
+
+  for (const [name, reading] of [
+    ["NaN", Number.NaN],
+    ["sonsuz", Number.POSITIVE_INFINITY],
+    ["metin", "3"],
+  ] as Array<[string, unknown]>)
+    it(`sonlu SAYI vermeyen saat (${name}) → ${CLOCK_INVALID}`, () => {
+      const executor = gitStub();
+      const result = wt.collectWorkingTree({
+        repoRoot: STUB_ROOT,
+        executor,
+        totalTimeoutMs: ROOMY_BUDGET,
+        clock: () => reading,
+      });
+      expectFail(result, CLOCK_INVALID, `sonlu olmayan okuma: ${name}`);
+      expect(executor.mock.calls.length).toBe(0);
+    });
+
+  // GERİYE giden saat yalnız İKİNCİ okumada görülebilir; o andan SONRA yeni süreç doğmamalıdır.
+  it(`GERİYE giden saat → ${CLOCK_BACKWARDS} ve SONRAKİ süreç doğmaz`, () => {
+    const total = cleanRunCalls();
+    const executor = gitStub();
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      totalTimeoutMs: 5,
+      clock: stepClock([9, 3]),
+    });
+    expectFail(result, CLOCK_BACKWARDS, "geriye giden saat");
+    expect(executor.mock.calls.length, "tel TAMAMLANMAMALI").toBeLessThan(total);
+    expectNoPartialSuccess(result);
+  });
+});
+
+describe("pr-size-git-working-tree — bütçe VERİLMEYİNCE eski davranış birebir korunur", () => {
+  it("saat HİÇ okunmaz ve sonuç bütçesiz çağrıyla AYNIdır", () => {
+    const clock = vi.fn(() => 1);
+    const withClock = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor: gitStub(),
+      clock,
+    });
+    const plain = wt.collectWorkingTree({ repoRoot: STUB_ROOT, executor: gitStub() });
+    expect(clock, "bütçe yokken saat okunmamalı").not.toHaveBeenCalled();
+    expect(withClock).toEqual(plain);
+    expect(plain.ok, JSON.stringify(plain.error)).toBe(true);
+  });
+});
+
+describe("pr-size-git-working-tree — bütçe TÜKENMESİ tek adlandırılmış hataya iner", () => {
+  it("İLK süreçten ÖNCE tükenen bütçe: hiç süreç doğmaz", () => {
+    const executor = gitStub();
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      totalTimeoutMs: 5,
+      clock: stepClock([0, 9]),
+    });
+    expectFail(result, DEADLINE_EXCEEDED, "ilk süreçten önce tükenen bütçe");
+    expect(executor.mock.calls.length).toBe(0);
+    expectNoPartialSuccess(result);
+  });
+
+  it("SÜREÇLER ARASINDA tükenen bütçe: tel TAMAMLANMADAN durulur", () => {
+    const total = cleanRunCalls();
+    const executor = gitStub();
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      totalTimeoutMs: 5,
+      clock: stepClock([0, 1, 9]),
+    });
+    expectFail(result, DEADLINE_EXCEEDED, "süreçler arasında tükenen bütçe");
+    expect(executor.mock.calls.length).toBeGreaterThan(0);
+    expect(executor.mock.calls.length).toBeLessThan(total);
+    expectNoPartialSuccess(result);
+  });
+
+  // Kalan bütçe süreç-başına süreden DARSA etkin tavan kalan bütçedir ve sonuç TOPLAM tükenmesidir.
+  // `git-timeout` deseydi çağıran tek bir yavaş süreci suçlar, bütçenin bittiğini göremezdi.
+  it(`kalan bütçe DAR taraf olduğunda ${DEADLINE_EXCEEDED} verir, git-timeout DEĞİL`, () => {
+    const executor = gitStub({ tracked: timedOut() });
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      timeoutMs: 11,
+      totalTimeoutMs: 3,
+      clock: stepClock([0, 1]),
+    });
+    expectFail(result, DEADLINE_EXCEEDED, "dar kalan bütçe");
+    const opts = executor.mock.calls.at(-1)?.[1] as { timeoutMs: number };
+    expect(opts.timeoutMs, "etkin tavan DAR olan taraf olmalı").toBeLessThanOrEqual(3);
+    expectNoPartialSuccess(result);
+  });
+
+  it("SON süreçten SONRA tükenen bütçe: başarı YAZILMAZ", () => {
+    const total = cleanRunCalls();
+    const executor = gitStub();
+    const clock = vi.fn(() => (executor.mock.calls.length >= total ? 9 : 1));
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      totalTimeoutMs: 5,
+      clock,
+    });
+    expectFail(result, DEADLINE_EXCEEDED, "son süreçten sonra tükenen bütçe");
+    expect(executor.mock.calls.length, "tüm süreçler koşmuş olmalı").toBe(total);
+    expectNoPartialSuccess(result);
+  });
+});
+
+describe("pr-size-git-working-tree — bütçe DAR taraf DEĞİLKEN eski sınıflandırma korunur", () => {
+  it("sıradan süreç-başına zaman aşımı `git-timeout` kalır", () => {
+    const executor = gitStub({ tracked: timedOut() });
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor,
+      timeoutMs: 3,
+      totalTimeoutMs: ROOMY_BUDGET,
+      clock: () => 1,
+    });
+    expectFail(result, "git-timeout", "bütçe geniş, süreç zaman aşımı");
+  });
+
+  it("saat ENJEKTE edilmeden de varsayılan tek-yönlü saat yolu koşar (gerçek uyku YOK)", () => {
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor: gitStub(),
+      totalTimeoutMs: ROOMY_BUDGET,
+    });
+    expect(result.ok, JSON.stringify(result.error)).toBe(true);
+  });
+});
+
+describe("pr-size-git-working-tree — BAŞARI üstverisi büyümez ve iç durum SIZDIRMAZ", () => {
+  it("anahtar kümesi AYNI kalır; son tarih/geçen süre/enjekte değer/mutlak kök taşınmaz", () => {
+    const injected = 987654321;
+    const result = wt.collectWorkingTree({
+      repoRoot: STUB_ROOT,
+      executor: gitStub({ tracked: ok(z("1\t0\ta.txt")) }),
+      totalTimeoutMs: ROOMY_BUDGET,
+      clock: () => injected,
+    });
+    expect(result.ok, JSON.stringify(result.error)).toBe(true);
+    expect(Object.keys(result.metadata).sort()).toEqual([
+      "byteLength",
+      "head",
+      "sha256",
+      "source",
+    ]);
+    const serialized = JSON.stringify(result);
+    for (const leak of ["deadline", "elapsed", "totalTimeoutMs", "startedAt", "remaining", "clock"])
+      expect(serialized, `sızıntı: ${leak}`).not.toContain(leak);
+    expect(serialized).not.toContain(String(injected));
+    expect(serialized).not.toContain(STUB_ROOT);
+    expect(serialized).not.toContain(os.homedir());
+  });
+});
+
+describe("pr-size-git-working-tree — YAPISAL kabul: değişen test-DIŞI kaynak kısa kalır", () => {
+  // SR-02 (B10-SR02-FILE-LENGTH): kanonik kural her test-dışı kaynağı ≤ tavan sayar ve BLOKLAR,
+  // ama kurulu checker yalnız `src/**/*.ts(x)` yürür ve `tools/lib/*.mjs`'e HİÇ bakmaz. Kapı
+  // burada YAPISAL olarak kapatılır; yardımcının İÇ tasarımına hiçbir şey dayatılmaz, yalnız BOY.
+  const MAX_SOURCE_LINES = 300;
+  const HISTORICAL_MONOLITH_LINES = 379;
+  const lineCount = (text: string) => text.split("\n").length;
+  const SOURCES = [MODULE, "tools/lib/pr-size-total-deadline.mjs"];
+
+  it("değişen/planlanan her test-dışı kaynak satır tavanının altında kalır", () => {
+    const present = SOURCES.filter((file) => fs.existsSync(path.join(ROOT, file)));
+    expect(present.length, "en az bir kaynak ölçülmeli").toBeGreaterThan(0);
+    for (const file of present)
+      expect(lineCount(fs.readFileSync(path.join(ROOT, file), "utf8")), file).toBeLessThanOrEqual(
+        MAX_SOURCE_LINES,
+      );
+  });
+
+  it("tavan DİŞLİDİR: tarihsel monolit boyundaki aday REDDEDİLİR", () => {
+    const monolith = `${"x\n".repeat(HISTORICAL_MONOLITH_LINES - 1)}x`;
+    expect(lineCount(monolith)).toBe(HISTORICAL_MONOLITH_LINES);
+    expect(lineCount(monolith) <= MAX_SOURCE_LINES, "tarihsel monolit kabul edilemez").toBe(false);
+  });
+});
