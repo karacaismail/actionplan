@@ -11,8 +11,9 @@ import { afterAll, describe, expect, it } from "vitest";
 // ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un HER yolda yalnız tam
 // JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi kanonikten türetilir.
 // KAPSAM DÜRÜST: üç kaynak da toplanır ve B12'den sonra kapı `pull_request` olayında bir CI
-// adımına BAĞLIdır; ama doğrudan/yerel çağrı hâlâ `ciEnforced=false` kalır ve branch protection /
-// zorunlu check (B13) bu pakette AÇIK bırakılır.
+// adımına BAĞLIdır; ama doğrudan/yerel çağrı hâlâ `ciEnforced=false` kalır. Birleştirmeyi durduran
+// şey bu süreç değil, build job'unu zorunlu kılan GitHub branch protection'dır ve o koruma bu
+// paketten ÖNCE de yürürlükteydi; B13 onu kurmaz, kanonik sözleşmeyle denetlenebilir kılar.
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
 /** B12: kapıyı `pull_request` olayına bağlayan ince adaptör; davranışı kendi testinde kanıtlanır. */

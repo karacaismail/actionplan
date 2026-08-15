@@ -11,7 +11,11 @@ import { afterAll, describe, expect, it } from "vitest";
  * `pr-size:evidence:<id>` etiketlerini okur, sınıf etiketi yoksa KANONİKTEN türeyen sınıfa düşer,
  * birden çok sınıf etiketini REDdeder ve kapıyı ÇAĞRIYA ÖZGÜ `ciEnforced=true` ile çalıştırır;
  * doğrudan/yerel çağrı `false` KALIR. Ad alanı önekleri ADAPTÖR SINIR SÖZDİZİMİdir; sınıf/bant/
- * eşik/kanıt KİMLİKLERİ yalnız kanonikten türer. B13 (branch protection / zorunlu check) AÇIK.
+ * eşik/kanıt KİMLİKLERİ yalnız kanonikten türer.
+ *
+ * B13 SINIRI: birleştirmeyi durduran şey bu adaptör değil, build job'unu zorunlu kılan GitHub
+ * branch protection'dır ve o koruma B12 sırasında da yürürlükteydi. B13 onu kurmaz; kanonik
+ * mergeProtection sözleşmesiyle makine tarafından karşılaştırılabilir kılar.
  */
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
@@ -268,11 +272,16 @@ describe("pr-size CI adaptörü — kablolama ve ikinci kopya yasağı", () => {
     ).toEqual(order);
   });
 
-  it("iş akışı başlığı merge koruması İDDİA ETMEZ ve kalan boşluğu adıyla sayar", () => {
+  it("iş akışı başlığı korumayı KENDİ kurduğunu iddia etmez ama canlı gerçeği yok da saymaz", () => {
     const header = read(WORKFLOW).split("\nname:")[0];
-    for (const stale of [/check'i merge için zorunludur/, /merge ve deploy engellenir/])
-      expect(header, `eskimiş merge iddiası duruyor: ${stale}`).not.toMatch(stale);
-    expect(header, "kalan boşluk adıyla sayılmıyor").toMatch(/B13/);
+    // Bu YAML bir CI iş akışıdır; birleştirmeyi durduran şey GitHub tarafındaki korumadır.
+    for (const overclaim of [/bu dosya[^.]*zorunlu kılar/i, /bu iş akışı[^.]*merge/i])
+      expect(header, `iş akışı kurmadığı korumayı üstleniyor: ${overclaim}`).not.toMatch(overclaim);
+    // Eskimiş "koruma YOK" anlatısı da kalamaz: koruma B13'ten ÖNCE de yürürlükteydi.
+    for (const stale of [/kurulmamıştır/, /hiçbir birleştirmenin durdurulduğunu/])
+      expect(header, `eskimiş 'koruma yok' anlatısı duruyor: ${stale}`).not.toMatch(stale);
+    expect(header, "B13 sözleşmesi adıyla anılmıyor").toMatch(/B13/);
+    expect(header, "canlı koruma gerçeği yazılmamış").toMatch(/branch\s*\n?#?\s*protection/);
   });
 
   it("adaptör ve bu test ikinci eşik/bant/sınıf/kanıt kopyası taşımaz", () => {

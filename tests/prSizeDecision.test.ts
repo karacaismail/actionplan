@@ -512,8 +512,8 @@ describe("pr-size karar motoru — kararlı sözleşme ve ikinci eşik kopyası 
   it("kanonik kapı beyanı: kapı CI'a BAĞLI, ama motor hâlâ kapı DEĞİL", () => {
     // Motor SAF kalır: PR olay adaptörü o değildir, olay/etiket okumaz ve hiçbir şeyi durdurmaz.
     // B12'de kapı dosyası PR iş akışından gerçek adaptör üzerinden çağrıldığı için kanonik durum
-    // bağlı/durduran hâle geçti. Bu MERGE koruması değildir: branch protection / zorunlu check
-    // (B13) hâlâ AÇIKtır ve bu dosya onu İDDİA ETMEZ.
+    // bağlı/durduran hâle geçti. Bu MERGE koruması değildir: birleştirmeyi durduran şey build
+    // job'unu zorunlu kılan GitHub branch protection'dır; motor onu ne kurar ne de İDDİA EDER.
     expect(budget.checker.status).toBe("ci-enforced-blocking");
     expect(budget.checker.blocks).toBe(true);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);

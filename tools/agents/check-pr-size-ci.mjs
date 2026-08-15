@@ -8,7 +8,9 @@
  * ÖZGÜ `ciEnforced=true` ile koşar: argv bayrağı DEĞİLdir, yerel çağıran onu üretemez. FAIL-CLOSED:
  * eksik/desteklenmeyen olay, okunamayan/bozuk/eksik şekilli yük, birden çok sınıf etiketi ve
  * kanonikte olmayan kimlik KARAR YERİNE adlandırılmış rapor + çıkış kodu üretir; stdout tam JSON.
- * Bu adım PR check'ini kırar; branch protection / zorunlu check (B13) HÂLÂ AÇIKtır.
+ * Bu adım PR'ın build check'ini kırar; birleştirmeyi durduran şey ise o build job'unu zorunlu kılan
+ * ve ZATEN yürürlükte olan GitHub branch protection'dır. B13 o korumayı KURMAZ, kanonik olarak
+ * doğrulanabilir kılar.
  */
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
