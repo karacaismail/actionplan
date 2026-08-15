@@ -489,12 +489,7 @@ describe("pr-size-git-working-tree — BAŞARI üstverisi büyümez ve iç durum
       clock: () => injected,
     });
     expect(result.ok, JSON.stringify(result.error)).toBe(true);
-    expect(Object.keys(result.metadata).sort()).toEqual([
-      "byteLength",
-      "head",
-      "sha256",
-      "source",
-    ]);
+    expect(Object.keys(result.metadata).sort()).toEqual(["byteLength", "head", "sha256", "source"]);
     const serialized = JSON.stringify(result);
     for (const leak of ["deadline", "elapsed", "totalTimeoutMs", "startedAt", "remaining", "clock"])
       expect(serialized, `sızıntı: ${leak}`).not.toContain(leak);
