@@ -154,7 +154,7 @@ Aşağıdaki giriş §2'deki çekirdek katalogda **yer almaz** ve §3'te bir `st
 | Kanonik karar (sahip) | `reports/kernel-asgi-core-profile-decision-2026-08-11.json` | Bağlayıcı değerlerin tek sahibi |
 | Doğrulayıcı (fail-closed) | `tools/lib/kernel-asgi-core-profile.mjs` | `accepted=true` + boş hata listesi vermeden karar tüketilemez |
 
-Kapılar — bu commit'te aktif: `tests/kernelAsgiCoreProfileDecision.test.ts`, `tests/kernelDeliveryBoundaryStandard.test.ts`; planlanan: `tests/kernelDeliveryBoundaryDocumentation.test.ts` — M7-R1 paketinde eklenecek, bu commit'te mevcut değildir. Bu ek çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
+Kapılar: `tests/kernelAsgiCoreProfileDecision.test.ts`, `tests/kernelDeliveryBoundaryStandard.test.ts`, `tests/kernelDeliveryBoundaryDocumentation.test.ts`. Bu ek çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
 
 ---
 
