@@ -216,14 +216,16 @@ describe("pr-size-git-working-tree — tüketicinin varsayamayacağı ölçüm g
   });
 });
 
-describe("pr-size-git-working-tree — kapanmamış kalan sınır DÜRÜSTÇE beyan edilir", () => {
-  it("çekirdek yalnız SÜREÇ BAŞINA süre ve süreç SAYISI tavanı taşır; TOPLAM süre P2B2b'dedir", () => {
+describe("pr-size-git-working-tree — süre sınırlarının KAPSAMI dürüstçe beyan edilir", () => {
+  it("süre/sayı tavanı ile ÇAĞIRAN bütçesi vardır; sabit süre POLİTİKASI ihraç EDİLMEZ", () => {
     // Süreç başına zaman aşımı ve izlenmeyen süreç sayısı tavanı BURADA kapanır…
     expect(typeof wt.DEFAULT_TIMEOUT_MS).toBe("number");
     expect(typeof wt.MAX_UNTRACKED_PATHS).toBe("number");
-    // …uçtan uca duvar-saati son tarihi ise KAPANMAMIŞTIR ve burada varmış gibi ihraç edilmez.
+    // …uçtan uca son tarih de artık BURADA kapanır, ama yalnız ÇAĞIRANIN verdiği isteğe bağlı
+    // `totalTimeoutMs` olarak. Sabit bir toplam-süre POLİTİKA değeri hâlâ YOKTUR ve ihraç EDİLMEZ;
+    // bayrak/varsayılan bağlaması (CLI) P2B2b/B11 kapsamında kalır.
     const totalDeadline = Object.keys(wt).filter((key) => /TOTAL|DEADLINE|WALL/i.test(key));
-    expect(totalDeadline, "toplam süre bütçesi bu pakette KAPANMADI").toEqual([]);
+    expect(totalDeadline, "sabit toplam süre POLİTİKA sabiti ihraç edilemez").toEqual([]);
     expect(fs.readFileSync(path.join(ROOT, MODULE), "utf8")).toContain("P2B2b");
   });
 
