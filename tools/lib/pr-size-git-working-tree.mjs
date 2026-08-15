@@ -21,15 +21,17 @@
  * sertleştirmesi (shell:false, sabit `cwd`, sınırlı süre/tampon, TAM ortam allowlist'i)
  * `pr-size-git-range.mjs` ile ORTAKtır: birinde kapanan kaçak diğerinde açık kalamaz.
  *
- * KAPANMAMIŞ SINIR (dürüst beyan): burada yalnız SÜREÇ BAŞINA zaman aşımı ve izlenmeyen SÜREÇ
- * SAYISI tavanı vardır. Uçtan uca TOPLAM duvar-saati son tarihi bu pakette KAPANMAMIŞTIR; o sınır
- * CLI entegrasyon paketi P2B2b'ye aittir ve bu modül onu kapatmış gibi bir bütçe ihraç ETMEZ.
+ * SÜRE SINIRLARI: süreç BAŞINA zaman aşımı ve izlenmeyen SÜREÇ SAYISI tavanı yanında, uçtan uca
+ * TOPLAM duvar-saati son tarihi artık İSTEĞE BAĞLI bir çağıran bütçesidir (`totalTimeoutMs`) ve
+ * `pr-size-total-deadline.mjs`'de tutulur. Bütçe VERİLMEZSE saat hiç okunmaz ve eski davranış
+ * birebir korunur; bir süre POLİTİKASI hâlâ ihraç EDİLMEZ, CLI bağlaması ise P2B2b'de kalır.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseNumstatZ, safePath } from "./pr-size-core.mjs";
 import { defaultExecutor, sanitizeEnv, validateRepoRoot } from "./pr-size-git-range.mjs";
+import { budgetedCaller, createTotalBudget, isBudgetStop } from "./pr-size-total-deadline.mjs";
 
 export const SOURCE = "working-tree";
 export const DEFAULT_TIMEOUT_MS = 10_000;
@@ -45,6 +47,9 @@ const HEX_COMMIT = /^[0-9a-f]{40}$|^[0-9a-f]{64}$/i;
 const TOPLEVEL_PATH = /^\/[^\0\n]*$/;
 const DIFF_BASE = ["diff", "--no-ext-diff", "--no-textconv", "--numstat", "-z"];
 const fail = (id, detail) => ({ ok: false, error: { id, detail } });
+/** Bütçe/saat durdurması adım adına ÇEVRİLEMEZ; yalnız gerçek git arızası yeniden adlandırılır. */
+const rename = (result, id, detail) => (isBudgetStop(result) ? result : fail(id, detail));
+const NOT_A_REPO = "verilen kök geçerli bir git deposu değil";
 const utf8 = new TextDecoder("utf-8", { fatal: true });
 
 /** Yürütücü sonucu tek bir sınıfa indirgenir; sınıf adı raporun TEK içeriğidir, ham neden DEĞİL. */
@@ -133,7 +138,7 @@ const byPathBytes = (a, b) =>
 const readToplevel = (run) => {
   const result = run(["rev-parse", "--show-toplevel"]);
   if (!result.ok)
-    return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
+    return rename(result, "root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
   const read = decode(result.stdout, "worktree-toplevel-output-invalid", "tepe yanıtı UTF-8 değil");
   if (!read.ok) return read;
   // Git tam olarak TEK satır yazar; yalnız o tek satırsonu düşer, ikincisi çok satırlılık kanıtıdır.
@@ -230,16 +235,22 @@ export const collectWorkingTree = ({
   executor = defaultExecutor,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   maxBufferBytes = DEFAULT_MAX_BUFFER_BYTES,
+  totalTimeoutMs,
+  clock,
 } = {}) => {
   const rootError = validateRepoRoot(repoRoot);
   if (rootError) return fail(rootError, "repoRoot biçimi geçersiz");
+  const created = createTotalBudget({ totalTimeoutMs, clock });
+  if (!created.ok) return created;
   const opts = { cwd: repoRoot, env: sanitizeEnv(process.env), timeoutMs, maxBufferBytes };
-  const run = (args, allowed) => runGit(executor, args, opts, allowed);
+  const call = (args, allowed, ms) => runGit(executor, args, { ...opts, timeoutMs: ms }, allowed);
+  const run = created.budget
+    ? budgetedCaller(created.budget, timeoutMs, call)
+    : (args, allowed) => runGit(executor, args, opts, allowed);
   const text = (result) => result.stdout.toString("utf8").trim();
 
   const inside = run(["rev-parse", "--is-inside-work-tree"]);
-  if (!inside.ok || text(inside) !== "true")
-    return fail("repo-not-found", "verilen kök geçerli bir git deposu değil");
+  if (!inside.ok || text(inside) !== "true") return rename(inside, "repo-not-found", NOT_A_REPO);
   // Kök TAM OLARAK tepe olmalı: alt dizinde `diff` yolu KÖKE, `ls-files --others` yolu CWD'ye
   // görelidir; iki liste sessizce FARKLI tabanda birleşirdi (sahte örtüşme / yanlış kategori).
   const toplevel = readToplevel(run);
@@ -248,7 +259,7 @@ export const collectWorkingTree = ({
     return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
 
   const shallow = run(["rev-parse", "--is-shallow-repository"]);
-  if (!shallow.ok) return fail("repo-not-found", "verilen kök geçerli bir git deposu değil");
+  if (!shallow.ok) return rename(shallow, "repo-not-found", NOT_A_REPO);
   if (text(shallow) !== "false")
     return fail("repo-shallow", "sığ (shallow) veya tamamlanmamış depo reddedildi");
 
@@ -256,7 +267,7 @@ export const collectWorkingTree = ({
   const resolved = run(["rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
   const head = resolved.ok ? text(resolved) : "";
   if (!HEX_COMMIT.test(head))
-    return fail("head-unborn", "HEAD tek bir commit'e çözülemedi (doğmamış dal)");
+    return rename(resolved, "head-unborn", "HEAD tek bir commit'e çözülemedi (doğmamış dal)");
 
   /** Çakışmalı ağaçta diff çakışma İŞARETLERİNİ gerçek değişiklik gibi sayardı; önce durulur. */
   const unmerged = run(["ls-files", "--unmerged", "-z"]);
@@ -269,6 +280,9 @@ export const collectWorkingTree = ({
   const untracked = readUntracked(run, repoRoot, new Set(tracked.rows.map((row) => row.file)));
   if (!untracked.ok) return untracked;
 
+  // SON süreç bittikten sonra da bakılır: bütçe tam orada tükendiyse başarı YAZILMAZ.
+  const closing = created.budget ? created.budget.remaining() : { ok: true };
+  if (!closing.ok) return closing;
   const numstatZ = frame([...tracked.rows, ...untracked.rows].sort(byPathBytes));
   const bytes = Buffer.from(numstatZ, "utf8");
   return {
