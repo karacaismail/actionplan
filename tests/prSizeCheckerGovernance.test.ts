@@ -18,6 +18,9 @@ const SELF = "tests/prSizeCheckerGovernance.test.ts";
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const CORE = "tools/lib/pr-size-core.mjs";
 const COLLECTOR = "tools/lib/pr-size-git-range.mjs";
+/** B11: kabul edilmiş ÇALIŞMA AĞACI toplayıcısı ve onun süre bütçesi; burada YENİDEN yazılmaz. */
+const TREE_COLLECTOR = "tools/lib/pr-size-git-working-tree.mjs";
+const DEADLINE = "tools/lib/pr-size-total-deadline.mjs";
 const CANONICAL = "src/data/standards/short-code.json";
 const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const href = (relative: string) => pathToFileURL(path.join(ROOT, relative)).href;
@@ -40,6 +43,8 @@ const SCOPE_MAX = bandNamed(budget.churnGuard.appliesWhenNetAtOrBelowBand).maxNe
 const engine = (await import(href(ENGINE))) as Any;
 const DECISION = engine.DECISION as Record<string, string>;
 const KIND = engine.ERROR_KIND as Record<string, string>;
+/** Kaynağın ADI da ikinci kez yazılmaz: kabul edilmiş toplayıcının kendi `SOURCE` alanıdır. */
+const TREE = ((await import(href(TREE_COLLECTOR))) as Any).SOURCE as string;
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "pr-size-cli-"));
 afterAll(() => fs.rmSync(TMP, { recursive: true, force: true }));
@@ -124,16 +129,21 @@ const failure = (result: Run, id: string, kind: string) => {
 const install = (root: string, makeConfig?: (doc: Any) => string | null) => {
   for (const dir of ["tools/agents", "tools/lib", "src/data/standards"])
     fs.mkdirSync(path.join(root, dir), { recursive: true });
-  for (const file of [CLI, CORE, ENGINE, COLLECTOR])
+  for (const file of [CLI, CORE, ENGINE, COLLECTOR, TREE_COLLECTOR, DEADLINE])
     fs.copyFileSync(path.join(ROOT, file), path.join(root, file));
   const text = makeConfig ? makeConfig(JSON.parse(read(CANONICAL))) : read(CANONICAL);
   if (text !== null) fs.writeFileSync(path.join(root, CANONICAL), text);
   return path.join(root, CLI);
 };
-const lab = (makeConfig: (doc: Any) => string | null, engineSource?: string) => {
+const lab = (
+  makeConfig: (doc: Any) => string | null,
+  engineSource?: string,
+  treeSource?: string,
+) => {
   const root = at(`lab-${nextId()}`);
   const entry = install(root, makeConfig);
   if (engineSource) fs.writeFileSync(path.join(root, ENGINE), engineSource);
+  if (treeSource) fs.writeFileSync(path.join(root, TREE_COLLECTOR), treeSource);
   return entry;
 };
 
@@ -379,11 +389,13 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
       "inputMode",
       "canonicalStandard",
       "collectsGitRange",
+      "collectsWorkingTree",
       "ciEnforced",
       "status",
       "exitCode",
       "fixture",
       "range",
+      "workingTree",
       "error",
       "decisionReport",
     ]);
@@ -391,9 +403,14 @@ describe("pr-size süreç kapısı — rapor yüzeyi yalnız JSON, sızıntısı
     expect(result.report.version).toBe(SURFACE.version);
     expect(result.report.inputMode).toBe(SURFACE.inputMode);
     expect(result.report.canonicalStandard).toBe(CANONICAL);
-    // Dürüstlük: fixture yolunda aralık TOPLANMAZ ve hiçbir yolda CI bloklaması İDDİA EDİLMEZ.
-    expect([result.report.collectsGitRange, result.report.ciEnforced]).toEqual([false, false]);
+    // Dürüstlük: fixture yolunda hiçbir git kaynağı TOPLANMAZ, CI bloklaması İDDİA EDİLMEZ.
+    expect([
+      result.report.collectsGitRange,
+      result.report.collectsWorkingTree,
+      result.report.ciEnforced,
+    ]).toEqual([false, false, false]);
     expect(result.report.range, "fixture yolunda aralık provenansı uyduruldu").toBeNull();
+    expect(result.report.workingTree, "fixture yolunda ağaç provenansı uyduruldu").toBeNull();
     expect(result.report.exitCode).toBe(result.status);
     // Provenans yol DEĞİL, bayt sayısı + özet: mutlak yol rapora hiç girmez.
     expect(Object.keys(result.report.fixture)).toEqual(["bytes", "sha256"]);
@@ -655,10 +672,129 @@ describe("pr-size süreç kapısı — gerçek Git aralığı izole bir depoda t
   });
 });
 
+/**
+ * KİRLİ çalışma ağacı laboratuvarı (B11). Aralık yolunun aksine burada İZLENMEYEN dosya da ölçüme
+ * girer; bu yüzden kapının kendi kopyası önce commit EDİLMİŞ bir `.gitignore` ile kapsam dışında
+ * bırakılır ve ölçülen tek şey commit edilmemiş gerçek değişiklik olur.
+ */
+const dirtyRepo = () => {
+  const root = repoAt("agac");
+  commit(root, ".gitignore", "/tools/\n/src/data/\n", "kapi kopyasi olcume girmez");
+  const head = commit(root, "README.md", "kok\n", "kok");
+  fs.mkdirSync(path.join(root, path.dirname(GOVERNED)), { recursive: true });
+  fs.writeFileSync(path.join(root, GOVERNED), body(RANGE_NET));
+  return { root, head, cli: install(root) };
+};
+const treeArgs = (value: string, klass: string) => [`--working-tree=${value}`, `--class=${klass}`];
+
+describe("pr-size süreç kapısı — çalışma ağacı ÜÇÜNCÜ kaynaktır ve toplayıcıya bağlıdır", () => {
+  const repo = dirtyRepo();
+
+  it("commit edilmemiş değişiklik ölçülür; provenans yalnız toplayıcının çözdüğü HEAD'dir", () => {
+    const result = run(treeArgs("true", TIGHT), { cli: repo.cli });
+    expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
+    expect(result.report.inputMode, "çalışma ağacı kaynağı çözülmedi").toBe(TREE);
+    expect([result.report.collectsWorkingTree, result.report.ciEnforced]).toEqual([true, false]);
+    // Tek kaynak DÜRÜSTLÜĞÜ: bu yolda fixture ve aralık provenansı UYDURULAMAZ.
+    expect([result.report.fixture, result.report.range]).toEqual([null, null]);
+    // Provenans yol DEĞİL: toplayıcının çözdüğü commit + bayt sayısı + özet, başka hiçbir şey.
+    expect(Object.keys(result.report.workingTree ?? {})).toEqual(["head", "bytes", "sha256"]);
+    expect(result.report.workingTree.head).toBe(repo.head);
+    expect(result.report.workingTree.sha256).toMatch(/^[0-9a-f]{64}$/);
+    const m = result.report.decisionReport.measurement;
+    expect([m.grossAdditions, m.grossDeletions, m.governedFiles]).toEqual([RANGE_NET, 0, 1]);
+    expect(result.stdout, "depo yolu rapora sızdı").not.toContain(repo.root);
+  });
+
+  it.each([
+    ["fixture", () => [`--numstat-z-input=${wireFile(wireForNet(1), "agac-uyum.z")}`]],
+    ["aralık", () => ["--base=main", "--head=main"]],
+  ])("çalışma ağacı %s ile BİRLİKTE verilemez", (_label, extra) => {
+    failure(
+      run([...treeArgs("true", TIGHT), ...extra()], { cli: repo.cli }),
+      "source-mixed",
+      KIND.caller,
+    );
+  });
+
+  it("kabul edilmiş toplayıcıya devredilir: kök MODÜLDEN, süre SONLU-POZİTİF ve ÖZELdir", () => {
+    const seen = at(`cagri-${nextId()}.json`);
+    // Casus toplayıcı: aldığı seçenekleri yan kanala yazar ve zarfa GEÇMEMESİ gereken bir EK alan
+    // döndürür. Yıldız ihracı gerçek modülün `SOURCE`'unu korur; yerel ihraç onu gölgelemez.
+    const entry = lab(
+      (doc) => JSON.stringify(doc),
+      undefined,
+      `import fs from "node:fs";
+export * from ${JSON.stringify(href(TREE_COLLECTOR))};
+export const collectWorkingTree = (options) => {
+  fs.writeFileSync(${JSON.stringify(seen)}, JSON.stringify(options));
+  return { ok: true, numstatZ: ${JSON.stringify(zRow(1, 0, GOVERNED))},
+    metadata: { source: ${JSON.stringify(TREE)}, head: "a".repeat(40), byteLength: 12,
+      sha256: "b".repeat(64), extraLeak: "SIZINTI-ALANI" } };
+};
+`,
+    );
+    const result = run(treeArgs("true", TIGHT), { cli: entry, cwd: TMP });
+    expect(result.report.status, JSON.stringify(result.report.error)).toBe(DECISION.accepted);
+    const call = JSON.parse(fs.readFileSync(seen, "utf8"));
+    // Kök ÇAĞIRANIN cwd'si değil, kapının KENDİ modül konumudur. Karşılaştırma GERÇEK yoldadır:
+    // macOS'ta `/var` → `/private/var` bağı düz metin eşitliğini sessizce yanıltırdı.
+    expect(path.join(call.repoRoot, CLI)).toBe(fs.realpathSync(entry));
+    expect(call.repoRoot, "kök cwd'den çözüldü").not.toBe(fs.realpathSync(TMP));
+    const deadline = call.totalTimeoutMs;
+    expect(Number.isFinite(deadline) && deadline > 0, "sonlu-pozitif süre bütçesi verilmedi").toBe(
+      true,
+    );
+    // Süre bir KAYNAK frenidir, ölçüm gerçeği değil: ne rapora ne de dışa açılan yüzeye girer.
+    expect(result.stdout, "süre bütçesi rapora sızdı").not.toContain(String(deadline));
+    const exported = probe("Object.values(cli).filter((v) => typeof v === 'number')") as number[];
+    expect(exported, "süre bütçesi ihraç edildi").not.toContain(deadline);
+    // Toplayıcının EK alanları zarfa geçmez: provenans en aza indirgenir.
+    expect(Object.keys(result.report.workingTree)).toEqual(["head", "bytes", "sha256"]);
+    expect(result.stdout, "toplayıcı ek alanı sızdı").not.toContain("SIZINTI-ALANI");
+  });
+
+  it("toplanamayan ağaç KARAR YERİNE adlandırılmış hata verir; provenans uydurulmaz", () => {
+    // Laboratuvar bir depo DEĞİLdir: toplayıcı ölçmek yerine kendi adıyla durur.
+    const entry = lab((doc) => JSON.stringify(doc));
+    const result = run(treeArgs("true", TIGHT), { cli: entry });
+    failure(result, `${TREE}-repo-not-found`, KIND.input);
+    expect([result.report.collectsWorkingTree, result.report.workingTree]).toEqual([false, null]);
+    expect(result.stdout, "laboratuvar yolu sızdı").not.toContain(TMP);
+  });
+
+  it("ad alanlı toplayıcı hatası ÇİFT öneklenmez; kimlik birebir korunur", () => {
+    // Süre bütçesi kimlikleri ZATEN bu ad alanında doğar; kör önek onları tanınmaz hale getirirdi.
+    const named = `${TREE}-deadline-exceeded`;
+    const entry = lab(
+      (doc) => JSON.stringify(doc),
+      undefined,
+      `export * from ${JSON.stringify(href(TREE_COLLECTOR))};
+export const collectWorkingTree = () => ({ ok: false,
+  error: { id: ${JSON.stringify(named)}, detail: "toplam süre bütçesi tükendi" } });
+`,
+    );
+    const result = run(treeArgs("true", TIGHT), { cli: entry });
+    failure(result, named, KIND.input);
+    expect(result.stdout, "kimlik çift öneklendi").not.toContain(`${TREE}-${named}`);
+  });
+
+  it("yalnız `true` kabul edilir; geçersiz değer YANKILANMADAN fail-closed durur", () => {
+    const sneaky = "evet;/etc/passwd";
+    const result = run(treeArgs(sneaky, TIGHT), { cli: repo.cli });
+    failure(result, "working-tree-value-invalid", KIND.caller);
+    expect(result.stdout, "geçersiz değer tanılamaya yankılandı").not.toContain(sneaky);
+    expect([result.report.collectsWorkingTree, result.report.workingTree ?? null]).toEqual([
+      false,
+      null,
+    ]);
+  });
+});
+
 describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı beyanı", () => {
   const source = read(CLI);
 
-  it("CLI kabuk/alt süreç çalıştırmaz, aralığı yalnız kabul edilmiş toplayıcıya sorar", () => {
+  it("CLI kabuk/alt süreç çalıştırmaz, iki kaynağı da yalnız kabul edilmiş toplayıcıya sorar", () => {
     for (const forbidden of [
       /child_process/,
       /\bspawn/,
@@ -666,6 +802,10 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
       /process\.stdin/,
       /["']git["']/,
       /readFileSync\(0\b/,
+      // İKİNCİ bir git argv'si de yasaktır: toplama sözleşmesi yalnız toplayıcılarındır.
+      /["']rev-parse["']/,
+      /["']ls-files["']/,
+      /["']--numstat["']/,
     ])
       expect(source, `CLI yasak yüzeyi kullandı: ${forbidden}`).not.toMatch(forbidden);
     const imports = [...source.matchAll(/^import .*from "(.+)";$/gm)].map((m) => m[1]);
@@ -674,6 +814,7 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
         "../lib/pr-size-core.mjs",
         "../lib/pr-size-decision.mjs",
         COLLECTOR.replace("tools/lib/", "../lib/"),
+        TREE_COLLECTOR.replace("tools/lib/", "../lib/"),
         "node:crypto",
         "node:fs",
         "node:url",

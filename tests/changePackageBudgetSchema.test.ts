@@ -84,8 +84,9 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
   it("standart şemaya uyar, sürüm uyumlu yükselir ve bütçe alanı strip edilmez", () => {
     const parsed = StandardContractSchema.parse(canonical);
     expect([parsed.id, parsed.family]).toEqual(["short-code", "engineering"]);
+    // Geriye UYUMLU yükseliş: aynı ana sürüm içinde minör artar, alan sözleşmesi kırılmaz.
     expect(parsed.version.startsWith("1.")).toBe(true);
-    expect(parsed.version, "sürüm yükselmedi").not.toBe("1.0.0");
+    expect(parsed.version, "sürüm yükselmedi").toBe("1.3.0");
     // Alan şemaya girmemişse zod onu sessizce atar; bu eşitlik tam da onu yakalar.
     expect((parsed as unknown as Dict).changePackageBudget).toEqual(budget);
   });
@@ -117,15 +118,19 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: aralık toplanır ama enforcement hâlâ YOK", () => {
+  it("kapı beyanı dürüsttür: üç kaynak da toplanır ama enforcement hâlâ YOK", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
     expect(budget.checker.status).toBe("implemented-not-wired");
     expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
-    // P2B gerçeği: aralık ARTIK toplanır — not bunu ne inkâr eder ne de fazlasını iddia eder.
+    // P2B gerçeği: aralık VE çalışma ağacı ARTIK toplanır; kalan boşluk (CI) adıyla sayılır.
     for (const missing of [/working-tree/i, /CI/, /P3/])
       expect(budget.checker.note, `kalan boşluk adıyla sayılmıyor: ${missing}`).toMatch(missing);
-    expect(budget.checker.note, "olmayan mod uygulanmış gibi").not.toMatch(
-      /working-tree[^.]*(ölçer|toplar|vardır)/i,
+    // Uygulanmış mod artık YOK sayılamaz; ama enforcement de İDDİA EDİLEMEZ.
+    expect(budget.checker.note, "uygulanmış mod yok sayılıyor").not.toMatch(
+      /working-tree[^.]*(yoktur|YOKTUR)/,
+    );
+    expect(budget.checker.note, "bağlanmamış kapı enforcement iddia ediyor").toMatch(
+      /enforcement hâlâ YOKTUR/,
     );
     // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(
