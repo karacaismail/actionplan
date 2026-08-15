@@ -1,7 +1,7 @@
 {
   "id": "short-code",
   "name": "Kısa Kod & Kapsam Frenleri Standardı",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "family": "engineering",
   "basedOnAdr": ["adr-0027"],
   "summary": "Küçük PR, dosya/fonksiyon boyut tavanı, döngüsel ve bilişsel karmaşıklık eşikleri, gereksiz soyutlama yasağı, zorunlu allowed-files + non-goals ile AI ajanın kapsam genişlemesini frenler.",
@@ -12,7 +12,7 @@
       "rule": "Bir değişiklik paketinin satır bütçesi bu dosyanın `changePackageBudget` alanında makine-okunur tanımlıdır. Bant merdiveni (varsayılan → koşullu istisna → waiver → split) her sınıf için AYNI eşiklerle işler; sınıf yalnız paketin varsayılan/gerekçeli tavanını sınıflandırır. Alan ayrıca dosya sayısı tavanını, churn (anlamsız silme) frenini ve ayrı raporlanan generated/lock/mekanik kategorilerini taşır. Eşiğin TEK kanonik makine sahibi bu alandır ve kural metni sayı taşımaz; tüketici alanı okur. AGENTS.md ve docs altındaki eski prose kopyaları hâlâ durur ve P3 tüketici-migrasyon borcudur: P3'e kadar çakışmada kanonik alan üstün gelir, eski kopya yeni yetki vermez ve bu standart onların temizlendiğini İDDİA ETMEZ.",
       "rationale": "Tek kanonik makine sahibi, prose kopyası üzerinden sessiz eşik sapmasını (drift) ve satır uğruna test/güvenlik kanıtı kısmayı engeller; eski kopyalar P3'te alana yönlendirilene kadar üstünlük kanonik alandadır, böylece küçük paket gözden geçirilebilir ve geri alınabilir kalır.",
       "severity": "must",
-      "check": "Yürürlükteki tek kapı sözleşme+tip kapısıdır (StandardContractSchema). Diff yüzeyi P2A'da yazıldı, P2B'de deterministik fixture'ın yanında gerçek Git aralığını (--base/--head) ve commit EDİLMEMİŞ çalışma ağacını (--working-tree=true) da ölçer; B12'de pull_request olay adaptörü üzerinden CI adımına bağlandı, ama merge koruması (branch protection / zorunlu check, B13) hâlâ AÇIK; makine-okunur durum changePackageBudget.checker (path/status/blocks) alanındadır."
+      "check": "Yürürlükteki kapılar sözleşme+tip kapısı (StandardContractSchema) ve pull_request olay adaptörüdür. Diff yüzeyi P2A'da yazıldı, P2B'de deterministik fixture'ın yanında gerçek Git aralığını (--base/--head) ve commit EDİLMEMİŞ çalışma ağacını (--working-tree=true) da ölçer; B12'de pull_request olay adaptörü üzerinden CI adımına bağlandı. Merge koruması GitHub tarafında ZATEN yürürlüktedir: korunan dal branch protection ile korunur ve build check'ini zorunlu kılar. B13 o korumayı kurmaz; makine-okunur durum changePackageBudget.checker (path/status/blocks) ve changePackageBudget.checker.mergeProtection alanlarındadır, ağa çıkmayan doğrulayıcı dışarıdan verilen anlık görüntüyü bu sözleşmeye karşı fail-closed karşılaştırır."
     },
     {
       "id": "short-file-length",
@@ -170,7 +170,19 @@
       "path": "tools/agents/check-pr-size.mjs",
       "status": "ci-enforced-blocking",
       "blocks": true,
-      "note": "P2A'da bu yol YAZILDI; P2B'de kapı ÖNCE gerçek Git ARALIĞI, SONRA commit EDİLMEMİŞ ÇALIŞMA AĞACI toplayıcısına bağlandı: deterministik fixture (--numstat-z-input), aralık (--base/--head) ve çalışma ağacı (--working-tree=true) ÜÇ AYRI KAYNAKTIR, BİRBİRİNİ DIŞLAR ve birlikte verilemez. B12'de kapı ince bir olay adaptörü (tools/agents/check-pr-size-ci.mjs) üzerinden pull_request olayına BAĞLANDI: adım koştuğunda PR'ın build check'i KIRILIR ve ciEnforced yalnız o çağrıda true olur, doğrudan/yerel çağrı false KALIR. DÜRÜST KAPSAM: bu MERGE koruması DEĞİLdir; branch protection / zorunlu check (B13) hâlâ AÇIKtır ve bu beyan ürün/runtime hazırlığı sayılmaz."
+      "note": "P2A'da bu yol YAZILDI; P2B'de kapı ÖNCE gerçek Git ARALIĞI, SONRA commit EDİLMEMİŞ ÇALIŞMA AĞACI toplayıcısına bağlandı: deterministik fixture (--numstat-z-input), aralık (--base/--head) ve çalışma ağacı (--working-tree=true) ÜÇ AYRI KAYNAKTIR, BİRBİRİNİ DIŞLAR ve birlikte verilemez. B12'de kapı ince bir olay adaptörü (tools/agents/check-pr-size-ci.mjs) üzerinden pull_request olayına BAĞLANDI: adım koştuğunda PR'ın build check'i KIRILIR ve ciEnforced yalnız o çağrıda true olur, doğrudan/yerel çağrı false KALIR. B13 GERÇEĞİ: korunan dalda branch protection ZATEN yürürlüktedir ve build check'ini zorunlu kılar, yani kırmızı build taşıyan bir PR hâlihazırda birleştirilemez; B13 bu korumayı KURMAZ ve GitHub ayarına DOKUNMAZ, onu mergeProtection sözleşmesi ve ağa çıkmayan doğrulayıcı ile makine tarafından karşılaştırılabilir kılarak kanonik/doğrulayıcı drift'ini kapatır. Bu bir yönetişim uygunluğudur ve ürün/runtime hazırlığı sayılmaz.",
+      "mergeProtection": {
+        "branch": "main",
+        "requiredCheck": "build",
+        "strict": true,
+        "enforceAdmins": true,
+        "pullRequestRequired": true,
+        "forcePushAllowed": false,
+        "deletionAllowed": false,
+        "requiredConversationResolution": true,
+        "verifier": "tools/agents/check-pr-size-branch-protection.mjs",
+        "note": "Bu alan canlı merge korumasını KURMAZ, GÜNCELLEMEZ ve GitHub'a hiç çağrı YAPMAZ; hâlihazırda yürürlükte olan korumayı makine tarafından KARŞILAŞTIRILABİLİR ve DOĞRULANABİLİR kılar. Doğrulayıcı yalnız dışarıdan verilen bir branch-protection anlık görüntüsünü bu sözleşmeyle karşılaştırır ve her sapmada adlandırılmış hatayla fail-closed durur; kimlik kimliğe, karar kararına eşlenir ve tam GitHub politika denkliği İDDİA EDİLMEZ. Sözleşmenin yeşil olması yönetişim uygunluğudur, ürün/runtime hazırlığı sayılmaz."
+      }
     }
   }
 }

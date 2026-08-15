@@ -2,9 +2,14 @@
 #  - main'e PUSH: build (tüm kapılar) + deploy.
 #  - main'e PR: yalnız build koşar (kapılar doğrulanır) — deploy YOK.
 # Kapılar build işini KIRAR: tip/lint/WBS/içerik/ruleset/surface/audit/veri-kalite/birim/E2E
-# herhangi biri kırmızıysa build kırmızı olur ve deploy çalışmaz. DÜRÜST KAPSAM: bu MERGE koruması
-# DEĞİLdir; "build" check'ini ZORUNLU kılan branch protection / required check hâlâ kurulmamıştır
-# (B13 açık) ve bu dosya hiçbir birleştirmenin durdurulduğunu İDDİA ETMEZ.
+# herhangi biri kırmızıysa build kırmızı olur ve deploy çalışmaz.
+# DÜRÜST KAPSAM: merge korumasını bu YAML SAĞLAMAZ, GitHub tarafı sağlar. Korunan dalda branch
+# protection ZATEN yürürlüktedir ve bu iş akışının "build" job'unu zorunlu kılar; bu yüzden kırmızı
+# build taşıyan bir PR hâlihazırda birleştirilemez. B13 o korumayı KURMAZ ve GitHub ayarına
+# DOKUNMAZ: onu kanonik mergeProtection sözleşmesi ve ağa çıkmayan doğrulayıcı
+# (tools/agents/check-pr-size-branch-protection.mjs) ile makine tarafından karşılaştırılabilir
+# kılar, böylece politika sapması sessiz kalamaz. Bu bir yönetişim uygunluğudur, ürün hazırlığı
+# DEĞİLdir.
 name: Deploy to GitHub Pages
 
 on:
@@ -51,9 +56,9 @@ jobs:
       # kapısı ince bir olay adaptörü üzerinden çağrılır: aralık olayın DEĞİŞMEZ base/head
       # SHA'larından, sınıf ve kanıt ise PR etiketlerinden gelir. Node kurulumundan SONRA koşar ki
       # çalışma zamanı sabitlensin, bağımlılık kurulumundan ÖNCE koşar çünkü yalnız Node yerleşikleri
-      # ve depo dosyaları gerekir. DÜRÜST KAPSAM: bu adım PR'ın build check'ini kırar, ama merge
-      # korumasını İDDİA ETMEZ — branch protection / zorunlu check (B13) hâlâ AÇIKtır. Push ve
-      # workflow_dispatch bu adımı çalıştırmaz.
+      # ve depo dosyaları gerekir. DÜRÜST KAPSAM: bu adım PR'ın build check'ini kırar; birleştirmeyi
+      # durduran şey adımın kendisi değil, build job'unu zorunlu kılan GitHub branch protection'dır
+      # ve o koruma B13'ten ÖNCE de yürürlükteydi. Push ve workflow_dispatch bu adımı çalıştırmaz.
       - name: Change-package bütçesi kapısı (pull_request olay adaptörü)
         if: github.event_name == 'pull_request'
         run: node tools/agents/check-pr-size-ci.mjs

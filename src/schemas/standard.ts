@@ -94,6 +94,27 @@ const ReportedCategorySchema = z
   })
   .refine((c) => c.paths.length + c.pathPrefixes.length > 0, { message: "yol/önek bildirilmedi" });
 
+/**
+ * B13 — merge koruması sözleşmesi. Bu alan canlı GitHub korumasını KURMAZ; hâlihazırda yürürlükte
+ * olan korumayı makine tarafından karşılaştırılabilir kılar. Altı politika kararı LITERAL kilitli
+ * (gevşetilmesi tip hatasıdır); `branch` ve `requiredCheck` boş-olmayan metindir çünkü kesin
+ * kimlikleri iş akışı dosyasına conformance testinde bağlanır, ikinci kez buraya kopyalanmaz.
+ */
+const MERGE_PROTECTION_VERIFIER = "tools/agents/check-pr-size-branch-protection.mjs";
+export const MergeProtectionSchema = z.strictObject({
+  branch: z.string().min(1),
+  requiredCheck: z.string().min(1),
+  strict: z.literal(true),
+  enforceAdmins: z.literal(true),
+  pullRequestRequired: z.literal(true),
+  forcePushAllowed: z.literal(false),
+  deletionAllowed: z.literal(false),
+  requiredConversationResolution: z.literal(true),
+  verifier: z.literal(MERGE_PROTECTION_VERIFIER),
+  note: z.string().min(1),
+});
+export type MergeProtection = z.infer<typeof MergeProtectionSchema>;
+
 export const ChangePackageBudgetSchema = z
   .strictObject({
     unit: z.literal("change-package"),
@@ -127,6 +148,8 @@ export const ChangePackageBudgetSchema = z
       status: z.enum(["planned-not-implemented", "implemented-not-wired", "ci-enforced-blocking"]),
       blocks: z.boolean(),
       note: z.string().min(1),
+      /** B13: canlı merge korumasının TEK makine-okunur sahibi; zorunlu, strict ve literal kilitli. */
+      mergeProtection: MergeProtectionSchema,
     }),
   })
   .superRefine((b, ctx) => {

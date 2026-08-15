@@ -33,6 +33,10 @@ const classesOf = (b: Dict) => b.classes as Rows;
 const catsOf = (b: Dict) => b.separatelyReported as Rows;
 const reqs = (b: Dict, i: number, requires: unknown[]) => set(bandsOf(b)[i], { requires });
 const checkerOf = (b: Dict) => b.checker as { status: string; blocks: boolean };
+/** B13 merge koruması: kanonik alanın TEK makine sahibi; mutasyonlar buradan türer. */
+const mpOf = (b: Dict) => (b.checker as Dict).mergeProtection as Dict;
+const MP = (budget.checker as unknown as Dict).mergeProtection as Dict;
+const VERIFIER = "tools/agents/check-pr-size-branch-protection.mjs";
 
 /** Sözleşmeyi sessizce zayıflatan her sapma şemada RED olmalı; hiçbiri strip edilip geçmemeli. */
 const REJECTS: Record<string, (b: Dict) => unknown> = {
@@ -83,6 +87,28 @@ const REJECTS: Record<string, (b: Dict) => unknown> = {
       status: checkerOf(b).blocks ? "implemented-not-wired" : "ci-enforced-blocking",
     }),
   "unknown-checker-status": (b) => set(b.checker, { status: "bloklar" }),
+  // B13: merge koruması sözleşmesi ZORUNLUdur ve sessizce strip EDİLEMEZ.
+  "merge-protection-dropped": (b) =>
+    set(b, {
+      checker: Object.fromEntries(
+        Object.entries(b.checker as Dict).filter(([key]) => key !== "mergeProtection"),
+      ),
+    }),
+  "merge-protection-branch-blank": (b) => set(mpOf(b), { branch: "" }),
+  "merge-protection-branch-typed-away": (b) => set(mpOf(b), { branch: null }),
+  "merge-protection-check-blank": (b) => set(mpOf(b), { requiredCheck: "" }),
+  // Altı politika kararının HER BİRİ literal kilitlidir; gevşetme sessizce geçemez.
+  "merge-protection-strict-off": (b) => set(mpOf(b), { strict: false }),
+  "merge-protection-admins-off": (b) => set(mpOf(b), { enforceAdmins: false }),
+  "merge-protection-pr-not-required": (b) => set(mpOf(b), { pullRequestRequired: false }),
+  "merge-protection-force-push-allowed": (b) => set(mpOf(b), { forcePushAllowed: true }),
+  "merge-protection-deletion-allowed": (b) => set(mpOf(b), { deletionAllowed: true }),
+  "merge-protection-conversation-off": (b) =>
+    set(mpOf(b), { requiredConversationResolution: false }),
+  "merge-protection-verifier-wrong": (b) => set(mpOf(b), { verifier: `${VERIFIER}.bak` }),
+  "merge-protection-verifier-blank": (b) => set(mpOf(b), { verifier: "" }),
+  "merge-protection-note-blank": (b) => set(mpOf(b), { note: "" }),
+  "merge-protection-unknown-field": (b) => set(mpOf(b), { rulesetId: "gizli" }),
 };
 
 describe("short-code — change-package bütçesi sözleşmesi", () => {
@@ -91,7 +117,8 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect([parsed.id, parsed.family]).toEqual(["short-code", "engineering"]);
     // Geriye UYUMLU yükseliş: aynı ana sürüm içinde minör artar, alan sözleşmesi kırılmaz.
     expect(parsed.version.startsWith("1.")).toBe(true);
-    expect(parsed.version, "sürüm yükselmedi").toBe("1.4.0");
+    // B13 merge-protection alanı GERİYE UYUMLU bir EKLEMEdir: minör yükselir, eski alanlar durur.
+    expect(parsed.version, "sürüm yükselmedi").toBe("1.5.0");
     // Alan şemaya girmemişse zod onu sessizce atar; bu eşitlik tam da onu yakalar.
     expect((parsed as unknown as Dict).changePackageBudget).toEqual(budget);
   });
@@ -123,7 +150,7 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: PR olayında CI'a bağlıdır, kalan boşluk B13'tür", () => {
+  it("kapı beyanı dürüsttür: PR olayında CI'a bağlıdır, B13 canlı korumayı denetlenebilir kılar", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
     // B12 gerçeği: kapı `pull_request` olayında bir CI adımına BAĞLANDI; ikisi tek gerçeği söyler.
     expect(budget.checker.status).toBe("ci-enforced-blocking");
@@ -136,9 +163,17 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(budget.checker.note, "bağlı kapı hâlâ enforcement yok diyor").not.toMatch(
       /enforcement hâlâ YOKTUR/,
     );
-    // Kalan boşluk ADIYLA sayılır: branch protection / zorunlu check (B13) HÂLÂ açıktır.
+    // Her yüzey ADIYLA sayılır: PR olay adaptörü ve canlı branch protection birlikte anlatılır.
     for (const named of [/pull_request/, /B13/, /branch protection|zorunlu check/i])
-      expect(budget.checker.note, `kalan boşluk adıyla sayılmıyor: ${named}`).toMatch(named);
+      expect(budget.checker.note, `yüzey adıyla sayılmıyor: ${named}`).toMatch(named);
+    // B13 GERÇEĞİ: koruma ZATEN yürürlüktedir; kanonik metin onu yok sayamaz ve kendi
+    // kurduğunu da İDDİA EDEMEZ. `açık` beyanı artık bir drift'tir.
+    const noteText = (budget.checker.note as string).replace(/\s*\n\s*/g, " ");
+    expect(noteText, "kapanmış boşluk hâlâ AÇIK ilan ediliyor").not.toMatch(
+      /(B13|branch protection|zorunlu check)[^.]*[Aa][ÇçCc][Iıİi][Kk](?!la|ça|ç)/,
+    );
+    for (const truth of [/ZATEN/, /KURMAZ/, /ürün\/runtime hazırlığı sayılmaz/])
+      expect(noteText, `canlı koruma gerçeği eksik: ${truth}`).toMatch(truth);
     // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(
       budget.checker.status !== "planned-not-implemented",
@@ -146,6 +181,37 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(EXTRA_RULES, "eşiğin tek kural sahibi olmalı").toEqual([]);
     expect(RULE.check, "olmayan kapı 'bloklar' deniyor").not.toMatch(/blok/i);
     expect(RULE.check).toContain("changePackageBudget.checker");
+  });
+
+  it("merge koruması sözleşmesi TAMdır, strip edilmez ve kendi kurduğunu iddia etmez", () => {
+    // Alan şemaya girmemişse zod onu sessizce atardı; bu eşitlik tam da onu yakalar.
+    const parsed = StandardContractSchema.parse(canonical) as unknown as Dict;
+    const parsedBudget = parsed.changePackageBudget as Dict;
+    expect(mpOf(parsedBudget), "merge koruması sözleşmesi strip edildi").toEqual(MP);
+    // Altı politika kararı: hepsi tek bir nesnede, yarım beyan yok.
+    expect({
+      strict: MP.strict,
+      enforceAdmins: MP.enforceAdmins,
+      pullRequestRequired: MP.pullRequestRequired,
+      forcePushAllowed: MP.forcePushAllowed,
+      deletionAllowed: MP.deletionAllowed,
+      requiredConversationResolution: MP.requiredConversationResolution,
+    }).toEqual({
+      strict: true,
+      enforceAdmins: true,
+      pullRequestRequired: true,
+      forcePushAllowed: false,
+      deletionAllowed: false,
+      requiredConversationResolution: true,
+    });
+    // Kimlikler boş olamaz; KESİN değerleri iş akışına B13 conformance testinde bağlanır.
+    for (const key of ["branch", "requiredCheck"])
+      expect((MP[key] as string).length, `${key} boş`).toBeGreaterThan(0);
+    expect(MP.verifier, "doğrulayıcı yolu sapmış").toBe(VERIFIER);
+    expect(fs.existsSync(path.join(ROOT, MP.verifier as string)), "doğrulayıcı yok").toBe(true);
+    // Dürüstlük: sözleşme canlı korumayı KURMAZ ve ürün hazırlığı iddia ETMEZ.
+    for (const truth of [/KURMAZ/, /KARŞILAŞTIRILABİLİR/, /ürün\/runtime hazırlığı sayılmaz/])
+      expect(MP.note as string, `dürüstlük beyanı eksik: ${truth}`).toMatch(truth);
   });
 
   it("ölçüm ölçemediğini iddia etmez; brüt ve ölçülen net ayrı raporlanır", () => {
@@ -181,6 +247,7 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
       budget.churnGuard.note,
       budget.measurement.honestScopeNote,
       budget.checker.note,
+      MP.note as string,
     ].join(" ");
     for (const value of thresholds)
       expect(freeText, `prose-threshold-copy:${value}`).not.toMatch(new RegExp(`\\b${value}\\b`));
