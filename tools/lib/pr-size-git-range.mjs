@@ -71,6 +71,13 @@ export const validateRef = (value) => {
  * kapatılır: aksi halde `~/.gitconfig` (örn. `core.attributesFile` ile `* binary`) saf metin farkını
  * sayılamaz hale getirip bütçeyi sessizce sıfırlayabilirdi. Sistem config'i `GIT_CONFIG_NOSYSTEM`
  * ile kapalı KALIR; iki katman birlikte aranır.
+ *
+ * ATTRIBUTES AYRI BİR YÜZEYDİR: attributes dosyaları config DEĞİLdir ve config kapatmaları onları
+ * KAPATMAZ. Global attributes VARSAYILAN YOLDAN (`$HOME/.config/git/attributes`) hiçbir işaretçi
+ * olmadan okunur; sistem attributes'ı ise `$(prefix)/etc/gitattributes`'tan gelir. Bir konak
+ * dosyasındaki tek satırlık `* -diff` gerçek metin değişikliğini `-\t-` yapıp ölçümü sessizce
+ * sıfırlayabilirdi. Bu yüzden sistem yüzeyi burada `GIT_ATTR_NOSYSTEM=1` ile, global/varsayılan
+ * yüzey ise her çağrıdaki komut-yerel `-c core.attributesFile=/dev/null` ile kapatılır.
  */
 export const sanitizeEnv = (parentEnv = {}) => {
   const safe = {};
@@ -84,6 +91,7 @@ export const sanitizeEnv = (parentEnv = {}) => {
     GIT_ASKPASS: "true",
     GIT_CONFIG_NOSYSTEM: "1",
     GIT_CONFIG_GLOBAL: "/dev/null",
+    GIT_ATTR_NOSYSTEM: "1",
     GIT_OPTIONAL_LOCKS: "0",
     LC_ALL: "C",
   };
@@ -119,10 +127,17 @@ const CLASS_ERROR_ID = {
   nonzero: "git-nonzero-exit",
 };
 
+/**
+ * Komut-yerel config, git'in EN YÜKSEK öncelikli katmanıdır; hem attributes'ın varsayılan global
+ * yolunu hem de olası bir `core.attributesFile` işaretçisini tek hamlede boşa çıkarır. Alt komuttan
+ * ÖNCE gelmek zorundadır, bu yüzden TEK huni olan `runGit` içinde eklenir.
+ */
+const ATTR_HARDENING = ["-c", "core.attributesFile=/dev/null"];
+
 const runGit = (executor, args, opts) => {
   let result;
   try {
-    result = executor(args, opts);
+    result = executor([...ATTR_HARDENING, ...args], opts);
   } catch {
     return fail("git-spawn-threw", "git süreci başlatılamadı");
   }

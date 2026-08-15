@@ -196,6 +196,24 @@ describe("pr-size-git-range — gerçek geçici depo üzerinde uçtan uca toplam
     });
   });
 
+  it("düşman VARSAYILAN global attributes yolu (~/.config/git/attributes) ölçümü ikiliye çeviremez", () => {
+    const dir = makeTmpDir("hostile-default-attributes");
+    initRepo(dir);
+    commitFile(dir, "a.txt", "one\n", "init");
+    commitFile(dir, "a.txt", "two\n", "second");
+    const home = makeTmpDir("hostile-default-home");
+    // Git'in VARSAYILAN global attributes yolu. Hiçbir `core.attributesFile` İŞARETÇİSİ ve hiçbir
+    // `~/.gitconfig` YOK: dosya salt konumu sayesinde okunur, yani `GIT_CONFIG_GLOBAL=/dev/null`
+    // bu yolu KAPATMAZ. `* -diff` saf metin farkını `-\t-` yapar ve bütçeyi sessizce sıfırlar.
+    fs.mkdirSync(path.join(home, ".config", "git"), { recursive: true });
+    fs.writeFileSync(path.join(home, ".config", "git", "attributes"), "* -diff\n");
+    withEnv({ HOME: home }, () => {
+      const result = range.collectRange({ repoRoot: dir, base: "HEAD~1", head: "HEAD" });
+      expect(result.ok).toBe(true);
+      expect(result.numstatZ).toBe("1\t1\ta.txt\0");
+    });
+  });
+
   it("gerçekten çok-anlamlı ref (aynı adda dal ve etiket) fail-closed reddedilir", () => {
     const dir = makeTmpDir("ambiguous-ref");
     initRepo(dir);
@@ -286,6 +304,24 @@ describe("pr-size-git-range — gerçek yürütücüde shell/argv sözleşmesi",
     }
   });
 
+  it("her git çağrısı komut-yerel `-c core.attributesFile=/dev/null` ve GIT_ATTR_NOSYSTEM taşır", () => {
+    const spy = vi.spyOn(childProcess, "spawnSync");
+    const dir = makeTmpDir("attributes-contract");
+    initRepo(dir);
+    commitFile(dir, "a.txt", "one\n", "init");
+    const result = range.collectRange({ repoRoot: dir, base: "main", head: "main" });
+    expect(result.ok).toBe(true);
+    expect(spy).toHaveBeenCalled();
+    for (const call of spy.mock.calls) {
+      // Komut-yerel `-c` en yüksek öncelikli katmandır: hem VARSAYILAN global attributes yolunu
+      // hem de olası bir `core.attributesFile` işaretçisini tek hamlede boşa çıkarır.
+      expect((call[1] as string[]).slice(0, 2)).toEqual(["-c", "core.attributesFile=/dev/null"]);
+      const options = call[2] as { env: Record<string, string> };
+      // Sistem attributes dosyası (`$(prefix)/etc/gitattributes`) ortamdan kapatılır.
+      expect(options.env.GIT_ATTR_NOSYSTEM).toBe("1");
+    }
+  });
+
   it("son diff çağrısı tam kanonik komuttur: `diff --no-ext-diff --no-textconv --numstat -z <mergeBase>..<head> --`", () => {
     const spy = vi.spyOn(childProcess, "spawnSync");
     const dir = makeTmpDir("exact-command");
@@ -294,10 +330,11 @@ describe("pr-size-git-range — gerçek yürütücüde shell/argv sözleşmesi",
     const headHash = commitFile(dir, "a.txt", "two\n", "second");
     const result = range.collectRange({ repoRoot: dir, base: "HEAD~1", head: "HEAD" });
     expect(result.ok).toBe(true);
-    const diffCall = spy.mock.calls.find((c) => (c[1] as string[])[0] === "diff");
+    const diffCall = spy.mock.calls.find((c) => (c[1] as string[]).includes("--numstat"));
     expect(diffCall).toBeDefined();
     const args = diffCall?.[1] as string[];
-    expect(args[0]).toBe("diff");
+    // Alt komuttan ÖNCE yalnız attributes sertleştirmesi gelir; kanonik diff sözleşmesi korunur.
+    expect(args.slice(0, 3)).toEqual(["-c", "core.attributesFile=/dev/null", "diff"]);
     expect(args).toContain("--no-ext-diff");
     expect(args).toContain("--no-textconv");
     expect(args).toContain("--numstat");
