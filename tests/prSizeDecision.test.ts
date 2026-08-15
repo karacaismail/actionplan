@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // ve bozuk girdinin karara DÖNÜŞMEDİĞİdir. Hiçbir eşik ya da bant kimliği bu dosyada ikinci kez
 // yazılmaz: sınırlar kanonikten hesaplanır, böylece test de motor da tek kaynağa bağlı kalır.
 // KAPSAM DÜRÜST: motor süreç değildir — argv, dosya/fixture, stdout ve çıkış kodu P2A-2c'nin,
-// gerçek Git aralığı P2B'nin, CI bağlantısı P3'ün işidir ve bu paket hiçbirini İDDİA ETMEZ.
+// gerçek Git aralığı P2B'nin, PR olay adaptörü B12'nin işidir ve bu dosya hiçbirini İDDİA ETMEZ.
 const ROOT = process.cwd();
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const SELF = "tests/prSizeDecision.test.ts";
@@ -509,10 +509,13 @@ describe("pr-size karar motoru — kararlı sözleşme ve ikinci eşik kopyası 
     }
   });
 
-  it("kanonik kapı beyanı: kapı dosyası YAZILDI ama CI YOK, enforcement hâlâ YOK", () => {
-    // Motor bir kapı değildir; kapı dosyasını P2A-2c yazdı, CI bağlantısını (P3) hâlâ kimse yazmadı.
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks).toBe(false);
+  it("kanonik kapı beyanı: kapı CI'a BAĞLI, ama motor hâlâ kapı DEĞİL", () => {
+    // Motor SAF kalır: PR olay adaptörü o değildir, olay/etiket okumaz ve hiçbir şeyi durdurmaz.
+    // B12'de kapı dosyası PR iş akışından gerçek adaptör üzerinden çağrıldığı için kanonik durum
+    // bağlı/durduran hâle geçti. Bu MERGE koruması değildir: branch protection / zorunlu check
+    // (B13) hâlâ AÇIKtır ve bu dosya onu İDDİA ETMEZ.
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks).toBe(true);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
   });
 });

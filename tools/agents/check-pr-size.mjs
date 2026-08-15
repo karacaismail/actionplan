@@ -3,13 +3,13 @@
  * check-pr-size (ADR-0027 / short-code `short-pr-size`) — SÜREÇ yüzeyi (P2A-2c + P2B1b + P2B2b).
  * ÖLÇÜM/KARAR/TOPLAMA burada DEĞİLdir; onları içe aktarılan saf motorlar ve kabul edilmiş
  * toplayıcılar üstlenir. Burada yalnız SÜREÇ vardır: argv dilbilgisi, TEK kaynak kuralı, fixture'ın
- * güvenli okunması, kanonik alanın ve depo kökünün yüklenmesi, tek JSON raporu, çıkış kodu
- * eşlemesi. İkinci bir eşik/bant/sınıf/kanıt kopyası, ikinci git argv'si ve alt süreç YOKTUR. Üç
- * kaynak da ölçülür ama kapı hiçbir CI adımına bağlı DEĞİLdir (P3), stdin'e yaslanmaz ve hiçbir
- * şeyi bloklamaz; bunu `inputMode`, `collectsGitRange`, `collectsWorkingTree` ve `ciEnforced`
- * makine-okunur söyler. FAIL-CLOSED: bozuk argv, karışık/eksik kaynak, güvensiz/okunamayan/boş
- * fixture, toplanamayan aralık/ağaç, güvenilmez kanonik alan ve süreç-içi hata KARAR YERİNE
- * adlandırılmış rapor + kendi çıkış kodunu üretir; stdout yalnız tam JSON, insan satırı stderr.
+ * güvenli okunması, kanonik alanın ve depo kökünün yüklenmesi, tek JSON raporu ve çıkış kodu
+ * eşlemesi. İkinci eşik/bant/sınıf/kanıt kopyası, ikinci git argv'si ve alt süreç YOKTUR. Üç
+ * kaynak da ölçülür; kapı stdin'e yaslanmaz ve KENDİLİĞİNDEN CI zorlaması İDDİA ETMEZ:
+ * `ciEnforced` ÇAĞRIYA ÖZGÜdür, argv'den DEĞİL yalnız `runCheck` bağlamından gelir ve doğrudan
+ * kabuk çağrısı onu üretemez. FAIL-CLOSED: bozuk argv, karışık veya eksik kaynak,
+ * güvensiz/okunamayan/boş fixture, toplanamayan aralık/ağaç, güvenilmez kanonik alan ve süreç-içi
+ * hata KARAR YERİNE adlandırılmış rapor + çıkış kodu üretir; stdout tam JSON, insan satırı stderr.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -20,7 +20,7 @@ import { collectRange } from "../lib/pr-size-git-range.mjs";
 import { SOURCE as TREE_SOURCE, collectWorkingTree } from "../lib/pr-size-git-working-tree.mjs";
 
 export const CLI_SCHEMA = "pr-size-check/1";
-export const CLI_VERSION = "1.2.0";
+export const CLI_VERSION = "1.3.0";
 export const INPUT_MODE = "numstat-z-file";
 export const RANGE_MODE = "git-range";
 /** Kaynağın ADI ikinci kez tanımlanmaz: kabul edilmiş toplayıcının kendi sabitinden türer. */
@@ -214,14 +214,14 @@ const treeSource = () => {
 };
 
 /** Zarf minimaldir, saf karar raporunu DEĞİŞTİRMEDEN taşır ve anahtar sırası sözleşmedir.
- *  `collectsGitRange`/`collectsWorkingTree` İDDİA değil provenansın VARLIĞIDIR: kaynak toplanıp
- *  karara dönüşmediyse alan da beyan da yoktur. Süre bütçesinin sayısı hiçbir alanda geçmez. */
+ *  `collectsGitRange`/`collectsWorkingTree`/`ciEnforced` İDDİA değil provenansın ve ÇAĞRININ
+ *  gerçeğidir; varsayılanları yanlıştır. Süre bütçesinin sayısı hiçbir alanda geçmez. */
 // biome-ignore format: the machine-readable envelope contract stays compact for the shard budget
 const envelope = ({ mode = null, status, fixture = null, range = null, workingTree = null,
-  error = null, decisionReport = null }) => ({
+  error = null, decisionReport = null, ciEnforced = false }) => ({
   schema: CLI_SCHEMA, version: CLI_VERSION, inputMode: mode,
   canonicalStandard: CANONICAL_STANDARD, collectsGitRange: range !== null,
-  collectsWorkingTree: workingTree !== null, ciEnforced: false,
+  collectsWorkingTree: workingTree !== null, ciEnforced,
   status, exitCode: EXIT_CODE[status] ?? EXIT_CODE[INTERNAL],
   fixture, range, workingTree, error, decisionReport,
 });
@@ -239,17 +239,19 @@ export const internalEnvelope = (cause) => {
  *  karar → zarf. `inputMode` çözülen kaynağı SÖYLER, argv okunamadıysa hiçbir mod İDDİA EDİLMEZ ve
  *  toplama provenansı yalnız karar üretilen yolda taşınır. */
 const SOURCES = { [RANGE_MODE]: rangeSource, [WORKING_TREE_MODE]: treeSource };
-export const runCheck = (argv) => {
+export const runCheck = (argv, context = {}) => {
+  /** Bağlam ÇAĞIRANIN kimliğidir, argv'nin değil: yalnız birebir `true` CI zorlaması sayılır. */
+  const wrap = (fields) => envelope({ ...fields, ciEnforced: context?.ciEnforced === true });
   const parsed = parseArgv(argv);
-  if (!parsed.ok) return envelope({ status: parsed.error.kind, error: parsed.error });
+  if (!parsed.ok) return wrap({ status: parsed.error.kind, error: parsed.error });
   const { source: mode, klass, evidence } = parsed;
   const config = loadBudget();
-  if (!config.ok) return envelope({ mode, status: config.error.kind, error: config.error });
+  if (!config.ok) return wrap({ mode, status: config.error.kind, error: config.error });
   const collect = SOURCES[mode];
   const source = collect ? collect(parsed) : fixtureSource(parsed.input);
-  if (!source.ok) return envelope({ mode, status: source.error.kind, error: source.error });
+  if (!source.ok) return wrap({ mode, status: source.error.kind, error: source.error });
   const report = decide({ budget: config.budget, numstatZ: source.wire, klass, evidence });
-  return envelope({
+  return wrap({
     mode,
     status: report.ok ? report.decision : report.error.kind,
     fixture: source.fixture,

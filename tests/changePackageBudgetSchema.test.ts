@@ -32,6 +32,7 @@ const bandsOf = (b: Dict) => b.bands as Rows;
 const classesOf = (b: Dict) => b.classes as Rows;
 const catsOf = (b: Dict) => b.separatelyReported as Rows;
 const reqs = (b: Dict, i: number, requires: unknown[]) => set(bandsOf(b)[i], { requires });
+const checkerOf = (b: Dict) => b.checker as { status: string; blocks: boolean };
 
 /** Sözleşmeyi sessizce zayıflatan her sapma şemada RED olmalı; hiçbiri strip edilip geçmemeli. */
 const REJECTS: Record<string, (b: Dict) => unknown> = {
@@ -73,10 +74,14 @@ const REJECTS: Record<string, (b: Dict) => unknown> = {
   "churn-guard-unknown-band": (b) => set(b.churnGuard, { appliesWhenNetAtOrBelowBand: "made-up" }),
   "churn-gross-max-decoupled": (b) => set(b.churnGuard, { grossMaxFromBand: "waiver" }),
   "churn-guard-credits-deletions": (b) => set(b.churnGuard, { netCreditFloor: -1000 }),
-  // CI'a bağlanmamış kapı "bloklar" diye beyan edilemez; blocks yalnız CI durumunda true olabilir.
-  "checker-claims-blocking-before-ci": (b) => set(b.checker, { blocks: true }),
-  // Ters yön de RED: durum CI'a atlarken blocks geride kalamaz (ikisi tek bir gerçeği söyler).
-  "checker-status-ahead-of-blocks": (b) => set(b.checker, { status: "ci-enforced-blocking" }),
+  // `status` ve `blocks` TEK bir gerçeği söyler; hangi durumda olursak olalım ayrışmaları RED'dir.
+  // Mutasyonlar kanonik durumdan TÜRETİLİR: sabit değer yazsaydık kanonik oraya geldiğinde
+  // mutasyon sessizce no-op'a döner ve bu satırlar hiçbir sapmayı yakalamaz hale gelirdi.
+  "checker-blocks-decoupled-from-status": (b) => set(b.checker, { blocks: !checkerOf(b).blocks }),
+  "checker-status-decoupled-from-blocks": (b) =>
+    set(b.checker, {
+      status: checkerOf(b).blocks ? "implemented-not-wired" : "ci-enforced-blocking",
+    }),
   "unknown-checker-status": (b) => set(b.checker, { status: "bloklar" }),
 };
 
@@ -86,7 +91,7 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect([parsed.id, parsed.family]).toEqual(["short-code", "engineering"]);
     // Geriye UYUMLU yükseliş: aynı ana sürüm içinde minör artar, alan sözleşmesi kırılmaz.
     expect(parsed.version.startsWith("1.")).toBe(true);
-    expect(parsed.version, "sürüm yükselmedi").toBe("1.3.0");
+    expect(parsed.version, "sürüm yükselmedi").toBe("1.4.0");
     // Alan şemaya girmemişse zod onu sessizce atar; bu eşitlik tam da onu yakalar.
     expect((parsed as unknown as Dict).changePackageBudget).toEqual(budget);
   });
@@ -118,20 +123,22 @@ describe("short-code — change-package bütçesi sözleşmesi", () => {
     expect(ceilingOf("security-test-conformance")).toBe(CONDITIONAL.maxNet);
   });
 
-  it("kapı beyanı dürüsttür: üç kaynak da toplanır ama enforcement hâlâ YOK", () => {
+  it("kapı beyanı dürüsttür: PR olayında CI'a bağlıdır, kalan boşluk B13'tür", () => {
     expect(budget.checker.path).toBe("tools/agents/check-pr-size.mjs");
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
-    // P2B gerçeği: aralık VE çalışma ağacı ARTIK toplanır; kalan boşluk (CI) adıyla sayılır.
-    for (const missing of [/working-tree/i, /CI/, /P3/])
-      expect(budget.checker.note, `kalan boşluk adıyla sayılmıyor: ${missing}`).toMatch(missing);
-    // Uygulanmış mod artık YOK sayılamaz; ama enforcement de İDDİA EDİLEMEZ.
+    // B12 gerçeği: kapı `pull_request` olayında bir CI adımına BAĞLANDI; ikisi tek gerçeği söyler.
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks, "bağlı kapı bloklamayı reddediyor").toBe(true);
+    // Uygulanmış mod artık YOK sayılamaz.
     expect(budget.checker.note, "uygulanmış mod yok sayılıyor").not.toMatch(
       /working-tree[^.]*(yoktur|YOKTUR)/,
     );
-    expect(budget.checker.note, "bağlanmamış kapı enforcement iddia ediyor").toMatch(
+    // Eski "enforcement yok" beyanı artık YANLIŞtır ve kalamaz.
+    expect(budget.checker.note, "bağlı kapı hâlâ enforcement yok diyor").not.toMatch(
       /enforcement hâlâ YOKTUR/,
     );
+    // Kalan boşluk ADIYLA sayılır: branch protection / zorunlu check (B13) HÂLÂ açıktır.
+    for (const named of [/pull_request/, /B13/, /branch protection|zorunlu check/i])
+      expect(budget.checker.note, `kalan boşluk adıyla sayılmıyor: ${named}`).toMatch(named);
     // Durum ↔ gerçeklik: yalnız `planned-not-implemented` iken dosya YOKtur; P2 dosyayı yazdı.
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(
       budget.checker.status !== "planned-not-implemented",

@@ -10,10 +10,13 @@ import { afterAll, describe, expect, it } from "vitest";
 // sızıntısız olduğudur: argv dilbilgisi, TEK kaynak kuralı, fixture tipi/sınırı, kanonik config'in
 // ve depo kökünün cwd'den bağımsız çözülmesi, çıkış kodu eşlemesi ve stdout'un HER yolda yalnız tam
 // JSON olması. Eşik/bant/kanıt kimliği bu dosyada ikinci kez YAZILMAZ; hepsi kanonikten türetilir.
-// KAPSAM DÜRÜST: gerçek aralık artık toplanır, ama çalışma-ağacı modu hâlâ YOKTUR ve hiçbir CI
-// adımına bağlı DEĞİLdir (P3); bu paket enforcement İDDİA ETMEZ.
+// KAPSAM DÜRÜST: üç kaynak da toplanır ve B12'den sonra kapı `pull_request` olayında bir CI
+// adımına BAĞLIdır; ama doğrudan/yerel çağrı hâlâ `ciEnforced=false` kalır ve branch protection /
+// zorunlu check (B13) bu pakette AÇIK bırakılır.
 const ROOT = process.cwd();
 const CLI = "tools/agents/check-pr-size.mjs";
+/** B12: kapıyı `pull_request` olayına bağlayan ince adaptör; davranışı kendi testinde kanıtlanır. */
+const ADAPTER = "tools/agents/check-pr-size-ci.mjs";
 const SELF = "tests/prSizeCheckerGovernance.test.ts";
 const ENGINE = "tools/lib/pr-size-decision.mjs";
 const CORE = "tools/lib/pr-size-core.mjs";
@@ -844,17 +847,20 @@ describe("pr-size süreç kapısı — yapısal sınırlar ve dürüst kapı bey
     }
   });
 
-  it("kanonik kapı beyanı dürüsttür: kapı ARALIK TOPLAR ama hiçbir yere BAĞLI DEĞİL", () => {
+  it("kanonik kapı beyanı dürüsttür: kapı PR olayında CI'a BAĞLIdır", () => {
     expect(budget.checker.path).toBe(CLI);
     // Kapı artık gerçek aralığı topluyor (bu dosyadaki gerçek depo kanıtı); not aksini diyemez.
     expect(budget.checker.note, "not gerçek aralığı yok sayıyor").not.toMatch(
       /aralı[kğ]ı?[^.]*toplan?ma[zy]/i,
     );
-    expect(budget.checker.status).toBe("implemented-not-wired");
-    expect(budget.checker.blocks, "bağlanmamış kapı bloklama iddia ediyor").toBe(false);
+    expect(budget.checker.status).toBe("ci-enforced-blocking");
+    expect(budget.checker.blocks, "bağlı kapı bloklamayı reddediyor").toBe(true);
     expect(fs.existsSync(path.join(ROOT, budget.checker.path))).toBe(true);
-    // İddia YANLIŞLANABİLİR: "wired değil" demek, hiçbir script/CI adımının kapıyı çağırmaması demek.
-    const wiring = [read("package.json"), read(".github/workflows/deploy.yml")].join("\n");
-    expect(wiring, "kapı bağlanmış ama durum bunu söylemiyor").not.toContain(CLI);
+    // İddia YANLIŞLANABİLİR: "bağlı" demek, olayı kapıya çeviren GERÇEK bir adaptörün gerçek bir
+    // CI adımından çağrılması demek. Kapının kendisi hâlâ doğrudan bir CI adımı DEĞİLdir.
+    expect(fs.existsSync(path.join(ROOT, ADAPTER)), "CI olay adaptörü yok").toBe(true);
+    const workflow = read(".github/workflows/deploy.yml");
+    expect(workflow, "kapı hiçbir CI adımına bağlı değil").toContain(ADAPTER);
+    expect(workflow.split(ADAPTER).join(""), "ham kapı doğrudan CI adımı oldu").not.toContain(CLI);
   });
 });
