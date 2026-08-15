@@ -4,7 +4,7 @@ Sürüm: 1.0 — 2026-07-01
 Durum: `docs/standards/` klasörünün giriş noktası. Kanonik hub `docs/engineering-standards-index.md`'yi *tamamlar*, yerini almaz.
 Amaç: Tüm standartları — makine-sözleşmeleri (`src/data/standards/*.json`; çekirdek 15 + eklenen 9 = **24 sözleşme**, 2026-07-01 RECONCILE) ve bu klasördeki anlatı standartları (01-15) — tek yerde listelemek.
 
-**Güncel makine-sözleşmesi sayısı (canlı):** 39 dosya. Bu sayı `src/data/standards/*.json` dizininden türetilir ve `tests/docsIntegrationReportStatus.test.ts` ile canlı dosya sayısına karşı doğrulanır; `tests/kernelDeliveryBoundaryDocumentation.test.ts` M7-R1 paketinde eklenecek, bu commit'te mevcut değildir ve bu sayıyı doğrulamaz. Aşağıdaki 15 / 24 / 28 sayıları kendi tarihlerinin kayıtlarıdır; güncel toplam değildir ve "current" diye okunmaz.
+**Güncel makine-sözleşmesi sayısı (canlı):** 39 dosya. Bu sayı `src/data/standards/*.json` dizininden türetilir ve `tests/kernelDeliveryBoundaryDocumentation.test.ts` ile canlı dosya sayısına karşı doğrulanır. Aşağıdaki 15 / 24 / 28 sayıları kendi tarihlerinin kayıtlarıdır; güncel toplam değildir ve "current" diye okunmaz.
 
 ---
 
@@ -91,7 +91,7 @@ Aşağıdaki satır §3'teki listeden ayrı sınıflandırılır: **reference-on
 |---|---|---|---|---|
 | 15 kernel-delivery-boundary (`docs/standards/15-kernel-delivery-boundary-standard.md`) | engineering | **reference-only** anlatı; `standardRef` anahtarı YOK | `src/data/standards/kernel-delivery-boundary.json` (reference-only katalog girişi) | `reports/kernel-asgi-core-profile-decision-2026-08-11.json` + doğrulayıcı `tools/lib/kernel-asgi-core-profile.mjs` |
 
-Kapılar — bu commit'te aktif: `tests/kernelDeliveryBoundaryStandard.test.ts` (katalog girişi kopya/overclaim taraması), `tests/kernelAsgiCoreProfileDecision.test.ts` (karar kaydı sapma süpürmesi); planlanan: `tests/kernelDeliveryBoundaryDocumentation.test.ts` (anlatı + indeks bütünlüğü) — M7-R1 paketinde eklenecek, bu commit'te mevcut değildir. Bu satır çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
+Kapılar: `tests/kernelDeliveryBoundaryDocumentation.test.ts` (anlatı + indeks bütünlüğü), `tests/kernelDeliveryBoundaryStandard.test.ts` (katalog girişi kopya/overclaim taraması), `tests/kernelAsgiCoreProfileDecision.test.ts` (karar kaydı sapma süpürmesi). Bu satır çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
 
 ---
 

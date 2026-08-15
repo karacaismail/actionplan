@@ -151,5 +151,5 @@ Bu doküman yeni bir CI kapısı kurmaz; mevcut kapılara bağlanır.
 |---|---|
 | Karar kaydının pinleri ve sapma süpürmesi | `tests/kernelAsgiCoreProfileDecision.test.ts` |
 | Katalog girişinin kopya/overclaim taraması | `tests/kernelDeliveryBoundaryStandard.test.ts` |
-| Bu anlatının ve iki indeksin bütünlüğü (M7-R1 paketinde planlanan kapı) | `tests/kernelDeliveryBoundaryDocumentation.test.ts` — M7-R1 paketinde eklenecek; bu M6 commit'inde mevcut değildir |
+| Bu anlatının ve iki indeksin bütünlüğü | `tests/kernelDeliveryBoundaryDocumentation.test.ts` |
 | Sahip anlayışı beş alanı ve teknoloji kanıtı | `tests/ownerComprehensionContract.test.ts` + `src/data/standards/ai-governance.json` |
