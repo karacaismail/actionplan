@@ -84,9 +84,13 @@ const copied = (doc: Doc) => SOURCE_VALUES.filter((v) => normative(doc).includes
 const sha = (doc: Doc) => crypto.createHash("sha256").update(visible(doc), "utf8").digest("hex");
 const rootKeys = (doc: Doc) => Object.keys(doc).join(",");
 /**
- * Kanonik JSON sahipliği tek dosyadan değil TÜM standard sözleşmelerinin birleşiminden çözülür
- * (`engineeringStandardSourceOwnership` ile aynı kapsam). Anchor'lu ref yol saymaz ve eşleşme tam
- * yol sınırındadır. `override` yalnız BELLEKTEKİ listeye uygulanır; canlı dosya hiç değişmez.
+ * LOW-1 — Kanonik JSON sahipliği tek dosyadan değil `src/data/standards/*.json` sözleşmelerinin
+ * BİRLEŞİMİNDEN çözülür. Bu kapsam `engineeringStandardSourceOwnership` ile AYNI DEĞİLDİR: o test
+ * aynı birleşime ayrıca `src/data/tech-profiles.json` referanslarını da katar, burada yalnız
+ * standard dizini okunur.
+ * LOW-2 — Karşılaştırmada çapa (`#...`) yolun dışında bırakılır; çapalı bir ref yine kendi
+ * doküman yoluna çözülür ve sahiplik sayar. Eşleşme substring değil tam yol sınırındadır.
+ * `override` yalnız BELLEKTEKİ listeye uygulanır; canlı dosya hiç değişmez.
  */
 const ownersOf = (docPath: string, override?: string[]): string[] =>
   fs
