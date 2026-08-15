@@ -10,7 +10,8 @@
  * liste birleştirilip yol BAYT sırasına göre yeniden çerçevelenir: aynı ağaç her çağrıda bayt bayt
  * aynı teli üretir ve rename satırı yalnız HEDEF yolu bir kez taşır.
  *
- * FAIL-CLOSED: geçersiz/tepe-olmayan kök, olmayan/sığ depo, doğmamış HEAD, çakışmalı ağaç, güvensiz/kaybolan/
+ * FAIL-CLOSED: geçersiz/tepe-olmayan kök, GEÇERSİZ BİÇİMLİ tepe yanıtı, olmayan/sığ depo, doğmamış
+ * HEAD, çakışmalı ağaç, İÇ İÇE izlenmeyen depo SINIRI, güvensiz/kaybolan/
  * düzenli-olmayan izlenmeyen yol, iki listenin ÖRTÜŞMESİ, kaynak sınırı aşımı, sıfır-olmayan çıkış,
  * SIFIR çıkışlı beklenmedik stderr, sinyal, zaman aşımı, tampon taşması ve UTF-8/çerçeve bozukluğu
  * KARAR YERİNE adlandırılmış hata döndürür; ayrıntı ham stderr, yol veya mutlak kök TAŞIMAZ.
@@ -19,6 +20,10 @@
  * ile indeks tazelenip YAZILMAZ; nesne deposu ve refler dokunulmadan kalır. Ağ/fetch YOKTUR. Süreç
  * sertleştirmesi (shell:false, sabit `cwd`, sınırlı süre/tampon, TAM ortam allowlist'i)
  * `pr-size-git-range.mjs` ile ORTAKtır: birinde kapanan kaçak diğerinde açık kalamaz.
+ *
+ * KAPANMAMIŞ SINIR (dürüst beyan): burada yalnız SÜREÇ BAŞINA zaman aşımı ve izlenmeyen SÜREÇ
+ * SAYISI tavanı vardır. Uçtan uca TOPLAM duvar-saati son tarihi bu pakette KAPANMAMIŞTIR; o sınır
+ * CLI entegrasyon paketi P2B2b'ye aittir ve bu modül onu kapatmış gibi bir bütçe ihraç ETMEZ.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -36,6 +41,8 @@ export const DEFAULT_MAX_BUFFER_BYTES = 64 * 1024 * 1024;
 export const MAX_UNTRACKED_PATHS = 4000;
 
 const HEX_COMMIT = /^[0-9a-f]{40}$|^[0-9a-f]{64}$/i;
+/** Tepe dizin yanıtı TEK, boş olmayan, MUTLAK bir yol olmalıdır; NUL/satırsonu taşıyamaz. */
+const TOPLEVEL_PATH = /^\/[^\0\n]*$/;
 const DIFF_BASE = ["diff", "--no-ext-diff", "--no-textconv", "--numstat", "-z"];
 const fail = (id, detail) => ({ ok: false, error: { id, detail } });
 const utf8 = new TextDecoder("utf-8", { fatal: true });
@@ -116,6 +123,26 @@ const frame = (rows) =>
 const byPathBytes = (a, b) =>
   Buffer.compare(Buffer.from(a.file, "utf8"), Buffer.from(b.file, "utf8"));
 
+/**
+ * Tepe yanıtı KARŞILAŞTIRMADAN ÖNCE kendi başına doğrulanır. BOŞ bir yanıt sözlüksel çözümde
+ * `process.cwd()`e açılırdı: cwd gerçek tepe olduğunda kök karşılaştırması KENDİ KENDİNİ doğrular
+ * ve git hiç konuşmadan ağaç KABUL edilirdi. Aynı kaçak göreli/çok satırlı/beyaz-boşluklu/NUL
+ * taşıyan/UTF-8 olmayan yanıtta da açıktır; hepsi TEK adlandırılmış kimlikle fail-closed durur.
+ * Biçimce GEÇERLİ ama eşleşmeyen tepe ayrı kalır: o bir çıktı arızası değil, YANLIŞ köktür.
+ */
+const readToplevel = (run) => {
+  const result = run(["rev-parse", "--show-toplevel"]);
+  if (!result.ok)
+    return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
+  const read = decode(result.stdout, "worktree-toplevel-output-invalid", "tepe yanıtı UTF-8 değil");
+  if (!read.ok) return read;
+  // Git tam olarak TEK satır yazar; yalnız o tek satırsonu düşer, ikincisi çok satırlılık kanıtıdır.
+  const value = read.text.endsWith("\n") ? read.text.slice(0, -1) : read.text;
+  if (!TOPLEVEL_PATH.test(value))
+    return fail("worktree-toplevel-output-invalid", "tepe yanıtı tek mutlak yol değil");
+  return { ok: true, path: value };
+};
+
 /** İzlenen tel doğrudan git'ten gelir: çerçeve, UTF-8 ve yol güvenliği ayrı ayrı kapanır. */
 const readTracked = (run) => {
   const result = run([...DIFF_BASE, "HEAD", "--"]);
@@ -170,6 +197,12 @@ const readUntracked = (run, repoRoot, trackedFiles) => {
     return fail("untracked-too-many", "izlenmeyen yol sayısı kaynak sınırını aşıyor");
   const rows = [];
   for (const file of files) {
+    // `ls-files --others` iç içe bir depoya İNMEZ; onu tek bir `dizin/` kaydı olarak bildirir. Bu
+    // sıradan bir güvensiz yol DEĞİL, ÖLÇÜLEMEYEN bir ağaç sınırıdır ve kimliği bunu söylemelidir:
+    // aksi halde ayrı bir depo "normalize edilemeyen bir dosya" gibi görünüp gerçek neden kaybolur.
+    // İçine İNİLMEZ ve içeriği SAYILMAZ; ölçüm o depoya kendi aralığıyla ayrıca bakmalıdır.
+    if (file.endsWith("/"))
+      return fail("untracked-repository-boundary", "izlenmeyen liste iç içe depo sınırı bildirdi");
     if (!safePath(file)) return fail("untracked-path-unsafe", "izlenmeyen yol normalize edilemedi");
     if (trackedFiles.has(file))
       return fail("untracked-tracked-overlap", "aynı yol iki listede birden göründü");
@@ -209,8 +242,9 @@ export const collectWorkingTree = ({
     return fail("repo-not-found", "verilen kök geçerli bir git deposu değil");
   // Kök TAM OLARAK tepe olmalı: alt dizinde `diff` yolu KÖKE, `ls-files --others` yolu CWD'ye
   // görelidir; iki liste sessizce FARKLI tabanda birleşirdi (sahte örtüşme / yanlış kategori).
-  const toplevel = run(["rev-parse", "--show-toplevel"]);
-  if (!toplevel.ok || canonicalDir(repoRoot) !== canonicalDir(text(toplevel)))
+  const toplevel = readToplevel(run);
+  if (!toplevel.ok) return toplevel;
+  if (canonicalDir(repoRoot) !== canonicalDir(toplevel.path))
     return fail("root-not-worktree-toplevel", "repoRoot çalışma ağacının tepesi değil");
 
   const shallow = run(["rev-parse", "--is-shallow-repository"]);
