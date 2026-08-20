@@ -46,7 +46,7 @@ type Cell = { token: string; value: string };
 // biome-ignore format: the append-only entry surface stays compact for the shard budget.
 type Entry = { seq: number; epochId: string; status: string; sourceType: string; sourceRef: string | null; supersedes: number | null; supersedesDimensions: string[]; previousEntrySha256: string | null; dimensions: Record<string, Cell>; entrySha256: string; normalizedText?: string; normalizedTextBytes?: number; normalizedTextSha256?: string; supersessionScope?: string; normalizedTextRef?: { path: string; jsonPointer: string; bytes: number; sha256: string } };
 // biome-ignore format: the chain root surface stays compact for the shard budget.
-type Chain = { schemaVersion: string; id: string; status: string; appendOnly: boolean; dimensionRegistry: string[]; historicalInvariant: Record<string, unknown>; entries: Entry[]; chainHeadSeq: number; chainHeadEntrySha256: string; chainSha256: string; nonSupersedableFloors: Record<string, string>; supersessionProjection: { supersededFloors: string[]; supersessionAuthority: string; supersedingEpoch: string; sealedEntriesMutated: boolean; historicalApprovalMutated: boolean; predecessorChainFileSha256: string; predecessorChainFileSource: string; appendWriter: string; appendInvocation: string; appendGitExecutor: string }; gitFloor: Record<string, boolean>; orchestrationPolicy: Record<string, unknown>; effectiveAuthorityBoundary: typeof BOUNDARY; consumerBindings: Record<string, string> };
+type Chain = { schemaVersion: string; id: string; status: string; appendOnly: boolean; dimensionRegistry: string[]; historicalInvariant: Record<string, unknown>; entries: Entry[]; chainHeadSeq: number; chainHeadEntrySha256: string; chainSha256: string; nonSupersedableFloors: Record<string, string>; supersessionProjection: { supersededFloors: string[]; supersessionAuthority: string; supersedingEpoch: string; sealedEntriesMutated: boolean; historicalApprovalMutated: boolean; predecessorChainFileSha256: string; predecessorChainFileSource: string; appendWriter: string; appendInvocation: string; appendGitExecutor: string }; gitFloor: Record<string, boolean>; orchestrationPolicy: Record<string, unknown>; effectiveAuthorityBoundary: typeof BOUNDARY; consumerBindings: Record<string, string>; projectionOf?: string };
 
 const exists = (relative: string) => fs.existsSync(path.join(ROOT, relative));
 // The digest of the chain file at actionplan@7312ac0, the base the Kernel readiness candidate pinned.
@@ -445,3 +445,90 @@ function probe(markers: boolean): { errors: string[]; thrown: string } {
 function validateSelf(module: any, input: ReturnType<typeof fixture>): string[] {
   return module.validateKernelEffectiveAuthorityChain(input);
 }
+
+// EPOCH-05 (M0 public-only closure) is declared, not appended: the live chain and its validator
+// (asserted byte-identical above) stay pinned to the EPOCH-04 head. These checks only verify that
+// the declared seq-5 successor entry and its standalone projection are internally consistent —
+// using the existing pure canonicalJson/entryDigest/chainDigest helpers as an independent oracle —
+// never that they have been merged into the live EFFECTIVE_AUTHORITY_CHAIN_REF.
+describe("kernel-epoch-05-activation — declared, not appended, M0 public-only closure", () => {
+  const ACTIVATION = "reports/kernel-epoch-05-activation-2026-08-21.json";
+  const PROJECTION = "reports/kernel-effective-authority-chain-2026-08-21.json";
+  const EPOCH05_TEXT_SHA256 =
+    "1a7c0b866eb82cb6edaebe835705100bb3c57d531bb1cedef6041e59a2242f87";
+  const EPOCH05_ENTRY_SHA256 =
+    "b206ec263eae03e5bd88cde42514161f4b6414091fc7cafe3d5d5ea98a0f9032";
+
+  it("keeps the live chain and validator untouched by the EPOCH-05 declaration", () => {
+    expect(preflight()).toEqual([]);
+    const chain = readJson<Chain>(CHAIN);
+    expect(chain.chainHeadSeq).toBe(4);
+    expect(chain.chainHeadEntrySha256).toBe(EPOCH04_ENTRY_SHA256);
+  });
+
+  it("computes the declared seq-5 entry digest correctly with the existing pure helpers", async () => {
+    const lib = await import(path.join(ROOT, LIB));
+    const activation = readJson<{
+      successorEntry: Entry;
+      chainBinding: {
+        appendExecutedHere: boolean;
+        appendableAsIs: boolean;
+        chainHeadSeqAtRecord: number;
+      };
+    }>(ACTIVATION);
+    const entry = activation.successorEntry;
+    expect(entry.seq).toBe(5);
+    expect(entry.epochId).toBe("AUTHORITY-SUPERSESSION-05");
+    expect(entry.supersedes).toBe(4);
+    expect(entry.previousEntrySha256).toBe(EPOCH04_ENTRY_SHA256);
+    expect(Buffer.byteLength(entry.normalizedText ?? "", "utf8")).toBe(entry.normalizedTextBytes);
+    expect(createHash("sha256").update(entry.normalizedText ?? "", "utf8").digest("hex")).toBe(
+      EPOCH05_TEXT_SHA256,
+    );
+    expect(entry.normalizedTextSha256).toBe(EPOCH05_TEXT_SHA256);
+    expect(lib.entryDigest(entry)).toBe(EPOCH05_ENTRY_SHA256);
+    expect(entry.entrySha256).toBe(EPOCH05_ENTRY_SHA256);
+    expect(entry.supersedesDimensions).toEqual([]);
+    expect(activation.chainBinding.appendExecutedHere).toBe(false);
+    expect(activation.chainBinding.appendableAsIs).toBe(false);
+    expect(activation.chainBinding.chainHeadSeqAtRecord).toBe(4);
+  });
+
+  it("keeps the standalone projection's entries 1-4 byte-identical to the live sealed entries", () => {
+    const projection = readJson<Chain>(PROJECTION);
+    const live = readJson<Chain>(CHAIN);
+    for (const seq of [1, 2, 3, 4]) {
+      const projected = projection.entries.find((entry) => entry.seq === seq);
+      const sealed = live.entries.find((entry) => entry.seq === seq);
+      expect(projected).toEqual(sealed);
+    }
+    expect(projection.status).toBe("projected-not-live");
+    expect(projection.projectionOf).toBe(CHAIN);
+  });
+
+  it("recomputes the projected seq-5 chain digest with the existing pure helpers", async () => {
+    const lib = await import(path.join(ROOT, LIB));
+    const projection = readJson<Chain>(PROJECTION);
+    expect(projection.chainHeadSeq).toBe(5);
+    expect(projection.chainHeadEntrySha256).toBe(EPOCH05_ENTRY_SHA256);
+    expect(lib.chainDigest(projection.entries)).toBe(projection.chainSha256);
+    const seq5 = projection.entries.find((entry) => entry.seq === 5) as Entry;
+    expect(lib.entryDigest(seq5)).toBe(EPOCH05_ENTRY_SHA256);
+  });
+
+  it("binds the public-delivery decision and guard by reference only, never by value copy", () => {
+    const projection = readJson<{
+      publicDeliveryBinding: { decisionRef: string; validatorRef: string };
+    }>(PROJECTION);
+    expect(projection.publicDeliveryBinding.decisionRef).toBe(
+      "reports/kernel-public-delivery-decision-2026-08-21.json",
+    );
+    expect(projection.publicDeliveryBinding.validatorRef).toBe(
+      "tools/lib/kernel-public-delivery-guard.mjs",
+    );
+    const decision = readJson<{ decisions: { actionsPublicGuardHandoff: string } }>(
+      "reports/kernel-public-delivery-decision-2026-08-21.json",
+    );
+    expect(decision.decisions.actionsPublicGuardHandoff).toBe("M1");
+  });
+});
