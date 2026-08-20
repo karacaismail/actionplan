@@ -454,10 +454,8 @@ function validateSelf(module: any, input: ReturnType<typeof fixture>): string[] 
 describe("kernel-epoch-05-activation — declared, not appended, M0 public-only closure", () => {
   const ACTIVATION = "reports/kernel-epoch-05-activation-2026-08-21.json";
   const PROJECTION = "reports/kernel-effective-authority-chain-2026-08-21.json";
-  const EPOCH05_TEXT_SHA256 =
-    "1a7c0b866eb82cb6edaebe835705100bb3c57d531bb1cedef6041e59a2242f87";
-  const EPOCH05_ENTRY_SHA256 =
-    "b206ec263eae03e5bd88cde42514161f4b6414091fc7cafe3d5d5ea98a0f9032";
+  const EPOCH05_TEXT_SHA256 = "1a7c0b866eb82cb6edaebe835705100bb3c57d531bb1cedef6041e59a2242f87";
+  const EPOCH05_ENTRY_SHA256 = "b206ec263eae03e5bd88cde42514161f4b6414091fc7cafe3d5d5ea98a0f9032";
 
   it("keeps the live chain and validator untouched by the EPOCH-05 declaration", () => {
     expect(preflight()).toEqual([]);
@@ -482,9 +480,11 @@ describe("kernel-epoch-05-activation — declared, not appended, M0 public-only 
     expect(entry.supersedes).toBe(4);
     expect(entry.previousEntrySha256).toBe(EPOCH04_ENTRY_SHA256);
     expect(Buffer.byteLength(entry.normalizedText ?? "", "utf8")).toBe(entry.normalizedTextBytes);
-    expect(createHash("sha256").update(entry.normalizedText ?? "", "utf8").digest("hex")).toBe(
-      EPOCH05_TEXT_SHA256,
-    );
+    expect(
+      createHash("sha256")
+        .update(entry.normalizedText ?? "", "utf8")
+        .digest("hex"),
+    ).toBe(EPOCH05_TEXT_SHA256);
     expect(entry.normalizedTextSha256).toBe(EPOCH05_TEXT_SHA256);
     expect(lib.entryDigest(entry)).toBe(EPOCH05_ENTRY_SHA256);
     expect(entry.entrySha256).toBe(EPOCH05_ENTRY_SHA256);

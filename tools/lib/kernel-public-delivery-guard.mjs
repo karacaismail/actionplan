@@ -28,7 +28,8 @@ export function validatePublicDeliveryDecision(record) {
   const errors = [];
   if (!record || typeof record !== "object") return ["public-delivery-decision-missing"];
   if (record.schemaVersion !== "1.0.0") errors.push("schema-version-drift");
-  if (record.id !== "kernel-public-delivery-decision-2026-08-21") errors.push("record-identity-drift");
+  if (record.id !== "kernel-public-delivery-decision-2026-08-21")
+    errors.push("record-identity-drift");
   if (record.status !== "effective") errors.push("record-status-drift");
   if (record.scope !== SCOPE) errors.push("record-scope-drift");
   const decisions = record.decisions ?? {};
@@ -46,8 +47,7 @@ export function validatePublicDeliveryDecision(record) {
   if (decisions.developmentBase?.fastapi !== FASTAPI_DEVELOPMENT_BASE)
     errors.push("fastapi-development-base-drift");
   if (!same(decisions.activationScope, ACTIVATION_SCOPE)) errors.push("activation-scope-drift");
-  if (!Array.isArray(record.nonGoals) || !record.nonGoals.length)
-    errors.push("non-goals-missing");
+  if (!Array.isArray(record.nonGoals) || !record.nonGoals.length) errors.push("non-goals-missing");
   if (!record.nonGoals?.includes(NO_SEPARATE_NARRATIVE_NON_GOAL))
     errors.push("no-separate-narrative-non-goal-missing");
   const owner = record.ownerComprehension ?? {};

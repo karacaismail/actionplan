@@ -50,9 +50,7 @@ describe("kernel-public-delivery-guard — M0 public-only closure decision", () 
 
     const expiry = clone(readJson(DECISION));
     expiry.decisions.manualRiskAcceptanceExpiry = "90_DAYS";
-    expect(validatePublicDeliveryDecision(expiry)).toContain(
-      "manual-risk-acceptance-expiry-drift",
-    );
+    expect(validatePublicDeliveryDecision(expiry)).toContain("manual-risk-acceptance-expiry-drift");
   });
 
   it("rejects FastAPI being claimed as a development base", async () => {
@@ -64,7 +62,12 @@ describe("kernel-public-delivery-guard — M0 public-only closure decision", () 
 
   it("rejects any activation-scope flag flipped true at M0", async () => {
     const { validatePublicDeliveryDecision } = await lib();
-    for (const key of ["codeStartAllowed", "runtimeCodeAllowed", "releaseAllowed", "deployAllowed"]) {
+    for (const key of [
+      "codeStartAllowed",
+      "runtimeCodeAllowed",
+      "releaseAllowed",
+      "deployAllowed",
+    ]) {
       const mutated = clone(readJson(DECISION));
       mutated.decisions.activationScope[key] = true;
       expect(validatePublicDeliveryDecision(mutated)).toContain("activation-scope-drift");
@@ -74,7 +77,7 @@ describe("kernel-public-delivery-guard — M0 public-only closure decision", () 
   it("rejects a missing rollback or non-goals block", async () => {
     const { validatePublicDeliveryDecision } = await lib();
     const noRollback = clone(readJson(DECISION));
-    delete noRollback.rollback;
+    noRollback.rollback = undefined;
     expect(validatePublicDeliveryDecision(noRollback)).toContain("rollback-missing");
 
     const noNonGoals = clone(readJson(DECISION));
