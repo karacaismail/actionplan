@@ -156,6 +156,8 @@ Aşağıdaki giriş §2'deki çekirdek katalogda **yer almaz** ve §3'te bir `st
 
 Kapılar: `tests/kernelAsgiCoreProfileDecision.test.ts`, `tests/kernelDeliveryBoundaryStandard.test.ts`, `tests/kernelDeliveryBoundaryDocumentation.test.ts`. Bu ek çalışan bir runtime, endpoint veya form iddia etmez: `capability delta = NONE`.
 
+Aynı DIŞ bölümün kapsamına, aynı H2 altında, M6 Constitutional Freeze kaydı da işaret olarak eklenir: `reports/kernel-constitutional-freeze-2026-08-21.json` (doğrulayıcı `tools/lib/kernel-constitutional-freeze.mjs`, kapı `tests/kernelConstitutionalFreeze.test.ts`) P01 (`PARTIAL_ADDITIVE`/`RCPT-01`, alınmamış) ve PKG11/12/13 (`invalid-or-superseded`/etkisiz) durumunu, Actionplan/Kernel taban pinlerini ve authority zincirinin sealed-live seq4 + projected-not-live seq5 pointer'larını taşır; yukarıdaki ASGI/authority değerlerini ikinci kez yazmaz, yalnız işaret eder ve çalışan bir runtime, endpoint veya form iddia etmez.
+
 ---
 
 ## 6. İlke — "Yeniden Yazma, Referans Ver"
