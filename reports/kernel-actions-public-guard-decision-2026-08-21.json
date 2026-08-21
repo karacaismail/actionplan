@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "kernel-actions-public-guard-decision-2026-08-21",
+  "status": "effective",
+  "scope": "M1_PUBLIC_ACTIONS_GUARD",
+  "decisions": {
+    "forkSafety": {
+      "pullRequestTargetTrigger": "FORBIDDEN",
+      "pullRequestTriggerOnly": "REQUIRED",
+      "forkPrDefaultToken": "READ_ONLY"
+    },
+    "secretless": {
+      "secretsUsedInForkTriggeredWorkflows": "NEVER",
+      "envSecretRefs": []
+    },
+    "shaPinning": {
+      "actionRefStyle": "FULL_COMMIT_SHA_ONLY",
+      "floatingTagsAllowed": false,
+      "vettedThirdPartyActionsAllowed": true,
+      "thirdPartyActionsRequireShaPin": true
+    },
+    "permissions": {
+      "defaultWorkflowPermissions": "READ_ONLY",
+      "topLevelPermissionsBlockRequired": true
+    },
+    "reusableWorkflow": {
+      "existsToday": false,
+      "contractOnly": true
+    },
+    "activationScope": {
+      "codeStartAllowed": false,
+      "runtimeCodeAllowed": false,
+      "releaseAllowed": false,
+      "deployAllowed": false,
+      "ciWiringAllowed": false
+    }
+  },
+  "nonGoals": [
+    "no live workflow YAML, no CI wiring, no GitHub mutations: M1 scopes to this decision record, its guard and its test only — the reusable-workflow contract this record describes has no runtime instance yet",
+    "no authority-chain append: this decision does not register itself into kernel-effective-authority-chain and stands alone as a targeted public-Actions-guard record",
+    "no runtime, product, or FastAPI code: this record and its guard are documentation-and-validation-only artifacts"
+  ],
+  "ownerComprehension": {
+    "once": "Depoyu public yaptığımızdan beri, herkesin GitHub'daki fork'undan bize Pull Request gönderebildiği bir dünyadayız; ama Actions iş akışlarımız hâlâ yokmuş gibi davranıyorduk — kötü niyetli bir fork PR'ı, eğer bir workflow onu yanlış tetikleyiciyle çalıştırırsa, bizim secret'larımıza veya yazma yetkimize erişebilirdi.",
+    "simdi": "Bu karar kaydı ve onu doğrulayan guard, gelecekte yazılacak her reusable workflow için dört kırmızı çizgiyi sabitliyor: fork PR'larını asla pull_request_target ile çalıştırma, fork PR akışına asla secret verme, her action'ı tam commit SHA'sıyla sabitle, varsayılan izinleri salt-okunur tut.",
+    "fark": "Önce: 'workflow yazarken dikkat ederiz' gibi belgesiz bir niyet. Şimdi: test edilebilir, drift'i otomatik reddeden, tek bir kaynak karar kaydı — ama henüz çalışan hiçbir workflow dosyası yok, bu M1 sadece sözleşmeyi donduruyor.",
+    "kullaniciYolculugu": "Bir dış katkıcı fork'undan PR açtığında: bu karar sayesinde, ileride yazılacak workflow'lar o PR'a secret sızdırmayacak ve depoya yazma yetkisi vermeyecek şekilde tasarlanmak zorunda kalacak — bugün için ise ortada çalışan bir workflow yok, sadece bu sözleşme var.",
+    "kalanEngel": "Bu kayıt bir reusable workflow YAML dosyası içermiyor ve hiçbir CI adımına bağlı değil; gerçek workflow, bu sözleşmeye uyacak şekilde ayrı bir Claude-writer paketi olarak, Codex MASTER'ın kapsam ve onay kapılarından geçerek yazılmalıdır."
+  },
+  "rollback": {
+    "trigger": "Bu karar kaydı veya guard'ı, gelecekte yazılacak bir reusable workflow'un fork-safe/secretless/SHA-pinned sözleşmesiyle çelişirse veya sözleşme owner tarafından değiştirilirse, MASTER bu dosyayı ve guard'ı git revert ile geri alır; hiçbir çalışan workflow bu karara bağlı olmadığından rollback'in üretim etkisi yoktur."
+  }
+}
