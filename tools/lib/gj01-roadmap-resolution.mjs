@@ -13,7 +13,15 @@ export const ACTIONPLAN_SHA = "c34ab04ac3a0846ee29386ad495a68efd99891d5";
 export const KERNEL_SHA = "8c2e5f0acf52338d2617547fad6585dd459b75f4";
 // biome-ignore format: the closed record root key set, sorted; a quietly added or dropped root is a diff
 export const RECORD_ROOT_KEYS = ["actionGateway", "applicability", "businessPersistenceOwner", "canonicalRefs", "frameworkDecision", "generatedAt", "httpDelivery", "id", "legacyPlatform", "nonGoals", "prohibitions", "roadmap", "schemaVersion", "scopeHash", "staleBranches", "status", "typedBridge"];
-export const PROHIBITION_KEYS = ["gitCommitPushByThisRecord", "runtimeCodeAllowed", "releaseAllowed", "deployAllowed", "pkg14_19CarryOverAllowed", "djangoCarryOverAllowed", "frameworkSelectionBeforeV4"];
+export const PROHIBITION_KEYS = [
+  "gitCommitPushByThisRecord",
+  "runtimeCodeAllowed",
+  "releaseAllowed",
+  "deployAllowed",
+  "pkg14_19CarryOverAllowed",
+  "djangoCarryOverAllowed",
+  "frameworkSelectionBeforeV4",
+];
 export const NON_GOALS = [
   "no runtime/feature/release/deploy",
   "no Git commit/push/merge/branch",
@@ -41,7 +49,11 @@ export const LEGACY_PLATFORM_PIN = {
   dirtyRootClassification: "ARCHIVE_EVIDENCE",
   djangoStatus: "DELETED_ABSENT_NO_CARRYOVER",
 };
-export const STALE_BRANCHES_PIN = { range: "PKG14-PKG19", base: "60568", status: "HISTORICAL_NO_CARRYOVER" };
+export const STALE_BRANCHES_PIN = {
+  range: "PKG14-PKG19",
+  base: "60568",
+  status: "HISTORICAL_NO_CARRYOVER",
+};
 export const ROADMAP_PIN = {
   firstFeaturePackage: "GJ01-V0-FAILURE-ARCHAEOLOGY",
   resolvedFromLiveEvidence: true,
@@ -51,7 +63,11 @@ export const ROADMAP_PIN = {
 const sortKeys = (value) => {
   if (Array.isArray(value)) return value.map(sortKeys);
   if (value && typeof value === "object")
-    return Object.fromEntries(Object.keys(value).sort().map((k) => [k, sortKeys(value[k])]));
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((k) => [k, sortKeys(value[k])]),
+    );
   return value;
 };
 
@@ -90,8 +106,10 @@ export function evaluateRoadmapResolution({ record } = {}) {
   if (doc.applicability !== APPLICABILITY) add("applicability-drift");
   if (doc.canonicalRefs?.actionplanBase?.sha !== ACTIONPLAN_SHA) add("actionplan-pin-drift");
   if (doc.canonicalRefs?.kernelBase?.sha !== KERNEL_SHA) add("kernel-pin-drift");
-  if (!/^[0-9a-f]{40}$/.test(doc.canonicalRefs?.standardsApplicability?.sourceCommit ?? "")) add("standards-applicability-source-commit-invalid");
-  if (doc.canonicalRefs?.standardsApplicability?.path !== "src/data/standards-applicability.json") add("standards-applicability-path-drift");
+  if (!/^[0-9a-f]{40}$/.test(doc.canonicalRefs?.standardsApplicability?.sourceCommit ?? ""))
+    add("standards-applicability-source-commit-invalid");
+  if (doc.canonicalRefs?.standardsApplicability?.path !== "src/data/standards-applicability.json")
+    add("standards-applicability-path-drift");
 
   eq(doc.actionGateway, ACTION_GATEWAY_PIN, "action-gateway");
   if (doc.businessPersistenceOwner !== "APPLICATION") add("business-persistence-owner-drift");
@@ -104,7 +122,8 @@ export function evaluateRoadmapResolution({ record } = {}) {
 
   const prohibitions = doc.prohibitions ?? {};
   closed(Object.keys(prohibitions).sort(), [...PROHIBITION_KEYS].sort(), "prohibition");
-  for (const key of PROHIBITION_KEYS) if (prohibitions[key] !== false) add(`prohibition-not-closed:${key}`);
+  for (const key of PROHIBITION_KEYS)
+    if (prohibitions[key] !== false) add(`prohibition-not-closed:${key}`);
 
   const nonGoals = doc.nonGoals ?? [];
   for (const [i, line] of NON_GOALS.entries()) if (nonGoals[i] !== line) add(`non-goal-drift:${i}`);

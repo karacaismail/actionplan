@@ -22,7 +22,8 @@ const read = (relative: string) => fs.readFileSync(path.join(ROOT, relative), "u
 const readJson = (relative: string) => JSON.parse(read(relative));
 const exists = (relative: string) => fs.existsSync(path.join(ROOT, relative));
 // biome-ignore lint/suspicious/noExplicitAny: the shipped pure JavaScript validator has no declaration file.
-const load = async (relative: string): Promise<any> => import(pathToFileURL(path.join(ROOT, relative)).href);
+const load = async (relative: string): Promise<any> =>
+  import(pathToFileURL(path.join(ROOT, relative)).href);
 // biome-ignore lint/suspicious/noExplicitAny: the validator consumes untyped JSON documents.
 const clone = (value: any): any => JSON.parse(JSON.stringify(value));
 
@@ -92,15 +93,60 @@ describe("GJ01 roadmap resolution reference-only record", () => {
       mutate(r);
       return evaluateRoadmapResolution({ record: r });
     };
-    expect(drift((r: any) => { r.canonicalRefs.kernelBase.sha = "0".repeat(40); }).accepted, "kernel-pin-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.canonicalRefs.actionplanBase.sha = "0".repeat(40); }).accepted, "actionplan-pin-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.businessPersistenceOwner = "KERNEL"; }).accepted, "owner-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.typedBridge.artifactStatus = "PRESENT"; }).accepted, "typed-bridge-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.frameworkDecision = "FASTAPI_NOW"; }).accepted, "framework-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.staleBranches.status = "carry-over"; }).accepted, "package-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.applicability = "other"; }).accepted, "applicability-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.scopeHash = "deadbeef"; }).accepted, "hash-drift-not-refused").toBe(false);
-    expect(drift((r: any) => { r.extraRoot = "x"; }).accepted, "unknown-root-not-refused").toBe(false);
+    expect(
+      drift((r: any) => {
+        r.canonicalRefs.kernelBase.sha = "0".repeat(40);
+      }).accepted,
+      "kernel-pin-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.canonicalRefs.actionplanBase.sha = "0".repeat(40);
+      }).accepted,
+      "actionplan-pin-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.businessPersistenceOwner = "KERNEL";
+      }).accepted,
+      "owner-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.typedBridge.artifactStatus = "PRESENT";
+      }).accepted,
+      "typed-bridge-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.frameworkDecision = "FASTAPI_NOW";
+      }).accepted,
+      "framework-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.staleBranches.status = "carry-over";
+      }).accepted,
+      "package-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.applicability = "other";
+      }).accepted,
+      "applicability-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.scopeHash = "deadbeef";
+      }).accepted,
+      "hash-drift-not-refused",
+    ).toBe(false);
+    expect(
+      drift((r: any) => {
+        r.extraRoot = "x";
+      }).accepted,
+      "unknown-root-not-refused",
+    ).toBe(false);
     expect(drift(() => {}).accepted, "harness-rejects-clean").toBe(true);
   });
 });
