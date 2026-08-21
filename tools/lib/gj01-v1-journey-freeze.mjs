@@ -30,15 +30,60 @@ export const STANDARD_REFS = [
   "release-versioning",
 ];
 export const APPLICABILITY_PIN = [
-  { standard: "architecture", applies: true, reason: "V1 kaydı mimari sınır ve dosya/rol kapsamını doğrudan belirler", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "short-code", applies: true, reason: "canonicalRefs.roadmapResolution short-code sözleşmesini sourceCommit ile tüketir", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "authz-rbac-abac", applies: true, reason: "journey AUTHENTICATED_TENANT_SCOPED_ACTOR ve CROSS_TENANT_DENY outcome'unu donduruyor", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "testing-strategy", applies: true, reason: "test-first RED/GREEN akışı bu kaydı doğrulayan validator'ı yönetir", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "quality-gates", applies: true, reason: "fail-closed evaluateJourneyFreeze bu kaydın kabul kapısıdır", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "kernel-delivery-boundary", applies: true, reason: "prohibitions v2-v5+ implementasyon ve release/deploy sınırını kapatıyor", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "data-api-contract", applies: false, reason: "V2 kapsamı; bu kayıt hiçbir ActionSpec/error/event/retry/receipt şema şekli açmaz", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "observability", applies: false, reason: "V8 kapsamı; bu kayıtta runtimeCodeAllowed=false ve gözlemlenecek çalışan sistem yok", sourceCommit: STANDARDS_SOURCE_COMMIT },
-  { standard: "release-versioning", applies: false, reason: "releaseAllowed=false ve deployAllowed=false; bu kayıtta release yok", sourceCommit: STANDARDS_SOURCE_COMMIT },
+  {
+    standard: "architecture",
+    applies: true,
+    reason: "V1 kaydı mimari sınır ve dosya/rol kapsamını doğrudan belirler",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "short-code",
+    applies: true,
+    reason: "canonicalRefs.roadmapResolution short-code sözleşmesini sourceCommit ile tüketir",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "authz-rbac-abac",
+    applies: true,
+    reason: "journey AUTHENTICATED_TENANT_SCOPED_ACTOR ve CROSS_TENANT_DENY outcome'unu donduruyor",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "testing-strategy",
+    applies: true,
+    reason: "test-first RED/GREEN akışı bu kaydı doğrulayan validator'ı yönetir",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "quality-gates",
+    applies: true,
+    reason: "fail-closed evaluateJourneyFreeze bu kaydın kabul kapısıdır",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "kernel-delivery-boundary",
+    applies: true,
+    reason: "prohibitions v2-v5+ implementasyon ve release/deploy sınırını kapatıyor",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "data-api-contract",
+    applies: false,
+    reason: "V2 kapsamı; bu kayıt hiçbir ActionSpec/error/event/retry/receipt şema şekli açmaz",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "observability",
+    applies: false,
+    reason: "V8 kapsamı; bu kayıtta runtimeCodeAllowed=false ve gözlemlenecek çalışan sistem yok",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
+  {
+    standard: "release-versioning",
+    applies: false,
+    reason: "releaseAllowed=false ve deployAllowed=false; bu kayıtta release yok",
+    sourceCommit: STANDARDS_SOURCE_COMMIT,
+  },
 ];
 export const WAIVER_PIN = null;
 export const CANONICAL_REFS_PIN = {

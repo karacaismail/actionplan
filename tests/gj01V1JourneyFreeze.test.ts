@@ -156,11 +156,42 @@ describe("GJ01 V1 journey freeze reference-only record", () => {
     expect(drift(() => {}).accepted, "harness-rejects-clean").toBe(true);
 
     const matrixMutations: Array<[string, (r: any) => void]> = [
-      ["row-missing", (r) => { r.applicability = r.applicability.slice(1); }],
-      ["applies-drift", (r) => { r.applicability[0].applies = false; }],
-      ["source-commit-drift", (r) => { r.applicability[0].sourceCommit = "0".repeat(40); }],
-      ["waiver-non-null", (r) => { r.waiver = { reason: "x" }; }],
-      ["unknown-standard", (r) => { r.applicability.push({ standard: "unknown-std", applies: true, reason: "x", sourceCommit: STANDARDS_SOURCE_COMMIT }); r.standardRefs.push("unknown-std"); }],
+      [
+        "row-missing",
+        (r) => {
+          r.applicability = r.applicability.slice(1);
+        },
+      ],
+      [
+        "applies-drift",
+        (r) => {
+          r.applicability[0].applies = false;
+        },
+      ],
+      [
+        "source-commit-drift",
+        (r) => {
+          r.applicability[0].sourceCommit = "0".repeat(40);
+        },
+      ],
+      [
+        "waiver-non-null",
+        (r) => {
+          r.waiver = { reason: "x" };
+        },
+      ],
+      [
+        "unknown-standard",
+        (r) => {
+          r.applicability.push({
+            standard: "unknown-std",
+            applies: true,
+            reason: "x",
+            sourceCommit: STANDARDS_SOURCE_COMMIT,
+          });
+          r.standardRefs.push("unknown-std");
+        },
+      ],
     ];
     for (const [tag, mutate] of matrixMutations)
       expect(drift(mutate).accepted, `applicability-${tag}-not-refused`).toBe(false);
@@ -168,7 +199,10 @@ describe("GJ01 V1 journey freeze reference-only record", () => {
     const attack = clone(record);
     attack.applicability[0].applies = false;
     attack.scopeHash = computeScopeHash(attack);
-    expect(evaluateJourneyFreeze({ record: attack }).accepted, "applicability-matching-hash-recompute-not-refused").toBe(false);
+    expect(
+      evaluateJourneyFreeze({ record: attack }).accepted,
+      "applicability-matching-hash-recompute-not-refused",
+    ).toBe(false);
   });
 
   it("closes prohibitions to exactly false and closes canonicalRefs pointers to exact pinned values", async () => {
