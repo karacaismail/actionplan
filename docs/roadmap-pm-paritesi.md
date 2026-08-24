@@ -310,3 +310,5 @@ Otomasyon yalnız audit seçimi ve insan/Codex handoff kuyruğu üretir; model v
 **Riskler:** (a) paylaşılan dosyalarda paralel ajan çakışması → fazlar arası dosya sahipliği netleştirilir, ajanlar izole node/util dosyalarında çalışır; (b) 467 satır tablo/Gantt performansı → sanallaştırma/scope; (c) çok-kullanıcılı gerçek senaryolar backend ister → bilinçli kapsam dışı (assignee yalnız veri).
 
 **Dogfooding (öneri):** Bu 8 fazı, aracın KENDİ WBS'ine düğüm olarak ekle (her faz = archetype/feature, alt adımlar = component/work_unit) → araç kendi geliştirme planını yönetir, audit/yürütme/Gantt görünümlerini kendi yol haritasıyla test eder.
+
+**ULTRA_FAST_V1 (işaretçi):** Bu yol haritasındaki fazlar altında yürüyen atomik değişiklik paketleri artık aktif-varsayılan `src/data/standards/short-code.json#changePackageBudget.ultraFastV1` teslim politikasına tabidir (bağ: `short-code.json#changePackageBudget.ultraFastPolicyRef`). Test bandı, checkpoint kadansı, QA sırası, Pane admisyonu ve MASTER'ın sorusuz karar kategorileri o sözleşmede yaşar; bu doküman sayı KOPYALAMAZ.

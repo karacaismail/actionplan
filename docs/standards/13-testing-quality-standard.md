@@ -253,3 +253,9 @@ Aşağıdaki tablo test & kalite kurallarını izlenebilir Requirement-ID'lere d
 | TQ-23 | DoD checklist tüm maddeleri işaretli | quality-gate | P1 | review | Eksik madde bloklar (ref: gate-dod-checklist) | qa-platform |
 
 Bu dosya bir anlatı standardıdır; kural değerlerini `src/data/standards/testing-strategy.json` ve `src/data/standards/quality-gates.json` sözleşmelerinden devralır veya onlara referans verir, kopyalamaz. Kurallar değişince yalnız JSON güncellenir; anlatı aynı sözleşmeleri işaret ettiği için tutarlı kalır.
+
+---
+
+## 16. ULTRA_FAST_V1 — İşaretçi
+
+Atomik ULTRA_FAST_V1 değişiklik paketlerinde test bandı, checkpoint kadansı, QA sırası ve Pane admisyonunun TEK kanonik makine sahibi `src/data/standards/short-code.json#changePackageBudget.ultraFastV1`'dir (bağ: `short-code.json#changePackageBudget.ultraFastPolicyRef`). Bu bölüm sayı/eşik KOPYALAMAZ; yukarıdaki §2 (piramit), §5 (coverage) ve §9 (merge kapıları) aynı kalır — ULTRA_FAST_V1 yalnız *hangi mikro-paket boyutunda hangi test kadansının uygulandığını* daraltır, mevcut kalite tabanını düşürmez. Deterministik doğrulayıcı: `tools/agents/check-ultra-fast-delivery.mjs`.
