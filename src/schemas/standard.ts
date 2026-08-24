@@ -64,6 +64,112 @@ const MEASUREMENT_REPORTS = ["gross-additions", "gross-deletions", "measured-net
 const sameSet = (got: readonly string[], want: readonly string[]) =>
   got.length === want.length && want.every((w) => got.includes(w));
 
+/**
+ * ULTRA_FAST_V1 — Actionplan hızlı teslim politikası (aktif-varsayılan, pilot DEĞİL). TEK kanonik
+ * makine yuvası bu belgenin (short-code) `changePackageBudget.ultraFastV1` alanıdır; ayrı bir
+ * dosya YOKTUR. `ultraFastPolicyRef` yalnız kendi öz-adresine İŞARET eder, sayıyı KOPYALAMAZ.
+ * Strict + literal kilitli: OWNER kararları (bant, kadans, QA sırası, eşzamanlılık formülü, karar
+ * yetkisi kategorileri) ikinci bir prose kopyasında sürüklenemez.
+ */
+const TERMINAL_OUTCOMES = [
+  "READY_FOR_CI",
+  "CLEAN_SPLIT_OR_ROLLBACK",
+  "BLOCKED_WITH_ONE_EVIDENCE",
+] as const;
+const QA_ROLES = ["test", "implementation", "read-only-reviewer"] as const;
+const MASTER_DECIDES = [
+  "reversible-technical",
+  "worktree",
+  "test-framework",
+  "git",
+  "pr",
+  "ci",
+] as const;
+const OWNER_QUESTION_CATEGORIES = [
+  "product-brand-scope",
+  "irreversible-impact",
+  "external-cost",
+  "security-risk-appetite",
+  "credentials",
+  "genuinely-required-external-authority",
+] as const;
+
+export const UltraFastV1Schema = z
+  .strictObject({
+    testScoping: z.strictObject({
+      activeDefault: z.strictObject({
+        minScenarios: z.literal(3),
+        maxScenarios: z.literal(8),
+        maxTestFiles: z.literal(2),
+      }),
+      nonBehavioral: z.strictObject({
+        minScenarios: z.literal(0),
+        maxScenarios: z.literal(2),
+        explicitRedAllowed: z.literal("N/A"),
+      }),
+      namedRiskException: z.strictObject({
+        requiresNamedRisk: z.literal(true),
+        requiresBoundedLocalCeiling: z.literal(true),
+        requiresIndependentReview: z.literal(true),
+      }),
+    }),
+    checkpointCadence: z.strictObject({
+      checkpointMinutes: z.literal(20),
+      maxCorrectionWaves: z.literal(1),
+      terminalOutcomes: z.tuple([
+        z.literal(TERMINAL_OUTCOMES[0]),
+        z.literal(TERMINAL_OUTCOMES[1]),
+        z.literal(TERMINAL_OUTCOMES[2]),
+      ]),
+    }),
+    qaDiscipline: z.strictObject({
+      fullQaSequence: z.tuple([z.literal("writer-local"), z.literal("ci")]),
+      unchangedSnapshotRerunAllowed: z.literal(false),
+      browserVerificationScope: z.literal("visible-ui-journey-change-only"),
+      separateRoles: z.array(z.enum(QA_ROLES)).length(QA_ROLES.length),
+    }),
+    paneAdmission: z.strictObject({
+      admissionMode: z.literal("jit-exact-worktree"),
+      speculativeCreationAllowed: z.literal(false),
+      concurrencyFormula: z.literal(
+        "min(guardianRecommended, dagReadyCount, sharedLockCapacity, 3)",
+      ),
+      staticConcurrencyCeiling: z.literal(3),
+      gcTrigger: z.literal("event-driven"),
+    }),
+    decisionAuthority: z.strictObject({
+      masterDecidesWithoutAsking: z.array(z.enum(MASTER_DECIDES)).min(MASTER_DECIDES.length),
+      ownerQuestionCategories: z
+        .array(z.enum(OWNER_QUESTION_CATEGORIES))
+        .min(OWNER_QUESTION_CATEGORIES.length),
+      /** En az beş sabit projeksiyon dosyası + en az bir `.claude/agents/` profili taşır. */
+      pointerProjectionFiles: z.array(z.string().min(1)).min(6),
+    }),
+    /** Yalnız iki kanıt dosyasının adı + sha256'sı; rapor metni KOPYALANMAZ. */
+    evidenceReports: z
+      .array(
+        z.strictObject({ file: z.string().min(1), sha256: z.string().regex(/^[0-9a-f]{40,80}$/) }),
+      )
+      .length(2),
+    evidenceHashes: z.array(z.string().regex(/^[0-9a-f]{40,80}$/)).length(2),
+  })
+  .superRefine((policy, ctx) => {
+    const add = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+    const roles = new Set(policy.qaDiscipline.separateRoles);
+    if (roles.size !== QA_ROLES.length || QA_ROLES.some((r) => !roles.has(r)))
+      add("qaDiscipline.separateRoles tam üç rolü ayrı taşımalı");
+    if (
+      !policy.decisionAuthority.pointerProjectionFiles.some((p) => p.startsWith(".claude/agents/"))
+    )
+      add("pointerProjectionFiles en az bir .claude/agents/ profili içermeli");
+    const hashSet = new Set(policy.evidenceHashes);
+    if (hashSet.size !== policy.evidenceHashes.length) add("evidenceHashes tekrar içeremez");
+    const reportHashSet = new Set(policy.evidenceReports.map((r) => r.sha256));
+    if (hashSet.size !== reportHashSet.size || [...hashSet].some((h) => !reportHashSet.has(h)))
+      add("evidenceHashes, evidenceReports'taki sha256 kümesiyle birebir eşleşmeli");
+  });
+export type UltraFastV1 = z.infer<typeof UltraFastV1Schema>;
+
 export const BudgetClassSchema = z.enum(["production", "security-test-conformance"]);
 export const BudgetBandIdSchema = z.enum(["default", "conditional", "waiver"]);
 const positive = z.number().int().positive();
@@ -117,6 +223,11 @@ export type MergeProtection = z.infer<typeof MergeProtectionSchema>;
 
 export const ChangePackageBudgetSchema = z
   .strictObject({
+    /** Kanonik ULTRA_FAST_V1 sözleşmesine ÖZ-işaretçi (bu belgenin kendi alanına); ikinci bir
+     *  dosya YOKTUR — sayı/enum KOPYALAMAZ, yalnız adresi taşır. */
+    ultraFastPolicyRef: z
+      .literal("src/data/standards/short-code.json#changePackageBudget.ultraFastV1")
+      .optional(),
     unit: z.literal("change-package"),
     netFormula: z.literal("additions-deletions"),
     maxChangedFiles: z.literal(OWNER_MAX_CHANGED_FILES),
@@ -151,6 +262,8 @@ export const ChangePackageBudgetSchema = z
       /** B13: canlı merge korumasının TEK makine-okunur sahibi; zorunlu, strict ve literal kilitli. */
       mergeProtection: MergeProtectionSchema,
     }),
+    /** ULTRA_FAST_V1 — bu belgenin (short-code) TEK kanonik yuvası; ayrı dosya YOKTUR. */
+    ultraFastV1: UltraFastV1Schema,
   })
   .superRefine((b, ctx) => {
     const add = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });

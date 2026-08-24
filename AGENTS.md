@@ -24,14 +24,15 @@ Kanonik yasak: `docs/platform-product-code-write-prohibition-directive.md`; rol 
 
 ### 0.1 Kalıcı yetki zinciri
 
-Operasyonel sıra: **Codex → PM → uzman ajanlar → Claude workers/slaves**.
+Operasyonel sıra: **Codex Desktop MASTER → PM → uzman ajanlar → Claude workers/slaves**.
 
-- **Codex = MASTER:** kapsam, öncelik, alt görev, rollback, Git/PR ve teslim kararının tek nihai yetkilisidir.
-- **PM = Codex sonrasındaki ardıl koordinasyon yetkilisi:** Codex'in kilitlediği kapsam içinde sırayı, bağımlılıkları, riskleri ve evidence paketini yönetir; Codex'in nihai yetkisini devralamaz.
-- Uzman ajanlar PM üzerinden Codex'e bağlıdır; doğrudan kapsam genişletemez veya nihai karar veremez.
-- **Claude = worker/slave:** yalnız Codex'in açıkça sınırladığı `claude_review` veya `claude_implement` alt görevini yapar; PM ve uzmanlar Claude çağıramaz.
+- **Codex Desktop MASTER:** orkestratör, kapsam yetkisi, rollback yetkisi, Git yürütücü ve nihai doğrulayıcıdır; repo üzerinde **mutlak salt-okunurdur** (`masterIsRepoReadOnly=true`) — hiçbir üretim/runtime/governance/docs/schema/CI yüzeyine YAZMAZ.
+- **PM = Codex sonrasındaki ardıl koordinasyon yetkilisi:** MASTER'ın kilitlediği kapsam içinde sırayı, bağımlılıkları, riskleri ve evidence paketini yönetir; MASTER'ın nihai yetkisini devralamaz.
+- Uzman ajanlar PM üzerinden MASTER'a bağlıdır; doğrudan kapsam genişletemez veya nihai karar veremez.
+- **Claude = worker/slave, her yazan/test yazan/review yapan rolün TEK gerçek yazarı:** yalnız canlı Codex Desktop MASTER oturumundan, **`runpane --agent claude`** ile guard'lanmış mekanizma üzerinden çağrılabilir. Doğrudan `claude_review`/`claude_implement` MCP tool çağrısı, harici/root kabuktan çağrı ve Pane-içi bir Codex MASTER çağrısı GEÇERSİZDİR ve REDDEDİLİR; bu üç MCP registration kaldırılmıştır ve geri dönmemelidir.
 - Claude çağrısı yalnız `claude.ai / firstParty / max` doğrulanınca çalışır; API/provider fallback yasaktır ve doğrulama yoksa süreç fail-closed durur.
-- Tüm ara çıktılar öneridir; Codex gerçek dosya, diff ve deterministik testlerle bağımsız doğrulamadan kabul edemez.
+- Tüm ara çıktılar öneridir; MASTER gerçek dosya, diff ve deterministik testlerle bağımsız doğrulamadan kabul edemez.
+- **Atomik ULTRA_FAST_V1 paketlerinde otomatik yönlendirme:** bant/kapsam/kadans/kanıt bütçesi içindeki değişiklik paketleri otomatik olarak `src/data/standards/short-code.json#changePackageBudget.ultraFastV1` politikasına yönlenir (işaretçi: bu dosya, `CLAUDE.md`, `RULES.md`, `docs/roadmap-pm-paritesi.md`, `.claude/skills/ultra-fast-development/SKILL.md`, `.claude/agents/ultra-fast-*.md`). MASTER, o politikanın `decisionAuthority.masterDecidesWithoutAsking` kümesindeki (geri-alınabilir teknik, worktree, test-çerçevesi, git, PR, CI) kararları sahibe SORMADAN verir; sahibe yalnız aynı politikanın `ownerQuestionCategories` kümesindeki (ürün/marka kapsamı, geri alınamaz etki, dış maliyet, güvenlik risk iştahı, kimlik bilgisi, gerçekten gereken dış yetki) kategoriler sorulur. Sayı/eşik bu dosyada KOPYALANMAZ; tek kanonik alan yukarıdaki JSON'dur.
 
 ### 0.2 Tek istisna — EPOCH-04 kernel-only şeridi (daha yüksek öncelikli, kalıcı)
 

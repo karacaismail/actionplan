@@ -47,3 +47,12 @@ Worker davranışı özeti:
   alınamaz etki, dış maliyet ve güvenlik risk iştahı sorulur.
 - `küresel ölçekte kanıtlı` iddiası popülerliğe dayanamaz; kanıt eksikse teknoloji
   `deneysel`/`koşullu` etiketlenir, izole edilir ve rollback deneyi kaydedilir.
+
+## ULTRA_FAST_V1 (işaretçi)
+
+Atomik değişiklik paketleri aktif-varsayılan olarak
+`src/data/standards/short-code.json#changePackageBudget.ultraFastV1` politikasına tabidir (bağ:
+`short-code.json#changePackageBudget.ultraFastPolicyRef`). `testScoping`, `checkpointCadence`,
+`qaDiscipline`, `paneAdmission` ve `decisionAuthority` alt alanları TEK kanonik sayı/eşik/sıra
+sahibidir; bu dosya hiçbirini KOPYALAMAZ — çalışma zamanında o JSON'u oku ve orada yazılanı
+uygula. Ayrıntı: `RULES.md`, `.claude/skills/ultra-fast-development/SKILL.md`.
